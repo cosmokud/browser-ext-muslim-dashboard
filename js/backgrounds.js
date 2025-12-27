@@ -101,7 +101,7 @@ class BackgroundManager {
    * Get images array for a category
    */
   getImagesForCategory(category, settings) {
-    if (category === 'custom') {
+    if (category === "custom") {
       const customBgs = settings.customBackgrounds || [];
       return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
     }
@@ -122,7 +122,10 @@ class BackgroundManager {
     }
 
     const lastChange = settings.lastBgChange;
-    const intervalValue = settings.bgInterval === 'custom' ? settings.bgIntervalCustom : settings.bgInterval;
+    const intervalValue =
+      settings.bgInterval === "custom"
+        ? settings.bgIntervalCustom
+        : settings.bgInterval;
     const interval = (intervalValue || 60) * 60 * 1000;
     const now = Date.now();
 

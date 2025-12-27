@@ -91,7 +91,10 @@ class SettingsManager {
     this.customBgCount = document.getElementById("customBgCount");
 
     // General settings elements
-    this.todoPosition = document.getElementById("todoPosition");
+    this.containerWidth = document.getElementById("containerWidth");
+    this.containerWidthCustom = document.getElementById("containerWidthCustom");
+    this.customWidthGroup = document.getElementById("customWidthGroup");
+    this.customWidthValue = document.getElementById("customWidthValue");
     this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
@@ -169,9 +172,10 @@ class SettingsManager {
     if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
 
     // Background settings
-    if (settings.bgIntervalCustom && settings.bgInterval === 'custom') {
-      if (this.bgInterval) this.bgInterval.value = 'custom';
-      if (this.bgIntervalCustom) this.bgIntervalCustom.value = settings.bgIntervalCustom;
+    if (settings.bgIntervalCustom && settings.bgInterval === "custom") {
+      if (this.bgInterval) this.bgInterval.value = "custom";
+      if (this.bgIntervalCustom)
+        this.bgIntervalCustom.value = settings.bgIntervalCustom;
       this.toggleCustomInterval(true);
     } else {
       if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
@@ -179,8 +183,25 @@ class SettingsManager {
     }
     if (this.bgCategory) this.bgCategory.value = settings.bgCategory;
 
-    // General settings
-    if (this.todoPosition) this.todoPosition.value = settings.todoPosition || 'right';
+    // Container width settings
+    if (this.containerWidth) {
+      this.containerWidth.value = settings.containerWidth || "narrow";
+    }
+    if (settings.containerWidth === "custom") {
+      this.toggleCustomWidth(true);
+      if (this.containerWidthCustom) {
+        const clamped = this.clampNumber(
+          settings.containerWidthCustom,
+          20,
+          98,
+          70
+        );
+        this.containerWidthCustom.value = String(clamped);
+      }
+      this.updateCustomWidthLabel();
+    } else {
+      this.toggleCustomWidth(false);
+    }
   }
 
   /**
@@ -188,7 +209,38 @@ class SettingsManager {
    */
   toggleCustomInterval(show) {
     if (this.customIntervalGroup) {
-      this.customIntervalGroup.style.display = show ? 'block' : 'none';
+      this.customIntervalGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Toggle custom width visibility
+   */
+  toggleCustomWidth(show) {
+    if (this.customWidthGroup) {
+      this.customWidthGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  clampNumber(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(max, Math.max(min, numeric));
+  }
+
+  /**
+   * Update custom width label
+   */
+  updateCustomWidthLabel() {
+    if (this.customWidthValue && this.containerWidthCustom) {
+      const clamped = this.clampNumber(
+        parseInt(this.containerWidthCustom.value, 10),
+        20,
+        98,
+        70
+      );
+      this.containerWidthCustom.value = String(clamped);
+      this.customWidthValue.textContent = clamped + "%";
     }
   }
 
@@ -196,10 +248,10 @@ class SettingsManager {
    * Update method angles display
    */
   updateMethodAnglesDisplay() {
-    const method = this.calculationMethod?.value || 'MWL';
-    
-    if (method === 'Custom') {
-      if (this.methodAnglesInfo) this.methodAnglesInfo.style.display = 'none';
+    const method = this.calculationMethod?.value || "MWL";
+
+    if (method === "Custom") {
+      if (this.methodAnglesInfo) this.methodAnglesInfo.style.display = "none";
       return;
     }
 
@@ -208,14 +260,15 @@ class SettingsManager {
     const params = prayTimes.methods[method]?.params || { fajr: 18, isha: 17 };
 
     if (this.methodFajrAngle) {
-      this.methodFajrAngle.textContent = params.fajr + '°';
+      this.methodFajrAngle.textContent = params.fajr + "°";
     }
     if (this.methodIshaAngle) {
-      const ishaValue = typeof params.isha === 'string' ? params.isha : params.isha + '°';
+      const ishaValue =
+        typeof params.isha === "string" ? params.isha : params.isha + "°";
       this.methodIshaAngle.textContent = ishaValue;
     }
     if (this.methodAnglesInfo) {
-      this.methodAnglesInfo.style.display = 'block';
+      this.methodAnglesInfo.style.display = "block";
     }
   }
 
@@ -228,23 +281,32 @@ class SettingsManager {
 
     if (this.customBgList) {
       if (customBgs.length === 0) {
-        this.customBgList.innerHTML = '<p class="empty-hint">No custom backgrounds added yet.</p>';
+        this.customBgList.innerHTML =
+          '<p class="empty-hint">No custom backgrounds added yet.</p>';
       } else {
-        this.customBgList.innerHTML = customBgs.map((bg, index) => `
+        this.customBgList.innerHTML = customBgs
+          .map(
+            (bg, index) => `
           <div class="custom-bg-item" data-index="${index}">
-            <img src="${bg}" alt="Background ${index + 1}" class="custom-bg-thumb" />
+            <img src="${bg}" alt="Background ${
+              index + 1
+            }" class="custom-bg-thumb" />
             <button class="custom-bg-remove" data-index="${index}" title="Remove">×</button>
           </div>
-        `).join('');
+        `
+          )
+          .join("");
 
         // Bind remove events
-        this.customBgList.querySelectorAll('.custom-bg-remove').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const index = parseInt(btn.dataset.index);
-            this.removeCustomBackground(index);
+        this.customBgList
+          .querySelectorAll(".custom-bg-remove")
+          .forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+              const index = parseInt(btn.dataset.index);
+              this.removeCustomBackground(index);
+            });
           });
-        });
       }
     }
 
@@ -261,17 +323,17 @@ class SettingsManager {
     const customBgs = settings.customBackgrounds || [];
 
     if (customBgs.length >= 10) {
-      this.showToast('Maximum 10 custom backgrounds allowed', 'error');
+      this.showToast("Maximum 10 custom backgrounds allowed", "error");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target.result;
-      
+
       // Check size (limit to ~2MB per image after base64 encoding)
       if (base64.length > 2800000) {
-        this.showToast('Image too large. Please use smaller images.', 'error');
+        this.showToast("Image too large. Please use smaller images.", "error");
         return;
       }
 
@@ -279,7 +341,7 @@ class SettingsManager {
       settings.customBackgrounds = customBgs;
       this.storage.saveSettings(settings);
       this.renderCustomBackgrounds();
-      this.showToast('Background added!', 'success');
+      this.showToast("Background added!", "success");
     };
     reader.readAsDataURL(file);
   }
@@ -290,13 +352,13 @@ class SettingsManager {
   removeCustomBackground(index) {
     const settings = this.storage.getSettings();
     const customBgs = settings.customBackgrounds || [];
-    
+
     if (index >= 0 && index < customBgs.length) {
       customBgs.splice(index, 1);
       settings.customBackgrounds = customBgs;
       this.storage.saveSettings(settings);
       this.renderCustomBackgrounds();
-      this.showToast('Background removed', 'success');
+      this.showToast("Background removed", "success");
     }
   }
 
@@ -317,22 +379,24 @@ class SettingsManager {
       todos: todos,
       userQuotes: userQuotes,
       pinnedApps: pinnedApps,
-      lastLocation: lastLocation
+      lastLocation: lastLocation,
     };
 
     const json = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `muslim-dashboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `muslim-dashboard-backup-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    this.showToast('Settings exported successfully!', 'success');
+    this.showToast("Settings exported successfully!", "success");
   }
 
   /**
@@ -341,9 +405,9 @@ class SettingsManager {
   importAllSettings(jsonString) {
     try {
       const data = JSON.parse(jsonString);
-      
+
       if (!data.version || !data.settings) {
-        throw new Error('Invalid backup file format');
+        throw new Error("Invalid backup file format");
       }
 
       // Import settings
@@ -371,15 +435,14 @@ class SettingsManager {
         this.storage.saveLastLocation(data.lastLocation);
       }
 
-      this.showToast('Settings imported! Reloading...', 'success');
-      
+      this.showToast("Settings imported! Reloading...", "success");
+
       // Reload page to apply all settings
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-
     } catch (e) {
-      this.showToast('Import failed: ' + e.message, 'error');
+      this.showToast("Import failed: " + e.message, "error");
     }
   }
 
@@ -430,8 +493,8 @@ class SettingsManager {
 
     // Background settings
     const bgIntervalValue = this.bgInterval?.value;
-    if (bgIntervalValue === 'custom') {
-      settings.bgInterval = 'custom';
+    if (bgIntervalValue === "custom") {
+      settings.bgInterval = "custom";
       settings.bgIntervalCustom = parseInt(this.bgIntervalCustom?.value) || 60;
     } else {
       settings.bgInterval = parseInt(bgIntervalValue) || 60;
@@ -439,8 +502,16 @@ class SettingsManager {
     }
     settings.bgCategory = this.bgCategory?.value || "nature";
 
-    // General settings
-    settings.todoPosition = this.todoPosition?.value || 'right';
+    // Container width settings
+    settings.containerWidth = this.containerWidth?.value || "narrow";
+    if (settings.containerWidth === "custom") {
+      settings.containerWidthCustom = this.clampNumber(
+        parseInt(this.containerWidthCustom?.value, 10),
+        20,
+        98,
+        70
+      );
+    }
 
     // Save to storage
     this.storage.saveSettings(settings);
@@ -486,53 +557,67 @@ class SettingsManager {
 
     // Update background rotation
     if (this.backgrounds) {
-      const interval = settings.bgInterval === 'custom' ? settings.bgIntervalCustom : settings.bgInterval;
+      const interval =
+        settings.bgInterval === "custom"
+          ? settings.bgIntervalCustom
+          : settings.bgInterval;
       this.backgrounds.updateInterval(interval);
     }
 
-    // Apply todo position
-    this.applyTodoPosition(settings.todoPosition);
+    // Apply container width
+    this.applyContainerWidth(
+      settings.containerWidth,
+      settings.containerWidthCustom
+    );
   }
 
   /**
-   * Apply todo position setting
+   * Apply container width setting
    */
-  applyTodoPosition(position) {
-    const todoCard = document.getElementById('todoCard');
-    const mainContainer = document.querySelector('.main-container');
-    const contentGrid = document.querySelector('.content-grid');
-    
-    if (!todoCard || !mainContainer) return;
+  applyContainerWidth(width, customValue) {
+    const mainContainer = document.querySelector(".main-container");
 
-    // Remove existing position classes
-    todoCard.classList.remove('todo-position-right', 'todo-position-left', 'todo-position-bottom');
-    mainContainer.classList.remove('todo-right', 'todo-left', 'todo-bottom');
+    if (!mainContainer) return;
 
-    // Apply new position
-    switch (position) {
-      case 'left':
-        todoCard.classList.add('todo-position-left');
-        mainContainer.classList.add('todo-left');
-        // Move todo out of grid and to beginning of main container (after header)
-        if (todoCard.parentElement === contentGrid) {
-          mainContainer.insertBefore(todoCard, contentGrid);
+    // Remove existing width classes
+    mainContainer.classList.remove(
+      "container-narrow",
+      "container-medium",
+      "container-wide",
+      "container-full",
+      "container-custom"
+    );
+    mainContainer.style.removeProperty("--custom-container-width");
+
+    // Apply new width
+    switch (width) {
+      case "medium":
+        mainContainer.classList.add("container-medium");
+        break;
+      case "wide":
+        mainContainer.classList.add("container-wide");
+        break;
+      case "full":
+        mainContainer.classList.add("container-full");
+        break;
+      case "custom":
+        mainContainer.classList.add("container-custom");
+        {
+          const clamped = this.clampNumber(customValue, 20, 98, 70);
+          if (this.containerWidthCustom) {
+            this.containerWidthCustom.value = String(clamped);
+          }
+          if (this.customWidthValue) {
+            this.customWidthValue.textContent = clamped + "%";
+          }
+          mainContainer.style.setProperty(
+            "--custom-container-width",
+            clamped + "%"
+          );
         }
         break;
-      case 'bottom':
-        todoCard.classList.add('todo-position-bottom');
-        mainContainer.classList.add('todo-bottom');
-        // Move todo to be inside the grid but at the end
-        if (todoCard.parentElement !== contentGrid) {
-          contentGrid?.appendChild(todoCard);
-        }
-        break;
-      default: // right
-        todoCard.classList.add('todo-position-right');
-        mainContainer.classList.add('todo-right');
-        // Move todo out of grid and to end of main container
-        if (todoCard.parentElement === contentGrid) {
-          mainContainer.appendChild(todoCard);
-        }
+      default: // narrow
+        mainContainer.classList.add("container-narrow");
         break;
     }
   }
@@ -769,6 +854,20 @@ class SettingsManager {
       });
     }
 
+    // Container width change - toggle custom width slider
+    if (this.containerWidth) {
+      this.containerWidth.addEventListener("change", (e) => {
+        this.toggleCustomWidth(e.target.value === "custom");
+      });
+    }
+
+    // Container width slider change - update label
+    if (this.containerWidthCustom) {
+      this.containerWidthCustom.addEventListener("input", () => {
+        this.updateCustomWidthLabel();
+      });
+    }
+
     // Add custom background
     if (this.addCustomBgBtn) {
       this.addCustomBgBtn.addEventListener("click", () => {
@@ -783,7 +882,7 @@ class SettingsManager {
           for (let i = 0; i < files.length; i++) {
             this.addCustomBackground(files[i]);
           }
-          e.target.value = ''; // Reset input
+          e.target.value = ""; // Reset input
         }
       });
     }
@@ -811,7 +910,7 @@ class SettingsManager {
             this.importAllSettings(event.target.result);
           };
           reader.readAsText(file);
-          e.target.value = ''; // Reset input
+          e.target.value = ""; // Reset input
         }
       });
     }

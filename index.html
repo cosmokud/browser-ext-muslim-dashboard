@@ -252,9 +252,7 @@
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
-            <button class="settings-tab" data-tab="general">
-              ⚙️ General
-            </button>
+            <button class="settings-tab" data-tab="general">⚙️ General</button>
           </div>
 
           <!-- Location Settings -->
@@ -370,7 +368,10 @@
                 </optgroup>
               </select>
               <div class="method-angles-info" id="methodAnglesInfo">
-                <span class="angles-info-text">Fajr: <strong id="methodFajrAngle">18°</strong> | Isha: <strong id="methodIshaAngle">17°</strong></span>
+                <span class="angles-info-text"
+                  >Fajr: <strong id="methodFajrAngle">18°</strong> | Isha:
+                  <strong id="methodIshaAngle">17°</strong></span
+                >
               </div>
             </div>
             <div
@@ -692,7 +693,11 @@
                 <option value="custom">Custom interval</option>
               </select>
             </div>
-            <div class="setting-group custom-interval-group" id="customIntervalGroup" style="display: none;">
+            <div
+              class="setting-group custom-interval-group"
+              id="customIntervalGroup"
+              style="display: none"
+            >
               <label class="setting-label">Custom Interval (minutes)</label>
               <input
                 type="number"
@@ -722,7 +727,13 @@
                 <!-- Custom backgrounds will be shown here -->
               </div>
               <div class="custom-bg-actions">
-                <input type="file" id="customBgInput" accept="image/*" style="display: none;" multiple />
+                <input
+                  type="file"
+                  id="customBgInput"
+                  accept="image/*"
+                  style="display: none"
+                  multiple
+                />
                 <button class="setting-btn" id="addCustomBgBtn">
                   🖼️ Add Background
                 </button>
@@ -740,7 +751,10 @@
           <div class="settings-panel" id="generalPanel">
             <div class="setting-group">
               <label class="setting-label">Import / Export All Settings</label>
-              <p class="setting-hint">Backup or restore your entire dashboard configuration including quotes, todos, and pinned apps.</p>
+              <p class="setting-hint">
+                Backup or restore your entire dashboard configuration including
+                quotes, todos, and pinned apps.
+              </p>
               <div class="import-export-btns">
                 <button class="setting-btn" id="exportSettingsBtn">
                   📤 Export Settings
@@ -758,19 +772,71 @@
             </div>
 
             <div class="setting-group">
-              <label class="setting-label">Todo List Position</label>
-              <select class="setting-select" id="todoPosition">
-                <option value="right" selected>Right Side (Sticky)</option>
-                <option value="left">Left Side (Sticky)</option>
-                <option value="bottom">Bottom (Full Width)</option>
+              <label class="setting-label">Dashboard Width</label>
+              <select class="setting-select" id="containerWidth">
+                <option value="narrow" selected>Narrow (1400px)</option>
+                <option value="medium">Medium (1600px)</option>
+                <option value="wide">Wide (1800px)</option>
+                <option value="full">Full Width (98%)</option>
+                <option value="custom">Custom Width</option>
               </select>
-              <p class="setting-hint">Choose where the todo list appears on the dashboard.</p>
+              <p class="setting-hint">
+                Adjust the main dashboard container width.
+              </p>
+            </div>
+            <div
+              class="setting-group custom-width-group"
+              id="customWidthGroup"
+              style="display: none"
+            >
+              <label class="setting-label">Custom Width</label>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="containerWidthCustom"
+                  min="20"
+                  max="98"
+                  value="70"
+                />
+                <span class="custom-width-value" id="customWidthValue"
+                  >70%</span
+                >
+              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="modal-btn save-btn" id="saveSettingsBtn">
             💾 Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay delete-confirm-modal" id="deleteConfirmModal">
+      <div class="delete-confirm-content">
+        <div class="delete-confirm-icon">⚠️</div>
+        <h3>Delete Pin?</h3>
+        <p>
+          Are you sure you want to remove "<span
+            class="delete-app-name"
+            id="deleteAppName"
+          ></span
+          >"?
+        </p>
+        <p
+          class="delete-confirm-hint"
+          style="font-size: 0.85rem; color: var(--text-muted)"
+        >
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button class="delete-confirm-btn cancel" id="cancelDeleteBtn">
+            Cancel
+          </button>
+          <button class="delete-confirm-btn confirm" id="confirmDeleteBtn">
+            🗑️ Delete
           </button>
         </div>
       </div>
@@ -823,7 +889,9 @@
       <div class="modal modal-small">
         <div class="modal-header">
           <h2 class="modal-title">✏️ Edit Website</h2>
-          <button class="modal-close" id="closeEditPinnedAppModal">&times;</button>
+          <button class="modal-close" id="closeEditPinnedAppModal">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <form id="editPinnedAppForm">
@@ -854,7 +922,11 @@
           <button class="modal-btn cancel-btn" id="cancelEditPinnedApp">
             Cancel
           </button>
-          <button class="modal-btn save-btn" type="submit" form="editPinnedAppForm">
+          <button
+            class="modal-btn save-btn"
+            type="submit"
+            form="editPinnedAppForm"
+          >
             Save
           </button>
         </div>

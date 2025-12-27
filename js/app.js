@@ -82,9 +82,12 @@ class MuslimDashboard {
     );
     this.settings.init();
 
-    // Apply initial todo position
+    // Apply initial container width
     const settings = this.storage.getSettings();
-    this.settings.applyTodoPosition(settings.todoPosition || 'right');
+    this.settings.applyContainerWidth(
+      settings.containerWidth || "narrow",
+      settings.containerWidthCustom || 70
+    );
 
     // Setup location updates
     this.setupLocationUpdates();

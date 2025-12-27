@@ -311,6 +311,31 @@ body {
   flex: 1;
 }
 
+/* Prefer container queries so layout responds to Dashboard Width setting */
+@supports (container-type: inline-size) {
+  .main-container {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 1050px) {
+    .content-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 700px) and (max-width: 1049px) {
+    .content-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (max-width: 699px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
 /* Card Base Styles */
 .card {
   background: var(--glass-bg);
@@ -568,6 +593,11 @@ body {
 }
 
 /* Todo Card */
+#todoCard {
+  grid-column: 1 / -1; /* Full width - spans all columns */
+  margin-top: var(--spacing-md);
+}
+
 .todo-count {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -1357,12 +1387,27 @@ body {
 }
 
 .pinned-app-item.dragging {
-  opacity: 0.5;
-  transform: scale(1.1);
+  opacity: 0.9;
+  transform: translateY(-6px) scale(1.12);
+  z-index: 2;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.35));
+  animation: pinnedDragFloat 0.9s ease-in-out infinite;
 }
 
 .pinned-app-item.drag-over {
-  transform: scale(1.05);
+  transform: translateY(-2px) scale(1.06);
+}
+
+@keyframes pinnedDragFloat {
+  0% {
+    transform: translateY(-6px) scale(1.12);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.12);
+  }
+  100% {
+    transform: translateY(-6px) scale(1.12);
+  }
 }
 
 .pinned-app-link {
@@ -1379,11 +1424,25 @@ body {
   height: 48px;
   border-radius: var(--radius-md);
   background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-normal);
   overflow: hidden;
+}
+
+.pinned-app-item.dragging .pinned-app-icon {
+  background: var(--glass-bg-hover);
+  border-color: var(--accent-gold);
+  transform: scale(1.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.pinned-app-item.drag-over .pinned-app-icon {
+  background: var(--glass-bg-hover);
+  border-style: dashed;
+  border-color: var(--accent-gold);
 }
 
 .pinned-app-icon img {
@@ -1413,31 +1472,162 @@ body {
   text-overflow: ellipsis;
 }
 
-.pinned-app-remove {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  background: #ff6b6b;
+/* Right-click Context Menu for Pinned Apps */
+.pinned-app-context-menu {
+  position: fixed;
+  z-index: 10000;
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  padding: var(--spacing-xs);
+  min-width: 140px;
+  opacity: 0;
+  transform: scale(0.8) translateY(-10px);
+  transform-origin: top left;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pinned-app-context-menu.active {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
   border: none;
-  color: white;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.9rem;
   cursor: pointer;
-  display: none;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.context-menu-item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.context-menu-item .context-menu-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.context-menu-delete:hover {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6b6b;
+}
+
+/* Delete Confirmation Modal */
+.delete-confirm-modal {
+  display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.delete-confirm-content {
+  background: rgba(30, 30, 50, 0.98);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 400px;
+  text-align: center;
+  animation: modalBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.delete-confirm-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  animation: warningPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.delete-confirm-content h3 {
+  font-size: 1.3rem;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+.delete-confirm-content p {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.delete-app-name {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.delete-confirm-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.delete-confirm-btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.pinned-app-item:hover .pinned-app-remove {
-  display: flex;
+.delete-confirm-btn.confirm {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: white;
 }
 
-.pinned-app-remove:hover {
-  transform: scale(1.1);
-  background: #ff5252;
+.delete-confirm-btn.confirm:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #e04848 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.delete-confirm-btn.cancel {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+}
+
+.delete-confirm-btn.cancel:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-2px);
 }
 
 .pinned-app-add {
@@ -1918,35 +2108,6 @@ body {
   color: var(--accent-gold);
 }
 
-/* Pinned App Edit Button */
-.pinned-app-edit {
-  position: absolute;
-  bottom: -6px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
-  background: #4a9eff;
-  border: none;
-  color: white;
-  font-size: 11px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  z-index: 2;
-}
-
-.pinned-app-item:hover .pinned-app-edit {
-  display: flex;
-}
-
-.pinned-app-edit:hover {
-  transform: scale(1.1);
-  background: #2d7fe0;
-}
-
 /* Custom Background List */
 .custom-bg-list {
   display: flex;
@@ -2009,48 +2170,25 @@ body {
   font-style: italic;
 }
 
-/* Todo Position Styles */
-.main-container.todo-right,
-.main-container.todo-left {
-  position: relative;
+/* Container Width Styles */
+.main-container.container-narrow {
+  max-width: 1400px;
 }
 
-.todo-card.todo-position-right {
-  position: fixed;
-  top: var(--spacing-xl);
-  right: var(--spacing-xl);
-  width: 320px;
-  max-height: calc(100vh - 2 * var(--spacing-xl));
-  overflow-y: auto;
-  z-index: 100;
-  animation: slideInRight 0.5s ease-out;
+.main-container.container-medium {
+  max-width: 1600px;
 }
 
-.todo-card.todo-position-left {
-  position: fixed;
-  top: var(--spacing-xl);
-  left: var(--spacing-xl);
-  width: 320px;
-  max-height: calc(100vh - 2 * var(--spacing-xl));
-  overflow-y: auto;
-  z-index: 100;
-  animation: slideInLeft 0.5s ease-out;
+.main-container.container-wide {
+  max-width: 1800px;
 }
 
-.todo-card.todo-position-bottom {
-  width: 100%;
-  margin-top: var(--spacing-xl);
-  grid-column: 1 / -1; /* Span full width of grid */
+.main-container.container-full {
+  max-width: 98%;
 }
 
-/* Adjust main container when todo is on right */
-.main-container.todo-right .content-grid {
-  margin-right: 340px;
-}
-
-/* Adjust main container when todo is on left */
-.main-container.todo-left .content-grid {
-  margin-left: 340px;
+.main-container.container-custom {
+  max-width: var(--custom-container-width, 70%);
 }
 
 /* Custom interval group */
@@ -2058,28 +2196,63 @@ body {
   margin-top: var(--spacing-sm);
 }
 
+/* Custom width group */
+.custom-width-group {
+  margin-top: var(--spacing-sm);
+}
+
+.custom-width-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.custom-width-slider input[type="range"] {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--glass-bg);
+  border-radius: 3px;
+  outline: none;
+}
+
+.custom-width-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.custom-width-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--accent-gold);
+}
+
+.custom-width-slider input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+}
+
+.custom-width-value {
+  min-width: 45px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--accent-gold);
+}
+
 /* Setting hint */
 .setting-hint {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: var(--spacing-xs);
-}
-
-/* Responsive adjustments for todo position */
-@media (max-width: 1200px) {
-  .todo-card.todo-position-right,
-  .todo-card.todo-position-left {
-    position: relative;
-    top: auto;
-    right: auto;
-    left: auto;
-    width: 100%;
-    max-height: none;
-  }
-
-  .main-container.todo-right .content-grid,
-  .main-container.todo-left .content-grid {
-    margin-right: 0;
-    margin-left: 0;
-  }
 }

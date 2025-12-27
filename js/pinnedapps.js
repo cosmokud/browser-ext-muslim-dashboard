@@ -25,6 +25,16 @@ class PinnedAppsManager {
     this.editUrlInput = document.getElementById("editPinnedAppUrl");
     this.editIdInput = document.getElementById("editPinnedAppId");
 
+    // Delete confirmation modal elements
+    this.deleteModal = document.getElementById("deleteConfirmModal");
+    this.deleteAppName = document.getElementById("deleteAppName");
+    this.confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    this.cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+    this.pendingDeleteId = null;
+
+    // Context menu element
+    this.contextMenu = null;
+
     this.init();
   }
 
@@ -33,8 +43,139 @@ class PinnedAppsManager {
    */
   init() {
     this.loadApps();
+    this.createContextMenu();
     this.bindEvents();
     this.render();
+  }
+
+  /**
+   * Create context menu element
+   */
+  createContextMenu() {
+    this.contextMenu = document.createElement("div");
+    this.contextMenu.className = "pinned-app-context-menu";
+    this.contextMenu.innerHTML = `
+      <button class="context-menu-item context-menu-edit">
+        <span class="context-menu-icon">✏️</span>
+        <span>Edit</span>
+      </button>
+      <button class="context-menu-item context-menu-delete">
+        <span class="context-menu-icon">🗑️</span>
+        <span>Delete</span>
+      </button>
+    `;
+    document.body.appendChild(this.contextMenu);
+
+    // Context menu item click handlers
+    this.contextMenu
+      .querySelector(".context-menu-edit")
+      .addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const appId = parseInt(this.contextMenu.dataset.appId);
+        this.hideContextMenu();
+        if (appId) this.showEditModal(appId);
+      });
+
+    this.contextMenu
+      .querySelector(".context-menu-delete")
+      .addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const appId = parseInt(this.contextMenu.dataset.appId);
+        this.hideContextMenu();
+        if (appId) this.showDeleteConfirmation(appId);
+      });
+
+    // Close context menu on outside click
+    document.addEventListener("click", (e) => {
+      if (!this.contextMenu.contains(e.target)) {
+        this.hideContextMenu();
+      }
+    });
+
+    // Close context menu on escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.hideContextMenu();
+      }
+    });
+
+    // Close context menu on scroll
+    document.addEventListener(
+      "scroll",
+      () => {
+        this.hideContextMenu();
+      },
+      true
+    );
+  }
+
+  /**
+   * Show context menu at position
+   */
+  showContextMenu(x, y, appId) {
+    this.contextMenu.dataset.appId = appId;
+
+    // Position the menu
+    this.contextMenu.style.left = x + "px";
+    this.contextMenu.style.top = y + "px";
+
+    // Show menu with animation
+    this.contextMenu.classList.add("active");
+
+    // Adjust position if menu goes off screen
+    const rect = this.contextMenu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+      this.contextMenu.style.left = x - rect.width + "px";
+    }
+    if (rect.bottom > window.innerHeight) {
+      this.contextMenu.style.top = y - rect.height + "px";
+    }
+  }
+
+  /**
+   * Hide context menu
+   */
+  hideContextMenu() {
+    this.contextMenu.classList.remove("active");
+    delete this.contextMenu.dataset.appId;
+  }
+
+  /**
+   * Show delete confirmation modal
+   */
+  showDeleteConfirmation(appId) {
+    const app = this.apps.find((a) => a.id === appId);
+    if (!app) return;
+
+    this.pendingDeleteId = appId;
+    if (this.deleteAppName) {
+      this.deleteAppName.textContent = app.name;
+    }
+    if (this.deleteModal) {
+      this.deleteModal.classList.add("active");
+    }
+  }
+
+  /**
+   * Hide delete confirmation modal
+   */
+  hideDeleteConfirmation() {
+    if (this.deleteModal) {
+      this.deleteModal.classList.remove("active");
+    }
+    this.pendingDeleteId = null;
+  }
+
+  /**
+   * Confirm delete action
+   */
+  confirmDelete() {
+    if (this.pendingDeleteId) {
+      this.removeApp(this.pendingDeleteId);
+    }
+    this.hideDeleteConfirmation();
   }
 
   /**
@@ -78,7 +219,9 @@ class PinnedAppsManager {
 
     // Edit form submit
     if (this.editForm) {
-      this.editForm.addEventListener("submit", (e) => this.handleEditFormSubmit(e));
+      this.editForm.addEventListener("submit", (e) =>
+        this.handleEditFormSubmit(e)
+      );
     }
 
     // Close edit modal on outside click
@@ -95,6 +238,27 @@ class PinnedAppsManager {
       this.modal.addEventListener("click", (e) => {
         if (e.target === this.modal) {
           this.hideModal();
+        }
+      });
+    }
+
+    // Delete confirmation modal buttons
+    if (this.confirmDeleteBtn) {
+      this.confirmDeleteBtn.addEventListener("click", () =>
+        this.confirmDelete()
+      );
+    }
+    if (this.cancelDeleteBtn) {
+      this.cancelDeleteBtn.addEventListener("click", () =>
+        this.hideDeleteConfirmation()
+      );
+    }
+
+    // Close delete modal on outside click
+    if (this.deleteModal) {
+      this.deleteModal.addEventListener("click", (e) => {
+        if (e.target === this.deleteModal) {
+          this.hideDeleteConfirmation();
         }
       });
     }
@@ -179,7 +343,7 @@ class PinnedAppsManager {
       app.url = url;
       // Refresh favicon with new URL
       app.favicon = this.getFaviconUrl(url);
-      
+
       this.saveApps();
       this.render();
       this.hideEditModal();
@@ -327,12 +491,6 @@ class PinnedAppsManager {
         </div>
         <span class="pinned-app-name">${this.escapeHtml(app.name)}</span>
       </a>
-      <button class="pinned-app-edit" data-app-id="${
-        app.id
-      }" title="Edit">✏️</button>
-      <button class="pinned-app-remove" data-app-id="${
-        app.id
-      }" title="Remove">×</button>
     `;
 
     // Drag events
@@ -341,22 +499,11 @@ class PinnedAppsManager {
     el.addEventListener("dragover", (e) => this.handleDragOver(e));
     el.addEventListener("drop", (e) => this.handleDrop(e, app));
 
-    // Edit button
-    const editBtn = el.querySelector(".pinned-app-edit");
-    editBtn.addEventListener("click", (e) => {
+    // Right-click context menu
+    el.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.showEditModal(app.id);
-    });
-
-    // Remove button
-    const removeBtn = el.querySelector(".pinned-app-remove");
-    removeBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (confirm(`Remove "${app.name}"?`)) {
-        this.removeApp(app.id);
-      }
+      this.showContextMenu(e.clientX, e.clientY, app.id);
     });
 
     return el;
@@ -367,7 +514,7 @@ class PinnedAppsManager {
    */
   handleDragStart(e, app) {
     this.draggedItem = app;
-    e.target.classList.add("dragging");
+    e.currentTarget.classList.add("dragging");
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", app.id);
   }

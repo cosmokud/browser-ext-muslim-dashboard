@@ -129,7 +129,11 @@ class StorageManager {
       customBackgrounds: [], // up to 10 custom backgrounds (base64)
 
       // Todo settings
-      todoPosition: "right", // 'right', 'left', 'bottom'
+      todoPosition: "bottom", // only 'bottom' now (full width)
+
+      // Container width settings
+      containerWidth: "narrow", // 'narrow', 'medium', 'wide', 'full', 'custom'
+      containerWidthCustom: 70, // percentage for custom width (50-98)
 
       // Calendar settings
       calendarType: "hijri",
