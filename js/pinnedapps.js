@@ -9,6 +9,13 @@ class PinnedAppsManager {
     this.storage = storage;
     this.apps = [];
     this.draggedItem = null;
+    this.draggedElement = null;
+    this.dragGhost = null;
+    this.isDragging = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
     this.container = document.getElementById("pinnedAppsGrid");
     this.addBtn = document.getElementById("addPinnedAppBtn");
     this.modal = document.getElementById("pinnedAppModal");
@@ -35,6 +42,12 @@ class PinnedAppsManager {
     // Context menu element
     this.contextMenu = null;
 
+    // Bound event handlers for proper cleanup
+    this.boundHandleMouseMove = this.handleMouseMove.bind(this);
+    this.boundHandleMouseUp = this.handleMouseUp.bind(this);
+    this.boundHandleTouchMove = this.handleTouchMove.bind(this);
+    this.boundHandleTouchEnd = this.handleTouchEnd.bind(this);
+
     this.init();
   }
 
@@ -59,7 +72,7 @@ class PinnedAppsManager {
         <span class="context-menu-icon">✏️</span>
         <span>Edit</span>
       </button>
-      <button class="context-menu-item context-menu-delete">
+      <button class="context-menu-item context-menu-delete">card todo-card
         <span class="context-menu-icon">🗑️</span>
         <span>Delete</span>
       </button>
@@ -469,7 +482,6 @@ class PinnedAppsManager {
   createAppElement(app) {
     const el = document.createElement("div");
     el.className = "pinned-app-item";
-    el.draggable = true;
     el.dataset.appId = app.id;
 
     const faviconUrl = app.favicon || this.getFaviconUrl(app.url);
@@ -482,7 +494,7 @@ class PinnedAppsManager {
         <div class="pinned-app-icon">
           ${
             faviconUrl
-              ? `<img src="${faviconUrl}" alt="${app.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`
+              ? `<img src="${faviconUrl}" alt="${app.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" draggable="false">`
               : ""
           }
           <span class="pinned-app-fallback" style="${
@@ -493,11 +505,21 @@ class PinnedAppsManager {
       </a>
     `;
 
-    // Drag events
-    el.addEventListener("dragstart", (e) => this.handleDragStart(e, app));
-    el.addEventListener("dragend", () => this.handleDragEnd());
-    el.addEventListener("dragover", (e) => this.handleDragOver(e));
-    el.addEventListener("drop", (e) => this.handleDrop(e, app));
+    // Prevent link drag
+    const link = el.querySelector(".pinned-app-link");
+    if (link) {
+      link.addEventListener("dragstart", (e) => e.preventDefault());
+    }
+
+    // Mouse-based custom drag (desktop)
+    el.addEventListener("mousedown", (e) => this.handleDragStart(e, app, el));
+
+    // Touch-based drag (mobile)
+    el.addEventListener(
+      "touchstart",
+      (e) => this.handleTouchStart(e, app, el),
+      { passive: false }
+    );
 
     // Right-click context menu
     el.addEventListener("contextmenu", (e) => {
@@ -510,9 +532,321 @@ class PinnedAppsManager {
   }
 
   /**
-   * Handle drag start
+   * Create drag ghost element (Android-like circular icon)
    */
-  handleDragStart(e, app) {
+  createDragGhost(app, sourceElement) {
+    const ghost = document.createElement("div");
+    ghost.className = "pinned-app-drag-ghost";
+
+    const iconEl = sourceElement.querySelector(".pinned-app-icon");
+    const imgEl = iconEl?.querySelector("img");
+    const fallbackEl = iconEl?.querySelector(".pinned-app-fallback");
+
+    if (imgEl && imgEl.style.display !== "none") {
+      const imgClone = imgEl.cloneNode(true);
+      imgClone.draggable = false;
+      ghost.appendChild(imgClone);
+    } else if (fallbackEl) {
+      const fallbackClone = fallbackEl.cloneNode(true);
+      fallbackClone.style.display = "flex";
+      ghost.appendChild(fallbackClone);
+    } else {
+      ghost.textContent = app.name.charAt(0).toUpperCase();
+    }
+
+    document.body.appendChild(ghost);
+    return ghost;
+  }
+
+  /**
+   * Handle mouse-based drag start
+   */
+  handleDragStart(e, app, el) {
+    // Only left mouse button
+    if (e.button !== 0) return;
+
+    // Don't start drag if clicking on a link for navigation
+    // But allow drag to start after a small move
+
+    this.startX = e.clientX;
+    this.startY = e.clientY;
+    this.currentX = e.clientX;
+    this.currentY = e.clientY;
+    this.draggedItem = app;
+    this.draggedElement = el;
+    this.isDragging = false;
+
+    document.addEventListener("mousemove", this.boundHandleMouseMove);
+    document.addEventListener("mouseup", this.boundHandleMouseUp);
+  }
+
+  /**
+   * Handle mouse move during drag
+   */
+  handleMouseMove(e) {
+    e.preventDefault();
+
+    const dx = e.clientX - this.startX;
+    const dy = e.clientY - this.startY;
+
+    // Start dragging after threshold (5px movement)
+    if (!this.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+      this.isDragging = true;
+      this.startDragVisuals();
+    }
+
+    if (this.isDragging) {
+      this.currentX = e.clientX;
+      this.currentY = e.clientY;
+      this.updateDragPosition();
+      this.checkDropTarget(e.clientX, e.clientY);
+    }
+  }
+
+  /**
+   * Handle mouse up (end drag)
+   */
+  handleMouseUp(e) {
+    document.removeEventListener("mousemove", this.boundHandleMouseMove);
+    document.removeEventListener("mouseup", this.boundHandleMouseUp);
+
+    if (this.isDragging) {
+      e.preventDefault();
+      this.endDrag();
+    }
+
+    this.isDragging = false;
+    this.draggedItem = null;
+    this.draggedElement = null;
+  }
+
+  /**
+   * Handle touch start
+   */
+  handleTouchStart(e, app, el) {
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    this.startX = touch.clientX;
+    this.startY = touch.clientY;
+    this.currentX = touch.clientX;
+    this.currentY = touch.clientY;
+    this.draggedItem = app;
+    this.draggedElement = el;
+    this.isDragging = false;
+
+    document.addEventListener("touchmove", this.boundHandleTouchMove, {
+      passive: false,
+    });
+    document.addEventListener("touchend", this.boundHandleTouchEnd);
+    document.addEventListener("touchcancel", this.boundHandleTouchEnd);
+  }
+
+  /**
+   * Handle touch move
+   */
+  handleTouchMove(e) {
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - this.startX;
+    const dy = touch.clientY - this.startY;
+
+    if (!this.isDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      this.isDragging = true;
+      e.preventDefault();
+      this.startDragVisuals();
+    }
+
+    if (this.isDragging) {
+      e.preventDefault();
+      this.currentX = touch.clientX;
+      this.currentY = touch.clientY;
+      this.updateDragPosition();
+      this.checkDropTarget(touch.clientX, touch.clientY);
+    }
+  }
+
+  /**
+   * Handle touch end
+   */
+  handleTouchEnd(e) {
+    document.removeEventListener("touchmove", this.boundHandleTouchMove);
+    document.removeEventListener("touchend", this.boundHandleTouchEnd);
+    document.removeEventListener("touchcancel", this.boundHandleTouchEnd);
+
+    if (this.isDragging) {
+      this.endDrag();
+    }
+
+    this.isDragging = false;
+    this.draggedItem = null;
+    this.draggedElement = null;
+  }
+
+  /**
+   * Start drag visuals
+   */
+  startDragVisuals() {
+    if (!this.draggedElement || !this.draggedItem) return;
+
+    // Create ghost
+    this.dragGhost = this.createDragGhost(
+      this.draggedItem,
+      this.draggedElement
+    );
+    this.updateDragPosition();
+
+    // Add dragging class to source element
+    this.draggedElement.classList.add("dragging");
+
+    // Prevent text selection
+    document.body.style.userSelect = "none";
+    document.body.style.webkitUserSelect = "none";
+  }
+
+  /**
+   * Update drag ghost position
+   */
+  updateDragPosition() {
+    if (!this.dragGhost) return;
+
+    this.dragGhost.style.left = `${this.currentX}px`;
+    this.dragGhost.style.top = `${this.currentY}px`;
+  }
+
+  /**
+   * Check what element we're hovering over and animate items
+   */
+  checkDropTarget(x, y) {
+    if (!this.draggedItem) return;
+
+    const items = this.container.querySelectorAll(
+      ".pinned-app-item:not(.dragging)"
+    );
+    let targetApp = null;
+    let targetElement = null;
+
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const distance = Math.sqrt(
+        Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+      );
+
+      // If we're within the item bounds or close to center
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        targetElement = item;
+        const appId = parseInt(item.dataset.appId);
+        targetApp = this.apps.find((a) => a.id === appId);
+      }
+    });
+
+    // Remove shift classes from all items first
+    items.forEach((item) => {
+      item.classList.remove("shift-left", "shift-right", "drag-over");
+    });
+
+    if (targetApp && targetElement && targetApp.id !== this.draggedItem.id) {
+      const draggedIndex = this.apps.findIndex(
+        (a) => a.id === this.draggedItem.id
+      );
+      const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
+
+      // Apply shift animations to items between dragged and target
+      items.forEach((item) => {
+        const appId = parseInt(item.dataset.appId);
+        const itemIndex = this.apps.findIndex((a) => a.id === appId);
+
+        if (draggedIndex < targetIndex) {
+          // Dragging right: items between should shift left
+          if (itemIndex > draggedIndex && itemIndex <= targetIndex) {
+            item.classList.add("shift-left");
+          }
+        } else {
+          // Dragging left: items between should shift right
+          if (itemIndex >= targetIndex && itemIndex < draggedIndex) {
+            item.classList.add("shift-right");
+          }
+        }
+      });
+
+      targetElement.classList.add("drag-over");
+      this.currentDropTarget = targetApp;
+    } else {
+      this.currentDropTarget = null;
+    }
+  }
+
+  /**
+   * End drag and perform reorder
+   */
+  endDrag() {
+    // Remove ghost
+    if (this.dragGhost) {
+      this.dragGhost.classList.add("dropping");
+      setTimeout(() => {
+        if (this.dragGhost && this.dragGhost.parentNode) {
+          this.dragGhost.parentNode.removeChild(this.dragGhost);
+        }
+        this.dragGhost = null;
+      }, 200);
+    }
+
+    // Perform reorder if we have a drop target
+    if (
+      this.currentDropTarget &&
+      this.draggedItem &&
+      this.currentDropTarget.id !== this.draggedItem.id
+    ) {
+      const draggedIndex = this.apps.findIndex(
+        (a) => a.id === this.draggedItem.id
+      );
+      const targetIndex = this.apps.findIndex(
+        (a) => a.id === this.currentDropTarget.id
+      );
+
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        // Remove dragged item
+        const [removed] = this.apps.splice(draggedIndex, 1);
+        // Insert at new position
+        this.apps.splice(targetIndex, 0, removed);
+        // Update order
+        this.apps.forEach((app, index) => {
+          app.order = index;
+        });
+
+        this.saveApps();
+        this.render();
+      }
+    }
+
+    // Cleanup
+    document.querySelectorAll(".pinned-app-item").forEach((item) => {
+      item.classList.remove(
+        "dragging",
+        "drag-over",
+        "shift-left",
+        "shift-right"
+      );
+    });
+
+    document.body.style.userSelect = "";
+    document.body.style.webkitUserSelect = "";
+
+    this.currentDropTarget = null;
+  }
+
+  /**
+   * Handle drag start (legacy - kept for compatibility)
+   */
+  handleLegacyDragStart(e, app) {
     this.draggedItem = app;
     e.currentTarget.classList.add("dragging");
     e.dataTransfer.effectAllowed = "move";
@@ -520,17 +854,22 @@ class PinnedAppsManager {
   }
 
   /**
-   * Handle drag end
+   * Handle drag end (legacy)
    */
   handleDragEnd() {
     this.draggedItem = null;
     document.querySelectorAll(".pinned-app-item").forEach((item) => {
-      item.classList.remove("dragging", "drag-over");
+      item.classList.remove(
+        "dragging",
+        "drag-over",
+        "shift-left",
+        "shift-right"
+      );
     });
   }
 
   /**
-   * Handle drag over
+   * Handle drag over (legacy)
    */
   handleDragOver(e) {
     e.preventDefault();
@@ -547,7 +886,7 @@ class PinnedAppsManager {
   }
 
   /**
-   * Handle drop
+   * Handle drop (legacy)
    */
   handleDrop(e, targetApp) {
     e.preventDefault();
