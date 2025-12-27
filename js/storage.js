@@ -1,6 +1,7 @@
 /**
  * Storage Manager
  * Handles localStorage operations for the Muslim Dashboard
+ * Enhanced with settings for visibility, pinned apps, calendar, quotes pagination
  */
 
 class StorageManager {
@@ -77,18 +78,47 @@ class StorageManager {
       // Prayer settings
       calculationMethod: "MWL",
       asrMethod: "Standard",
+      highLatMethod: "NightMiddle",
+      midnightMethod: "Standard",
+
+      // Custom angles (used when calculationMethod is "Custom")
+      customFajrAngle: 18,
+      customIshaAngle: 17,
+      customIshaMinutes: false, // If true, customIshaAngle is minutes after Maghrib
+
+      // Duha settings
+      duhaOffset: 20, // minutes after sunrise
+
+      // Time adjustments (in minutes)
       adjustments: {
         fajr: 0,
         sunrise: 0,
+        duha: 0,
         dhuhr: 0,
         asr: 0,
         maghrib: 0,
         isha: 0,
+        midnight: 0,
+        qiyam: 0,
+      },
+
+      // Prayer visibility settings
+      prayerVisibility: {
+        fajr: true,
+        sunrise: true,
+        duha: false,
+        dhuhr: true,
+        asr: true,
+        maghrib: true,
+        isha: true,
+        midnight: false,
+        qiyam: false,
       },
 
       // Quote settings
       useDefaultQuotes: true,
       useUserQuotes: true,
+      quotesPerPage: 10,
 
       // Background settings
       bgInterval: 60, // minutes
@@ -102,6 +132,9 @@ class StorageManager {
 
       // UI settings
       timeFormat: "24h",
+
+      // Pinned Apps settings
+      pinnedApps: [],
     };
   }
 
@@ -111,7 +144,22 @@ class StorageManager {
   getSettings() {
     const defaults = this.getDefaultSettings();
     const stored = this.get("settings", {});
-    return { ...defaults, ...stored };
+
+    // Deep merge for nested objects
+    const merged = { ...defaults };
+    for (const key in stored) {
+      if (
+        typeof stored[key] === "object" &&
+        stored[key] !== null &&
+        !Array.isArray(stored[key])
+      ) {
+        merged[key] = { ...defaults[key], ...stored[key] };
+      } else {
+        merged[key] = stored[key];
+      }
+    }
+
+    return merged;
   }
 
   /**
@@ -161,6 +209,103 @@ class StorageManager {
    */
   saveLastLocation(location) {
     return this.set("lastLocation", location);
+  }
+
+  /**
+   * Get pinned apps
+   */
+  getPinnedApps() {
+    return this.get("pinnedApps", []);
+  }
+
+  /**
+   * Save pinned apps
+   */
+  savePinnedApps(apps) {
+    return this.set("pinnedApps", apps);
+  }
+
+  /**
+   * Add a pinned app
+   */
+  addPinnedApp(app) {
+    const apps = this.getPinnedApps();
+    apps.push({
+      id: Date.now(),
+      name: app.name,
+      url: app.url,
+      favicon: app.favicon || null,
+      order: apps.length,
+    });
+    return this.savePinnedApps(apps);
+  }
+
+  /**
+   * Remove a pinned app
+   */
+  removePinnedApp(appId) {
+    let apps = this.getPinnedApps();
+    apps = apps.filter((app) => app.id !== appId);
+    // Reorder
+    apps.forEach((app, index) => {
+      app.order = index;
+    });
+    return this.savePinnedApps(apps);
+  }
+
+  /**
+   * Reorder pinned apps
+   */
+  reorderPinnedApps(orderedIds) {
+    const apps = this.getPinnedApps();
+    const reordered = orderedIds
+      .map((id, index) => {
+        const app = apps.find((a) => a.id === id);
+        if (app) {
+          app.order = index;
+          return app;
+        }
+        return null;
+      })
+      .filter(Boolean);
+    return this.savePinnedApps(reordered);
+  }
+
+  /**
+   * Export user quotes as JSON
+   */
+  exportUserQuotes() {
+    const quotes = this.getUserQuotes();
+    return JSON.stringify(quotes, null, 2);
+  }
+
+  /**
+   * Import user quotes from JSON
+   */
+  importUserQuotes(jsonString) {
+    try {
+      const quotes = JSON.parse(jsonString);
+      if (Array.isArray(quotes)) {
+        // Validate structure
+        const validQuotes = quotes
+          .filter((q) => typeof q.text === "string" && q.text.trim() !== "")
+          .map((q) => ({
+            id: q.id || Date.now() + Math.random(),
+            text: q.text,
+            source: q.source || "",
+            isArabic: q.isArabic || false,
+          }));
+
+        // Merge with existing quotes
+        const existing = this.getUserQuotes();
+        const merged = [...existing, ...validQuotes];
+        this.saveUserQuotes(merged);
+        return { success: true, count: validQuotes.length };
+      }
+      return { success: false, error: "Invalid format: expected an array" };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
   }
 }
 

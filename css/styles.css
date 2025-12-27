@@ -1317,3 +1317,585 @@ body {
 .toast.info {
   border-left: 4px solid var(--accent-gold);
 }
+
+/* ========================================
+   NEW ENHANCED STYLES
+   ======================================== */
+
+/* Pinned Apps Section */
+.pinned-apps-section {
+  margin-bottom: var(--spacing-xl);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.pinned-apps-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  justify-content: center;
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  min-height: 80px;
+}
+
+.pinned-app-item {
+  position: relative;
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: grab;
+  transition: all var(--transition-normal);
+}
+
+.pinned-app-item:active {
+  cursor: grabbing;
+}
+
+.pinned-app-item.dragging {
+  opacity: 0.5;
+  transform: scale(1.1);
+}
+
+.pinned-app-item.drag-over {
+  transform: scale(1.05);
+}
+
+.pinned-app-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  gap: var(--spacing-xs);
+}
+
+.pinned-app-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+  overflow: hidden;
+}
+
+.pinned-app-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.pinned-app-fallback {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.pinned-app-item:hover .pinned-app-icon {
+  transform: scale(1.1);
+  background: var(--glass-bg-hover);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.pinned-app-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  max-width: 70px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pinned-app-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: #ff6b6b;
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.pinned-app-item:hover .pinned-app-remove {
+  display: flex;
+}
+
+.pinned-app-remove:hover {
+  transform: scale(1.1);
+  background: #ff5252;
+}
+
+.pinned-app-add {
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.pinned-app-add .add-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 2px dashed var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  transition: all var(--transition-normal);
+}
+
+.pinned-app-add:hover .add-icon {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  transform: scale(1.05);
+}
+
+.pinned-app-add .add-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Calendar Card */
+.calendar-card {
+  min-width: 320px;
+}
+
+.calendar-toggle-btns {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.calendar-type-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.calendar-type-btn:hover,
+.calendar-type-btn.active {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+}
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.calendar-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.calendar-nav-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--accent-gold);
+}
+
+.calendar-month-year {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.calendar-month {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.calendar-year {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-xs);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-xs);
+  text-align: center;
+}
+
+.calendar-day {
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.calendar-day:hover:not(.empty) {
+  background: var(--glass-bg);
+}
+
+.calendar-day.empty {
+  cursor: default;
+}
+
+.calendar-day.today {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(26, 95, 74, 0.4);
+}
+
+.calendar-day.friday {
+  color: var(--accent-gold);
+}
+
+.calendar-today-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.hijri-date {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.gregorian-date {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Location refresh button */
+.location-refresh-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.location-refresh-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: rotate(180deg);
+}
+
+/* Detect location button in settings */
+.detect-location-btn {
+  margin-top: var(--spacing-sm);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  border: none;
+}
+
+.detect-location-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
+}
+
+/* Prayer icon in list */
+.prayer-icon {
+  margin-right: var(--spacing-xs);
+}
+
+/* Visibility grid in settings */
+.visibility-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+/* Custom angles group */
+.custom-angles-group {
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.isha-custom-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.isha-custom-row .setting-input {
+  width: 100px;
+}
+
+/* Setting hint text */
+.setting-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: var(--spacing-xs);
+  font-style: italic;
+}
+
+/* Import/Export buttons */
+.import-export-btns {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* Quotes list styles with pagination */
+.quotes-empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-muted);
+}
+
+.quotes-empty-hint {
+  font-size: 0.85rem;
+  margin-top: var(--spacing-sm);
+  opacity: 0.7;
+}
+
+.quote-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  transition: all var(--transition-fast);
+}
+
+.quote-item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.quote-item-number {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.quote-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-item-text {
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-xs);
+  word-break: break-word;
+}
+
+.quote-item-text.arabic-text {
+  font-family: var(--font-arabic);
+  font-size: 1.1rem;
+  direction: rtl;
+  text-align: right;
+}
+
+.quote-item-source {
+  font-size: 0.8rem;
+  color: var(--accent-gold);
+}
+
+.quote-item-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.quote-item-delete:hover {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+/* Pagination */
+.quotes-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 32px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+}
+
+.pagination-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  color: var(--text-muted);
+  padding: 0 var(--spacing-xs);
+}
+
+/* Modal large */
+.modal-large {
+  max-width: 700px;
+}
+
+/* Responsive adjustments for new elements */
+@media (max-width: 768px) {
+  .pinned-apps-grid {
+    gap: var(--spacing-sm);
+  }
+
+  .pinned-app-item {
+    width: 60px;
+  }
+
+  .pinned-app-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pinned-app-icon img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .visibility-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .calendar-weekdays,
+  .calendar-days {
+    font-size: 0.7rem;
+  }
+
+  .calendar-day {
+    padding: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .pinned-app-item {
+    width: 55px;
+  }
+
+  .pinned-app-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pinned-app-name {
+    font-size: 0.65rem;
+  }
+
+  .visibility-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .isha-custom-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .isha-custom-row .setting-input {
+    width: 100%;
+  }
+
+  .import-export-btns {
+    flex-direction: column;
+  }
+
+  .import-export-btns .setting-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

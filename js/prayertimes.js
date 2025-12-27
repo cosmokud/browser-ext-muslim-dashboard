@@ -1,6 +1,7 @@
 /**
  * Prayer Times Manager
- * Handles prayer time calculations and display
+ * Handles prayer time calculations, display, and visibility
+ * Supports 9 prayer times with user-controlled visibility
  */
 
 class PrayerTimesManager {
@@ -10,20 +11,27 @@ class PrayerTimesManager {
     this.times = {};
     this.location = null;
     this.countdownInterval = null;
+    this.locationPermissionRequested = false;
 
-    // Prayer elements
-    this.prayerElements = {
-      fajr: document.getElementById("fajrTime"),
-      sunrise: document.getElementById("sunriseTime"),
-      dhuhr: document.getElementById("dhuhrTime"),
-      asr: document.getElementById("asrTime"),
-      maghrib: document.getElementById("maghribTime"),
-      isha: document.getElementById("ishaTime"),
-    };
+    // All available prayer times
+    this.allPrayers = [
+      { key: "fajr", name: "Fajr", icon: "🌙" },
+      { key: "sunrise", name: "Sunrise", icon: "🌅" },
+      { key: "duha", name: "Duha", icon: "☀️" },
+      { key: "dhuhr", name: "Dhuhr", icon: "🌤️" },
+      { key: "asr", name: "Asr", icon: "⛅" },
+      { key: "maghrib", name: "Maghrib", icon: "🌇" },
+      { key: "isha", name: "Isha", icon: "🌙" },
+      { key: "midnight", name: "Midnight", icon: "🕛" },
+      { key: "qiyam", name: "Qiyam", icon: "🌃" },
+    ];
 
+    // DOM elements
+    this.prayerList = document.getElementById("prayerList");
     this.locationText = document.getElementById("locationText");
     this.nextPrayerName = document.getElementById("nextPrayerName");
     this.nextPrayerCountdown = document.getElementById("nextPrayerCountdown");
+    this.locationBtn = document.getElementById("detectLocationBtn");
   }
 
   /**
@@ -32,15 +40,142 @@ class PrayerTimesManager {
   async init() {
     const settings = this.storage.getSettings();
 
-    // Set calculation method
-    this.prayTimes.setMethod(settings.calculationMethod);
-    this.prayTimes.setAsrMethod(settings.asrMethod);
+    // Configure prayer times calculator
+    this.configureCalculator(settings);
 
-    // Set adjustments
-    this.prayTimes.tune(settings.adjustments);
+    // Render prayer list based on visibility settings
+    this.renderPrayerList(settings.prayerVisibility);
+
+    // Bind location button
+    if (this.locationBtn) {
+      this.locationBtn.addEventListener("click", () => this.requestLocation());
+    }
 
     // Get location
     await this.getLocation();
+  }
+
+  /**
+   * Configure the prayer times calculator
+   */
+  configureCalculator(settings) {
+    // Set calculation method
+    this.prayTimes.setMethod(settings.calculationMethod);
+
+    // Set custom angles if using Custom method
+    if (settings.calculationMethod === "Custom") {
+      this.prayTimes.setFajrAngle(settings.customFajrAngle);
+      this.prayTimes.setIshaAngle(
+        settings.customIshaAngle,
+        settings.customIshaMinutes
+      );
+    }
+
+    // Set Asr method
+    this.prayTimes.setAsrMethod(settings.asrMethod);
+
+    // Set higher latitude method
+    this.prayTimes.setHighLatMethod(settings.highLatMethod);
+
+    // Set midnight method
+    this.prayTimes.setMidnightMethod(settings.midnightMethod);
+
+    // Set Duha offset
+    this.prayTimes.setDuhaOffset(settings.duhaOffset);
+
+    // Set adjustments
+    this.prayTimes.tune(settings.adjustments);
+  }
+
+  /**
+   * Render prayer list based on visibility
+   */
+  renderPrayerList(visibility) {
+    if (!this.prayerList) return;
+
+    this.prayerList.innerHTML = "";
+
+    this.allPrayers.forEach((prayer) => {
+      if (visibility[prayer.key]) {
+        const prayerItem = document.createElement("div");
+        prayerItem.className = "prayer-item";
+        prayerItem.dataset.prayer = prayer.key;
+        prayerItem.innerHTML = `
+          <span class="prayer-name">
+            <span class="prayer-icon">${prayer.icon}</span>
+            ${prayer.name}
+          </span>
+          <span class="prayer-time" id="${prayer.key}Time">--:--</span>
+        `;
+        this.prayerList.appendChild(prayerItem);
+      }
+    });
+  }
+
+  /**
+   * Request location permission explicitly
+   */
+  async requestLocation() {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    if (this.locationText) {
+      this.locationText.textContent = "Requesting permission...";
+    }
+
+    try {
+      // Request with high accuracy for desktop
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        });
+      });
+
+      this.location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        city: "Current Location",
+      };
+
+      // Try to get city name
+      await this.reverseGeocode(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+
+      // Save location
+      this.storage.saveLastLocation(this.location);
+
+      this.updatePrayerTimes();
+    } catch (error) {
+      console.error("Geolocation error:", error);
+
+      let message = "Could not get location. ";
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          message += "Please allow location access in your browser settings.";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          message += "Location information unavailable.";
+          break;
+        case error.TIMEOUT:
+          message += "Location request timed out.";
+          break;
+        default:
+          message += "Unknown error occurred.";
+      }
+
+      alert(message);
+
+      // Fall back to stored or default location
+      if (!this.location) {
+        this.useDefaultLocation();
+      }
+    }
   }
 
   /**
@@ -49,6 +184,7 @@ class PrayerTimesManager {
   async getLocation() {
     const settings = this.storage.getSettings();
 
+    // Check for manual location first
     if (
       settings.locationMethod === "manual" &&
       settings.latitude &&
@@ -63,66 +199,69 @@ class PrayerTimesManager {
       return;
     }
 
-    // Try to get from storage first
+    // Try to get from storage
     const lastLocation = this.storage.getLastLocation();
     if (lastLocation) {
       this.location = lastLocation;
       this.updatePrayerTimes();
     }
 
-    // Try to get current location
-    if (navigator.geolocation) {
-      this.locationText.textContent = "Detecting...";
+    // Try to get current location if auto
+    if (settings.locationMethod === "auto" && navigator.geolocation) {
+      if (this.locationText) {
+        this.locationText.textContent = "Detecting...";
+      }
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.location = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            city: "Current Location",
-          };
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 600000, // 10 minutes
+          });
+        });
 
-          // Try to get city name
-          this.reverseGeocode(
-            position.coords.latitude,
-            position.coords.longitude
-          );
+        this.location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          city: "Current Location",
+        };
 
-          // Save location
-          this.storage.saveLastLocation(this.location);
+        // Try to get city name
+        await this.reverseGeocode(
+          position.coords.latitude,
+          position.coords.longitude
+        );
 
-          this.updatePrayerTimes();
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
+        // Save location
+        this.storage.saveLastLocation(this.location);
 
-          // Use default location (Mecca) if no location available
-          if (!this.location) {
-            this.location = {
-              latitude: 21.4225,
-              longitude: 39.8262,
-              city: "Mecca (Default)",
-            };
-            this.updatePrayerTimes();
-          }
+        this.updatePrayerTimes();
+      } catch (error) {
+        console.warn("Auto geolocation failed:", error.message);
 
+        // Use stored location or default
+        if (!this.location) {
+          this.useDefaultLocation();
+        } else if (this.locationText) {
           this.locationText.textContent = this.location.city;
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 600000, // 10 minutes
         }
-      );
+      }
     } else if (!this.location) {
-      // Default to Mecca
-      this.location = {
-        latitude: 21.4225,
-        longitude: 39.8262,
-        city: "Mecca (Default)",
-      };
-      this.updatePrayerTimes();
+      this.useDefaultLocation();
     }
+  }
+
+  /**
+   * Use default location (Mecca)
+   */
+  useDefaultLocation() {
+    this.location = {
+      latitude: 21.4225,
+      longitude: 39.8262,
+      city: "Mecca (Default)",
+    };
+    this.updatePrayerTimes();
   }
 
   /**
@@ -131,7 +270,12 @@ class PrayerTimesManager {
   async reverseGeocode(lat, lng) {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+        {
+          headers: {
+            "Accept-Language": "en",
+          },
+        }
       );
 
       if (response.ok) {
@@ -145,7 +289,9 @@ class PrayerTimesManager {
 
         if (city) {
           this.location.city = city;
-          this.locationText.textContent = city;
+          if (this.locationText) {
+            this.locationText.textContent = city;
+          }
           this.storage.saveLastLocation(this.location);
         }
       }
@@ -162,33 +308,38 @@ class PrayerTimesManager {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           cityName
-        )}&limit=1`
+        )}&limit=5`,
+        {
+          headers: {
+            "Accept-Language": "en",
+          },
+        }
       );
 
       if (response.ok) {
         const data = await response.json();
-        if (data.length > 0) {
-          return {
-            latitude: parseFloat(data[0].lat),
-            longitude: parseFloat(data[0].lon),
-            city: data[0].display_name.split(",")[0],
-          };
-        }
+        return data.map((result) => ({
+          latitude: parseFloat(result.lat),
+          longitude: parseFloat(result.lon),
+          city: result.display_name.split(",")[0],
+          fullName: result.display_name,
+        }));
       }
     } catch (e) {
       console.error("City search error:", e);
     }
 
-    return null;
+    return [];
   }
 
   /**
-   * Update prayer times
+   * Update prayer times display
    */
   updatePrayerTimes() {
     if (!this.location) return;
 
     const date = new Date();
+    const settings = this.storage.getSettings();
 
     // Get prayer times
     this.times = this.prayTimes.getTimes(
@@ -196,11 +347,11 @@ class PrayerTimesManager {
       [this.location.latitude, this.location.longitude],
       "auto",
       "auto",
-      "24h"
+      settings.timeFormat || "24h"
     );
 
-    // Update display
-    this.displayPrayerTimes();
+    // Display times
+    this.displayPrayerTimes(settings.prayerVisibility);
 
     // Update location text
     if (this.locationText) {
@@ -210,38 +361,53 @@ class PrayerTimesManager {
     // Start countdown
     this.startCountdown();
 
-    // Highlight current/next prayer
-    this.highlightPrayer();
+    // Highlight next prayer
+    this.highlightPrayer(settings.prayerVisibility);
   }
 
   /**
    * Display prayer times
    */
-  displayPrayerTimes() {
-    const prayers = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-
-    prayers.forEach((prayer) => {
-      if (this.prayerElements[prayer]) {
-        this.prayerElements[prayer].textContent = this.times[prayer] || "--:--";
+  displayPrayerTimes(visibility) {
+    this.allPrayers.forEach((prayer) => {
+      if (visibility[prayer.key]) {
+        const timeEl = document.getElementById(`${prayer.key}Time`);
+        if (timeEl) {
+          timeEl.textContent = this.times[prayer.key] || "--:--";
+        }
       }
     });
   }
 
   /**
-   * Highlight current and next prayer
+   * Highlight next prayer
    */
-  highlightPrayer() {
+  highlightPrayer(visibility) {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
-    const prayers = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-    const prayerTimes = prayers
+    // Get visible prayers with their times
+    const visiblePrayers = this.allPrayers
+      .filter((p) => visibility[p.key])
       .map((prayer) => {
-        const timeStr = this.times[prayer];
+        const timeStr = this.times[prayer.key];
         if (!timeStr || timeStr === "-----") return null;
 
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        return { name: prayer, minutes: hours * 60 + minutes };
+        const timeParts = timeStr.match(/(\d+):(\d+)/);
+        if (!timeParts) return null;
+
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+
+        // Handle AM/PM format
+        if (timeStr.includes("PM") && hours !== 12) hours += 12;
+        if (timeStr.includes("AM") && hours === 12) hours = 0;
+
+        return {
+          key: prayer.key,
+          name: prayer.name,
+          minutes: hours * 60 + minutes,
+        };
       })
       .filter(Boolean);
 
@@ -251,17 +417,17 @@ class PrayerTimesManager {
     });
 
     // Find next prayer
-    let nextPrayer = prayerTimes.find((p) => p.minutes > currentTime);
+    let nextPrayer = visiblePrayers.find((p) => p.minutes > currentTime);
 
-    // If no prayer found today, next is fajr tomorrow
-    if (!nextPrayer && prayerTimes.length > 0) {
-      nextPrayer = prayerTimes[0];
+    // If no prayer found today, next is first prayer tomorrow
+    if (!nextPrayer && visiblePrayers.length > 0) {
+      nextPrayer = visiblePrayers[0];
     }
 
     // Highlight next prayer
     if (nextPrayer) {
       const nextPrayerItem = document.querySelector(
-        `[data-prayer="${nextPrayer.name}"]`
+        `[data-prayer="${nextPrayer.key}"]`
       );
       if (nextPrayerItem) {
         nextPrayerItem.classList.add("next");
@@ -269,13 +435,13 @@ class PrayerTimesManager {
 
       // Update next prayer display
       if (this.nextPrayerName) {
-        this.nextPrayerName.textContent = this.capitalizeFirst(nextPrayer.name);
+        this.nextPrayerName.textContent = nextPrayer.name;
       }
     }
   }
 
   /**
-   * Start countdown to next prayer
+   * Start countdown timer
    */
   startCountdown() {
     if (this.countdownInterval) {
@@ -292,28 +458,45 @@ class PrayerTimesManager {
    * Update countdown display
    */
   updateCountdown() {
+    const settings = this.storage.getSettings();
+    const visibility = settings.prayerVisibility;
+
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const currentSeconds = now.getSeconds();
 
-    const prayers = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-    const prayerTimes = prayers
+    // Get visible prayers with their times
+    const visiblePrayers = this.allPrayers
+      .filter((p) => visibility[p.key])
       .map((prayer) => {
-        const timeStr = this.times[prayer];
+        const timeStr = this.times[prayer.key];
         if (!timeStr || timeStr === "-----") return null;
 
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        return { name: prayer, minutes: hours * 60 + minutes };
+        const timeParts = timeStr.match(/(\d+):(\d+)/);
+        if (!timeParts) return null;
+
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+
+        // Handle AM/PM format
+        if (timeStr.includes("PM") && hours !== 12) hours += 12;
+        if (timeStr.includes("AM") && hours === 12) hours = 0;
+
+        return {
+          key: prayer.key,
+          name: prayer.name,
+          minutes: hours * 60 + minutes,
+        };
       })
       .filter(Boolean);
 
     // Find next prayer
-    let nextPrayer = prayerTimes.find((p) => p.minutes > currentMinutes);
+    let nextPrayer = visiblePrayers.find((p) => p.minutes > currentMinutes);
     let isTomorrow = false;
 
-    // If no prayer found today, next is fajr tomorrow
-    if (!nextPrayer && prayerTimes.length > 0) {
-      nextPrayer = prayerTimes[0];
+    // If no prayer found today, next is first prayer tomorrow
+    if (!nextPrayer && visiblePrayers.length > 0) {
+      nextPrayer = visiblePrayers[0];
       isTomorrow = true;
     }
 
@@ -321,7 +504,6 @@ class PrayerTimesManager {
       let diffMinutes;
 
       if (isTomorrow) {
-        // Time until midnight + time from midnight to fajr
         diffMinutes = 24 * 60 - currentMinutes + nextPrayer.minutes;
       } else {
         diffMinutes = nextPrayer.minutes - currentMinutes;
@@ -342,8 +524,8 @@ class PrayerTimesManager {
       }
     }
 
-    // Highlight current prayer (just passed)
-    this.highlightPrayer();
+    // Update highlights
+    this.highlightPrayer(visibility);
   }
 
   /**
@@ -358,29 +540,28 @@ class PrayerTimesManager {
   /**
    * Update calculation settings
    */
-  updateSettings(method, asrMethod, adjustments) {
-    this.prayTimes.setMethod(method);
-    this.prayTimes.setAsrMethod(asrMethod);
-    this.prayTimes.tune(adjustments);
+  updateSettings(settings) {
+    this.configureCalculator(settings);
+    this.renderPrayerList(settings.prayerVisibility);
     this.updatePrayerTimes();
   }
 
   /**
    * Get current location
    */
-  getLocation() {
+  getCurrentLocation() {
     return this.location;
   }
 
   /**
-   * Utility: Capitalize first letter
+   * Get all prayer info
    */
-  capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  getAllPrayers() {
+    return this.allPrayers;
   }
 
   /**
-   * Utility: Pad with zero
+   * Pad number with zero
    */
   padZero(num) {
     return String(num).padStart(2, "0");

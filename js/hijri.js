@@ -293,6 +293,108 @@ class HijriDate {
       (e) => e.month === hijriDate.month && e.day === hijriDate.day
     );
   }
+
+  /**
+   * Get Hijri month name by month number (1-12)
+   * @param {number} month - Month number (1-12)
+   * @param {string} lang - Language (en/ar)
+   * @returns {string} Month name
+   */
+  getHijriMonthName(month, lang = "en") {
+    const index = Math.max(0, Math.min(11, month - 1));
+    return this.monthNames[lang][index];
+  }
+
+  /**
+   * Get number of days in a Hijri month
+   * Uses the tabular Islamic calendar (30-year cycle)
+   * @param {number} year - Hijri year
+   * @param {number} month - Hijri month (1-12)
+   * @returns {number} Number of days (29 or 30)
+   */
+  getHijriDaysInMonth(year, month) {
+    // Odd months have 30 days, even months have 29 days
+    // Exception: Month 12 has 30 days in leap years
+    if (month % 2 === 1) {
+      return 30; // Odd months: 30 days
+    } else if (month === 12) {
+      // Check if leap year (years 2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29 in 30-year cycle)
+      const leapYears = [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29];
+      const yearInCycle = ((year - 1) % 30) + 1;
+      return leapYears.includes(yearInCycle) ? 30 : 29;
+    } else {
+      return 29; // Even months (except 12): 29 days
+    }
+  }
+
+  /**
+   * Get first day of Hijri month (day of week: 0=Sunday, 6=Saturday)
+   * @param {number} year - Hijri year
+   * @param {number} month - Hijri month (1-12)
+   * @returns {number} Day of week (0-6)
+   */
+  getFirstDayOfHijriMonth(year, month) {
+    // Convert first day of Hijri month to Gregorian to get day of week
+    const jd = this.hijriToJulian(year, month, 1);
+    const gregDate = this.julianToGregorian(jd);
+    const date = new Date(gregDate.year, gregDate.month - 1, gregDate.day);
+    return date.getDay();
+  }
+
+  /**
+   * Convert Hijri date to Gregorian date object
+   * @param {number} year - Hijri year
+   * @param {number} month - Hijri month (1-12)
+   * @param {number} day - Hijri day
+   * @returns {Object} Gregorian date {year, month, day}
+   */
+  hijriToGregorian(year, month, day) {
+    const jd = this.hijriToJulian(year, month, day);
+    return this.julianToGregorian(jd);
+  }
+
+  /**
+   * Get Gregorian month name
+   * @param {number} month - Month number (1-12)
+   * @returns {string} Month name
+   */
+  getGregorianMonthName(month) {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    return monthNames[Math.max(0, Math.min(11, month - 1))];
+  }
+
+  /**
+   * Get first day of Gregorian month (day of week: 0=Sunday, 6=Saturday)
+   * @param {number} year - Gregorian year
+   * @param {number} month - Gregorian month (1-12)
+   * @returns {number} Day of week (0-6)
+   */
+  getFirstDayOfGregorianMonth(year, month) {
+    return new Date(year, month - 1, 1).getDay();
+  }
+
+  /**
+   * Get number of days in a Gregorian month
+   * @param {number} year - Gregorian year
+   * @param {number} month - Gregorian month (1-12)
+   * @returns {number} Number of days
+   */
+  getGregorianDaysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
+  }
 }
 
 // Export for use

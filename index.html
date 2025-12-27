@@ -27,20 +27,23 @@
         <div class="greeting-section">
           <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
           <p class="date-display" id="dateDisplay"></p>
-          <button
-            class="calendar-toggle"
-            id="calendarToggle"
-            title="Toggle Hijri/Gregorian"
-          >
-            <span class="toggle-icon">📅</span>
-            <span class="toggle-text" id="calendarType">Hijri</span>
-          </button>
         </div>
         <div class="time-section">
           <div class="current-time" id="currentTime">00:00</div>
           <div class="current-seconds" id="currentSeconds">:00</div>
         </div>
       </header>
+
+      <!-- Pinned Apps Section -->
+      <section class="pinned-apps-section" id="pinnedAppsSection">
+        <div class="pinned-apps-grid" id="pinnedAppsGrid">
+          <!-- Apps will be dynamically added here -->
+          <div class="pinned-app-add" id="addPinnedAppBtn">
+            <div class="add-icon">+</div>
+            <span class="add-text">Add Site</span>
+          </div>
+        </div>
+      </section>
 
       <!-- Quote Section -->
       <section class="quote-section" id="quoteSection">
@@ -75,33 +78,17 @@
             <div class="location-display" id="locationDisplay">
               <span class="location-icon">📍</span>
               <span class="location-text" id="locationText">Detecting...</span>
+              <button
+                class="location-refresh-btn"
+                id="detectLocationBtn"
+                title="Refresh Location"
+              >
+                🔄
+              </button>
             </div>
           </div>
           <div class="prayer-list" id="prayerList">
-            <div class="prayer-item" data-prayer="fajr">
-              <span class="prayer-name">Fajr</span>
-              <span class="prayer-time" id="fajrTime">--:--</span>
-            </div>
-            <div class="prayer-item" data-prayer="sunrise">
-              <span class="prayer-name">Sunrise</span>
-              <span class="prayer-time" id="sunriseTime">--:--</span>
-            </div>
-            <div class="prayer-item" data-prayer="dhuhr">
-              <span class="prayer-name">Dhuhr</span>
-              <span class="prayer-time" id="dhuhrTime">--:--</span>
-            </div>
-            <div class="prayer-item" data-prayer="asr">
-              <span class="prayer-name">Asr</span>
-              <span class="prayer-time" id="asrTime">--:--</span>
-            </div>
-            <div class="prayer-item" data-prayer="maghrib">
-              <span class="prayer-name">Maghrib</span>
-              <span class="prayer-time" id="maghribTime">--:--</span>
-            </div>
-            <div class="prayer-item" data-prayer="isha">
-              <span class="prayer-name">Isha</span>
-              <span class="prayer-time" id="ishaTime">--:--</span>
-            </div>
+            <!-- Prayer items will be dynamically generated based on visibility settings -->
           </div>
           <div class="next-prayer" id="nextPrayer">
             <span class="next-prayer-label">Next Prayer:</span>
@@ -109,6 +96,50 @@
             <span class="next-prayer-countdown" id="nextPrayerCountdown"
               >--:--:--</span
             >
+          </div>
+        </section>
+
+        <!-- Calendar Card -->
+        <section class="card calendar-card" id="calendarCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">📅</span>
+              Calendar
+            </h2>
+            <div class="calendar-toggle-btns">
+              <button class="calendar-type-btn active" data-type="hijri">
+                Hijri
+              </button>
+              <button class="calendar-type-btn" data-type="gregorian">
+                Gregorian
+              </button>
+            </div>
+          </div>
+          <div class="calendar-container" id="calendarContainer">
+            <div class="calendar-header">
+              <button class="calendar-nav-btn" id="prevMonth">❮</button>
+              <div class="calendar-month-year">
+                <span class="calendar-month" id="calendarMonth">--</span>
+                <span class="calendar-year" id="calendarYear">----</span>
+              </div>
+              <button class="calendar-nav-btn" id="nextMonth">❯</button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div class="calendar-days" id="calendarDays">
+              <!-- Calendar days will be dynamically generated -->
+            </div>
+            <div class="calendar-today-info" id="calendarTodayInfo">
+              <span class="hijri-date" id="hijriDateDisplay">--</span>
+              <span class="gregorian-date" id="gregorianDateDisplay">--</span>
+            </div>
           </div>
         </section>
 
@@ -205,7 +236,7 @@
 
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
-      <div class="modal">
+      <div class="modal modal-large">
         <div class="modal-header">
           <h2 class="modal-title">⚙️ Settings</h2>
           <button class="modal-close" id="settingsClose">&times;</button>
@@ -242,6 +273,12 @@
                   <span>Manual Entry</span>
                 </label>
               </div>
+              <button
+                class="setting-btn detect-location-btn"
+                id="requestLocationBtn"
+              >
+                🌍 Request Location Permission
+              </button>
             </div>
             <div
               class="setting-group manual-location-fields"
@@ -284,20 +321,88 @@
 
           <!-- Prayer Settings -->
           <div class="settings-panel" id="prayerPanel">
+            <!-- Calculation Method -->
             <div class="setting-group">
               <label class="setting-label">Calculation Method</label>
               <select class="setting-select" id="calculationMethod">
-                <option value="MWL">Muslim World League</option>
-                <option value="ISNA">ISNA (North America)</option>
-                <option value="Egypt">Egyptian General Authority</option>
-                <option value="Makkah">Umm Al-Qura, Makkah</option>
-                <option value="Karachi">
-                  University of Islamic Sciences, Karachi
-                </option>
-                <option value="Tehran">Institute of Geophysics, Tehran</option>
-                <option value="Jafari">Shia Ithna-Ashari</option>
+                <optgroup label="International">
+                  <option value="MWL">Muslim World League</option>
+                  <option value="ISNA">ISNA (North America)</option>
+                  <option value="Egypt">Egyptian General Authority</option>
+                  <option value="Makkah">Umm Al-Qura, Makkah</option>
+                  <option value="Karachi">
+                    University of Islamic Sciences, Karachi
+                  </option>
+                  <option value="Tehran">
+                    Institute of Geophysics, Tehran
+                  </option>
+                  <option value="Jafari">Shia Ithna-Ashari, Qum</option>
+                </optgroup>
+                <optgroup label="Middle East">
+                  <option value="Kuwait">Kuwait</option>
+                  <option value="Qatar">Qatar</option>
+                  <option value="Dubai">Dubai (UAE)</option>
+                  <option value="Jordan">Jordan</option>
+                  <option value="Palestine">Palestine</option>
+                </optgroup>
+                <optgroup label="Africa">
+                  <option value="Algeria">Algeria</option>
+                  <option value="Morocco">Morocco</option>
+                  <option value="Tunisia">Tunisia</option>
+                </optgroup>
+                <optgroup label="Asia">
+                  <option value="Singapore">Singapore (MUIS)</option>
+                  <option value="Malaysia">Malaysia (JAKIM)</option>
+                  <option value="Indonesia">Indonesia (Kemenag)</option>
+                  <option value="Brunei">Brunei</option>
+                </optgroup>
+                <optgroup label="Europe">
+                  <option value="Turkey">Turkey (Diyanet)</option>
+                  <option value="France">France (UOIF)</option>
+                  <option value="Germany">Germany (IGMG)</option>
+                  <option value="Russia">Russia</option>
+                </optgroup>
+                <optgroup label="Custom">
+                  <option value="Custom">Custom Angles</option>
+                </optgroup>
               </select>
             </div>
+
+            <!-- Custom Angles (shown when Custom is selected) -->
+            <div
+              class="setting-group custom-angles-group"
+              id="customAnglesGroup"
+              style="display: none"
+            >
+              <label class="setting-label">Custom Fajr Angle</label>
+              <input
+                type="number"
+                class="setting-input"
+                id="customFajrAngle"
+                value="18"
+                min="10"
+                max="25"
+                step="0.1"
+              />
+              <label class="setting-label">Custom Isha Setting</label>
+              <div class="isha-custom-row">
+                <input
+                  type="number"
+                  class="setting-input"
+                  id="customIshaAngle"
+                  value="17"
+                  min="10"
+                  max="25"
+                  step="0.1"
+                />
+                <label class="checkbox-option">
+                  <input type="checkbox" id="customIshaMinutes" />
+                  <span>Minutes after Maghrib</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Asr Method -->
             <div class="setting-group">
               <label class="setting-label">Asr Juristic Method</label>
               <select class="setting-select" id="asrMethod">
@@ -307,6 +412,94 @@
                 <option value="Hanafi">Hanafi</option>
               </select>
             </div>
+
+            <!-- Higher Latitude Method -->
+            <div class="setting-group">
+              <label class="setting-label">Higher Latitude Adjustment</label>
+              <select class="setting-select" id="highLatMethod">
+                <option value="NightMiddle">Middle of the Night</option>
+                <option value="AngleBased">Angle/60th of the Night</option>
+                <option value="OneSeventh">One-Seventh of the Night</option>
+                <option value="None">No Adjustment</option>
+              </select>
+              <p class="setting-hint">
+                For locations above 48° latitude where Fajr/Isha may not occur
+                normally.
+              </p>
+            </div>
+
+            <!-- Midnight Method -->
+            <div class="setting-group">
+              <label class="setting-label">Midnight Calculation</label>
+              <select class="setting-select" id="midnightMethod">
+                <option value="Standard">
+                  Standard (Midpoint of sunset to sunrise)
+                </option>
+                <option value="Jafari">
+                  Jafari (Midpoint of sunset to Fajr)
+                </option>
+              </select>
+            </div>
+
+            <!-- Duha Offset -->
+            <div class="setting-group">
+              <label class="setting-label"
+                >Duha Time (minutes after sunrise)</label
+              >
+              <input
+                type="number"
+                class="setting-input"
+                id="duhaOffset"
+                value="20"
+                min="10"
+                max="60"
+              />
+            </div>
+
+            <!-- Prayer Visibility -->
+            <div class="setting-group">
+              <label class="setting-label">Show Prayer Times</label>
+              <div class="visibility-grid">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showFajr" checked />
+                  <span>Fajr</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showSunrise" checked />
+                  <span>Sunrise</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showDuha" />
+                  <span>Duha</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showDhuhr" checked />
+                  <span>Dhuhr</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showAsr" checked />
+                  <span>Asr</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showMaghrib" checked />
+                  <span>Maghrib</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showIsha" checked />
+                  <span>Isha</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showMidnight" />
+                  <span>Midnight</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showQiyam" />
+                  <span>Qiyam</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Time Adjustments -->
             <div class="setting-group">
               <label class="setting-label">Time Adjustments (minutes)</label>
               <div class="adjustments-grid">
@@ -327,6 +520,17 @@
                     type="number"
                     class="adjustment-input"
                     id="adjustSunrise"
+                    value="0"
+                    min="-60"
+                    max="60"
+                  />
+                </div>
+                <div class="adjustment-item">
+                  <label>Duha</label>
+                  <input
+                    type="number"
+                    class="adjustment-input"
+                    id="adjustDuha"
                     value="0"
                     min="-60"
                     max="60"
@@ -376,6 +580,28 @@
                     max="60"
                   />
                 </div>
+                <div class="adjustment-item">
+                  <label>Midnight</label>
+                  <input
+                    type="number"
+                    class="adjustment-input"
+                    id="adjustMidnight"
+                    value="0"
+                    min="-60"
+                    max="60"
+                  />
+                </div>
+                <div class="adjustment-item">
+                  <label>Qiyam</label>
+                  <input
+                    type="number"
+                    class="adjustment-input"
+                    id="adjustQiyam"
+                    value="0"
+                    min="-60"
+                    max="60"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -395,26 +621,56 @@
                 </label>
               </div>
             </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Add Custom Quote</label>
+              <div class="add-quote-form">
+                <textarea
+                  class="setting-textarea"
+                  id="newQuoteText"
+                  placeholder="Enter quote text..."
+                ></textarea>
+                <input
+                  type="text"
+                  class="setting-input"
+                  id="newQuoteSource"
+                  placeholder="Source (e.g., Surah Al-Baqarah 2:255)"
+                />
+                <label class="checkbox-option">
+                  <input type="checkbox" id="newQuoteArabic" />
+                  <span>Arabic Text</span>
+                </label>
+                <button class="setting-btn" id="addQuoteBtn">
+                  ➕ Add Quote
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Import / Export Quotes</label>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="importQuotesBtn">
+                  📥 Import JSON
+                </button>
+                <button class="setting-btn" id="exportQuotesBtn">
+                  📤 Export JSON
+                </button>
+                <input
+                  type="file"
+                  id="importQuotesInput"
+                  accept=".json"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
             <div class="setting-group">
               <label class="setting-label">My Custom Quotes</label>
-              <div class="user-quotes-manager">
-                <div class="add-quote-form">
-                  <textarea
-                    class="setting-textarea"
-                    id="newQuoteText"
-                    placeholder="Enter quote text..."
-                  ></textarea>
-                  <input
-                    type="text"
-                    class="setting-input"
-                    id="newQuoteSource"
-                    placeholder="Source (e.g., Surah Al-Baqarah 2:255)"
-                  />
-                  <button class="setting-btn" id="addQuoteBtn">
-                    ➕ Add Quote
-                  </button>
-                </div>
-                <div class="user-quotes-list" id="userQuotesList"></div>
+              <div class="user-quotes-list" id="userQuotesList">
+                <!-- Quotes will be dynamically generated with pagination -->
+              </div>
+              <div class="quotes-pagination" id="quotesPagination">
+                <!-- Pagination controls will be dynamically generated -->
               </div>
             </div>
           </div>
@@ -458,6 +714,48 @@
       </div>
     </div>
 
+    <!-- Add Pinned App Modal -->
+    <div class="modal-overlay" id="pinnedAppModal">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2 class="modal-title">🔗 Add Website</h2>
+          <button class="modal-close" id="closePinnedAppModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="pinnedAppForm">
+            <div class="setting-group">
+              <label class="setting-label">Name</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="pinnedAppName"
+                placeholder="e.g., Google"
+                required
+              />
+            </div>
+            <div class="setting-group">
+              <label class="setting-label">URL</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="pinnedAppUrl"
+                placeholder="e.g., google.com"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" id="cancelPinnedApp">
+            Cancel
+          </button>
+          <button class="modal-btn save-btn" type="submit" form="pinnedAppForm">
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit Todo Modal -->
     <div class="modal-overlay" id="editTodoModal">
       <div class="modal modal-small">
@@ -492,6 +790,8 @@
     <script src="js/qibla.js"></script>
     <script src="js/prayertimes.js"></script>
     <script src="js/todo.js"></script>
+    <script src="js/pinnedapps.js"></script>
+    <script src="js/calendar.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/app.js"></script>
   </body>

@@ -1,6 +1,7 @@
 /**
  * Settings Manager
- * Handles settings modal and configuration
+ * Handles settings modal and configuration for all features
+ * Supports 25+ calculation methods, visibility settings, quotes import/export
  */
 
 class SettingsManager {
@@ -30,17 +31,43 @@ class SettingsManager {
     this.latitudeInput = document.getElementById("latitudeInput");
     this.longitudeInput = document.getElementById("longitudeInput");
     this.searchCityBtn = document.getElementById("searchCityBtn");
+    this.requestLocationBtn = document.getElementById("requestLocationBtn");
 
     // Prayer elements
     this.calculationMethod = document.getElementById("calculationMethod");
+    this.customAnglesGroup = document.getElementById("customAnglesGroup");
+    this.customFajrAngle = document.getElementById("customFajrAngle");
+    this.customIshaAngle = document.getElementById("customIshaAngle");
+    this.customIshaMinutes = document.getElementById("customIshaMinutes");
     this.asrMethod = document.getElementById("asrMethod");
+    this.highLatMethod = document.getElementById("highLatMethod");
+    this.midnightMethod = document.getElementById("midnightMethod");
+    this.duhaOffset = document.getElementById("duhaOffset");
+
+    // Prayer visibility checkboxes
+    this.visibilityCheckboxes = {
+      fajr: document.getElementById("showFajr"),
+      sunrise: document.getElementById("showSunrise"),
+      duha: document.getElementById("showDuha"),
+      dhuhr: document.getElementById("showDhuhr"),
+      asr: document.getElementById("showAsr"),
+      maghrib: document.getElementById("showMaghrib"),
+      isha: document.getElementById("showIsha"),
+      midnight: document.getElementById("showMidnight"),
+      qiyam: document.getElementById("showQiyam"),
+    };
+
+    // Prayer adjustment inputs
     this.adjustmentInputs = {
       fajr: document.getElementById("adjustFajr"),
       sunrise: document.getElementById("adjustSunrise"),
+      duha: document.getElementById("adjustDuha"),
       dhuhr: document.getElementById("adjustDhuhr"),
       asr: document.getElementById("adjustAsr"),
       maghrib: document.getElementById("adjustMaghrib"),
       isha: document.getElementById("adjustIsha"),
+      midnight: document.getElementById("adjustMidnight"),
+      qiyam: document.getElementById("adjustQiyam"),
     };
 
     // Quote elements
@@ -48,8 +75,8 @@ class SettingsManager {
     this.useUserQuotes = document.getElementById("useUserQuotes");
     this.newQuoteText = document.getElementById("newQuoteText");
     this.newQuoteSource = document.getElementById("newQuoteSource");
+    this.newQuoteArabic = document.getElementById("newQuoteArabic");
     this.addQuoteBtn = document.getElementById("addQuoteBtn");
-    this.userQuotesList = document.getElementById("userQuotesList");
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -63,7 +90,6 @@ class SettingsManager {
   init() {
     this.loadSettings();
     this.setupEventListeners();
-    this.renderUserQuotes();
   }
 
   /**
@@ -73,31 +99,58 @@ class SettingsManager {
     const settings = this.storage.getSettings();
 
     // Location settings
-    document.querySelector(
+    const locationRadio = document.querySelector(
       `input[name="locationMethod"][value="${settings.locationMethod}"]`
-    ).checked = true;
+    );
+    if (locationRadio) locationRadio.checked = true;
     this.toggleManualLocation(settings.locationMethod === "manual");
-    this.cityInput.value = settings.city || "";
-    this.latitudeInput.value = settings.latitude || "";
-    this.longitudeInput.value = settings.longitude || "";
+
+    if (this.cityInput) this.cityInput.value = settings.city || "";
+    if (this.latitudeInput) this.latitudeInput.value = settings.latitude || "";
+    if (this.longitudeInput)
+      this.longitudeInput.value = settings.longitude || "";
 
     // Prayer settings
-    this.calculationMethod.value = settings.calculationMethod;
-    this.asrMethod.value = settings.asrMethod;
+    if (this.calculationMethod)
+      this.calculationMethod.value = settings.calculationMethod;
+    if (this.asrMethod) this.asrMethod.value = settings.asrMethod;
+    if (this.highLatMethod) this.highLatMethod.value = settings.highLatMethod;
+    if (this.midnightMethod)
+      this.midnightMethod.value = settings.midnightMethod;
+    if (this.duhaOffset) this.duhaOffset.value = settings.duhaOffset;
 
-    for (let prayer in this.adjustmentInputs) {
-      if (this.adjustmentInputs[prayer]) {
+    // Custom angles
+    if (this.customFajrAngle)
+      this.customFajrAngle.value = settings.customFajrAngle;
+    if (this.customIshaAngle)
+      this.customIshaAngle.value = settings.customIshaAngle;
+    if (this.customIshaMinutes)
+      this.customIshaMinutes.checked = settings.customIshaMinutes;
+    this.toggleCustomAngles(settings.calculationMethod === "Custom");
+
+    // Prayer visibility
+    for (const prayer in this.visibilityCheckboxes) {
+      if (this.visibilityCheckboxes[prayer]) {
+        this.visibilityCheckboxes[prayer].checked =
+          settings.prayerVisibility[prayer];
+      }
+    }
+
+    // Adjustments
+    for (const prayer in this.adjustmentInputs) {
+      if (this.adjustmentInputs[prayer] && settings.adjustments) {
         this.adjustmentInputs[prayer].value = settings.adjustments[prayer] || 0;
       }
     }
 
     // Quote settings
-    this.useDefaultQuotes.checked = settings.useDefaultQuotes;
-    this.useUserQuotes.checked = settings.useUserQuotes;
+    if (this.useDefaultQuotes)
+      this.useDefaultQuotes.checked = settings.useDefaultQuotes;
+    if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
 
     // Background settings
-    this.bgInterval.value = settings.bgInterval;
-    this.bgCategory.value = settings.bgCategory;
+    if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
+    if (this.bgCategory) this.bgCategory.value = settings.bgCategory;
   }
 
   /**
@@ -107,32 +160,47 @@ class SettingsManager {
     const settings = this.storage.getSettings();
 
     // Location settings
-    settings.locationMethod = document.querySelector(
+    const locationRadio = document.querySelector(
       'input[name="locationMethod"]:checked'
-    ).value;
-    settings.city = this.cityInput.value;
-    settings.latitude = parseFloat(this.latitudeInput.value) || null;
-    settings.longitude = parseFloat(this.longitudeInput.value) || null;
+    );
+    if (locationRadio) settings.locationMethod = locationRadio.value;
+    settings.city = this.cityInput?.value || "";
+    settings.latitude = parseFloat(this.latitudeInput?.value) || null;
+    settings.longitude = parseFloat(this.longitudeInput?.value) || null;
 
     // Prayer settings
-    settings.calculationMethod = this.calculationMethod.value;
-    settings.asrMethod = this.asrMethod.value;
+    settings.calculationMethod = this.calculationMethod?.value || "MWL";
+    settings.asrMethod = this.asrMethod?.value || "Standard";
+    settings.highLatMethod = this.highLatMethod?.value || "NightMiddle";
+    settings.midnightMethod = this.midnightMethod?.value || "Standard";
+    settings.duhaOffset = parseInt(this.duhaOffset?.value) || 20;
 
+    // Custom angles
+    settings.customFajrAngle = parseFloat(this.customFajrAngle?.value) || 18;
+    settings.customIshaAngle = parseFloat(this.customIshaAngle?.value) || 17;
+    settings.customIshaMinutes = this.customIshaMinutes?.checked || false;
+
+    // Prayer visibility
+    settings.prayerVisibility = {};
+    for (const prayer in this.visibilityCheckboxes) {
+      settings.prayerVisibility[prayer] =
+        this.visibilityCheckboxes[prayer]?.checked || false;
+    }
+
+    // Adjustments
     settings.adjustments = {};
-    for (let prayer in this.adjustmentInputs) {
-      if (this.adjustmentInputs[prayer]) {
-        settings.adjustments[prayer] =
-          parseInt(this.adjustmentInputs[prayer].value) || 0;
-      }
+    for (const prayer in this.adjustmentInputs) {
+      settings.adjustments[prayer] =
+        parseInt(this.adjustmentInputs[prayer]?.value) || 0;
     }
 
     // Quote settings
-    settings.useDefaultQuotes = this.useDefaultQuotes.checked;
-    settings.useUserQuotes = this.useUserQuotes.checked;
+    settings.useDefaultQuotes = this.useDefaultQuotes?.checked ?? true;
+    settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
 
     // Background settings
-    settings.bgInterval = parseInt(this.bgInterval.value);
-    settings.bgCategory = this.bgCategory.value;
+    settings.bgInterval = parseInt(this.bgInterval?.value) || 60;
+    settings.bgCategory = this.bgCategory?.value || "nature";
 
     // Save to storage
     this.storage.saveSettings(settings);
@@ -152,11 +220,9 @@ class SettingsManager {
    */
   applySettings(settings) {
     // Update prayer times
-    this.prayerTimes.updateSettings(
-      settings.calculationMethod,
-      settings.asrMethod,
-      settings.adjustments
-    );
+    if (this.prayerTimes) {
+      this.prayerTimes.updateSettings(settings);
+    }
 
     // Update location if manual
     if (
@@ -164,28 +230,54 @@ class SettingsManager {
       settings.latitude &&
       settings.longitude
     ) {
-      this.prayerTimes.setManualLocation(
-        settings.latitude,
-        settings.longitude,
-        settings.city
-      );
-      this.qibla.updateLocation(settings.latitude, settings.longitude);
-    } else {
+      if (this.prayerTimes) {
+        this.prayerTimes.setManualLocation(
+          settings.latitude,
+          settings.longitude,
+          settings.city
+        );
+      }
+      if (this.qibla) {
+        this.qibla.updateLocation(settings.latitude, settings.longitude);
+      }
+    } else if (this.prayerTimes) {
       this.prayerTimes.getLocation();
     }
 
     // Update background rotation
-    this.backgrounds.updateInterval(settings.bgInterval);
+    if (this.backgrounds) {
+      this.backgrounds.updateInterval(settings.bgInterval);
+    }
   }
 
   /**
    * Toggle manual location fields
    */
   toggleManualLocation(show) {
-    if (show) {
-      this.manualLocationFields.classList.add("active");
-    } else {
-      this.manualLocationFields.classList.remove("active");
+    if (this.manualLocationFields) {
+      if (show) {
+        this.manualLocationFields.classList.add("active");
+      } else {
+        this.manualLocationFields.classList.remove("active");
+      }
+    }
+  }
+
+  /**
+   * Toggle custom angles group
+   */
+  toggleCustomAngles(show) {
+    if (this.customAnglesGroup) {
+      this.customAnglesGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Request location permission
+   */
+  async requestLocation() {
+    if (this.prayerTimes) {
+      await this.prayerTimes.requestLocation();
     }
   }
 
@@ -193,36 +285,48 @@ class SettingsManager {
    * Search for city
    */
   async searchCity() {
-    const cityName = this.cityInput.value.trim();
+    const cityName = this.cityInput?.value.trim();
     if (!cityName) {
       this.showToast("Please enter a city name", "error");
       return;
     }
 
-    this.searchCityBtn.textContent = "🔍 Searching...";
-    this.searchCityBtn.disabled = true;
-
-    const result = await this.prayerTimes.searchCity(cityName);
-
-    if (result) {
-      this.cityInput.value = result.city;
-      this.latitudeInput.value = result.latitude.toFixed(4);
-      this.longitudeInput.value = result.longitude.toFixed(4);
-      this.showToast(`Found: ${result.city}`, "success");
-    } else {
-      this.showToast("City not found. Please try a different name.", "error");
+    if (this.searchCityBtn) {
+      this.searchCityBtn.textContent = "🔍 Searching...";
+      this.searchCityBtn.disabled = true;
     }
 
-    this.searchCityBtn.textContent = "🔍 Search City";
-    this.searchCityBtn.disabled = false;
+    try {
+      const results = await this.prayerTimes.searchCity(cityName);
+
+      if (results && results.length > 0) {
+        const result = results[0];
+        if (this.cityInput) this.cityInput.value = result.city;
+        if (this.latitudeInput)
+          this.latitudeInput.value = result.latitude.toFixed(4);
+        if (this.longitudeInput)
+          this.longitudeInput.value = result.longitude.toFixed(4);
+        this.showToast(`Found: ${result.city}`, "success");
+      } else {
+        this.showToast("City not found. Please try a different name.", "error");
+      }
+    } catch (error) {
+      this.showToast("Search failed. Please try again.", "error");
+    }
+
+    if (this.searchCityBtn) {
+      this.searchCityBtn.textContent = "🔍 Search City";
+      this.searchCityBtn.disabled = false;
+    }
   }
 
   /**
    * Add user quote
    */
   addUserQuote() {
-    const text = this.newQuoteText.value.trim();
-    const source = this.newQuoteSource.value.trim();
+    const text = this.newQuoteText?.value.trim();
+    const source = this.newQuoteSource?.value.trim();
+    const isArabic = this.newQuoteArabic?.checked || false;
 
     if (!text) {
       this.showToast("Please enter quote text", "error");
@@ -234,50 +338,15 @@ class SettingsManager {
       return;
     }
 
-    this.quotes.addUserQuote(text, source);
-    this.newQuoteText.value = "";
-    this.newQuoteSource.value = "";
-    this.renderUserQuotes();
-    this.showToast("Quote added!", "success");
-  }
-
-  /**
-   * Delete user quote
-   */
-  deleteUserQuote(id) {
-    this.quotes.deleteUserQuote(id);
-    this.renderUserQuotes();
-    this.showToast("Quote deleted", "info");
-  }
-
-  /**
-   * Render user quotes list
-   */
-  renderUserQuotes() {
-    const quotes = this.quotes.getUserQuotes();
-
-    if (quotes.length === 0) {
-      this.userQuotesList.innerHTML = `
-        <div class="empty-state">
-          <p>No custom quotes yet. Add one above!</p>
-        </div>
-      `;
-      return;
+    if (this.quotes) {
+      this.quotes.addUserQuote(text, source, isArabic);
     }
 
-    this.userQuotesList.innerHTML = quotes
-      .map(
-        (quote) => `
-      <div class="user-quote-item" data-id="${quote.id}">
-        <div class="user-quote-content">
-          <p class="user-quote-text">${this.escapeHtml(quote.text)}</p>
-          <p class="user-quote-source">— ${this.escapeHtml(quote.source)}</p>
-        </div>
-        <button class="user-quote-delete" data-action="delete" title="Delete">×</button>
-      </div>
-    `
-      )
-      .join("");
+    if (this.newQuoteText) this.newQuoteText.value = "";
+    if (this.newQuoteSource) this.newQuoteSource.value = "";
+    if (this.newQuoteArabic) this.newQuoteArabic.checked = false;
+
+    this.showToast("Quote added!", "success");
   }
 
   /**
@@ -285,15 +354,21 @@ class SettingsManager {
    */
   openModal() {
     this.loadSettings();
-    this.renderUserQuotes();
-    this.modal.classList.add("active");
+    if (this.quotes) {
+      this.quotes.renderQuotesList();
+    }
+    if (this.modal) {
+      this.modal.classList.add("active");
+    }
   }
 
   /**
    * Close modal
    */
   closeModal() {
-    this.modal.classList.remove("active");
+    if (this.modal) {
+      this.modal.classList.remove("active");
+    }
   }
 
   /**
@@ -341,28 +416,27 @@ class SettingsManager {
   }
 
   /**
-   * Escape HTML
-   */
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  /**
    * Setup event listeners
    */
   setupEventListeners() {
     // Open/close modal
-    this.settingsBtn.addEventListener("click", () => this.openModal());
-    this.closeBtn.addEventListener("click", () => this.closeModal());
-    this.saveBtn.addEventListener("click", () => this.saveSettings());
+    if (this.settingsBtn) {
+      this.settingsBtn.addEventListener("click", () => this.openModal());
+    }
+    if (this.closeBtn) {
+      this.closeBtn.addEventListener("click", () => this.closeModal());
+    }
+    if (this.saveBtn) {
+      this.saveBtn.addEventListener("click", () => this.saveSettings());
+    }
 
-    this.modal.addEventListener("click", (e) => {
-      if (e.target === this.modal) {
-        this.closeModal();
-      }
-    });
+    if (this.modal) {
+      this.modal.addEventListener("click", (e) => {
+        if (e.target === this.modal) {
+          this.closeModal();
+        }
+      });
+    }
 
     // Tabs
     this.tabs.forEach((tab) => {
@@ -376,35 +450,49 @@ class SettingsManager {
       });
     });
 
+    // Request location permission
+    if (this.requestLocationBtn) {
+      this.requestLocationBtn.addEventListener("click", () =>
+        this.requestLocation()
+      );
+    }
+
     // Search city
-    this.searchCityBtn.addEventListener("click", () => this.searchCity());
+    if (this.searchCityBtn) {
+      this.searchCityBtn.addEventListener("click", () => this.searchCity());
+    }
+
+    // Calculation method change - toggle custom angles
+    if (this.calculationMethod) {
+      this.calculationMethod.addEventListener("change", (e) => {
+        this.toggleCustomAngles(e.target.value === "Custom");
+      });
+    }
 
     // Add quote
-    this.addQuoteBtn.addEventListener("click", () => this.addUserQuote());
-
-    // Delete quote (event delegation)
-    this.userQuotesList.addEventListener("click", (e) => {
-      if (e.target.closest('[data-action="delete"]')) {
-        const quoteItem = e.target.closest(".user-quote-item");
-        if (quoteItem) {
-          this.deleteUserQuote(parseInt(quoteItem.dataset.id));
-        }
-      }
-    });
+    if (this.addQuoteBtn) {
+      this.addQuoteBtn.addEventListener("click", () => this.addUserQuote());
+    }
 
     // Change background now
-    this.changeBackgroundBtn.addEventListener("click", () => {
-      const settings = this.storage.getSettings();
-      settings.bgCategory = this.bgCategory.value;
-      this.storage.saveSettings(settings);
-      this.backgrounds.updateCategory(this.bgCategory.value);
-      this.backgrounds.changeBackground();
-      this.showToast("Background changed!", "success");
-    });
+    if (this.changeBackgroundBtn) {
+      this.changeBackgroundBtn.addEventListener("click", () => {
+        const settings = this.storage.getSettings();
+        if (this.bgCategory) {
+          settings.bgCategory = this.bgCategory.value;
+          this.storage.saveSettings(settings);
+        }
+        if (this.backgrounds) {
+          this.backgrounds.updateCategory(this.bgCategory?.value || "nature");
+          this.backgrounds.changeBackground();
+        }
+        this.showToast("Background changed!", "success");
+      });
+    }
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.modal.classList.contains("active")) {
+      if (e.key === "Escape" && this.modal?.classList.contains("active")) {
         this.closeModal();
       }
     });

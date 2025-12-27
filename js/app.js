@@ -1,6 +1,7 @@
 /**
  * Muslim Dashboard - Main Application
  * Orchestrates all modules and initializes the dashboard
+ * Enhanced with calendar widget, pinned apps, and more prayer options
  */
 
 class MuslimDashboard {
@@ -14,6 +15,8 @@ class MuslimDashboard {
     this.qibla = new QiblaManager(this.storage);
     this.quotes = new QuotesManager(this.storage);
     this.todos = new TodoManager(this.storage);
+    this.pinnedApps = null; // Will be initialized after DOM
+    this.calendar = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -26,11 +29,6 @@ class MuslimDashboard {
     this.dateDisplay = document.getElementById("dateDisplay");
     this.currentTime = document.getElementById("currentTime");
     this.currentSeconds = document.getElementById("currentSeconds");
-    this.calendarToggle = document.getElementById("calendarToggle");
-    this.calendarType = document.getElementById("calendarType");
-
-    // State
-    this.showHijri = true;
   }
 
   /**
@@ -56,7 +54,7 @@ class MuslimDashboard {
     await this.prayerTimes.init();
 
     // Initialize qibla after location is available
-    const location = this.prayerTimes.getLocation();
+    const location = this.prayerTimes.getCurrentLocation();
     if (location) {
       this.qibla.init(location.latitude, location.longitude);
     }
@@ -66,6 +64,13 @@ class MuslimDashboard {
 
     // Initialize todos
     this.todos.init();
+
+    // Initialize pinned apps
+    this.pinnedApps = new PinnedAppsManager(this.storage);
+
+    // Initialize calendar
+    this.calendar = new CalendarManager(this.storage, this.hijri);
+    this.calendar.init();
 
     // Initialize settings (after all other managers)
     this.settings = new SettingsManager(
@@ -77,10 +82,7 @@ class MuslimDashboard {
     );
     this.settings.init();
 
-    // Setup calendar toggle
-    this.setupCalendarToggle();
-
-    // Listen for location updates
+    // Setup location updates
     this.setupLocationUpdates();
 
     console.log("✅ Muslim Dashboard ready!");
@@ -91,11 +93,25 @@ class MuslimDashboard {
    */
   updateTime() {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
+    const settings = this.storage.getSettings();
+    const is24h = settings.timeFormat !== "12h";
+
+    let hours = now.getHours();
     const minutes = String(now.getMinutes()).padStart(2, "0");
     const seconds = String(now.getSeconds()).padStart(2, "0");
 
-    this.currentTime.textContent = `${hours}:${minutes}`;
+    if (!is24h) {
+      const suffix = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      this.currentTime.textContent = `${hours}:${minutes}`;
+      // Could add AM/PM indicator if needed
+    } else {
+      this.currentTime.textContent = `${String(hours).padStart(
+        2,
+        "0"
+      )}:${minutes}`;
+    }
+
     this.currentSeconds.textContent = `:${seconds}`;
   }
 
@@ -104,17 +120,20 @@ class MuslimDashboard {
    */
   updateDate() {
     const now = new Date();
+    const settings = this.storage.getSettings();
+    const showHijri = settings.calendarType !== "gregorian";
 
-    if (this.showHijri) {
-      const settings = this.storage.getSettings();
+    if (showHijri) {
       const hijriDate = this.hijri.toHijri(now, settings.hijriAdjustment || 0);
-      this.dateDisplay.textContent = this.hijri.format(hijriDate, "full", "en");
+      let dateText = this.hijri.format(hijriDate, "full", "en");
 
       // Check for Islamic events
       const event = this.hijri.getTodayEvent(hijriDate);
       if (event) {
-        this.dateDisplay.textContent += ` • ${event.name}`;
+        dateText += ` • ${event.name}`;
       }
+
+      this.dateDisplay.textContent = dateText;
     } else {
       this.dateDisplay.textContent = this.hijri.formatGregorian(now, "full");
     }
@@ -141,28 +160,6 @@ class MuslimDashboard {
   }
 
   /**
-   * Setup calendar toggle
-   */
-  setupCalendarToggle() {
-    const settings = this.storage.getSettings();
-    this.showHijri = settings.calendarType !== "gregorian";
-    this.calendarType.textContent = this.showHijri ? "Hijri" : "Gregorian";
-
-    this.calendarToggle.addEventListener("click", () => {
-      this.showHijri = !this.showHijri;
-      this.calendarType.textContent = this.showHijri ? "Hijri" : "Gregorian";
-
-      // Save preference
-      const settings = this.storage.getSettings();
-      settings.calendarType = this.showHijri ? "hijri" : "gregorian";
-      this.storage.saveSettings(settings);
-
-      // Update display
-      this.updateDate();
-    });
-  }
-
-  /**
    * Setup location updates
    */
   setupLocationUpdates() {
@@ -172,7 +169,7 @@ class MuslimDashboard {
     );
     this.prayerTimes.updatePrayerTimes = () => {
       originalUpdate();
-      const location = this.prayerTimes.getLocation();
+      const location = this.prayerTimes.getCurrentLocation();
       if (location) {
         this.qibla.updateLocation(location.latitude, location.longitude);
       }
