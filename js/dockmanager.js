@@ -11,7 +11,6 @@ class DockManager {
     this.draggedComponent = null;
     this.draggedSlot = null;
     this.isEditMode = false;
-    this.componentCache = {}; // Global component cache
 
     // Container elements
     this.masterContainer = document.getElementById("masterContainer");
@@ -24,7 +23,7 @@ class DockManager {
       slotsPerRow: 3,
       containerWidth: "default",
       customWidth: 80,
-      showSideContainers: true,
+      showSideContainers: false,
       sideAlignment: "center",
     };
 
@@ -35,37 +34,20 @@ class DockManager {
       qibla: { id: "qiblaCard", name: "Qibla Direction", icon: "🧭" },
       todo: { id: "todoCard", name: "My Tasks", icon: "✅" },
       pinnedApps: { id: "pinnedAppsSection", name: "Pinned Apps", icon: "📌" },
-      quote: { id: "quoteSection", name: "Daily Quote", icon: "📖" },
+      quote: { id: "quoteSection", name: "Quote", icon: "📖" },
     };
-
-    // Active components (for component management)
-    this.activeComponents = new Set(Object.keys(this.componentRegistry));
   }
 
   /**
    * Initialize dock manager
    */
   init() {
-    this.cacheAllComponents();
     this.loadSettings();
     this.loadLayout();
     this.applyContainerWidth();
     this.applySideContainers();
     this.bindEvents();
     this.render();
-  }
-
-  /**
-   * Cache all components once at initialization
-   */
-  cacheAllComponents() {
-    for (const key in this.componentRegistry) {
-      const comp = this.componentRegistry[key];
-      const el = document.getElementById(comp.id);
-      if (el) {
-        this.componentCache[key] = el;
-      }
-    }
   }
 
   /**
@@ -76,10 +58,7 @@ class DockManager {
     this.settings.slotsPerRow = settings.dockSlotsPerRow || 3;
     this.settings.containerWidth = settings.dockContainerWidth || "default";
     this.settings.customWidth = settings.dockCustomWidth || 80;
-    this.settings.showSideContainers =
-      settings.dockShowSideContainers !== undefined
-        ? settings.dockShowSideContainers
-        : true;
+    this.settings.showSideContainers = settings.dockShowSideContainers || false;
     this.settings.sideAlignment = settings.dockSideAlignment || "center";
   }
 
@@ -105,27 +84,28 @@ class DockManager {
     if (saved && saved.main) {
       this.layout = saved;
     } else {
-      // Default layout - side containers enabled, 3 slots per row
-      // Row 0: Pinned Apps (full row - 3 slots)
-      // Row 1: Quote (full row - 3 slots)
-      // Row 2: Prayer Times (2 slots) + Qibla (1 slot) = 3 slots
-      // Row 3: Calendar (1 slot)
-      // Right side: Todo
+      // Default layout
       this.layout = {
         main: [
-          { row: 0, components: [{ id: "pinnedApps", slots: 3 }] },
-          { row: 1, components: [{ id: "quote", slots: 3 }] },
           {
-            row: 2,
+            row: 0,
             components: [
-              { id: "prayerTimes", slots: 2 },
+              { id: "prayerTimes", slots: 1 },
+              { id: "calendar", slots: 1 },
               { id: "qibla", slots: 1 },
             ],
           },
-          { row: 3, components: [{ id: "calendar", slots: 1 }] },
+          {
+            row: 1,
+            components: [
+              { id: "todo", slots: 1 },
+              { id: "pinnedApps", slots: 1 },
+            ],
+          },
+          { row: 2, components: [{ id: "quote", slots: 1 }] },
         ],
         left: [],
-        right: [{ row: 0, components: [{ id: "todo", slots: 1 }] }],
+        right: [],
       };
     }
   }
@@ -228,20 +208,6 @@ class DockManager {
    * Render the dock layout
    */
   render() {
-    // First, detach all components from DOM but keep in cache
-    for (const key in this.componentCache) {
-      const el = this.componentCache[key];
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    }
-
-    // Clear all containers
-    if (this.mainContainer) this.mainContainer.innerHTML = "";
-    if (this.leftContainer) this.leftContainer.innerHTML = "";
-    if (this.rightContainer) this.rightContainer.innerHTML = "";
-
-    // Render all containers
     this.renderContainer("main", this.mainContainer, this.layout.main);
     if (this.settings.showSideContainers) {
       this.renderContainer("left", this.leftContainer, this.layout.left);
@@ -256,13 +222,30 @@ class DockManager {
   renderContainer(containerType, containerEl, rows) {
     if (!containerEl) return;
 
-    // Render rows using global component cache
+    // Store original components
+    const componentCache = {};
+    for (const key in this.componentRegistry) {
+      const comp = this.componentRegistry[key];
+      const el = document.getElementById(comp.id);
+      if (el) {
+        componentCache[key] = el;
+        // Temporarily remove from DOM
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      }
+    }
+
+    // Clear container
+    containerEl.innerHTML = "";
+
+    // Render rows
     rows.forEach((rowData, rowIndex) => {
       const rowEl = this.createRow(
         containerType,
         rowIndex,
         rowData.components,
-        this.componentCache
+        componentCache
       );
       containerEl.appendChild(rowEl);
     });
@@ -318,8 +301,8 @@ class DockManager {
         // Add drag handle
         this.addDragHandle(component, compData.id);
 
-        // Add resize handles for main container (always show on hover)
-        if (containerType === "main") {
+        // Add resize handles for main container
+        if (containerType === "main" && totalSlots < slotsPerRow) {
           this.addResizeHandle(slotEl, compData, rowIndex, compIndex);
         }
 
@@ -399,11 +382,11 @@ class DockManager {
   addResizeHandle(slotEl, compData, rowIndex, compIndex) {
     const handle = document.createElement("div");
     handle.className = "dock-resize-handle";
+    handle.innerHTML = "↔";
     handle.title = "Drag to resize";
 
     handle.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      e.stopPropagation();
       this.startResize(e, compData, rowIndex, compIndex);
     });
 
@@ -417,7 +400,6 @@ class DockManager {
     const startX = e.clientX;
     const startSlots = compData.slots;
     const maxSlots = this.settings.slotsPerRow;
-    let lastAppliedSlots = startSlots;
 
     const onMouseMove = (e) => {
       const diff = e.clientX - startX;
@@ -425,34 +407,17 @@ class DockManager {
       const slotChange = Math.round(diff / slotWidth);
       const newSlots = Math.max(1, Math.min(maxSlots, startSlots + slotChange));
 
-      if (newSlots === lastAppliedSlots) return;
-      lastAppliedSlots = newSlots;
-
+      // Check if resize is valid
       const row = this.layout.main[rowIndex];
-      const currentTotalSlots = row.components.reduce(
-        (sum, c) => sum + c.slots,
+      const otherSlots = row.components.reduce(
+        (sum, c, i) => (i !== compIndex ? sum + c.slots : sum),
         0
       );
-      const slotsNeeded = newSlots - compData.slots;
 
-      if (slotsNeeded > 0) {
-        // Expanding - check if we need to move components to new row
-        const availableSlots = maxSlots - currentTotalSlots + compData.slots;
-
-        if (newSlots <= availableSlots) {
-          // Fits in current row
-          row.components[compIndex].slots = newSlots;
-        } else {
-          // Need to push rightmost component(s) to new row
-          row.components[compIndex].slots = newSlots;
-          this.handleRowOverflow(rowIndex);
-        }
-      } else {
-        // Shrinking - just update slots
+      if (otherSlots + newSlots <= maxSlots) {
         row.components[compIndex].slots = newSlots;
+        this.render();
       }
-
-      this.render();
     };
 
     const onMouseUp = () => {
@@ -463,35 +428,6 @@ class DockManager {
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-  }
-
-  /**
-   * Handle row overflow by moving rightmost components to new row
-   */
-  handleRowOverflow(rowIndex) {
-    const row = this.layout.main[rowIndex];
-    const maxSlots = this.settings.slotsPerRow;
-
-    while (
-      row.components.reduce((sum, c) => sum + c.slots, 0) > maxSlots &&
-      row.components.length > 1
-    ) {
-      // Remove the rightmost component
-      const overflow = row.components.pop();
-
-      // Check if next row exists, otherwise create one
-      if (!this.layout.main[rowIndex + 1]) {
-        this.layout.main.push({
-          row: rowIndex + 1,
-          components: [overflow],
-        });
-      } else {
-        // Insert at the beginning of the next row
-        this.layout.main[rowIndex + 1].components.unshift(overflow);
-        // Check if next row now overflows
-        this.handleRowOverflow(rowIndex + 1);
-      }
-    }
   }
 
   /**
@@ -694,57 +630,9 @@ class DockManager {
    * Update slots per row
    */
   setSlotsPerRow(count) {
-    const newSlotsPerRow = Math.max(2, Math.min(8, count));
-    this.settings.slotsPerRow = newSlotsPerRow;
-
-    // Reflow layout to handle overflow
-    this.reflowLayout();
-
+    this.settings.slotsPerRow = Math.max(2, Math.min(8, count));
     this.saveSettings();
-    this.saveLayout();
     this.render();
-  }
-
-  /**
-   * Reflow layout to handle slot overflow
-   * When slots per row decreases, move excess components to new rows
-   */
-  reflowLayout() {
-    const slotsPerRow = this.settings.slotsPerRow;
-
-    // Process main container
-    const newMainRows = [];
-    for (const row of this.layout.main) {
-      let currentRow = { row: newMainRows.length, components: [] };
-      let currentSlots = 0;
-
-      for (const comp of row.components) {
-        // Cap component slots to max slots per row
-        const compSlots = Math.min(comp.slots, slotsPerRow);
-
-        if (currentSlots + compSlots <= slotsPerRow) {
-          currentRow.components.push({ ...comp, slots: compSlots });
-          currentSlots += compSlots;
-        } else {
-          // Push current row and start new one
-          if (currentRow.components.length > 0) {
-            newMainRows.push(currentRow);
-          }
-          currentRow = {
-            row: newMainRows.length,
-            components: [{ ...comp, slots: compSlots }],
-          };
-          currentSlots = compSlots;
-        }
-      }
-
-      // Don't forget the last row
-      if (currentRow.components.length > 0) {
-        newMainRows.push(currentRow);
-      }
-    }
-
-    this.layout.main = newMainRows;
   }
 
   /**
@@ -793,185 +681,41 @@ class DockManager {
    * Reset layout to default
    */
   resetLayout() {
-    // Default layout with side containers enabled, 3 slots per row
-    // Row 0: Pinned Apps (full row - 3 slots)
-    // Row 1: Quote (full row - 3 slots)
-    // Row 2: Prayer Times (2 slots) + Qibla (1 slot) = 3 slots
-    // Row 3: Calendar (1 slot)
-    // Right side: Todo
     this.layout = {
       main: [
-        { row: 0, components: [{ id: "pinnedApps", slots: 3 }] },
-        { row: 1, components: [{ id: "quote", slots: 3 }] },
         {
-          row: 2,
+          row: 0,
           components: [
-            { id: "prayerTimes", slots: 2 },
+            { id: "prayerTimes", slots: 1 },
+            { id: "calendar", slots: 1 },
             { id: "qibla", slots: 1 },
           ],
         },
-        { row: 3, components: [{ id: "calendar", slots: 1 }] },
+        {
+          row: 1,
+          components: [
+            { id: "todo", slots: 1 },
+            { id: "pinnedApps", slots: 1 },
+          ],
+        },
+        { row: 2, components: [{ id: "quote", slots: 1 }] },
       ],
       left: [],
-      right: [{ row: 0, components: [{ id: "todo", slots: 1 }] }],
+      right: [],
     };
 
     // Reset settings
     this.settings.slotsPerRow = 3;
     this.settings.containerWidth = "default";
     this.settings.customWidth = 80;
-    this.settings.showSideContainers = true;
+    this.settings.showSideContainers = false;
     this.settings.sideAlignment = "center";
-
-    // Reset active components
-    this.activeComponents = new Set(Object.keys(this.componentRegistry));
 
     this.saveLayout();
     this.saveSettings();
     this.applyContainerWidth();
     this.applySideContainers();
     this.render();
-  }
-
-  /**
-   * Get all active components in layout
-   */
-  getActiveComponentsInLayout() {
-    const active = new Set();
-
-    const scanContainer = (rows) => {
-      for (const row of rows) {
-        for (const comp of row.components) {
-          active.add(comp.id);
-        }
-      }
-    };
-
-    scanContainer(this.layout.main);
-    scanContainer(this.layout.left);
-    scanContainer(this.layout.right);
-
-    return active;
-  }
-
-  /**
-   * Get available components (not in layout)
-   */
-  getAvailableComponents() {
-    const inLayout = this.getActiveComponentsInLayout();
-    const available = [];
-
-    for (const key in this.componentRegistry) {
-      if (!inLayout.has(key)) {
-        available.push({
-          id: key,
-          ...this.componentRegistry[key],
-        });
-      }
-    }
-
-    return available;
-  }
-
-  /**
-   * Add a component to the layout
-   */
-  addComponent(componentId, container = "main") {
-    if (!this.componentRegistry[componentId]) return false;
-
-    const targetLayout = this.layout[container];
-
-    // Add to a new row at the bottom
-    targetLayout.push({
-      row: targetLayout.length,
-      components: [{ id: componentId, slots: 1 }],
-    });
-
-    this.saveLayout();
-    this.render();
-    return true;
-  }
-
-  /**
-   * Remove a component from the layout
-   */
-  removeComponent(componentId) {
-    const removeFromContainer = (rows) => {
-      for (let r = rows.length - 1; r >= 0; r--) {
-        const row = rows[r];
-        const compIndex = row.components.findIndex((c) => c.id === componentId);
-
-        if (compIndex !== -1) {
-          const totalSlotsInRow = row.components.reduce(
-            (sum, c) => sum + c.slots,
-            0
-          );
-          const componentSlots = row.components[compIndex].slots;
-
-          // Remove the component
-          row.components.splice(compIndex, 1);
-
-          // Only remove the row if the component consumed the entire row
-          if (
-            row.components.length === 0 ||
-            componentSlots >= this.settings.slotsPerRow
-          ) {
-            if (row.components.length === 0) {
-              rows.splice(r, 1);
-            }
-          }
-
-          // Hide the component element
-          const compInfo = this.componentRegistry[componentId];
-          if (compInfo) {
-            const el = document.getElementById(compInfo.id);
-            if (el) {
-              el.style.display = "none";
-            }
-          }
-
-          return true;
-        }
-      }
-      return false;
-    };
-
-    if (removeFromContainer(this.layout.main)) {
-      this.saveLayout();
-      this.render();
-      return true;
-    }
-    if (removeFromContainer(this.layout.left)) {
-      this.saveLayout();
-      this.render();
-      return true;
-    }
-    if (removeFromContainer(this.layout.right)) {
-      this.saveLayout();
-      this.render();
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Get component info for settings panel
-   */
-  getComponentsList() {
-    const inLayout = this.getActiveComponentsInLayout();
-    const list = [];
-
-    for (const key in this.componentRegistry) {
-      list.push({
-        id: key,
-        name: this.componentRegistry[key].name,
-        icon: this.componentRegistry[key].icon,
-        active: inLayout.has(key),
-      });
-    }
-
-    return list;
   }
 }
 

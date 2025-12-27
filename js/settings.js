@@ -107,11 +107,6 @@ class SettingsManager {
     this.sideAlignment = document.getElementById("sideAlignment");
     this.resetLayoutBtn = document.getElementById("resetLayoutBtn");
 
-    // Components settings elements
-    this.componentsList = document.getElementById("componentsList");
-    this.addComponentSelect = document.getElementById("addComponentSelect");
-    this.addComponentBtn = document.getElementById("addComponentBtn");
-
     // Prayer calculation methods reference
     this.prayerMethods = {
       MWL: { fajr: 18, isha: 17 },
@@ -284,97 +279,6 @@ class SettingsManager {
     if (this.sideAlignment) {
       this.sideAlignment.value = settings.dockSideAlignment || "center";
     }
-
-    // Load components list
-    this.renderComponentsList();
-  }
-
-  /**
-   * Render the components list in settings
-   */
-  renderComponentsList() {
-    if (!this.componentsList || !window.dockManager) return;
-
-    const components = window.dockManager.getComponentsList();
-
-    this.componentsList.innerHTML = "";
-
-    components.forEach((comp) => {
-      const item = document.createElement("div");
-      item.className = `component-item ${comp.active ? "" : "inactive"}`;
-      item.dataset.componentId = comp.id;
-
-      item.innerHTML = `
-        <div class="component-item-info">
-          <span class="component-item-icon">${comp.icon}</span>
-          <div>
-            <div class="component-item-name">${comp.name}</div>
-            <div class="component-item-status">${
-              comp.active ? "Active" : "Not in layout"
-            }</div>
-          </div>
-        </div>
-        <div class="component-item-actions">
-          ${
-            comp.active
-              ? `<button class="component-remove-btn" data-id="${comp.id}">Remove</button>`
-              : `<button class="component-toggle-btn" data-id="${comp.id}">Add</button>`
-          }
-        </div>
-      `;
-
-      this.componentsList.appendChild(item);
-    });
-
-    // Bind remove buttons
-    this.componentsList
-      .querySelectorAll(".component-remove-btn")
-      .forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const compId = e.target.dataset.id;
-          if (window.dockManager) {
-            window.dockManager.removeComponent(compId);
-            this.renderComponentsList();
-            this.updateAddComponentSelect();
-          }
-        });
-      });
-
-    // Bind add buttons
-    this.componentsList
-      .querySelectorAll(".component-toggle-btn")
-      .forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const compId = e.target.dataset.id;
-          if (window.dockManager) {
-            window.dockManager.addComponent(compId, "main");
-            this.renderComponentsList();
-            this.updateAddComponentSelect();
-          }
-        });
-      });
-
-    // Update add component select
-    this.updateAddComponentSelect();
-  }
-
-  /**
-   * Update the add component dropdown
-   */
-  updateAddComponentSelect() {
-    if (!this.addComponentSelect || !window.dockManager) return;
-
-    const available = window.dockManager.getAvailableComponents();
-
-    this.addComponentSelect.innerHTML =
-      '<option value="">-- Select Component --</option>';
-
-    available.forEach((comp) => {
-      const option = document.createElement("option");
-      option.value = comp.id;
-      option.textContent = `${comp.icon} ${comp.name}`;
-      this.addComponentSelect.appendChild(option);
-    });
   }
 
   /**
@@ -756,11 +660,6 @@ class SettingsManager {
     this.panels.forEach((panel) => {
       panel.classList.toggle("active", panel.id === `${tabName}Panel`);
     });
-
-    // Refresh components list when switching to components tab
-    if (tabName === "components") {
-      this.renderComponentsList();
-    }
   }
 
   /**
@@ -926,18 +825,6 @@ class SettingsManager {
     if (this.showSideContainers) {
       this.showSideContainers.addEventListener("change", (e) => {
         this.toggleSideContainerOptions(e.target.checked);
-      });
-    }
-
-    // Add component button
-    if (this.addComponentBtn) {
-      this.addComponentBtn.addEventListener("click", () => {
-        const compId = this.addComponentSelect?.value;
-        if (compId && window.dockManager) {
-          window.dockManager.addComponent(compId, "main");
-          this.renderComponentsList();
-          this.showToast(`Component added!`, "success");
-        }
       });
     }
 
