@@ -144,6 +144,7 @@ class QuotesManager {
 
   /**
    * Animate quote change
+   * Uses a jitter-free approach: measure before and after, then animate with transforms
    */
   animateQuote(quote) {
     if (!this.quoteText || !this.quoteSource) return;
@@ -172,19 +173,22 @@ class QuotesManager {
       this._activeAnimations = [];
     }
 
-    const startHeight = container.getBoundingClientRect().height;
+    // FLIP technique: First, measure initial state
+    const startRect = container.getBoundingClientRect();
+    const startHeight = startRect.height;
+
+    // Lock the container height immediately to prevent layout shift
     container.style.height = `${startHeight}px`;
     container.style.overflow = "hidden";
-    container.style.willChange = "height";
 
     const outKeyframes = [
-      { opacity: 1, transform: "translateY(0px)" },
-      { opacity: 0, transform: "translateY(-8px)" },
+      { opacity: 1, transform: "translateY(0)" },
+      { opacity: 0, transform: "translateY(-6px)" },
     ];
 
     const outOptions = {
-      duration: 180,
-      easing: "cubic-bezier(0.2, 0, 0, 1)",
+      duration: 150,
+      easing: "cubic-bezier(0.4, 0, 1, 1)",
       fill: "forwards",
     };
 
@@ -192,55 +196,76 @@ class QuotesManager {
     const outSource = this.quoteSource.animate(outKeyframes, outOptions);
     this._activeAnimations.push(outText, outSource);
 
-    Promise.all([
-      outText.finished.catch(() => undefined),
-      outSource.finished.catch(() => undefined),
-    ]).then(() => {
-      // Swap content while hidden
-      this.quoteText.textContent = quote.text;
-      this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
-      this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
+    outText.finished
+      .catch(() => {})
+      .finally(() => {
+        // Skip if animation was cancelled
+        if (outText.playState === "idle") return;
 
-      // Measure target height after content swap
-      const endHeight = container.scrollHeight;
+        // Swap content while invisible
+        this.quoteText.textContent = quote.text;
+        this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
+        this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
 
-      const heightAnim = container.animate(
-        [{ height: `${startHeight}px` }, { height: `${endHeight}px` }],
-        {
-          duration: 340,
-          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
-          fill: "forwards",
-        }
-      );
-      this._activeAnimations.push(heightAnim);
+        // Force layout recalc and measure new height
+        // Temporarily remove height lock to get natural height
+        container.style.height = "auto";
+        const endHeight = container.getBoundingClientRect().height;
 
-      const inKeyframes = [
-        { opacity: 0, transform: "translateY(10px)" },
-        { opacity: 1, transform: "translateY(0px)" },
-      ];
+        // Immediately re-lock at start height (no visual change yet)
+        container.style.height = `${startHeight}px`;
 
-      const inOptions = {
-        duration: 260,
-        delay: 60,
-        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
-        fill: "forwards",
-      };
+        // Use requestAnimationFrame to batch the height transition
+        requestAnimationFrame(() => {
+          // Animate height using CSS transition for smoother performance
+          container.style.transition =
+            "height 280ms cubic-bezier(0.4, 0, 0.2, 1)";
+          container.style.height = `${endHeight}px`;
 
-      const inText = this.quoteText.animate(inKeyframes, inOptions);
-      const inSource = this.quoteSource.animate(inKeyframes, inOptions);
-      this._activeAnimations.push(inText, inSource);
+          const inKeyframes = [
+            { opacity: 0, transform: "translateY(8px)" },
+            { opacity: 1, transform: "translateY(0)" },
+          ];
 
-      Promise.all([
-        heightAnim.finished.catch(() => undefined),
-        inText.finished.catch(() => undefined),
-        inSource.finished.catch(() => undefined),
-      ]).then(() => {
-        container.style.height = "";
-        container.style.overflow = "";
-        container.style.willChange = "";
-        this._activeAnimations = [];
+          const inOptions = {
+            duration: 220,
+            delay: 40,
+            easing: "cubic-bezier(0, 0, 0.2, 1)",
+            fill: "forwards",
+          };
+
+          const inText = this.quoteText.animate(inKeyframes, inOptions);
+          const inSource = this.quoteSource.animate(inKeyframes, inOptions);
+          this._activeAnimations.push(inText, inSource);
+
+          // Clean up after all animations complete
+          const cleanup = () => {
+            container.style.height = "";
+            container.style.overflow = "";
+            container.style.transition = "";
+            this._activeAnimations = [];
+          };
+
+          // Wait for both height transition and fade-in to complete
+          const heightTransitionEnd = new Promise((resolve) => {
+            const onEnd = (e) => {
+              if (e.propertyName === "height") {
+                container.removeEventListener("transitionend", onEnd);
+                resolve();
+              }
+            };
+            container.addEventListener("transitionend", onEnd);
+            // Fallback timeout in case transitionend doesn't fire
+            setTimeout(resolve, 320);
+          });
+
+          Promise.all([
+            heightTransitionEnd,
+            inText.finished.catch(() => {}),
+            inSource.finished.catch(() => {}),
+          ]).then(cleanup);
+        });
       });
-    });
   }
 
   /**
