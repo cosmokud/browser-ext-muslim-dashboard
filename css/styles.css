@@ -11,18 +11,18 @@
   --primary-dark: #0d3d2e;
   --accent-gold: #d4af37;
   --accent-gold-light: #e6c866;
-  
+
   /* Glass effect */
   --glass-bg: rgba(255, 255, 255, 0.12);
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  
+
   /* Text colors */
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.85);
   --text-muted: rgba(255, 255, 255, 0.6);
-  
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -30,26 +30,28 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 30px;
   --radius-full: 50%;
-  
+
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
-  
+
   /* Fonts */
-  --font-primary: 'Poppins', sans-serif;
-  --font-arabic: 'Noto Naskh Arabic', 'Amiri', serif;
+  --font-primary: "Poppins", sans-serif;
+  --font-arabic: "Noto Naskh Arabic", "Amiri", serif;
 }
 
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -321,9 +323,15 @@ body {
   animation: scaleIn 0.5s ease-out both;
 }
 
-.card:nth-child(1) { animation-delay: 0.3s; }
-.card:nth-child(2) { animation-delay: 0.4s; }
-.card:nth-child(3) { animation-delay: 0.5s; }
+.card:nth-child(1) {
+  animation-delay: 0.3s;
+}
+.card:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.card:nth-child(3) {
+  animation-delay: 0.5s;
+}
 
 @keyframes scaleIn {
   from {
@@ -395,7 +403,11 @@ body {
 }
 
 .prayer-item.active {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
 }
 
@@ -410,13 +422,17 @@ body {
 .prayer-time {
   font-size: 1.1rem;
   font-weight: 600;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .next-prayer {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
-  background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary-color)
+  );
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -438,7 +454,7 @@ body {
   margin-left: auto;
   font-size: 1.2rem;
   font-weight: 700;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 /* Qibla Card */
@@ -592,7 +608,11 @@ body {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   border: none;
   color: var(--text-primary);
   cursor: pointer;
@@ -713,7 +733,7 @@ body {
 }
 
 .todo-checkbox.checked::after {
-  content: '✓';
+  content: "✓";
   color: white;
   font-size: 14px;
 }
@@ -786,7 +806,11 @@ body {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   border: none;
   color: var(--text-primary);
   cursor: pointer;
@@ -832,7 +856,11 @@ body {
 }
 
 .modal {
-  background: linear-gradient(135deg, rgba(30, 40, 50, 0.95), rgba(20, 30, 40, 0.98));
+  background: linear-gradient(
+    135deg,
+    rgba(30, 40, 50, 0.95),
+    rgba(20, 30, 40, 0.98)
+  );
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 90%;
@@ -909,7 +937,11 @@ body {
 }
 
 .save-btn {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   color: var(--text-primary);
 }
 
@@ -1173,28 +1205,28 @@ body {
   .main-container {
     padding: var(--spacing-md);
   }
-  
+
   .header {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .time-section {
     justify-content: center;
   }
-  
+
   .content-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .adjustments-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .settings-tabs {
     justify-content: center;
   }
-  
+
   .settings-btn {
     bottom: var(--spacing-md);
     right: var(--spacing-md);
@@ -1207,20 +1239,20 @@ body {
   html {
     font-size: 14px;
   }
-  
+
   .adjustments-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .coordinates-group {
     grid-template-columns: 1fr;
   }
-  
+
   .next-prayer {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .next-prayer-countdown {
     margin-left: 0;
     margin-top: var(--spacing-sm);
@@ -1241,7 +1273,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

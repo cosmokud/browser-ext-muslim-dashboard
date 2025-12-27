@@ -9,27 +9,77 @@ class HijriDate {
     // Islamic month names
     this.monthNames = {
       ar: [
-        'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني',
-        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
-        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+        "محرم",
+        "صفر",
+        "ربيع الأول",
+        "ربيع الثاني",
+        "جمادى الأولى",
+        "جمادى الآخرة",
+        "رجب",
+        "شعبان",
+        "رمضان",
+        "شوال",
+        "ذو القعدة",
+        "ذو الحجة",
       ],
       en: [
-        'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
-        'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha\'ban',
-        'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'
-      ]
+        "Muharram",
+        "Safar",
+        "Rabi al-Awwal",
+        "Rabi al-Thani",
+        "Jumada al-Awwal",
+        "Jumada al-Thani",
+        "Rajab",
+        "Sha'ban",
+        "Ramadan",
+        "Shawwal",
+        "Dhu al-Qi'dah",
+        "Dhu al-Hijjah",
+      ],
     };
 
     // Day names
     this.dayNames = {
-      ar: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
-      en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      ar: [
+        "الأحد",
+        "الإثنين",
+        "الثلاثاء",
+        "الأربعاء",
+        "الخميس",
+        "الجمعة",
+        "السبت",
+      ],
+      en: [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
     };
 
     // Islamic day names
     this.islamicDayNames = {
-      ar: ['يوم الأحد', 'يوم الإثنين', 'يوم الثلاثاء', 'يوم الأربعاء', 'يوم الخميس', 'يوم الجمعة', 'يوم السبت'],
-      en: ['Yawm al-Ahad', 'Yawm al-Ithnayn', 'Yawm ath-Thulatha\'', 'Yawm al-Arba\'a\'', 'Yawm al-Khamis', 'Yawm al-Jumu\'ah', 'Yawm as-Sabt']
+      ar: [
+        "يوم الأحد",
+        "يوم الإثنين",
+        "يوم الثلاثاء",
+        "يوم الأربعاء",
+        "يوم الخميس",
+        "يوم الجمعة",
+        "يوم السبت",
+      ],
+      en: [
+        "Yawm al-Ahad",
+        "Yawm al-Ithnayn",
+        "Yawm ath-Thulatha'",
+        "Yawm al-Arba'a'",
+        "Yawm al-Khamis",
+        "Yawm al-Jumu'ah",
+        "Yawm as-Sabt",
+      ],
     };
   }
 
@@ -66,7 +116,7 @@ class HijriDate {
       monthName: this.monthNames.en[hijri.month - 1],
       monthNameAr: this.monthNames.ar[hijri.month - 1],
       dayName: this.dayNames.en[adjustedDate.getDay()],
-      dayNameAr: this.dayNames.ar[adjustedDate.getDay()]
+      dayNameAr: this.dayNames.ar[adjustedDate.getDay()],
     };
   }
 
@@ -95,9 +145,13 @@ class HijriDate {
     const A = Math.floor(year / 100);
     const B = 2 - A + Math.floor(A / 4);
 
-    return Math.floor(365.25 * (year + 4716)) +
-           Math.floor(30.6001 * (month + 1)) +
-           day + B - 1524.5;
+    return (
+      Math.floor(365.25 * (year + 4716)) +
+      Math.floor(30.6001 * (month + 1)) +
+      day +
+      B -
+      1524.5
+    );
   }
 
   /**
@@ -108,10 +162,14 @@ class HijriDate {
     const l = jd - 1948439.5 + 10632;
     const n = Math.floor((l - 1) / 10631);
     const l2 = l - 10631 * n + 354;
-    const j = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) +
-              Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
-    const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
-               Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+    const j =
+      Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) +
+      Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
+    const l3 =
+      l2 -
+      Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+      Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
+      29;
     const month = Math.floor((24 * l3) / 709);
     const day = l3 - Math.floor((709 * month) / 24);
     const year = 30 * n + j - 30;
@@ -123,11 +181,15 @@ class HijriDate {
    * Convert Hijri date to Julian Day Number
    */
   hijriToJulian(year, month, day) {
-    return Math.floor((11 * year + 3) / 30) +
-           354 * year +
-           30 * month -
-           Math.floor((month - 1) / 2) +
-           day + 1948440 - 385;
+    return (
+      Math.floor((11 * year + 3) / 30) +
+      354 * year +
+      30 * month -
+      Math.floor((month - 1) / 2) +
+      day +
+      1948440 -
+      385
+    );
   }
 
   /**
@@ -155,20 +217,20 @@ class HijriDate {
    * @param {string} format - Format string
    * @param {string} lang - Language (en/ar)
    */
-  format(hijriDate, format = 'full', lang = 'en') {
+  format(hijriDate, format = "full", lang = "en") {
     const day = hijriDate.day;
-    const month = lang === 'ar' ? hijriDate.monthNameAr : hijriDate.monthName;
+    const month = lang === "ar" ? hijriDate.monthNameAr : hijriDate.monthName;
     const year = hijriDate.year;
-    const dayName = lang === 'ar' ? hijriDate.dayNameAr : hijriDate.dayName;
+    const dayName = lang === "ar" ? hijriDate.dayNameAr : hijriDate.dayName;
 
     switch (format) {
-      case 'full':
+      case "full":
         return `${dayName}, ${day} ${month} ${year} AH`;
-      case 'long':
+      case "long":
         return `${day} ${month} ${year} AH`;
-      case 'short':
+      case "short":
         return `${day}/${hijriDate.month}/${year}`;
-      case 'month-year':
+      case "month-year":
         return `${month} ${year} AH`;
       default:
         return `${day} ${month} ${year}`;
@@ -178,15 +240,15 @@ class HijriDate {
   /**
    * Format Gregorian date
    */
-  formatGregorian(date, format = 'full') {
+  formatGregorian(date, format = "full") {
     const options = {
-      full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
-      long: { year: 'numeric', month: 'long', day: 'numeric' },
-      short: { year: 'numeric', month: 'numeric', day: 'numeric' },
-      'month-year': { year: 'numeric', month: 'long' }
+      full: { weekday: "long", year: "numeric", month: "long", day: "numeric" },
+      long: { year: "numeric", month: "long", day: "numeric" },
+      short: { year: "numeric", month: "numeric", day: "numeric" },
+      "month-year": { year: "numeric", month: "long" },
     };
 
-    return date.toLocaleDateString('en-US', options[format] || options.full);
+    return date.toLocaleDateString("en-US", options[format] || options.full);
   }
 
   /**
@@ -194,16 +256,31 @@ class HijriDate {
    */
   getIslamicEvents(hijriYear) {
     return [
-      { month: 1, day: 1, name: 'Islamic New Year', nameAr: 'رأس السنة الهجرية' },
-      { month: 1, day: 10, name: 'Day of Ashura', nameAr: 'يوم عاشوراء' },
-      { month: 3, day: 12, name: 'Mawlid al-Nabi', nameAr: 'المولد النبوي' },
-      { month: 7, day: 27, name: 'Isra and Mi\'raj', nameAr: 'الإسراء والمعراج' },
-      { month: 8, day: 15, name: 'Mid-Sha\'ban', nameAr: 'ليلة النصف من شعبان' },
-      { month: 9, day: 1, name: 'Beginning of Ramadan', nameAr: 'بداية رمضان' },
-      { month: 9, day: 27, name: 'Laylat al-Qadr (estimated)', nameAr: 'ليلة القدر' },
-      { month: 10, day: 1, name: 'Eid al-Fitr', nameAr: 'عيد الفطر' },
-      { month: 12, day: 9, name: 'Day of Arafah', nameAr: 'يوم عرفة' },
-      { month: 12, day: 10, name: 'Eid al-Adha', nameAr: 'عيد الأضحى' }
+      {
+        month: 1,
+        day: 1,
+        name: "Islamic New Year",
+        nameAr: "رأس السنة الهجرية",
+      },
+      { month: 1, day: 10, name: "Day of Ashura", nameAr: "يوم عاشوراء" },
+      { month: 3, day: 12, name: "Mawlid al-Nabi", nameAr: "المولد النبوي" },
+      {
+        month: 7,
+        day: 27,
+        name: "Isra and Mi'raj",
+        nameAr: "الإسراء والمعراج",
+      },
+      { month: 8, day: 15, name: "Mid-Sha'ban", nameAr: "ليلة النصف من شعبان" },
+      { month: 9, day: 1, name: "Beginning of Ramadan", nameAr: "بداية رمضان" },
+      {
+        month: 9,
+        day: 27,
+        name: "Laylat al-Qadr (estimated)",
+        nameAr: "ليلة القدر",
+      },
+      { month: 10, day: 1, name: "Eid al-Fitr", nameAr: "عيد الفطر" },
+      { month: 12, day: 9, name: "Day of Arafah", nameAr: "يوم عرفة" },
+      { month: 12, day: 10, name: "Eid al-Adha", nameAr: "عيد الأضحى" },
     ];
   }
 
@@ -212,7 +289,9 @@ class HijriDate {
    */
   getTodayEvent(hijriDate) {
     const events = this.getIslamicEvents(hijriDate.year);
-    return events.find(e => e.month === hijriDate.month && e.day === hijriDate.day);
+    return events.find(
+      (e) => e.month === hijriDate.month && e.day === hijriDate.day
+    );
   }
 }
 

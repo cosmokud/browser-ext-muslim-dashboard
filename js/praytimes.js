@@ -2,75 +2,75 @@
  * PrayTimes.js - Prayer Times Calculator
  * Based on PrayTimes library by Hamid Zarrabi-Zadeh
  * http://praytimes.org/
- * 
+ *
  * Adapted and optimized for Muslim Dashboard Extension
  */
 
 class PrayTimes {
-  constructor(method = 'MWL') {
+  constructor(method = "MWL") {
     // Time Names
     this.timeNames = {
-      imsak: 'Imsak',
-      fajr: 'Fajr',
-      sunrise: 'Sunrise',
-      dhuhr: 'Dhuhr',
-      asr: 'Asr',
-      sunset: 'Sunset',
-      maghrib: 'Maghrib',
-      isha: 'Isha',
-      midnight: 'Midnight'
+      imsak: "Imsak",
+      fajr: "Fajr",
+      sunrise: "Sunrise",
+      dhuhr: "Dhuhr",
+      asr: "Asr",
+      sunset: "Sunset",
+      maghrib: "Maghrib",
+      isha: "Isha",
+      midnight: "Midnight",
     };
 
     // Calculation Methods
     this.methods = {
       MWL: {
-        name: 'Muslim World League',
-        params: { fajr: 18, isha: 17 }
+        name: "Muslim World League",
+        params: { fajr: 18, isha: 17 },
       },
       ISNA: {
-        name: 'Islamic Society of North America',
-        params: { fajr: 15, isha: 15 }
+        name: "Islamic Society of North America",
+        params: { fajr: 15, isha: 15 },
       },
       Egypt: {
-        name: 'Egyptian General Authority of Survey',
-        params: { fajr: 19.5, isha: 17.5 }
+        name: "Egyptian General Authority of Survey",
+        params: { fajr: 19.5, isha: 17.5 },
       },
       Makkah: {
-        name: 'Umm Al-Qura University, Makkah',
-        params: { fajr: 18.5, isha: '90 min' }
+        name: "Umm Al-Qura University, Makkah",
+        params: { fajr: 18.5, isha: "90 min" },
       },
       Karachi: {
-        name: 'University of Islamic Sciences, Karachi',
-        params: { fajr: 18, isha: 18 }
+        name: "University of Islamic Sciences, Karachi",
+        params: { fajr: 18, isha: 18 },
       },
       Tehran: {
-        name: 'Institute of Geophysics, University of Tehran',
-        params: { fajr: 17.7, isha: 14, maghrib: 4.5, midnight: 'Jafari' }
+        name: "Institute of Geophysics, University of Tehran",
+        params: { fajr: 17.7, isha: 14, maghrib: 4.5, midnight: "Jafari" },
       },
       Jafari: {
-        name: 'Shia Ithna-Ashari, Leva Institute, Qum',
-        params: { fajr: 16, isha: 14, maghrib: 4, midnight: 'Jafari' }
-      }
+        name: "Shia Ithna-Ashari, Leva Institute, Qum",
+        params: { fajr: 16, isha: 14, maghrib: 4, midnight: "Jafari" },
+      },
     };
 
     // Default Parameters
     this.defaultParams = {
-      maghrib: '0 min',
-      midnight: 'Standard'
+      maghrib: "0 min",
+      midnight: "Standard",
     };
 
     // Settings
     this.setting = {
-      imsak: '10 min',
-      dhuhr: '0 min',
-      asr: 'Standard',
-      highLats: 'NightMiddle'
+      imsak: "10 min",
+      dhuhr: "0 min",
+      asr: "Standard",
+      highLats: "NightMiddle",
     };
 
     // Time Format
-    this.timeFormat = '24h';
-    this.timeSuffixes = ['am', 'pm'];
-    this.invalidTime = '-----';
+    this.timeFormat = "24h";
+    this.timeSuffixes = ["am", "pm"];
+    this.invalidTime = "-----";
 
     // Coordinates
     this.lat = 0;
@@ -96,7 +96,7 @@ class PrayTimes {
 
   // Set asr juristic method
   setAsrMethod(method) {
-    this.setting.asr = method === 'Hanafi' ? 'Hanafi' : 'Standard';
+    this.setting.asr = method === "Hanafi" ? "Hanafi" : "Standard";
   }
 
   // Adjust times by minutes
@@ -119,15 +119,17 @@ class PrayTimes {
     this.elv = coords[2] || 0;
     this.timeFormat = format || this.timeFormat;
 
-    if (typeof timezone === 'undefined' || timezone === 'auto') {
+    if (typeof timezone === "undefined" || timezone === "auto") {
       timezone = this.getTimeZone(date);
     }
-    if (typeof dst === 'undefined' || dst === 'auto') {
+    if (typeof dst === "undefined" || dst === "auto") {
       dst = this.getDst(date);
     }
 
     this.timeZone = timezone + (dst ? 1 : 0);
-    this.jDate = this.julian(date.getFullYear(), date.getMonth() + 1, date.getDate()) - this.lng / (15 * 24);
+    this.jDate =
+      this.julian(date.getFullYear(), date.getMonth() + 1, date.getDate()) -
+      this.lng / (15 * 24);
 
     return this.computeTimes();
   }
@@ -135,16 +137,21 @@ class PrayTimes {
   // Get formatted time
   getFormattedTime(time, format, suffixes) {
     if (isNaN(time)) return this.invalidTime;
-    if (format === 'Float') return time;
+    if (format === "Float") return time;
 
     suffixes = suffixes || this.timeSuffixes;
     time = this.fixHour(time + 0.5 / 60); // add 0.5 minutes to round
     const hours = Math.floor(time);
     const minutes = Math.floor((time - hours) * 60);
-    const suffix = format === '12h' ? suffixes[hours < 12 ? 0 : 1] : '';
-    const hour = format === '24h' ? this.twoDigitsFormat(hours) : ((hours + 12 - 1) % 12 + 1);
+    const suffix = format === "12h" ? suffixes[hours < 12 ? 0 : 1] : "";
+    const hour =
+      format === "24h"
+        ? this.twoDigitsFormat(hours)
+        : ((hours + 12 - 1) % 12) + 1;
 
-    return hour + ':' + this.twoDigitsFormat(minutes) + (suffix ? ' ' + suffix : '');
+    return (
+      hour + ":" + this.twoDigitsFormat(minutes) + (suffix ? " " + suffix : "")
+    );
   }
 
   // Compute prayer times
@@ -157,7 +164,7 @@ class PrayTimes {
       asr: 13,
       sunset: 18,
       maghrib: 18,
-      isha: 18
+      isha: 18,
     };
 
     // Main iterations
@@ -168,9 +175,10 @@ class PrayTimes {
     times = this.adjustTimes(times);
 
     // Add midnight
-    times.midnight = this.setting.midnight === 'Jafari' ?
-      times.sunset + this.timeDiff(times.sunset, times.fajr) / 2 :
-      times.sunset + this.timeDiff(times.sunset, times.sunrise) / 2;
+    times.midnight =
+      this.setting.midnight === "Jafari"
+        ? times.sunset + this.timeDiff(times.sunset, times.fajr) / 2
+        : times.sunset + this.timeDiff(times.sunset, times.sunrise) / 2;
 
     times = this.tuneTimes(times);
     return this.modifyFormats(times);
@@ -181,14 +189,29 @@ class PrayTimes {
     const dayPortion = this.dayPortion(times);
 
     return {
-      imsak: this.sunAngleTime(this.eval(this.setting.imsak), dayPortion.imsak, 'ccw'),
-      fajr: this.sunAngleTime(this.eval(this.setting.fajr), dayPortion.fajr, 'ccw'),
-      sunrise: this.sunAngleTime(this.riseSetAngle(), dayPortion.sunrise, 'ccw'),
+      imsak: this.sunAngleTime(
+        this.eval(this.setting.imsak),
+        dayPortion.imsak,
+        "ccw"
+      ),
+      fajr: this.sunAngleTime(
+        this.eval(this.setting.fajr),
+        dayPortion.fajr,
+        "ccw"
+      ),
+      sunrise: this.sunAngleTime(
+        this.riseSetAngle(),
+        dayPortion.sunrise,
+        "ccw"
+      ),
       dhuhr: this.midDay(dayPortion.dhuhr),
       asr: this.asrTime(this.asrFactor(this.setting.asr), dayPortion.asr),
       sunset: this.sunAngleTime(this.riseSetAngle(), dayPortion.sunset),
-      maghrib: this.sunAngleTime(this.eval(this.setting.maghrib), dayPortion.maghrib),
-      isha: this.sunAngleTime(this.eval(this.setting.isha), dayPortion.isha)
+      maghrib: this.sunAngleTime(
+        this.eval(this.setting.maghrib),
+        dayPortion.maghrib
+      ),
+      isha: this.sunAngleTime(this.eval(this.setting.isha), dayPortion.isha),
     };
   }
 
@@ -198,7 +221,7 @@ class PrayTimes {
       times[i] += this.timeZone - this.lng / 15;
     }
 
-    if (this.setting.highLats !== 'None') {
+    if (this.setting.highLats !== "None") {
       times = this.adjustHighLats(times);
     }
 
@@ -221,10 +244,32 @@ class PrayTimes {
   adjustHighLats(times) {
     const nightTime = this.timeDiff(times.sunset, times.sunrise);
 
-    times.imsak = this.adjustHLTime(times.imsak, times.sunrise, this.eval(this.setting.imsak), nightTime, 'ccw');
-    times.fajr = this.adjustHLTime(times.fajr, times.sunrise, this.eval(this.setting.fajr), nightTime, 'ccw');
-    times.isha = this.adjustHLTime(times.isha, times.sunset, this.eval(this.setting.isha), nightTime);
-    times.maghrib = this.adjustHLTime(times.maghrib, times.sunset, this.eval(this.setting.maghrib), nightTime);
+    times.imsak = this.adjustHLTime(
+      times.imsak,
+      times.sunrise,
+      this.eval(this.setting.imsak),
+      nightTime,
+      "ccw"
+    );
+    times.fajr = this.adjustHLTime(
+      times.fajr,
+      times.sunrise,
+      this.eval(this.setting.fajr),
+      nightTime,
+      "ccw"
+    );
+    times.isha = this.adjustHLTime(
+      times.isha,
+      times.sunset,
+      this.eval(this.setting.isha),
+      nightTime
+    );
+    times.maghrib = this.adjustHLTime(
+      times.maghrib,
+      times.sunset,
+      this.eval(this.setting.maghrib),
+      nightTime
+    );
 
     return times;
   }
@@ -232,12 +277,13 @@ class PrayTimes {
   // Adjust time for higher latitudes
   adjustHLTime(time, base, angle, night, direction) {
     const portion = this.nightPortion(angle, night);
-    const timeDiff = direction === 'ccw' ?
-      this.timeDiff(time, base) :
-      this.timeDiff(base, time);
+    const timeDiff =
+      direction === "ccw"
+        ? this.timeDiff(time, base)
+        : this.timeDiff(base, time);
 
     if (isNaN(time) || timeDiff > portion) {
-      time = base + (direction === 'ccw' ? -portion : portion);
+      time = base + (direction === "ccw" ? -portion : portion);
     }
 
     return time;
@@ -248,10 +294,10 @@ class PrayTimes {
     const method = this.setting.highLats;
     let portion = 1 / 2; // MidNight
 
-    if (method === 'AngleBased') {
-      portion = 1 / 60 * angle;
+    if (method === "AngleBased") {
+      portion = (1 / 60) * angle;
     }
-    if (method === 'OneSeventh') {
+    if (method === "OneSeventh") {
       portion = 1 / 7;
     }
 
@@ -289,12 +335,14 @@ class PrayTimes {
   sunAngleTime(angle, time, direction) {
     const decl = this.sunPosition(this.jDate + time).declination;
     const noon = this.midDay(time);
-    const t = 1 / 15 * this.arccos(
-      (-this.sin(angle) - this.sin(decl) * this.sin(this.lat)) /
-      (this.cos(decl) * this.cos(this.lat))
-    );
+    const t =
+      (1 / 15) *
+      this.arccos(
+        (-this.sin(angle) - this.sin(decl) * this.sin(this.lat)) /
+          (this.cos(decl) * this.cos(this.lat))
+      );
 
-    return noon + (direction === 'ccw' ? -t : t);
+    return noon + (direction === "ccw" ? -t : t);
   }
 
   // Mid-day time
@@ -313,7 +361,7 @@ class PrayTimes {
 
   // Asr factor
   asrFactor(method) {
-    return method === 'Hanafi' ? 2 : 1;
+    return method === "Hanafi" ? 2 : 1;
   }
 
   // Rise/set angle
@@ -327,13 +375,13 @@ class PrayTimes {
     const D = jd - 2451545.0;
     const g = this.fixAngle(357.529 + 0.98560028 * D);
     const q = this.fixAngle(280.459 + 0.98564736 * D);
-    const L = this.fixAngle(q + 1.915 * this.sin(g) + 0.020 * this.sin(2 * g));
+    const L = this.fixAngle(q + 1.915 * this.sin(g) + 0.02 * this.sin(2 * g));
     const e = 23.439 - 0.00000036 * D;
     const RA = this.arctan2(this.cos(e) * this.sin(L), this.cos(L)) / 15;
 
     return {
       declination: this.arcsin(this.sin(e) * this.sin(L)),
-      equation: q / 15 - this.fixHour(RA)
+      equation: q / 15 - this.fixHour(RA),
     };
   }
 
@@ -346,8 +394,13 @@ class PrayTimes {
     const A = Math.floor(year / 100);
     const B = 2 - A + Math.floor(A / 4);
 
-    return Math.floor(365.25 * (year + 4716)) +
-      Math.floor(30.6001 * (month + 1)) + day + B - 1524.5;
+    return (
+      Math.floor(365.25 * (year + 4716)) +
+      Math.floor(30.6001 * (month + 1)) +
+      day +
+      B -
+      1524.5
+    );
   }
 
   // Get timezone
@@ -370,11 +423,11 @@ class PrayTimes {
 
   // Helper functions
   eval(str) {
-    return (str + '').split(/[^0-9.+-]/)[0] * 1;
+    return (str + "").split(/[^0-9.+-]/)[0] * 1;
   }
 
   isMin(str) {
-    return (str + '').indexOf('min') !== -1;
+    return (str + "").indexOf("min") !== -1;
   }
 
   timeDiff(time1, time2) {
@@ -382,20 +435,40 @@ class PrayTimes {
   }
 
   twoDigitsFormat(num) {
-    return (num < 10) ? '0' + num : num;
+    return num < 10 ? "0" + num : num;
   }
 
   // Trigonometric functions
-  sin(d) { return Math.sin(this.dtr(d)); }
-  cos(d) { return Math.cos(this.dtr(d)); }
-  tan(d) { return Math.tan(this.dtr(d)); }
-  arcsin(x) { return this.rtd(Math.asin(x)); }
-  arccos(x) { return this.rtd(Math.acos(x)); }
-  arctan(x) { return this.rtd(Math.atan(x)); }
-  arccot(x) { return this.rtd(Math.atan(1 / x)); }
-  arctan2(y, x) { return this.rtd(Math.atan2(y, x)); }
-  dtr(d) { return (d * Math.PI) / 180.0; }
-  rtd(r) { return (r * 180.0) / Math.PI; }
+  sin(d) {
+    return Math.sin(this.dtr(d));
+  }
+  cos(d) {
+    return Math.cos(this.dtr(d));
+  }
+  tan(d) {
+    return Math.tan(this.dtr(d));
+  }
+  arcsin(x) {
+    return this.rtd(Math.asin(x));
+  }
+  arccos(x) {
+    return this.rtd(Math.acos(x));
+  }
+  arctan(x) {
+    return this.rtd(Math.atan(x));
+  }
+  arccot(x) {
+    return this.rtd(Math.atan(1 / x));
+  }
+  arctan2(y, x) {
+    return this.rtd(Math.atan2(y, x));
+  }
+  dtr(d) {
+    return (d * Math.PI) / 180.0;
+  }
+  rtd(r) {
+    return (r * 180.0) / Math.PI;
+  }
 
   // Angle functions
   fixAngle(a) {

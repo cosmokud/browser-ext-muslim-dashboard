@@ -1,145 +1,183 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Generate Icon PNGs</title>
-</head>
-<body>
-  <h1>Icon PNG Generator</h1>
-  <p>Save these as PNG files in the icons folder:</p>
-  <div id="output"></div>
-  
-  <script>
-    const sizes = [16, 32, 48, 128];
-    const output = document.getElementById('output');
-    
-    function drawIcon(ctx, size) {
-      const scale = size / 128;
-      
-      // Background gradient
-      const bgGrad = ctx.createLinearGradient(0, 0, size, size);
-      bgGrad.addColorStop(0, '#1a5f4a');
-      bgGrad.addColorStop(1, '#0d3d2e');
-      
-      // Gold gradient
-      const goldGrad = ctx.createLinearGradient(0, 0, size, size);
-      goldGrad.addColorStop(0, '#d4af37');
-      goldGrad.addColorStop(1, '#f4d03f');
-      
-      // Background circle
-      ctx.beginPath();
-      ctx.arc(64 * scale, 64 * scale, 60 * scale, 0, Math.PI * 2);
-      ctx.fillStyle = bgGrad;
-      ctx.fill();
-      
-      // Border
-      ctx.beginPath();
-      ctx.arc(64 * scale, 64 * scale, 56 * scale, 0, Math.PI * 2);
-      ctx.strokeStyle = goldGrad;
-      ctx.lineWidth = Math.max(1, 2 * scale);
-      ctx.stroke();
-      
-      // Simplified mosque for small sizes
-      if (size < 48) {
-        // Simple dome shape
+  <head>
+    <meta charset="UTF-8" />
+    <title>Generate Icon PNGs</title>
+  </head>
+  <body>
+    <h1>Icon PNG Generator</h1>
+    <p>Save these as PNG files in the icons folder:</p>
+    <div id="output"></div>
+
+    <script>
+      const sizes = [16, 32, 48, 128];
+      const output = document.getElementById("output");
+
+      function drawIcon(ctx, size) {
+        const scale = size / 128;
+
+        // Background gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+        bgGrad.addColorStop(0, "#1a5f4a");
+        bgGrad.addColorStop(1, "#0d3d2e");
+
+        // Gold gradient
+        const goldGrad = ctx.createLinearGradient(0, 0, size, size);
+        goldGrad.addColorStop(0, "#d4af37");
+        goldGrad.addColorStop(1, "#f4d03f");
+
+        // Background circle
         ctx.beginPath();
-        ctx.arc(64 * scale, 55 * scale, 25 * scale, Math.PI, 0);
-        ctx.lineTo(89 * scale, 85 * scale);
-        ctx.lineTo(39 * scale, 85 * scale);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.fill();
-        
-        // Golden dome top
-        ctx.beginPath();
-        ctx.arc(64 * scale, 45 * scale, 12 * scale, Math.PI, 0);
-        ctx.fillStyle = goldGrad;
-        ctx.fill();
-        
-        // Crescent
-        ctx.beginPath();
-        ctx.arc(64 * scale, 32 * scale, 4 * scale, 0, Math.PI * 2);
-        ctx.fillStyle = goldGrad;
-        ctx.fill();
-      } else {
-        // Full mosque design
-        // Mosque body
-        ctx.beginPath();
-        ctx.moveTo(64 * scale, 25 * scale);
-        ctx.bezierCurveTo(40 * scale, 25 * scale, 30 * scale, 50 * scale, 30 * scale, 60 * scale);
-        ctx.lineTo(30 * scale, 88 * scale);
-        ctx.lineTo(98 * scale, 88 * scale);
-        ctx.lineTo(98 * scale, 60 * scale);
-        ctx.bezierCurveTo(98 * scale, 50 * scale, 88 * scale, 25 * scale, 64 * scale, 25 * scale);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.fill();
-        
-        // Dome
-        ctx.beginPath();
-        ctx.ellipse(64 * scale, 50 * scale, 20 * scale, 16 * scale, 0, 0, Math.PI * 2);
-        ctx.fillStyle = goldGrad;
-        ctx.fill();
-        
-        // Crescent
-        ctx.beginPath();
-        ctx.arc(64 * scale, 30 * scale, 5 * scale, 0, Math.PI * 2);
-        ctx.fillStyle = goldGrad;
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(66 * scale, 29 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(64 * scale, 64 * scale, 60 * scale, 0, Math.PI * 2);
         ctx.fillStyle = bgGrad;
         ctx.fill();
-        
-        // Windows
+
+        // Border
         ctx.beginPath();
-        ctx.ellipse(52 * scale, 72 * scale, 5 * scale, 8 * scale, 0, 0, Math.PI * 2);
-        ctx.fillStyle = bgGrad;
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.ellipse(76 * scale, 72 * scale, 5 * scale, 8 * scale, 0, 0, Math.PI * 2);
-        ctx.fillStyle = bgGrad;
-        ctx.fill();
-        
-        // Door
-        ctx.beginPath();
-        ctx.moveTo(58 * scale, 88 * scale);
-        ctx.lineTo(58 * scale, 76 * scale);
-        ctx.quadraticCurveTo(64 * scale, 70 * scale, 70 * scale, 76 * scale);
-        ctx.lineTo(70 * scale, 88 * scale);
-        ctx.fillStyle = bgGrad;
-        ctx.fill();
+        ctx.arc(64 * scale, 64 * scale, 56 * scale, 0, Math.PI * 2);
+        ctx.strokeStyle = goldGrad;
+        ctx.lineWidth = Math.max(1, 2 * scale);
+        ctx.stroke();
+
+        // Simplified mosque for small sizes
+        if (size < 48) {
+          // Simple dome shape
+          ctx.beginPath();
+          ctx.arc(64 * scale, 55 * scale, 25 * scale, Math.PI, 0);
+          ctx.lineTo(89 * scale, 85 * scale);
+          ctx.lineTo(39 * scale, 85 * scale);
+          ctx.closePath();
+          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+          ctx.fill();
+
+          // Golden dome top
+          ctx.beginPath();
+          ctx.arc(64 * scale, 45 * scale, 12 * scale, Math.PI, 0);
+          ctx.fillStyle = goldGrad;
+          ctx.fill();
+
+          // Crescent
+          ctx.beginPath();
+          ctx.arc(64 * scale, 32 * scale, 4 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = goldGrad;
+          ctx.fill();
+        } else {
+          // Full mosque design
+          // Mosque body
+          ctx.beginPath();
+          ctx.moveTo(64 * scale, 25 * scale);
+          ctx.bezierCurveTo(
+            40 * scale,
+            25 * scale,
+            30 * scale,
+            50 * scale,
+            30 * scale,
+            60 * scale
+          );
+          ctx.lineTo(30 * scale, 88 * scale);
+          ctx.lineTo(98 * scale, 88 * scale);
+          ctx.lineTo(98 * scale, 60 * scale);
+          ctx.bezierCurveTo(
+            98 * scale,
+            50 * scale,
+            88 * scale,
+            25 * scale,
+            64 * scale,
+            25 * scale
+          );
+          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+          ctx.fill();
+
+          // Dome
+          ctx.beginPath();
+          ctx.ellipse(
+            64 * scale,
+            50 * scale,
+            20 * scale,
+            16 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = goldGrad;
+          ctx.fill();
+
+          // Crescent
+          ctx.beginPath();
+          ctx.arc(64 * scale, 30 * scale, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = goldGrad;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(66 * scale, 29 * scale, 4 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = bgGrad;
+          ctx.fill();
+
+          // Windows
+          ctx.beginPath();
+          ctx.ellipse(
+            52 * scale,
+            72 * scale,
+            5 * scale,
+            8 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = bgGrad;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.ellipse(
+            76 * scale,
+            72 * scale,
+            5 * scale,
+            8 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = bgGrad;
+          ctx.fill();
+
+          // Door
+          ctx.beginPath();
+          ctx.moveTo(58 * scale, 88 * scale);
+          ctx.lineTo(58 * scale, 76 * scale);
+          ctx.quadraticCurveTo(64 * scale, 70 * scale, 70 * scale, 76 * scale);
+          ctx.lineTo(70 * scale, 88 * scale);
+          ctx.fillStyle = bgGrad;
+          ctx.fill();
+        }
       }
-    }
-    
-    sizes.forEach(size => {
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      drawIcon(ctx, size);
-      
-      const div = document.createElement('div');
-      div.style.marginBottom = '20px';
-      
-      const img = document.createElement('img');
-      img.src = canvas.toDataURL('image/png');
-      img.style.border = '1px solid #ccc';
-      img.style.marginRight = '10px';
-      
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = `icon${size}.png`;
-      link.textContent = `Download icon${size}.png`;
-      link.style.marginLeft = '10px';
-      
-      div.appendChild(img);
-      div.appendChild(document.createTextNode(`icon${size}.png - `));
-      div.appendChild(link);
-      
-      output.appendChild(div);
-    });
-  </script>
-</body>
+
+      sizes.forEach((size) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        drawIcon(ctx, size);
+
+        const div = document.createElement("div");
+        div.style.marginBottom = "20px";
+
+        const img = document.createElement("img");
+        img.src = canvas.toDataURL("image/png");
+        img.style.border = "1px solid #ccc";
+        img.style.marginRight = "10px";
+
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = `icon${size}.png`;
+        link.textContent = `Download icon${size}.png`;
+        link.style.marginLeft = "10px";
+
+        div.appendChild(img);
+        div.appendChild(document.createTextNode(`icon${size}.png - `));
+        div.appendChild(link);
+
+        output.appendChild(div);
+      });
+    </script>
+  </body>
 </html>

@@ -9,9 +9,9 @@ class QuotesManager {
     this.defaultQuotes = [];
     this.userQuotes = [];
     this.currentQuote = null;
-    this.quoteText = document.getElementById('quoteText');
-    this.quoteSource = document.getElementById('quoteSource');
-    this.quoteRefresh = document.getElementById('quoteRefresh');
+    this.quoteText = document.getElementById("quoteText");
+    this.quoteSource = document.getElementById("quoteSource");
+    this.quoteRefresh = document.getElementById("quoteRefresh");
   }
 
   /**
@@ -29,29 +29,29 @@ class QuotesManager {
    */
   async loadDefaultQuotes() {
     try {
-      const response = await fetch('data/quotes_default.json');
+      const response = await fetch("data/quotes_default.json");
       if (response.ok) {
         this.defaultQuotes = await response.json();
       }
     } catch (e) {
-      console.error('Failed to load default quotes:', e);
+      console.error("Failed to load default quotes:", e);
       // Fallback quotes
       this.defaultQuotes = [
         {
           text: "Indeed, with hardship comes ease.",
           source: "Quran 94:6",
-          type: "quran"
+          type: "quran",
         },
         {
           text: "And He found you lost and guided you.",
           source: "Quran 93:7",
-          type: "quran"
+          type: "quran",
         },
         {
           text: "So remember Me; I will remember you.",
           source: "Quran 2:152",
-          type: "quran"
-        }
+          type: "quran",
+        },
       ];
     }
   }
@@ -116,14 +116,14 @@ class QuotesManager {
    * Animate quote change
    */
   animateQuote(quote) {
-    this.quoteText.style.opacity = '0';
-    this.quoteSource.style.opacity = '0';
+    this.quoteText.style.opacity = "0";
+    this.quoteSource.style.opacity = "0";
 
     setTimeout(() => {
       this.quoteText.textContent = quote.text;
       this.quoteSource.textContent = `— ${quote.source}`;
-      this.quoteText.style.opacity = '1';
-      this.quoteSource.style.opacity = '1';
+      this.quoteText.style.opacity = "1";
+      this.quoteSource.style.opacity = "1";
     }, 300);
   }
 
@@ -135,7 +135,7 @@ class QuotesManager {
       id: Date.now(),
       text: text.trim(),
       source: source.trim(),
-      type: 'user'
+      type: "user",
     };
 
     this.userQuotes.push(quote);
@@ -147,7 +147,7 @@ class QuotesManager {
    * Delete user quote
    */
   deleteUserQuote(id) {
-    this.userQuotes = this.userQuotes.filter(q => q.id !== id);
+    this.userQuotes = this.userQuotes.filter((q) => q.id !== id);
     this.storage.saveUserQuotes(this.userQuotes);
   }
 
@@ -162,10 +162,10 @@ class QuotesManager {
    * Setup event listeners
    */
   setupEventListeners() {
-    this.quoteRefresh.addEventListener('click', () => {
-      this.quoteRefresh.style.transform = 'rotate(360deg)';
+    this.quoteRefresh.addEventListener("click", () => {
+      this.quoteRefresh.style.transform = "rotate(360deg)";
       setTimeout(() => {
-        this.quoteRefresh.style.transform = '';
+        this.quoteRefresh.style.transform = "";
       }, 300);
       this.displayRandomQuote();
     });

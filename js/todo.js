@@ -7,24 +7,24 @@ class TodoManager {
   constructor(storage) {
     this.storage = storage;
     this.todos = [];
-    this.filter = 'all';
+    this.filter = "all";
     this.editingId = null;
-    
+
     // Elements
-    this.todoInput = document.getElementById('todoInput');
-    this.todoAddBtn = document.getElementById('todoAddBtn');
-    this.todoList = document.getElementById('todoList');
-    this.todoCount = document.getElementById('todoCount');
-    this.clearCompletedBtn = document.getElementById('clearCompletedBtn');
-    this.filterBtns = document.querySelectorAll('.filter-btn');
-    
+    this.todoInput = document.getElementById("todoInput");
+    this.todoAddBtn = document.getElementById("todoAddBtn");
+    this.todoList = document.getElementById("todoList");
+    this.todoCount = document.getElementById("todoCount");
+    this.clearCompletedBtn = document.getElementById("clearCompletedBtn");
+    this.filterBtns = document.querySelectorAll(".filter-btn");
+
     // Edit modal elements
-    this.editModal = document.getElementById('editTodoModal');
-    this.editInput = document.getElementById('editTodoInput');
-    this.editIdInput = document.getElementById('editTodoId');
-    this.editSaveBtn = document.getElementById('editTodoSave');
-    this.editCancelBtn = document.getElementById('editTodoCancel');
-    this.editCloseBtn = document.getElementById('editTodoClose');
+    this.editModal = document.getElementById("editTodoModal");
+    this.editInput = document.getElementById("editTodoInput");
+    this.editIdInput = document.getElementById("editTodoId");
+    this.editSaveBtn = document.getElementById("editTodoSave");
+    this.editCancelBtn = document.getElementById("editTodoCancel");
+    this.editCloseBtn = document.getElementById("editTodoClose");
   }
 
   /**
@@ -55,18 +55,18 @@ class TodoManager {
    */
   addTodo(text) {
     if (!text.trim()) return null;
-    
+
     const todo = {
       id: Date.now(),
       text: text.trim(),
       completed: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    
+
     this.todos.unshift(todo);
     this.saveTodos();
     this.render();
-    
+
     return todo;
   }
 
@@ -74,7 +74,7 @@ class TodoManager {
    * Update todo
    */
   updateTodo(id, updates) {
-    const todo = this.todos.find(t => t.id === id);
+    const todo = this.todos.find((t) => t.id === id);
     if (todo) {
       Object.assign(todo, updates);
       this.saveTodos();
@@ -86,7 +86,7 @@ class TodoManager {
    * Delete todo
    */
   deleteTodo(id) {
-    this.todos = this.todos.filter(t => t.id !== id);
+    this.todos = this.todos.filter((t) => t.id !== id);
     this.saveTodos();
     this.render();
   }
@@ -95,7 +95,7 @@ class TodoManager {
    * Toggle todo completion
    */
   toggleTodo(id) {
-    const todo = this.todos.find(t => t.id === id);
+    const todo = this.todos.find((t) => t.id === id);
     if (todo) {
       todo.completed = !todo.completed;
       this.saveTodos();
@@ -107,7 +107,7 @@ class TodoManager {
    * Clear completed todos
    */
   clearCompleted() {
-    this.todos = this.todos.filter(t => !t.completed);
+    this.todos = this.todos.filter((t) => !t.completed);
     this.saveTodos();
     this.render();
   }
@@ -118,10 +118,10 @@ class TodoManager {
   setFilter(filter) {
     this.filter = filter;
     this.render();
-    
+
     // Update filter buttons
-    this.filterBtns.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.filter === filter);
+    this.filterBtns.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.filter === filter);
     });
   }
 
@@ -130,10 +130,10 @@ class TodoManager {
    */
   getFilteredTodos() {
     switch (this.filter) {
-      case 'active':
-        return this.todos.filter(t => !t.completed);
-      case 'completed':
-        return this.todos.filter(t => t.completed);
+      case "active":
+        return this.todos.filter((t) => !t.completed);
+      case "completed":
+        return this.todos.filter((t) => t.completed);
       default:
         return this.todos;
     }
@@ -144,27 +144,34 @@ class TodoManager {
    */
   render() {
     const filteredTodos = this.getFilteredTodos();
-    
+
     if (filteredTodos.length === 0) {
       this.todoList.innerHTML = `
         <li class="empty-state">
           <div class="empty-state-icon">📝</div>
-          <p>${this.filter === 'all' ? 'No tasks yet. Add one above!' : 
-               this.filter === 'active' ? 'No active tasks!' : 'No completed tasks!'}</p>
+          <p>${
+            this.filter === "all"
+              ? "No tasks yet. Add one above!"
+              : this.filter === "active"
+              ? "No active tasks!"
+              : "No completed tasks!"
+          }</p>
         </li>
       `;
     } else {
-      this.todoList.innerHTML = filteredTodos.map(todo => this.renderTodoItem(todo)).join('');
+      this.todoList.innerHTML = filteredTodos
+        .map((todo) => this.renderTodoItem(todo))
+        .join("");
     }
-    
+
     // Update count
-    const activeCount = this.todos.filter(t => !t.completed).length;
+    const activeCount = this.todos.filter((t) => !t.completed).length;
     const totalCount = this.todos.length;
     this.todoCount.textContent = `${activeCount}/${totalCount} tasks`;
-    
+
     // Show/hide clear button
-    const hasCompleted = this.todos.some(t => t.completed);
-    this.clearCompletedBtn.style.display = hasCompleted ? 'block' : 'none';
+    const hasCompleted = this.todos.some((t) => t.completed);
+    this.clearCompletedBtn.style.display = hasCompleted ? "block" : "none";
   }
 
   /**
@@ -172,8 +179,12 @@ class TodoManager {
    */
   renderTodoItem(todo) {
     return `
-      <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-        <div class="todo-checkbox ${todo.completed ? 'checked' : ''}" data-action="toggle"></div>
+      <li class="todo-item ${todo.completed ? "completed" : ""}" data-id="${
+      todo.id
+    }">
+        <div class="todo-checkbox ${
+          todo.completed ? "checked" : ""
+        }" data-action="toggle"></div>
         <span class="todo-text">${this.escapeHtml(todo.text)}</span>
         <div class="todo-actions-btns">
           <button class="todo-action-btn edit" data-action="edit" title="Edit">
@@ -197,12 +208,12 @@ class TodoManager {
    * Open edit modal
    */
   openEditModal(id) {
-    const todo = this.todos.find(t => t.id === id);
+    const todo = this.todos.find((t) => t.id === id);
     if (!todo) return;
-    
+
     this.editingId = id;
     this.editInput.value = todo.text;
-    this.editModal.classList.add('active');
+    this.editModal.classList.add("active");
     this.editInput.focus();
   }
 
@@ -211,8 +222,8 @@ class TodoManager {
    */
   closeEditModal() {
     this.editingId = null;
-    this.editInput.value = '';
-    this.editModal.classList.remove('active');
+    this.editInput.value = "";
+    this.editModal.classList.remove("active");
   }
 
   /**
@@ -230,66 +241,66 @@ class TodoManager {
    */
   setupEventListeners() {
     // Add todo
-    this.todoAddBtn.addEventListener('click', () => {
+    this.todoAddBtn.addEventListener("click", () => {
       if (this.todoInput.value.trim()) {
         this.addTodo(this.todoInput.value);
-        this.todoInput.value = '';
+        this.todoInput.value = "";
         this.todoInput.focus();
       }
     });
-    
-    this.todoInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && this.todoInput.value.trim()) {
+
+    this.todoInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && this.todoInput.value.trim()) {
         this.addTodo(this.todoInput.value);
-        this.todoInput.value = '';
+        this.todoInput.value = "";
       }
     });
-    
+
     // Todo list actions (event delegation)
-    this.todoList.addEventListener('click', (e) => {
-      const todoItem = e.target.closest('.todo-item');
+    this.todoList.addEventListener("click", (e) => {
+      const todoItem = e.target.closest(".todo-item");
       if (!todoItem) return;
-      
+
       const id = parseInt(todoItem.dataset.id);
-      const action = e.target.closest('[data-action]')?.dataset.action;
-      
+      const action = e.target.closest("[data-action]")?.dataset.action;
+
       switch (action) {
-        case 'toggle':
+        case "toggle":
           this.toggleTodo(id);
           break;
-        case 'edit':
+        case "edit":
           this.openEditModal(id);
           break;
-        case 'delete':
+        case "delete":
           this.deleteTodo(id);
           break;
       }
     });
-    
+
     // Filter buttons
-    this.filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+    this.filterBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
         this.setFilter(btn.dataset.filter);
       });
     });
-    
+
     // Clear completed
-    this.clearCompletedBtn.addEventListener('click', () => {
+    this.clearCompletedBtn.addEventListener("click", () => {
       this.clearCompleted();
     });
-    
+
     // Edit modal
-    this.editSaveBtn.addEventListener('click', () => this.saveEdit());
-    this.editCancelBtn.addEventListener('click', () => this.closeEditModal());
-    this.editCloseBtn.addEventListener('click', () => this.closeEditModal());
-    
-    this.editInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+    this.editSaveBtn.addEventListener("click", () => this.saveEdit());
+    this.editCancelBtn.addEventListener("click", () => this.closeEditModal());
+    this.editCloseBtn.addEventListener("click", () => this.closeEditModal());
+
+    this.editInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
         this.saveEdit();
       }
     });
-    
-    this.editModal.addEventListener('click', (e) => {
+
+    this.editModal.addEventListener("click", (e) => {
       if (e.target === this.editModal) {
         this.closeEditModal();
       }
@@ -300,7 +311,7 @@ class TodoManager {
    * Escape HTML to prevent XSS
    */
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }

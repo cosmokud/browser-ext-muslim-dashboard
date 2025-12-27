@@ -5,9 +5,10 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 ## ✨ Features
 
 ### 🕋 Prayer Times
+
 - **Automatic Location Detection**: Uses GPS to detect your location automatically
 - **Manual City Search**: Enter any city name to get prayer times
-- **Multiple Calculation Methods**: 
+- **Multiple Calculation Methods**:
   - Muslim World League (MWL)
   - ISNA (North America)
   - Egyptian General Authority
@@ -20,17 +21,20 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - **Next Prayer Countdown**: Real-time countdown to the next prayer
 
 ### 🧭 Qibla Direction
+
 - Compass showing the direction of the Ka'bah from your location
 - Degree display with cardinal direction
 - Device orientation support for mobile devices
 
 ### 📅 Hijri Calendar
+
 - Toggle between Hijri (Islamic) and Gregorian calendar
 - Automatic Islamic date calculation
 - Special Islamic event notifications
 - Hijri date adjustment support
 
 ### ✅ To-Do List
+
 - Full CRUD functionality (Create, Read, Update, Delete)
 - Filter tasks: All, Active, Completed
 - Persistent storage using browser localStorage
@@ -38,6 +42,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Beautiful animations
 
 ### 📖 Islamic Quotes
+
 - 100+ quotes from Quran and authentic Hadith
 - Random quote display with refresh button
 - Add your own custom quotes
@@ -45,12 +50,14 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Smooth fade transitions
 
 ### 🖼️ Dynamic Backgrounds
+
 - High-resolution nature backgrounds from Unsplash
 - Multiple categories: Nature, Mosques, Landscapes, Mountains, Ocean, Forests, Sky
 - Configurable rotation interval (15 min to daily)
 - Smooth crossfade transitions
 
 ### ⚙️ Comprehensive Settings
+
 - Location settings with auto-detect or manual entry
 - Prayer calculation customization
 - Quote source management
@@ -60,6 +67,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 ## 🚀 Installation
 
 ### Chrome
+
 1. Download or clone this repository
 2. Open Chrome and go to `chrome://extensions/`
 3. Enable "Developer mode" (toggle in top right)
@@ -68,6 +76,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 6. Open a new tab to see your Muslim Dashboard!
 
 ### Microsoft Edge
+
 1. Download or clone this repository
 2. Open Edge and go to `edge://extensions/`
 3. Enable "Developer mode" (toggle in left sidebar)
@@ -117,18 +126,21 @@ browser-ext-muslim-dashboard/
 ## 🔧 Customization
 
 ### Adding Custom Quotes
+
 1. Click the settings button (⚙️) in the bottom right
 2. Go to the "Quotes" tab
 3. Enter your quote text and source
 4. Click "Add Quote"
 
 ### Adjusting Prayer Times
+
 1. Open Settings → Prayer tab
 2. Select your preferred calculation method
 3. Use the adjustment fields to fine-tune times (in minutes)
 4. Click "Save Settings"
 
 ### Changing Background
+
 1. Open Settings → Background tab
 2. Choose your preferred category
 3. Set rotation interval
@@ -143,6 +155,7 @@ browser-ext-muslim-dashboard/
 ## 📜 Islamic Sources
 
 The default quotes are sourced from:
+
 - The Holy Quran
 - Sahih Bukhari
 - Sahih Muslim
@@ -168,4 +181,4 @@ May Allah accept this work and make it beneficial for the Ummah. Ameen.
 
 **Made with ❤️ for the Muslim community worldwide**
 
-*Assalamu Alaikum wa Rahmatullahi wa Barakatuh* 🌙
+_Assalamu Alaikum wa Rahmatullahi wa Barakatuh_ 🌙
