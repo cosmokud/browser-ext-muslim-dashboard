@@ -197,6 +197,11 @@ body {
   display: flex;
   align-items: baseline;
   animation: slideInRight 0.6s ease-out;
+  /* Keep clock layout stable as digits change */
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  justify-content: flex-end;
 }
 
 @keyframes slideInRight {
@@ -215,6 +220,9 @@ body {
   font-weight: 700;
   letter-spacing: -2px;
   text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
+  display: inline-block;
+  width: 5ch;
+  text-align: right;
 }
 
 .current-seconds {
@@ -222,15 +230,20 @@ body {
   font-weight: 300;
   color: var(--text-secondary);
   margin-left: var(--spacing-xs);
+  display: inline-block;
+  width: 3ch;
+  text-align: left;
 }
 
 /* Quote Section */
 .quote-section {
   margin-bottom: var(--spacing-xl);
-  animation: fadeInUp 0.8s ease-out 0.2s both;
+  /* Keep fadeInUp, but don't keep a persistent transform after it ends */
+  animation: fadeInUp 0.8s ease-out 0.2s backwards;
   /* Prevent visual glitches during hover transforms */
   isolation: isolate;
   contain: layout style;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeInUp {
@@ -1379,10 +1392,12 @@ body {
 /* Pinned Apps Section */
 .pinned-apps-section {
   margin-bottom: var(--spacing-xl);
-  animation: fadeInUp 0.6s ease-out 0.1s both;
+  /* Keep fadeInUp, but don't keep a persistent transform after it ends */
+  animation: fadeInUp 0.6s ease-out 0.1s backwards;
   /* Prevent visual glitches during hover transforms */
   isolation: isolate;
   contain: layout style;
+  will-change: transform, opacity;
 }
 
 .pinned-apps-grid {
@@ -1404,13 +1419,25 @@ body {
   transform: translateZ(0);
 }
 
+/* While dragging, disable hover transforms that change layout/rects (prevents jitter). */
+.pinned-apps-grid.is-dragging
+  .pinned-app-item:hover:not(.dragging)
+  .pinned-app-icon {
+  transform: none;
+  box-shadow: none;
+}
+
+.pinned-apps-grid.is-dragging .pinned-app-item:hover:not(.dragging) {
+  transform: translateZ(0);
+}
+
 .pinned-apps-grid:hover {
   /* transform: translateY(-5px) translateZ(0); */
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Disable grid hover effect during drag */
-.pinned-apps-grid:has(.dragging):hover {
+.pinned-apps-grid.is-dragging:hover {
   transform: translateZ(0);
   box-shadow: var(--glass-shadow);
 }
@@ -1442,7 +1469,8 @@ body {
 }
 
 .pinned-app-item.drag-over {
-  transform: scale(1.08) translateZ(0);
+  /* Avoid scaling the whole item: it changes getBoundingClientRect() and can cause jitter */
+  transform: translateZ(0);
 }
 
 .pinned-app-item.drag-over .pinned-app-icon {
