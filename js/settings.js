@@ -80,8 +80,26 @@ class SettingsManager {
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
+    this.bgIntervalCustom = document.getElementById("bgIntervalCustom");
+    this.customIntervalGroup = document.getElementById("customIntervalGroup");
     this.bgCategory = document.getElementById("bgCategory");
     this.changeBackgroundBtn = document.getElementById("changeBackgroundBtn");
+    this.customBgGroup = document.getElementById("customBgGroup");
+    this.customBgList = document.getElementById("customBgList");
+    this.customBgInput = document.getElementById("customBgInput");
+    this.addCustomBgBtn = document.getElementById("addCustomBgBtn");
+    this.customBgCount = document.getElementById("customBgCount");
+
+    // General settings elements
+    this.todoPosition = document.getElementById("todoPosition");
+    this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
+    this.importSettingsBtn = document.getElementById("importSettingsBtn");
+    this.importSettingsInput = document.getElementById("importSettingsInput");
+
+    // Method angles display
+    this.methodAnglesInfo = document.getElementById("methodAnglesInfo");
+    this.methodFajrAngle = document.getElementById("methodFajrAngle");
+    this.methodIshaAngle = document.getElementById("methodIshaAngle");
   }
 
   /**
@@ -90,6 +108,8 @@ class SettingsManager {
   init() {
     this.loadSettings();
     this.setupEventListeners();
+    this.updateMethodAnglesDisplay();
+    this.renderCustomBackgrounds();
   }
 
   /**
@@ -149,8 +169,218 @@ class SettingsManager {
     if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
 
     // Background settings
-    if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
+    if (settings.bgIntervalCustom && settings.bgInterval === 'custom') {
+      if (this.bgInterval) this.bgInterval.value = 'custom';
+      if (this.bgIntervalCustom) this.bgIntervalCustom.value = settings.bgIntervalCustom;
+      this.toggleCustomInterval(true);
+    } else {
+      if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
+      this.toggleCustomInterval(false);
+    }
     if (this.bgCategory) this.bgCategory.value = settings.bgCategory;
+
+    // General settings
+    if (this.todoPosition) this.todoPosition.value = settings.todoPosition || 'right';
+  }
+
+  /**
+   * Toggle custom interval visibility
+   */
+  toggleCustomInterval(show) {
+    if (this.customIntervalGroup) {
+      this.customIntervalGroup.style.display = show ? 'block' : 'none';
+    }
+  }
+
+  /**
+   * Update method angles display
+   */
+  updateMethodAnglesDisplay() {
+    const method = this.calculationMethod?.value || 'MWL';
+    
+    if (method === 'Custom') {
+      if (this.methodAnglesInfo) this.methodAnglesInfo.style.display = 'none';
+      return;
+    }
+
+    // Get method params from PrayTimes
+    const prayTimes = new PrayTimes(method);
+    const params = prayTimes.methods[method]?.params || { fajr: 18, isha: 17 };
+
+    if (this.methodFajrAngle) {
+      this.methodFajrAngle.textContent = params.fajr + '°';
+    }
+    if (this.methodIshaAngle) {
+      const ishaValue = typeof params.isha === 'string' ? params.isha : params.isha + '°';
+      this.methodIshaAngle.textContent = ishaValue;
+    }
+    if (this.methodAnglesInfo) {
+      this.methodAnglesInfo.style.display = 'block';
+    }
+  }
+
+  /**
+   * Render custom backgrounds list
+   */
+  renderCustomBackgrounds() {
+    const settings = this.storage.getSettings();
+    const customBgs = settings.customBackgrounds || [];
+
+    if (this.customBgList) {
+      if (customBgs.length === 0) {
+        this.customBgList.innerHTML = '<p class="empty-hint">No custom backgrounds added yet.</p>';
+      } else {
+        this.customBgList.innerHTML = customBgs.map((bg, index) => `
+          <div class="custom-bg-item" data-index="${index}">
+            <img src="${bg}" alt="Background ${index + 1}" class="custom-bg-thumb" />
+            <button class="custom-bg-remove" data-index="${index}" title="Remove">×</button>
+          </div>
+        `).join('');
+
+        // Bind remove events
+        this.customBgList.querySelectorAll('.custom-bg-remove').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const index = parseInt(btn.dataset.index);
+            this.removeCustomBackground(index);
+          });
+        });
+      }
+    }
+
+    if (this.customBgCount) {
+      this.customBgCount.textContent = `${customBgs.length}/10`;
+    }
+  }
+
+  /**
+   * Add custom background
+   */
+  addCustomBackground(file) {
+    const settings = this.storage.getSettings();
+    const customBgs = settings.customBackgrounds || [];
+
+    if (customBgs.length >= 10) {
+      this.showToast('Maximum 10 custom backgrounds allowed', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      
+      // Check size (limit to ~2MB per image after base64 encoding)
+      if (base64.length > 2800000) {
+        this.showToast('Image too large. Please use smaller images.', 'error');
+        return;
+      }
+
+      customBgs.push(base64);
+      settings.customBackgrounds = customBgs;
+      this.storage.saveSettings(settings);
+      this.renderCustomBackgrounds();
+      this.showToast('Background added!', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Remove custom background
+   */
+  removeCustomBackground(index) {
+    const settings = this.storage.getSettings();
+    const customBgs = settings.customBackgrounds || [];
+    
+    if (index >= 0 && index < customBgs.length) {
+      customBgs.splice(index, 1);
+      settings.customBackgrounds = customBgs;
+      this.storage.saveSettings(settings);
+      this.renderCustomBackgrounds();
+      this.showToast('Background removed', 'success');
+    }
+  }
+
+  /**
+   * Export all settings
+   */
+  exportAllSettings() {
+    const settings = this.storage.getSettings();
+    const todos = this.storage.getTodos();
+    const userQuotes = this.storage.getUserQuotes();
+    const pinnedApps = this.storage.getPinnedApps();
+    const lastLocation = this.storage.getLastLocation();
+
+    const exportData = {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      settings: settings,
+      todos: todos,
+      userQuotes: userQuotes,
+      pinnedApps: pinnedApps,
+      lastLocation: lastLocation
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `muslim-dashboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast('Settings exported successfully!', 'success');
+  }
+
+  /**
+   * Import all settings
+   */
+  importAllSettings(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      
+      if (!data.version || !data.settings) {
+        throw new Error('Invalid backup file format');
+      }
+
+      // Import settings
+      if (data.settings) {
+        this.storage.saveSettings(data.settings);
+      }
+
+      // Import todos
+      if (data.todos) {
+        this.storage.saveTodos(data.todos);
+      }
+
+      // Import user quotes
+      if (data.userQuotes) {
+        this.storage.saveUserQuotes(data.userQuotes);
+      }
+
+      // Import pinned apps
+      if (data.pinnedApps) {
+        this.storage.savePinnedApps(data.pinnedApps);
+      }
+
+      // Import last location
+      if (data.lastLocation) {
+        this.storage.saveLastLocation(data.lastLocation);
+      }
+
+      this.showToast('Settings imported! Reloading...', 'success');
+      
+      // Reload page to apply all settings
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (e) {
+      this.showToast('Import failed: ' + e.message, 'error');
+    }
   }
 
   /**
@@ -199,8 +429,18 @@ class SettingsManager {
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
 
     // Background settings
-    settings.bgInterval = parseInt(this.bgInterval?.value) || 60;
+    const bgIntervalValue = this.bgInterval?.value;
+    if (bgIntervalValue === 'custom') {
+      settings.bgInterval = 'custom';
+      settings.bgIntervalCustom = parseInt(this.bgIntervalCustom?.value) || 60;
+    } else {
+      settings.bgInterval = parseInt(bgIntervalValue) || 60;
+      settings.bgIntervalCustom = null;
+    }
     settings.bgCategory = this.bgCategory?.value || "nature";
+
+    // General settings
+    settings.todoPosition = this.todoPosition?.value || 'right';
 
     // Save to storage
     this.storage.saveSettings(settings);
@@ -246,7 +486,54 @@ class SettingsManager {
 
     // Update background rotation
     if (this.backgrounds) {
-      this.backgrounds.updateInterval(settings.bgInterval);
+      const interval = settings.bgInterval === 'custom' ? settings.bgIntervalCustom : settings.bgInterval;
+      this.backgrounds.updateInterval(interval);
+    }
+
+    // Apply todo position
+    this.applyTodoPosition(settings.todoPosition);
+  }
+
+  /**
+   * Apply todo position setting
+   */
+  applyTodoPosition(position) {
+    const todoCard = document.getElementById('todoCard');
+    const mainContainer = document.querySelector('.main-container');
+    const contentGrid = document.querySelector('.content-grid');
+    
+    if (!todoCard || !mainContainer) return;
+
+    // Remove existing position classes
+    todoCard.classList.remove('todo-position-right', 'todo-position-left', 'todo-position-bottom');
+    mainContainer.classList.remove('todo-right', 'todo-left', 'todo-bottom');
+
+    // Apply new position
+    switch (position) {
+      case 'left':
+        todoCard.classList.add('todo-position-left');
+        mainContainer.classList.add('todo-left');
+        // Move todo out of grid and to beginning of main container (after header)
+        if (todoCard.parentElement === contentGrid) {
+          mainContainer.insertBefore(todoCard, contentGrid);
+        }
+        break;
+      case 'bottom':
+        todoCard.classList.add('todo-position-bottom');
+        mainContainer.classList.add('todo-bottom');
+        // Move todo to be inside the grid but at the end
+        if (todoCard.parentElement !== contentGrid) {
+          contentGrid?.appendChild(todoCard);
+        }
+        break;
+      default: // right
+        todoCard.classList.add('todo-position-right');
+        mainContainer.classList.add('todo-right');
+        // Move todo out of grid and to end of main container
+        if (todoCard.parentElement === contentGrid) {
+          mainContainer.appendChild(todoCard);
+        }
+        break;
     }
   }
 
@@ -462,16 +749,71 @@ class SettingsManager {
       this.searchCityBtn.addEventListener("click", () => this.searchCity());
     }
 
-    // Calculation method change - toggle custom angles
+    // Calculation method change - toggle custom angles and update display
     if (this.calculationMethod) {
       this.calculationMethod.addEventListener("change", (e) => {
         this.toggleCustomAngles(e.target.value === "Custom");
+        this.updateMethodAnglesDisplay();
       });
     }
 
     // Add quote
     if (this.addQuoteBtn) {
       this.addQuoteBtn.addEventListener("click", () => this.addUserQuote());
+    }
+
+    // Background interval change - toggle custom interval field
+    if (this.bgInterval) {
+      this.bgInterval.addEventListener("change", (e) => {
+        this.toggleCustomInterval(e.target.value === "custom");
+      });
+    }
+
+    // Add custom background
+    if (this.addCustomBgBtn) {
+      this.addCustomBgBtn.addEventListener("click", () => {
+        this.customBgInput?.click();
+      });
+    }
+
+    if (this.customBgInput) {
+      this.customBgInput.addEventListener("change", (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+          for (let i = 0; i < files.length; i++) {
+            this.addCustomBackground(files[i]);
+          }
+          e.target.value = ''; // Reset input
+        }
+      });
+    }
+
+    // Export settings
+    if (this.exportSettingsBtn) {
+      this.exportSettingsBtn.addEventListener("click", () => {
+        this.exportAllSettings();
+      });
+    }
+
+    // Import settings
+    if (this.importSettingsBtn) {
+      this.importSettingsBtn.addEventListener("click", () => {
+        this.importSettingsInput?.click();
+      });
+    }
+
+    if (this.importSettingsInput) {
+      this.importSettingsInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            this.importAllSettings(event.target.result);
+          };
+          reader.readAsText(file);
+          e.target.value = ''; // Reset input
+        }
+      });
     }
 
     // Change background now

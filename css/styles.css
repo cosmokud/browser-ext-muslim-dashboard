@@ -1899,3 +1899,187 @@ body {
     text-align: center;
   }
 }
+
+/* ========================================
+   NEW FEATURE STYLES
+   ======================================== */
+
+/* Method Angles Info Display */
+.method-angles-info {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.method-angles-info .angles-info-text strong {
+  color: var(--accent-gold);
+}
+
+/* Pinned App Edit Button */
+.pinned-app-edit {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: #4a9eff;
+  border: none;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.pinned-app-item:hover .pinned-app-edit {
+  display: flex;
+}
+
+.pinned-app-edit:hover {
+  transform: scale(1.1);
+  background: #2d7fe0;
+}
+
+/* Custom Background List */
+.custom-bg-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.custom-bg-item {
+  position: relative;
+  width: 80px;
+  height: 50px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.custom-bg-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.custom-bg-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: #ff6b6b;
+  border: none;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.custom-bg-item:hover .custom-bg-remove {
+  opacity: 1;
+}
+
+.custom-bg-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.custom-bg-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.empty-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Todo Position Styles */
+.main-container.todo-right,
+.main-container.todo-left {
+  position: relative;
+}
+
+.todo-card.todo-position-right {
+  position: fixed;
+  top: var(--spacing-xl);
+  right: var(--spacing-xl);
+  width: 320px;
+  max-height: calc(100vh - 2 * var(--spacing-xl));
+  overflow-y: auto;
+  z-index: 100;
+  animation: slideInRight 0.5s ease-out;
+}
+
+.todo-card.todo-position-left {
+  position: fixed;
+  top: var(--spacing-xl);
+  left: var(--spacing-xl);
+  width: 320px;
+  max-height: calc(100vh - 2 * var(--spacing-xl));
+  overflow-y: auto;
+  z-index: 100;
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.todo-card.todo-position-bottom {
+  width: 100%;
+  margin-top: var(--spacing-xl);
+  grid-column: 1 / -1; /* Span full width of grid */
+}
+
+/* Adjust main container when todo is on right */
+.main-container.todo-right .content-grid {
+  margin-right: 340px;
+}
+
+/* Adjust main container when todo is on left */
+.main-container.todo-left .content-grid {
+  margin-left: 340px;
+}
+
+/* Custom interval group */
+.custom-interval-group {
+  margin-top: var(--spacing-sm);
+}
+
+/* Setting hint */
+.setting-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: var(--spacing-xs);
+}
+
+/* Responsive adjustments for todo position */
+@media (max-width: 1200px) {
+  .todo-card.todo-position-right,
+  .todo-card.todo-position-left {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    width: 100%;
+    max-height: none;
+  }
+
+  .main-container.todo-right .content-grid,
+  .main-container.todo-left .content-grid {
+    margin-right: 0;
+    margin-left: 0;
+  }
+}

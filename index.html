@@ -252,6 +252,9 @@
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
+            <button class="settings-tab" data-tab="general">
+              ⚙️ General
+            </button>
           </div>
 
           <!-- Location Settings -->
@@ -366,9 +369,10 @@
                   <option value="Custom">Custom Angles</option>
                 </optgroup>
               </select>
+              <div class="method-angles-info" id="methodAnglesInfo">
+                <span class="angles-info-text">Fajr: <strong id="methodFajrAngle">18°</strong> | Isha: <strong id="methodIshaAngle">17°</strong></span>
+              </div>
             </div>
-
-            <!-- Custom Angles (shown when Custom is selected) -->
             <div
               class="setting-group custom-angles-group"
               id="customAnglesGroup"
@@ -417,10 +421,10 @@
             <div class="setting-group">
               <label class="setting-label">Higher Latitude Adjustment</label>
               <select class="setting-select" id="highLatMethod">
+                <option value="None" selected>No Adjustment</option>
                 <option value="NightMiddle">Middle of the Night</option>
                 <option value="AngleBased">Angle/60th of the Night</option>
                 <option value="OneSeventh">One-Seventh of the Night</option>
-                <option value="None">No Adjustment</option>
               </select>
               <p class="setting-hint">
                 For locations above 48° latitude where Fajr/Isha may not occur
@@ -685,7 +689,19 @@
                 <option value="60" selected>Every 60 minutes</option>
                 <option value="120">Every 2 hours</option>
                 <option value="1440">Once a day</option>
+                <option value="custom">Custom interval</option>
               </select>
+            </div>
+            <div class="setting-group custom-interval-group" id="customIntervalGroup" style="display: none;">
+              <label class="setting-label">Custom Interval (minutes)</label>
+              <input
+                type="number"
+                class="setting-input"
+                id="bgIntervalCustom"
+                placeholder="e.g., 45"
+                min="1"
+                max="10080"
+              />
             </div>
             <div class="setting-group">
               <label class="setting-label">Background Category</label>
@@ -697,12 +713,58 @@
                 <option value="ocean">Ocean & Sea</option>
                 <option value="forest">Forests</option>
                 <option value="sky">Sky & Clouds</option>
+                <option value="custom">My Custom Backgrounds</option>
               </select>
+            </div>
+            <div class="setting-group custom-bg-group" id="customBgGroup">
+              <label class="setting-label">Custom Backgrounds (up to 10)</label>
+              <div class="custom-bg-list" id="customBgList">
+                <!-- Custom backgrounds will be shown here -->
+              </div>
+              <div class="custom-bg-actions">
+                <input type="file" id="customBgInput" accept="image/*" style="display: none;" multiple />
+                <button class="setting-btn" id="addCustomBgBtn">
+                  🖼️ Add Background
+                </button>
+                <span class="custom-bg-count" id="customBgCount">0/10</span>
+              </div>
             </div>
             <div class="setting-group">
               <button class="setting-btn" id="changeBackgroundBtn">
                 🔄 Change Background Now
               </button>
+            </div>
+          </div>
+
+          <!-- General Settings -->
+          <div class="settings-panel" id="generalPanel">
+            <div class="setting-group">
+              <label class="setting-label">Import / Export All Settings</label>
+              <p class="setting-hint">Backup or restore your entire dashboard configuration including quotes, todos, and pinned apps.</p>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="exportSettingsBtn">
+                  📤 Export Settings
+                </button>
+                <button class="setting-btn" id="importSettingsBtn">
+                  📥 Import Settings
+                </button>
+                <input
+                  type="file"
+                  id="importSettingsInput"
+                  accept=".json"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Todo List Position</label>
+              <select class="setting-select" id="todoPosition">
+                <option value="right" selected>Right Side (Sticky)</option>
+                <option value="left">Left Side (Sticky)</option>
+                <option value="bottom">Bottom (Full Width)</option>
+              </select>
+              <p class="setting-hint">Choose where the todo list appears on the dashboard.</p>
             </div>
           </div>
         </div>
@@ -751,6 +813,49 @@
           </button>
           <button class="modal-btn save-btn" type="submit" form="pinnedAppForm">
             Add
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Pinned App Modal -->
+    <div class="modal-overlay" id="editPinnedAppModal">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2 class="modal-title">✏️ Edit Website</h2>
+          <button class="modal-close" id="closeEditPinnedAppModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="editPinnedAppForm">
+            <div class="setting-group">
+              <label class="setting-label">Name</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="editPinnedAppName"
+                placeholder="e.g., Google"
+                required
+              />
+            </div>
+            <div class="setting-group">
+              <label class="setting-label">URL</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="editPinnedAppUrl"
+                placeholder="e.g., google.com"
+                required
+              />
+            </div>
+            <input type="hidden" id="editPinnedAppId" />
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" id="cancelEditPinnedApp">
+            Cancel
+          </button>
+          <button class="modal-btn save-btn" type="submit" form="editPinnedAppForm">
+            Save
           </button>
         </div>
       </div>

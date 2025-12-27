@@ -1,7 +1,7 @@
 /**
  * Pinned Apps Manager
  * Handles pinned websites/apps with drag-and-drop functionality
- * Features: favicon fetching, reordering, 10 items per row
+ * Features: favicon fetching, reordering, editing, 10 items per row
  */
 
 class PinnedAppsManager {
@@ -15,6 +15,15 @@ class PinnedAppsManager {
     this.form = document.getElementById("pinnedAppForm");
     this.closeBtn = document.getElementById("closePinnedAppModal");
     this.cancelBtn = document.getElementById("cancelPinnedApp");
+
+    // Edit modal elements
+    this.editModal = document.getElementById("editPinnedAppModal");
+    this.editForm = document.getElementById("editPinnedAppForm");
+    this.editCloseBtn = document.getElementById("closeEditPinnedAppModal");
+    this.editCancelBtn = document.getElementById("cancelEditPinnedApp");
+    this.editNameInput = document.getElementById("editPinnedAppName");
+    this.editUrlInput = document.getElementById("editPinnedAppUrl");
+    this.editIdInput = document.getElementById("editPinnedAppId");
 
     this.init();
   }
@@ -59,6 +68,28 @@ class PinnedAppsManager {
       this.form.addEventListener("submit", (e) => this.handleFormSubmit(e));
     }
 
+    // Edit modal close buttons
+    if (this.editCloseBtn) {
+      this.editCloseBtn.addEventListener("click", () => this.hideEditModal());
+    }
+    if (this.editCancelBtn) {
+      this.editCancelBtn.addEventListener("click", () => this.hideEditModal());
+    }
+
+    // Edit form submit
+    if (this.editForm) {
+      this.editForm.addEventListener("submit", (e) => this.handleEditFormSubmit(e));
+    }
+
+    // Close edit modal on outside click
+    if (this.editModal) {
+      this.editModal.addEventListener("click", (e) => {
+        if (e.target === this.editModal) {
+          this.hideEditModal();
+        }
+      });
+    }
+
     // Close modal on outside click
     if (this.modal) {
       this.modal.addEventListener("click", (e) => {
@@ -87,6 +118,71 @@ class PinnedAppsManager {
     if (this.modal) {
       this.modal.classList.remove("active");
       if (this.form) this.form.reset();
+    }
+  }
+
+  /**
+   * Show edit app modal
+   */
+  showEditModal(appId) {
+    const app = this.apps.find((a) => a.id === appId);
+    if (!app) return;
+
+    if (this.editModal) {
+      if (this.editNameInput) this.editNameInput.value = app.name;
+      if (this.editUrlInput) this.editUrlInput.value = app.url;
+      if (this.editIdInput) this.editIdInput.value = appId;
+      this.editModal.classList.add("active");
+      if (this.editNameInput) this.editNameInput.focus();
+    }
+  }
+
+  /**
+   * Hide edit app modal
+   */
+  hideEditModal() {
+    if (this.editModal) {
+      this.editModal.classList.remove("active");
+      if (this.editForm) this.editForm.reset();
+    }
+  }
+
+  /**
+   * Handle edit form submission
+   */
+  async handleEditFormSubmit(e) {
+    e.preventDefault();
+
+    const name = this.editNameInput?.value.trim();
+    let url = this.editUrlInput?.value.trim();
+    const appId = parseInt(this.editIdInput?.value);
+
+    if (!name || !url || !appId) return;
+
+    // Ensure URL has protocol
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    // Validate URL
+    try {
+      new URL(url);
+    } catch (e) {
+      alert("Please enter a valid URL");
+      return;
+    }
+
+    // Find and update the app
+    const app = this.apps.find((a) => a.id === appId);
+    if (app) {
+      app.name = name;
+      app.url = url;
+      // Refresh favicon with new URL
+      app.favicon = this.getFaviconUrl(url);
+      
+      this.saveApps();
+      this.render();
+      this.hideEditModal();
     }
   }
 
@@ -231,6 +327,9 @@ class PinnedAppsManager {
         </div>
         <span class="pinned-app-name">${this.escapeHtml(app.name)}</span>
       </a>
+      <button class="pinned-app-edit" data-app-id="${
+        app.id
+      }" title="Edit">✏️</button>
       <button class="pinned-app-remove" data-app-id="${
         app.id
       }" title="Remove">×</button>
@@ -241,6 +340,14 @@ class PinnedAppsManager {
     el.addEventListener("dragend", () => this.handleDragEnd());
     el.addEventListener("dragover", (e) => this.handleDragOver(e));
     el.addEventListener("drop", (e) => this.handleDrop(e, app));
+
+    // Edit button
+    const editBtn = el.querySelector(".pinned-app-edit");
+    editBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.showEditModal(app.id);
+    });
 
     // Remove button
     const removeBtn = el.querySelector(".pinned-app-remove");

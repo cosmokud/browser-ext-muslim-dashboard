@@ -78,7 +78,7 @@ class StorageManager {
       // Prayer settings
       calculationMethod: "MWL",
       asrMethod: "Standard",
-      highLatMethod: "NightMiddle",
+      highLatMethod: "None",
       midnightMethod: "Standard",
 
       // Custom angles (used when calculationMethod is "Custom")
@@ -122,9 +122,14 @@ class StorageManager {
 
       // Background settings
       bgInterval: 60, // minutes
+      bgIntervalCustom: null, // custom interval in minutes
       bgCategory: "nature",
       lastBgChange: null,
       currentBgIndex: 0,
+      customBackgrounds: [], // up to 10 custom backgrounds (base64)
+
+      // Todo settings
+      todoPosition: "right", // 'right', 'left', 'bottom'
 
       // Calendar settings
       calendarType: "hijri",

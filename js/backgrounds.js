@@ -98,15 +98,32 @@ class BackgroundManager {
   }
 
   /**
+   * Get images array for a category
+   */
+  getImagesForCategory(category, settings) {
+    if (category === 'custom') {
+      const customBgs = settings.customBackgrounds || [];
+      return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
+    }
+    return this.backgrounds[category] || this.backgrounds.nature;
+  }
+
+  /**
    * Load background image
    */
   loadBackground(settings) {
     const category = settings.bgCategory || "nature";
-    const images = this.backgrounds[category] || this.backgrounds.nature;
+    const images = this.getImagesForCategory(category, settings);
 
     let index = settings.currentBgIndex || 0;
+    // Ensure index is within bounds
+    if (index >= images.length) {
+      index = 0;
+    }
+
     const lastChange = settings.lastBgChange;
-    const interval = (settings.bgInterval || 60) * 60 * 1000;
+    const intervalValue = settings.bgInterval === 'custom' ? settings.bgIntervalCustom : settings.bgInterval;
+    const interval = (intervalValue || 60) * 60 * 1000;
     const now = Date.now();
 
     // Check if we need to rotate
@@ -169,9 +186,9 @@ class BackgroundManager {
   changeBackground() {
     const settings = this.storage.getSettings();
     const category = settings.bgCategory || "nature";
-    const images = this.backgrounds[category] || this.backgrounds.nature;
+    const images = this.getImagesForCategory(category, settings);
 
-    let index = (settings.currentBgIndex + 1) % images.length;
+    let index = ((settings.currentBgIndex || 0) + 1) % images.length;
     settings.currentBgIndex = index;
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
@@ -190,8 +207,10 @@ class BackgroundManager {
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
 
-    const images = this.backgrounds[category] || this.backgrounds.nature;
-    this.setBackground(images[0]);
+    const images = this.getImagesForCategory(category, settings);
+    if (images.length > 0) {
+      this.setBackground(images[0]);
+    }
   }
 
   /**
