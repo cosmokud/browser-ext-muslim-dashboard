@@ -80,8 +80,60 @@ class SettingsManager {
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
+    this.customBgInterval = document.getElementById("customBgInterval");
+    this.customIntervalGroup = document.getElementById("customIntervalGroup");
     this.bgCategory = document.getElementById("bgCategory");
     this.changeBackgroundBtn = document.getElementById("changeBackgroundBtn");
+
+    // Angle display elements
+    this.currentFajrAngle = document.getElementById("currentFajrAngle");
+    this.currentIshaAngle = document.getElementById("currentIshaAngle");
+
+    // Settings import/export
+    this.importSettingsBtn = document.getElementById("importSettingsBtn");
+    this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
+    this.importSettingsInput = document.getElementById("importSettingsInput");
+
+    // Layout settings elements
+    this.slotButtons = document.querySelectorAll(".slot-btn");
+    this.containerWidth = document.getElementById("containerWidth");
+    this.customWidthGroup = document.getElementById("customWidthGroup");
+    this.customWidthSlider = document.getElementById("customWidthSlider");
+    this.customWidthValue = document.getElementById("customWidthValue");
+    this.showSideContainers = document.getElementById("showSideContainers");
+    this.sideContainersOptions = document.getElementById(
+      "sideContainersOptions"
+    );
+    this.sideAlignment = document.getElementById("sideAlignment");
+    this.resetLayoutBtn = document.getElementById("resetLayoutBtn");
+
+    // Prayer calculation methods reference
+    this.prayerMethods = {
+      MWL: { fajr: 18, isha: 17 },
+      ISNA: { fajr: 15, isha: 15 },
+      Egypt: { fajr: 19.5, isha: 17.5 },
+      Makkah: { fajr: 18.5, isha: "90 min" },
+      Karachi: { fajr: 18, isha: 18 },
+      Tehran: { fajr: 17.7, isha: 14 },
+      Jafari: { fajr: 16, isha: 14 },
+      Kuwait: { fajr: 18, isha: 17.5 },
+      Qatar: { fajr: 18, isha: "90 min" },
+      Dubai: { fajr: 18.2, isha: 18.2 },
+      Jordan: { fajr: 18, isha: 18 },
+      Palestine: { fajr: 18, isha: 18 },
+      Algeria: { fajr: 18, isha: 17 },
+      Morocco: { fajr: 19, isha: 17 },
+      Tunisia: { fajr: 18, isha: 18 },
+      Singapore: { fajr: 20, isha: 18 },
+      Malaysia: { fajr: 20, isha: 18 },
+      Indonesia: { fajr: 20, isha: 18 },
+      Brunei: { fajr: 20, isha: 18 },
+      Turkey: { fajr: 18, isha: 17 },
+      France: { fajr: 12, isha: 12 },
+      Germany: { fajr: 18, isha: 17 },
+      Russia: { fajr: 16, isha: 15 },
+      Custom: { fajr: 18, isha: 17 },
+    };
   }
 
   /**
@@ -90,6 +142,24 @@ class SettingsManager {
   init() {
     this.loadSettings();
     this.setupEventListeners();
+    this.updateAngleDisplay();
+  }
+
+  /**
+   * Update angle display based on selected method
+   */
+  updateAngleDisplay() {
+    const method = this.calculationMethod?.value || "MWL";
+    const angles = this.prayerMethods[method] || this.prayerMethods.MWL;
+
+    if (this.currentFajrAngle) {
+      this.currentFajrAngle.textContent = `${angles.fajr}°`;
+    }
+    if (this.currentIshaAngle) {
+      const ishaValue =
+        typeof angles.isha === "string" ? angles.isha : `${angles.isha}°`;
+      this.currentIshaAngle.textContent = ishaValue;
+    }
   }
 
   /**
@@ -149,8 +219,93 @@ class SettingsManager {
     if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
 
     // Background settings
-    if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
+    if (
+      settings.bgInterval === "custom" ||
+      !["15", "30", "60", "120", "1440"].includes(String(settings.bgInterval))
+    ) {
+      if (this.bgInterval) this.bgInterval.value = "custom";
+      if (this.customBgInterval)
+        this.customBgInterval.value =
+          settings.customBgInterval || settings.bgInterval || 60;
+      this.toggleCustomInterval(true);
+    } else {
+      if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
+      this.toggleCustomInterval(false);
+    }
     if (this.bgCategory) this.bgCategory.value = settings.bgCategory;
+
+    // Layout settings
+    this.loadLayoutSettings(settings);
+
+    // Update angle display
+    this.updateAngleDisplay();
+  }
+
+  /**
+   * Load layout settings
+   */
+  loadLayoutSettings(settings) {
+    // Slots per row
+    const slotsPerRow = settings.dockSlotsPerRow || 3;
+    this.slotButtons.forEach((btn) => {
+      btn.classList.toggle(
+        "active",
+        parseInt(btn.dataset.slots) === slotsPerRow
+      );
+    });
+
+    // Container width
+    if (this.containerWidth) {
+      this.containerWidth.value = settings.dockContainerWidth || "default";
+      this.toggleCustomWidth(settings.dockContainerWidth === "custom");
+    }
+
+    // Custom width slider
+    if (this.customWidthSlider) {
+      this.customWidthSlider.value = settings.dockCustomWidth || 80;
+    }
+    if (this.customWidthValue) {
+      this.customWidthValue.textContent = `${settings.dockCustomWidth || 80}vw`;
+    }
+
+    // Side containers
+    if (this.showSideContainers) {
+      this.showSideContainers.checked =
+        settings.dockShowSideContainers || false;
+      this.toggleSideContainerOptions(settings.dockShowSideContainers || false);
+    }
+
+    // Side alignment
+    if (this.sideAlignment) {
+      this.sideAlignment.value = settings.dockSideAlignment || "center";
+    }
+  }
+
+  /**
+   * Toggle custom width slider
+   */
+  toggleCustomWidth(show) {
+    if (this.customWidthGroup) {
+      this.customWidthGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Toggle side container options
+   */
+  toggleSideContainerOptions(show) {
+    if (this.sideContainersOptions) {
+      this.sideContainersOptions.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Toggle custom interval input
+   */
+  toggleCustomInterval(show) {
+    if (this.customIntervalGroup) {
+      this.customIntervalGroup.style.display = show ? "block" : "none";
+    }
   }
 
   /**
@@ -199,8 +354,25 @@ class SettingsManager {
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
 
     // Background settings
-    settings.bgInterval = parseInt(this.bgInterval?.value) || 60;
+    const bgIntervalValue = this.bgInterval?.value;
+    if (bgIntervalValue === "custom") {
+      settings.bgInterval = "custom";
+      settings.customBgInterval = parseInt(this.customBgInterval?.value) || 60;
+    } else {
+      settings.bgInterval = parseInt(bgIntervalValue) || 60;
+      settings.customBgInterval = null;
+    }
     settings.bgCategory = this.bgCategory?.value || "nature";
+
+    // Layout settings
+    const activeSlotBtn = document.querySelector(".slot-btn.active");
+    settings.dockSlotsPerRow = activeSlotBtn
+      ? parseInt(activeSlotBtn.dataset.slots)
+      : 3;
+    settings.dockContainerWidth = this.containerWidth?.value || "default";
+    settings.dockCustomWidth = parseInt(this.customWidthSlider?.value) || 80;
+    settings.dockShowSideContainers = this.showSideContainers?.checked || false;
+    settings.dockSideAlignment = this.sideAlignment?.value || "center";
 
     // Save to storage
     this.storage.saveSettings(settings);
@@ -208,11 +380,115 @@ class SettingsManager {
     // Apply changes
     this.applySettings(settings);
 
+    // Apply layout changes if DockManager exists
+    if (window.dockManager) {
+      window.dockManager.setSlotsPerRow(settings.dockSlotsPerRow);
+      window.dockManager.setContainerWidth(
+        settings.dockContainerWidth,
+        settings.dockCustomWidth
+      );
+      window.dockManager.setSideContainers(
+        settings.dockShowSideContainers,
+        settings.dockSideAlignment
+      );
+    }
+
     // Show confirmation
     this.showToast("Settings saved successfully!", "success");
 
     // Close modal
     this.closeModal();
+  }
+
+  /**
+   * Export all dashboard settings as JSON
+   */
+  exportSettings() {
+    const settings = this.storage.getSettings();
+    const userQuotes = this.storage.getUserQuotes();
+    const pinnedApps = this.storage.getPinnedApps();
+    const todos = this.storage.getTodos();
+
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      settings: settings,
+      userQuotes: userQuotes,
+      pinnedApps: pinnedApps,
+      todos: todos,
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `muslim_dashboard_settings_${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast("Settings exported successfully!", "success");
+  }
+
+  /**
+   * Import all dashboard settings from JSON
+   */
+  importSettings(file) {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+
+        if (!data.settings) {
+          this.showToast("Invalid settings file format", "error");
+          return;
+        }
+
+        // Import settings
+        if (data.settings) {
+          this.storage.saveSettings(data.settings);
+        }
+
+        // Import user quotes
+        if (data.userQuotes && Array.isArray(data.userQuotes)) {
+          this.storage.saveUserQuotes(data.userQuotes);
+        }
+
+        // Import pinned apps
+        if (data.pinnedApps && Array.isArray(data.pinnedApps)) {
+          this.storage.savePinnedApps(data.pinnedApps);
+        }
+
+        // Import todos
+        if (data.todos && Array.isArray(data.todos)) {
+          this.storage.saveTodos(data.todos);
+        }
+
+        this.showToast("Settings imported! Reloading...", "success");
+
+        // Reload the page to apply all settings
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } catch (err) {
+        this.showToast(
+          "Failed to parse settings file: " + err.message,
+          "error"
+        );
+      }
+    };
+
+    reader.onerror = () => {
+      this.showToast("Failed to read file", "error");
+    };
+
+    reader.readAsText(file);
   }
 
   /**
@@ -462,16 +738,24 @@ class SettingsManager {
       this.searchCityBtn.addEventListener("click", () => this.searchCity());
     }
 
-    // Calculation method change - toggle custom angles
+    // Calculation method change - toggle custom angles and update display
     if (this.calculationMethod) {
       this.calculationMethod.addEventListener("change", (e) => {
         this.toggleCustomAngles(e.target.value === "Custom");
+        this.updateAngleDisplay();
       });
     }
 
     // Add quote
     if (this.addQuoteBtn) {
       this.addQuoteBtn.addEventListener("click", () => this.addUserQuote());
+    }
+
+    // Background interval change - toggle custom input
+    if (this.bgInterval) {
+      this.bgInterval.addEventListener("change", (e) => {
+        this.toggleCustomInterval(e.target.value === "custom");
+      });
     }
 
     // Change background now
@@ -487,6 +771,91 @@ class SettingsManager {
           this.backgrounds.changeBackground();
         }
         this.showToast("Background changed!", "success");
+      });
+    }
+
+    // Settings import/export
+    if (this.exportSettingsBtn) {
+      this.exportSettingsBtn.addEventListener("click", () =>
+        this.exportSettings()
+      );
+    }
+    if (this.importSettingsBtn) {
+      this.importSettingsBtn.addEventListener("click", () => {
+        if (this.importSettingsInput) {
+          this.importSettingsInput.click();
+        }
+      });
+    }
+    if (this.importSettingsInput) {
+      this.importSettingsInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.importSettings(file);
+          this.importSettingsInput.value = "";
+        }
+      });
+    }
+
+    // Layout settings - Slot buttons
+    this.slotButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.slotButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    // Container width change
+    if (this.containerWidth) {
+      this.containerWidth.addEventListener("change", (e) => {
+        this.toggleCustomWidth(e.target.value === "custom");
+      });
+    }
+
+    // Custom width slider
+    if (this.customWidthSlider) {
+      this.customWidthSlider.addEventListener("input", (e) => {
+        if (this.customWidthValue) {
+          this.customWidthValue.textContent = `${e.target.value}vw`;
+        }
+      });
+    }
+
+    // Side containers toggle
+    if (this.showSideContainers) {
+      this.showSideContainers.addEventListener("change", (e) => {
+        this.toggleSideContainerOptions(e.target.checked);
+      });
+    }
+
+    // Reset layout button
+    if (this.resetLayoutBtn) {
+      this.resetLayoutBtn.addEventListener("click", () => {
+        if (
+          confirm(
+            "Reset layout to default? This will reset component positions and layout settings."
+          )
+        ) {
+          // Reset layout settings
+          this.slotButtons.forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.slots === "3");
+          });
+          if (this.containerWidth) this.containerWidth.value = "default";
+          if (this.customWidthSlider) this.customWidthSlider.value = 80;
+          if (this.customWidthValue) this.customWidthValue.textContent = "80vw";
+          if (this.showSideContainers) this.showSideContainers.checked = false;
+          if (this.sideAlignment) this.sideAlignment.value = "center";
+
+          this.toggleCustomWidth(false);
+          this.toggleSideContainerOptions(false);
+
+          // Reset dock manager layout
+          if (window.dockManager) {
+            window.dockManager.resetLayout();
+          }
+
+          this.showToast("Layout reset to default!", "success");
+        }
       });
     }
 

@@ -78,7 +78,7 @@ class StorageManager {
       // Prayer settings
       calculationMethod: "MWL",
       asrMethod: "Standard",
-      highLatMethod: "NightMiddle",
+      highLatMethod: "None",
       midnightMethod: "Standard",
 
       // Custom angles (used when calculationMethod is "Custom")
@@ -123,6 +123,7 @@ class StorageManager {
       // Background settings
       bgInterval: 60, // minutes
       bgCategory: "nature",
+      customBgInterval: null,
       lastBgChange: null,
       currentBgIndex: 0,
 
@@ -135,6 +136,13 @@ class StorageManager {
 
       // Pinned Apps settings
       pinnedApps: [],
+
+      // Dock/Layout settings
+      dockSlotsPerRow: 3,
+      dockContainerWidth: "default",
+      dockCustomWidth: 80,
+      dockShowSideContainers: false,
+      dockSideAlignment: "center",
     };
   }
 

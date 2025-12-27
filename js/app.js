@@ -17,6 +17,7 @@ class MuslimDashboard {
     this.todos = new TodoManager(this.storage);
     this.pinnedApps = null; // Will be initialized after DOM
     this.calendar = null; // Will be initialized after DOM
+    this.dockManager = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -81,6 +82,11 @@ class MuslimDashboard {
       this.backgrounds
     );
     this.settings.init();
+
+    // Initialize dock manager for draggable UI
+    this.dockManager = new DockManager(this.storage);
+    this.dockManager.init();
+    window.dockManager = this.dockManager; // Make accessible globally for settings
 
     // Setup location updates
     this.setupLocationUpdates();

@@ -20,204 +20,242 @@
       <div class="background-overlay"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-      <!-- Header Section -->
-      <header class="header">
-        <div class="greeting-section">
-          <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
-          <p class="date-display" id="dateDisplay"></p>
-        </div>
-        <div class="time-section">
-          <div class="current-time" id="currentTime">00:00</div>
-          <div class="current-seconds" id="currentSeconds">:00</div>
-        </div>
-      </header>
+    <!-- Master Container for Dockable UI -->
+    <div class="master-container" id="masterContainer">
+      <!-- Left Side Container (optional) -->
+      <aside
+        class="side-container left-container"
+        id="leftContainer"
+        style="display: none"
+      >
+        <!-- Components can be dragged here -->
+      </aside>
 
-      <!-- Pinned Apps Section -->
-      <section class="pinned-apps-section" id="pinnedAppsSection">
-        <div class="pinned-apps-grid" id="pinnedAppsGrid">
-          <!-- Apps will be dynamically added here -->
-          <div class="pinned-app-add" id="addPinnedAppBtn">
-            <div class="add-icon">+</div>
-            <span class="add-text">Add Site</span>
+      <!-- Main Container -->
+      <div class="main-container" id="mainWrapper">
+        <!-- Header Section -->
+        <header class="header">
+          <div class="greeting-section">
+            <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
+            <p class="date-display" id="dateDisplay"></p>
           </div>
-        </div>
-      </section>
+          <div class="time-section">
+            <div class="current-time" id="currentTime">00:00</div>
+            <div class="current-seconds" id="currentSeconds">:00</div>
+          </div>
+        </header>
 
-      <!-- Quote Section -->
-      <section class="quote-section" id="quoteSection">
-        <div class="quote-container">
-          <div class="quote-icon">❝</div>
-          <p class="quote-text" id="quoteText">Loading inspiration...</p>
-          <p class="quote-source" id="quoteSource"></p>
-          <button class="quote-refresh" id="quoteRefresh" title="New Quote">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-              />
-            </svg>
-          </button>
-        </div>
-      </section>
+        <!-- Dockable Content Area -->
+        <div class="dock-container" id="mainDockContainer">
+          <!-- Pinned Apps Section -->
+          <section class="pinned-apps-section card" id="pinnedAppsSection">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">📌</span>
+                Pinned Apps
+              </h2>
+            </div>
+            <div class="pinned-apps-grid" id="pinnedAppsGrid">
+              <!-- Apps will be dynamically added here -->
+              <div class="pinned-app-add" id="addPinnedAppBtn">
+                <div class="add-icon">+</div>
+                <span class="add-text">Add Site</span>
+              </div>
+            </div>
+          </section>
 
-      <!-- Main Content Grid -->
-      <main class="content-grid">
-        <!-- Prayer Times Card -->
-        <section class="card prayer-times-card" id="prayerTimesCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🕌</span>
-              Prayer Times
-            </h2>
-            <div class="location-display" id="locationDisplay">
-              <span class="location-icon">📍</span>
-              <span class="location-text" id="locationText">Detecting...</span>
-              <button
-                class="location-refresh-btn"
-                id="detectLocationBtn"
-                title="Refresh Location"
+          <!-- Quote Section -->
+          <section class="quote-section card" id="quoteSection">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">📖</span>
+                Daily Quote
+              </h2>
+            </div>
+            <div class="quote-container">
+              <div class="quote-icon">❝</div>
+              <p class="quote-text" id="quoteText">Loading inspiration...</p>
+              <p class="quote-source" id="quoteSource"></p>
+              <button class="quote-refresh" id="quoteRefresh" title="New Quote">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                  />
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Prayer Times Card -->
+          <section class="card prayer-times-card" id="prayerTimesCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">🕌</span>
+                Prayer Times
+              </h2>
+              <div class="location-display" id="locationDisplay">
+                <span class="location-icon">📍</span>
+                <span class="location-text" id="locationText"
+                  >Detecting...</span
+                >
+                <button
+                  class="location-refresh-btn"
+                  id="detectLocationBtn"
+                  title="Refresh Location"
+                >
+                  🔄
+                </button>
+              </div>
+            </div>
+            <div class="prayer-list" id="prayerList">
+              <!-- Prayer items will be dynamically generated based on visibility settings -->
+            </div>
+            <div class="next-prayer" id="nextPrayer">
+              <span class="next-prayer-label">Next Prayer:</span>
+              <span class="next-prayer-name" id="nextPrayerName">--</span>
+              <span class="next-prayer-countdown" id="nextPrayerCountdown"
+                >--:--:--</span
               >
-                🔄
-              </button>
             </div>
-          </div>
-          <div class="prayer-list" id="prayerList">
-            <!-- Prayer items will be dynamically generated based on visibility settings -->
-          </div>
-          <div class="next-prayer" id="nextPrayer">
-            <span class="next-prayer-label">Next Prayer:</span>
-            <span class="next-prayer-name" id="nextPrayerName">--</span>
-            <span class="next-prayer-countdown" id="nextPrayerCountdown"
-              >--:--:--</span
-            >
-          </div>
-        </section>
+          </section>
 
-        <!-- Calendar Card -->
-        <section class="card calendar-card" id="calendarCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📅</span>
-              Calendar
-            </h2>
-            <div class="calendar-toggle-btns">
-              <button class="calendar-type-btn active" data-type="hijri">
-                Hijri
-              </button>
-              <button class="calendar-type-btn" data-type="gregorian">
-                Gregorian
-              </button>
-            </div>
-          </div>
-          <div class="calendar-container" id="calendarContainer">
-            <div class="calendar-header">
-              <button class="calendar-nav-btn" id="prevMonth">❮</button>
-              <div class="calendar-month-year">
-                <span class="calendar-month" id="calendarMonth">--</span>
-                <span class="calendar-year" id="calendarYear">----</span>
+          <!-- Calendar Card -->
+          <section class="card calendar-card" id="calendarCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">📅</span>
+                Calendar
+              </h2>
+              <div class="calendar-toggle-btns">
+                <button class="calendar-type-btn active" data-type="hijri">
+                  Hijri
+                </button>
+                <button class="calendar-type-btn" data-type="gregorian">
+                  Gregorian
+                </button>
               </div>
-              <button class="calendar-nav-btn" id="nextMonth">❯</button>
             </div>
-            <div class="calendar-weekdays">
-              <span>Sun</span>
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
+            <div class="calendar-container" id="calendarContainer">
+              <div class="calendar-header">
+                <button class="calendar-nav-btn" id="prevMonth">❮</button>
+                <div class="calendar-month-year">
+                  <span class="calendar-month" id="calendarMonth">--</span>
+                  <span class="calendar-year" id="calendarYear">----</span>
+                </div>
+                <button class="calendar-nav-btn" id="nextMonth">❯</button>
+              </div>
+              <div class="calendar-weekdays">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+              <div class="calendar-days" id="calendarDays">
+                <!-- Calendar days will be dynamically generated -->
+              </div>
+              <div class="calendar-today-info" id="calendarTodayInfo">
+                <span class="hijri-date" id="hijriDateDisplay">--</span>
+                <span class="gregorian-date" id="gregorianDateDisplay">--</span>
+              </div>
             </div>
-            <div class="calendar-days" id="calendarDays">
-              <!-- Calendar days will be dynamically generated -->
-            </div>
-            <div class="calendar-today-info" id="calendarTodayInfo">
-              <span class="hijri-date" id="hijriDateDisplay">--</span>
-              <span class="gregorian-date" id="gregorianDateDisplay">--</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Qibla Direction Card -->
-        <section class="card qibla-card" id="qiblaCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🧭</span>
-              Qibla Direction
-            </h2>
-          </div>
-          <div class="qibla-compass-container">
-            <div class="compass-outer">
-              <div class="compass-ring">
-                <span class="compass-direction north">N</span>
-                <span class="compass-direction east">E</span>
-                <span class="compass-direction south">S</span>
-                <span class="compass-direction west">W</span>
-              </div>
-              <div class="compass-inner" id="compassInner">
-                <div class="qibla-needle" id="qiblaNeedle">
-                  <div class="needle-point"></div>
-                  <div class="kaaba-icon">🕋</div>
+          <!-- Qibla Direction Card -->
+          <section class="card qibla-card" id="qiblaCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">🧭</span>
+                Qibla Direction
+              </h2>
+            </div>
+            <div class="qibla-compass-container">
+              <div class="compass-outer">
+                <div class="compass-ring">
+                  <span class="compass-direction north">N</span>
+                  <span class="compass-direction east">E</span>
+                  <span class="compass-direction south">S</span>
+                  <span class="compass-direction west">W</span>
+                </div>
+                <div class="compass-inner" id="compassInner">
+                  <div class="qibla-needle" id="qiblaNeedle">
+                    <div class="needle-point"></div>
+                    <div class="kaaba-icon">🕋</div>
+                  </div>
                 </div>
               </div>
+              <div class="qibla-degree" id="qiblaDegree">--°</div>
+              <p class="qibla-instruction">
+                Point your device north for accurate direction
+              </p>
             </div>
-            <div class="qibla-degree" id="qiblaDegree">--°</div>
-            <p class="qibla-instruction">
-              Point your device north for accurate direction
-            </p>
-          </div>
-        </section>
+          </section>
 
-        <!-- Todo List Card -->
-        <section class="card todo-card" id="todoCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">✅</span>
-              My Tasks
-            </h2>
-            <span class="todo-count" id="todoCount">0 tasks</span>
-          </div>
-          <div class="todo-input-container">
-            <input
-              type="text"
-              class="todo-input"
-              id="todoInput"
-              placeholder="Add a new task..."
-              maxlength="200"
-            />
-            <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="todo-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="active">Active</button>
-            <button class="filter-btn" data-filter="completed">
-              Completed
-            </button>
-          </div>
-          <ul class="todo-list" id="todoList"></ul>
-          <div class="todo-actions">
-            <button class="clear-completed-btn" id="clearCompletedBtn">
-              Clear Completed
-            </button>
-          </div>
-        </section>
-      </main>
+          <!-- Todo List Card -->
+          <section class="card todo-card" id="todoCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">✅</span>
+                My Tasks
+              </h2>
+              <span class="todo-count" id="todoCount">0 tasks</span>
+            </div>
+            <div class="todo-input-container">
+              <input
+                type="text"
+                class="todo-input"
+                id="todoInput"
+                placeholder="Add a new task..."
+                maxlength="200"
+              />
+              <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="todo-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="active">Active</button>
+              <button class="filter-btn" data-filter="completed">
+                Completed
+              </button>
+            </div>
+            <ul class="todo-list" id="todoList"></ul>
+            <div class="todo-actions">
+              <button class="clear-completed-btn" id="clearCompletedBtn">
+                Clear Completed
+              </button>
+            </div>
+          </section>
+        </div>
+        <!-- End Dock Container -->
+      </div>
+      <!-- End Main Container -->
+
+      <!-- Right Side Container (optional) -->
+      <aside
+        class="side-container right-container"
+        id="rightContainer"
+        style="display: none"
+      >
+        <!-- Components can be dragged here -->
+      </aside>
     </div>
+    <!-- End Master Container -->
 
     <!-- Settings Button -->
     <button class="settings-btn" id="settingsBtn" title="Settings">
@@ -252,6 +290,7 @@
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
+            <button class="settings-tab" data-tab="layout">📐 Layout</button>
           </div>
 
           <!-- Location Settings -->
@@ -366,6 +405,17 @@
                   <option value="Custom">Custom Angles</option>
                 </optgroup>
               </select>
+              <!-- Current Method Angles Display -->
+              <div class="method-angles-display" id="methodAnglesDisplay">
+                <span class="angle-item"
+                  ><strong>Fajr:</strong>
+                  <span id="currentFajrAngle">18°</span></span
+                >
+                <span class="angle-item"
+                  ><strong>Isha:</strong>
+                  <span id="currentIshaAngle">17°</span></span
+                >
+              </div>
             </div>
 
             <!-- Custom Angles (shown when Custom is selected) -->
@@ -417,10 +467,10 @@
             <div class="setting-group">
               <label class="setting-label">Higher Latitude Adjustment</label>
               <select class="setting-select" id="highLatMethod">
+                <option value="None">No Adjustment</option>
                 <option value="NightMiddle">Middle of the Night</option>
                 <option value="AngleBased">Angle/60th of the Night</option>
                 <option value="OneSeventh">One-Seventh of the Night</option>
-                <option value="None">No Adjustment</option>
               </select>
               <p class="setting-hint">
                 For locations above 48° latitude where Fajr/Isha may not occur
@@ -685,7 +735,23 @@
                 <option value="60" selected>Every 60 minutes</option>
                 <option value="120">Every 2 hours</option>
                 <option value="1440">Once a day</option>
+                <option value="custom">Custom (minutes)</option>
               </select>
+              <div
+                class="custom-interval-group"
+                id="customIntervalGroup"
+                style="display: none; margin-top: 0.5rem"
+              >
+                <input
+                  type="number"
+                  class="setting-input"
+                  id="customBgInterval"
+                  placeholder="Enter minutes"
+                  min="1"
+                  max="10080"
+                  value="60"
+                />
+              </div>
             </div>
             <div class="setting-group">
               <label class="setting-label">Background Category</label>
@@ -705,8 +771,117 @@
               </button>
             </div>
           </div>
+
+          <!-- Layout Settings -->
+          <div class="settings-panel" id="layoutPanel">
+            <div class="setting-group">
+              <label class="setting-label">Slots per Row</label>
+              <p class="setting-description">
+                Number of component slots in each row (2-8)
+              </p>
+              <div class="slots-selector">
+                <button class="slot-btn" data-slots="2">2</button>
+                <button class="slot-btn" data-slots="3">3</button>
+                <button class="slot-btn" data-slots="4">4</button>
+                <button class="slot-btn" data-slots="5">5</button>
+                <button class="slot-btn" data-slots="6">6</button>
+                <button class="slot-btn" data-slots="7">7</button>
+                <button class="slot-btn" data-slots="8">8</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Container Width</label>
+              <p class="setting-description">
+                Width of the main dashboard container
+              </p>
+              <select class="setting-select" id="containerWidth">
+                <option value="default">Default (1400px)</option>
+                <option value="narrow">Narrow (900px)</option>
+                <option value="medium">Medium (1100px)</option>
+                <option value="wide">Wide (1600px)</option>
+                <option value="full">Full Width (99vw)</option>
+                <option value="custom">Custom</option>
+              </select>
+              <div
+                class="custom-width-group"
+                id="customWidthGroup"
+                style="display: none; margin-top: 0.75rem"
+              >
+                <div class="slider-container">
+                  <input
+                    type="range"
+                    class="width-slider"
+                    id="customWidthSlider"
+                    min="50"
+                    max="99"
+                    value="80"
+                  />
+                  <span class="slider-value" id="customWidthValue">80vw</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  id="showSideContainers"
+                  class="setting-checkbox"
+                />
+                Enable Side Containers
+              </label>
+              <p class="setting-description">
+                Add optional containers on left and right of the main dashboard
+              </p>
+            </div>
+
+            <div
+              class="setting-group side-containers-options"
+              id="sideContainersOptions"
+              style="display: none"
+            >
+              <label class="setting-label">Side Containers Alignment</label>
+              <p class="setting-description">
+                Vertical alignment of side container content
+              </p>
+              <select class="setting-select" id="sideAlignment">
+                <option value="top">Top</option>
+                <option value="center" selected>Center</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <button class="setting-btn" id="resetLayoutBtn">
+                🔄 Reset Layout to Default
+              </button>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
+          <div class="settings-io-btns">
+            <button
+              class="modal-btn io-btn"
+              id="importSettingsBtn"
+              title="Import all settings from JSON"
+            >
+              📥 Import
+            </button>
+            <button
+              class="modal-btn io-btn"
+              id="exportSettingsBtn"
+              title="Export all settings to JSON"
+            >
+              📤 Export
+            </button>
+            <input
+              type="file"
+              id="importSettingsInput"
+              accept=".json"
+              style="display: none"
+            />
+          </div>
           <button class="modal-btn save-btn" id="saveSettingsBtn">
             💾 Save Settings
           </button>
@@ -718,11 +893,12 @@
     <div class="modal-overlay" id="pinnedAppModal">
       <div class="modal modal-small">
         <div class="modal-header">
-          <h2 class="modal-title">🔗 Add Website</h2>
+          <h2 class="modal-title" id="pinnedAppModalTitle">🔗 Add Website</h2>
           <button class="modal-close" id="closePinnedAppModal">&times;</button>
         </div>
         <div class="modal-body">
           <form id="pinnedAppForm">
+            <input type="hidden" id="pinnedAppEditId" value="" />
             <div class="setting-group">
               <label class="setting-label">Name</label>
               <input
@@ -749,7 +925,12 @@
           <button class="modal-btn cancel-btn" id="cancelPinnedApp">
             Cancel
           </button>
-          <button class="modal-btn save-btn" type="submit" form="pinnedAppForm">
+          <button
+            class="modal-btn save-btn"
+            type="submit"
+            form="pinnedAppForm"
+            id="pinnedAppSubmitBtn"
+          >
             Add
           </button>
         </div>
@@ -792,6 +973,7 @@
     <script src="js/todo.js"></script>
     <script src="js/pinnedapps.js"></script>
     <script src="js/calendar.js"></script>
+    <script src="js/dockmanager.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/app.js"></script>
   </body>
