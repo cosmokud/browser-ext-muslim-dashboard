@@ -141,6 +141,7 @@ class StorageManager {
 
       // UI settings
       timeFormat: "24h",
+      uiBlurPower: 100, // percentage (100 = current blur, 0 = no blur)
 
       // Pinned Apps settings
       pinnedApps: [],

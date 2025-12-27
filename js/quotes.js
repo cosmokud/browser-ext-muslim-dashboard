@@ -12,10 +12,19 @@ class QuotesManager {
     this.currentPage = 1;
     this.quotesPerPage = 10;
 
+    // Quote auto-rotation
+    this.autoRotateMs = 60 * 1000;
+    this.autoRotateTimer = null;
+
+    // Track running animations so we can cancel cleanly
+    this._activeAnimations = [];
+
     // Quote display elements
     this.quoteText = document.getElementById("quoteText");
     this.quoteSource = document.getElementById("quoteSource");
     this.quoteRefresh = document.getElementById("quoteRefresh");
+
+    this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
 
     // Quotes settings elements
     this.quotesListContainer = document.getElementById("userQuotesList");
@@ -34,6 +43,9 @@ class QuotesManager {
     this.displayRandomQuote();
     this.setupEventListeners();
     this.renderQuotesList();
+
+    // Auto-rotate quotes using the same animation path as manual refresh
+    this.startAutoRotate();
   }
 
   /**
@@ -136,15 +148,119 @@ class QuotesManager {
   animateQuote(quote) {
     if (!this.quoteText || !this.quoteSource) return;
 
-    this.quoteText.style.opacity = "0";
-    this.quoteSource.style.opacity = "0";
+    const prefersReducedMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)"
+    )?.matches;
+    const container = this.quoteContainer || this.quoteText.parentElement;
 
-    setTimeout(() => {
+    if (!container || prefersReducedMotion) {
       this.quoteText.textContent = quote.text;
-      this.quoteSource.textContent = `— ${quote.source}`;
-      this.quoteText.style.opacity = "1";
-      this.quoteSource.style.opacity = "1";
-    }, 300);
+      this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
+      this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
+      return;
+    }
+
+    // Cancel any in-flight animations to avoid stacking/jank
+    if (this._activeAnimations.length > 0) {
+      this._activeAnimations.forEach((a) => {
+        try {
+          a.cancel();
+        } catch {
+          // no-op
+        }
+      });
+      this._activeAnimations = [];
+    }
+
+    const startHeight = container.getBoundingClientRect().height;
+    container.style.height = `${startHeight}px`;
+    container.style.overflow = "hidden";
+    container.style.willChange = "height";
+
+    const outKeyframes = [
+      { opacity: 1, transform: "translateY(0px)" },
+      { opacity: 0, transform: "translateY(-8px)" },
+    ];
+
+    const outOptions = {
+      duration: 180,
+      easing: "cubic-bezier(0.2, 0, 0, 1)",
+      fill: "forwards",
+    };
+
+    const outText = this.quoteText.animate(outKeyframes, outOptions);
+    const outSource = this.quoteSource.animate(outKeyframes, outOptions);
+    this._activeAnimations.push(outText, outSource);
+
+    Promise.all([
+      outText.finished.catch(() => undefined),
+      outSource.finished.catch(() => undefined),
+    ]).then(() => {
+      // Swap content while hidden
+      this.quoteText.textContent = quote.text;
+      this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
+      this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
+
+      // Measure target height after content swap
+      const endHeight = container.scrollHeight;
+
+      const heightAnim = container.animate(
+        [{ height: `${startHeight}px` }, { height: `${endHeight}px` }],
+        {
+          duration: 340,
+          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          fill: "forwards",
+        }
+      );
+      this._activeAnimations.push(heightAnim);
+
+      const inKeyframes = [
+        { opacity: 0, transform: "translateY(10px)" },
+        { opacity: 1, transform: "translateY(0px)" },
+      ];
+
+      const inOptions = {
+        duration: 260,
+        delay: 60,
+        easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        fill: "forwards",
+      };
+
+      const inText = this.quoteText.animate(inKeyframes, inOptions);
+      const inSource = this.quoteSource.animate(inKeyframes, inOptions);
+      this._activeAnimations.push(inText, inSource);
+
+      Promise.all([
+        heightAnim.finished.catch(() => undefined),
+        inText.finished.catch(() => undefined),
+        inSource.finished.catch(() => undefined),
+      ]).then(() => {
+        container.style.height = "";
+        container.style.overflow = "";
+        container.style.willChange = "";
+        this._activeAnimations = [];
+      });
+    });
+  }
+
+  /**
+   * Start automatic quote rotation
+   */
+  startAutoRotate() {
+    this.stopAutoRotate();
+    this.autoRotateTimer = setInterval(() => {
+      this.displayRandomQuote();
+    }, this.autoRotateMs);
+  }
+
+  /**
+   * Stop automatic quote rotation
+   */
+  stopAutoRotate() {
+    if (this.autoRotateTimer) {
+      clearInterval(this.autoRotateTimer);
+      this.autoRotateTimer = null;
+    }
   }
 
   /**

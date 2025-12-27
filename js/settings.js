@@ -95,6 +95,8 @@ class SettingsManager {
     this.containerWidthCustom = document.getElementById("containerWidthCustom");
     this.customWidthGroup = document.getElementById("customWidthGroup");
     this.customWidthValue = document.getElementById("customWidthValue");
+    this.uiBlurPower = document.getElementById("uiBlurPower");
+    this.uiBlurPowerValue = document.getElementById("uiBlurPowerValue");
     this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
@@ -113,6 +115,10 @@ class SettingsManager {
     this.setupEventListeners();
     this.updateMethodAnglesDisplay();
     this.renderCustomBackgrounds();
+
+    // Apply UI settings immediately (not only after Save)
+    const settings = this.storage.getSettings();
+    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
   }
 
   /**
@@ -202,6 +208,14 @@ class SettingsManager {
     } else {
       this.toggleCustomWidth(false);
     }
+
+    // UI blur power
+    if (this.uiBlurPower) {
+      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+      this.uiBlurPower.value = String(clamped);
+      this.updateUiBlurPowerLabel();
+      this.applyUiBlurPower(clamped);
+    }
   }
 
   /**
@@ -242,6 +256,28 @@ class SettingsManager {
       this.containerWidthCustom.value = String(clamped);
       this.customWidthValue.textContent = clamped + "%";
     }
+  }
+
+  updateUiBlurPowerLabel() {
+    if (this.uiBlurPowerValue && this.uiBlurPower) {
+      const clamped = this.clampNumber(
+        parseInt(this.uiBlurPower.value, 10),
+        0,
+        200,
+        100
+      );
+      this.uiBlurPower.value = String(clamped);
+      this.uiBlurPowerValue.textContent = clamped + "%";
+    }
+  }
+
+  applyUiBlurPower(powerPercent) {
+    const clamped = this.clampNumber(powerPercent, 0, 200, 100);
+    const multiplier = clamped / 100;
+    document.documentElement.style.setProperty(
+      "--ui-blur-multiplier",
+      String(multiplier)
+    );
   }
 
   /**
@@ -513,6 +549,14 @@ class SettingsManager {
       );
     }
 
+    // UI blur power
+    settings.uiBlurPower = this.clampNumber(
+      parseInt(this.uiBlurPower?.value, 10),
+      0,
+      200,
+      100
+    );
+
     // Save to storage
     this.storage.saveSettings(settings);
 
@@ -569,6 +613,9 @@ class SettingsManager {
       settings.containerWidth,
       settings.containerWidthCustom
     );
+
+    // Apply UI blur power
+    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
   }
 
   /**
@@ -865,6 +912,14 @@ class SettingsManager {
     if (this.containerWidthCustom) {
       this.containerWidthCustom.addEventListener("input", () => {
         this.updateCustomWidthLabel();
+      });
+    }
+
+    // UI blur power slider - live preview
+    if (this.uiBlurPower) {
+      this.uiBlurPower.addEventListener("input", () => {
+        this.updateUiBlurPowerLabel();
+        this.applyUiBlurPower(parseInt(this.uiBlurPower.value, 10));
       });
     }
 
