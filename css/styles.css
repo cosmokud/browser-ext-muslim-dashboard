@@ -123,7 +123,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  animation: fadeInBlurSafe 0.8s ease-out;
 }
 
 /* Blur-safe fade-in: uses minimal opacity to trigger backdrop-filter compositing
@@ -254,7 +253,6 @@ body {
 /* Quote Section */
 .quote-section {
   margin-bottom: var(--spacing-xl);
-  animation: fadeInUpBlurSafe 0.8s ease-out 0.2s backwards;
   isolation: isolate;
   contain: layout style;
 }
@@ -301,7 +299,8 @@ body {
     box-shadow var(--transition-normal);
   will-change: transform, box-shadow;
   backface-visibility: hidden;
-  /* transform: translateZ(0); */
+  transform: translateZ(0);
+  animation: fadeInUpBlurSafe 0.8s ease-out 0.2s backwards;
 }
 
 .quote-container:hover {
@@ -1476,9 +1475,6 @@ body {
 /* Pinned Apps Section */
 .pinned-apps-section {
   margin-bottom: var(--spacing-xl);
-  /* Use blur-safe animation to prevent backdrop-filter pop on load */
-  animation: fadeInUpBlurSafe 0.6s ease-out 0.1s backwards;
-  /* Prevent visual glitches during hover transforms */
   isolation: isolate;
   contain: layout style;
 }
@@ -1500,6 +1496,7 @@ body {
   will-change: transform, box-shadow;
   backface-visibility: hidden;
   transform: translateZ(0);
+  animation: fadeInUpBlurSafe 0.6s ease-out 0.1s backwards;
 }
 
 /* While dragging, disable hover transforms that change layout/rects (prevents jitter). */

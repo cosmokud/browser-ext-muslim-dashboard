@@ -96,9 +96,6 @@ class MuslimDashboard {
         if (this.backgrounds) {
           this.backgrounds.changeBackground();
         }
-        if (this.settings && typeof this.settings.showToast === "function") {
-          this.settings.showToast("Background changed!", "success");
-        }
         refreshBtn.classList.add("rotate-once");
         setTimeout(() => refreshBtn.classList.remove("rotate-once"), 700);
       });
