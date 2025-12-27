@@ -1,7 +1,7 @@
 /**
  * Pinned Apps Manager
  * Handles pinned websites/apps with drag-and-drop functionality
- * Features: favicon fetching, reordering, editing, 10 items per row
+ * Features: favicon fetching, reordering, 10 items per row
  */
 
 class PinnedAppsManager {
@@ -9,16 +9,12 @@ class PinnedAppsManager {
     this.storage = storage;
     this.apps = [];
     this.draggedItem = null;
-    this.editingAppId = null;
     this.container = document.getElementById("pinnedAppsGrid");
     this.addBtn = document.getElementById("addPinnedAppBtn");
     this.modal = document.getElementById("pinnedAppModal");
     this.form = document.getElementById("pinnedAppForm");
     this.closeBtn = document.getElementById("closePinnedAppModal");
     this.cancelBtn = document.getElementById("cancelPinnedApp");
-    this.modalTitle = document.getElementById("pinnedAppModalTitle");
-    this.submitBtn = document.getElementById("pinnedAppSubmitBtn");
-    this.editIdInput = document.getElementById("pinnedAppEditId");
 
     this.init();
   }
@@ -74,31 +70,9 @@ class PinnedAppsManager {
   }
 
   /**
-   * Show add/edit app modal
+   * Show add app modal
    */
-  showModal(appId = null) {
-    this.editingAppId = appId;
-
-    if (appId) {
-      // Edit mode
-      const app = this.apps.find((a) => a.id === appId);
-      if (app) {
-        if (this.modalTitle) this.modalTitle.textContent = "✏️ Edit Website";
-        if (this.submitBtn) this.submitBtn.textContent = "Save";
-        if (this.editIdInput) this.editIdInput.value = appId;
-        const nameInput = document.getElementById("pinnedAppName");
-        const urlInput = document.getElementById("pinnedAppUrl");
-        if (nameInput) nameInput.value = app.name;
-        if (urlInput) urlInput.value = app.url;
-      }
-    } else {
-      // Add mode
-      if (this.modalTitle) this.modalTitle.textContent = "🔗 Add Website";
-      if (this.submitBtn) this.submitBtn.textContent = "Add";
-      if (this.editIdInput) this.editIdInput.value = "";
-      if (this.form) this.form.reset();
-    }
-
+  showModal() {
     if (this.modal) {
       this.modal.classList.add("active");
       const nameInput = document.getElementById("pinnedAppName");
@@ -113,8 +87,6 @@ class PinnedAppsManager {
     if (this.modal) {
       this.modal.classList.remove("active");
       if (this.form) this.form.reset();
-      this.editingAppId = null;
-      if (this.editIdInput) this.editIdInput.value = "";
     }
   }
 
@@ -150,26 +122,16 @@ class PinnedAppsManager {
     // Get favicon
     const favicon = this.getFaviconUrl(url);
 
-    if (this.editingAppId) {
-      // Edit existing app
-      const appIndex = this.apps.findIndex((a) => a.id === this.editingAppId);
-      if (appIndex !== -1) {
-        this.apps[appIndex].name = name;
-        this.apps[appIndex].url = url;
-        this.apps[appIndex].favicon = favicon; // Refresh favicon
-      }
-    } else {
-      // Add new app
-      const app = {
-        id: Date.now(),
-        name: name,
-        url: url,
-        favicon: favicon,
-        order: this.apps.length,
-      };
-      this.apps.push(app);
-    }
+    // Add app
+    const app = {
+      id: Date.now(),
+      name: name,
+      url: url,
+      favicon: favicon,
+      order: this.apps.length,
+    };
 
+    this.apps.push(app);
     this.saveApps();
     this.render();
     this.hideModal();
@@ -186,13 +148,6 @@ class PinnedAppsManager {
     } catch (e) {
       return null;
     }
-  }
-
-  /**
-   * Edit an app
-   */
-  editApp(appId) {
-    this.showModal(appId);
   }
 
   /**
@@ -276,12 +231,6 @@ class PinnedAppsManager {
         </div>
         <span class="pinned-app-name">${this.escapeHtml(app.name)}</span>
       </a>
-      <button class="pinned-app-edit" data-app-id="${app.id}" title="Edit">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-      </button>
       <button class="pinned-app-remove" data-app-id="${
         app.id
       }" title="Remove">×</button>
@@ -292,14 +241,6 @@ class PinnedAppsManager {
     el.addEventListener("dragend", () => this.handleDragEnd());
     el.addEventListener("dragover", (e) => this.handleDragOver(e));
     el.addEventListener("drop", (e) => this.handleDrop(e, app));
-
-    // Edit button
-    const editBtn = el.querySelector(".pinned-app-edit");
-    editBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.editApp(app.id);
-    });
 
     // Remove button
     const removeBtn = el.querySelector(".pinned-app-remove");
