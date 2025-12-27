@@ -291,6 +291,9 @@
               🖼️ Background
             </button>
             <button class="settings-tab" data-tab="layout">📐 Layout</button>
+            <button class="settings-tab" data-tab="components">
+              🧩 Components
+            </button>
           </div>
 
           <!-- Location Settings -->
@@ -856,6 +859,32 @@
               <button class="setting-btn" id="resetLayoutBtn">
                 🔄 Reset Layout to Default
               </button>
+            </div>
+          </div>
+
+          <!-- Components Settings -->
+          <div class="settings-panel" id="componentsPanel">
+            <div class="setting-group">
+              <label class="setting-label">Dashboard Components</label>
+              <p class="setting-description">
+                Toggle components on/off. Disabled components are removed from
+                the layout.
+              </p>
+            </div>
+            <div class="components-list" id="componentsList">
+              <!-- Components will be dynamically generated -->
+            </div>
+            <div class="setting-group" style="margin-top: 1rem">
+              <label class="setting-label">Add Component to Dashboard</label>
+              <p class="setting-description">
+                Select a component to add it to the main container.
+              </p>
+              <div class="add-component-row">
+                <select class="setting-select" id="addComponentSelect">
+                  <option value="">-- Select Component --</option>
+                </select>
+                <button class="setting-btn" id="addComponentBtn">➕ Add</button>
+              </div>
             </div>
           </div>
         </div>
