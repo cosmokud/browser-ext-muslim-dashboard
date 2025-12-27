@@ -35,63 +35,7 @@ class PinnedAppsManager {
     // Context menu element
     this.contextMenu = null;
 
-    // Drag state
-    this.draggedEl = null;
-    this._dragAnimRaf = null;
-
     this.init();
-  }
-
-  getPinnedItemElements() {
-    if (!this.container) return [];
-    return Array.from(this.container.querySelectorAll(".pinned-app-item"));
-  }
-
-  capturePinnedPositions() {
-    const positions = new Map();
-    this.getPinnedItemElements().forEach((el) => {
-      const id = el.dataset.appId;
-      if (id) positions.set(id, el.getBoundingClientRect());
-    });
-    return positions;
-  }
-
-  animatePinnedReorder(fromPositions) {
-    const items = this.getPinnedItemElements();
-    const toPositions = new Map();
-    items.forEach((el) => {
-      const id = el.dataset.appId;
-      if (id) toPositions.set(id, el.getBoundingClientRect());
-    });
-
-    items.forEach((el) => {
-      if (el.classList.contains("dragging")) return;
-      const id = el.dataset.appId;
-      if (!id) return;
-
-      const from = fromPositions.get(id);
-      const to = toPositions.get(id);
-      if (!from || !to) return;
-
-      const dx = from.left - to.left;
-      const dy = from.top - to.top;
-      if (dx === 0 && dy === 0) return;
-
-      el.style.transition = "transform 0s";
-      el.style.transform = `translate(${dx}px, ${dy}px)`;
-
-      requestAnimationFrame(() => {
-        el.style.transition = "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)";
-        el.style.transform = "";
-      });
-
-      const cleanup = () => {
-        el.style.transition = "";
-        el.style.transform = "";
-        el.removeEventListener("transitionend", cleanup);
-      };
-      el.addEventListener("transitionend", cleanup);
-    });
   }
 
   /**
@@ -571,7 +515,6 @@ class PinnedAppsManager {
   handleDragStart(e, app) {
     this.draggedItem = app;
     e.currentTarget.classList.add("dragging");
-    this.draggedEl = e.currentTarget;
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", app.id);
   }
@@ -581,7 +524,6 @@ class PinnedAppsManager {
    */
   handleDragEnd() {
     this.draggedItem = null;
-    this.draggedEl = null;
     document.querySelectorAll(".pinned-app-item").forEach((item) => {
       item.classList.remove("dragging", "drag-over");
     });
@@ -594,36 +536,14 @@ class PinnedAppsManager {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
 
-    if (!this.container || !this.draggedEl) return;
-
     const target = e.target.closest(".pinned-app-item");
-    if (!target || target === this.draggedEl) return;
-    if (target.classList.contains("dragging")) return;
-
-    // Remove drag-over from all items
-    this.getPinnedItemElements().forEach((item) =>
-      item.classList.remove("drag-over")
-    );
-    target.classList.add("drag-over");
-
-    // Throttle DOM reordering + FLIP animation
-    if (this._dragAnimRaf) return;
-    this._dragAnimRaf = requestAnimationFrame(() => {
-      this._dragAnimRaf = null;
-
-      const before = this.capturePinnedPositions();
-
-      const rect = target.getBoundingClientRect();
-      const insertBefore = e.clientX < rect.left + rect.width / 2;
-
-      if (insertBefore) {
-        this.container.insertBefore(this.draggedEl, target);
-      } else {
-        this.container.insertBefore(this.draggedEl, target.nextSibling);
-      }
-
-      this.animatePinnedReorder(before);
-    });
+    if (target && !target.classList.contains("dragging")) {
+      // Remove drag-over from all items
+      document.querySelectorAll(".pinned-app-item").forEach((item) => {
+        item.classList.remove("drag-over");
+      });
+      target.classList.add("drag-over");
+    }
   }
 
   /**
@@ -632,25 +552,23 @@ class PinnedAppsManager {
   handleDrop(e, targetApp) {
     e.preventDefault();
 
-    if (!this.draggedItem || !this.container) return;
+    if (!this.draggedItem || this.draggedItem.id === targetApp.id) return;
 
-    // Persist order based on current DOM order
-    const orderedIds = this.getPinnedItemElements()
-      .map((el) => parseInt(el.dataset.appId, 10))
-      .filter((id) => Number.isFinite(id));
+    // Find indexes
+    const draggedIndex = this.apps.findIndex(
+      (a) => a.id === this.draggedItem.id
+    );
+    const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
 
-    const nextApps = [];
-    orderedIds.forEach((id) => {
-      const app = this.apps.find((a) => a.id === id);
-      if (app) nextApps.push(app);
-    });
+    if (draggedIndex === -1 || targetIndex === -1) return;
 
-    // Fallback (shouldn't happen): keep any missing apps at end
-    this.apps.forEach((app) => {
-      if (!orderedIds.includes(app.id)) nextApps.push(app);
-    });
+    // Remove dragged item
+    const [removed] = this.apps.splice(draggedIndex, 1);
 
-    this.apps = nextApps;
+    // Insert at new position
+    this.apps.splice(targetIndex, 0, removed);
+
+    // Update order
     this.apps.forEach((app, index) => {
       app.order = index;
     });

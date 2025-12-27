@@ -245,17 +245,11 @@ body {
   position: relative;
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   text-align: center;
   box-shadow: var(--glass-shadow);
-  overflow: hidden;
-  isolation: isolate;
-  background-clip: padding-box;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .quote-icon {
@@ -346,17 +340,12 @@ body {
 .card {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   box-shadow: var(--glass-shadow);
   transition: all var(--transition-normal);
   animation: scaleIn 0.5s ease-out both;
-  isolation: isolate;
-  background-clip: padding-box;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .card:nth-child(1) {
@@ -1377,15 +1366,9 @@ body {
   padding: var(--spacing-md);
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   min-height: 80px;
-  overflow: hidden;
-  isolation: isolate;
-  background-clip: padding-box;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .pinned-app-item {
@@ -1396,9 +1379,7 @@ body {
   align-items: center;
   text-align: center;
   cursor: grab;
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity var(--transition-fast), filter var(--transition-fast);
-  will-change: transform;
+  transition: all var(--transition-normal);
 }
 
 .pinned-app-item:active {
