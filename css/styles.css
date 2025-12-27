@@ -617,6 +617,11 @@ body {
   margin-top: var(--spacing-md);
 }
 
+#todoCard:hover {
+  /* transform: translateY(-5px) translateZ(0); */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
 .todo-count {
   font-size: 0.85rem;
   color: var(--text-muted);
