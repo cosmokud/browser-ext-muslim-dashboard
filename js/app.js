@@ -89,6 +89,21 @@ class MuslimDashboard {
       settings.containerWidthCustom || 70
     );
 
+    // Add global Refresh Background button handler (bottom-right UI)
+    const refreshBtn = document.getElementById("refreshBgBtn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => {
+        if (this.backgrounds) {
+          this.backgrounds.changeBackground();
+        }
+        if (this.settings && typeof this.settings.showToast === "function") {
+          this.settings.showToast("Background changed!", "success");
+        }
+        refreshBtn.classList.add("rotate-once");
+        setTimeout(() => refreshBtn.classList.remove("rotate-once"), 700);
+      });
+    }
+
     // Setup location updates
     this.setupLocationUpdates();
 
