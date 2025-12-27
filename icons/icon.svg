@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a5f4a"/>
+      <stop offset="100%" style="stop-color:#0d3d2e"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4af37"/>
+      <stop offset="100%" style="stop-color:#f4d03f"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#bgGrad)"/>
+  <circle cx="64" cy="64" r="56" fill="none" stroke="url(#goldGrad)" stroke-width="2"/>
+  
+  <!-- Mosque Dome -->
+  <path d="M64 20 C40 20, 28 45, 28 60 L28 90 L100 90 L100 60 C100 45, 88 20, 64 20Z" fill="#fff" opacity="0.95"/>
+  
+  <!-- Minaret Left -->
+  <rect x="22" y="50" width="12" height="45" fill="#fff" opacity="0.9"/>
+  <path d="M28 50 C24 50, 22 42, 28 35 C34 42, 32 50, 28 50Z" fill="#fff" opacity="0.9"/>
+  <circle cx="28" cy="32" r="3" fill="url(#goldGrad)"/>
+  
+  <!-- Minaret Right -->
+  <rect x="94" y="50" width="12" height="45" fill="#fff" opacity="0.9"/>
+  <path d="M100 50 C96 50, 94 42, 100 35 C106 42, 104 50, 100 50Z" fill="#fff" opacity="0.9"/>
+  <circle cx="100" cy="32" r="3" fill="url(#goldGrad)"/>
+  
+  <!-- Central Dome -->
+  <ellipse cx="64" cy="48" rx="22" ry="18" fill="url(#goldGrad)"/>
+  
+  <!-- Crescent -->
+  <g transform="translate(64, 28)">
+    <circle cx="0" cy="0" r="6" fill="url(#goldGrad)"/>
+    <circle cx="2" cy="-1" r="5" fill="url(#bgGrad)"/>
+  </g>
+  
+  <!-- Windows -->
+  <ellipse cx="50" cy="70" rx="6" ry="10" fill="url(#bgGrad)"/>
+  <ellipse cx="78" cy="70" rx="6" ry="10" fill="url(#bgGrad)"/>
+  
+  <!-- Door -->
+  <path d="M58 90 L58 75 C58 71, 64 68, 64 68 C64 68, 70 71, 70 75 L70 90Z" fill="url(#bgGrad)"/>
+  
+  <!-- Stars -->
+  <circle cx="35" cy="28" r="1.5" fill="url(#goldGrad)"/>
+  <circle cx="93" cy="25" r="1.5" fill="url(#goldGrad)"/>
+  <circle cx="45" cy="18" r="1" fill="url(#goldGrad)"/>
+  <circle cx="83" cy="20" r="1" fill="url(#goldGrad)"/>
+</svg>

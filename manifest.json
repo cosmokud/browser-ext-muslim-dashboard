@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Muslim Dashboard - Islamic New Tab",
+  "short_name": "Muslim Dashboard",
+  "version": "1.0.0",
+  "description": "Beautiful Islamic dashboard with prayer times, Qibla direction, Hijri calendar, to-do list, and inspiring Quran & Hadith quotes.",
+  "author": "Muslim Dashboard",
+  "homepage_url": "https://github.com/browser-ext-muslim-dashboard",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "geolocation"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Muslim Dashboard"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
