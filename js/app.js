@@ -17,6 +17,7 @@ class MuslimDashboard {
     this.todos = new TodoManager(this.storage);
     this.pinnedApps = null; // Will be initialized after DOM
     this.calendar = null; // Will be initialized after DOM
+    this.stickyNotes = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -71,6 +72,9 @@ class MuslimDashboard {
     // Initialize calendar
     this.calendar = new CalendarManager(this.storage, this.hijri);
     this.calendar.init();
+
+    // Initialize sticky notes
+    this.stickyNotes = new StickyNotesManager(this.storage);
 
     // Initialize settings (after all other managers)
     this.settings = new SettingsManager(

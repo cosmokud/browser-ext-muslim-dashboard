@@ -2511,3 +2511,721 @@ body {
   color: var(--text-muted);
   margin-top: var(--spacing-xs);
 }
+
+/* ========================================
+   Sticky Notes Styles
+   Beautiful, animated, interactive notes
+   ======================================== */
+
+/* Container for all sticky notes */
+.sticky-notes-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 500;
+  transition: opacity var(--transition-normal);
+}
+
+.sticky-notes-container.hidden {
+  opacity: 0;
+  pointer-events: none !important;
+}
+
+.sticky-notes-container .sticky-note {
+  pointer-events: auto;
+}
+
+/* Floating Action Buttons */
+.sticky-note-fab {
+  position: fixed;
+  bottom: var(--spacing-xl);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.sticky-note-fab svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sticky-note-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.sticky-note-fab.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+}
+
+/* Add Note Button */
+.sticky-note-add-btn {
+  right: calc(var(--spacing-xl) + 144px);
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
+.sticky-note-add-btn:hover {
+  background: linear-gradient(135deg, #fda085 0%, #f6d365 100%);
+}
+
+/* Toggle Visibility Button */
+.sticky-note-toggle-btn {
+  right: calc(var(--spacing-xl) + 196px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.sticky-note-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Individual Sticky Note */
+.sticky-note {
+  position: fixed;
+  min-width: 200px;
+  min-height: 150px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.8) rotate(-3deg);
+  transition: opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow var(--transition-normal);
+  font-family: var(--font-primary);
+}
+
+.sticky-note.visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.sticky-note.dragging {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
+  transform: scale(1.02);
+  cursor: grabbing;
+}
+
+.sticky-note.resizing {
+  transition: none;
+}
+
+.sticky-note.deleting {
+  opacity: 0;
+  transform: scale(0.5) rotate(10deg);
+  transition: all 0.3s ease;
+}
+
+/* Note Header */
+.sticky-note-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  cursor: grab;
+  position: relative;
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sticky-note-header:active {
+  cursor: grabbing;
+}
+
+.sticky-note-drag-handle {
+  flex: 1;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 20%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  margin-right: 10px;
+}
+
+/* Menu Button */
+.sticky-note-menu-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  color: inherit;
+  opacity: 0.7;
+}
+
+.sticky-note-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1;
+}
+
+.sticky-note-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Dropdown Menu */
+.sticky-note-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  width: 220px;
+  background: rgba(40, 40, 40, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  color: #fff;
+
+  /* Make dropdown scrollable when content is long */
+  max-height: 260px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 8px; /* keep space for the scrollbar */
+}
+
+/* Custom scrollbar styling */
+.sticky-note-dropdown {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(212, 175, 55, 0.9) rgba(255, 255, 255, 0.03);
+}
+
+.sticky-note-dropdown::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.sticky-note-dropdown::-webkit-scrollbar-track {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.sticky-note-dropdown::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.95),
+    rgba(150, 120, 35, 0.95)
+  );
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+}
+.sticky-note-dropdown::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 1),
+    rgba(150, 120, 35, 1)
+  );
+}
+
+/* Focus styles for keyboard accessibility */
+.sticky-note-dropdown:focus {
+  outline: 3px solid rgba(212, 175, 55, 0.12);
+  outline-offset: 6px;
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.04);
+}
+.sticky-note-dropdown:focus-visible {
+  outline: 3px solid rgba(212, 175, 55, 0.18);
+  outline-offset: 6px;
+  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.06);
+}
+
+.sticky-note-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(5px) scale(1);
+}
+
+.sticky-note-dropdown-section {
+  margin-bottom: 12px;
+}
+
+.sticky-note-dropdown-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.dropdown-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.dropdown-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.dropdown-label input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+  cursor: pointer;
+  accent-color: var(--accent-gold);
+}
+
+/* Color Presets Grid */
+.color-presets {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.color-preset {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.color-preset:hover {
+  transform: scale(1.15);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.color-preset.active {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px var(--accent-gold);
+}
+
+.sticky-note-dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
+}
+
+/* Delete Button */
+.sticky-note-delete-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 80, 80, 0.2);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+
+.sticky-note-delete-btn:hover {
+  background: rgba(255, 80, 80, 0.4);
+  color: #fff;
+}
+
+.sticky-note-delete-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Note Content Area */
+.sticky-note-content {
+  flex: 1;
+  padding: 12px 14px;
+  overflow-y: auto;
+  outline: none;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  word-wrap: break-word;
+  min-height: 60px;
+}
+
+.sticky-note-content:empty::before {
+  content: "Type your note here...";
+  color: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.sticky-note-content h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.sticky-note-content h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+}
+
+.sticky-note-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.sticky-note-content p {
+  margin: 0 0 8px 0;
+}
+
+.sticky-note-content ul,
+.sticky-note-content ol {
+  margin: 0 0 8px 0;
+  padding-left: 20px;
+}
+
+.sticky-note-content li {
+  margin-bottom: 4px;
+}
+
+.sticky-note-link {
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sticky-note-link:hover {
+  color: #0044aa;
+}
+
+/* Custom scrollbar for note content */
+.sticky-note-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sticky-note-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.sticky-note-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.sticky-note-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* WYSIWYG Toolbar */
+.sticky-note-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.7;
+  transition: all var(--transition-fast);
+}
+
+.toolbar-btn:hover {
+  background: rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.toolbar-btn:active {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.15);
+  margin: 0 4px;
+}
+
+/* Resize Handles */
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.resize-handle.resize-n {
+  top: -3px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  cursor: n-resize;
+}
+
+.resize-handle.resize-s {
+  bottom: -3px;
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  cursor: s-resize;
+}
+
+.resize-handle.resize-e {
+  right: -3px;
+  top: 10px;
+  bottom: 10px;
+  width: 8px;
+  cursor: e-resize;
+}
+
+.resize-handle.resize-w {
+  left: -3px;
+  top: 10px;
+  bottom: 10px;
+  width: 8px;
+  cursor: w-resize;
+}
+
+.resize-handle.resize-ne {
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  cursor: ne-resize;
+}
+
+.resize-handle.resize-nw {
+  top: -5px;
+  left: -5px;
+  width: 15px;
+  height: 15px;
+  cursor: nw-resize;
+}
+
+.resize-handle.resize-se {
+  bottom: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  cursor: se-resize;
+}
+
+.resize-handle.resize-sw {
+  bottom: -5px;
+  left: -5px;
+  width: 15px;
+  height: 15px;
+  cursor: sw-resize;
+}
+
+/* Visual indicator on hover */
+.sticky-note:hover .resize-handle.resize-se::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Cursor overrides during drag/resize */
+body.sticky-note-dragging,
+body.sticky-note-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+body.sticky-note-resizing {
+  user-select: none !important;
+}
+
+/* ========================================
+   Sticky Notes Responsive Styles
+   ======================================== */
+
+@media (max-width: 768px) {
+  .sticky-note-fab {
+    width: 44px;
+    height: 44px;
+    bottom: var(--spacing-lg);
+  }
+
+  .sticky-note-add-btn {
+    right: calc(var(--spacing-lg) + 120px);
+  }
+
+  .sticky-note-toggle-btn {
+    right: calc(var(--spacing-lg) + 168px);
+  }
+
+  .sticky-note {
+    min-width: 180px;
+    min-height: 130px;
+  }
+
+  .sticky-note-toolbar {
+    padding: 4px 8px;
+    gap: 1px;
+  }
+
+  .toolbar-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  .sticky-note-content {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .sticky-note-dropdown {
+    width: 200px;
+    right: 0;
+  }
+
+  .color-presets {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+
+  .color-preset {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sticky-note-fab {
+    width: 40px;
+    height: 40px;
+    bottom: var(--spacing-md);
+  }
+
+  .sticky-note-fab svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sticky-note-add-btn {
+    right: calc(var(--spacing-md) + 100px);
+  }
+
+  .sticky-note-toggle-btn {
+    right: calc(var(--spacing-md) + 144px);
+  }
+
+  .sticky-note {
+    min-width: 160px;
+    min-height: 120px;
+  }
+
+  .sticky-note-header {
+    padding: 6px 8px;
+  }
+
+  .sticky-note-menu-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sticky-note-content {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .sticky-note-toolbar {
+    padding: 3px 6px;
+  }
+
+  .toolbar-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 0.65rem;
+  }
+
+  .toolbar-divider {
+    height: 16px;
+    margin: 0 2px;
+  }
+
+  .sticky-note-dropdown {
+    width: 180px;
+    padding: 10px;
+  }
+
+  .color-preset {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* High DPI / Retina adjustments */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .sticky-note {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sticky-note {
+    transition: opacity 0.15s ease;
+  }
+
+  .sticky-note.visible {
+    transform: scale(1) rotate(0deg);
+  }
+
+  .sticky-note.dragging {
+    transform: none;
+  }
+
+  .sticky-note.deleting {
+    transform: none;
+  }
+
+  .sticky-note-fab {
+    transition: background 0.15s ease;
+  }
+
+  .sticky-note-fab:hover {
+    transform: none;
+  }
+}
