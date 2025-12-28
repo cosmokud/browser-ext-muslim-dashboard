@@ -2616,6 +2616,29 @@ body {
   transform: scale(1) rotate(0deg);
 }
 
+/* Entrance animation for sticky notes (staggered on startup) */
+@keyframes stickyNoteEntrance {
+  0% {
+    opacity: 0.01;
+    transform: translateY(30px) scale(0.92) rotate(-8deg);
+    filter: blur(2px);
+  }
+  60% {
+    transform: translateY(-6px) scale(1.03) rotate(4deg);
+    filter: none;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: none;
+  }
+}
+
+.sticky-note.animate-in {
+  animation: stickyNoteEntrance 0.64s cubic-bezier(0.2, 1, 0.22, 1) both;
+  transform-origin: center;
+}
+
 .sticky-note.dragging {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
@@ -2835,8 +2858,9 @@ body {
 
 .sticky-note-content:empty::before {
   content: "Type your note here...";
-  color: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.95);
   pointer-events: none;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .sticky-note-content h1 {
@@ -3190,5 +3214,10 @@ body.sticky-note-resizing {
 
   .sticky-note-fab:hover {
     transform: none;
+  }
+
+  /* Disable entrance animation for users who prefer reduced motion */
+  .sticky-note.animate-in {
+    animation: none !important;
   }
 }

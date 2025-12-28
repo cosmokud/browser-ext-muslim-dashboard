@@ -14,8 +14,16 @@ class StickyNotesManager {
     this.dragState = null;
     this.resizeState = null;
 
-    // Color presets for notes
+    // Color presets for notes (first item is the default 'Glass' style matching other section cards)
     this.colorPresets = [
+      {
+        name: "Glass (Default)",
+        bg: "var(--glass-bg)",
+        text: "var(--text-primary)",
+        glass: true,
+        blur: 20,
+        transparency: 1,
+      },
       { name: "Yellow", bg: "rgba(255, 235, 59, 0.95)", text: "#333" },
       { name: "Pink", bg: "rgba(255, 182, 193, 0.95)", text: "#333" },
       { name: "Blue", bg: "rgba(135, 206, 250, 0.95)", text: "#333" },
@@ -24,6 +32,10 @@ class StickyNotesManager {
       { name: "Orange", bg: "rgba(255, 200, 124, 0.95)", text: "#333" },
       { name: "Coral", bg: "rgba(255, 127, 80, 0.95)", text: "#fff" },
       { name: "Teal", bg: "rgba(64, 224, 208, 0.95)", text: "#333" },
+      { name: "Mint", bg: "rgba(209, 237, 223, 0.95)", text: "#333" },
+      { name: "Lavender", bg: "rgba(234, 220, 255, 0.95)", text: "#333" },
+      { name: "Midnight", bg: "rgba(12, 16, 30, 0.95)", text: "#fff" },
+      { name: "Sand", bg: "rgba(245, 238, 224, 0.95)", text: "#333" },
       { name: "Glass Dark", bg: "rgba(30, 30, 30, 0.85)", text: "#fff" },
       { name: "Glass Light", bg: "rgba(255, 255, 255, 0.25)", text: "#fff" },
     ];
@@ -38,7 +50,8 @@ class StickyNotesManager {
     this.loadNotes();
     this.createContainer();
     this.createFloatingButtons();
-    this.renderAllNotes();
+    // initial render with entrance animation
+    this.renderAllNotes(true);
     this.setupGlobalListeners();
     this.applyVisibility();
   }
@@ -181,9 +194,16 @@ class StickyNotesManager {
       height: options.height || 220,
       zIndex: this.maxZIndex,
       color: options.color || this.colorPresets[0],
-      glassEffect: options.glassEffect || false,
-      blur: options.blur || 0,
-      transparency: options.transparency || 1,
+      glassEffect:
+        options.glassEffect !== undefined ? options.glassEffect : true,
+      blur:
+        options.blur !== undefined
+          ? options.blur
+          : this.colorPresets[0].blur || 20,
+      transparency:
+        options.transparency !== undefined
+          ? options.transparency
+          : this.colorPresets[0].transparency || 1,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -205,15 +225,15 @@ class StickyNotesManager {
   /**
    * Render all notes
    */
-  renderAllNotes() {
+  renderAllNotes(initial = false) {
     this.container.innerHTML = "";
-    this.notes.forEach((note) => this.renderNote(note));
+    this.notes.forEach((note, idx) => this.renderNote(note, idx, initial));
   }
 
   /**
    * Render a single note
    */
-  renderNote(note) {
+  renderNote(note, index = 0, initial = false) {
     const noteEl = document.createElement("div");
     noteEl.id = `sticky-note-${note.id}`;
     noteEl.className = "sticky-note";
@@ -315,10 +335,22 @@ class StickyNotesManager {
     this.container.appendChild(noteEl);
     this.attachNoteListeners(noteEl, note);
 
-    // Animate in
-    requestAnimationFrame(() => {
-      noteEl.classList.add("visible");
-    });
+    if (initial) {
+      // staggered entrance on first load
+      noteEl.style.animationDelay = `${index * 70}ms`;
+      noteEl.classList.add("animate-in");
+      const onEnd = () => {
+        noteEl.classList.remove("animate-in");
+        noteEl.classList.add("visible");
+        noteEl.removeEventListener("animationend", onEnd);
+      };
+      noteEl.addEventListener("animationend", onEnd);
+    } else {
+      // simple pop-in for newly created notes
+      requestAnimationFrame(() => {
+        noteEl.classList.add("visible");
+      });
+    }
   }
 
   /**
@@ -327,9 +359,25 @@ class StickyNotesManager {
   getNoteStyles(note) {
     let bg = note.color.bg;
 
-    // Apply transparency
+    // Resolve CSS variable background (e.g., var(--glass-bg))
+    if (typeof bg === "string" && bg.trim().startsWith("var(")) {
+      const match = bg.match(/var\((--[^)]+)\)/);
+      if (match) {
+        try {
+          const computed = getComputedStyle(document.documentElement)
+            .getPropertyValue(match[1])
+            .trim();
+          if (computed) bg = computed;
+        } catch (e) {
+          // ignore and fallback to original bg
+        }
+      }
+    }
+
+    // Apply transparency (overrides alpha if provided)
     if (note.transparency < 1) {
-      bg = this.adjustAlpha(bg, note.transparency);
+      const adjusted = this.adjustAlpha(bg, note.transparency);
+      if (adjusted) bg = adjusted;
     }
 
     let styles = `
@@ -344,8 +392,9 @@ class StickyNotesManager {
 
     if (note.glassEffect || note.blur > 0) {
       const blurValue = note.glassEffect ? Math.max(note.blur, 10) : note.blur;
-      styles += `backdrop-filter: blur(${blurValue}px);`;
-      styles += `-webkit-backdrop-filter: blur(${blurValue}px);`;
+      styles += `backdrop-filter: blur(${blurValue}px); -webkit-backdrop-filter: blur(${blurValue}px);`;
+      // apply glass border and subtle glass shadow on top of the default note shadow
+      styles += `border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow), 0 10px 40px rgba(0,0,0,0.3);`;
     }
 
     return styles;
@@ -804,8 +853,47 @@ class StickyNotesManager {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
       note.color = color;
+
+      // If this preset indicates a glass style, apply glass defaults
+      if (color.glass) {
+        note.glassEffect = true;
+        note.blur = color.blur !== undefined ? color.blur : note.blur || 20;
+        note.transparency =
+          color.transparency !== undefined
+            ? color.transparency
+            : note.transparency;
+      } else {
+        // selecting a solid color removes glass effect by default
+        note.glassEffect = false;
+        note.blur = color.blur !== undefined ? color.blur : 0;
+      }
+
       this.refreshNoteStyles(noteId);
       this.updateColorPresetUI(noteId, color);
+
+      // Update dropdown UI values if present
+      const noteEl = document.getElementById(`sticky-note-${noteId}`);
+      if (noteEl) {
+        const dropdown = noteEl.querySelector(".sticky-note-dropdown");
+        if (dropdown) {
+          const blurSlider = dropdown.querySelector(".blur-slider");
+          const blurValue = dropdown.querySelector(".blur-value");
+          if (blurSlider) {
+            blurSlider.value = note.blur;
+            if (blurValue) blurValue.textContent = note.blur;
+          }
+          const opacitySlider = dropdown.querySelector(".opacity-slider");
+          const opacityValue = dropdown.querySelector(".opacity-value");
+          if (opacitySlider) {
+            opacitySlider.value = Math.round(note.transparency * 100);
+            if (opacityValue)
+              opacityValue.textContent = Math.round(note.transparency * 100);
+          }
+          const glassToggle = dropdown.querySelector(".glass-toggle");
+          if (glassToggle) glassToggle.checked = !!note.glassEffect;
+        }
+      }
+
       this.saveNotes();
     }
   }
