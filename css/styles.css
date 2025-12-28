@@ -2602,7 +2602,7 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   opacity: 0;
   transform: scale(0.8) rotate(-3deg);
   transition: opacity 0.3s ease,
@@ -2705,49 +2705,12 @@ body {
   z-index: 1000;
   color: #fff;
 
-  /* Make dropdown scrollable when content is long */
-  max-height: 260px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 8px; /* keep space for the scrollbar */
+  /* Allow menu to grow beyond the note container */
+  overflow: visible;
+  padding-right: 12px;
 }
 
-/* Custom scrollbar styling */
-.sticky-note-dropdown {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(212, 175, 55, 0.9) rgba(255, 255, 255, 0.03);
-}
-
-.sticky-note-dropdown::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.sticky-note-dropdown::-webkit-scrollbar-track {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.01)
-  );
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-.sticky-note-dropdown::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg,
-    rgba(212, 175, 55, 0.95),
-    rgba(150, 120, 35, 0.95)
-  );
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  border: 2px solid rgba(0, 0, 0, 0.12);
-}
-.sticky-note-dropdown::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(212, 175, 55, 1),
-    rgba(150, 120, 35, 1)
-  );
-}
+/* Custom scrollbar removed to allow the dropdown to grow beyond the note */
 
 /* Focus styles for keyboard accessibility */
 .sticky-note-dropdown:focus {
