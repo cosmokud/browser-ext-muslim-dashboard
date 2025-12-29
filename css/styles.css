@@ -3221,3 +3221,366 @@ body.sticky-note-resizing {
     animation: none !important;
   }
 }
+
+/* ========================================
+   WEATHER CARD STYLES
+   ======================================== */
+
+.weather-card {
+  animation-delay: 0.25s;
+  grid-column: 1 / -1; /* Full width - spans all columns like todo */
+}
+
+.weather-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.weather-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.weather-temp-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.weather-temp {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weather-desc {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+.weather-location {
+  font-size: 0.95rem;
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.weather-details {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+}
+
+.weather-detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.weather-detail-icon {
+  font-size: 1.2rem;
+}
+
+.weather-refresh-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.weather-refresh-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: rotate(180deg);
+}
+
+.weather-refresh-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.weather-refresh-btn.rotating {
+  animation: rotateOnce 0.5s ease-in-out;
+}
+
+/* ========================================
+   COMPONENT VISIBILITY TOGGLE STYLES
+   ======================================== */
+
+.visibility-toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.visibility-toggle-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.visibility-toggle-item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.visibility-icon {
+  font-size: 1.4rem;
+  margin-right: var(--spacing-md);
+  width: 32px;
+  text-align: center;
+}
+
+.visibility-name {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.visibility-toggle-item input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 13px;
+  transition: all var(--transition-fast);
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.visibility-toggle-item input[type="checkbox"]:checked + .toggle-switch {
+  background: var(--primary-color);
+}
+
+.visibility-toggle-item input[type="checkbox"]:checked + .toggle-switch::after {
+  left: 25px;
+}
+
+/* ========================================
+   HEADING SETTINGS STYLES
+   ======================================== */
+
+.time-greeting-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.time-greeting-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.time-greeting-item label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.setting-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+}
+
+.clock-style-options {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.style-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.style-option:hover {
+  background: var(--glass-bg);
+}
+
+.style-option input[type="radio"] {
+  display: none;
+}
+
+.style-preview {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  transition: all var(--transition-fast);
+}
+
+.style-option input[type="radio"]:checked + .style-preview {
+  border-color: var(--accent-gold);
+  background: var(--glass-bg-hover);
+}
+
+.style-option span:last-child {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Clock preview styles */
+.clock-preview-default .preview-time {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.clock-preview-default .preview-seconds {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.clock-preview-minimal .preview-time {
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.clock-preview-elegant .preview-time {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: "Georgia", serif;
+}
+
+.clock-preview-elegant .preview-seconds {
+  font-size: 0.8rem;
+  color: var(--accent-gold);
+}
+
+/* Clock style classes for actual display */
+.time-section.clock-style-default .current-time {
+  font-weight: 700;
+}
+
+.time-section.clock-style-minimal .current-time {
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.time-section.clock-style-minimal .current-seconds {
+  display: none;
+}
+
+.time-section.clock-style-elegant .current-time {
+  font-weight: 600;
+  font-family: "Georgia", serif;
+}
+
+.time-section.clock-style-elegant .current-seconds {
+  color: var(--accent-gold);
+}
+
+/* Location refresh button */
+.location-refresh-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px;
+  transition: transform var(--transition-fast);
+}
+
+.location-refresh-btn:hover {
+  transform: rotate(180deg);
+}
+
+/* Visibility Grid for Prayer Times settings */
+.visibility-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 480px) {
+  .visibility-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .clock-style-options {
+    justify-content: center;
+  }
+
+  .weather-details {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* Settings hint text */
+.setting-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Empty hint for custom backgrounds */
+.empty-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* Modal large for settings */
+.modal-large {
+  max-width: 700px;
+}
+
+/* Import/Export buttons row */
+.import-export-btns {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}

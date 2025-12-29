@@ -173,6 +173,64 @@
           </div>
         </section>
 
+        <!-- Weather Card -->
+        <section class="card weather-card" id="weatherCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🌤️</span>
+              Weather
+            </h2>
+            <button
+              class="weather-refresh-btn"
+              id="weatherRefreshBtn"
+              title="Refresh Weather"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                />
+              </svg>
+            </button>
+          </div>
+          <div class="weather-content">
+            <div class="weather-main">
+              <span class="weather-icon" id="weatherIcon">🌡️</span>
+              <div class="weather-temp-group">
+                <span class="weather-temp" id="weatherTemp">--</span>
+                <span class="weather-desc" id="weatherDesc">Loading...</span>
+              </div>
+            </div>
+            <div class="weather-location" id="weatherLocation">
+              Detecting location...
+            </div>
+            <div class="weather-details">
+              <div class="weather-detail-item">
+                <span class="weather-detail-icon">🌡️</span>
+                <span class="weather-detail-value" id="weatherFeelsLike"
+                  >--</span
+                >
+              </div>
+              <div class="weather-detail-item">
+                <span class="weather-detail-icon">💧</span>
+                <span class="weather-detail-value" id="weatherHumidity"
+                  >--%</span
+                >
+              </div>
+              <div class="weather-detail-item">
+                <span class="weather-detail-icon">💨</span>
+                <span class="weather-detail-value" id="weatherWind"
+                  >-- km/h</span
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Todo List Card -->
         <section class="card todo-card" id="todoCard">
           <div class="card-header">
@@ -268,6 +326,10 @@
               📍 Location
             </button>
             <button class="settings-tab" data-tab="prayer">🕌 Prayer</button>
+            <button class="settings-tab" data-tab="heading">🕐 Heading</button>
+            <button class="settings-tab" data-tab="visibility">
+              👁️ Visibility
+            </button>
             <button class="settings-tab" data-tab="quotes">📖 Quotes</button>
             <button class="settings-tab" data-tab="background">
               🖼️ Background
@@ -627,6 +689,305 @@
                     max="60"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Heading Settings -->
+          <div class="settings-panel" id="headingPanel">
+            <!-- Greeting Settings -->
+            <div class="setting-group">
+              <label class="setting-label">Greeting Message</label>
+              <div class="setting-options">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="greetingType"
+                    value="auto"
+                    checked
+                  />
+                  <span>Auto (Time-based greeting)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="greetingType" value="custom" />
+                  <span>Custom greeting</span>
+                </label>
+              </div>
+            </div>
+
+            <div
+              class="setting-group custom-greeting-group"
+              id="customGreetingGroup"
+              style="display: none"
+            >
+              <label class="setting-label">Custom Greeting Text</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="customGreetingInput"
+                placeholder="e.g., Welcome back, Abdullah"
+                maxlength="100"
+              />
+            </div>
+
+            <div
+              class="setting-group time-greeting-group"
+              id="timeGreetingGroup"
+            >
+              <label class="setting-label">Time-Based Greetings</label>
+              <p class="setting-hint">
+                Customize greetings for different times of day
+              </p>
+              <div class="time-greeting-list">
+                <div class="time-greeting-item">
+                  <label>Morning (3:00 - 12:00)</label>
+                  <input
+                    type="text"
+                    class="setting-input"
+                    id="greetingMorning"
+                    value="Assalamu Alaikum, Good Morning"
+                  />
+                </div>
+                <div class="time-greeting-item">
+                  <label>Afternoon (12:00 - 15:00)</label>
+                  <input
+                    type="text"
+                    class="setting-input"
+                    id="greetingAfternoon"
+                    value="Assalamu Alaikum, Good Afternoon"
+                  />
+                </div>
+                <div class="time-greeting-item">
+                  <label>Evening (15:00 - 18:00)</label>
+                  <input
+                    type="text"
+                    class="setting-input"
+                    id="greetingEvening"
+                    value="Assalamu Alaikum, Good Evening"
+                  />
+                </div>
+                <div class="time-greeting-item">
+                  <label>Night (18:00 - 3:00)</label>
+                  <input
+                    type="text"
+                    class="setting-input"
+                    id="greetingNight"
+                    value="Assalamu Alaikum, Good Night"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Clock Settings -->
+            <div class="setting-group">
+              <label class="setting-label">Clock Display</label>
+              <div class="setting-options">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showClock" checked />
+                  <span>Show Clock</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group clock-options" id="clockOptionsGroup">
+              <label class="setting-label">Clock Format</label>
+              <div class="setting-options">
+                <label class="radio-option">
+                  <input type="radio" name="clockFormat" value="24h" checked />
+                  <span>24-Hour (14:30)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="clockFormat" value="12h" />
+                  <span>12-Hour (2:30 PM)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group clock-options" id="clockExtraOptions">
+              <div class="setting-options-row">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showSeconds" checked />
+                  <span>Show Seconds</span>
+                </label>
+                <label class="checkbox-option" id="ampmOption">
+                  <input type="checkbox" id="showAmPm" checked />
+                  <span>Show AM/PM</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Clock Style</label>
+              <div class="clock-style-options">
+                <label class="style-option">
+                  <input
+                    type="radio"
+                    name="clockStyle"
+                    value="default"
+                    checked
+                  />
+                  <div class="style-preview clock-preview-default">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Default</span>
+                </label>
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="minimal" />
+                  <div class="style-preview clock-preview-minimal">
+                    <span class="preview-time">14:30</span>
+                  </div>
+                  <span>Minimal</span>
+                </label>
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="elegant" />
+                  <div class="style-preview clock-preview-elegant">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Elegant</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Date Settings -->
+            <div class="setting-group">
+              <label class="setting-label">Date Display</label>
+              <div class="setting-options">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showDate" checked />
+                  <span>Show Date</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showWeekday" checked />
+                  <span>Show Weekday</span>
+                </label>
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showIslamicEvents" checked />
+                  <span>Show Islamic Events</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Date Format</label>
+              <select class="setting-select" id="dateFormatSelect">
+                <option value="full">Full (Monday, January 1, 2025)</option>
+                <option value="long">Long (January 1, 2025)</option>
+                <option value="medium">Medium (Jan 1, 2025)</option>
+                <option value="short">Short (1/1/2025)</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label"
+                >Calendar Type for Date Display</label
+              >
+              <div class="setting-options">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="dateCalendar"
+                    value="hijri"
+                    checked
+                  />
+                  <span>Hijri Calendar</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="dateCalendar" value="gregorian" />
+                  <span>Gregorian Calendar</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="dateCalendar" value="both" />
+                  <span>Both Calendars</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visibility Settings -->
+          <div class="settings-panel" id="visibilityPanel">
+            <div class="setting-group">
+              <label class="setting-label"
+                >Show/Hide Dashboard Components</label
+              >
+              <p class="setting-hint">
+                Toggle visibility of each component on the dashboard
+              </p>
+              <div class="visibility-toggle-list">
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🏠</span>
+                  <span class="visibility-name"
+                    >Header (Greeting, Date & Clock)</span
+                  >
+                  <input type="checkbox" id="visibilityHeader" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📌</span>
+                  <span class="visibility-name">Quick Pins</span>
+                  <input type="checkbox" id="visibilityQuickPins" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">💬</span>
+                  <span class="visibility-name">Quotes</span>
+                  <input type="checkbox" id="visibilityQuotes" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-name">Prayer Times</span>
+                  <input type="checkbox" id="visibilityPrayerTimes" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-name">Hijri Calendar</span>
+                  <input type="checkbox" id="visibilityHijriCalendar" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🧭</span>
+                  <span class="visibility-name">Qibla Direction</span>
+                  <input
+                    type="checkbox"
+                    id="visibilityQiblaDirection"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌤️</span>
+                  <span class="visibility-name">Weather</span>
+                  <input type="checkbox" id="visibilityWeather" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">✅</span>
+                  <span class="visibility-name">To-Do List</span>
+                  <input type="checkbox" id="visibilityTodoList" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Weather Settings</label>
+              <div class="setting-options">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="weatherUnit"
+                    value="celsius"
+                    checked
+                  />
+                  <span>Celsius (°C)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="weatherUnit" value="fahrenheit" />
+                  <span>Fahrenheit (°F)</span>
+                </label>
               </div>
             </div>
           </div>
@@ -1008,6 +1369,7 @@
     <script src="js/todo.js"></script>
     <script src="js/pinnedapps.js"></script>
     <script src="js/calendar.js"></script>
+    <script src="js/weather.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/stickynotes.js"></script>
     <script src="js/app.js"></script>

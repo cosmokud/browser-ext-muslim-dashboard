@@ -1,16 +1,17 @@
 /**
  * Settings Manager
  * Handles settings modal and configuration for all features
- * Supports 25+ calculation methods, visibility settings, quotes import/export
+ * Supports 25+ calculation methods, visibility settings, quotes import/export, weather, and heading customization
  */
 
 class SettingsManager {
-  constructor(storage, prayerTimes, qibla, quotes, backgrounds) {
+  constructor(storage, prayerTimes, qibla, quotes, backgrounds, weather) {
     this.storage = storage;
     this.prayerTimes = prayerTimes;
     this.qibla = qibla;
     this.quotes = quotes;
     this.backgrounds = backgrounds;
+    this.weather = weather;
 
     // Modal elements
     this.modal = document.getElementById("settingsModal");
@@ -105,6 +106,53 @@ class SettingsManager {
     this.methodAnglesInfo = document.getElementById("methodAnglesInfo");
     this.methodFajrAngle = document.getElementById("methodFajrAngle");
     this.methodIshaAngle = document.getElementById("methodIshaAngle");
+
+    // Heading settings elements
+    this.greetingTypeRadios = document.querySelectorAll(
+      'input[name="greetingType"]'
+    );
+    this.customGreetingGroup = document.getElementById("customGreetingGroup");
+    this.customGreetingInput = document.getElementById("customGreetingInput");
+    this.timeGreetingGroup = document.getElementById("timeGreetingGroup");
+    this.greetingMorning = document.getElementById("greetingMorning");
+    this.greetingAfternoon = document.getElementById("greetingAfternoon");
+    this.greetingEvening = document.getElementById("greetingEvening");
+    this.greetingNight = document.getElementById("greetingNight");
+    this.showClock = document.getElementById("showClock");
+    this.clockFormatRadios = document.querySelectorAll(
+      'input[name="clockFormat"]'
+    );
+    this.showSeconds = document.getElementById("showSeconds");
+    this.showAmPm = document.getElementById("showAmPm");
+    this.clockStyleRadios = document.querySelectorAll(
+      'input[name="clockStyle"]'
+    );
+    this.showDate = document.getElementById("showDate");
+    this.showWeekday = document.getElementById("showWeekday");
+    this.showIslamicEvents = document.getElementById("showIslamicEvents");
+    this.dateFormatSelect = document.getElementById("dateFormatSelect");
+    this.dateCalendarRadios = document.querySelectorAll(
+      'input[name="dateCalendar"]'
+    );
+
+    // Component visibility elements
+    this.visibilityHeader = document.getElementById("visibilityHeader");
+    this.visibilityQuickPins = document.getElementById("visibilityQuickPins");
+    this.visibilityQuotes = document.getElementById("visibilityQuotes");
+    this.visibilityPrayerTimes = document.getElementById(
+      "visibilityPrayerTimes"
+    );
+    this.visibilityHijriCalendar = document.getElementById(
+      "visibilityHijriCalendar"
+    );
+    this.visibilityQiblaDirection = document.getElementById(
+      "visibilityQiblaDirection"
+    );
+    this.visibilityWeather = document.getElementById("visibilityWeather");
+    this.visibilityTodoList = document.getElementById("visibilityTodoList");
+    this.weatherUnitRadios = document.querySelectorAll(
+      'input[name="weatherUnit"]'
+    );
   }
 
   /**
@@ -216,6 +264,154 @@ class SettingsManager {
       this.updateUiBlurPowerLabel();
       this.applyUiBlurPower(clamped);
     }
+
+    // Load heading settings
+    this.loadHeadingSettings(settings);
+
+    // Load component visibility settings
+    this.loadVisibilitySettings(settings);
+
+    // Load weather settings
+    this.loadWeatherSettings(settings);
+  }
+
+  /**
+   * Load heading settings
+   */
+  loadHeadingSettings(settings) {
+    const heading = settings.heading || {};
+
+    // Greeting type
+    const useCustom = heading.useCustomGreeting || false;
+    const greetingRadio = document.querySelector(
+      `input[name="greetingType"][value="${useCustom ? "custom" : "auto"}"]`
+    );
+    if (greetingRadio) greetingRadio.checked = true;
+    this.toggleCustomGreeting(useCustom);
+
+    // Custom greeting text
+    if (this.customGreetingInput) {
+      this.customGreetingInput.value = heading.customGreeting || "";
+    }
+
+    // Time-based greetings
+    const timeRanges = heading.greetingTimeRanges || {};
+    if (this.greetingMorning)
+      this.greetingMorning.value =
+        timeRanges.morning?.text || "Assalamu Alaikum, Good Morning";
+    if (this.greetingAfternoon)
+      this.greetingAfternoon.value =
+        timeRanges.afternoon?.text || "Assalamu Alaikum, Good Afternoon";
+    if (this.greetingEvening)
+      this.greetingEvening.value =
+        timeRanges.evening?.text || "Assalamu Alaikum, Good Evening";
+    if (this.greetingNight)
+      this.greetingNight.value =
+        timeRanges.night?.text || "Assalamu Alaikum, Good Night";
+
+    // Clock settings
+    if (this.showClock) this.showClock.checked = heading.showClock !== false;
+    this.toggleClockOptions(heading.showClock !== false);
+
+    const clockFormat = heading.clockFormat || "24h";
+    const clockFormatRadio = document.querySelector(
+      `input[name="clockFormat"][value="${clockFormat}"]`
+    );
+    if (clockFormatRadio) clockFormatRadio.checked = true;
+    this.toggleAmPmOption(clockFormat === "12h");
+
+    if (this.showSeconds)
+      this.showSeconds.checked = heading.showSeconds !== false;
+    if (this.showAmPm) this.showAmPm.checked = heading.showAmPm !== false;
+
+    const clockStyle = heading.clockStyle || "default";
+    const clockStyleRadio = document.querySelector(
+      `input[name="clockStyle"][value="${clockStyle}"]`
+    );
+    if (clockStyleRadio) clockStyleRadio.checked = true;
+
+    // Date settings
+    if (this.showDate) this.showDate.checked = heading.showDate !== false;
+    if (this.showWeekday)
+      this.showWeekday.checked = heading.showWeekday !== false;
+    if (this.showIslamicEvents)
+      this.showIslamicEvents.checked = heading.showIslamicEvents !== false;
+    if (this.dateFormatSelect)
+      this.dateFormatSelect.value = heading.dateFormat || "full";
+
+    const dateCalendar = heading.dateCalendar || "hijri";
+    const dateCalendarRadio = document.querySelector(
+      `input[name="dateCalendar"][value="${dateCalendar}"]`
+    );
+    if (dateCalendarRadio) dateCalendarRadio.checked = true;
+  }
+
+  /**
+   * Load component visibility settings
+   */
+  loadVisibilitySettings(settings) {
+    const visibility = settings.componentVisibility || {};
+
+    if (this.visibilityHeader)
+      this.visibilityHeader.checked = visibility.header !== false;
+    if (this.visibilityQuickPins)
+      this.visibilityQuickPins.checked = visibility.quickPins !== false;
+    if (this.visibilityQuotes)
+      this.visibilityQuotes.checked = visibility.quotes !== false;
+    if (this.visibilityPrayerTimes)
+      this.visibilityPrayerTimes.checked = visibility.prayerTimes !== false;
+    if (this.visibilityHijriCalendar)
+      this.visibilityHijriCalendar.checked = visibility.hijriCalendar !== false;
+    if (this.visibilityQiblaDirection)
+      this.visibilityQiblaDirection.checked =
+        visibility.qiblaDirection !== false;
+    if (this.visibilityWeather)
+      this.visibilityWeather.checked = visibility.weather !== false;
+    if (this.visibilityTodoList)
+      this.visibilityTodoList.checked = visibility.todoList !== false;
+  }
+
+  /**
+   * Load weather settings
+   */
+  loadWeatherSettings(settings) {
+    const weatherUnit = settings.weatherUnit || "celsius";
+    const weatherUnitRadio = document.querySelector(
+      `input[name="weatherUnit"][value="${weatherUnit}"]`
+    );
+    if (weatherUnitRadio) weatherUnitRadio.checked = true;
+  }
+
+  /**
+   * Toggle custom greeting input visibility
+   */
+  toggleCustomGreeting(show) {
+    if (this.customGreetingGroup) {
+      this.customGreetingGroup.style.display = show ? "block" : "none";
+    }
+    if (this.timeGreetingGroup) {
+      this.timeGreetingGroup.style.display = show ? "none" : "block";
+    }
+  }
+
+  /**
+   * Toggle clock options visibility
+   */
+  toggleClockOptions(show) {
+    const clockOptionsGroup = document.getElementById("clockOptionsGroup");
+    const clockExtraOptions = document.getElementById("clockExtraOptions");
+    if (clockOptionsGroup)
+      clockOptionsGroup.style.display = show ? "block" : "none";
+    if (clockExtraOptions)
+      clockExtraOptions.style.display = show ? "block" : "none";
+  }
+
+  /**
+   * Toggle AM/PM option visibility
+   */
+  toggleAmPmOption(show) {
+    const ampmOption = document.getElementById("ampmOption");
+    if (ampmOption) ampmOption.style.display = show ? "flex" : "none";
   }
 
   /**
@@ -557,6 +753,15 @@ class SettingsManager {
       100
     );
 
+    // Save heading settings
+    this.saveHeadingSettings(settings);
+
+    // Save component visibility settings
+    this.saveVisibilitySettings(settings);
+
+    // Save weather settings
+    this.saveWeatherSettings(settings);
+
     // Save to storage
     this.storage.saveSettings(settings);
 
@@ -568,6 +773,95 @@ class SettingsManager {
 
     // Close modal
     this.closeModal();
+  }
+
+  /**
+   * Save heading settings
+   */
+  saveHeadingSettings(settings) {
+    const greetingTypeRadio = document.querySelector(
+      'input[name="greetingType"]:checked'
+    );
+    const useCustomGreeting = greetingTypeRadio?.value === "custom";
+
+    settings.heading = settings.heading || {};
+    settings.heading.useCustomGreeting = useCustomGreeting;
+    settings.heading.customGreeting = this.customGreetingInput?.value || "";
+
+    // Time-based greetings
+    settings.heading.greetingTimeRanges = {
+      morning: {
+        start: 3,
+        end: 12,
+        text: this.greetingMorning?.value || "Assalamu Alaikum, Good Morning",
+      },
+      afternoon: {
+        start: 12,
+        end: 15,
+        text:
+          this.greetingAfternoon?.value || "Assalamu Alaikum, Good Afternoon",
+      },
+      evening: {
+        start: 15,
+        end: 18,
+        text: this.greetingEvening?.value || "Assalamu Alaikum, Good Evening",
+      },
+      night: {
+        start: 18,
+        end: 3,
+        text: this.greetingNight?.value || "Assalamu Alaikum, Good Night",
+      },
+    };
+
+    // Clock settings
+    settings.heading.showClock = this.showClock?.checked ?? true;
+    const clockFormatRadio = document.querySelector(
+      'input[name="clockFormat"]:checked'
+    );
+    settings.heading.clockFormat = clockFormatRadio?.value || "24h";
+    settings.heading.showSeconds = this.showSeconds?.checked ?? true;
+    settings.heading.showAmPm = this.showAmPm?.checked ?? true;
+    const clockStyleRadio = document.querySelector(
+      'input[name="clockStyle"]:checked'
+    );
+    settings.heading.clockStyle = clockStyleRadio?.value || "default";
+
+    // Date settings
+    settings.heading.showDate = this.showDate?.checked ?? true;
+    settings.heading.showWeekday = this.showWeekday?.checked ?? true;
+    settings.heading.showIslamicEvents =
+      this.showIslamicEvents?.checked ?? true;
+    settings.heading.dateFormat = this.dateFormatSelect?.value || "full";
+    const dateCalendarRadio = document.querySelector(
+      'input[name="dateCalendar"]:checked'
+    );
+    settings.heading.dateCalendar = dateCalendarRadio?.value || "hijri";
+  }
+
+  /**
+   * Save component visibility settings
+   */
+  saveVisibilitySettings(settings) {
+    settings.componentVisibility = {
+      header: this.visibilityHeader?.checked ?? true,
+      quickPins: this.visibilityQuickPins?.checked ?? true,
+      quotes: this.visibilityQuotes?.checked ?? true,
+      prayerTimes: this.visibilityPrayerTimes?.checked ?? true,
+      hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
+      qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
+      weather: this.visibilityWeather?.checked ?? true,
+      todoList: this.visibilityTodoList?.checked ?? true,
+    };
+  }
+
+  /**
+   * Save weather settings
+   */
+  saveWeatherSettings(settings) {
+    const weatherUnitRadio = document.querySelector(
+      'input[name="weatherUnit"]:checked'
+    );
+    settings.weatherUnit = weatherUnitRadio?.value || "celsius";
   }
 
   /**
@@ -616,6 +910,16 @@ class SettingsManager {
 
     // Apply UI blur power
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+
+    // Update weather unit
+    if (this.weather) {
+      this.weather.fetchWeather();
+    }
+
+    // Reload page to apply all settings properly
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   }
 
   /**
@@ -985,6 +1289,27 @@ class SettingsManager {
         this.showToast("Background changed!", "success");
       });
     }
+
+    // Heading settings - greeting type toggle
+    this.greetingTypeRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.toggleCustomGreeting(radio.value === "custom");
+      });
+    });
+
+    // Heading settings - show clock toggle
+    if (this.showClock) {
+      this.showClock.addEventListener("change", () => {
+        this.toggleClockOptions(this.showClock.checked);
+      });
+    }
+
+    // Heading settings - clock format toggle (show/hide AM/PM option)
+    this.clockFormatRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.toggleAmPmOption(radio.value === "12h");
+      });
+    });
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {

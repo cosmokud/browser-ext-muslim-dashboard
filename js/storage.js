@@ -145,6 +145,60 @@ class StorageManager {
 
       // Pinned Apps settings
       pinnedApps: [],
+
+      // Weather settings
+      weatherUnit: "celsius", // 'celsius' or 'fahrenheit'
+
+      // Component visibility settings
+      componentVisibility: {
+        header: true,
+        quickPins: true,
+        quotes: true,
+        prayerTimes: true,
+        hijriCalendar: true,
+        qiblaDirection: true,
+        todoList: true,
+        weather: true,
+      },
+
+      // Heading customization settings
+      heading: {
+        // Greeting settings
+        useCustomGreeting: false,
+        customGreeting: "",
+        greetingTimeRanges: {
+          morning: {
+            start: 3,
+            end: 12,
+            text: "Assalamu Alaikum, Good Morning",
+          },
+          afternoon: {
+            start: 12,
+            end: 15,
+            text: "Assalamu Alaikum, Good Afternoon",
+          },
+          evening: {
+            start: 15,
+            end: 18,
+            text: "Assalamu Alaikum, Good Evening",
+          },
+          night: { start: 18, end: 3, text: "Assalamu Alaikum, Good Night" },
+        },
+
+        // Clock settings
+        showClock: true,
+        clockFormat: "24h", // '12h' or '24h'
+        showSeconds: true,
+        showAmPm: true, // Only applies when clockFormat is '12h'
+        clockStyle: "default", // 'default', 'minimal', 'elegant'
+
+        // Date settings
+        showDate: true,
+        dateFormat: "full", // 'full', 'long', 'medium', 'short'
+        showWeekday: true,
+        dateCalendar: "hijri", // 'hijri', 'gregorian', 'both'
+        showIslamicEvents: true,
+      },
     };
   }
 
