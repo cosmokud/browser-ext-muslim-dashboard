@@ -1515,7 +1515,7 @@ body {
     calc(
       var(--pinned-apps-per-row, 10) *
         (var(--pinned-app-width) + var(--pinned-app-gap)) -
-        var(--pinned-app-gap)
+        var(--pinned-app-gap) + (2 * var(--spacing-md)) + 2px
     )
   );
   margin-left: auto;
@@ -3530,26 +3530,49 @@ body.sticky-note-resizing {
 
 .weather-chart-tab.active {
   background: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary); /* Ensure active tab text stays readable */
+  transition: background var(--transition-fast),
+    border-color var(--transition-fast), color var(--transition-fast);
 }
 
+/* Temperature: border + subtle tint when active, hover only affects border */
 .weather-chart-tab[data-metric="temperature"].active {
-  border-color: var(--weather-metric-temperature);
-  color: var(--weather-metric-temperature);
+  border-color: rgba(212, 175, 55, 1);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--text-primary);
+}
+.weather-chart-tab[data-metric="temperature"]:not(.active):hover {
+  border-color: rgba(212, 175, 55, 0.45);
 }
 
+/* Humidity */
 .weather-chart-tab[data-metric="humidity"].active {
-  border-color: var(--weather-metric-humidity);
-  color: var(--weather-metric-humidity);
+  border-color: rgba(0, 102, 204, 1);
+  background: rgba(0, 102, 204, 0.08);
+  color: var(--text-primary);
+}
+.weather-chart-tab[data-metric="humidity"]:not(.active):hover {
+  border-color: rgba(0, 102, 204, 0.45);
 }
 
+/* Precipitation (gray) */
 .weather-chart-tab[data-metric="precipitation"].active {
-  border-color: var(--weather-metric-precipitation);
-  color: var(--weather-metric-precipitation);
+  border-color: rgba(160, 160, 160, 1);
+  background: rgba(160, 160, 160, 0.08);
+  color: var(--text-primary);
+}
+.weather-chart-tab[data-metric="precipitation"]:not(.active):hover {
+  border-color: rgba(160, 160, 160, 0.45);
 }
 
+/* Wind */
 .weather-chart-tab[data-metric="wind"].active {
-  border-color: var(--weather-metric-wind);
-  color: var(--weather-metric-wind);
+  border-color: rgba(26, 95, 74, 1);
+  background: rgba(26, 95, 74, 0.08);
+  color: var(--text-primary);
+}
+.weather-chart-tab[data-metric="wind"]:not(.active):hover {
+  border-color: rgba(26, 95, 74, 0.45);
 }
 
 .weather-chart-legend {
