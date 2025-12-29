@@ -3270,11 +3270,16 @@ body.sticky-note-resizing {
 }
 
 .weather-location {
-  font-size: 0.95rem;
+  font-size: 1.35rem;
+  font-weight: 600;
   color: var(--accent-gold);
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .weather-details {
@@ -3381,7 +3386,7 @@ body.sticky-note-resizing {
 .weather-chart-wrap {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
-  background: var(--glass-bg);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
@@ -3390,15 +3395,61 @@ body.sticky-note-resizing {
 .weather-chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
 .weather-chart-title {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.weather-chart-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.weather-chart-tab {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.weather-chart-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.weather-chart-tab.active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.weather-chart-tab[data-metric="temperature"].active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.weather-chart-tab[data-metric="humidity"].active {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}
+
+.weather-chart-tab[data-metric="precipitation"].active {
+  border-color: var(--accent-gold-light);
+  color: var(--accent-gold-light);
+}
+
+.weather-chart-tab[data-metric="wind"].active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .weather-chart-legend {
@@ -3409,7 +3460,7 @@ body.sticky-note-resizing {
 
 .weather-chart {
   width: 100%;
-  height: 260px;
+  height: 280px;
   display: block;
 }
 

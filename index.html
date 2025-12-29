@@ -235,6 +235,48 @@
           <div class="weather-chart-wrap">
             <div class="weather-chart-header">
               <div class="weather-chart-title">Next 24 hours</div>
+              <div
+                class="weather-chart-tabs"
+                role="tablist"
+                aria-label="Weather chart metric"
+              >
+                <button
+                  class="weather-chart-tab active"
+                  type="button"
+                  data-metric="temperature"
+                  role="tab"
+                  aria-selected="true"
+                >
+                  Temperature
+                </button>
+                <button
+                  class="weather-chart-tab"
+                  type="button"
+                  data-metric="humidity"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  Humidity
+                </button>
+                <button
+                  class="weather-chart-tab"
+                  type="button"
+                  data-metric="precipitation"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  Precipitation
+                </button>
+                <button
+                  class="weather-chart-tab"
+                  type="button"
+                  data-metric="wind"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  Wind
+                </button>
+              </div>
               <div class="weather-chart-legend" id="weatherChartLegend"></div>
             </div>
             <canvas class="weather-chart" id="weatherChart"></canvas>
