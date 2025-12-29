@@ -19,7 +19,7 @@
   --weather-metric-temperature: var(--accent-gold);
   --weather-metric-humidity: var(--accent-blue);
   --weather-metric-precipitation: var(--text-muted);
-  --weather-metric-wind: var(--primary-color);
+  --weather-metric-wind: var(--primary-light);
 
   /* Glass effect */
   --glass-bg: rgba(255, 255, 255, 0.12);
@@ -46,6 +46,10 @@
   --radius-lg: 20px;
   --radius-xl: 30px;
   --radius-full: 50%;
+
+  /* Pinned apps sizing */
+  --pinned-app-width: 70px;
+  --pinned-app-gap: var(--spacing-md);
 
   /* Transitions */
   --transition-fast: 0.2s ease;
@@ -1502,11 +1506,20 @@ body {
 }
 
 .pinned-apps-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--pinned-apps-per-row, 10), minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  justify-items: center;
-  gap: var(--spacing-md);
+  gap: var(--pinned-app-gap);
+  width: min(
+    100%,
+    calc(
+      var(--pinned-apps-per-row, 10) *
+        (var(--pinned-app-width) + var(--pinned-app-gap)) -
+        var(--pinned-app-gap)
+    )
+  );
+  margin-left: auto;
+  margin-right: auto;
   padding: var(--spacing-md);
   background: var(--glass-bg);
   backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
@@ -1547,8 +1560,7 @@ body {
 
 .pinned-app-item {
   position: relative;
-  width: 100%;
-  max-width: 70px;
+  width: var(--pinned-app-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1734,10 +1746,7 @@ body {
 .pinned-app-name {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: var(--pinned-app-width);
   pointer-events: none;
 }
 
@@ -1901,8 +1910,7 @@ body {
 }
 
 .pinned-app-add {
-  width: 100%;
-  max-width: 70px;
+  width: var(--pinned-app-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2299,12 +2307,12 @@ body {
 
 /* Responsive adjustments for new elements */
 @media (max-width: 768px) {
-  .pinned-apps-grid {
-    gap: var(--spacing-sm);
+  :root {
+    --pinned-app-width: 60px;
   }
 
-  .pinned-app-item {
-    max-width: 60px;
+  .pinned-apps-grid {
+    gap: var(--spacing-sm);
   }
 
   .pinned-app-icon {
@@ -2332,8 +2340,8 @@ body {
 }
 
 @media (max-width: 480px) {
-  .pinned-app-item {
-    max-width: 55px;
+  :root {
+    --pinned-app-width: 55px;
   }
 
   .pinned-app-icon {
