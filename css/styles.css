@@ -1435,6 +1435,15 @@ body {
   }
 }
 
+/* Ensure key dashboard cards collapse to full-width at narrower widths (fixes layout gap at ~1114px) */
+@media (max-width: 1114px) {
+  .card.prayer-times-card,
+  .card.calendar-card,
+  .card.qibla-card {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Utility Classes */
 .hidden {
   display: none !important;
