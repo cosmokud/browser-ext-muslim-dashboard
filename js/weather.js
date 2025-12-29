@@ -251,6 +251,110 @@ class WeatherManager {
     });
   }
 
+  /* -------------------------- Color helpers -------------------------- */
+  _hexToRgb(hexOrRgb) {
+    if (!hexOrRgb) return null;
+    const s = String(hexOrRgb).trim();
+
+    // Accept rgb(...) or rgba(...)
+    const rgbMatch = s.match(
+      /^rgba?\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i
+    );
+    if (rgbMatch) {
+      return {
+        r: Math.round(Number(rgbMatch[1])),
+        g: Math.round(Number(rgbMatch[2])),
+        b: Math.round(Number(rgbMatch[3])),
+      };
+    }
+
+    let hex = s.replace("#", "");
+    if (hex.length === 3)
+      hex = hex
+        .split("")
+        .map((c) => c + c)
+        .join("");
+    if (hex.length !== 6) return null;
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+  }
+
+  _rgbToCss(rgb) {
+    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  }
+
+  _rgbToHex(rgb) {
+    if (!rgb) return "#000000";
+    const toHex = (n) => {
+      const v = Math.max(0, Math.min(255, Math.round(n)));
+      const h = v.toString(16);
+      return h.length === 1 ? "0" + h : h;
+    };
+    return "#" + toHex(rgb.r) + toHex(rgb.g) + toHex(rgb.b);
+  }
+
+  _interpolateHex(a, b, t) {
+    const ra = this._hexToRgb(a);
+    const rb = this._hexToRgb(b);
+    if (!ra || !rb) return { r: 0, g: 0, b: 0 };
+    const r = Math.round(ra.r + (rb.r - ra.r) * t);
+    const g = Math.round(ra.g + (rb.g - ra.g) * t);
+    const b2 = Math.round(ra.b + (rb.b - ra.b) * t);
+    return { r, g, b: b2 };
+  }
+
+  _lightenHex(hex, factor) {
+    const rgb = this._hexToRgb(hex);
+    if (!rgb) return { r: 255, g: 255, b: 255 };
+    const r = Math.round(rgb.r + (255 - rgb.r) * factor);
+    const g = Math.round(rgb.g + (255 - rgb.g) * factor);
+    const b = Math.round(rgb.b + (255 - rgb.b) * factor);
+    return { r, g, b };
+  }
+
+  _colorForMetric(metric, value, min, max) {
+    const v = Number.isFinite(value) ? value : null;
+    if (v === null) return "#888888";
+
+    let t = 0;
+    if (Number.isFinite(min) && Number.isFinite(max) && max > min) {
+      t = Math.max(0, Math.min(1, (v - min) / (max - min)));
+    }
+
+    // Define color endpoints for each metric
+    switch (metric) {
+      case "humidity": {
+        const low = "#e6f6ff"; // very light blue
+        const high = "#003f8a"; // deep blue
+        const rgb = this._interpolateHex(low, high, t);
+        return this._rgbToHex(rgb);
+      }
+      case "precipitation": {
+        const low = "#ffffff";
+        const high = "#bdbdbd";
+        const rgb = this._interpolateHex(low, high, t);
+        return this._rgbToHex(rgb);
+      }
+      case "wind": {
+        const low = "#d7f6e6";
+        const high = "#0b6b48";
+        const rgb = this._interpolateHex(low, high, t);
+        return this._rgbToHex(rgb);
+      }
+      case "temperature":
+      default: {
+        // blue -> red/orange
+        const low = "#2b8cff";
+        const high = "#ff3b30";
+        const rgb = this._interpolateHex(low, high, t);
+        return this._rgbToHex(rgb);
+      }
+    }
+  }
+
   _ensureWeatherChartTooltip() {
     if (this.weatherChartTooltip) return this.weatherChartTooltip;
     if (!this.weatherChartWrap) return null;
@@ -508,6 +612,9 @@ class WeatherManager {
       const unit = settings.weatherUnit || "celsius";
 
       const location = await this._resolveWeatherLocation(settings);
+      console.debug("Resolved weather location:", location, "settings:", {
+        weatherLocationMode: settings.weatherLocationMode,
+      });
       if (!location) {
         throw new Error("No location available");
       }
@@ -517,13 +624,33 @@ class WeatherManager {
 
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=auto&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
 
+      console.debug("Weather URL:", url);
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error("Weather API request failed");
+        const text = await response.text().catch(() => "");
+        console.error(
+          "Weather API response not OK:",
+          response.status,
+          text.substr ? text.substr(0, 200) : text
+        );
+        throw new Error(
+          `Weather API request failed (status ${response.status})`
+        );
       }
 
-      const data = await response.json();
-      const current = data.current || {};
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        const txt = await response.text().catch(() => "");
+        console.error(
+          "Weather API JSON parse error:",
+          e,
+          txt.substr ? txt.substr(0, 500) : txt
+        );
+        throw new Error("Weather API returned invalid JSON");
+      }
+      const current = data.current || data.current_weather || {};
 
       const locationName =
         location.city ||
@@ -533,20 +660,66 @@ class WeatherManager {
         )) ||
         `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
 
+      // Try to derive reasonable current values when API uses different field names
+      const hourly = data.hourly || {};
+      const pickNearestHourly = (arr) => {
+        if (
+          !Array.isArray(arr) ||
+          !arr.length ||
+          !Array.isArray(hourly.time) ||
+          !hourly.time.length
+        )
+          return null;
+        const now = new Date();
+        for (let i = 0; i < hourly.time.length; i++) {
+          const t = new Date(hourly.time[i]);
+          if (t >= now)
+            return Number.isFinite(Number(arr[i])) ? Number(arr[i]) : null;
+        }
+        const last = arr[arr.length - 1];
+        return Number.isFinite(Number(last)) ? Number(last) : null;
+      };
+
+      const temps = hourly.temperature_2m || hourly.temperature || null;
+      const hums = hourly.relative_humidity_2m || null;
+      const prec = hourly.precipitation || null;
+      const winds = hourly.wind_speed_10m || hourly.windspeed || null;
+
+      const derivedTemp = Number.isFinite(current.temperature_2m)
+        ? current.temperature_2m
+        : Number.isFinite(current.temperature)
+        ? current.temperature
+        : pickNearestHourly(temps);
+
+      const derivedFeels = Number.isFinite(current.apparent_temperature)
+        ? current.apparent_temperature
+        : null;
+
+      const derivedHum = Number.isFinite(current.relative_humidity_2m)
+        ? current.relative_humidity_2m
+        : pickNearestHourly(hums);
+
+      const derivedWind = Number.isFinite(current.wind_speed_10m)
+        ? current.wind_speed_10m
+        : Number.isFinite(current.windspeed)
+        ? current.windspeed
+        : pickNearestHourly(winds);
+
+      const derivedWeatherCode =
+        current.weather_code ?? current.weathercode ?? null;
+
       this.currentWeather = {
-        temperature: Number.isFinite(current.temperature_2m)
-          ? Math.round(current.temperature_2m)
+        temperature: Number.isFinite(derivedTemp)
+          ? Math.round(derivedTemp)
           : null,
-        feelsLike: Number.isFinite(current.apparent_temperature)
-          ? Math.round(current.apparent_temperature)
+        feelsLike: Number.isFinite(derivedFeels)
+          ? Math.round(derivedFeels)
           : null,
-        humidity: Number.isFinite(current.relative_humidity_2m)
-          ? Math.round(current.relative_humidity_2m)
+        humidity: Number.isFinite(derivedHum) ? Math.round(derivedHum) : null,
+        windSpeed: Number.isFinite(derivedWind)
+          ? Math.round(derivedWind)
           : null,
-        windSpeed: Number.isFinite(current.wind_speed_10m)
-          ? Math.round(current.wind_speed_10m)
-          : null,
-        weatherCode: current.weather_code,
+        weatherCode: derivedWeatherCode,
         unit: unit,
         windUnit: windUnit,
         location: locationName,
@@ -570,14 +743,14 @@ class WeatherManager {
       this.updateDisplay();
     } catch (error) {
       console.error("Weather fetch error:", error);
-      this.showError();
+      this.showError(error?.message || String(error));
     }
   }
 
   /**
    * Show error state
    */
-  showError() {
+  showError(message) {
     if (this.weatherIcon) {
       this.weatherIcon.textContent = "⚠️";
     }
@@ -585,7 +758,8 @@ class WeatherManager {
       this.weatherTemp.textContent = "--";
     }
     if (this.weatherDesc) {
-      this.weatherDesc.textContent = "Unable to load weather";
+      const suffix = message ? `: ${String(message).slice(0, 120)}` : "";
+      this.weatherDesc.textContent = `Unable to load weather${suffix}`;
     }
     if (this.weatherLocation) {
       this.weatherLocation.textContent = "";
@@ -1027,7 +1201,6 @@ window.WeatherManager = WeatherManager;
 
     ctx.save();
     ctx.globalAlpha = 0.92;
-    ctx.fillStyle = barColor;
     for (let i = 0; i < points; i++) {
       const x = plotLeft + i * stepX + stepX / 2;
       const y = yFor(numericValues[i]);
@@ -1036,6 +1209,22 @@ window.WeatherManager = WeatherManager;
       const scale = scaleForIndex(i);
       const scaledH = heightPx * scale;
       const scaledY = baseY - scaledH;
+
+      // compute a value-based color for this bar and use a subtle vertical gradient
+      const baseColor = this._colorForMetric(
+        metric,
+        numericValues[i],
+        min,
+        max
+      );
+      const topRgb = this._lightenHex(baseColor, 0.32);
+      const topColor = this._rgbToCss(topRgb);
+      const bottomColor = baseColor;
+      const grad = ctx.createLinearGradient(0, scaledY, 0, scaledY + scaledH);
+      grad.addColorStop(0, topColor);
+      grad.addColorStop(1, bottomColor);
+      ctx.fillStyle = grad;
+
       ctx.fillRect(x - barWidth / 2, scaledY, barWidth, scaledH);
 
       const value = numericValues[i];
