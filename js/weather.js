@@ -1309,9 +1309,9 @@ window.WeatherManager = WeatherManager;
         if (labelX > maxX) labelX = maxX;
         const labelY = plotTop - labelH - 8;
 
-        // Draw rounded rect background for pill
+        // Draw rounded rect background for pill (softer transparent gray)
         const r = 6;
-        ctx.fillStyle = "rgba(20,24,30,0.86)";
+        ctx.fillStyle = "rgba(120,120,120,0.35)";
         ctx.beginPath();
         ctx.moveTo(labelX + r, labelY);
         ctx.arcTo(labelX + txtW, labelY, labelX + txtW, labelY + labelH, r);
@@ -1321,8 +1321,8 @@ window.WeatherManager = WeatherManager;
         ctx.closePath();
         ctx.fill();
 
-        // label text
-        ctx.fillStyle = "#ffffff";
+        // label text (slightly softer white for contrast)
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.fillText(labelText, labelX + txtW / 2, labelY + labelH / 2);
 
         ctx.restore();
