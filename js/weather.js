@@ -24,6 +24,14 @@ class WeatherManager {
       "#weatherCard .weather-chart-tab[data-metric]"
     );
 
+    this.weatherChartWrap = this.weatherChart?.closest(".weather-chart-wrap");
+    this.weatherChartTooltip = null;
+    this._chartBars = null;
+    this._chartLayout = null;
+    this._chartRaf = null;
+    this._chartAnim = null;
+    this._chartHoverIndex = -1;
+
     this.currentWeather = null;
     this.dailyForecast = null;
     this.hourlyForecast = null;
@@ -215,9 +223,19 @@ class WeatherManager {
           if (!metric) return;
           this.selectedMetric = metric;
           this.updateMetricTabs();
+          this._startHourlyChartAnimation();
           this.renderHourlyChart();
         });
       });
+    }
+
+    if (this.weatherChart) {
+      this.weatherChart.addEventListener("mousemove", (e) =>
+        this._handleChartMouseMove(e)
+      );
+      this.weatherChart.addEventListener("mouseleave", () =>
+        this._handleChartMouseLeave()
+      );
     }
 
     window.addEventListener("resize", this._onResize);
@@ -231,6 +249,148 @@ class WeatherManager {
       tab.classList.toggle("active", isActive);
       tab.setAttribute("aria-selected", isActive ? "true" : "false");
     });
+  }
+
+  _ensureWeatherChartTooltip() {
+    if (this.weatherChartTooltip) return this.weatherChartTooltip;
+    if (!this.weatherChartWrap) return null;
+
+    const tip = document.createElement("div");
+    tip.className = "weather-chart-tooltip";
+    tip.setAttribute("role", "tooltip");
+    tip.setAttribute("aria-hidden", "true");
+    this.weatherChartWrap.appendChild(tip);
+    this.weatherChartTooltip = tip;
+    return tip;
+  }
+
+  _handleChartMouseLeave() {
+    this._chartHoverIndex = -1;
+    this._hideWeatherChartTooltip();
+  }
+
+  _handleChartMouseMove(e) {
+    if (!this.weatherChart || !this.weatherChartWrap) return;
+    if (!this._chartBars || !this._chartLayout) return;
+
+    const canvasRect = this.weatherChart.getBoundingClientRect();
+    const x = e.clientX - canvasRect.left;
+    const y = e.clientY - canvasRect.top;
+
+    const idx = this._hitTestWeatherBarIndex(x, y);
+    if (!Number.isFinite(idx) || idx < 0) {
+      this._chartHoverIndex = -1;
+      this._hideWeatherChartTooltip();
+      return;
+    }
+
+    if (this._chartHoverIndex !== idx) {
+      this._chartHoverIndex = idx;
+    }
+
+    this._showWeatherChartTooltip(idx);
+  }
+
+  _hitTestWeatherBarIndex(x, y) {
+    const layout = this._chartLayout;
+    if (!layout) return -1;
+    if (x < layout.plotLeft || x > layout.plotLeft + layout.plotWidth)
+      return -1;
+    if (y < layout.plotTop || y > layout.plotBottom) return -1;
+
+    const bars = this._chartBars;
+    if (!Array.isArray(bars) || !bars.length) return -1;
+
+    // Prefer direct hit on the bar's x-range; y is validated against plot area.
+    for (let i = 0; i < bars.length; i++) {
+      const b = bars[i];
+      if (!b) continue;
+      if (x >= b.x && x <= b.x + b.w) return i;
+    }
+
+    // Fallback: nearest by x center
+    let best = -1;
+    let bestDist = Infinity;
+    for (let i = 0; i < bars.length; i++) {
+      const b = bars[i];
+      if (!b) continue;
+      const d = Math.abs(x - b.cx);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  _hideWeatherChartTooltip() {
+    const tip = this._ensureWeatherChartTooltip();
+    if (!tip) return;
+    tip.classList.remove("active");
+    tip.setAttribute("aria-hidden", "true");
+  }
+
+  _showWeatherChartTooltip(index) {
+    const tip = this._ensureWeatherChartTooltip();
+    if (!tip || !this.weatherChart || !this.weatherChartWrap) return;
+    const bars = this._chartBars;
+    const bar = Array.isArray(bars) ? bars[index] : null;
+    if (!bar) {
+      this._hideWeatherChartTooltip();
+      return;
+    }
+
+    const wrapRect = this.weatherChartWrap.getBoundingClientRect();
+    const canvasRect = this.weatherChart.getBoundingClientRect();
+
+    const left = canvasRect.left - wrapRect.left + bar.cx;
+    const top = canvasRect.top - wrapRect.top + bar.y;
+
+    const label = bar.timeLabel ? `${bar.timeLabel}: ` : "";
+    tip.textContent = `${label}${bar.valueLabel}`;
+
+    // Position and clamp horizontally within the wrap
+    const padding = 10;
+    const maxLeft = wrapRect.width - padding;
+    const clampedLeft = Math.max(padding, Math.min(maxLeft, left));
+
+    tip.style.left = `${clampedLeft}px`;
+    tip.style.top = `${top}px`;
+    tip.classList.add("active");
+    tip.setAttribute("aria-hidden", "false");
+  }
+
+  _startHourlyChartAnimation() {
+    if (this._chartRaf) {
+      cancelAnimationFrame(this._chartRaf);
+      this._chartRaf = null;
+    }
+    this._chartAnim = {
+      start: performance.now(),
+      duration: 520,
+      stagger: 16,
+      metric: this.selectedMetric || "temperature",
+    };
+  }
+
+  _applyWeatherIconAnimation(weatherCode) {
+    if (!this.weatherIcon) return;
+    const code = Number(weatherCode);
+    const cls = this.weatherIcon.classList;
+    ["weather-anim-sunny", "weather-anim-cloudy", "weather-anim-rainy"].forEach(
+      (c) => cls.remove(c)
+    );
+    if (!Number.isFinite(code)) return;
+
+    if (code === 0 || code === 1) {
+      cls.add("weather-anim-sunny");
+    } else if (code === 2 || code === 3 || code === 45 || code === 48) {
+      cls.add("weather-anim-cloudy");
+    } else if (code >= 71 && code <= 77) {
+      cls.add("weather-anim-cloudy");
+    } else {
+      cls.add("weather-anim-rainy");
+    }
   }
 
   _toNumber(value) {
@@ -534,6 +694,7 @@ window.WeatherManager = WeatherManager;
 
     if (this.weatherIcon) {
       this.weatherIcon.textContent = weatherInfo.icon;
+      this._applyWeatherIconAnimation(weather.weatherCode);
     }
 
     if (this.weatherTemp) {
@@ -717,13 +878,21 @@ window.WeatherManager = WeatherManager;
 
     const rootStyles = getComputedStyle(document.documentElement);
     const colorTemp =
-      rootStyles.getPropertyValue("--accent-gold").trim() || "#d4af37";
+      rootStyles.getPropertyValue("--weather-metric-temperature").trim() ||
+      rootStyles.getPropertyValue("--accent-gold").trim() ||
+      "#d4af37";
     const colorHum =
-      rootStyles.getPropertyValue("--primary-light").trim() || "#2d8a6e";
+      rootStyles.getPropertyValue("--weather-metric-humidity").trim() ||
+      rootStyles.getPropertyValue("--accent-blue").trim() ||
+      "#0066cc";
     const colorPrecip =
-      rootStyles.getPropertyValue("--accent-gold-light").trim() || "#e6c866";
+      rootStyles.getPropertyValue("--weather-metric-precipitation").trim() ||
+      rootStyles.getPropertyValue("--text-muted").trim() ||
+      "rgba(255, 255, 255, 0.6)";
     const colorWind =
-      rootStyles.getPropertyValue("--primary-color").trim() || "#1a5f4a";
+      rootStyles.getPropertyValue("--weather-metric-wind").trim() ||
+      rootStyles.getPropertyValue("--primary-color").trim() ||
+      "#1a5f4a";
     const colorMuted =
       rootStyles.getPropertyValue("--text-muted").trim() ||
       "rgba(255, 255, 255, 0.6)";
@@ -734,6 +903,12 @@ window.WeatherManager = WeatherManager;
     const canvas = this.weatherChart;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Cancel any in-flight frame; we'll schedule a fresh one if animation is still running.
+    if (this._chartRaf) {
+      cancelAnimationFrame(this._chartRaf);
+      this._chartRaf = null;
+    }
 
     const dpr = window.devicePixelRatio || 1;
     const cssWidth = canvas.clientWidth || 800;
@@ -820,6 +995,36 @@ window.WeatherManager = WeatherManager;
     const barWidth = Math.max(2, Math.floor(stepX * 0.72));
     const baseY = yFor(min);
 
+    // Cache layout + x hitboxes for tooltip
+    this._chartLayout = {
+      plotLeft,
+      plotTop,
+      plotBottom,
+      plotWidth,
+      plotHeight,
+      stepX,
+      barWidth,
+      baseY,
+      points,
+    };
+
+    const bars = new Array(points);
+
+    const nowMs = performance.now();
+    const anim = this._chartAnim;
+    const shouldAnimate =
+      !!anim &&
+      anim.metric === metric &&
+      nowMs - anim.start < anim.duration + points * anim.stagger + 60;
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    const scaleForIndex = (i) => {
+      if (!shouldAnimate || !anim) return 1;
+      const local = (nowMs - anim.start - i * anim.stagger) / anim.duration;
+      const t = Math.max(0, Math.min(1, local));
+      return easeOutCubic(t);
+    };
+
     ctx.save();
     ctx.globalAlpha = 0.92;
     ctx.fillStyle = barColor;
@@ -828,9 +1033,32 @@ window.WeatherManager = WeatherManager;
       const y = yFor(numericValues[i]);
       const h = baseY - y;
       const heightPx = Math.max(0, h);
-      ctx.fillRect(x - barWidth / 2, y, barWidth, heightPx);
+      const scale = scaleForIndex(i);
+      const scaledH = heightPx * scale;
+      const scaledY = baseY - scaledH;
+      ctx.fillRect(x - barWidth / 2, scaledY, barWidth, scaledH);
+
+      const value = numericValues[i];
+      const valueLabel = Number.isFinite(value)
+        ? `${Math.round(value * 10) / 10}${metricUnit}`
+        : `--${metricUnit}`;
+      const timeLabel = times[i]?.toLocaleTimeString(undefined, {
+        hour: "numeric",
+      });
+
+      bars[i] = {
+        x: x - barWidth / 2,
+        w: barWidth,
+        cx: x,
+        y: scaledY,
+        h: scaledH,
+        valueLabel,
+        timeLabel,
+      };
     }
     ctx.restore();
+
+    this._chartBars = bars;
 
     // subtle outline for readability
     ctx.strokeStyle = colorBorder;
@@ -840,7 +1068,10 @@ window.WeatherManager = WeatherManager;
       const y = yFor(numericValues[i]);
       const h = baseY - y;
       const heightPx = Math.max(0, h);
-      ctx.strokeRect(x - barWidth / 2, y, barWidth, heightPx);
+      const scale = scaleForIndex(i);
+      const scaledH = heightPx * scale;
+      const scaledY = baseY - scaledH;
+      ctx.strokeRect(x - barWidth / 2, scaledY, barWidth, scaledH);
     }
 
     // x labels (every 3 hours)
@@ -855,6 +1086,12 @@ window.WeatherManager = WeatherManager;
         hour: "numeric",
       });
       ctx.fillText(hourLabel, x, plotBottom + 6);
+    }
+
+    if (shouldAnimate) {
+      this._chartRaf = requestAnimationFrame(() => this.renderHourlyChart());
+    } else {
+      this._chartAnim = null;
     }
 
     return;

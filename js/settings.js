@@ -128,7 +128,6 @@ class SettingsManager {
       'input[name="clockStyle"]'
     );
     this.showDate = document.getElementById("showDate");
-    this.showWeekday = document.getElementById("showWeekday");
     this.showIslamicEvents = document.getElementById("showIslamicEvents");
     this.dateFormatSelect = document.getElementById("dateFormatSelect");
     this.dateCalendarRadios = document.querySelectorAll(
@@ -167,6 +166,12 @@ class SettingsManager {
       "weatherLongitudeInput"
     );
     this.weatherSearchCityBtn = document.getElementById("weatherSearchCityBtn");
+
+    // Pinned Apps tab elements
+    this.pinnedAppsPerRow = document.getElementById("pinnedAppsPerRow");
+    this.pinnedAppsPerRowValue = document.getElementById(
+      "pinnedAppsPerRowValue"
+    );
   }
 
   /**
@@ -279,6 +284,13 @@ class SettingsManager {
       this.applyUiBlurPower(clamped);
     }
 
+    // Pinned Apps settings
+    if (this.pinnedAppsPerRow) {
+      const clamped = this.clampNumber(settings.pinnedAppsPerRow, 3, 20, 10);
+      this.pinnedAppsPerRow.value = String(clamped);
+      this.updatePinnedAppsPerRowLabel();
+    }
+
     // Load heading settings
     this.loadHeadingSettings(settings);
 
@@ -289,11 +301,51 @@ class SettingsManager {
     this.loadWeatherSettings(settings);
   }
 
+  updatePinnedAppsPerRowLabel() {
+    if (!this.pinnedAppsPerRow || !this.pinnedAppsPerRowValue) return;
+    const clamped = this.clampNumber(
+      parseInt(this.pinnedAppsPerRow.value, 10),
+      3,
+      20,
+      10
+    );
+    this.pinnedAppsPerRow.value = String(clamped);
+    this.pinnedAppsPerRowValue.textContent = String(clamped);
+  }
+
   /**
    * Load heading settings
    */
   loadHeadingSettings(settings) {
     const heading = settings.heading || {};
+
+    const normalizeHeadingDateFormat = (format, legacyShowWeekday) => {
+      const normalized = String(format || "").trim();
+      const newValues = new Set([
+        "full-weekday",
+        "full",
+        "medium-weekday",
+        "medium",
+        "short",
+      ]);
+
+      if (newValues.has(normalized)) return normalized;
+
+      if (normalized === "full") {
+        return legacyShowWeekday === false ? "full" : "full-weekday";
+      }
+      if (normalized === "long") {
+        return "full";
+      }
+      if (normalized === "medium") {
+        return legacyShowWeekday === false ? "medium" : "medium-weekday";
+      }
+      if (normalized === "short") {
+        return "short";
+      }
+
+      return legacyShowWeekday === false ? "full" : "full-weekday";
+    };
 
     // Greeting type
     const useCustom = heading.useCustomGreeting || false;
@@ -346,12 +398,15 @@ class SettingsManager {
 
     // Date settings
     if (this.showDate) this.showDate.checked = heading.showDate !== false;
-    if (this.showWeekday)
-      this.showWeekday.checked = heading.showWeekday !== false;
     if (this.showIslamicEvents)
       this.showIslamicEvents.checked = heading.showIslamicEvents !== false;
-    if (this.dateFormatSelect)
-      this.dateFormatSelect.value = heading.dateFormat || "full";
+    if (this.dateFormatSelect) {
+      const normalizedDateFormat = normalizeHeadingDateFormat(
+        heading.dateFormat || "full",
+        heading.showWeekday
+      );
+      this.dateFormatSelect.value = normalizedDateFormat;
+    }
 
     const dateCalendar = heading.dateCalendar || "hijri";
     const dateCalendarRadio = document.querySelector(
@@ -827,6 +882,14 @@ class SettingsManager {
       100
     );
 
+    // Pinned Apps per-row
+    settings.pinnedAppsPerRow = this.clampNumber(
+      parseInt(this.pinnedAppsPerRow?.value, 10),
+      3,
+      20,
+      10
+    );
+
     // Save heading settings
     this.saveHeadingSettings(settings);
 
@@ -902,10 +965,10 @@ class SettingsManager {
 
     // Date settings
     settings.heading.showDate = this.showDate?.checked ?? true;
-    settings.heading.showWeekday = this.showWeekday?.checked ?? true;
     settings.heading.showIslamicEvents =
       this.showIslamicEvents?.checked ?? true;
-    settings.heading.dateFormat = this.dateFormatSelect?.value || "full";
+    settings.heading.dateFormat =
+      this.dateFormatSelect?.value || "full-weekday";
     const dateCalendarRadio = document.querySelector(
       'input[name="dateCalendar"]:checked'
     );
@@ -1325,6 +1388,13 @@ class SettingsManager {
       this.uiBlurPower.addEventListener("input", () => {
         this.updateUiBlurPowerLabel();
         this.applyUiBlurPower(parseInt(this.uiBlurPower.value, 10));
+      });
+    }
+
+    // Pinned Apps per-row slider - update label
+    if (this.pinnedAppsPerRow) {
+      this.pinnedAppsPerRow.addEventListener("input", () => {
+        this.updatePinnedAppsPerRowLabel();
       });
     }
 

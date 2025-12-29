@@ -223,17 +223,26 @@ class HijriDate {
     const year = hijriDate.year;
     const dayName = lang === "ar" ? hijriDate.dayNameAr : hijriDate.dayName;
 
+    const monthShort =
+      lang === "ar" ? month : String(month).replace(/\s+/g, " ").slice(0, 3);
+    const dayNameShort = lang === "ar" ? dayName : String(dayName).slice(0, 3);
+
     switch (format) {
-      case "full":
+      case "full-weekday":
         return `${dayName}, ${day} ${month} ${year} AH`;
+      case "full":
       case "long":
         return `${day} ${month} ${year} AH`;
+      case "medium-weekday":
+        return `${dayNameShort}, ${day} ${monthShort} ${year} AH`;
+      case "medium":
+        return `${day} ${monthShort} ${year} AH`;
       case "short":
         return `${day}/${hijriDate.month}/${year}`;
       case "month-year":
         return `${month} ${year} AH`;
       default:
-        return `${day} ${month} ${year}`;
+        return `${day} ${month} ${year} AH`;
     }
   }
 

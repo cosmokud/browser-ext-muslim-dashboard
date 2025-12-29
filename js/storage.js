@@ -145,6 +145,7 @@ class StorageManager {
 
       // Pinned Apps settings
       pinnedApps: [],
+      pinnedAppsPerRow: 10,
 
       // Weather settings
       weatherUnit: "celsius", // 'celsius' or 'fahrenheit'
@@ -201,8 +202,7 @@ class StorageManager {
 
         // Date settings
         showDate: true,
-        dateFormat: "full", // 'full', 'long', 'medium', 'short'
-        showWeekday: true,
+        dateFormat: "full-weekday", // 'full-weekday', 'full', 'medium-weekday', 'medium', 'short'
         dateCalendar: "hijri", // 'hijri', 'gregorian', 'both'
         showIslamicEvents: true,
       },

@@ -31,6 +31,7 @@ class MuslimDashboard {
     this.dateDisplay = document.getElementById("dateDisplay");
     this.currentTime = document.getElementById("currentTime");
     this.currentSeconds = document.getElementById("currentSeconds");
+    this.currentAmPm = document.getElementById("currentAmPm");
   }
 
   /**
@@ -105,6 +106,9 @@ class MuslimDashboard {
     // Apply heading settings
     this.applyHeadingSettings();
 
+    // Apply pinned apps layout settings
+    this.applyPinnedAppsSettings();
+
     // Add global Refresh Background button handler (bottom-right UI)
     const refreshBtn = document.getElementById("refreshBgBtn");
     if (refreshBtn) {
@@ -121,6 +125,19 @@ class MuslimDashboard {
     this.setupLocationUpdates();
 
     console.log("✅ Muslim Dashboard ready!");
+  }
+
+  applyPinnedAppsSettings() {
+    const settings = this.storage.getSettings();
+    const perRowRaw = Number(settings.pinnedAppsPerRow);
+    const perRow = Number.isFinite(perRowRaw)
+      ? Math.min(20, Math.max(3, perRowRaw))
+      : 10;
+
+    const grid = document.getElementById("pinnedAppsGrid");
+    if (grid) {
+      grid.style.setProperty("--pinned-apps-per-row", String(perRow));
+    }
   }
 
   /**
@@ -142,19 +159,34 @@ class MuslimDashboard {
     if (!is24h) {
       const suffix = hours >= 12 ? "PM" : "AM";
       hours = hours % 12 || 12;
-      if (showAmPm) {
-        this.currentTime.textContent = `${hours}:${minutes} ${suffix}`;
-      } else {
-        this.currentTime.textContent = `${hours}:${minutes}`;
+      this.currentTime.textContent = `${hours}:${minutes}`;
+
+      if (this.currentAmPm) {
+        if (showAmPm) {
+          this.currentAmPm.textContent = suffix;
+          this.currentAmPm.style.display = "";
+          this.currentAmPm.setAttribute("aria-hidden", "false");
+        } else {
+          this.currentAmPm.textContent = "";
+          this.currentAmPm.style.display = "none";
+          this.currentAmPm.setAttribute("aria-hidden", "true");
+        }
       }
     } else {
       this.currentTime.textContent = `${String(hours).padStart(
         2,
         "0"
       )}:${minutes}`;
+      if (this.currentAmPm) {
+        this.currentAmPm.textContent = "";
+        this.currentAmPm.style.display = "none";
+        this.currentAmPm.setAttribute("aria-hidden", "true");
+      }
     }
 
-    this.currentSeconds.textContent = `:${seconds}`;
+    if (this.currentSeconds) {
+      this.currentSeconds.textContent = `:${seconds}`;
+    }
   }
 
   /**
@@ -166,8 +198,11 @@ class MuslimDashboard {
     const headingSettings = settings.heading || {};
     const dateCalendar =
       headingSettings.dateCalendar || settings.calendarType || "hijri";
-    const dateFormat = headingSettings.dateFormat || "full";
-    const showWeekday = headingSettings.showWeekday !== false;
+    const legacyShowWeekday = headingSettings.showWeekday;
+    const dateFormat = this.normalizeHeadingDateFormat(
+      headingSettings.dateFormat || "full",
+      legacyShowWeekday
+    );
     const showIslamicEvents = headingSettings.showIslamicEvents !== false;
 
     let dateText = "";
@@ -185,11 +220,10 @@ class MuslimDashboard {
       }
 
       if (dateCalendar === "both") {
-        dateText +=
-          " | " + this.formatGregorianDate(now, dateFormat, showWeekday);
+        dateText += " | " + this.formatGregorianDate(now, dateFormat);
       }
     } else {
-      dateText = this.formatGregorianDate(now, dateFormat, showWeekday);
+      dateText = this.formatGregorianDate(now, dateFormat);
     }
 
     this.dateDisplay.textContent = dateText;
@@ -198,17 +232,52 @@ class MuslimDashboard {
   /**
    * Format Gregorian date with options
    */
-  formatGregorianDate(date, format, showWeekday) {
-    const options = {};
+  normalizeHeadingDateFormat(format, legacyShowWeekday) {
+    const normalized = String(format || "").trim();
+    const newValues = new Set([
+      "full-weekday",
+      "full",
+      "medium-weekday",
+      "medium",
+      "short",
+    ]);
 
-    switch (format) {
+    if (newValues.has(normalized)) return normalized;
+
+    // Legacy values were: full/long/medium/short + separate showWeekday
+    if (normalized === "full") {
+      return legacyShowWeekday === false ? "full" : "full-weekday";
+    }
+    if (normalized === "long") {
+      return "full";
+    }
+    if (normalized === "medium") {
+      return legacyShowWeekday === false ? "medium" : "medium-weekday";
+    }
+    if (normalized === "short") {
+      return "short";
+    }
+
+    return legacyShowWeekday === false ? "full" : "full-weekday";
+  }
+
+  /**
+   * Format Gregorian date based on a combined Date Format value
+   */
+  formatGregorianDate(date, format) {
+    const options = {};
+    const normalized = String(format || "").trim();
+    const includeWeekday = normalized.endsWith("-weekday");
+    const base = includeWeekday
+      ? normalized.replace(/-weekday$/, "")
+      : normalized;
+
+    if (includeWeekday) {
+      options.weekday = base === "medium" ? "short" : "long";
+    }
+
+    switch (base) {
       case "full":
-        if (showWeekday) options.weekday = "long";
-        options.year = "numeric";
-        options.month = "long";
-        options.day = "numeric";
-        break;
-      case "long":
         options.year = "numeric";
         options.month = "long";
         options.day = "numeric";
@@ -224,7 +293,6 @@ class MuslimDashboard {
         options.day = "numeric";
         break;
       default:
-        if (showWeekday) options.weekday = "long";
         options.year = "numeric";
         options.month = "long";
         options.day = "numeric";
@@ -348,11 +416,9 @@ class MuslimDashboard {
     // Apply clock style
     const clockStyle = headingSettings.clockStyle || "default";
     if (timeSection) {
-      timeSection.classList.remove(
-        "clock-style-default",
-        "clock-style-minimal",
-        "clock-style-elegant"
-      );
+      [...timeSection.classList]
+        .filter((c) => c.startsWith("clock-style-"))
+        .forEach((c) => timeSection.classList.remove(c));
       timeSection.classList.add(`clock-style-${clockStyle}`);
     }
 

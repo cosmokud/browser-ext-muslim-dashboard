@@ -31,6 +31,7 @@
         <div class="time-section">
           <div class="current-time" id="currentTime">00:00</div>
           <div class="current-seconds" id="currentSeconds">:00</div>
+          <div class="current-ampm" id="currentAmPm" aria-hidden="true"></div>
         </div>
       </header>
 
@@ -381,6 +382,9 @@
             <button class="settings-tab" data-tab="heading">🕐 Heading</button>
             <button class="settings-tab" data-tab="visibility">
               👁️ Visibility
+            </button>
+            <button class="settings-tab" data-tab="pinnedApps">
+              📌 Pinned Apps
             </button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
             <button class="settings-tab" data-tab="quotes">📖 Quotes</button>
@@ -900,6 +904,69 @@
                   </div>
                   <span>Elegant</span>
                 </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="classic" />
+                  <div class="style-preview clock-preview-classic">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Classic</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="mono" />
+                  <div class="style-preview clock-preview-mono">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Mono</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="boxed" />
+                  <div class="style-preview clock-preview-boxed">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Boxed</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="pill" />
+                  <div class="style-preview clock-preview-pill">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Pill</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="neon" />
+                  <div class="style-preview clock-preview-neon">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Neon</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="underline" />
+                  <div class="style-preview clock-preview-underline">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Underline</span>
+                </label>
+
+                <label class="style-option">
+                  <input type="radio" name="clockStyle" value="shadow" />
+                  <div class="style-preview clock-preview-shadow">
+                    <span class="preview-time">14:30</span>
+                    <span class="preview-seconds">:45</span>
+                  </div>
+                  <span>Shadow</span>
+                </label>
               </div>
             </div>
 
@@ -912,10 +979,6 @@
                   <span>Show Date</span>
                 </label>
                 <label class="checkbox-option">
-                  <input type="checkbox" id="showWeekday" checked />
-                  <span>Show Weekday</span>
-                </label>
-                <label class="checkbox-option">
                   <input type="checkbox" id="showIslamicEvents" checked />
                   <span>Show Islamic Events</span>
                 </label>
@@ -925,8 +988,13 @@
             <div class="setting-group">
               <label class="setting-label">Date Format</label>
               <select class="setting-select" id="dateFormatSelect">
-                <option value="full">Full (Monday, January 1, 2025)</option>
-                <option value="long">Long (January 1, 2025)</option>
+                <option value="full-weekday">
+                  Full (Monday, January 1, 2025)
+                </option>
+                <option value="full">Full (January 1, 2025)</option>
+                <option value="medium-weekday">
+                  Medium (Mon, Jan 1, 2025)
+                </option>
                 <option value="medium">Medium (Jan 1, 2025)</option>
                 <option value="short">Short (1/1/2025)</option>
               </select>
@@ -1022,6 +1090,28 @@
                   <input type="checkbox" id="visibilityTodoList" checked />
                   <span class="toggle-switch"></span>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pinned Apps Settings -->
+          <div class="settings-panel" id="pinnedAppsPanel">
+            <div class="setting-group">
+              <label class="setting-label">Apps Per Row</label>
+              <p class="setting-hint">
+                Control how many pinned apps appear in each row.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pinnedAppsPerRow"
+                  min="3"
+                  max="20"
+                  value="10"
+                />
+                <span class="custom-width-value" id="pinnedAppsPerRowValue"
+                  >10</span
+                >
               </div>
             </div>
           </div>
