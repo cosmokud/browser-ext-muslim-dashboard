@@ -3493,12 +3493,52 @@ body.sticky-note-resizing {
 }
 
 .weather-chart-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-sm);
-  flex-wrap: wrap;
+  min-height: 40px; /* keeps center column vertically stable */
+  position: relative;
+}
+
+.weather-chart-title {
+  grid-column: 1 / 2;
+  justify-self: start;
+}
+
+.weather-chart-tabs {
+  grid-column: 2 / 3;
+  justify-self: center;
+}
+
+.weather-chart-legend {
+  grid-column: 3 / 4;
+  justify-self: end;
+}
+
+@media (max-width: 640px) {
+  .weather-chart-header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: var(--spacing-sm);
+    min-height: auto;
+  }
+
+  .weather-chart-title {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .weather-chart-tabs {
+    grid-column: 1;
+    justify-self: center;
+  }
+
+  .weather-chart-legend {
+    grid-column: 1;
+    justify-self: center;
+  }
 }
 
 .weather-chart-title {

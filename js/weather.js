@@ -1263,6 +1263,72 @@ window.WeatherManager = WeatherManager;
       ctx.strokeRect(x - barWidth / 2, scaledY, barWidth, scaledH);
     }
 
+    // Draw current time vertical strip (if within range)
+    (function () {
+      if (!Array.isArray(times) || times.length < 2) return;
+      const startMs = times[0].getTime();
+      const endMs = times[times.length - 1].getTime();
+      const nowMs = Date.now();
+      if (endMs > startMs && nowMs >= startMs && nowMs <= endMs) {
+        const p = (nowMs - startMs) / (endMs - startMs);
+        const xPos = plotLeft + p * plotWidth;
+        const stripW = Math.max(3, Math.min(14, stepX * 0.4));
+        const half = stripW / 2;
+
+        // vertical gradient stripe for depth
+        const gradStrip = ctx.createLinearGradient(0, plotTop, 0, plotBottom);
+        gradStrip.addColorStop(0, "rgba(255,255,255,0.02)");
+        gradStrip.addColorStop(0.48, "rgba(255,255,255,0.06)");
+        gradStrip.addColorStop(0.5, "rgba(255,255,255,0.12)");
+        gradStrip.addColorStop(0.52, "rgba(255,255,255,0.06)");
+        gradStrip.addColorStop(1, "rgba(255,255,255,0.02)");
+
+        ctx.save();
+        ctx.fillStyle = gradStrip;
+        ctx.fillRect(xPos - half, plotTop, stripW, plotHeight);
+
+        // center accent line
+        ctx.strokeStyle = "rgba(255,255,255,0.24)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(xPos, plotTop);
+        ctx.lineTo(xPos, plotBottom);
+        ctx.stroke();
+
+        // 'Now' pill label above chart (clamped to plot area)
+        const labelText = "Now";
+        ctx.font = "11px Poppins, sans-serif";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        const txtW = Math.max(28, ctx.measureText(labelText).width + 12);
+        const labelH = 18;
+        let labelX = xPos - txtW / 2;
+        const minX = plotLeft;
+        const maxX = plotLeft + plotWidth - txtW;
+        if (labelX < minX) labelX = minX;
+        if (labelX > maxX) labelX = maxX;
+        const labelY = plotTop - labelH - 8;
+
+        // Draw rounded rect background for pill
+        const r = 6;
+        ctx.fillStyle = "rgba(20,24,30,0.86)";
+        ctx.beginPath();
+        ctx.moveTo(labelX + r, labelY);
+        ctx.arcTo(labelX + txtW, labelY, labelX + txtW, labelY + labelH, r);
+        ctx.arcTo(labelX + txtW, labelY + labelH, labelX, labelY + labelH, r);
+        ctx.arcTo(labelX, labelY + labelH, labelX, labelY, r);
+        ctx.arcTo(labelX, labelY, labelX + txtW, labelY, r);
+        ctx.closePath();
+        ctx.fill();
+
+        // label text
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(labelText, labelX + txtW / 2, labelY + labelH / 2);
+
+        ctx.restore();
+      }
+    })();
+
     // x labels (every 3 hours)
     const labelEvery = 3;
     ctx.fillStyle = colorMuted;
