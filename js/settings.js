@@ -153,6 +153,20 @@ class SettingsManager {
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]'
     );
+
+    // Weather tab elements
+    this.weatherLocationModeRadios = document.querySelectorAll(
+      'input[name="weatherLocationMode"]'
+    );
+    this.weatherManualLocationFields = document.getElementById(
+      "weatherManualLocationFields"
+    );
+    this.weatherCityInput = document.getElementById("weatherCityInput");
+    this.weatherLatitudeInput = document.getElementById("weatherLatitudeInput");
+    this.weatherLongitudeInput = document.getElementById(
+      "weatherLongitudeInput"
+    );
+    this.weatherSearchCityBtn = document.getElementById("weatherSearchCityBtn");
   }
 
   /**
@@ -380,6 +394,66 @@ class SettingsManager {
       `input[name="weatherUnit"][value="${weatherUnit}"]`
     );
     if (weatherUnitRadio) weatherUnitRadio.checked = true;
+
+    const weatherLocationMode = settings.weatherLocationMode || "dashboard";
+    const modeRadio = document.querySelector(
+      `input[name="weatherLocationMode"][value="${weatherLocationMode}"]`
+    );
+    if (modeRadio) modeRadio.checked = true;
+    this.toggleWeatherManualLocation(weatherLocationMode === "custom");
+
+    if (this.weatherCityInput)
+      this.weatherCityInput.value = settings.weatherCity || "";
+    if (this.weatherLatitudeInput)
+      this.weatherLatitudeInput.value = settings.weatherLatitude || "";
+    if (this.weatherLongitudeInput)
+      this.weatherLongitudeInput.value = settings.weatherLongitude || "";
+  }
+
+  toggleWeatherManualLocation(show) {
+    if (this.weatherManualLocationFields) {
+      if (show) {
+        this.weatherManualLocationFields.classList.add("active");
+      } else {
+        this.weatherManualLocationFields.classList.remove("active");
+      }
+    }
+  }
+
+  async searchWeatherCity() {
+    const cityName = this.weatherCityInput?.value.trim();
+    if (!cityName) {
+      this.showToast("Please enter a city name", "error");
+      return;
+    }
+
+    if (this.weatherSearchCityBtn) {
+      this.weatherSearchCityBtn.textContent = "🔍 Searching...";
+      this.weatherSearchCityBtn.disabled = true;
+    }
+
+    try {
+      const results = await this.prayerTimes.searchCity(cityName);
+
+      if (results && results.length > 0) {
+        const result = results[0];
+        if (this.weatherCityInput) this.weatherCityInput.value = result.city;
+        if (this.weatherLatitudeInput)
+          this.weatherLatitudeInput.value = result.latitude.toFixed(4);
+        if (this.weatherLongitudeInput)
+          this.weatherLongitudeInput.value = result.longitude.toFixed(4);
+        this.showToast(`Found: ${result.city}`, "success");
+      } else {
+        this.showToast("City not found. Please try a different name.", "error");
+      }
+    } catch (error) {
+      this.showToast("Search failed. Please try again.", "error");
+    }
+
+    if (this.weatherSearchCityBtn) {
+      this.weatherSearchCityBtn.textContent = "🔍 Search City";
+      this.weatherSearchCityBtn.disabled = false;
+    }
   }
 
   /**
@@ -862,6 +936,19 @@ class SettingsManager {
       'input[name="weatherUnit"]:checked'
     );
     settings.weatherUnit = weatherUnitRadio?.value || "celsius";
+
+    const weatherLocationModeRadio = document.querySelector(
+      'input[name="weatherLocationMode"]:checked'
+    );
+    settings.weatherLocationMode =
+      weatherLocationModeRadio?.value || "dashboard";
+    settings.weatherCity = this.weatherCityInput?.value || "";
+    settings.weatherLatitude = this.weatherLatitudeInput?.value
+      ? parseFloat(this.weatherLatitudeInput.value)
+      : null;
+    settings.weatherLongitude = this.weatherLongitudeInput?.value
+      ? parseFloat(this.weatherLongitudeInput.value)
+      : null;
   }
 
   /**
@@ -1183,6 +1270,20 @@ class SettingsManager {
     // Search city
     if (this.searchCityBtn) {
       this.searchCityBtn.addEventListener("click", () => this.searchCity());
+    }
+
+    // Weather location mode toggle
+    this.weatherLocationModeRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.toggleWeatherManualLocation(radio.value === "custom");
+      });
+    });
+
+    // Search city (weather)
+    if (this.weatherSearchCityBtn) {
+      this.weatherSearchCityBtn.addEventListener("click", () =>
+        this.searchWeatherCity()
+      );
     }
 
     // Calculation method change - toggle custom angles and update display

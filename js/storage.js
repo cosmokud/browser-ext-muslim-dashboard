@@ -149,6 +149,13 @@ class StorageManager {
       // Weather settings
       weatherUnit: "celsius", // 'celsius' or 'fahrenheit'
 
+      // Weather location settings
+      // 'dashboard' uses the main dashboard location settings, 'custom' uses the fields below
+      weatherLocationMode: "dashboard",
+      weatherCity: "",
+      weatherLatitude: null,
+      weatherLongitude: null,
+
       // Component visibility settings
       componentVisibility: {
         header: true,
