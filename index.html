@@ -81,110 +81,115 @@
 
       <!-- Main Content Grid -->
       <main class="content-grid">
-        <!-- Prayer Times Card -->
-        <section class="card prayer-times-card" id="prayerTimesCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🕌</span>
-              Prayer Times
-            </h2>
-            <div class="location-display" id="locationDisplay">
-              <span class="location-icon">📍</span>
-              <span class="location-text" id="locationText">Detecting...</span>
-              <button
-                class="location-refresh-btn"
-                id="detectLocationBtn"
-                title="Refresh Location"
+        <!-- Top features (Prayer, Calendar, Qibla) -->
+        <div class="top-features">
+          <!-- Prayer Times Card -->
+          <section class="card prayer-times-card" id="prayerTimesCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">🕌</span>
+                Prayer Times
+              </h2>
+              <div class="location-display" id="locationDisplay">
+                <span class="location-icon">📍</span>
+                <span class="location-text" id="locationText"
+                  >Detecting...</span
+                >
+                <button
+                  class="location-refresh-btn"
+                  id="detectLocationBtn"
+                  title="Refresh Location"
+                >
+                  🔄
+                </button>
+              </div>
+            </div>
+            <div class="prayer-list" id="prayerList">
+              <!-- Prayer items will be dynamically generated based on visibility settings -->
+            </div>
+            <div class="next-prayer" id="nextPrayer">
+              <span class="next-prayer-label">Next Prayer:</span>
+              <span class="next-prayer-name" id="nextPrayerName">--</span>
+              <span class="next-prayer-countdown" id="nextPrayerCountdown"
+                >--:--:--</span
               >
-                🔄
-              </button>
             </div>
-          </div>
-          <div class="prayer-list" id="prayerList">
-            <!-- Prayer items will be dynamically generated based on visibility settings -->
-          </div>
-          <div class="next-prayer" id="nextPrayer">
-            <span class="next-prayer-label">Next Prayer:</span>
-            <span class="next-prayer-name" id="nextPrayerName">--</span>
-            <span class="next-prayer-countdown" id="nextPrayerCountdown"
-              >--:--:--</span
-            >
-          </div>
-        </section>
+          </section>
 
-        <!-- Calendar Card -->
-        <section class="card calendar-card" id="calendarCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📅</span>
-              Calendar
-            </h2>
-            <div class="calendar-toggle-btns">
-              <button class="calendar-type-btn active" data-type="hijri">
-                Hijri
-              </button>
-              <button class="calendar-type-btn" data-type="gregorian">
-                Gregorian
-              </button>
-            </div>
-          </div>
-          <div class="calendar-container" id="calendarContainer">
-            <div class="calendar-header">
-              <button class="calendar-nav-btn" id="prevMonth">❮</button>
-              <div class="calendar-month-year">
-                <span class="calendar-month" id="calendarMonth">--</span>
-                <span class="calendar-year" id="calendarYear">----</span>
+          <!-- Calendar Card -->
+          <section class="card calendar-card" id="calendarCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">📅</span>
+                Calendar
+              </h2>
+              <div class="calendar-toggle-btns">
+                <button class="calendar-type-btn active" data-type="hijri">
+                  Hijri
+                </button>
+                <button class="calendar-type-btn" data-type="gregorian">
+                  Gregorian
+                </button>
               </div>
-              <button class="calendar-nav-btn" id="nextMonth">❯</button>
             </div>
-            <div class="calendar-weekdays">
-              <span>Sun</span>
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
+            <div class="calendar-container" id="calendarContainer">
+              <div class="calendar-header">
+                <button class="calendar-nav-btn" id="prevMonth">❮</button>
+                <div class="calendar-month-year">
+                  <span class="calendar-month" id="calendarMonth">--</span>
+                  <span class="calendar-year" id="calendarYear">----</span>
+                </div>
+                <button class="calendar-nav-btn" id="nextMonth">❯</button>
+              </div>
+              <div class="calendar-weekdays">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+              <div class="calendar-days" id="calendarDays">
+                <!-- Calendar days will be dynamically generated -->
+              </div>
+              <div class="calendar-today-info" id="calendarTodayInfo">
+                <span class="hijri-date" id="hijriDateDisplay">--</span>
+                <span class="gregorian-date" id="gregorianDateDisplay">--</span>
+              </div>
             </div>
-            <div class="calendar-days" id="calendarDays">
-              <!-- Calendar days will be dynamically generated -->
-            </div>
-            <div class="calendar-today-info" id="calendarTodayInfo">
-              <span class="hijri-date" id="hijriDateDisplay">--</span>
-              <span class="gregorian-date" id="gregorianDateDisplay">--</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Qibla Direction Card -->
-        <section class="card qibla-card" id="qiblaCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🧭</span>
-              Qibla Direction
-            </h2>
-          </div>
-          <div class="qibla-compass-container">
-            <div class="compass-outer">
-              <div class="compass-ring">
-                <span class="compass-direction north">N</span>
-                <span class="compass-direction east">E</span>
-                <span class="compass-direction south">S</span>
-                <span class="compass-direction west">W</span>
-              </div>
-              <div class="compass-inner" id="compassInner">
-                <div class="qibla-needle" id="qiblaNeedle">
-                  <div class="needle-point"></div>
-                  <div class="kaaba-icon">🕋</div>
+          <!-- Qibla Direction Card -->
+          <section class="card qibla-card" id="qiblaCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">🧭</span>
+                Qibla Direction
+              </h2>
+            </div>
+            <div class="qibla-compass-container">
+              <div class="compass-outer">
+                <div class="compass-ring">
+                  <span class="compass-direction north">N</span>
+                  <span class="compass-direction east">E</span>
+                  <span class="compass-direction south">S</span>
+                  <span class="compass-direction west">W</span>
+                </div>
+                <div class="compass-inner" id="compassInner">
+                  <div class="qibla-needle" id="qiblaNeedle">
+                    <div class="needle-point"></div>
+                    <div class="kaaba-icon">🕋</div>
+                  </div>
                 </div>
               </div>
+              <div class="qibla-degree" id="qiblaDegree">--°</div>
+              <p class="qibla-instruction">
+                Point your device north for accurate direction
+              </p>
             </div>
-            <div class="qibla-degree" id="qiblaDegree">--°</div>
-            <p class="qibla-instruction">
-              Point your device north for accurate direction
-            </p>
-          </div>
-        </section>
+          </section>
+        </div>
 
         <!-- Weather Card -->
         <section class="card weather-card" id="weatherCard">

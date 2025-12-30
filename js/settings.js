@@ -920,7 +920,19 @@ class SettingsManager {
     // Save to storage
     this.storage.saveSettings(settings);
 
-    // Apply changes
+    // Apply immediate preview (if dashboard exists)
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyComponentVisibility === "function"
+    ) {
+      try {
+        window.dashboard.applyComponentVisibility();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Apply changes (may reload)
     this.applySettings(settings);
 
     // Show confirmation
@@ -1264,6 +1276,17 @@ class SettingsManager {
     if (this.modal) {
       this.modal.classList.remove("active");
     }
+    // Restore dashboard layout in case user made a live preview
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyComponentVisibility === "function"
+    ) {
+      try {
+        window.dashboard.applyComponentVisibility();
+      } catch (e) {
+        // ignore
+      }
+    }
   }
 
   /**
@@ -1470,6 +1493,58 @@ class SettingsManager {
         }
       });
     }
+
+    // Live preview for top components visibility (Prayer, Hijri, Qibla)
+    const previewHandler = () => {
+      const prayerChecked = this.visibilityPrayerTimes?.checked ?? true;
+      const hijriChecked = this.visibilityHijriCalendar?.checked ?? true;
+      const qiblaChecked = this.visibilityQiblaDirection?.checked ?? true;
+
+      const prayerCard = document.getElementById("prayerTimesCard");
+      const calCard = document.getElementById("calendarCard");
+      const qiblaCard = document.getElementById("qiblaCard");
+
+      if (prayerCard) {
+        prayerCard.style.display = prayerChecked ? "" : "none";
+        prayerCard.setAttribute(
+          "aria-hidden",
+          prayerChecked ? "false" : "true"
+        );
+      }
+      if (calCard) {
+        calCard.style.display = hijriChecked ? "" : "none";
+        calCard.setAttribute("aria-hidden", hijriChecked ? "false" : "true");
+      }
+      if (qiblaCard) {
+        qiblaCard.style.display = qiblaChecked ? "" : "none";
+        qiblaCard.setAttribute("aria-hidden", qiblaChecked ? "false" : "true");
+      }
+
+      const count =
+        (prayerChecked ? 1 : 0) +
+        (hijriChecked ? 1 : 0) +
+        (qiblaChecked ? 1 : 0);
+      const topFeatures = document.querySelector(".top-features");
+      if (topFeatures) {
+        topFeatures.classList.remove(
+          "columns-0",
+          "columns-1",
+          "columns-2",
+          "columns-3"
+        );
+        topFeatures.classList.add(`columns-${count}`);
+      }
+    };
+
+    [
+      this.visibilityPrayerTimes,
+      this.visibilityHijriCalendar,
+      this.visibilityQiblaDirection,
+    ].forEach((el) => {
+      if (el) {
+        el.addEventListener("change", previewHandler);
+      }
+    });
 
     // Change background now
     if (this.changeBackgroundBtn) {

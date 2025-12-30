@@ -487,6 +487,10 @@ class MuslimDashboard {
     const header = document.querySelector(".header");
     if (header) {
       header.style.display = visibility.header === false ? "none" : "";
+      header.setAttribute(
+        "aria-hidden",
+        visibility.header === false ? "true" : "false"
+      );
     }
 
     // Quick Pins
@@ -494,12 +498,20 @@ class MuslimDashboard {
     if (pinnedAppsSection) {
       pinnedAppsSection.style.display =
         visibility.quickPins === false ? "none" : "";
+      pinnedAppsSection.setAttribute(
+        "aria-hidden",
+        visibility.quickPins === false ? "true" : "false"
+      );
     }
 
     // Quotes
     const quoteSection = document.getElementById("quoteSection");
     if (quoteSection) {
       quoteSection.style.display = visibility.quotes === false ? "none" : "";
+      quoteSection.setAttribute(
+        "aria-hidden",
+        visibility.quotes === false ? "true" : "false"
+      );
     }
 
     // Prayer Times
@@ -507,6 +519,10 @@ class MuslimDashboard {
     if (prayerTimesCard) {
       prayerTimesCard.style.display =
         visibility.prayerTimes === false ? "none" : "";
+      prayerTimesCard.setAttribute(
+        "aria-hidden",
+        visibility.prayerTimes === false ? "true" : "false"
+      );
     }
 
     // Hijri Calendar
@@ -514,6 +530,10 @@ class MuslimDashboard {
     if (calendarCard) {
       calendarCard.style.display =
         visibility.hijriCalendar === false ? "none" : "";
+      calendarCard.setAttribute(
+        "aria-hidden",
+        visibility.hijriCalendar === false ? "true" : "false"
+      );
     }
 
     // Qibla Direction
@@ -521,12 +541,20 @@ class MuslimDashboard {
     if (qiblaCard) {
       qiblaCard.style.display =
         visibility.qiblaDirection === false ? "none" : "";
+      qiblaCard.setAttribute(
+        "aria-hidden",
+        visibility.qiblaDirection === false ? "true" : "false"
+      );
     }
 
     // Weather
     const weatherCard = document.getElementById("weatherCard");
     if (weatherCard) {
       weatherCard.style.display = visibility.weather === false ? "none" : "";
+      weatherCard.setAttribute(
+        "aria-hidden",
+        visibility.weather === false ? "true" : "false"
+      );
     }
 
     // Flashcards
@@ -534,12 +562,38 @@ class MuslimDashboard {
     if (flashcardCard) {
       flashcardCard.style.display =
         visibility.flashcards === false ? "none" : "";
+      flashcardCard.setAttribute(
+        "aria-hidden",
+        visibility.flashcards === false ? "true" : "false"
+      );
     }
 
     // Todo List
     const todoCard = document.getElementById("todoCard");
     if (todoCard) {
       todoCard.style.display = visibility.todoList === false ? "none" : "";
+      todoCard.setAttribute(
+        "aria-hidden",
+        visibility.todoList === false ? "true" : "false"
+      );
+    }
+
+    // Update top-features columns based on visible top features (prayer, hijri, qibla)
+    const topFeatures = document.querySelector(".top-features");
+    if (topFeatures) {
+      const topVisibleCount =
+        (visibility.prayerTimes !== false ? 1 : 0) +
+        (visibility.hijriCalendar !== false ? 1 : 0) +
+        (visibility.qiblaDirection !== false ? 1 : 0);
+
+      // clean previously applied classes
+      topFeatures.classList.remove(
+        "columns-0",
+        "columns-1",
+        "columns-2",
+        "columns-3"
+      );
+      topFeatures.classList.add(`columns-${topVisibleCount}`);
     }
   }
 
@@ -601,6 +655,8 @@ class MuslimDashboard {
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
   const dashboard = new MuslimDashboard();
+  // Expose instance for runtime interactions (settings live preview, debugging)
+  window.dashboard = dashboard;
   dashboard.init();
 });
 

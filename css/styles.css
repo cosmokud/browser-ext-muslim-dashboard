@@ -4864,3 +4864,62 @@ body.sticky-note-resizing {
   gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
+
+/* Top features responsive columns (prayer, hijri, qibla) */
+/* JS will add a class on .top-features like columns-3 / columns-2 / columns-1 */
+.top-features {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--spacing-xl);
+  align-items: stretch;
+  transition: grid-template-columns 0.25s ease;
+}
+
+.top-features.columns-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.top-features.columns-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.top-features.columns-1 {
+  grid-template-columns: 1fr;
+}
+.top-features.columns-0 {
+  grid-template-columns: 1fr;
+}
+
+/* Container-query aware fallbacks to ensure responsiveness */
+@supports (container-type: inline-size) {
+  @container (min-width: 1050px) {
+    .top-features.columns-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .top-features.columns-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .top-features.columns-1,
+    .top-features.columns-0 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @container (min-width: 700px) and (max-width: 1049px) {
+    .top-features.columns-3,
+    .top-features.columns-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .top-features.columns-1,
+    .top-features.columns-0 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @container (max-width: 699px) {
+    .top-features.columns-3,
+    .top-features.columns-2,
+    .top-features.columns-1,
+    .top-features.columns-0 {
+      grid-template-columns: 1fr;
+    }
+  }
+}
