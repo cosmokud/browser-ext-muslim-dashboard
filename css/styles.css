@@ -1587,7 +1587,7 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 770px) {
+/* @media (max-width: 770px) {
   .main-container {
     padding: var(--spacing-md);
   }
@@ -1635,15 +1635,15 @@ body {
     width: 44px;
     height: 44px;
   }
-}
+} */
 
 /* 641px–770px: keep content comfortably padded and centered (matches the small-screen centering intent without letting cards touch edges). */
-@media (min-width: 641px) and (max-width: 770px) {
+/* @media (min-width: 641px) and (max-width: 770px) {
   .main-container {
     padding-left: var(--spacing-lg);
     padding-right: var(--spacing-lg);
   }
-}
+} */
 
 @media (max-width: 480px) {
   html {
@@ -3905,7 +3905,7 @@ body.sticky-note-resizing {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 818px) {
   .weather-content {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
