@@ -9,6 +9,9 @@ class FlashcardManager {
   static MAX_SETS = 10;
   static PAGE_SIZE = 20;
 
+  static FLIP_ANIM_MS = 320;
+  static NAV_ANIM_MS = 320;
+
   constructor(storage) {
     this.storage = storage;
 
@@ -44,6 +47,11 @@ class FlashcardManager {
 
     // Debounce timer for editor saves
     this.saveTimer = null;
+
+    // Dashboard animation timers
+    this._dashboardAnimating = false;
+    this._dashboardMidTimer = null;
+    this._dashboardEndTimer = null;
   }
 
   async init() {
@@ -172,8 +180,100 @@ class FlashcardManager {
   }
 
   toggleFlip() {
-    this.isFlipped = !this.isFlipped;
-    this.renderDashboard();
+    this.animateFlipSwap();
+  }
+
+  prefersReducedMotion() {
+    try {
+      return !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    } catch {
+      return false;
+    }
+  }
+
+  cancelDashboardAnimation() {
+    if (this._dashboardMidTimer) clearTimeout(this._dashboardMidTimer);
+    if (this._dashboardEndTimer) clearTimeout(this._dashboardEndTimer);
+    this._dashboardMidTimer = null;
+    this._dashboardEndTimer = null;
+    this._dashboardAnimating = false;
+
+    if (this.flipCardEl) {
+      this.flipCardEl.classList.remove(
+        "flashcard-anim-flip",
+        "flashcard-anim-next",
+        "flashcard-anim-prev"
+      );
+    }
+  }
+
+  animateFlipSwap() {
+    // Flip should swap what is displayed (question <-> answer)
+    if (this.prefersReducedMotion() || !this.flipCardEl) {
+      this.isFlipped = !this.isFlipped;
+      this.renderDashboard();
+      return;
+    }
+
+    if (this._dashboardAnimating) return;
+    this._dashboardAnimating = true;
+
+    // Ensure nav animation isn't running
+    this.cancelDashboardAnimation();
+    this._dashboardAnimating = true;
+
+    this.flipCardEl.classList.add("flashcard-anim-flip");
+
+    this._dashboardMidTimer = setTimeout(() => {
+      this.isFlipped = !this.isFlipped;
+      this.renderDashboard();
+    }, Math.floor(FlashcardManager.FLIP_ANIM_MS / 2));
+
+    this._dashboardEndTimer = setTimeout(() => {
+      if (this.flipCardEl) this.flipCardEl.classList.remove("flashcard-anim-flip");
+      this._dashboardAnimating = false;
+      this._dashboardMidTimer = null;
+      this._dashboardEndTimer = null;
+    }, FlashcardManager.FLIP_ANIM_MS);
+  }
+
+  animateNavSwap(direction) {
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+    if (!cards.length) return;
+
+    const isNext = direction === "next";
+    const className = isNext ? "flashcard-anim-next" : "flashcard-anim-prev";
+
+    const advance = () => {
+      this.currentCardIndex = isNext
+        ? (this.currentCardIndex + 1) % cards.length
+        : (this.currentCardIndex - 1 + cards.length) % cards.length;
+      this.isFlipped = false;
+      this.renderDashboard();
+    };
+
+    if (this.prefersReducedMotion() || !this.flipCardEl) {
+      advance();
+      return;
+    }
+
+    // Restart animation cleanly on rapid clicks
+    this.cancelDashboardAnimation();
+    this._dashboardAnimating = true;
+
+    this.flipCardEl.classList.add(className);
+
+    this._dashboardMidTimer = setTimeout(() => {
+      advance();
+    }, Math.floor(FlashcardManager.NAV_ANIM_MS / 2));
+
+    this._dashboardEndTimer = setTimeout(() => {
+      if (this.flipCardEl) this.flipCardEl.classList.remove(className);
+      this._dashboardAnimating = false;
+      this._dashboardMidTimer = null;
+      this._dashboardEndTimer = null;
+    }, FlashcardManager.NAV_ANIM_MS);
   }
 
   normalizeCurrentIndex() {
@@ -190,24 +290,11 @@ class FlashcardManager {
   }
 
   gotoNextCard() {
-    const activeSet = this.getActiveSet();
-    const cards = activeSet?.cards || [];
-    if (!cards.length) return;
-
-    this.currentCardIndex = (this.currentCardIndex + 1) % cards.length;
-    this.isFlipped = false;
-    this.renderDashboard();
+    this.animateNavSwap("next");
   }
 
   gotoPrevCard() {
-    const activeSet = this.getActiveSet();
-    const cards = activeSet?.cards || [];
-    if (!cards.length) return;
-
-    this.currentCardIndex =
-      (this.currentCardIndex - 1 + cards.length) % cards.length;
-    this.isFlipped = false;
-    this.renderDashboard();
+    this.animateNavSwap("prev");
   }
 
   renderDashboard() {
@@ -219,12 +306,16 @@ class FlashcardManager {
     this.normalizeCurrentIndex();
 
     if (!cards.length) {
-      this.questionEl.textContent = "No flashcards yet";
-      this.answerEl.textContent = "Import a CSV in Settings → Flashcards";
+      // Only the front face is visible in the new swap-on-flip behavior,
+      // so include the hint in the primary text.
+      this.questionEl.textContent =
+        "No flashcards yet. Import a CSV in Settings → Flashcards";
+      this.answerEl.textContent = "";
       if (this.prevBtn) this.prevBtn.disabled = true;
       if (this.nextBtn) this.nextBtn.disabled = true;
       if (this.flipCardEl) {
-        this.flipCardEl.classList.toggle("is-flipped", this.isFlipped);
+        // We animate flips via keyframes; keep the card facing forward.
+        this.flipCardEl.classList.remove("is-flipped");
       }
       return;
     }
@@ -232,14 +323,23 @@ class FlashcardManager {
     const idx = Math.min(this.currentCardIndex, cards.length - 1);
     const card = cards[idx];
 
-    this.questionEl.textContent = card.question || "(empty question)";
-    this.answerEl.textContent = card.answer || "(empty answer)";
+    // Swap behavior: when flipped, show the answer in the primary (front) slot,
+    // and move the question to the secondary slot.
+    const frontText = this.isFlipped ? card.answer : card.question;
+    const backText = this.isFlipped ? card.question : card.answer;
+
+    const frontFallback = this.isFlipped ? "(empty answer)" : "(empty question)";
+    const backFallback = this.isFlipped ? "(empty question)" : "(empty answer)";
+
+    this.questionEl.textContent = frontText || frontFallback;
+    this.answerEl.textContent = backText || backFallback;
 
     if (this.prevBtn) this.prevBtn.disabled = cards.length <= 1;
     if (this.nextBtn) this.nextBtn.disabled = cards.length <= 1;
 
     if (this.flipCardEl) {
-      this.flipCardEl.classList.toggle("is-flipped", this.isFlipped);
+      // We animate flips via keyframes; keep the card facing forward.
+      this.flipCardEl.classList.remove("is-flipped");
     }
   }
 

@@ -2525,6 +2525,78 @@ body {
   cursor: pointer;
 }
 
+/* Dashboard animations (flip + next/prev) */
+.flashcard-flip-card.flashcard-anim-flip,
+.flashcard-flip-card.flashcard-anim-next,
+.flashcard-flip-card.flashcard-anim-prev {
+  transition: none !important;
+  will-change: transform, opacity;
+}
+
+.flashcard-flip-card.flashcard-anim-flip {
+  animation: flashcardFlipSwap 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+
+.flashcard-flip-card.flashcard-anim-next {
+  animation: flashcardNavNext 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+
+.flashcard-flip-card.flashcard-anim-prev {
+  animation: flashcardNavPrev 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+
+@keyframes flashcardFlipSwap {
+  0% {
+    transform: rotateY(0deg) scale(1);
+  }
+  50% {
+    transform: rotateY(90deg) scale(0.98);
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+  }
+}
+
+/* Next: slide old card left, new card in from right */
+@keyframes flashcardNavNext {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  45% {
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+  55% {
+    transform: translateX(14px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Prev: slide old card right, new card in from left */
+@keyframes flashcardNavPrev {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  45% {
+    transform: translateX(14px);
+    opacity: 0;
+  }
+  55% {
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .flashcard-flip-card:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 3px;
@@ -2576,6 +2648,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .flashcard-flip-card {
     transition: none !important;
+  }
+
+  .flashcard-flip-card.flashcard-anim-flip,
+  .flashcard-flip-card.flashcard-anim-next,
+  .flashcard-flip-card.flashcard-anim-prev {
+    animation: none !important;
   }
 }
 
