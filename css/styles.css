@@ -509,6 +509,8 @@ body {
   /* Keep card styling consistent, just lift it above the layout */
   z-index: 50;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  animation: none !important;
+  transform: none !important;
 }
 
 .floating-card:hover {

@@ -347,13 +347,15 @@ class FloatingModeManager {
       e.preventDefault();
 
       const rect = card.getBoundingClientRect();
+      const styleLeft = parseFloat(card.style.left);
+      const styleTop = parseFloat(card.style.top);
       const pointerX = e.clientX;
       const pointerY = e.clientY;
       st.dragging = {
         startX: pointerX,
         startY: pointerY,
-        startLeft: rect.left,
-        startTop: rect.top,
+        startLeft: Number.isFinite(styleLeft) ? styleLeft : rect.left,
+        startTop: Number.isFinite(styleTop) ? styleTop : rect.top,
       };
 
       try {
@@ -654,29 +656,38 @@ class FloatingModeManager {
     const card = st.card;
     if (!card.classList.contains("floating-card")) return;
 
+    // IMPORTANT: use inline styles as the source of truth.
+    // getBoundingClientRect() is affected by CSS transforms/animations, which can
+    // otherwise "nudge" a window on startup.
     const rect = card.getBoundingClientRect();
+    const styleLeft = parseFloat(card.style.left);
+    const styleTop = parseFloat(card.style.top);
+    const styleWidth = parseFloat(card.style.width);
+    const styleHeight = parseFloat(card.style.height);
+
+    const curLeft = Number.isFinite(styleLeft) ? styleLeft : rect.left;
+    const curTop = Number.isFinite(styleTop) ? styleTop : rect.top;
+    const curWidth = Number.isFinite(styleWidth) ? styleWidth : rect.width;
+    const curHeight = Number.isFinite(styleHeight) ? styleHeight : rect.height;
 
     const pad = this.viewportPadding;
-    const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
-    const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+    const maxLeft = Math.max(pad, window.innerWidth - curWidth - pad);
+    const maxTop = Math.max(pad, window.innerHeight - curHeight - pad);
 
-    const left = this.clamp(rect.left, pad, maxLeft);
-    const top = this.clamp(rect.top, pad, maxTop);
+    const clampedLeft = this.clamp(curLeft, pad, maxLeft);
+    const clampedTop = this.clamp(curTop, pad, maxTop);
 
-    const nextLeft = Math.round(left);
-    const nextTop = Math.round(top);
+    const nextLeft = Math.round(clampedLeft);
+    const nextTop = Math.round(clampedTop);
 
-    // Only write (and save) if clamping actually changes something.
-    const curLeft = parseFloat(card.style.left);
-    const curTop = parseFloat(card.style.top);
+    const prevLeft = Number.isFinite(styleLeft) ? Math.round(styleLeft) : null;
+    const prevTop = Number.isFinite(styleTop) ? Math.round(styleTop) : null;
 
-    card.style.left = `${nextLeft}px`;
-    card.style.top = `${nextTop}px`;
+    if (prevLeft !== nextLeft) card.style.left = `${nextLeft}px`;
+    if (prevTop !== nextTop) card.style.top = `${nextTop}px`;
 
-    if (
-      (Number.isFinite(curLeft) && curLeft !== nextLeft) ||
-      (Number.isFinite(curTop) && curTop !== nextTop)
-    ) {
+    // Persist only if clamping actually moved the window.
+    if ((prevLeft !== null && prevLeft !== nextLeft) || (prevTop !== null && prevTop !== nextTop)) {
       this.scheduleSave(key);
     }
   }
