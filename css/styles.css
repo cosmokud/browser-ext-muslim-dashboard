@@ -525,7 +525,7 @@ body {
 }
 
 .floating-card.floating-animate-in {
-  animation: floatingCardIn 220ms ease-out both;
+  animation: floatingCardIn 800ms ease both;
 }
 
 .floating-card:hover {
