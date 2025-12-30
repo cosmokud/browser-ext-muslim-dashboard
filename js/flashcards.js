@@ -180,13 +180,15 @@ class FlashcardManager {
 
     if (this.modeToggleBtn) {
       this.modeToggleBtn.dataset.mode = mode;
-      this.modeToggleBtn.textContent =
-        mode === "study" ? "Study mode" : "Test mode";
-      this.modeToggleBtn.title =
+      const icon = mode === "study" ? "📖" : "❓";
+      const nextTitle =
         mode === "study" ? "Switch to Test mode" : "Switch to Study mode";
+      this.modeToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true">${icon}</span>`;
+      this.modeToggleBtn.title = nextTitle;
+      this.modeToggleBtn.setAttribute("aria-label", nextTitle);
       this.modeToggleBtn.setAttribute(
-        "aria-label",
-        mode === "study" ? "Switch to Test mode" : "Switch to Study mode"
+        "aria-pressed",
+        mode === "study" ? "true" : "false"
       );
     }
   }

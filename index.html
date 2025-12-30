@@ -296,113 +296,117 @@
           </div>
         </section>
 
-        <!-- Flashcards Card -->
-        <section class="card flashcard-card" id="flashcardCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🃏</span>
-              Flashcards
-            </h2>
-            <button
-              class="flashcard-mode-toggle-btn"
-              id="flashcardModeToggleBtn"
-              type="button"
-              title="Switch flashcard mode"
-            >
-              Study mode
-            </button>
-          </div>
-          <div class="flashcard-viewer">
-            <button
-              class="flashcard-nav flashcard-nav-prev"
-              id="flashcardPrevBtn"
-              type="button"
-              aria-label="Previous card"
-              title="Previous"
-            >
-              ❮
-            </button>
-
-            <div class="flashcard-flip-scene" id="flashcardFlipScene">
-              <div
-                class="flashcard-flip-card"
-                id="flashcardFlipCard"
-                role="button"
-                tabindex="0"
-                aria-label="Flip flashcard"
+        <!-- Flashcards + Todo Row -->
+        <div class="flashcard-todo-row">
+          <!-- Flashcards Card -->
+          <section class="card flashcard-card" id="flashcardCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">🃏</span>
+                Flashcards
+              </h2>
+              <button
+                class="flashcard-mode-toggle-btn"
+                id="flashcardModeToggleBtn"
+                type="button"
+                aria-label="Toggle flashcard mode"
+                title="Toggle flashcard mode"
               >
-                <div class="flashcard-face flashcard-face-front">
-                  <div
-                    class="flashcard-face-content flashcard-question"
-                    id="flashcardQuestion"
-                  >
-                    Loading...
+                <span class="mode-icon">📖</span>
+              </button>
+            </div>
+            <div class="flashcard-viewer">
+              <button
+                class="flashcard-nav flashcard-nav-prev"
+                id="flashcardPrevBtn"
+                type="button"
+                aria-label="Previous card"
+                title="Previous"
+              >
+                ❮
+              </button>
+
+              <div class="flashcard-flip-scene" id="flashcardFlipScene">
+                <div
+                  class="flashcard-flip-card"
+                  id="flashcardFlipCard"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Flip flashcard"
+                >
+                  <div class="flashcard-face flashcard-face-front">
+                    <div
+                      class="flashcard-face-content flashcard-question"
+                      id="flashcardQuestion"
+                    >
+                      Loading...
+                    </div>
+                  </div>
+                  <div class="flashcard-face flashcard-face-back">
+                    <div
+                      class="flashcard-face-content flashcard-answer"
+                      id="flashcardAnswer"
+                    ></div>
                   </div>
                 </div>
-                <div class="flashcard-face flashcard-face-back">
-                  <div
-                    class="flashcard-face-content flashcard-answer"
-                    id="flashcardAnswer"
-                  ></div>
-                </div>
               </div>
-            </div>
 
-            <button
-              class="flashcard-nav flashcard-nav-next"
-              id="flashcardNextBtn"
-              type="button"
-              aria-label="Next card"
-              title="Next"
-            >
-              ❯
-            </button>
-          </div>
-        </section>
-
-        <!-- Todo List Card -->
-        <section class="card todo-card" id="todoCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">✅</span>
-              My Tasks
-            </h2>
-            <span class="todo-count" id="todoCount">0 tasks</span>
-          </div>
-          <div class="todo-input-container">
-            <input
-              type="text"
-              class="todo-input"
-              id="todoInput"
-              placeholder="Add a new task..."
-              maxlength="200"
-            />
-            <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+              <button
+                class="flashcard-nav flashcard-nav-next"
+                id="flashcardNextBtn"
+                type="button"
+                aria-label="Next card"
+                title="Next"
               >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="todo-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="active">Active</button>
-            <button class="filter-btn" data-filter="completed">
-              Completed
-            </button>
-          </div>
-          <ul class="todo-list" id="todoList"></ul>
-          <div class="todo-actions">
-            <button class="clear-completed-btn" id="clearCompletedBtn">
-              Clear Completed
-            </button>
-          </div>
-        </section>
+                ❯
+              </button>
+            </div>
+          </section>
+
+          <!-- Todo List Card -->
+          <section class="card todo-card" id="todoCard">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span class="card-icon">✅</span>
+                My Tasks
+              </h2>
+              <span class="todo-count" id="todoCount">0 tasks</span>
+            </div>
+            <div class="todo-input-container">
+              <input
+                type="text"
+                class="todo-input"
+                id="todoInput"
+                placeholder="Add a new task..."
+                maxlength="200"
+              />
+              <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="todo-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="active">Active</button>
+              <button class="filter-btn" data-filter="completed">
+                Completed
+              </button>
+            </div>
+            <ul class="todo-list" id="todoList"></ul>
+            <div class="todo-actions">
+              <button class="clear-completed-btn" id="clearCompletedBtn">
+                Clear Completed
+              </button>
+            </div>
+          </section>
+        </div>
       </main>
     </div>
 
