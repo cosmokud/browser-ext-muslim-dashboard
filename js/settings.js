@@ -5,13 +5,22 @@
  */
 
 class SettingsManager {
-  constructor(storage, prayerTimes, qibla, quotes, backgrounds, weather) {
+  constructor(
+    storage,
+    prayerTimes,
+    qibla,
+    quotes,
+    backgrounds,
+    weather,
+    flashcards
+  ) {
     this.storage = storage;
     this.prayerTimes = prayerTimes;
     this.qibla = qibla;
     this.quotes = quotes;
     this.backgrounds = backgrounds;
     this.weather = weather;
+    this.flashcards = flashcards;
 
     // Modal elements
     this.modal = document.getElementById("settingsModal");
@@ -148,6 +157,7 @@ class SettingsManager {
       "visibilityQiblaDirection"
     );
     this.visibilityWeather = document.getElementById("visibilityWeather");
+    this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]'
@@ -442,6 +452,8 @@ class SettingsManager {
         visibility.qiblaDirection !== false;
     if (this.visibilityWeather)
       this.visibilityWeather.checked = visibility.weather !== false;
+    if (this.visibilityFlashcards)
+      this.visibilityFlashcards.checked = visibility.flashcards !== false;
     if (this.visibilityTodoList)
       this.visibilityTodoList.checked = visibility.todoList !== false;
   }
@@ -993,6 +1005,7 @@ class SettingsManager {
       hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
       qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
       weather: this.visibilityWeather?.checked ?? true,
+      flashcards: this.visibilityFlashcards?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
     };
   }
@@ -1236,6 +1249,9 @@ class SettingsManager {
     if (this.quotes) {
       this.quotes.renderQuotesList();
     }
+    if (this.flashcards) {
+      this.flashcards.renderSettings();
+    }
     if (this.modal) {
       this.modal.classList.add("active");
     }
@@ -1263,6 +1279,10 @@ class SettingsManager {
     this.panels.forEach((panel) => {
       panel.classList.toggle("active", panel.id === `${tabName}Panel`);
     });
+
+    if (tabName === "flashcards" && this.flashcards) {
+      this.flashcards.renderSettings();
+    }
   }
 
   /**

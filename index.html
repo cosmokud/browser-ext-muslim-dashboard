@@ -296,6 +296,39 @@
           </div>
         </section>
 
+        <!-- Flashcards Card -->
+        <section class="card flashcard-card" id="flashcardCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🃏</span>
+              Flashcards
+            </h2>
+            <div class="flashcard-set-name" id="flashcardSetName">--</div>
+          </div>
+          <div class="flashcard-viewer">
+            <div class="flashcard-question" id="flashcardQuestion">
+              Loading...
+            </div>
+            <div class="flashcard-answer" id="flashcardAnswer"></div>
+            <div class="flashcard-actions">
+              <button
+                class="setting-btn flashcard-btn"
+                id="flashcardToggleAnswerBtn"
+                type="button"
+              >
+                Show Answer
+              </button>
+              <button
+                class="setting-btn flashcard-btn"
+                id="flashcardNextBtn"
+                type="button"
+              >
+                New Card
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- Todo List Card -->
         <section class="card todo-card" id="todoCard">
           <div class="card-header">
@@ -429,6 +462,9 @@
             </button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
             <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
+            <button class="settings-tab" data-tab="flashcards">
+              🃏 Flashcards
+            </button>
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
@@ -1126,6 +1162,12 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🃏</span>
+                  <span class="visibility-name">Flashcards</span>
+                  <input type="checkbox" id="visibilityFlashcards" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">✅</span>
                   <span class="visibility-name">To-Do List</span>
                   <input type="checkbox" id="visibilityTodoList" checked />
@@ -1308,6 +1350,55 @@
               </div>
               <div class="quotes-pagination" id="quotesPagination">
                 <!-- Pagination controls will be dynamically generated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Flashcards Settings -->
+          <div class="settings-panel" id="flashcardsPanel">
+            <div class="setting-group">
+              <label class="setting-label">Flashcard Sets</label>
+              <p class="setting-hint">
+                Import up to 10 CSV sets (2 columns: Question, Answer).
+              </p>
+              <div class="flashcards-toolbar">
+                <select
+                  class="setting-select"
+                  id="flashcardsSetSelect"
+                ></select>
+                <button class="setting-btn" id="flashcardsDeleteSetBtn">
+                  🗑️ Delete Set
+                </button>
+              </div>
+              <div class="flashcards-meta" id="flashcardsMeta"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Import / Export</label>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="flashcardsImportBtn">
+                  📥 Import CSV
+                </button>
+                <button class="setting-btn" id="flashcardsExportBtn">
+                  📤 Export CSV
+                </button>
+                <input
+                  type="file"
+                  id="flashcardsImportInput"
+                  accept=".csv,text/csv"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Manage Cards</label>
+              <div class="flashcards-editor" id="flashcardsEditorList"></div>
+              <div class="flashcards-editor-footer">
+                <button class="setting-btn" id="flashcardsAddCardBtn">
+                  ➕ Add Card
+                </button>
+                <div class="quotes-pagination" id="flashcardsPagination"></div>
               </div>
             </div>
           </div>
@@ -1621,6 +1712,7 @@
     <script src="js/pinnedapps.js"></script>
     <script src="js/calendar.js"></script>
     <script src="js/weather.js"></script>
+    <script src="js/flashcards.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/stickynotes.js"></script>
     <script src="js/app.js"></script>

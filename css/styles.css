@@ -2440,6 +2440,203 @@ body {
   flex-wrap: wrap;
 }
 
+/* ========================================
+   Flashcards
+   ======================================== */
+
+/* Dashboard card */
+.flashcard-set-name {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flashcard-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.flashcard-question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: break-word;
+  direction: auto;
+}
+
+.flashcard-answer {
+  display: none;
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  word-break: break-word;
+  direction: auto;
+  max-height: 140px;
+  overflow: auto;
+}
+
+.flashcard-answer.visible {
+  display: block;
+}
+
+.flashcard-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.flashcard-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Settings tab */
+.flashcards-toolbar {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.flashcards-toolbar .setting-select {
+  flex: 1;
+  min-width: 220px;
+}
+
+.flashcards-meta {
+  margin-top: var(--spacing-xs);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.flashcards-editor {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.flashcard-editor-header {
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr 34px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.flashcard-editor-body {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.flashcard-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr 34px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.flashcard-row:hover {
+  background: var(--glass-bg-hover);
+}
+
+.flashcard-row:last-child {
+  border-bottom: none;
+}
+
+.flashcard-row-index {
+  text-align: center;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.flashcard-row .setting-input.flashcard-cell {
+  margin: 0;
+}
+
+.flashcard-row-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.flashcard-row-delete:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.flashcards-editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+/* Custom scrollbars */
+.flashcard-editor-body::-webkit-scrollbar,
+.flashcard-answer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.flashcard-editor-body::-webkit-scrollbar-track,
+.flashcard-answer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.flashcard-editor-body::-webkit-scrollbar-thumb,
+.flashcard-answer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+}
+
+.flashcard-editor-body::-webkit-scrollbar-thumb:hover,
+.flashcard-answer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.flashcard-editor-body,
+.flashcard-answer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 560px) {
+  .flashcard-editor-header,
+  .flashcard-row {
+    grid-template-columns: 34px 1fr 1fr 30px;
+  }
+}
+
 /* Quotes list styles with pagination */
 .quotes-empty {
   text-align: center;

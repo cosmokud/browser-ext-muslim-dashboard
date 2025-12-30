@@ -19,6 +19,7 @@ class MuslimDashboard {
     this.calendar = null; // Will be initialized after DOM
     this.stickyNotes = null; // Will be initialized after DOM
     this.weather = null; // Will be initialized after DOM
+    this.flashcards = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -217,6 +218,10 @@ class MuslimDashboard {
     this.weather = new WeatherManager(this.storage);
     await this.weather.init();
 
+    // Initialize flashcards
+    this.flashcards = new FlashcardManager(this.storage);
+    await this.flashcards.init();
+
     // Initialize settings (after all other managers)
     this.settings = new SettingsManager(
       this.storage,
@@ -224,7 +229,8 @@ class MuslimDashboard {
       this.qibla,
       this.quotes,
       this.backgrounds,
-      this.weather
+      this.weather,
+      this.flashcards
     );
     this.settings.init();
 
@@ -521,6 +527,13 @@ class MuslimDashboard {
     const weatherCard = document.getElementById("weatherCard");
     if (weatherCard) {
       weatherCard.style.display = visibility.weather === false ? "none" : "";
+    }
+
+    // Flashcards
+    const flashcardCard = document.getElementById("flashcardCard");
+    if (flashcardCard) {
+      flashcardCard.style.display =
+        visibility.flashcards === false ? "none" : "";
     }
 
     // Todo List

@@ -167,6 +167,12 @@ class StorageManager {
         qiblaDirection: true,
         todoList: true,
         weather: true,
+        flashcards: true,
+      },
+
+      // Flashcards settings
+      flashcards: {
+        activeSetId: null,
       },
 
       // Heading customization settings
