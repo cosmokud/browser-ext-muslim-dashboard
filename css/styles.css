@@ -3681,12 +3681,13 @@ body.sticky-note-resizing {
 
 .weather-forecast {
   margin-top: var(--spacing-lg);
-  /* Switch to flexbox for responsive wrapping while preserving equal columns */
+  /* Flex-based grid: 4 columns by default, 10px gap. Uses flex-wrap for responsive rows. */
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  justify-content: space-between;
+  gap: 10px;
+  justify-content: flex-start; /* items expand to fill rows via equal flex-grow */
   align-items: stretch;
+  box-sizing: border-box;
 }
 
 .weather-forecast-day {
@@ -3698,9 +3699,11 @@ body.sticky-note-resizing {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   cursor: pointer;
   transition: all var(--transition-fast);
-  /* Default: 7 columns layout (flex-basis accounts for gaps) */
-  /* Allow shrinking on narrow viewports (matches grid minmax(0,1fr)) */
-  flex: 0 1 calc((100% - (6 * var(--spacing-sm))) / 7);
+  /* Default: 4 columns layout using a 10px gap.
+     flex-basis uses calc() to account for the 3 gaps between 4 columns.
+     flex-grow: 1 ensures that when the last row has fewer than 4 items,
+     those items grow equally to fill the full row width. */
+  flex: 1 1 calc((100% - (3 * 10px)) / 4);
   min-width: 0;
   box-sizing: border-box;
 }
@@ -3907,13 +3910,7 @@ body.sticky-note-resizing {
   display: block;
 }
 
-@media (max-width: 1000px) {
-  /* 4 columns layout */
-  .weather-forecast-day {
-    /* Allow shrinking on narrow viewports */
-    flex: 0 1 calc((100% - (3 * var(--spacing-sm))) / 4);
-  }
-}
+/* Removed: explicit 4-column breakpoint (default is 4 columns). */
 
 @media (max-width: 818px) {
   .weather-content {
@@ -3940,14 +3937,21 @@ body.sticky-note-resizing {
     gap: var(--spacing-lg);
   }
 
-  /* 2 columns layout */
-  .weather-forecast-day {
-    /* Allow shrinking on narrow viewports */
-    flex: 0 1 calc((100% - (1 * var(--spacing-sm))) / 2);
-  }
-
+  /* 2 columns layout for weather forecast moved to the mobile breakpoint (max-width: 640px) */
+  
   .weather-chart {
     height: 300px;
+  }
+} 
+
+/* Mobile: 2-column layout for weather forecast */
+@media (max-width: 640px) {
+  .weather-forecast {
+    gap: 10px;
+  }
+  .weather-forecast-day {
+    /* 2 columns layout on mobile: one 10px gap between two columns */
+    flex: 1 1 calc((100% - (1 * 10px)) / 2);
   }
 }
 
