@@ -170,6 +170,16 @@ class StorageManager {
         flashcards: true,
       },
 
+      // Floating mode (detached + draggable + resizable) for select components
+      // Stored in pixels relative to viewport (left/top/width/height)
+      floating: {
+        prayerTimes: { enabled: false, left: 40, top: 120, width: 420, height: 520, z: 10 },
+        hijriCalendar: { enabled: false, left: 480, top: 120, width: 420, height: 520, z: 10 },
+        qiblaDirection: { enabled: false, left: 920, top: 120, width: 420, height: 520, z: 10 },
+        flashcards: { enabled: false, left: 80, top: 680, width: 560, height: 360, z: 10 },
+        todoList: { enabled: false, left: 680, top: 680, width: 560, height: 360, z: 10 },
+      },
+
       // Flashcards settings
       flashcards: {
         activeSetId: null,

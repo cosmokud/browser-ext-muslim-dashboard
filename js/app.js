@@ -9,6 +9,9 @@ class MuslimDashboard {
     // Initialize storage
     this.storage = new StorageManager();
 
+    // Floating mode manager (detached draggable/resizable cards)
+    this.floating = new FloatingModeManager(this.storage);
+
     // Initialize managers
     this.backgrounds = new BackgroundManager(this.storage);
     this.prayerTimes = new PrayerTimesManager(this.storage);
@@ -240,6 +243,13 @@ class MuslimDashboard {
       settings.containerWidth || "narrow",
       settings.containerWidthCustom || 70
     );
+
+    // Apply floating mode positions/states before visibility + layout calculations
+    try {
+      this.floating.init();
+    } catch (e) {
+      console.warn("Floating mode init failed:", e);
+    }
 
     // Apply component visibility
     this.applyComponentVisibility();
@@ -581,10 +591,18 @@ class MuslimDashboard {
     // Update top-features columns based on visible top features (prayer, hijri, qibla)
     const topFeatures = document.querySelector(".top-features");
     if (topFeatures) {
-      const topVisibleCount =
-        (visibility.prayerTimes !== false ? 1 : 0) +
-        (visibility.hijriCalendar !== false ? 1 : 0) +
-        (visibility.qiblaDirection !== false ? 1 : 0);
+      // Count only cards that are actually still inside the grid (not floating)
+      const prayerTimesCard = document.getElementById("prayerTimesCard");
+      const calendarCard = document.getElementById("calendarCard");
+      const qiblaCard = document.getElementById("qiblaCard");
+
+      const topVisibleCount = [prayerTimesCard, calendarCard, qiblaCard].filter(
+        (el) =>
+          el &&
+          el.parentElement === topFeatures &&
+          el.getAttribute("aria-hidden") !== "true" &&
+          el.style.display !== "none"
+      ).length;
 
       // clean previously applied classes
       topFeatures.classList.remove(

@@ -204,6 +204,15 @@ class SettingsManager {
   loadSettings() {
     const settings = this.storage.getSettings();
 
+    // Keep floating mode button UI in sync (handled by FloatingModeManager)
+    try {
+      if (window.dashboard && window.dashboard.floating) {
+        window.dashboard.floating.updateAllButtons();
+      }
+    } catch (e) {
+      // ignore
+    }
+
     // Location settings
     const locationRadio = document.querySelector(
       `input[name="locationMethod"][value="${settings.locationMethod}"]`
