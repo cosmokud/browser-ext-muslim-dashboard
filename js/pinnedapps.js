@@ -24,7 +24,8 @@ class PinnedAppsManager {
     this.currentDropTarget = null;
     this.flipDurationMs = 160;
     this.flipEasing = "cubic-bezier(0.2, 0.8, 0.2, 1)";
-    this.container = document.getElementById("pinnedAppsGrid");
+    this.wrapper = document.getElementById("pinnedAppsGrid");
+    this.container = document.getElementById("pinnedAppsTrack") || this.wrapper;
     this.addBtn = document.getElementById("addPinnedAppBtn");
     this.modal = document.getElementById("pinnedAppModal");
     this.form = document.getElementById("pinnedAppForm");
@@ -728,6 +729,7 @@ class PinnedAppsManager {
       .forEach((el) => el.classList.remove("shift-left", "shift-right"));
 
     // Disable hover transforms while dragging to avoid rect jitter
+    this.wrapper?.classList.add("is-dragging");
     this.container?.classList.add("is-dragging");
 
     // Prevent the click that fires after a drag
@@ -1030,6 +1032,7 @@ class PinnedAppsManager {
       );
     });
 
+    this.wrapper?.classList.remove("is-dragging");
     this.container?.classList.remove("is-dragging");
 
     document.body.style.userSelect = "";
