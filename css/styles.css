@@ -957,7 +957,11 @@ body {
   height: 48px;
   opacity: 1;
   color: var(--text-primary);
-  background: linear-gradient(135deg, var(--settings-color), var(--settings-light));
+  background: linear-gradient(
+    135deg,
+    var(--settings-color),
+    var(--settings-light)
+  );
   border-radius: var(--radius-full);
   box-shadow: var(--settings-shadow);
   outline: 2px solid var(--accent-gold);
@@ -1028,7 +1032,11 @@ body {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   border: none;
   color: var(--text-primary);
   cursor: pointer;
@@ -1037,8 +1045,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: transform var(--transition-normal),
-    box-shadow var(--transition-normal),
-    opacity var(--transition-normal);
+    box-shadow var(--transition-normal), opacity var(--transition-normal);
 }
 
 /* When JS autohide is enabled the toggle is hidden by default and only shown when 'hot-visible' is active */
@@ -1048,8 +1055,7 @@ body {
   pointer-events: none;
   transform: translateY(8px) scale(0.98);
   transition: opacity var(--transition-normal),
-    transform var(--transition-normal),
-    visibility var(--transition-normal);
+    transform var(--transition-normal), visibility var(--transition-normal);
 }
 
 .fab-menu.autohide.hot-visible .fab-menu-toggle,
@@ -1139,7 +1145,11 @@ body {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--settings-color), var(--settings-light));
+  background: linear-gradient(
+    135deg,
+    var(--settings-color),
+    var(--settings-light)
+  );
   border: none;
   color: var(--text-primary);
   cursor: pointer;
@@ -1627,6 +1637,14 @@ body {
   }
 }
 
+/* 641px–770px: keep content comfortably padded and centered (matches the small-screen centering intent without letting cards touch edges). */
+@media (min-width: 641px) and (max-width: 770px) {
+  .main-container {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+}
+
 @media (max-width: 480px) {
   html {
     font-size: 14px;
@@ -1734,7 +1752,8 @@ body {
   display: flex;
   align-items: flex-start;
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
   padding: var(--spacing-md);
   background: var(--glass-bg);
   backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
@@ -1757,13 +1776,18 @@ body {
 
 .pinned-apps-track {
   flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: repeat(
-    var(--pinned-apps-per-row, 10),
-    var(--pinned-app-width)
+  width: min(
+    100%,
+    calc(
+      var(--pinned-apps-per-row, 10) *
+        (var(--pinned-app-width) + var(--pinned-app-gap)) -
+        var(--pinned-app-gap)
+    )
   );
-  justify-items: center;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
   gap: var(--pinned-app-gap);
 }
 
@@ -2555,7 +2579,7 @@ body {
     --pinned-app-width: 60px;
   }
 
-  .pinned-apps-grid {
+  .pinned-apps-track {
     gap: var(--spacing-sm);
   }
 
