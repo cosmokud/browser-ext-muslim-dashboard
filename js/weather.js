@@ -103,6 +103,11 @@ class WeatherManager {
     this.setupEventListeners();
     await this.fetchWeather();
 
+    // Trigger the hourly chart animation on initial load so it animates
+    // the same way it does when switching metric tabs.
+    this._startHourlyChartAnimation();
+    this.renderHourlyChart();
+
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
