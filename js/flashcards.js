@@ -162,7 +162,10 @@ class FlashcardManager {
     const mode = this.getMode();
 
     if (this.flipCardEl) {
-      this.flipCardEl.classList.toggle("flashcard-mode-study", mode === "study");
+      this.flipCardEl.classList.toggle(
+        "flashcard-mode-study",
+        mode === "study"
+      );
 
       if (mode === "study") {
         this.flipCardEl.setAttribute("aria-disabled", "true");
@@ -356,7 +359,8 @@ class FlashcardManager {
     }, Math.floor(FlashcardManager.FLIP_ANIM_MS / 2));
 
     this._dashboardEndTimer = setTimeout(() => {
-      if (this.flipCardEl) this.flipCardEl.classList.remove("flashcard-anim-flip");
+      if (this.flipCardEl)
+        this.flipCardEl.classList.remove("flashcard-anim-flip");
       this._dashboardAnimating = false;
       this._dashboardMidTimer = null;
       this._dashboardEndTimer = null;
