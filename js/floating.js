@@ -687,7 +687,10 @@ class FloatingModeManager {
     if (prevTop !== nextTop) card.style.top = `${nextTop}px`;
 
     // Persist only if clamping actually moved the window.
-    if ((prevLeft !== null && prevLeft !== nextLeft) || (prevTop !== null && prevTop !== nextTop)) {
+    if (
+      (prevLeft !== null && prevLeft !== nextLeft) ||
+      (prevTop !== null && prevTop !== nextTop)
+    ) {
       this.scheduleSave(key);
     }
   }
