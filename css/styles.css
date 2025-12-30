@@ -519,6 +519,21 @@ body {
   cursor: move;
 }
 
+/* When detached from .flashcard-todo-row, keep flashcard layout as a flex column
+   so the viewer can fill height and remain vertically centered. */
+.floating-card.flashcard-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.floating-card.flashcard-card .card-header {
+  flex: 0 0 auto;
+}
+
+.floating-card.flashcard-card .flashcard-viewer {
+  flex: 1 1 auto;
+}
+
 @media (max-width: 699px) {
   /* On small screens, floating is suspended via JS; this just avoids odd visuals */
   .floating-card {

@@ -46,6 +46,37 @@ class FloatingModeManager {
     this.runtime = new Map();
   }
 
+  getBoxStorageKey(key) {
+    return `floatingBox_${key}`;
+  }
+
+  getStoredBox(key) {
+    try {
+      return this.storage.get(this.getBoxStorageKey(key), null);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  persistBox(key, box) {
+    // Persist in two places:
+    // 1) settings.floating (for export/import and centralized config)
+    // 2) dedicated per-component key (more robust against accidental overwrites)
+    try {
+      const settings = this.getSettings();
+      settings.floating = settings.floating || {};
+      settings.floating[key] = {
+        ...(settings.floating[key] || {}),
+        ...(box || {}),
+      };
+      this.saveSettings(settings);
+    } catch (e) {}
+
+    try {
+      this.storage.set(this.getBoxStorageKey(key), box);
+    } catch (e) {}
+  }
+
   init() {
     // Prepare runtime state for each target
     for (const key of Object.keys(this.targets)) {
@@ -70,6 +101,8 @@ class FloatingModeManager {
         mutationObserver: null,
         saveTimer: null,
         minUpdateRaf: null,
+        dragPersistRaf: null,
+        dragPersistLastAt: 0,
       });
 
       if (button) {
@@ -155,7 +188,10 @@ class FloatingModeManager {
     this.applyOne(key);
 
     // Let layout recalculations run if the dashboard exposes it
-    if (window.dashboard && typeof window.dashboard.applyComponentVisibility === "function") {
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyComponentVisibility === "function"
+    ) {
       try {
         window.dashboard.applyComponentVisibility();
       } catch (e) {}
@@ -178,7 +214,10 @@ class FloatingModeManager {
     this.hasAppliedOnce = true;
     this.updateAllButtons();
 
-    if (window.dashboard && typeof window.dashboard.applyComponentVisibility === "function") {
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyComponentVisibility === "function"
+    ) {
       try {
         window.dashboard.applyComponentVisibility();
       } catch (e) {}
@@ -201,7 +240,10 @@ class FloatingModeManager {
 
     st.button.disabled = this.isViewportSuspended;
     if (this.isViewportSuspended) {
-      st.button.setAttribute("title", "Floating Mode is disabled on small screens");
+      st.button.setAttribute(
+        "title",
+        "Floating Mode is disabled on small screens"
+      );
     } else {
       st.button.setAttribute("title", "Toggle Floating Mode");
     }
@@ -257,7 +299,8 @@ class FloatingModeManager {
     document.body.appendChild(card);
     card.classList.add("floating-card");
 
-    const cfg = this.getSettings()?.floating?.[key] || {};
+    const cfg =
+      this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
     const left = this.safeNumber(cfg.left, 40);
     const top = this.safeNumber(cfg.top, 120);
     const width = this.safeNumber(cfg.width, 420);
@@ -281,7 +324,8 @@ class FloatingModeManager {
 
     // Dragging
     const handleSelector = this.targets[key]?.handleSelector;
-    const handle = (handleSelector ? card.querySelector(handleSelector) : null) ||
+    const handle =
+      (handleSelector ? card.querySelector(handleSelector) : null) ||
       card.querySelector(".card-header") ||
       card;
     handle.style.cursor = "move";
@@ -293,7 +337,10 @@ class FloatingModeManager {
       if (e.button !== undefined && e.button !== 0) return;
 
       // Don't hijack interactions
-      if (e.target && e.target.closest("button, a, input, textarea, select, [role='button']")) {
+      if (
+        e.target &&
+        e.target.closest("button, a, input, textarea, select, [role='button']")
+      ) {
         return;
       }
 
@@ -332,7 +379,9 @@ class FloatingModeManager {
       card.style.left = `${nextLeft}px`;
       card.style.top = `${nextTop}px`;
 
-      this.scheduleSave(key);
+      // Persist drag position while moving (throttled) so position survives even
+      // if pointerup is missed or the tab closes mid-drag.
+      this.scheduleDragPersist(key);
     };
 
     const onPointerUp = () => {
@@ -393,7 +442,10 @@ class FloatingModeManager {
     // Cleanup handlers
     try {
       if (st._floatingHandle && st._onPointerDown) {
-        st._floatingHandle.removeEventListener("pointerdown", st._onPointerDown);
+        st._floatingHandle.removeEventListener(
+          "pointerdown",
+          st._onPointerDown
+        );
       }
     } catch (e) {}
 
@@ -443,7 +495,11 @@ class FloatingModeManager {
       } catch (e) {
         // Fallback: append to original parent
         try {
-          (st.originalParent || document.querySelector(".content-grid") || document.body).appendChild(card);
+          (
+            st.originalParent ||
+            document.querySelector(".content-grid") ||
+            document.body
+          ).appendChild(card);
         } catch (e2) {}
       }
     } else if (st.originalParent) {
@@ -488,6 +544,22 @@ class FloatingModeManager {
       st.saveTimer = null;
       this.flushSave(key);
     }, 120);
+  }
+
+  scheduleDragPersist(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return;
+    if (!st.card.classList.contains("floating-card")) return;
+
+    if (st.dragPersistRaf) return;
+    st.dragPersistRaf = requestAnimationFrame(() => {
+      st.dragPersistRaf = null;
+      const now = Date.now();
+      // Throttle localStorage writes; still frequent enough to feel instantaneous.
+      if (now - (st.dragPersistLastAt || 0) < 80) return;
+      st.dragPersistLastAt = now;
+      this.flushSave(key);
+    });
   }
 
   scheduleMinUpdate(key) {
@@ -546,21 +618,34 @@ class FloatingModeManager {
     const card = st.card;
     const rect = card.getBoundingClientRect();
 
+    // Prefer inline styles for position; they are the source of truth for dragging.
+    // (Using getBoundingClientRect() alone can be stale in rare timing cases.)
+    const styleLeft = parseFloat(card.style.left);
+    const styleTop = parseFloat(card.style.top);
+    const left = Number.isFinite(styleLeft) ? styleLeft : rect.left;
+    const top = Number.isFinite(styleTop) ? styleTop : rect.top;
+
+    // Prefer inline width/height (set by resize handles), fallback to rect.
+    const styleWidth = parseFloat(card.style.width);
+    const styleHeight = parseFloat(card.style.height);
+    const width = Number.isFinite(styleWidth) ? styleWidth : rect.width;
+    const height = Number.isFinite(styleHeight) ? styleHeight : rect.height;
+
     const settings = this.getSettings();
     settings.floating = settings.floating || {};
     const prev = settings.floating[key] || {};
 
-    settings.floating[key] = {
+    const box = {
       ...prev,
-      left: Math.round(rect.left),
-      top: Math.round(rect.top),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height),
+      left: Math.round(left),
+      top: Math.round(top),
+      width: Math.round(width),
+      height: Math.round(height),
       enabled: true,
       z: this.safeNumber(parseInt(card.style.zIndex || "10", 10), prev.z ?? 10),
     };
 
-    this.saveSettings(settings);
+    this.persistBox(key, box);
   }
 
   clampCardToViewport(key) {
@@ -578,8 +663,22 @@ class FloatingModeManager {
     const left = this.clamp(rect.left, pad, maxLeft);
     const top = this.clamp(rect.top, pad, maxTop);
 
-    card.style.left = `${Math.round(left)}px`;
-    card.style.top = `${Math.round(top)}px`;
+    const nextLeft = Math.round(left);
+    const nextTop = Math.round(top);
+
+    // Only write (and save) if clamping actually changes something.
+    const curLeft = parseFloat(card.style.left);
+    const curTop = parseFloat(card.style.top);
+
+    card.style.left = `${nextLeft}px`;
+    card.style.top = `${nextTop}px`;
+
+    if (
+      (Number.isFinite(curLeft) && curLeft !== nextLeft) ||
+      (Number.isFinite(curTop) && curTop !== nextTop)
+    ) {
+      this.scheduleSave(key);
+    }
   }
 
   safeNumber(value, fallback) {
