@@ -509,8 +509,23 @@ body {
   /* Keep card styling consistent, just lift it above the layout */
   z-index: 50;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
-  animation: none !important;
-  transform: none !important;
+  /* Prevent the base .card entrance animation (it uses transforms) */
+  animation: none;
+}
+
+@keyframes floatingCardIn {
+  0% {
+    opacity: 0.01;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  }
+}
+
+.floating-card.floating-animate-in {
+  animation: floatingCardIn 220ms ease-out both;
 }
 
 .floating-card:hover {

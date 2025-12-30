@@ -299,6 +299,27 @@ class FloatingModeManager {
     document.body.appendChild(card);
     card.classList.add("floating-card");
 
+    // Safe startup animation (no transforms)
+    card.classList.remove("floating-animate-in");
+    // Force reflow so re-adding the class retriggers animation reliably
+    try {
+      void card.offsetWidth;
+    } catch (e) {}
+    card.classList.add("floating-animate-in");
+    const onAnimEnd = (e) => {
+      if (e && e.target !== card) return;
+      card.classList.remove("floating-animate-in");
+      card.removeEventListener("animationend", onAnimEnd);
+    };
+    card.addEventListener("animationend", onAnimEnd);
+    // Fallback: remove class even if animationend doesn't fire
+    window.setTimeout(() => {
+      try {
+        card.classList.remove("floating-animate-in");
+        card.removeEventListener("animationend", onAnimEnd);
+      } catch (e) {}
+    }, 500);
+
     const cfg =
       this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
     const left = this.safeNumber(cfg.left, 40);
