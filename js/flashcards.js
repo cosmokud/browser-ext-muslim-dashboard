@@ -22,6 +22,7 @@ class FlashcardManager {
     this.nextBtn = document.getElementById("flashcardNextBtn");
     this.questionEl = document.getElementById("flashcardQuestion");
     this.answerEl = document.getElementById("flashcardAnswer");
+    this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
 
     // Settings elements (may not exist until modal opened)
     this.settingsSetSelect = null;
@@ -33,6 +34,10 @@ class FlashcardManager {
     this.settingsList = null;
     this.settingsPagination = null;
     this.settingsMeta = null;
+
+    // Mode controls (Settings tab)
+    this.settingsModeSelect = null;
+    this.settingsStudyAutoAdvanceSeconds = null;
 
     // Typography controls (Settings tab)
     this.settingsQuestionFontSize = null;
@@ -52,13 +57,18 @@ class FlashcardManager {
     this._dashboardAnimating = false;
     this._dashboardMidTimer = null;
     this._dashboardEndTimer = null;
+
+    // Study mode auto-advance timer
+    this._autoAdvanceTimer = null;
   }
 
   async init() {
     await this.ensureDefaultSet();
     this.applyTypography();
     this.bindDashboardEvents();
+    this.applyModeToDashboard();
     this.renderDashboard();
+    this.ensureAutoAdvanceState({ reset: true });
   }
 
   // ---------- Storage ----------
@@ -97,6 +107,117 @@ class FlashcardManager {
     const activeId = this.getActiveSetId();
     if (!sets.length) return null;
     return sets.find((s) => s.id === activeId) || sets[0];
+  }
+
+  // ---------- Mode + auto-advance ----------
+
+  normalizeMode(mode) {
+    return mode === "test" ? "test" : "study";
+  }
+
+  getMode() {
+    const settings = this.getFlashcardSettings();
+    return this.normalizeMode(settings.mode);
+  }
+
+  isStudyMode() {
+    return this.getMode() === "study";
+  }
+
+  setMode(mode) {
+    const next = this.normalizeMode(mode);
+    this.setFlashcardSettings({ mode: next });
+
+    // Study mode doesn't flip; keep the card in a consistent state.
+    this.isFlipped = false;
+    this.cancelDashboardAnimation();
+    this.applyModeToDashboard();
+    this.renderDashboard();
+    this.ensureAutoAdvanceState({ reset: true });
+  }
+
+  toggleMode() {
+    const current = this.getMode();
+    this.setMode(current === "study" ? "test" : "study");
+  }
+
+  getStudyAutoAdvanceSeconds() {
+    const settings = this.getFlashcardSettings();
+    return this.clampNumber(
+      parseInt(settings.studyAutoAdvanceSeconds, 10),
+      1,
+      3600,
+      10
+    );
+  }
+
+  setStudyAutoAdvanceSeconds(seconds) {
+    const clamped = this.clampNumber(parseInt(seconds, 10), 1, 3600, 10);
+    this.setFlashcardSettings({ studyAutoAdvanceSeconds: clamped });
+    this.ensureAutoAdvanceState({ reset: true });
+    return clamped;
+  }
+
+  applyModeToDashboard() {
+    const mode = this.getMode();
+
+    if (this.flipCardEl) {
+      this.flipCardEl.classList.toggle("flashcard-mode-study", mode === "study");
+
+      if (mode === "study") {
+        this.flipCardEl.setAttribute("aria-disabled", "true");
+        this.flipCardEl.setAttribute("tabindex", "-1");
+        this.flipCardEl.setAttribute("aria-label", "Flashcard (study mode)");
+      } else {
+        this.flipCardEl.removeAttribute("aria-disabled");
+        this.flipCardEl.setAttribute("tabindex", "0");
+        this.flipCardEl.setAttribute("aria-label", "Flip flashcard");
+      }
+    }
+
+    if (this.modeToggleBtn) {
+      this.modeToggleBtn.dataset.mode = mode;
+      this.modeToggleBtn.textContent =
+        mode === "study" ? "Study mode" : "Test mode";
+      this.modeToggleBtn.title =
+        mode === "study" ? "Switch to Test mode" : "Switch to Study mode";
+      this.modeToggleBtn.setAttribute(
+        "aria-label",
+        mode === "study" ? "Switch to Test mode" : "Switch to Study mode"
+      );
+    }
+  }
+
+  clearAutoAdvanceTimer() {
+    if (this._autoAdvanceTimer) {
+      clearTimeout(this._autoAdvanceTimer);
+      this._autoAdvanceTimer = null;
+    }
+  }
+
+  ensureAutoAdvanceState({ reset = false } = {}) {
+    const isStudy = this.isStudyMode();
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+
+    if (!isStudy || cards.length <= 1) {
+      this.clearAutoAdvanceTimer();
+      return;
+    }
+
+    const seconds = this.getStudyAutoAdvanceSeconds();
+
+    if (reset) {
+      this.clearAutoAdvanceTimer();
+    }
+
+    if (this._autoAdvanceTimer) return;
+
+    this._autoAdvanceTimer = setTimeout(() => {
+      this._autoAdvanceTimer = null;
+      // Uses the same path as manual navigation so timing stays consistent.
+      this.gotoNextCard();
+    }, seconds * 1000);
   }
 
   // ---------- Default bootstrap ----------
@@ -148,6 +269,13 @@ class FlashcardManager {
   // ---------- Dashboard ----------
 
   bindDashboardEvents() {
+    if (this.modeToggleBtn) {
+      this.modeToggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.toggleMode();
+      });
+    }
+
     if (this.prevBtn) {
       this.prevBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -180,6 +308,7 @@ class FlashcardManager {
   }
 
   toggleFlip() {
+    if (this.isStudyMode()) return;
     this.animateFlipSwap();
   }
 
@@ -295,10 +424,12 @@ class FlashcardManager {
 
   gotoNextCard() {
     this.animateNavSwap("next");
+    this.ensureAutoAdvanceState({ reset: true });
   }
 
   gotoPrevCard() {
     this.animateNavSwap("prev");
+    this.ensureAutoAdvanceState({ reset: true });
   }
 
   renderDashboard() {
@@ -306,6 +437,10 @@ class FlashcardManager {
     const cards = activeSet?.cards || [];
 
     if (!this.questionEl || !this.answerEl) return;
+
+    this.applyModeToDashboard();
+    const isStudy = this.isStudyMode();
+    if (isStudy) this.isFlipped = false;
 
     this.normalizeCurrentIndex();
 
@@ -318,32 +453,48 @@ class FlashcardManager {
         // Keep the physical card facing forward; we swap text instead.
         this.flipCardEl.classList.remove("is-flipped");
       }
+
+      this.ensureAutoAdvanceState();
       return;
     }
 
     const idx = Math.min(this.currentCardIndex, cards.length - 1);
     const card = cards[idx];
 
-    const frontText = this.isFlipped ? card.answer : card.question;
-    const backText = this.isFlipped ? card.question : card.answer;
+    if (isStudy) {
+      this.questionEl.textContent = card.question || "(empty question)";
+      this.answerEl.textContent = card.answer || "(empty answer)";
 
-    const frontFallback = this.isFlipped ? "(empty answer)" : "(empty question)";
-    const backFallback = this.isFlipped ? "(empty question)" : "(empty answer)";
-
-    this.questionEl.textContent = frontText || frontFallback;
-    this.answerEl.textContent = backText || backFallback;
-
-    // Ensure the visible face uses the correct typography.
-    if (this.isFlipped) {
-      this.questionEl.classList.remove("flashcard-question");
-      this.questionEl.classList.add("flashcard-answer");
-      this.answerEl.classList.remove("flashcard-answer");
-      this.answerEl.classList.add("flashcard-question");
-    } else {
       this.questionEl.classList.remove("flashcard-answer");
       this.questionEl.classList.add("flashcard-question");
       this.answerEl.classList.remove("flashcard-question");
       this.answerEl.classList.add("flashcard-answer");
+    } else {
+      const frontText = this.isFlipped ? card.answer : card.question;
+      const backText = this.isFlipped ? card.question : card.answer;
+
+      const frontFallback = this.isFlipped
+        ? "(empty answer)"
+        : "(empty question)";
+      const backFallback = this.isFlipped
+        ? "(empty question)"
+        : "(empty answer)";
+
+      this.questionEl.textContent = frontText || frontFallback;
+      this.answerEl.textContent = backText || backFallback;
+
+      // Ensure the visible face uses the correct typography.
+      if (this.isFlipped) {
+        this.questionEl.classList.remove("flashcard-question");
+        this.questionEl.classList.add("flashcard-answer");
+        this.answerEl.classList.remove("flashcard-answer");
+        this.answerEl.classList.add("flashcard-question");
+      } else {
+        this.questionEl.classList.remove("flashcard-answer");
+        this.questionEl.classList.add("flashcard-question");
+        this.answerEl.classList.remove("flashcard-question");
+        this.answerEl.classList.add("flashcard-answer");
+      }
     }
 
     if (this.prevBtn) this.prevBtn.disabled = cards.length <= 1;
@@ -353,6 +504,8 @@ class FlashcardManager {
       // Keep the physical card facing forward; we swap text instead.
       this.flipCardEl.classList.remove("is-flipped");
     }
+
+    this.ensureAutoAdvanceState();
   }
 
   // ---------- Settings UI ----------
@@ -369,6 +522,11 @@ class FlashcardManager {
     this.settingsList = document.getElementById("flashcardsEditorList");
     this.settingsPagination = document.getElementById("flashcardsPagination");
     this.settingsMeta = document.getElementById("flashcardsMeta");
+
+    this.settingsModeSelect = document.getElementById("flashcardsModeSelect");
+    this.settingsStudyAutoAdvanceSeconds = document.getElementById(
+      "flashcardsStudyAutoAdvanceSeconds"
+    );
 
     this.settingsQuestionFontSize = document.getElementById(
       "flashcardsQuestionFontSize"
@@ -401,6 +559,7 @@ class FlashcardManager {
       this.isFlipped = false;
       this.renderSettings();
       this.renderDashboard();
+      this.ensureAutoAdvanceState({ reset: true });
     });
 
     const bindTypography = () => {
@@ -433,6 +592,23 @@ class FlashcardManager {
     };
 
     bindTypography();
+
+    if (this.settingsModeSelect) {
+      this.settingsModeSelect.addEventListener("change", () => {
+        const mode = this.normalizeMode(this.settingsModeSelect.value);
+        this.setMode(mode);
+        this.renderSettings();
+      });
+    }
+
+    if (this.settingsStudyAutoAdvanceSeconds) {
+      this.settingsStudyAutoAdvanceSeconds.addEventListener("change", () => {
+        const seconds = this.setStudyAutoAdvanceSeconds(
+          this.settingsStudyAutoAdvanceSeconds.value
+        );
+        this.settingsStudyAutoAdvanceSeconds.value = String(seconds);
+      });
+    }
 
     if (this.settingsImportBtn && this.settingsImportInput) {
       this.settingsImportBtn.addEventListener("click", () => {
@@ -530,6 +706,16 @@ class FlashcardManager {
       this.settingsAnswerFontSize.value = String(t.answer);
     this.updateTypographyLabels(t.question, t.answer);
     this.applyTypography();
+
+    if (this.settingsModeSelect) {
+      this.settingsModeSelect.value = this.getMode();
+    }
+
+    if (this.settingsStudyAutoAdvanceSeconds) {
+      this.settingsStudyAutoAdvanceSeconds.value = String(
+        this.getStudyAutoAdvanceSeconds()
+      );
+    }
 
     this.renderEditorList();
     this.renderPagination();

@@ -303,6 +303,14 @@
               <span class="card-icon">🃏</span>
               Flashcards
             </h2>
+            <button
+              class="flashcard-mode-toggle-btn"
+              id="flashcardModeToggleBtn"
+              type="button"
+              title="Switch flashcard mode"
+            >
+              Study mode
+            </button>
           </div>
           <div class="flashcard-viewer">
             <button
@@ -1394,6 +1402,33 @@
                 </button>
               </div>
               <div class="flashcards-meta" id="flashcardsMeta"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Default Flashcard Mode</label>
+              <p class="setting-hint">
+                Study mode shows question + answer and can auto-advance.
+              </p>
+              <select class="setting-select" id="flashcardsModeSelect">
+                <option value="study">Study mode</option>
+                <option value="test">Test mode</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Study Auto-Advance (seconds)</label>
+              <p class="setting-hint">
+                In Study mode, automatically moves to the next card after this
+                many seconds.
+              </p>
+              <input
+                type="number"
+                class="setting-input"
+                id="flashcardsStudyAutoAdvanceSeconds"
+                min="1"
+                max="3600"
+                placeholder="10"
+              />
             </div>
 
             <div class="setting-group">

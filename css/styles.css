@@ -2467,6 +2467,34 @@ body {
   padding: 0 44px;
 }
 
+.flashcard-mode-toggle-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), transform var(--transition-fast);
+  will-change: background, color;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  white-space: nowrap;
+}
+
+.flashcard-mode-toggle-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+  transform: translateY(-1px);
+}
+
+.flashcard-mode-toggle-btn[data-mode="study"] {
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+}
+
 .flashcard-nav {
   position: absolute;
   top: 50%;
@@ -2523,6 +2551,37 @@ body {
   transform-style: preserve-3d;
   transition: transform var(--transition-normal);
   cursor: pointer;
+}
+
+/* Study mode: show question + answer stacked in one container */
+.flashcard-flip-card.flashcard-mode-study {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+.flashcard-flip-card.flashcard-mode-study .flashcard-face {
+  position: relative;
+  inset: auto;
+  padding: 0;
+  display: block;
+  border-radius: 0;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.flashcard-flip-card.flashcard-mode-study .flashcard-face-back {
+  transform: none;
+  border-top: 1px solid var(--glass-border);
+  padding-top: var(--spacing-md);
+}
+
+.flashcard-flip-card.flashcard-mode-study .flashcard-face-content {
+  max-height: none;
+  overflow: visible;
 }
 
 /* Dashboard animations (flip + next/prev) */

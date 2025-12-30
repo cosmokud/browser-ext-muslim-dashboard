@@ -173,6 +173,8 @@ class StorageManager {
       // Flashcards settings
       flashcards: {
         activeSetId: null,
+        mode: "study", // 'study' or 'test'
+        studyAutoAdvanceSeconds: 10,
         questionFontSize: 22,
         answerFontSize: 18,
       },
