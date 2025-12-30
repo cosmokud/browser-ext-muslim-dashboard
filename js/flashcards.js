@@ -208,17 +208,14 @@ class FlashcardManager {
   }
 
   animateFlipSwap() {
-    // Flip should swap what is displayed (question <-> answer)
+    // Vertical flip animation + swap at midpoint.
     if (this.prefersReducedMotion() || !this.flipCardEl) {
       this.isFlipped = !this.isFlipped;
       this.renderDashboard();
       return;
     }
 
-    if (this._dashboardAnimating) return;
-    this._dashboardAnimating = true;
-
-    // Ensure nav animation isn't running
+    // Restart cleanly on rapid clicks
     this.cancelDashboardAnimation();
     this._dashboardAnimating = true;
 
@@ -260,6 +257,13 @@ class FlashcardManager {
 
     // Restart animation cleanly on rapid clicks
     this.cancelDashboardAnimation();
+
+    // Always start nav animation from the front face to avoid transform conflicts.
+    if (this.isFlipped) {
+      this.isFlipped = false;
+      this.renderDashboard();
+    }
+
     this._dashboardAnimating = true;
 
     this.flipCardEl.classList.add(className);
@@ -306,15 +310,12 @@ class FlashcardManager {
     this.normalizeCurrentIndex();
 
     if (!cards.length) {
-      // Only the front face is visible in the new swap-on-flip behavior,
-      // so include the hint in the primary text.
-      this.questionEl.textContent =
-        "No flashcards yet. Import a CSV in Settings → Flashcards";
-      this.answerEl.textContent = "";
+      this.questionEl.textContent = "No flashcards yet";
+      this.answerEl.textContent = "Import a CSV in Settings → Flashcards";
       if (this.prevBtn) this.prevBtn.disabled = true;
       if (this.nextBtn) this.nextBtn.disabled = true;
       if (this.flipCardEl) {
-        // We animate flips via keyframes; keep the card facing forward.
+        // Keep the physical card facing forward; we swap text instead.
         this.flipCardEl.classList.remove("is-flipped");
       }
       return;
@@ -323,8 +324,6 @@ class FlashcardManager {
     const idx = Math.min(this.currentCardIndex, cards.length - 1);
     const card = cards[idx];
 
-    // Swap behavior: when flipped, show the answer in the primary (front) slot,
-    // and move the question to the secondary slot.
     const frontText = this.isFlipped ? card.answer : card.question;
     const backText = this.isFlipped ? card.question : card.answer;
 
@@ -334,11 +333,24 @@ class FlashcardManager {
     this.questionEl.textContent = frontText || frontFallback;
     this.answerEl.textContent = backText || backFallback;
 
+    // Ensure the visible face uses the correct typography.
+    if (this.isFlipped) {
+      this.questionEl.classList.remove("flashcard-question");
+      this.questionEl.classList.add("flashcard-answer");
+      this.answerEl.classList.remove("flashcard-answer");
+      this.answerEl.classList.add("flashcard-question");
+    } else {
+      this.questionEl.classList.remove("flashcard-answer");
+      this.questionEl.classList.add("flashcard-question");
+      this.answerEl.classList.remove("flashcard-question");
+      this.answerEl.classList.add("flashcard-answer");
+    }
+
     if (this.prevBtn) this.prevBtn.disabled = cards.length <= 1;
     if (this.nextBtn) this.nextBtn.disabled = cards.length <= 1;
 
     if (this.flipCardEl) {
-      // We animate flips via keyframes; keep the card facing forward.
+      // Keep the physical card facing forward; we swap text instead.
       this.flipCardEl.classList.remove("is-flipped");
     }
   }
@@ -402,13 +414,13 @@ class FlashcardManager {
         const q = this.clampNumber(
           parseInt(this.settingsQuestionFontSize.value, 10),
           12,
-          48,
+          72,
           22
         );
         const a = this.clampNumber(
           parseInt(this.settingsAnswerFontSize.value, 10),
           12,
-          48,
+          72,
           18
         );
         this.setFlashcardSettings({ questionFontSize: q, answerFontSize: a });
@@ -613,13 +625,13 @@ class FlashcardManager {
       question: this.clampNumber(
         parseInt(settings.questionFontSize, 10),
         12,
-        48,
+        72,
         22
       ),
       answer: this.clampNumber(
         parseInt(settings.answerFontSize, 10),
         12,
-        48,
+        72,
         18
       ),
     };

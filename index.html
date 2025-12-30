@@ -324,13 +324,16 @@
                 aria-label="Flip flashcard"
               >
                 <div class="flashcard-face flashcard-face-front">
-                  <div class="flashcard-face-content" id="flashcardQuestion">
+                  <div
+                    class="flashcard-face-content flashcard-question"
+                    id="flashcardQuestion"
+                  >
                     Loading...
                   </div>
                 </div>
                 <div class="flashcard-face flashcard-face-back">
                   <div
-                    class="flashcard-face-content"
+                    class="flashcard-face-content flashcard-answer"
                     id="flashcardAnswer"
                   ></div>
                 </div>
@@ -1406,7 +1409,7 @@
                     type="range"
                     id="flashcardsQuestionFontSize"
                     min="12"
-                    max="48"
+                    max="72"
                     step="1"
                   />
                   <span
@@ -1421,7 +1424,7 @@
                     type="range"
                     id="flashcardsAnswerFontSize"
                     min="12"
-                    max="48"
+                    max="72"
                     step="1"
                   />
                   <span

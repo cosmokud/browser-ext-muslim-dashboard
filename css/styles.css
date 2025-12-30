@@ -2534,7 +2534,19 @@ body {
 }
 
 .flashcard-flip-card.flashcard-anim-flip {
-  animation: flashcardFlipSwap 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+  animation: flashcardFlipSwapVertical 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+
+@keyframes flashcardFlipSwapVertical {
+  0% {
+    transform: rotateX(0deg) scale(1);
+  }
+  50% {
+    transform: rotateX(90deg) scale(0.98);
+  }
+  100% {
+    transform: rotateX(0deg) scale(1);
+  }
 }
 
 .flashcard-flip-card.flashcard-anim-next {
@@ -2543,18 +2555,6 @@ body {
 
 .flashcard-flip-card.flashcard-anim-prev {
   animation: flashcardNavPrev 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 1;
-}
-
-@keyframes flashcardFlipSwap {
-  0% {
-    transform: rotateY(0deg) scale(1);
-  }
-  50% {
-    transform: rotateY(90deg) scale(0.98);
-  }
-  100% {
-    transform: rotateY(0deg) scale(1);
-  }
 }
 
 /* Next: slide old card left, new card in from right */
@@ -2602,10 +2602,6 @@ body {
   outline-offset: 3px;
 }
 
-.flashcard-flip-card.is-flipped {
-  transform: rotateY(180deg);
-}
-
 .flashcard-face {
   position: absolute;
   inset: 0;
@@ -2619,7 +2615,7 @@ body {
 }
 
 .flashcard-face-back {
-  transform: rotateY(180deg);
+  transform: rotateX(180deg);
 }
 
 .flashcard-face-content {
@@ -2632,13 +2628,15 @@ body {
   direction: auto;
 }
 
-.flashcard-face-front .flashcard-face-content {
+.flashcard-face-content.flashcard-question,
+.flashcard-question {
   font-size: var(--flashcard-question-font-size, 22px);
   font-weight: 600;
   line-height: 1.45;
 }
 
-.flashcard-face-back .flashcard-face-content {
+.flashcard-face-content.flashcard-answer,
+.flashcard-answer {
   font-size: var(--flashcard-answer-font-size, 18px);
   color: var(--text-secondary);
   line-height: 1.55;
