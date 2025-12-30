@@ -838,6 +838,15 @@ class SettingsManager {
    * Save settings
    */
   saveSettings() {
+    // Ensure floating mode geometry/state is persisted before we snapshot settings
+    try {
+      if (window.dashboard && window.dashboard.floating) {
+        window.dashboard.floating.flushAll();
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const settings = this.storage.getSettings();
 
     // Location settings

@@ -15,6 +15,7 @@ class FloatingModeManager {
 
     this.viewportDisableQuery = window.matchMedia("(max-width: 699px)");
     this.isViewportSuspended = false;
+    this.hasAppliedOnce = false;
 
     this.viewportPadding = 8;
 
@@ -22,6 +23,7 @@ class FloatingModeManager {
       prayerTimes: {
         cardId: "prayerTimesCard",
         buttonId: "floatingPrayerTimesBtn",
+        handleSelector: ".card-title",
       },
       hijriCalendar: {
         cardId: "calendarCard",
@@ -65,7 +67,9 @@ class FloatingModeManager {
         originalNextSibling: null,
         dragging: null,
         resizeObserver: null,
+        mutationObserver: null,
         saveTimer: null,
+        minUpdateRaf: null,
       });
 
       if (button) {
@@ -94,6 +98,34 @@ class FloatingModeManager {
     } catch (e) {
       // Safari legacy
       this.viewportDisableQuery.addListener(onViewportChange);
+    }
+
+    // Ensure we persist the very latest geometry even if the page is closed quickly
+    window.addEventListener("pagehide", () => {
+      try {
+        this.flushAll();
+      } catch (e) {}
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        try {
+          this.flushAll();
+        } catch (e) {}
+      }
+    });
+  }
+
+  flushAll() {
+    for (const key of this.runtime.keys()) {
+      const st = this.runtime.get(key);
+      if (!st) continue;
+      if (st.saveTimer) {
+        try {
+          clearTimeout(st.saveTimer);
+        } catch (e) {}
+        st.saveTimer = null;
+      }
+      this.flushSave(key);
     }
   }
 
@@ -133,26 +165,17 @@ class FloatingModeManager {
   applyViewportConstraint() {
     const shouldSuspend = this.viewportDisableQuery.matches;
 
-    if (shouldSuspend === this.isViewportSuspended) {
-      // Still update button state (e.g., if HTML loaded later)
-      this.updateAllButtons();
-      return;
-    }
-
+    const changed = shouldSuspend !== this.isViewportSuspended;
     this.isViewportSuspended = shouldSuspend;
 
+    // Always apply at least once so persisted states restore on reload
     if (this.isViewportSuspended) {
-      // Suspend floating visually without destroying the user's preference.
-      for (const key of this.runtime.keys()) {
-        this.disableFloatingRuntime(key);
-      }
+      for (const key of this.runtime.keys()) this.disableFloatingRuntime(key);
     } else {
-      // Re-apply desired states.
-      for (const key of this.runtime.keys()) {
-        this.applyOne(key);
-      }
+      for (const key of this.runtime.keys()) this.applyOne(key);
     }
 
+    this.hasAppliedOnce = true;
     this.updateAllButtons();
 
     if (window.dashboard && typeof window.dashboard.applyComponentVisibility === "function") {
@@ -250,12 +273,20 @@ class FloatingModeManager {
 
     // Native resizing
     card.style.resize = "both";
-    card.style.overflow = "auto";
+    card.style.overflow = "hidden";
+
+    // Prevent resizing below content (no scrollbars). Will be refined dynamically.
+    card.style.minWidth = "280px";
+    card.style.minHeight = "200px";
 
     // Dragging
-    const handle = card.querySelector(".card-header") || card;
+    const handleSelector = this.targets[key]?.handleSelector;
+    const handle = (handleSelector ? card.querySelector(handleSelector) : null) ||
+      card.querySelector(".card-header") ||
+      card;
     handle.style.cursor = "move";
-    handle.style.touchAction = "none";
+    // Allow normal taps/clicks; we only preventDefault when actually dragging
+    handle.style.touchAction = "manipulation";
 
     const onPointerDown = (e) => {
       if (!card.classList.contains("floating-card")) return;
@@ -321,9 +352,27 @@ class FloatingModeManager {
       st.resizeObserver = new ResizeObserver(() => {
         if (!card.classList.contains("floating-card")) return;
         this.scheduleSave(key);
+        this.scheduleMinUpdate(key);
       });
       st.resizeObserver.observe(card);
     }
+
+    // Content changes can alter the required minimum size
+    if (typeof MutationObserver !== "undefined") {
+      st.mutationObserver = new MutationObserver(() => {
+        if (!card.classList.contains("floating-card")) return;
+        this.scheduleMinUpdate(key);
+      });
+      st.mutationObserver.observe(card, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+      });
+    }
+
+    // Compute min sizes based on current content and ensure height is not below content
+    this.scheduleMinUpdate(key);
 
     this.clampCardToViewport(key);
     this.flushSave(key);
@@ -358,6 +407,20 @@ class FloatingModeManager {
       st.resizeObserver = null;
     }
 
+    if (st.mutationObserver) {
+      try {
+        st.mutationObserver.disconnect();
+      } catch (e) {}
+      st.mutationObserver = null;
+    }
+
+    if (st.minUpdateRaf) {
+      try {
+        cancelAnimationFrame(st.minUpdateRaf);
+      } catch (e) {}
+      st.minUpdateRaf = null;
+    }
+
     // Remove floating styles
     card.classList.remove("floating-card");
     card.style.position = "";
@@ -368,6 +431,8 @@ class FloatingModeManager {
     card.style.zIndex = "";
     card.style.resize = "";
     card.style.overflow = "";
+    card.style.minWidth = "";
+    card.style.minHeight = "";
 
     // Restore to original position using placeholder
     const placeholder = st.placeholder;
@@ -423,6 +488,53 @@ class FloatingModeManager {
       st.saveTimer = null;
       this.flushSave(key);
     }, 120);
+  }
+
+  scheduleMinUpdate(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return;
+    if (!st.card.classList.contains("floating-card")) return;
+
+    if (st.minUpdateRaf) return;
+    st.minUpdateRaf = requestAnimationFrame(() => {
+      st.minUpdateRaf = null;
+      this.updateMinSizeToContent(key);
+    });
+  }
+
+  updateMinSizeToContent(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return;
+    const card = st.card;
+    if (!card.classList.contains("floating-card")) return;
+
+    // Measure natural content height at current width (without forcing scrollbars)
+    const prevHeight = card.style.height;
+    const prevMinHeight = card.style.minHeight;
+
+    // Temporarily allow the card to size to its content to measure the minimum
+    card.style.minHeight = "0px";
+    card.style.height = "auto";
+
+    const naturalHeight = Math.ceil(card.getBoundingClientRect().height);
+
+    // Restore explicit height, then enforce minHeight
+    card.style.height = prevHeight;
+    const nextMinHeight = `${Math.max(0, naturalHeight)}px`;
+    if (prevMinHeight !== nextMinHeight) {
+      card.style.minHeight = nextMinHeight;
+    } else {
+      card.style.minHeight = prevMinHeight;
+    }
+
+    // If the current height is below the content minimum, grow it.
+    const rect = card.getBoundingClientRect();
+    if (rect.height + 0.5 < naturalHeight) {
+      card.style.height = `${naturalHeight}px`;
+    }
+
+    // Keep it on-screen as best as possible
+    this.clampCardToViewport(key);
   }
 
   flushSave(key) {
