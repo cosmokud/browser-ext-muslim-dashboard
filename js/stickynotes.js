@@ -102,6 +102,9 @@ class StickyNotesManager {
    * Create floating action buttons
    */
   createFloatingButtons() {
+    const fabHost =
+      document.getElementById("fabMenuDynamicItems") || document.body;
+
     // Add Note Button
     this.addBtn = document.createElement("button");
     this.addBtn.id = "addStickyNoteBtn";
@@ -115,7 +118,7 @@ class StickyNotesManager {
       </svg>
     `;
     this.addBtn.addEventListener("click", () => this.createNote());
-    document.body.appendChild(this.addBtn);
+    fabHost.appendChild(this.addBtn);
 
     // Toggle Visibility Button
     this.toggleBtn = document.createElement("button");
@@ -124,7 +127,7 @@ class StickyNotesManager {
     this.toggleBtn.title = "Toggle Sticky Notes";
     this.updateToggleButtonIcon();
     this.toggleBtn.addEventListener("click", () => this.toggleVisibility());
-    document.body.appendChild(this.toggleBtn);
+    fabHost.appendChild(this.toggleBtn);
   }
 
   /**

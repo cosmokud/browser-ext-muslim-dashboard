@@ -34,6 +34,51 @@ class MuslimDashboard {
     this.currentAmPm = document.getElementById("currentAmPm");
   }
 
+  setupFabMenu() {
+    const menu = document.getElementById("fabMenu");
+    const toggle = document.getElementById("fabMenuToggle");
+    const items = document.getElementById("fabMenuItems");
+
+    if (!menu || !toggle || !items) return;
+
+    const setOpen = (open) => {
+      menu.classList.toggle("open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      items.setAttribute("aria-hidden", open ? "false" : "true");
+    };
+
+    const isOpen = () => menu.classList.contains("open");
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(!isOpen());
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+      if (!isOpen()) return;
+      if (menu.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (!isOpen()) return;
+      if (e.key === "Escape") setOpen(false);
+    });
+
+    // Close after choosing an action
+    items.addEventListener("click", (e) => {
+      const button = e.target.closest("button");
+      if (!button) return;
+      setOpen(false);
+    });
+
+    setOpen(false);
+  }
+
   /**
    * Initialize the dashboard
    */
@@ -120,6 +165,9 @@ class MuslimDashboard {
         setTimeout(() => refreshBtn.classList.remove("rotate-once"), 700);
       });
     }
+
+    // Setup hamburger menu for bottom-right actions
+    this.setupFabMenu();
 
     // Setup location updates
     this.setupLocationUpdates();
