@@ -14,11 +14,11 @@ class FlashcardManager {
 
     // Dashboard elements
     this.cardEl = document.getElementById("flashcardCard");
-    this.setNameEl = document.getElementById("flashcardSetName");
+    this.flipCardEl = document.getElementById("flashcardFlipCard");
+    this.prevBtn = document.getElementById("flashcardPrevBtn");
+    this.nextBtn = document.getElementById("flashcardNextBtn");
     this.questionEl = document.getElementById("flashcardQuestion");
     this.answerEl = document.getElementById("flashcardAnswer");
-    this.toggleAnswerBtn = document.getElementById("flashcardToggleAnswerBtn");
-    this.nextBtn = document.getElementById("flashcardNextBtn");
 
     // Settings elements (may not exist until modal opened)
     this.settingsSetSelect = null;
@@ -31,9 +31,15 @@ class FlashcardManager {
     this.settingsPagination = null;
     this.settingsMeta = null;
 
+    // Typography controls (Settings tab)
+    this.settingsQuestionFontSize = null;
+    this.settingsQuestionFontSizeValue = null;
+    this.settingsAnswerFontSize = null;
+    this.settingsAnswerFontSizeValue = null;
+
     // State
     this.currentCardIndex = 0;
-    this.answerVisible = false;
+    this.isFlipped = false;
     this.settingsPage = 1;
 
     // Debounce timer for editor saves
@@ -42,6 +48,7 @@ class FlashcardManager {
 
   async init() {
     await this.ensureDefaultSet();
+    this.applyTypography();
     this.bindDashboardEvents();
     this.renderDashboard();
   }
@@ -133,60 +140,94 @@ class FlashcardManager {
   // ---------- Dashboard ----------
 
   bindDashboardEvents() {
-    if (this.toggleAnswerBtn) {
-      this.toggleAnswerBtn.addEventListener("click", () => {
-        this.answerVisible = !this.answerVisible;
-        this.renderDashboard();
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.gotoPrevCard();
       });
     }
 
     if (this.nextBtn) {
-      this.nextBtn.addEventListener("click", () => {
-        this.pickNextCard();
-        this.answerVisible = false;
-        this.renderDashboard();
+      this.nextBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.gotoNextCard();
+      });
+    }
+
+    if (this.flipCardEl) {
+      this.flipCardEl.addEventListener("click", (e) => {
+        // Avoid flipping when clicking nav buttons (they are siblings, but be safe)
+        const targetBtn = e.target.closest("button");
+        if (targetBtn) return;
+        this.toggleFlip();
+      });
+
+      this.flipCardEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          this.toggleFlip();
+        }
       });
     }
   }
 
-  pickNextCard() {
+  toggleFlip() {
+    this.isFlipped = !this.isFlipped;
+    this.renderDashboard();
+  }
+
+  normalizeCurrentIndex() {
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
-    if (cards.length <= 1) {
+    if (!cards.length) {
       this.currentCardIndex = 0;
       return;
     }
-
-    const prev = this.currentCardIndex;
-    let next = prev;
-    let guard = 0;
-    while (next === prev && guard < 10) {
-      next = Math.floor(Math.random() * cards.length);
-      guard += 1;
+    if (this.currentCardIndex < 0) this.currentCardIndex = 0;
+    if (this.currentCardIndex > cards.length - 1) {
+      this.currentCardIndex = cards.length - 1;
     }
-    this.currentCardIndex = next;
+  }
+
+  gotoNextCard() {
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+    if (!cards.length) return;
+
+    this.currentCardIndex = (this.currentCardIndex + 1) % cards.length;
+    this.isFlipped = false;
+    this.renderDashboard();
+  }
+
+  gotoPrevCard() {
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+    if (!cards.length) return;
+
+    this.currentCardIndex =
+      (this.currentCardIndex - 1 + cards.length) % cards.length;
+    this.isFlipped = false;
+    this.renderDashboard();
   }
 
   renderDashboard() {
     const activeSet = this.getActiveSet();
-    const setName = activeSet?.name || "Flashcards";
     const cards = activeSet?.cards || [];
 
-    if (this.setNameEl) this.setNameEl.textContent = setName;
-
     if (!this.questionEl || !this.answerEl) return;
+
+    this.normalizeCurrentIndex();
 
     if (!cards.length) {
       this.questionEl.textContent = "No flashcards yet";
       this.answerEl.textContent = "Import a CSV in Settings → Flashcards";
-      this.answerEl.classList.add("visible");
-      if (this.toggleAnswerBtn) this.toggleAnswerBtn.disabled = true;
+      if (this.prevBtn) this.prevBtn.disabled = true;
       if (this.nextBtn) this.nextBtn.disabled = true;
+      if (this.flipCardEl) {
+        this.flipCardEl.classList.toggle("is-flipped", this.isFlipped);
+      }
       return;
     }
-
-    if (this.toggleAnswerBtn) this.toggleAnswerBtn.disabled = false;
-    if (this.nextBtn) this.nextBtn.disabled = false;
 
     const idx = Math.min(this.currentCardIndex, cards.length - 1);
     const card = cards[idx];
@@ -194,12 +235,11 @@ class FlashcardManager {
     this.questionEl.textContent = card.question || "(empty question)";
     this.answerEl.textContent = card.answer || "(empty answer)";
 
-    this.answerEl.classList.toggle("visible", this.answerVisible);
+    if (this.prevBtn) this.prevBtn.disabled = cards.length <= 1;
+    if (this.nextBtn) this.nextBtn.disabled = cards.length <= 1;
 
-    if (this.toggleAnswerBtn) {
-      this.toggleAnswerBtn.textContent = this.answerVisible
-        ? "Hide Answer"
-        : "Show Answer";
+    if (this.flipCardEl) {
+      this.flipCardEl.classList.toggle("is-flipped", this.isFlipped);
     }
   }
 
@@ -217,6 +257,19 @@ class FlashcardManager {
     this.settingsList = document.getElementById("flashcardsEditorList");
     this.settingsPagination = document.getElementById("flashcardsPagination");
     this.settingsMeta = document.getElementById("flashcardsMeta");
+
+    this.settingsQuestionFontSize = document.getElementById(
+      "flashcardsQuestionFontSize"
+    );
+    this.settingsQuestionFontSizeValue = document.getElementById(
+      "flashcardsQuestionFontSizeValue"
+    );
+    this.settingsAnswerFontSize = document.getElementById(
+      "flashcardsAnswerFontSize"
+    );
+    this.settingsAnswerFontSizeValue = document.getElementById(
+      "flashcardsAnswerFontSizeValue"
+    );
   }
 
   ensureSettingsBound() {
@@ -232,9 +285,42 @@ class FlashcardManager {
       const id = this.settingsSetSelect.value;
       this.setActiveSetId(id);
       this.settingsPage = 1;
+      this.currentCardIndex = 0;
+      this.isFlipped = false;
       this.renderSettings();
       this.renderDashboard();
     });
+
+    const bindTypography = () => {
+      if (!this.settingsQuestionFontSize || !this.settingsAnswerFontSize)
+        return;
+
+      if (this.settingsQuestionFontSize.dataset.bound === "true") return;
+      this.settingsQuestionFontSize.dataset.bound = "true";
+
+      const onUpdate = () => {
+        const q = this.clampNumber(
+          parseInt(this.settingsQuestionFontSize.value, 10),
+          12,
+          48,
+          22
+        );
+        const a = this.clampNumber(
+          parseInt(this.settingsAnswerFontSize.value, 10),
+          12,
+          48,
+          18
+        );
+        this.setFlashcardSettings({ questionFontSize: q, answerFontSize: a });
+        this.applyTypography();
+        this.updateTypographyLabels(q, a);
+      };
+
+      this.settingsQuestionFontSize.addEventListener("input", onUpdate);
+      this.settingsAnswerFontSize.addEventListener("input", onUpdate);
+    };
+
+    bindTypography();
 
     if (this.settingsImportBtn && this.settingsImportInput) {
       this.settingsImportBtn.addEventListener("click", () => {
@@ -269,6 +355,10 @@ class FlashcardManager {
 
     // Inline editor events (delegation)
     this.settingsList.addEventListener("input", (e) => {
+      if (e.target && e.target.classList?.contains("flashcard-textarea")) {
+        this.autoResizeTextarea(e.target);
+      }
+
       const row = e.target.closest(".flashcard-row");
       if (!row) return;
 
@@ -320,6 +410,15 @@ class FlashcardManager {
       this.settingsMeta.textContent = `${totalCards} cards • ${totalSets}/${FlashcardManager.MAX_SETS} sets`;
     }
 
+    // Typography
+    const t = this.getTypography();
+    if (this.settingsQuestionFontSize)
+      this.settingsQuestionFontSize.value = String(t.question);
+    if (this.settingsAnswerFontSize)
+      this.settingsAnswerFontSize.value = String(t.answer);
+    this.updateTypographyLabels(t.question, t.answer);
+    this.applyTypography();
+
     this.renderEditorList();
     this.renderPagination();
   }
@@ -353,22 +452,20 @@ class FlashcardManager {
       rows.push(`
         <div class="flashcard-row" data-index="${i}">
           <div class="flashcard-row-index">${i + 1}</div>
-          <input
-            class="flashcard-cell setting-input"
+          <textarea
+            class="flashcard-cell flashcard-textarea setting-input"
             data-field="question"
-            type="text"
-            value="${this.escapeHtmlAttr(c.question || "")}"
+            rows="1"
             placeholder="Question"
             maxlength="500"
-          />
-          <input
-            class="flashcard-cell setting-input"
+          >${this.escapeHtmlAttr(c.question || "")}</textarea>
+          <textarea
+            class="flashcard-cell flashcard-textarea setting-input"
             data-field="answer"
-            type="text"
-            value="${this.escapeHtmlAttr(c.answer || "")}"
+            rows="1"
             placeholder="Answer"
             maxlength="1000"
-          />
+          >${this.escapeHtmlAttr(c.answer || "")}</textarea>
           <button
             class="flashcard-row-delete"
             type="button"
@@ -393,6 +490,65 @@ class FlashcardManager {
         ${rows.join("")}
       </div>
     `;
+
+    this.autoResizeAllTextareas();
+  }
+
+  applyTypography() {
+    if (!this.cardEl) return;
+    const t = this.getTypography();
+    this.cardEl.style.setProperty(
+      "--flashcard-question-font-size",
+      `${t.question}px`
+    );
+    this.cardEl.style.setProperty(
+      "--flashcard-answer-font-size",
+      `${t.answer}px`
+    );
+  }
+
+  getTypography() {
+    const settings = this.getFlashcardSettings();
+    return {
+      question: this.clampNumber(
+        parseInt(settings.questionFontSize, 10),
+        12,
+        48,
+        22
+      ),
+      answer: this.clampNumber(
+        parseInt(settings.answerFontSize, 10),
+        12,
+        48,
+        18
+      ),
+    };
+  }
+
+  updateTypographyLabels(question, answer) {
+    if (this.settingsQuestionFontSizeValue)
+      this.settingsQuestionFontSizeValue.textContent = `${question}px`;
+    if (this.settingsAnswerFontSizeValue)
+      this.settingsAnswerFontSizeValue.textContent = `${answer}px`;
+  }
+
+  autoResizeTextarea(textarea) {
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+
+  autoResizeAllTextareas() {
+    if (!this.settingsList) return;
+    const items = this.settingsList.querySelectorAll(
+      "textarea.flashcard-textarea"
+    );
+    items.forEach((t) => this.autoResizeTextarea(t));
+  }
+
+  clampNumber(value, min, max, fallback) {
+    if (!Number.isFinite(value)) return fallback;
+    return Math.max(min, Math.min(max, value));
   }
 
   renderPagination() {

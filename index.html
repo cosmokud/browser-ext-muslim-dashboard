@@ -303,29 +303,49 @@
               <span class="card-icon">🃏</span>
               Flashcards
             </h2>
-            <div class="flashcard-set-name" id="flashcardSetName">--</div>
           </div>
           <div class="flashcard-viewer">
-            <div class="flashcard-question" id="flashcardQuestion">
-              Loading...
-            </div>
-            <div class="flashcard-answer" id="flashcardAnswer"></div>
-            <div class="flashcard-actions">
-              <button
-                class="setting-btn flashcard-btn"
-                id="flashcardToggleAnswerBtn"
-                type="button"
+            <button
+              class="flashcard-nav flashcard-nav-prev"
+              id="flashcardPrevBtn"
+              type="button"
+              aria-label="Previous card"
+              title="Previous"
+            >
+              ❮
+            </button>
+
+            <div class="flashcard-flip-scene" id="flashcardFlipScene">
+              <div
+                class="flashcard-flip-card"
+                id="flashcardFlipCard"
+                role="button"
+                tabindex="0"
+                aria-label="Flip flashcard"
               >
-                Show Answer
-              </button>
-              <button
-                class="setting-btn flashcard-btn"
-                id="flashcardNextBtn"
-                type="button"
-              >
-                New Card
-              </button>
+                <div class="flashcard-face flashcard-face-front">
+                  <div class="flashcard-face-content" id="flashcardQuestion">
+                    Loading...
+                  </div>
+                </div>
+                <div class="flashcard-face flashcard-face-back">
+                  <div
+                    class="flashcard-face-content"
+                    id="flashcardAnswer"
+                  ></div>
+                </div>
+              </div>
             </div>
+
+            <button
+              class="flashcard-nav flashcard-nav-next"
+              id="flashcardNextBtn"
+              type="button"
+              aria-label="Next card"
+              title="Next"
+            >
+              ❯
+            </button>
           </div>
         </section>
 
@@ -1371,6 +1391,45 @@
                 </button>
               </div>
               <div class="flashcards-meta" id="flashcardsMeta"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Typography Settings</label>
+              <p class="setting-hint">
+                Adjust the font size on the dashboard flashcard.
+              </p>
+              <div class="flashcards-typography">
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Question</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="flashcardsQuestionFontSize"
+                    min="12"
+                    max="48"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="flashcardsQuestionFontSizeValue"
+                  ></span>
+                </div>
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Answer</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="flashcardsAnswerFontSize"
+                    min="12"
+                    max="48"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="flashcardsAnswerFontSizeValue"
+                  ></span>
+                </div>
+              </div>
             </div>
 
             <div class="setting-group">

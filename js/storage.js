@@ -173,6 +173,8 @@ class StorageManager {
       // Flashcards settings
       flashcards: {
         activeSetId: null,
+        questionFontSize: 22,
+        answerFontSize: 18,
       },
 
       // Heading customization settings

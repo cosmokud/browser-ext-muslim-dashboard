@@ -2460,47 +2460,123 @@ body {
 }
 
 .flashcard-viewer {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  align-items: stretch;
+  min-height: 220px;
+  padding: 0 44px;
 }
 
-.flashcard-question {
-  font-size: 1.1rem;
+.flashcard-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: background var(--transition-fast),
+    transform var(--transition-fast), opacity var(--transition-fast);
+  z-index: 2;
+}
+
+.flashcard-nav:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-50%) scale(1.02);
+}
+
+.flashcard-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flashcard-nav-prev {
+  left: 0;
+}
+
+.flashcard-nav-next {
+  right: 0;
+}
+
+.flashcard-flip-scene {
+  flex: 1;
+  perspective: 900px;
+}
+
+.flashcard-flip-card {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--transition-normal);
+  cursor: pointer;
+}
+
+.flashcard-flip-card:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+.flashcard-flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: inherit;
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flashcard-face-back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face-content {
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  text-align: center;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  direction: auto;
+}
+
+.flashcard-face-front .flashcard-face-content {
+  font-size: var(--flashcard-question-font-size, 22px);
   font-weight: 600;
   line-height: 1.45;
-  word-break: break-word;
-  direction: auto;
 }
 
-.flashcard-answer {
-  display: none;
-  padding: var(--spacing-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+.flashcard-face-back .flashcard-face-content {
+  font-size: var(--flashcard-answer-font-size, 18px);
   color: var(--text-secondary);
   line-height: 1.55;
-  word-break: break-word;
-  direction: auto;
-  max-height: 140px;
-  overflow: auto;
 }
 
-.flashcard-answer.visible {
-  display: block;
-}
-
-.flashcard-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.flashcard-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .flashcard-flip-card {
+    transition: none !important;
+  }
 }
 
 /* Settings tab */
@@ -2520,6 +2596,68 @@ body {
   margin-top: var(--spacing-xs);
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.flashcards-typography {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.flashcards-typography-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.flashcards-typography-label {
+  min-width: 80px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.flashcards-typography-range {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--glass-bg);
+  border-radius: 3px;
+  outline: none;
+}
+
+.flashcards-typography-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.flashcards-typography-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--accent-gold);
+}
+
+.flashcards-typography-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+}
+
+.flashcards-typography-value {
+  min-width: 52px;
+  text-align: right;
+  font-weight: 500;
+  color: var(--accent-gold);
 }
 
 .flashcards-editor {
@@ -2550,7 +2688,7 @@ body {
   grid-template-columns: 42px 1fr 1fr 34px;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  align-items: center;
+  align-items: start;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -2571,6 +2709,14 @@ body {
 
 .flashcard-row .setting-input.flashcard-cell {
   margin: 0;
+}
+
+.flashcard-textarea {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 
 .flashcard-row-delete {
@@ -2604,28 +2750,28 @@ body {
 
 /* Custom scrollbars */
 .flashcard-editor-body::-webkit-scrollbar,
-.flashcard-answer::-webkit-scrollbar {
+.flashcard-face-content::-webkit-scrollbar {
   width: 8px;
 }
 
 .flashcard-editor-body::-webkit-scrollbar-track,
-.flashcard-answer::-webkit-scrollbar-track {
+.flashcard-face-content::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.06);
 }
 
 .flashcard-editor-body::-webkit-scrollbar-thumb,
-.flashcard-answer::-webkit-scrollbar-thumb {
+.flashcard-face-content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.22);
   border-radius: 12px;
 }
 
 .flashcard-editor-body::-webkit-scrollbar-thumb:hover,
-.flashcard-answer::-webkit-scrollbar-thumb:hover {
+.flashcard-face-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.32);
 }
 
 .flashcard-editor-body,
-.flashcard-answer {
+.flashcard-face-content {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
 }
