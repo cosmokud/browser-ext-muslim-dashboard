@@ -3681,9 +3681,12 @@ body.sticky-note-resizing {
 
 .weather-forecast {
   margin-top: var(--spacing-lg);
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* Switch to flexbox for responsive wrapping while preserving equal columns */
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
+  justify-content: space-between;
+  align-items: stretch;
 }
 
 .weather-forecast-day {
@@ -3695,6 +3698,11 @@ body.sticky-note-resizing {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   cursor: pointer;
   transition: all var(--transition-fast);
+  /* Default: 7 columns layout (flex-basis accounts for gaps) */
+  /* Allow shrinking on narrow viewports (matches grid minmax(0,1fr)) */
+  flex: 0 1 calc((100% - (6 * var(--spacing-sm))) / 7);
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .weather-forecast-day:hover {
@@ -3900,8 +3908,10 @@ body.sticky-note-resizing {
 }
 
 @media (max-width: 1000px) {
-  .weather-forecast {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 4 columns layout */
+  .weather-forecast-day {
+    /* Allow shrinking on narrow viewports */
+    flex: 0 1 calc((100% - (3 * var(--spacing-sm))) / 4);
   }
 }
 
@@ -3930,8 +3940,10 @@ body.sticky-note-resizing {
     gap: var(--spacing-lg);
   }
 
-  .weather-forecast {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 2 columns layout */
+  .weather-forecast-day {
+    /* Allow shrinking on narrow viewports */
+    flex: 0 1 calc((100% - (1 * var(--spacing-sm))) / 2);
   }
 
   .weather-chart {
