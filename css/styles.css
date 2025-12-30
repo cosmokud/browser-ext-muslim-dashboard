@@ -397,6 +397,7 @@ body {
 }
 
 /* Flashcard & Todo Row - make both occupy a single row together */
+
 .flashcard-todo-row {
   grid-column: 1 / -1;
   display: flex;
@@ -721,7 +722,6 @@ body {
 /* Todo Card */
 #todoCard {
   grid-column: 1 / -1; /* Full width - spans all columns */
-  margin-top: var(--spacing-md);
 }
 
 #todoCard:hover {
