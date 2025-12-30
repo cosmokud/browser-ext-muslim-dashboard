@@ -398,24 +398,36 @@ body {
 
 /* Flashcard & Todo Row - make both occupy a single row together */
 .flashcard-todo-row {
-  grid-column: 1 / -1; /* span full width of the content grid */
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-column: 1 / -1;
+  display: flex;
   gap: var(--spacing-xl);
-  align-items: start;
+  align-items: stretch; /* keep cards the same height visually */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .flashcard-todo-row .card {
   min-height: 220px;
   display: flex;
   flex-direction: column;
+  flex: 1 1 50%; /* consume half the available width each */
+  min-width: 0; /* allow internal content to shrink instead of overflowing */
+}
+
+.flashcard-todo-row .card.todo-card {
+  /* explicit rule to ensure todo card matches layout expectations */
+  flex: 1 1 50%;
 }
 
 /* Responsive: stack vertically on small screens */
 @media (max-width: 699px) {
   .flashcard-todo-row {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: var(--spacing-md);
+  }
+  .flashcard-todo-row .card {
+    flex: 0 0 auto;
+    width: 100%;
   }
 }
 
