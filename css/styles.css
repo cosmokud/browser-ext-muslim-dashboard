@@ -15,6 +15,12 @@
   /* Utility accents (used by a few components) */
   --accent-blue: #0066cc;
 
+  /* Settings (bottom-right) light-blue palette */
+  /* accessible light-blue palette */
+  --settings-color: #0066aa;
+  --settings-light: #2b9bff;
+  --settings-shadow: 0 4px 20px rgba(0, 102, 170, 0.45);
+
   /* Weather chart metric colors */
   --weather-metric-temperature: var(--accent-gold);
   --weather-metric-humidity: var(--accent-blue);
@@ -930,6 +936,35 @@ body {
   z-index: 900;
 }
 
+/* Keyboard hotspot (visually hidden until focused) to reveal FAB for keyboard users */
+.fab-hotspot {
+  position: fixed;
+  right: var(--spacing-xl);
+  bottom: var(--spacing-xl);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  overflow: hidden;
+  opacity: 0;
+  z-index: 910; /* slightly above menu */
+}
+
+.fab-hotspot:focus {
+  width: 48px;
+  height: 48px;
+  opacity: 1;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--settings-color), var(--settings-light));
+  border-radius: var(--radius-full);
+  box-shadow: var(--settings-shadow);
+  outline: 2px solid var(--accent-gold);
+  transform: none;
+  transition: all var(--transition-normal);
+}
+
 .fab-menu-items {
   display: flex;
   flex-direction: column;
@@ -993,11 +1028,7 @@ body {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   border: none;
   color: var(--text-primary);
   cursor: pointer;
@@ -1006,7 +1037,39 @@ body {
   align-items: center;
   justify-content: center;
   transition: transform var(--transition-normal),
-    box-shadow var(--transition-normal);
+    box-shadow var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+/* When JS autohide is enabled the toggle is hidden by default and only shown when 'hot-visible' is active */
+.fab-menu.autohide .fab-menu-toggle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity var(--transition-normal),
+    transform var(--transition-normal),
+    visibility var(--transition-normal);
+}
+
+.fab-menu.autohide.hot-visible .fab-menu-toggle,
+.fab-menu.autohide:hover .fab-menu-toggle,
+.fab-menu.autohide.open .fab-menu-toggle,
+.fab-menu.autohide:focus-within .fab-menu-toggle {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .fab-menu .fab-menu-toggle,
+  .fab-menu .fab-menu-items,
+  .fab-menu .fab-menu-items button,
+  .fab-hamburger-bar {
+    transition: none !important;
+  }
 }
 
 .fab-menu-toggle:hover {
@@ -1076,15 +1139,11 @@ body {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
+  background: linear-gradient(135deg, var(--settings-color), var(--settings-light));
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(26, 95, 74, 0.5);
+  box-shadow: var(--settings-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1094,7 +1153,7 @@ body {
 
 .settings-btn:hover {
   transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 6px 25px rgba(26, 95, 74, 0.6);
+  box-shadow: 0 6px 25px rgba(0, 102, 170, 0.6);
 }
 
 .settings-btn svg {

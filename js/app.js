@@ -41,11 +41,24 @@ class MuslimDashboard {
 
     if (!menu || !toggle || !items) return;
 
+    // Enable JS-driven autohide mode (graceful: without JS toggle remains visible)
+    menu.classList.add("autohide");
+    toggle.setAttribute("aria-hidden", "true");
+
+    const setHotVisible = (visible) => {
+      menu.classList.toggle("hot-visible", visible);
+      try {
+        toggle.setAttribute("aria-hidden", visible ? "false" : "true");
+      } catch (e) {}
+    };
+
     const setOpen = (open) => {
       menu.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
       items.setAttribute("aria-hidden", open ? "false" : "true");
+      // keep toggle visible while menu is open
+      if (open) setHotVisible(true);
     };
 
     const isOpen = () => menu.classList.contains("open");
@@ -61,12 +74,17 @@ class MuslimDashboard {
       if (!isOpen()) return;
       if (menu.contains(e.target)) return;
       setOpen(false);
+      // hide toggle shortly after closing if user isn't hovering
+      setTimeout(() => setHotVisible(false), 300);
     });
 
     // Close on Escape
     document.addEventListener("keydown", (e) => {
       if (!isOpen()) return;
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setTimeout(() => setHotVisible(false), 300);
+      }
     });
 
     // Close after choosing an action
@@ -76,6 +94,78 @@ class MuslimDashboard {
       setOpen(false);
     });
 
+    // Autohide behaviour: show toggle when pointer is near bottom-right, or on touch
+    const threshold = 120; // px from corner
+    const hideDelay = 1500; // ms
+    let hideTimer = null;
+
+    const showHot = () => {
+      setHotVisible(true);
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+    };
+
+    const hideHot = () => {
+      if (isOpen()) return; // keep visible if menu is open
+      setHotVisible(false);
+    };
+
+    // Mouse move detection (desktop)
+    document.addEventListener("mousemove", (e) => {
+      const dx = window.innerWidth - e.clientX;
+      const dy = window.innerHeight - e.clientY;
+      if (dx < threshold && dy < threshold) {
+        showHot();
+      } else {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(hideHot, hideDelay);
+      }
+    });
+
+    // Touch fallback (mobile)
+    document.addEventListener(
+      "touchstart",
+      (e) => {
+        const t = e.touches[0];
+        if (!t) return;
+        const dx = window.innerWidth - t.clientX;
+        const dy = window.innerHeight - t.clientY;
+        if (dx < threshold && dy < threshold) {
+          showHot();
+          if (hideTimer) clearTimeout(hideTimer);
+          hideTimer = setTimeout(hideHot, hideDelay * 3);
+        }
+      },
+      { passive: true }
+    );
+
+    // Show on focus (keyboard)
+    toggle.addEventListener("focus", () => {
+      showHot();
+    });
+    toggle.addEventListener("blur", () => {
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(hideHot, hideDelay);
+    });
+
+    // Keyboard hotspot support (focusable invisible target at the corner)
+    const hotspot = document.getElementById("fabHotspot");
+    if (hotspot) {
+      hotspot.addEventListener("focus", () => {
+        showHot();
+        // Move focus to the toggle so keyboard users can open the menu
+        setTimeout(() => toggle.focus(), 0);
+      });
+      hotspot.addEventListener("blur", () => {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(hideHot, hideDelay);
+      });
+    }
+
+    // Ensure initial state
+    setHotVisible(false);
     setOpen(false);
   }
 
