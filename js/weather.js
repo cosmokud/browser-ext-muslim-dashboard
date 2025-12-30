@@ -39,14 +39,29 @@ class WeatherManager {
     this.refreshInterval = null;
 
     this._resizeTimer = null;
+    this._forecastResizeTimer = null; // used for debouncing forecast layout recalcs
     this.selectedForecastIndex = 0;
     this.selectedMetric = "temperature";
+
+    // Reflow handler for chart resize
     this._onResize = () => {
       if (this._resizeTimer) window.clearTimeout(this._resizeTimer);
       this._resizeTimer = window.setTimeout(() => {
         this.renderHourlyChart();
       }, 120);
     };
+
+    // Debounced handler to update forecast flex layout on viewport changes
+    this._onForecastResize = () => {
+      if (this._forecastResizeTimer)
+        window.clearTimeout(this._forecastResizeTimer);
+      this._forecastResizeTimer = window.setTimeout(() => {
+        this.applyForecastFlexLayout();
+      }, 80);
+    };
+
+    // Listen for resize to update forecast layout (keeps last-row spreading correct)
+    window.addEventListener("resize", this._onForecastResize);
 
     // Weather code to icon/description mapping (WMO codes)
     this.weatherCodes = {
@@ -978,6 +993,53 @@ window.WeatherManager = WeatherManager;
           this.renderHourlyChart();
         });
       });
+
+    // Apply responsive flex rules so 7-column full rows remain exact,
+    // and any incomplete last row items spread equally to fill the row.
+    this.applyForecastFlexLayout();
+  }
+
+  applyForecastFlexLayout() {
+    const container = this.weatherForecast;
+    if (!container) return;
+    const items = Array.from(
+      container.querySelectorAll(".weather-forecast-day")
+    );
+    if (!items.length) return;
+
+    // Read gap from CSS var so JS math matches CSS exactly
+    const computedGap =
+      getComputedStyle(container).getPropertyValue("--wf-gap") || "10px";
+    const gapPx = parseFloat(computedGap) || 10;
+
+    // Breakpoints: <=640px => 2 cols, <=1020px => 4 cols, otherwise 7 cols
+    const w = window.innerWidth;
+    let columns = 7;
+    if (w <= 640) columns = 2;
+    else if (w <= 1020) columns = 4;
+
+    // base width for full rows (no grow)
+    const base = `calc((100% - (${columns - 1} * ${gapPx}px)) / ${columns})`;
+
+    // set defaults (full-row behavior)
+    items.forEach((el) => {
+      el.style.boxSizing = "border-box";
+      el.style.flex = `0 0 ${base}`;
+      el.style.maxWidth = "none";
+    });
+
+    // if last row incomplete, make those items grow equally to fill the row
+    const remainder = items.length % columns;
+    if (remainder === 0) return;
+
+    const lastBasis = `calc((100% - (${Math.max(
+      0,
+      remainder - 1
+    )} * ${gapPx}px)) / ${remainder})`;
+    const lastItems = items.slice(-remainder);
+    lastItems.forEach((el) => {
+      el.style.flex = `1 1 ${lastBasis}`;
+    });
   }
 
   renderHourlyChart() {

@@ -3681,11 +3681,12 @@ body.sticky-note-resizing {
 
 .weather-forecast {
   margin-top: var(--spacing-lg);
-  /* Flex-based grid: 4 columns by default, 10px gap. Uses flex-wrap for responsive rows. */
+  /* Flex-based weekly grid: default 7 columns, 10px gap. Uses flex-wrap for responsive rows. */
+  --wf-gap: 10px; /* fallback variable for script and calc math */
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-start; /* items expand to fill rows via equal flex-grow */
+  gap: var(--wf-gap);
+  justify-content: flex-start;
   align-items: stretch;
   box-sizing: border-box;
 }
@@ -3699,13 +3700,17 @@ body.sticky-note-resizing {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   cursor: pointer;
   transition: all var(--transition-fast);
-  /* Default: 4 columns layout using a 10px gap.
-     flex-basis uses calc() to account for the 3 gaps between 4 columns.
-     flex-grow: 1 ensures that when the last row has fewer than 4 items,
-     those items grow equally to fill the full row width. */
-  flex: 1 1 calc((100% - (3 * 10px)) / 4);
+  /* Default: 7 columns layout using a 10px gap (6 gaps between items).
+     flex-basis subtracts the total gap width so 7 items fit exactly.
+     flex-grow is 0 in full rows, last-row items are upgraded to flex-grow via JS to spread evenly. */
+  flex: 0 0 calc((100% - (6 * var(--wf-gap))) / 7);
   min-width: 0;
   box-sizing: border-box;
+  /* center content */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .weather-forecast-day:hover {
@@ -3910,7 +3915,12 @@ body.sticky-note-resizing {
   display: block;
 }
 
-/* Removed: explicit 4-column breakpoint (default is 4 columns). */
+@media (max-width: 1020px) {
+  /* Wrap into 4 columns: top row 4 items, bottom row 3 items for a 7-day view */
+  .weather-forecast-day {
+    flex: 0 0 calc((100% - (3 * var(--wf-gap))) / 4);
+  }
+}
 
 @media (max-width: 818px) {
   .weather-content {
@@ -3938,20 +3948,20 @@ body.sticky-note-resizing {
   }
 
   /* 2 columns layout for weather forecast moved to the mobile breakpoint (max-width: 640px) */
-  
+
   .weather-chart {
     height: 300px;
   }
-} 
+}
 
 /* Mobile: 2-column layout for weather forecast */
 @media (max-width: 640px) {
   .weather-forecast {
-    gap: 10px;
+    gap: var(--wf-gap);
   }
   .weather-forecast-day {
-    /* 2 columns layout on mobile: one 10px gap between two columns */
-    flex: 1 1 calc((100% - (1 * 10px)) / 2);
+    /* 2 columns layout on mobile: default fixed 2-column basis (no grow); JS will upgrade last-row items to grow */
+    flex: 0 0 calc((100% - (1 * var(--wf-gap))) / 2);
   }
 }
 
