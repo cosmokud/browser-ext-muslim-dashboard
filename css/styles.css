@@ -569,6 +569,7 @@ body {
 
 .prayer-name {
   font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .prayer-time {
@@ -598,6 +599,7 @@ body {
 }
 
 .next-prayer-name {
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--accent-gold);
 }
