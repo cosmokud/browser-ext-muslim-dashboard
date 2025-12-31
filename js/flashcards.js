@@ -112,7 +112,7 @@ class FlashcardManager {
   // ---------- Mode + auto-advance ----------
 
   normalizeMode(mode) {
-    return mode === "test" ? "test" : "study";
+    return mode === "quiz" ? "quiz" : "study";
   }
 
   getMode() {
@@ -138,7 +138,7 @@ class FlashcardManager {
 
   toggleMode() {
     const current = this.getMode();
-    this.setMode(current === "study" ? "test" : "study");
+    this.setMode(current === "study" ? "quiz" : "study");
   }
 
   getStudyAutoAdvanceSeconds() {
@@ -182,7 +182,7 @@ class FlashcardManager {
       this.modeToggleBtn.dataset.mode = mode;
       const icon = mode === "study" ? "📖" : "❓";
       const nextTitle =
-        mode === "study" ? "Switch to Test mode" : "Switch to Study mode";
+        mode === "study" ? "Switch to Quiz mode" : "Switch to Study mode";
       this.modeToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true">${icon}</span>`;
       this.modeToggleBtn.title = nextTitle;
       this.modeToggleBtn.setAttribute("aria-label", nextTitle);
