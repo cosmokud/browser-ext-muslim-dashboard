@@ -47,6 +47,120 @@ class FloatingModeManager {
     this.runtime = new Map();
 
     this._resizeRaf = null;
+
+    // Animation tuning (ms)
+    this.collapseOutMs = 260;
+    this.collapseInMs = 90;
+  }
+
+  ensureCollapseButton(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return;
+    const card = st.card;
+    if (!card.classList.contains("floating-card")) return;
+
+    if (st._collapseBtn && st._collapseBtn.isConnected) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "floating-collapse-btn";
+    btn.setAttribute("title", "Return to layout");
+    btn.setAttribute("aria-label", "Return to layout");
+    btn.textContent = "⤓";
+
+    const onClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Explicit user action: disable floating and persist that preference.
+      try {
+        st.spaceSuspended = false;
+      } catch (err) {}
+      this.setEnabledDesired(key, false);
+      this.disableFloatingRuntime(key);
+      this.updateButton(key);
+      this.notifyLayoutChanged();
+    };
+
+    // Prevent drag initiation from the button.
+    const stop = (e) => {
+      try {
+        e.stopPropagation();
+      } catch (err) {}
+    };
+
+    btn.addEventListener("click", onClick);
+    btn.addEventListener("pointerdown", stop);
+    btn.addEventListener("mousedown", stop);
+
+    st._collapseBtn = btn;
+    try {
+      card.appendChild(btn);
+    } catch (e) {}
+  }
+
+  removeCollapseButton(key) {
+    const st = this.runtime.get(key);
+    if (!st) return;
+    try {
+      if (st._collapseBtn) st._collapseBtn.remove();
+    } catch (e) {}
+    st._collapseBtn = null;
+  }
+
+  createCollapseProxy(card) {
+    if (!card) return null;
+    try {
+      const rect = card.getBoundingClientRect();
+      const proxy = card.cloneNode(true);
+
+      // Avoid duplicate IDs and interactive behavior.
+      const stripIds = (node) => {
+        if (!node || node.nodeType !== 1) return;
+        try {
+          node.removeAttribute("id");
+        } catch (e) {}
+        const children = node.children || [];
+        for (const c of children) stripIds(c);
+      };
+      stripIds(proxy);
+
+      try {
+        proxy
+          .querySelectorAll(
+            ".floating-collapse-btn, button, a, input, textarea, select"
+          )
+          .forEach((el) => {
+            try {
+              el.setAttribute("tabindex", "-1");
+              el.setAttribute("aria-hidden", "true");
+            } catch (e) {}
+          });
+      } catch (e) {}
+
+      proxy.classList.add("floating-collapse-out");
+      proxy.style.position = "fixed";
+      proxy.style.left = `${Math.round(rect.left)}px`;
+      proxy.style.top = `${Math.round(rect.top)}px`;
+      proxy.style.width = `${Math.round(rect.width)}px`;
+      proxy.style.height = `${Math.round(rect.height)}px`;
+      proxy.style.margin = "0";
+      proxy.style.pointerEvents = "none";
+      proxy.style.zIndex = String(
+        Math.max(999, parseInt(card.style.zIndex || "50", 10) + 50)
+      );
+
+      document.body.appendChild(proxy);
+      window.setTimeout(() => {
+        try {
+          proxy.remove();
+        } catch (e) {}
+      }, this.collapseOutMs + 80);
+
+      return proxy;
+    } catch (e) {
+      return null;
+    }
   }
 
   getBoxStorageKey(key) {
@@ -104,6 +218,7 @@ class FloatingModeManager {
         userMovedSinceLastSave: false,
         autoPositionChangedSinceLastSave: false,
         spaceSuspended: false,
+        collapseTimer: null,
         persistenceSuppressed: 0,
         resizeObserver: null,
         mutationObserver: null,
@@ -355,6 +470,8 @@ class FloatingModeManager {
     document.body.appendChild(card);
     card.classList.add("floating-card");
 
+    this.ensureCollapseButton(key);
+
     // Update top-features columns if this card used to live there.
     this.notifyLayoutChanged();
 
@@ -544,19 +661,18 @@ class FloatingModeManager {
 
     const card = st.card;
 
-    // Capture the current floating rect for a FLIP-style collapse animation.
-    let fromRect = null;
-    try {
-      fromRect = card.getBoundingClientRect();
-    } catch (e) {
-      fromRect = null;
-    }
-
     // If not floating, just update button state
     if (!card.classList.contains("floating-card")) {
       this.updateButton(key);
       return;
     }
+
+    // If a collapse is already scheduled, don't double-run it.
+    if (st.collapseTimer) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Cleanup handlers
     try {
@@ -616,68 +732,109 @@ class FloatingModeManager {
       st.minUpdateRaf = null;
     }
 
-    // Restore to original position using placeholder (while still floating),
-    // then clear floating styles so it participates in the tiling layout.
-    const placeholder = st.placeholder;
-    let inserted = false;
-    if (placeholder && placeholder.parentNode) {
-      try {
-        placeholder.parentNode.insertBefore(card, placeholder);
-        placeholder.remove();
-        inserted = true;
-      } catch (e) {
-        // Fallback: append to original parent
-        try {
-          (
-            st.originalParent ||
-            document.querySelector(".content-grid") ||
-            document.body
-          ).appendChild(card);
-          inserted = true;
-        } catch (e2) {}
-      }
-    } else if (st.originalParent) {
-      try {
-        st.originalParent.insertBefore(card, st.originalNextSibling);
-        inserted = true;
-      } catch (e) {
-        try {
-          st.originalParent.appendChild(card);
-          inserted = true;
-        } catch (e2) {}
-      }
-    }
+    const finalizeRestoreToTiling = () => {
+      // Button only exists in floating mode
+      this.removeCollapseButton(key);
 
-    // Remove floating styles
-    card.classList.remove("floating-card");
-    card.style.position = "";
-    card.style.left = "";
-    card.style.top = "";
-    card.style.width = "";
-    card.style.height = "";
-    card.style.zIndex = "";
-    card.style.resize = "";
-    card.style.overflow = "";
-    card.style.minWidth = "";
-    card.style.minHeight = "";
-
-    // Animate collapse into the tiling layout (FLIP). Keep it resilient and
-    // skip if reduced-motion is preferred.
-    if (inserted && fromRect) {
-      try {
-        const prefersReducedMotion =
-          window.matchMedia &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (!prefersReducedMotion) {
-          const toRect = card.getBoundingClientRect();
-          this.animateCollapseToTiling(card, fromRect, toRect);
+      // Restore to original position using placeholder (while still floating),
+      // then clear floating styles so it participates in the tiling layout.
+      const placeholder = st.placeholder;
+      let inserted = false;
+      if (placeholder && placeholder.parentNode) {
+        try {
+          placeholder.parentNode.insertBefore(card, placeholder);
+          placeholder.remove();
+          inserted = true;
+        } catch (e) {
+          // Fallback: append to original parent
+          try {
+            (
+              st.originalParent ||
+              document.querySelector(".content-grid") ||
+              document.body
+            ).appendChild(card);
+            inserted = true;
+          } catch (e2) {}
         }
+      } else if (st.originalParent) {
+        try {
+          st.originalParent.insertBefore(card, st.originalNextSibling);
+          inserted = true;
+        } catch (e) {
+          try {
+            st.originalParent.appendChild(card);
+            inserted = true;
+          } catch (e2) {}
+        }
+      }
+
+      // Remove floating styles
+      card.classList.remove("floating-card");
+      card.style.position = "";
+      card.style.left = "";
+      card.style.top = "";
+      card.style.width = "";
+      card.style.height = "";
+      card.style.zIndex = "";
+      card.style.resize = "";
+      card.style.overflow = "";
+      card.style.minWidth = "";
+      card.style.minHeight = "";
+
+      // Fade in quickly once the card is in place.
+      if (inserted && !prefersReducedMotion) {
+        try {
+          // Ensure we don't accidentally re-trigger the base .card entrance animation.
+          card.classList.remove("floating-collapse-out");
+          card.classList.add("tiling-collapse-in");
+
+          const cleanup = () => {
+            try {
+              card.classList.remove("tiling-collapse-in");
+              card.removeEventListener("animationend", cleanup);
+            } catch (e) {}
+          };
+          card.addEventListener("animationend", cleanup);
+          window.setTimeout(cleanup, this.collapseInMs + 80);
+        } catch (e) {}
+      } else {
+        try {
+          card.classList.remove("floating-collapse-out");
+          card.classList.remove("tiling-collapse-in");
+        } catch (e) {}
+      }
+
+      // Re-enable interactions.
+      try {
+        card.style.pointerEvents = "";
       } catch (e) {}
+
+      // Ensure the top-features grid updates back to 3 columns when these cards
+      // return from floating.
+      this.notifyLayoutChanged();
+    };
+
+    if (prefersReducedMotion) {
+      finalizeRestoreToTiling();
+      return;
     }
 
-    // Ensure the top-features grid updates back to 3 columns when these cards
-    // return from floating.
-    this.notifyLayoutChanged();
+    // Subtle collapse WITHOUT empty gap:
+    // - Create a visual proxy that fades out where it was floating
+    // - Immediately restore the real card into tiling, then fade it in quickly
+    this.createCollapseProxy(card);
+
+    // Immediately restore the real card so the grid never looks empty.
+    st.collapseTimer = window.setTimeout(() => {
+      st.collapseTimer = null;
+    }, this.collapseOutMs + 120);
+
+    try {
+      card.classList.remove("floating-collapse-out");
+      card.classList.remove("tiling-collapse-in");
+    } catch (e) {}
+
+    finalizeRestoreToTiling();
   }
 
   bumpZIndex(key) {
@@ -1023,60 +1180,6 @@ class FloatingModeManager {
   clamp(value, min, max) {
     if (!Number.isFinite(value)) return min;
     return Math.min(Math.max(value, min), max);
-  }
-
-  animateCollapseToTiling(card, fromRect, toRect) {
-    if (!card || !fromRect || !toRect) return;
-
-    const dx = fromRect.left - toRect.left;
-    const dy = fromRect.top - toRect.top;
-
-    const toW = Math.max(1, toRect.width || 1);
-    const toH = Math.max(1, toRect.height || 1);
-    const scaleX = Math.max(0.2, (fromRect.width || toW) / toW);
-    const scaleY = Math.max(0.2, (fromRect.height || toH) / toH);
-
-    const hasMeaningfulMove =
-      Math.abs(dx) > 0.5 ||
-      Math.abs(dy) > 0.5 ||
-      Math.abs(scaleX - 1) > 0.02 ||
-      Math.abs(scaleY - 1) > 0.02;
-    if (!hasMeaningfulMove) return;
-
-    // Set initial inverted transform without transition, then transition to identity.
-    // Opacity fade is handled by CSS animation on .floating-collapse.
-    card.classList.add("floating-collapse");
-    card.style.transition = "none";
-    card.style.transformOrigin = "top left";
-    card.style.willChange = "transform, opacity";
-    card.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
-
-    try {
-      void card.offsetWidth;
-    } catch (e) {}
-
-    // Next frame: allow CSS transition to run.
-    requestAnimationFrame(() => {
-      try {
-        card.style.transition = "";
-        card.style.transform = "";
-
-        const cleanup = () => {
-          try {
-            card.classList.remove("floating-collapse");
-            card.style.willChange = "";
-            card.style.transformOrigin = "";
-            card.removeEventListener("transitionend", cleanup);
-            card.removeEventListener("animationend", cleanup);
-          } catch (e) {}
-        };
-        card.addEventListener("transitionend", cleanup);
-        card.addEventListener("animationend", cleanup);
-
-        // Safety cleanup in case transitionend doesn't fire.
-        window.setTimeout(cleanup, 950);
-      } catch (e) {}
-    });
   }
 }
 
