@@ -23,7 +23,8 @@ class FloatingModeManager {
       prayerTimes: {
         cardId: "prayerTimesCard",
         buttonId: "floatingPrayerTimesBtn",
-        handleSelector: ".card-title",
+        // Use header as the drag handle (match other floating components)
+        handleSelector: ".card-header",
       },
       hijriCalendar: {
         cardId: "calendarCard",
