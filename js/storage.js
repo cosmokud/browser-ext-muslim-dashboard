@@ -220,6 +220,7 @@ class StorageManager {
         activeSetId: null,
         mode: "study", // 'study' or 'test'
         studyAutoAdvanceSeconds: 10,
+        autoAdvancePaused: false, // pause/resume auto-advance in study mode
         questionFontSize: 22,
         answerFontSize: 18,
       },

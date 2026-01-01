@@ -69,6 +69,13 @@ class FlashcardManager {
 
     // Study mode auto-advance timer
     this._autoAdvanceTimer = null;
+
+    // Auto-advance toggle elements
+    this.autoAdvanceToggleBtn = document.getElementById(
+      "flashcardAutoAdvanceToggleBtn"
+    );
+    this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
+    this.autoAdvanceWrapEl = document.getElementById("flashcardAutoWrap");
   }
 
   async init() {
@@ -245,6 +252,83 @@ class FlashcardManager {
     return clamped;
   }
 
+  // ---------- Auto-advance pause controls ----------
+
+  getAutoAdvancePaused() {
+    const settings = this.getFlashcardSettings();
+    return !!settings.autoAdvancePaused;
+  }
+
+  setAutoAdvancePaused(paused) {
+    const next = !!paused;
+    this.setFlashcardSettings({ autoAdvancePaused: next });
+
+    if (next) {
+      // user paused it — clear any pending timer
+      this.clearAutoAdvanceTimer();
+    } else {
+      // user resumed — start/restart timer
+      this.ensureAutoAdvanceState({ reset: true });
+    }
+
+    this.updateAutoAdvanceToggleUi();
+    return next;
+  }
+
+  toggleAutoAdvancePaused() {
+    const next = !this.getAutoAdvancePaused();
+    this.setAutoAdvancePaused(next);
+    this.showToast(
+      next ? "Auto-advance paused" : "Auto-advance resumed",
+      "info"
+    );
+  }
+
+  updateAutoAdvanceToggleUi() {
+    // Ensure references exist (DOM may have been modified)
+    if (!this.autoAdvanceToggleBtn)
+      this.autoAdvanceToggleBtn = document.getElementById(
+        "flashcardAutoAdvanceToggleBtn"
+      );
+    if (!this.autoAdvanceStatusEl)
+      this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
+    if (!this.autoAdvanceWrapEl)
+      this.autoAdvanceWrapEl = document.getElementById("flashcardAutoWrap");
+
+    if (!this.autoAdvanceToggleBtn && !this.autoAdvanceStatusEl && !this.autoAdvanceWrapEl)
+      return;
+
+    const paused = this.getAutoAdvancePaused();
+    const cards = this.getActiveSet()?.cards || [];
+    const visible = this.isStudyMode() && cards.length > 1;
+
+    if (this.autoAdvanceToggleBtn) {
+      this.autoAdvanceToggleBtn.setAttribute(
+        "aria-pressed",
+        paused ? "true" : "false"
+      );
+      this.autoAdvanceToggleBtn.dataset.paused = paused ? "true" : "false";
+      this.autoAdvanceToggleBtn.title = paused
+        ? "Resume auto-advance"
+        : "Pause auto-advance";
+      this.autoAdvanceToggleBtn.innerHTML = `<span class="auto-icon" aria-hidden="true">${
+        paused ? "▶" : "⏸"
+      }</span>`;
+
+      this.autoAdvanceToggleBtn.disabled = !visible;
+      this.autoAdvanceToggleBtn.style.display = visible ? "" : "none";
+    }
+
+    if (this.autoAdvanceStatusEl) {
+      this.autoAdvanceStatusEl.textContent = paused ? "Paused" : "Auto";
+      this.autoAdvanceStatusEl.style.display = visible ? "" : "none";
+    }
+
+    if (this.autoAdvanceWrapEl) {
+      this.autoAdvanceWrapEl.style.display = visible ? "" : "none";
+    }
+  }
+
   applyModeToDashboard() {
     const mode = this.getMode();
 
@@ -278,6 +362,9 @@ class FlashcardManager {
         mode === "study" ? "true" : "false"
       );
     }
+
+    // Update auto-advance toggle UI to reflect paused state and mode
+    this.updateAutoAdvanceToggleUi();
   }
 
   clearAutoAdvanceTimer() {
@@ -291,8 +378,10 @@ class FlashcardManager {
     const isStudy = this.isStudyMode();
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
+    const paused = this.getAutoAdvancePaused();
 
-    if (!isStudy || cards.length <= 1) {
+    // Do not run auto-advance when not in study mode, only one card exists, or user paused it.
+    if (!isStudy || cards.length <= 1 || paused) {
       this.clearAutoAdvanceTimer();
       return;
     }
@@ -423,6 +512,28 @@ class FlashcardManager {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           this.toggleFlip();
+        }
+      });
+    }
+
+    // Re-query auto-advance elements (safe if DOM was modified)
+    if (!this.autoAdvanceToggleBtn)
+      this.autoAdvanceToggleBtn = document.getElementById(
+        "flashcardAutoAdvanceToggleBtn"
+      );
+    if (!this.autoAdvanceStatusEl)
+      this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
+
+    if (this.autoAdvanceToggleBtn) {
+      this.autoAdvanceToggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.toggleAutoAdvancePaused();
+      });
+
+      this.autoAdvanceToggleBtn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          this.toggleAutoAdvancePaused();
         }
       });
     }
@@ -674,6 +785,7 @@ class FlashcardManager {
 
     this.ensureAutoAdvanceState();
     this.updateJumpControls();
+    this.updateAutoAdvanceToggleUi();
   }
 
   // ---------- Settings UI ----------
