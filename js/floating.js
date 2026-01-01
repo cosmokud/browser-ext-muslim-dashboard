@@ -160,6 +160,17 @@ class FloatingModeManager {
     });
   }
 
+  notifyLayoutChanged() {
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyComponentVisibility === "function"
+    ) {
+      try {
+        window.dashboard.applyComponentVisibility();
+      } catch (e) {}
+    }
+  }
+
   flushAll() {
     for (const key of this.runtime.keys()) {
       const st = this.runtime.get(key);
@@ -343,6 +354,9 @@ class FloatingModeManager {
     // Detach and float
     document.body.appendChild(card);
     card.classList.add("floating-card");
+
+    // Update top-features columns if this card used to live there.
+    this.notifyLayoutChanged();
 
     // Safe startup animation (no transforms)
     card.classList.remove("floating-animate-in");
@@ -660,6 +674,10 @@ class FloatingModeManager {
         }
       } catch (e) {}
     }
+
+    // Ensure the top-features grid updates back to 3 columns when these cards
+    // return from floating.
+    this.notifyLayoutChanged();
   }
 
   bumpZIndex(key) {
@@ -1026,12 +1044,12 @@ class FloatingModeManager {
     if (!hasMeaningfulMove) return;
 
     // Set initial inverted transform without transition, then transition to identity.
+    // Opacity fade is handled by CSS animation on .floating-collapse.
     card.classList.add("floating-collapse");
     card.style.transition = "none";
     card.style.transformOrigin = "top left";
     card.style.willChange = "transform, opacity";
     card.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
-    card.style.opacity = "0.98";
 
     try {
       void card.offsetWidth;
@@ -1042,7 +1060,6 @@ class FloatingModeManager {
       try {
         card.style.transition = "";
         card.style.transform = "";
-        card.style.opacity = "";
 
         const cleanup = () => {
           try {
@@ -1050,12 +1067,14 @@ class FloatingModeManager {
             card.style.willChange = "";
             card.style.transformOrigin = "";
             card.removeEventListener("transitionend", cleanup);
+            card.removeEventListener("animationend", cleanup);
           } catch (e) {}
         };
         card.addEventListener("transitionend", cleanup);
+        card.addEventListener("animationend", cleanup);
 
         // Safety cleanup in case transitionend doesn't fire.
-        window.setTimeout(cleanup, 450);
+        window.setTimeout(cleanup, 950);
       } catch (e) {}
     });
   }
