@@ -45,6 +45,8 @@ class FloatingModeManager {
     };
 
     this.runtime = new Map();
+
+    this._resizeRaf = null;
   }
 
   getBoxStorageKey(key) {
@@ -98,6 +100,10 @@ class FloatingModeManager {
         originalParent: null,
         originalNextSibling: null,
         dragging: null,
+        userResizing: false,
+        userMovedSinceLastSave: false,
+        autoPositionChangedSinceLastSave: false,
+        persistenceSuppressed: 0,
         resizeObserver: null,
         mutationObserver: null,
         saveTimer: null,
@@ -124,6 +130,10 @@ class FloatingModeManager {
 
     // Apply viewport constraints + initial state
     this.applyViewportConstraint();
+
+    // Keep floating windows visible on viewport changes, but never persist
+    // these automatic adjustments.
+    window.addEventListener("resize", () => this.onWindowResize());
 
     // Keep constraint in sync with viewport
     const onViewportChange = () => this.applyViewportConstraint();
@@ -278,8 +288,10 @@ class FloatingModeManager {
 
     // Already floating
     if (card.classList.contains("floating-card")) {
-      // ensure position is clamped
-      this.clampCardToViewport(key);
+      // Ensure position is clamped, but do NOT persist auto moves.
+      this.clampCardToViewport(key, { persist: false });
+      // If there's no longer enough space for floating, cancel it.
+      this.enforceHorizontalSpace(key);
       return;
     }
 
@@ -328,6 +340,15 @@ class FloatingModeManager {
     const width = this.safeNumber(cfg.width, 420);
     const height = this.safeNumber(cfg.height, 520);
     const z = this.safeNumber(cfg.z, 10);
+
+    // If the viewport can no longer accommodate the main container + this
+    // floating component, cancel floating mode and keep normal tiling layout.
+    if (!this.hasHorizontalSpace(width)) {
+      this.setEnabledDesired(key, false);
+      this.disableFloatingRuntime(key);
+      this.updateButton(key);
+      return;
+    }
 
     card.style.position = "fixed";
     card.style.left = `${left}px`;
@@ -380,6 +401,8 @@ class FloatingModeManager {
         startTop: Number.isFinite(styleTop) ? styleTop : rect.top,
       };
 
+      st.userMovedSinceLastSave = false;
+
       try {
         handle.setPointerCapture(e.pointerId);
       } catch (err) {}
@@ -392,10 +415,35 @@ class FloatingModeManager {
       document.addEventListener("pointercancel", onPointerUp, { once: true });
     };
 
+    // Track native resize handle drags (bottom-right) to treat resulting clamps
+    // as user-driven (and thus persistable).
+    const onCardPointerDownForResize = (e) => {
+      if (!card.classList.contains("floating-card")) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      if (typeof e.clientX !== "number" || typeof e.clientY !== "number") return;
+
+      const rect = card.getBoundingClientRect();
+      const edge = 18; // px
+      const nearRight = rect.right - e.clientX <= edge;
+      const nearBottom = rect.bottom - e.clientY <= edge;
+
+      if (nearRight && nearBottom) {
+        st.userResizing = true;
+      }
+    };
+
+    const onAnyPointerUpClearResize = () => {
+      st.userResizing = false;
+    };
+
     const onPointerMove = (e) => {
       if (!st.dragging) return;
       const dx = e.clientX - st.dragging.startX;
       const dy = e.clientY - st.dragging.startY;
+
+       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        st.userMovedSinceLastSave = true;
+      }
 
       const nextLeft = st.dragging.startLeft + dx;
       const nextTop = st.dragging.startTop + dy;
@@ -411,19 +459,26 @@ class FloatingModeManager {
     const onPointerUp = () => {
       document.removeEventListener("pointermove", onPointerMove);
       st.dragging = null;
-      this.clampCardToViewport(key);
+      // User-driven: clamp + persist final position.
+      this.clampCardToViewport(key, { persist: true });
       this.flushSave(key);
     };
 
     // Store handlers for cleanup
     st._floatingHandle = handle;
     st._onPointerDown = onPointerDown;
+    st._onCardPointerDownForResize = onCardPointerDownForResize;
+    st._onAnyPointerUpClearResize = onAnyPointerUpClearResize;
     handle.addEventListener("pointerdown", onPointerDown);
+    card.addEventListener("pointerdown", onCardPointerDownForResize);
+    document.addEventListener("pointerup", onAnyPointerUpClearResize);
+    document.addEventListener("pointercancel", onAnyPointerUpClearResize);
 
     // Resize persistence
     if (typeof ResizeObserver !== "undefined") {
       st.resizeObserver = new ResizeObserver(() => {
         if (!card.classList.contains("floating-card")) return;
+        if (this.isPersistenceSuppressed(key)) return;
         this.scheduleSave(key);
         this.scheduleMinUpdate(key);
       });
@@ -447,8 +502,10 @@ class FloatingModeManager {
     // Compute min sizes based on current content and ensure height is not below content
     this.scheduleMinUpdate(key);
 
-    this.clampCardToViewport(key);
+    // Persist the configured box once on enable, but do NOT persist any
+    // automatic clamping that might be required for the current viewport.
     this.flushSave(key);
+    this.clampCardToViewport(key, { persist: false });
   }
 
   disableFloatingRuntime(key) {
@@ -473,8 +530,26 @@ class FloatingModeManager {
       }
     } catch (e) {}
 
+    try {
+      if (st.card && st._onCardPointerDownForResize) {
+        st.card.removeEventListener("pointerdown", st._onCardPointerDownForResize);
+      }
+    } catch (e) {}
+
+    try {
+      if (st._onAnyPointerUpClearResize) {
+        document.removeEventListener("pointerup", st._onAnyPointerUpClearResize);
+        document.removeEventListener(
+          "pointercancel",
+          st._onAnyPointerUpClearResize
+        );
+      }
+    } catch (e) {}
+
     st._floatingHandle = null;
     st._onPointerDown = null;
+    st._onCardPointerDownForResize = null;
+    st._onAnyPointerUpClearResize = null;
 
     if (st.resizeObserver) {
       try {
@@ -562,6 +637,8 @@ class FloatingModeManager {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
 
+    if (this.isPersistenceSuppressed(key)) return;
+
     if (st.saveTimer) return;
 
     st.saveTimer = window.setTimeout(() => {
@@ -604,38 +681,51 @@ class FloatingModeManager {
     const card = st.card;
     if (!card.classList.contains("floating-card")) return;
 
-    // Measure natural content height at current width (without forcing scrollbars)
-    const prevHeight = card.style.height;
-    const prevMinHeight = card.style.minHeight;
+    const doUpdate = () => {
+      // Measure natural content height at current width (without forcing scrollbars)
+      const prevHeight = card.style.height;
+      const prevMinHeight = card.style.minHeight;
 
-    // Temporarily allow the card to size to its content to measure the minimum
-    card.style.minHeight = "0px";
-    card.style.height = "auto";
+      // Temporarily allow the card to size to its content to measure the minimum
+      card.style.minHeight = "0px";
+      card.style.height = "auto";
 
-    const naturalHeight = Math.ceil(card.getBoundingClientRect().height);
+      const naturalHeight = Math.ceil(card.getBoundingClientRect().height);
 
-    // Restore explicit height, then enforce minHeight
-    card.style.height = prevHeight;
-    const nextMinHeight = `${Math.max(0, naturalHeight)}px`;
-    if (prevMinHeight !== nextMinHeight) {
-      card.style.minHeight = nextMinHeight;
+      // Restore explicit height, then enforce minHeight
+      card.style.height = prevHeight;
+      const nextMinHeight = `${Math.max(0, naturalHeight)}px`;
+      if (prevMinHeight !== nextMinHeight) {
+        card.style.minHeight = nextMinHeight;
+      } else {
+        card.style.minHeight = prevMinHeight;
+      }
+
+      // If the current height is below the content minimum, grow it.
+      const rect = card.getBoundingClientRect();
+      if (rect.height + 0.5 < naturalHeight) {
+        card.style.height = `${naturalHeight}px`;
+      }
+
+      // Keep it on-screen as best as possible.
+      // NOTE: Position changes from content/DOM-driven reflow must not persist.
+      this.clampCardToViewport(key, { persist: false });
+    };
+
+    // If this update is auto-triggered (content reflow, viewport shrink), do
+    // not allow the resulting programmatic resize/clamp to persist.
+    if (st.userResizing) {
+      doUpdate();
     } else {
-      card.style.minHeight = prevMinHeight;
+      this.withPersistenceSuppressedThroughNextFrame(key, doUpdate);
     }
-
-    // If the current height is below the content minimum, grow it.
-    const rect = card.getBoundingClientRect();
-    if (rect.height + 0.5 < naturalHeight) {
-      card.style.height = `${naturalHeight}px`;
-    }
-
-    // Keep it on-screen as best as possible
-    this.clampCardToViewport(key);
   }
 
   flushSave(key) {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
+
+    if (this.isPersistenceSuppressed(key)) return;
 
     if (!st.card.classList.contains("floating-card")) return;
 
@@ -659,10 +749,23 @@ class FloatingModeManager {
     settings.floating = settings.floating || {};
     const prev = settings.floating[key] || {};
 
+    // If the window was only moved automatically (e.g., viewport shrink clamp),
+    // never persist the new left/top. Only user drags should update position.
+    const shouldPersistPosition = st.userMovedSinceLastSave === true;
+    const shouldKeepPreviousPosition =
+      st.autoPositionChangedSinceLastSave === true && !shouldPersistPosition;
+
+    const persistedLeft = shouldKeepPreviousPosition
+      ? this.safeNumber(prev.left, Math.round(left))
+      : Math.round(left);
+    const persistedTop = shouldKeepPreviousPosition
+      ? this.safeNumber(prev.top, Math.round(top))
+      : Math.round(top);
+
     const box = {
       ...prev,
-      left: Math.round(left),
-      top: Math.round(top),
+      left: persistedLeft,
+      top: persistedTop,
       width: Math.round(width),
       height: Math.round(height),
       enabled: true,
@@ -670,9 +773,14 @@ class FloatingModeManager {
     };
 
     this.persistBox(key, box);
+
+    if (shouldPersistPosition) {
+      st.autoPositionChangedSinceLastSave = false;
+      st.userMovedSinceLastSave = false;
+    }
   }
 
-  clampCardToViewport(key) {
+  clampCardToViewport(key, { persist = false } = {}) {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
     const card = st.card;
@@ -708,12 +816,95 @@ class FloatingModeManager {
     if (prevLeft !== nextLeft) card.style.left = `${nextLeft}px`;
     if (prevTop !== nextTop) card.style.top = `${nextTop}px`;
 
-    // Persist only if clamping actually moved the window.
-    if (
+    const didMove =
       (prevLeft !== null && prevLeft !== nextLeft) ||
-      (prevTop !== null && prevTop !== nextTop)
-    ) {
+      (prevTop !== null && prevTop !== nextTop);
+
+    if (didMove && !persist) {
+      st.autoPositionChangedSinceLastSave = true;
+    }
+
+    // Persist only for user-driven interactions (drag end / resize handle).
+    if (!persist) return;
+    if (this.isPersistenceSuppressed(key)) return;
+
+    if (didMove) {
+      st.userMovedSinceLastSave = true;
+    }
+
+    if (didMove) {
       this.scheduleSave(key);
+    }
+  }
+
+  onWindowResize() {
+    if (this._resizeRaf) return;
+    this._resizeRaf = requestAnimationFrame(() => {
+      this._resizeRaf = null;
+      for (const key of this.runtime.keys()) {
+        // Enforce horizontal space rule and clamp without persistence.
+        this.enforceHorizontalSpace(key);
+        this.clampCardToViewport(key, { persist: false });
+      }
+    });
+  }
+
+  getMainContainerWidth() {
+    const el =
+      document.querySelector(".main-container") ||
+      document.querySelector(".content-grid") ||
+      document.body;
+    try {
+      return Math.max(0, el.getBoundingClientRect().width || 0);
+    } catch (e) {
+      return Math.max(0, window.innerWidth || 0);
+    }
+  }
+
+  hasHorizontalSpace(componentWidth) {
+    const mainWidth = this.getMainContainerWidth();
+    const required = mainWidth + (this.safeNumber(componentWidth, 0) || 0);
+    return required <= window.innerWidth;
+  }
+
+  enforceHorizontalSpace(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return true;
+
+    if (!st.card.classList.contains("floating-card")) return true;
+
+    const rect = st.card.getBoundingClientRect();
+    const componentWidth = rect.width;
+    if (this.hasHorizontalSpace(componentWidth)) return true;
+
+    // Cancel floating mode and return to normal tiling layout.
+    this.setEnabledDesired(key, false);
+    this.disableFloatingRuntime(key);
+    this.updateButton(key);
+    return false;
+  }
+
+  isPersistenceSuppressed(key) {
+    const st = this.runtime.get(key);
+    return !!st && (st.persistenceSuppressed || 0) > 0;
+  }
+
+  withPersistenceSuppressedThroughNextFrame(key, fn) {
+    const st = this.runtime.get(key);
+    if (!st) return fn();
+
+    st.persistenceSuppressed = (st.persistenceSuppressed || 0) + 1;
+    try {
+      return fn();
+    } finally {
+      requestAnimationFrame(() => {
+        const st2 = this.runtime.get(key);
+        if (!st2) return;
+        st2.persistenceSuppressed = Math.max(
+          0,
+          (st2.persistenceSuppressed || 0) - 1
+        );
+      });
     }
   }
 
