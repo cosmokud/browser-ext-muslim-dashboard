@@ -792,9 +792,14 @@ class SettingsManager {
    * Export custom content (Flashcards sets, Custom backgrounds, Custom quotes)
    */
   exportFullExport() {
+    // Base payload = same as "Export Settings" (so Full Export is a strict superset)
     const settings = this.storage.getSettings();
+    const todos = this.storage.getTodos();
     const userQuotes = this.storage.getUserQuotes();
+    const pinnedApps = this.storage.getPinnedApps();
+    const lastLocation = this.storage.getLastLocation();
 
+    // Extra payload = custom content not covered by settings export (custom flashcard sets)
     const customBackgrounds = Array.isArray(settings.customBackgrounds)
       ? settings.customBackgrounds
       : [];
@@ -824,6 +829,13 @@ class SettingsManager {
       exportType: "full",
       version: 1,
       exportDate: new Date().toISOString(),
+      settings,
+      todos,
+      userQuotes: Array.isArray(userQuotes) ? userQuotes : [],
+      pinnedApps,
+      lastLocation,
+
+      // Additive / full-export-only fields
       flashcards: {
         activeSetId:
           this.flashcards?.getActiveSetId?.() ||
@@ -831,8 +843,9 @@ class SettingsManager {
           null,
         sets: customSets,
       },
+
+      // Kept for clarity/backward-compat (also included within settings.customBackgrounds)
       customBackgrounds,
-      userQuotes: Array.isArray(userQuotes) ? userQuotes : [],
     };
 
     const json = JSON.stringify(exportData, null, 2);
@@ -859,8 +872,27 @@ class SettingsManager {
         ? FlashcardManager.MAX_SETS
         : 10;
 
-    // Backgrounds
+    // Import base payload (same shape as normal settings export)
+    if (data.settings) {
+      this.storage.saveSettings(data.settings);
+    }
+
+    if (data.todos) {
+      this.storage.saveTodos(data.todos);
+    }
+
+    if (data.pinnedApps) {
+      this.storage.savePinnedApps(data.pinnedApps);
+    }
+
+    if (data.lastLocation) {
+      this.storage.saveLastLocation(data.lastLocation);
+    }
+
+    // Continue with a fresh settings object so we can safely patch fields below.
     const settings = this.storage.getSettings();
+
+    // Backgrounds (full export supports overriding these explicitly)
     if (Array.isArray(data.customBackgrounds)) {
       const filtered = data.customBackgrounds
         .filter((x) => typeof x === "string" && x.startsWith("data:image"))
