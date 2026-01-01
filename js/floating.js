@@ -103,6 +103,7 @@ class FloatingModeManager {
         userResizing: false,
         userMovedSinceLastSave: false,
         autoPositionChangedSinceLastSave: false,
+        spaceSuspended: false,
         persistenceSuppressed: 0,
         resizeObserver: null,
         mutationObserver: null,
@@ -169,7 +170,11 @@ class FloatingModeManager {
         } catch (e) {}
         st.saveTimer = null;
       }
-      this.flushSave(key);
+      // If the user is/was dragging, ensure persistence isn't blocked by any
+      // temporary suppression window.
+      this.flushSave(key, {
+        force: !!st.dragging || st.userMovedSinceLastSave === true,
+      });
     }
   }
 
@@ -244,7 +249,7 @@ class FloatingModeManager {
     if (!st || !st.button) return;
 
     const desired = this.isEnabledDesired(key);
-    const active = desired && !this.isViewportSuspended;
+    const active = desired && !this.isViewportSuspended && !st.spaceSuspended;
 
     st.button.classList.toggle("active", active);
     st.button.setAttribute("aria-pressed", active ? "true" : "false");
@@ -254,6 +259,11 @@ class FloatingModeManager {
       st.button.setAttribute(
         "title",
         "Floating Mode is disabled on small screens"
+      );
+    } else if (desired && st.spaceSuspended) {
+      st.button.setAttribute(
+        "title",
+        "Not enough space for Floating Mode at this viewport width"
       );
     } else {
       st.button.setAttribute("title", "Toggle Floating Mode");
@@ -274,6 +284,7 @@ class FloatingModeManager {
     if (desired) {
       this.enableFloatingRuntime(key);
     } else {
+      st.spaceSuspended = false;
       this.disableFloatingRuntime(key);
     }
 
@@ -285,6 +296,27 @@ class FloatingModeManager {
     if (!st || !st.card) return;
 
     const card = st.card;
+
+    const cfg =
+      this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
+    const left = this.safeNumber(cfg.left, 40);
+    const top = this.safeNumber(cfg.top, 120);
+    const width = this.safeNumber(cfg.width, 420);
+    const height = this.safeNumber(cfg.height, 520);
+    const z = this.safeNumber(cfg.z, 10);
+
+    // If the viewport can't accommodate the main container plus a sidebar-wide
+    // floating window, keep tiling layout. Do NOT change the user's desired
+    // setting; we'll auto-restore when space returns.
+    if (!this.hasHorizontalSpace(width)) {
+      st.spaceSuspended = true;
+      // If it was already floating, restore it to tiling.
+      this.disableFloatingRuntime(key);
+      this.updateButton(key);
+      return;
+    }
+
+    st.spaceSuspended = false;
 
     // Already floating
     if (card.classList.contains("floating-card")) {
@@ -332,23 +364,6 @@ class FloatingModeManager {
         card.removeEventListener("animationend", onAnimEnd);
       } catch (e) {}
     }, 500);
-
-    const cfg =
-      this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
-    const left = this.safeNumber(cfg.left, 40);
-    const top = this.safeNumber(cfg.top, 120);
-    const width = this.safeNumber(cfg.width, 420);
-    const height = this.safeNumber(cfg.height, 520);
-    const z = this.safeNumber(cfg.z, 10);
-
-    // If the viewport can no longer accommodate the main container + this
-    // floating component, cancel floating mode and keep normal tiling layout.
-    if (!this.hasHorizontalSpace(width)) {
-      this.setEnabledDesired(key, false);
-      this.disableFloatingRuntime(key);
-      this.updateButton(key);
-      return;
-    }
 
     card.style.position = "fixed";
     card.style.left = `${left}px`;
@@ -420,7 +435,8 @@ class FloatingModeManager {
     const onCardPointerDownForResize = (e) => {
       if (!card.classList.contains("floating-card")) return;
       if (e.button !== undefined && e.button !== 0) return;
-      if (typeof e.clientX !== "number" || typeof e.clientY !== "number") return;
+      if (typeof e.clientX !== "number" || typeof e.clientY !== "number")
+        return;
 
       const rect = card.getBoundingClientRect();
       const edge = 18; // px
@@ -441,7 +457,7 @@ class FloatingModeManager {
       const dx = e.clientX - st.dragging.startX;
       const dy = e.clientY - st.dragging.startY;
 
-       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
         st.userMovedSinceLastSave = true;
       }
 
@@ -461,7 +477,7 @@ class FloatingModeManager {
       st.dragging = null;
       // User-driven: clamp + persist final position.
       this.clampCardToViewport(key, { persist: true });
-      this.flushSave(key);
+      this.flushSave(key, { force: true });
     };
 
     // Store handlers for cleanup
@@ -514,6 +530,14 @@ class FloatingModeManager {
 
     const card = st.card;
 
+    // Capture the current floating rect for a FLIP-style collapse animation.
+    let fromRect = null;
+    try {
+      fromRect = card.getBoundingClientRect();
+    } catch (e) {
+      fromRect = null;
+    }
+
     // If not floating, just update button state
     if (!card.classList.contains("floating-card")) {
       this.updateButton(key);
@@ -532,13 +556,19 @@ class FloatingModeManager {
 
     try {
       if (st.card && st._onCardPointerDownForResize) {
-        st.card.removeEventListener("pointerdown", st._onCardPointerDownForResize);
+        st.card.removeEventListener(
+          "pointerdown",
+          st._onCardPointerDownForResize
+        );
       }
     } catch (e) {}
 
     try {
       if (st._onAnyPointerUpClearResize) {
-        document.removeEventListener("pointerup", st._onAnyPointerUpClearResize);
+        document.removeEventListener(
+          "pointerup",
+          st._onAnyPointerUpClearResize
+        );
         document.removeEventListener(
           "pointercancel",
           st._onAnyPointerUpClearResize
@@ -572,6 +602,38 @@ class FloatingModeManager {
       st.minUpdateRaf = null;
     }
 
+    // Restore to original position using placeholder (while still floating),
+    // then clear floating styles so it participates in the tiling layout.
+    const placeholder = st.placeholder;
+    let inserted = false;
+    if (placeholder && placeholder.parentNode) {
+      try {
+        placeholder.parentNode.insertBefore(card, placeholder);
+        placeholder.remove();
+        inserted = true;
+      } catch (e) {
+        // Fallback: append to original parent
+        try {
+          (
+            st.originalParent ||
+            document.querySelector(".content-grid") ||
+            document.body
+          ).appendChild(card);
+          inserted = true;
+        } catch (e2) {}
+      }
+    } else if (st.originalParent) {
+      try {
+        st.originalParent.insertBefore(card, st.originalNextSibling);
+        inserted = true;
+      } catch (e) {
+        try {
+          st.originalParent.appendChild(card);
+          inserted = true;
+        } catch (e2) {}
+      }
+    }
+
     // Remove floating styles
     card.classList.remove("floating-card");
     card.style.position = "";
@@ -585,30 +647,18 @@ class FloatingModeManager {
     card.style.minWidth = "";
     card.style.minHeight = "";
 
-    // Restore to original position using placeholder
-    const placeholder = st.placeholder;
-    if (placeholder && placeholder.parentNode) {
+    // Animate collapse into the tiling layout (FLIP). Keep it resilient and
+    // skip if reduced-motion is preferred.
+    if (inserted && fromRect) {
       try {
-        placeholder.parentNode.insertBefore(card, placeholder);
-        placeholder.remove();
-      } catch (e) {
-        // Fallback: append to original parent
-        try {
-          (
-            st.originalParent ||
-            document.querySelector(".content-grid") ||
-            document.body
-          ).appendChild(card);
-        } catch (e2) {}
-      }
-    } else if (st.originalParent) {
-      try {
-        st.originalParent.insertBefore(card, st.originalNextSibling);
-      } catch (e) {
-        try {
-          st.originalParent.appendChild(card);
-        } catch (e2) {}
-      }
+        const prefersReducedMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!prefersReducedMotion) {
+          const toRect = card.getBoundingClientRect();
+          this.animateCollapseToTiling(card, fromRect, toRect);
+        }
+      } catch (e) {}
     }
   }
 
@@ -659,7 +709,7 @@ class FloatingModeManager {
       // Throttle localStorage writes; still frequent enough to feel instantaneous.
       if (now - (st.dragPersistLastAt || 0) < 80) return;
       st.dragPersistLastAt = now;
-      this.flushSave(key);
+      this.flushSave(key, { force: true });
     });
   }
 
@@ -721,11 +771,13 @@ class FloatingModeManager {
     }
   }
 
-  flushSave(key) {
+  flushSave(key, { force = false } = {}) {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
 
-    if (this.isPersistenceSuppressed(key)) return;
+    // Suppression is only for automatic layout adjustments. User drag saves
+    // must bypass it.
+    if (!force && this.isPersistenceSuppressed(key)) return;
 
     if (!st.card.classList.contains("floating-card")) return;
 
@@ -849,39 +901,76 @@ class FloatingModeManager {
     });
   }
 
-  getMainContainerWidth() {
+  getMainContainerRect() {
     const el =
       document.querySelector(".main-container") ||
       document.querySelector(".content-grid") ||
       document.body;
     try {
-      return Math.max(0, el.getBoundingClientRect().width || 0);
+      return el.getBoundingClientRect();
     } catch (e) {
-      return Math.max(0, window.innerWidth || 0);
+      return { left: 0, right: window.innerWidth, width: window.innerWidth };
     }
   }
 
+  getAvailableSidebarSpace() {
+    const rect = this.getMainContainerRect();
+    const leftSpace = Math.max(0, rect.left);
+    const rightSpace = Math.max(0, window.innerWidth - rect.right);
+
+    // The spec wants a single-side capacity (e.g. remaining space split into
+    // left/right sidebars). For a centered container, this is one margin side.
+    return Math.max(0, Math.min(leftSpace, rightSpace) - this.viewportPadding);
+  }
+
   hasHorizontalSpace(componentWidth) {
-    const mainWidth = this.getMainContainerWidth();
-    const required = mainWidth + (this.safeNumber(componentWidth, 0) || 0);
-    return required <= window.innerWidth;
+    const w = this.safeNumber(componentWidth, 0) || 0;
+    return w <= this.getAvailableSidebarSpace();
   }
 
   enforceHorizontalSpace(key) {
     const st = this.runtime.get(key);
     if (!st || !st.card) return true;
 
-    if (!st.card.classList.contains("floating-card")) return true;
+    const desired = this.isEnabledDesired(key);
+    const isFloating = st.card.classList.contains("floating-card");
 
-    const rect = st.card.getBoundingClientRect();
-    const componentWidth = rect.width;
-    if (this.hasHorizontalSpace(componentWidth)) return true;
+    // If not floating, approximate width from stored config so we can decide
+    // whether we should auto-restore when space returns.
+    let componentWidth = 0;
+    if (isFloating) {
+      componentWidth = Math.max(0, st.card.getBoundingClientRect().width || 0);
+    } else {
+      const cfg =
+        this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
+      componentWidth = this.safeNumber(cfg.width, 420);
+    }
 
-    // Cancel floating mode and return to normal tiling layout.
-    this.setEnabledDesired(key, false);
-    this.disableFloatingRuntime(key);
+    const hasSpace = this.hasHorizontalSpace(componentWidth);
+
+    if (!hasSpace) {
+      st.spaceSuspended = desired;
+      if (isFloating) {
+        this.disableFloatingRuntime(key);
+      }
+      this.updateButton(key);
+      return false;
+    }
+
+    // Space is available again: if user still wants floating, restore it.
+    if (desired && !this.isViewportSuspended) {
+      if (st.spaceSuspended && !isFloating) {
+        st.spaceSuspended = false;
+        this.enableFloatingRuntime(key);
+      } else {
+        st.spaceSuspended = false;
+      }
+    } else {
+      st.spaceSuspended = false;
+    }
+
     this.updateButton(key);
-    return false;
+    return true;
   }
 
   isPersistenceSuppressed(key) {
@@ -916,6 +1005,59 @@ class FloatingModeManager {
   clamp(value, min, max) {
     if (!Number.isFinite(value)) return min;
     return Math.min(Math.max(value, min), max);
+  }
+
+  animateCollapseToTiling(card, fromRect, toRect) {
+    if (!card || !fromRect || !toRect) return;
+
+    const dx = fromRect.left - toRect.left;
+    const dy = fromRect.top - toRect.top;
+
+    const toW = Math.max(1, toRect.width || 1);
+    const toH = Math.max(1, toRect.height || 1);
+    const scaleX = Math.max(0.2, (fromRect.width || toW) / toW);
+    const scaleY = Math.max(0.2, (fromRect.height || toH) / toH);
+
+    const hasMeaningfulMove =
+      Math.abs(dx) > 0.5 ||
+      Math.abs(dy) > 0.5 ||
+      Math.abs(scaleX - 1) > 0.02 ||
+      Math.abs(scaleY - 1) > 0.02;
+    if (!hasMeaningfulMove) return;
+
+    // Set initial inverted transform without transition, then transition to identity.
+    card.classList.add("floating-collapse");
+    card.style.transition = "none";
+    card.style.transformOrigin = "top left";
+    card.style.willChange = "transform, opacity";
+    card.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+    card.style.opacity = "0.98";
+
+    try {
+      void card.offsetWidth;
+    } catch (e) {}
+
+    // Next frame: allow CSS transition to run.
+    requestAnimationFrame(() => {
+      try {
+        card.style.transition = "";
+        card.style.transform = "";
+        card.style.opacity = "";
+
+        const cleanup = () => {
+          try {
+            card.classList.remove("floating-collapse");
+            card.style.willChange = "";
+            card.style.transformOrigin = "";
+            card.removeEventListener("transitionend", cleanup);
+          } catch (e) {}
+        };
+        card.addEventListener("transitionend", cleanup);
+
+        // Safety cleanup in case transitionend doesn't fire.
+        window.setTimeout(cleanup, 450);
+      } catch (e) {}
+    });
   }
 }
 

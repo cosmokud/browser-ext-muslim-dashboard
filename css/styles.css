@@ -532,6 +532,17 @@ body {
   transform: none; /* avoid hover lift changing position while dragging */
 }
 
+/* Smooth collapse animation when a floating card returns to tiling */
+.floating-collapse {
+  transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 260ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-collapse {
+    transition: none;
+  }
+}
+
 .floating-card .card-header {
   cursor: move;
 }
