@@ -1625,8 +1625,9 @@ body {
 }
 
 .user-quotes-list {
-  max-height: 200px;
-  overflow-y: auto;
+  /* Avoid nested scrollbars: use the settings modal scrollbar instead */
+  max-height: none;
+  overflow: visible;
 }
 
 .user-quote-item {
@@ -3174,6 +3175,71 @@ body {
   color: #ff6b6b;
 }
 
+.quote-item-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.quote-item-action-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quote-item-action-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+}
+
+.quote-item-action-btn.primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.quote-item-action-btn.primary:hover {
+  border-color: var(--accent-gold);
+}
+
+.quote-item-editing {
+  background: var(--glass-bg-hover);
+}
+
+.quote-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.quote-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.quote-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.quote-edit-textarea {
+  /* Prefer the settings modal scrollbar (no inner textarea scrollbar) */
+  overflow: hidden;
+  resize: none;
+  min-height: 56px;
+}
+
 /* Pagination */
 .quotes-pagination {
   display: flex;
@@ -3215,6 +3281,12 @@ body {
 
 .pagination-ellipsis {
   color: var(--text-muted);
+  padding: 0 var(--spacing-xs);
+}
+
+.pagination-info {
+  color: var(--text-muted);
+  font-size: 0.85rem;
   padding: 0 var(--spacing-xs);
 }
 

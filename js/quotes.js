@@ -12,6 +12,9 @@ class QuotesManager {
     this.currentPage = 1;
     this.quotesPerPage = 10;
 
+    // Editing state for settings UI
+    this.editingQuoteId = null;
+
     // Quote auto-rotation
     this.autoRotateMs = 60 * 1000;
     this.autoRotateTimer = null;
@@ -302,8 +305,38 @@ class QuotesManager {
 
     this.userQuotes.push(quote);
     this.storage.saveUserQuotes(this.userQuotes);
+
+    // Jump to the last page so the newly added quote is visible
+    this.currentPage = Math.max(1, this.getTotalPages());
     this.renderQuotesList();
     return quote;
+  }
+
+  /**
+   * Update an existing user quote
+   */
+  updateUserQuote(id, { text, source, isArabic }) {
+    const quote = this.userQuotes.find((q) => q.id === id);
+    if (!quote) return false;
+
+    const nextText = String(text ?? "").trim();
+    const nextSource = String(source ?? "").trim();
+
+    if (!nextText) {
+      alert("Quote text cannot be empty");
+      return false;
+    }
+    if (!nextSource) {
+      alert("Quote source cannot be empty");
+      return false;
+    }
+
+    quote.text = nextText;
+    quote.source = nextSource;
+    quote.isArabic = !!isArabic;
+
+    this.storage.saveUserQuotes(this.userQuotes);
+    return true;
   }
 
   /**
@@ -312,6 +345,10 @@ class QuotesManager {
   deleteUserQuote(id) {
     this.userQuotes = this.userQuotes.filter((q) => q.id !== id);
     this.storage.saveUserQuotes(this.userQuotes);
+
+    if (this.editingQuoteId === id) {
+      this.editingQuoteId = null;
+    }
 
     // Adjust current page if needed
     const totalPages = Math.ceil(this.userQuotes.length / this.quotesPerPage);
@@ -382,6 +419,135 @@ class QuotesManager {
           (this.currentPage - 1) * this.quotesPerPage + index + 1;
         const quoteEl = document.createElement("div");
         quoteEl.className = "quote-item";
+
+        // Inline edit mode
+        if (this.editingQuoteId === quote.id) {
+          quoteEl.classList.add("quote-item-editing");
+
+          const numberEl = document.createElement("div");
+          numberEl.className = "quote-item-number";
+          numberEl.textContent = String(globalIndex);
+
+          const contentEl = document.createElement("div");
+          contentEl.className = "quote-item-content";
+
+          const formEl = document.createElement("div");
+          formEl.className = "quote-edit-form";
+
+          const textArea = document.createElement("textarea");
+          textArea.className = `setting-textarea quote-edit-textarea ${
+            quote.isArabic ? "arabic-text" : ""
+          }`;
+          textArea.value = quote.text;
+          textArea.placeholder = "Quote text";
+
+          const sourceInput = document.createElement("input");
+          sourceInput.type = "text";
+          sourceInput.className = "setting-input";
+          sourceInput.value = quote.source;
+          sourceInput.placeholder = "Source";
+
+          const optionsRow = document.createElement("div");
+          optionsRow.className = "quote-edit-row";
+
+          const arabicLabel = document.createElement("label");
+          arabicLabel.className = "checkbox-option";
+
+          const arabicCheckbox = document.createElement("input");
+          arabicCheckbox.type = "checkbox";
+          arabicCheckbox.checked = !!quote.isArabic;
+
+          const arabicText = document.createElement("span");
+          arabicText.textContent = "Arabic Text";
+
+          arabicLabel.appendChild(arabicCheckbox);
+          arabicLabel.appendChild(arabicText);
+
+          const actionsRow = document.createElement("div");
+          actionsRow.className = "quote-edit-actions";
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.type = "button";
+          cancelBtn.className = "quote-item-action-btn";
+          cancelBtn.textContent = "Cancel";
+
+          const saveBtn = document.createElement("button");
+          saveBtn.type = "button";
+          saveBtn.className = "quote-item-action-btn primary";
+          saveBtn.textContent = "Save";
+
+          actionsRow.appendChild(cancelBtn);
+          actionsRow.appendChild(saveBtn);
+
+          optionsRow.appendChild(arabicLabel);
+
+          formEl.appendChild(textArea);
+          formEl.appendChild(sourceInput);
+          formEl.appendChild(optionsRow);
+          formEl.appendChild(actionsRow);
+
+          contentEl.appendChild(formEl);
+
+          const sideActions = document.createElement("div");
+          sideActions.className = "quote-item-actions";
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "quote-item-delete";
+          deleteBtn.dataset.id = String(quote.id);
+          deleteBtn.title = "Delete";
+          deleteBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          `;
+
+          sideActions.appendChild(deleteBtn);
+
+          quoteEl.appendChild(numberEl);
+          quoteEl.appendChild(contentEl);
+          quoteEl.appendChild(sideActions);
+
+          const autoResize = () => {
+            textArea.style.height = "auto";
+            textArea.style.height = `${textArea.scrollHeight}px`;
+          };
+          textArea.addEventListener("input", autoResize);
+          requestAnimationFrame(autoResize);
+
+          arabicCheckbox.addEventListener("change", () => {
+            textArea.classList.toggle("arabic-text", arabicCheckbox.checked);
+            autoResize();
+          });
+
+          cancelBtn.addEventListener("click", () => {
+            this.editingQuoteId = null;
+            this.renderQuotesList();
+          });
+
+          saveBtn.addEventListener("click", () => {
+            const ok = this.updateUserQuote(quote.id, {
+              text: textArea.value,
+              source: sourceInput.value,
+              isArabic: arabicCheckbox.checked,
+            });
+            if (!ok) return;
+            this.editingQuoteId = null;
+            this.renderQuotesList();
+          });
+
+          deleteBtn.addEventListener("click", () => {
+            const id = parseInt(deleteBtn.dataset.id);
+            if (confirm("Delete this quote?")) {
+              this.deleteUserQuote(id);
+            }
+          });
+
+          this.quotesListContainer.appendChild(quoteEl);
+          return;
+        }
+
+        // Read-only list item
         quoteEl.innerHTML = `
           <div class="quote-item-number">${globalIndex}</div>
           <div class="quote-item-content">
@@ -390,13 +556,18 @@ class QuotesManager {
             }">${this.escapeHtml(quote.text)}</p>
             <p class="quote-item-source">${this.escapeHtml(quote.source)}</p>
           </div>
-          <button class="quote-item-delete" data-id="${
-            quote.id
-          }" title="Delete">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-          </button>
+          <div class="quote-item-actions">
+            <button class="quote-item-action-btn" data-action="edit" data-id="${
+              quote.id
+            }" type="button">Edit</button>
+            <button class="quote-item-delete" data-id="${
+              quote.id
+            }" title="Delete" type="button">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+              </svg>
+            </button>
+          </div>
         `;
         this.quotesListContainer.appendChild(quoteEl);
       });
@@ -410,6 +581,17 @@ class QuotesManager {
             if (confirm("Delete this quote?")) {
               this.deleteUserQuote(id);
             }
+          });
+        });
+
+      // Bind edit buttons
+      this.quotesListContainer
+        .querySelectorAll('.quote-item-action-btn[data-action="edit"]')
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = parseInt(btn.dataset.id);
+            this.editingQuoteId = id;
+            this.renderQuotesList();
           });
         });
     }
@@ -435,6 +617,9 @@ class QuotesManager {
       }>
         ‹ Prev
       </button>
+      <span class="pagination-info">Page ${
+        this.currentPage
+      } / ${totalPages}</span>
     `;
 
     // Page numbers
