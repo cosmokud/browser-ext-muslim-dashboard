@@ -2616,14 +2616,20 @@ body {
 .flashcard-auto-wrap {
   display: inline-flex;
   align-items: center;
+  justify-content: center; /* center contents horizontally */
   gap: var(--spacing-xs);
   margin-left: auto; /* push to the end of the jump row */
+  align-self: center; /* ensure wrapper centers vertically within the row */
 }
 
 .flashcard-auto-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;
+  line-height: 0; /* prevent glyph baseline offset */
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: linear-gradient(
@@ -2647,6 +2653,15 @@ body {
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   background: var(--glass-bg-hover);
+}
+
+.flashcard-auto-toggle-btn .auto-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
 }
 
 .flashcard-auto-toggle-btn:focus-visible {

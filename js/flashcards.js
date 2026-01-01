@@ -295,7 +295,11 @@ class FlashcardManager {
     if (!this.autoAdvanceWrapEl)
       this.autoAdvanceWrapEl = document.getElementById("flashcardAutoWrap");
 
-    if (!this.autoAdvanceToggleBtn && !this.autoAdvanceStatusEl && !this.autoAdvanceWrapEl)
+    if (
+      !this.autoAdvanceToggleBtn &&
+      !this.autoAdvanceStatusEl &&
+      !this.autoAdvanceWrapEl
+    )
       return;
 
     const paused = this.getAutoAdvancePaused();
