@@ -108,6 +108,7 @@ class SettingsManager {
     this.uiBlurPower = document.getElementById("uiBlurPower");
     this.uiBlurPowerValue = document.getElementById("uiBlurPowerValue");
     this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
+    this.fullExportBtn = document.getElementById("fullExportBtn");
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
 
@@ -788,11 +789,173 @@ class SettingsManager {
   }
 
   /**
+   * Export custom content (Flashcards sets, Custom backgrounds, Custom quotes)
+   */
+  exportFullExport() {
+    const settings = this.storage.getSettings();
+    const userQuotes = this.storage.getUserQuotes();
+
+    const customBackgrounds = Array.isArray(settings.customBackgrounds)
+      ? settings.customBackgrounds
+      : [];
+
+    const sets = this.flashcards?.getSets
+      ? this.flashcards.getSets()
+      : this.storage.get("flashcardSets", []);
+
+    const customSets = (Array.isArray(sets) ? sets : [])
+      .filter((s) => s && s.id && s.id !== "default")
+      .map((s) => ({
+        id: String(s.id),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || null,
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.question || c.answer))
+              .map((c) => ({
+                question: String(c.question || ""),
+                answer: String(c.answer || ""),
+              }))
+          : [],
+      }));
+
+    const exportData = {
+      exportType: "full",
+      version: 1,
+      exportDate: new Date().toISOString(),
+      flashcards: {
+        activeSetId:
+          this.flashcards?.getActiveSetId?.() ||
+          settings.flashcards?.activeSetId ||
+          null,
+        sets: customSets,
+      },
+      customBackgrounds,
+      userQuotes: Array.isArray(userQuotes) ? userQuotes : [],
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `muslim-dashboard-full-export-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast("Full export created!", "success");
+  }
+
+  importFullExport(data) {
+    const maxSets =
+      typeof FlashcardManager !== "undefined" &&
+      typeof FlashcardManager.MAX_SETS === "number"
+        ? FlashcardManager.MAX_SETS
+        : 10;
+
+    // Backgrounds
+    const settings = this.storage.getSettings();
+    if (Array.isArray(data.customBackgrounds)) {
+      const filtered = data.customBackgrounds
+        .filter((x) => typeof x === "string" && x.startsWith("data:image"))
+        .slice(0, 10);
+      settings.customBackgrounds = filtered;
+    }
+
+    // Quotes (replace)
+    if (Array.isArray(data.userQuotes)) {
+      const validQuotes = data.userQuotes
+        .filter((q) => q && typeof q.text === "string" && q.text.trim() !== "")
+        .map((q) => ({
+          id: q.id || Date.now() + Math.random(),
+          text: String(q.text),
+          source: String(q.source || ""),
+          isArabic: !!q.isArabic,
+        }));
+      this.storage.saveUserQuotes(validQuotes);
+    }
+
+    // Flashcards (replace custom sets, keep default)
+    const existingSets = this.storage.get("flashcardSets", []);
+    const existingDefault = Array.isArray(existingSets)
+      ? existingSets.find((s) => s && s.id === "default")
+      : null;
+
+    const defaultSet = existingDefault || {
+      id: "default",
+      name: "Default",
+      createdAt: new Date().toISOString(),
+      cards: [],
+    };
+
+    const incomingSetsRaw =
+      data.flashcards?.sets || data.flashcardSets || data.flashcards || [];
+    const incomingSets = Array.isArray(incomingSetsRaw) ? incomingSetsRaw : [];
+
+    const cleanedCustomSets = incomingSets
+      .filter((s) => s && s.id && s.id !== "default")
+      .map((s, i) => ({
+        id: String(s.id || `set_${Date.now()}_${i}`),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || new Date().toISOString(),
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.question || c.answer))
+              .map((c) => ({
+                question: String(c.question || ""),
+                answer: String(c.answer || ""),
+              }))
+          : [],
+      }))
+      .slice(0, Math.max(0, maxSets - 1));
+
+    this.storage.set("flashcardSets", [defaultSet, ...cleanedCustomSets]);
+
+    // Flashcards active set (optional)
+    const incomingActiveSetId = data.flashcards?.activeSetId;
+    if (
+      incomingActiveSetId &&
+      typeof incomingActiveSetId === "string" &&
+      incomingActiveSetId !== "default" &&
+      cleanedCustomSets.some((s) => s.id === incomingActiveSetId)
+    ) {
+      settings.flashcards = {
+        ...(settings.flashcards || {}),
+        activeSetId: incomingActiveSetId,
+      };
+    } else {
+      settings.flashcards = {
+        ...(settings.flashcards || {}),
+        activeSetId: "default",
+      };
+    }
+
+    this.storage.saveSettings(settings);
+  }
+
+  /**
    * Import all settings
    */
   importAllSettings(jsonString) {
     try {
       const data = JSON.parse(jsonString);
+
+      // Full export import
+      if (data && data.exportType === "full") {
+        this.importFullExport(data);
+        this.showToast("Full export imported! Reloading...", "success");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return;
+      }
 
       if (!data.version || !data.settings) {
         throw new Error("Invalid backup file format");
@@ -1488,6 +1651,13 @@ class SettingsManager {
     if (this.exportSettingsBtn) {
       this.exportSettingsBtn.addEventListener("click", () => {
         this.exportAllSettings();
+      });
+    }
+
+    // Full export
+    if (this.fullExportBtn) {
+      this.fullExportBtn.addEventListener("click", () => {
+        this.exportFullExport();
       });
     }
 

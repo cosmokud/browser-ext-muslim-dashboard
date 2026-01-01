@@ -2824,6 +2824,55 @@ body {
   line-height: 1.55;
 }
 
+/* Card jump controls (slider + number input) */
+.flashcard-jump {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  border-top: 1px solid var(--glass-border);
+}
+
+.floating-card.flashcard-card .flashcard-jump {
+  flex: 0 0 auto;
+}
+
+.flashcard-jump-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  min-width: 72px;
+  text-align: right;
+  user-select: none;
+}
+
+.flashcard-jump-slider {
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.flashcard-jump-input {
+  width: 84px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.flashcard-jump-input:focus-visible {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.flashcard-jump-input:disabled,
+.flashcard-jump-slider:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .flashcard-flip-card {

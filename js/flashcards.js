@@ -24,11 +24,17 @@ class FlashcardManager {
     this.answerEl = document.getElementById("flashcardAnswer");
     this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
 
+    // Dashboard jump controls
+    this.jumpLabelEl = document.getElementById("flashcardJumpLabel");
+    this.jumpSliderEl = document.getElementById("flashcardJumpSlider");
+    this.jumpInputEl = document.getElementById("flashcardJumpInput");
+
     // Settings elements (may not exist until modal opened)
     this.settingsSetSelect = null;
     this.settingsImportBtn = null;
     this.settingsExportBtn = null;
     this.settingsDeleteSetBtn = null;
+    this.settingsNewSetBtn = null;
     this.settingsImportInput = null;
     this.settingsAddCardBtn = null;
     this.settingsList = null;
@@ -50,6 +56,9 @@ class FlashcardManager {
     this.isFlipped = false;
     this.settingsPage = 1;
 
+    // Settings editor state
+    this._settingsReadOnly = false;
+
     // Debounce timer for editor saves
     this.saveTimer = null;
 
@@ -66,6 +75,7 @@ class FlashcardManager {
     await this.ensureDefaultSet();
     this.applyTypography();
     this.bindDashboardEvents();
+    this.restoreCurrentCardIndexForActiveSet();
     this.applyModeToDashboard();
     this.renderDashboard();
     this.ensureAutoAdvanceState({ reset: true });
@@ -107,6 +117,83 @@ class FlashcardManager {
     const activeId = this.getActiveSetId();
     if (!sets.length) return null;
     return sets.find((s) => s.id === activeId) || sets[0];
+  }
+
+  // ---------- Persisted current card index ----------
+
+  getCardIndexBySet() {
+    const map = this.storage.get("flashcardCardIndexBySet", {});
+    return map && typeof map === "object" && !Array.isArray(map) ? map : {};
+  }
+
+  saveCardIndexBySet(map) {
+    return this.storage.set("flashcardCardIndexBySet", map);
+  }
+
+  getSavedCardIndexForSet(setId) {
+    if (!setId) return 0;
+    const map = this.getCardIndexBySet();
+    const raw = map[setId];
+    const parsed = parseInt(raw, 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  persistCurrentCardIndex() {
+    const active = this.getActiveSet();
+    if (!active) return;
+    const map = this.getCardIndexBySet();
+    map[active.id] = this.currentCardIndex;
+    this.saveCardIndexBySet(map);
+  }
+
+  clearSavedCardIndexForSet(setId) {
+    if (!setId) return;
+    const map = this.getCardIndexBySet();
+    if (Object.prototype.hasOwnProperty.call(map, setId)) {
+      delete map[setId];
+      this.saveCardIndexBySet(map);
+    }
+  }
+
+  restoreCurrentCardIndexForActiveSet() {
+    const active = this.getActiveSet();
+    if (!active) {
+      this.currentCardIndex = 0;
+      return;
+    }
+    this.currentCardIndex = this.getSavedCardIndexForSet(active.id);
+    this.normalizeCurrentIndex();
+  }
+
+  setCurrentCardIndex(
+    nextIndex,
+    { resetFlip = true, cancelAnimation = true } = {}
+  ) {
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+
+    const prev = this.currentCardIndex;
+    if (!cards.length) {
+      this.currentCardIndex = 0;
+    } else {
+      const clamped = this.clampNumber(
+        parseInt(nextIndex, 10),
+        0,
+        cards.length - 1,
+        0
+      );
+      this.currentCardIndex = clamped;
+    }
+
+    if (resetFlip) this.isFlipped = false;
+    if (cancelAnimation) this.cancelDashboardAnimation();
+
+    if (this.currentCardIndex !== prev) {
+      this.persistCurrentCardIndex();
+    }
+
+    this.renderDashboard();
+    this.ensureAutoAdvanceState({ reset: true });
   }
 
   // ---------- Mode + auto-advance ----------
@@ -295,6 +382,35 @@ class FlashcardManager {
       });
     }
 
+    const gotoOneBased = (oneBased) => {
+      const activeSet = this.getActiveSet();
+      const cards = activeSet?.cards || [];
+      if (!cards.length) return;
+
+      const n = this.clampNumber(parseInt(oneBased, 10), 1, cards.length, 1);
+      this.setCurrentCardIndex(n - 1);
+    };
+
+    if (this.jumpSliderEl) {
+      this.jumpSliderEl.addEventListener("input", (e) => {
+        gotoOneBased(e.target.value);
+      });
+    }
+
+    if (this.jumpInputEl) {
+      const onCommit = () => {
+        gotoOneBased(this.jumpInputEl.value);
+      };
+
+      this.jumpInputEl.addEventListener("change", onCommit);
+      this.jumpInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onCommit();
+        }
+      });
+    }
+
     if (this.flipCardEl) {
       this.flipCardEl.addEventListener("click", (e) => {
         // Avoid flipping when clicking nav buttons (they are siblings, but be safe)
@@ -378,11 +494,14 @@ class FlashcardManager {
     const className = isNext ? "flashcard-anim-next" : "flashcard-anim-prev";
 
     const advance = () => {
-      this.currentCardIndex = isNext
+      const nextIndex = isNext
         ? (this.currentCardIndex + 1) % cards.length
         : (this.currentCardIndex - 1 + cards.length) % cards.length;
-      this.isFlipped = false;
-      this.renderDashboard();
+      // Do not cancel animation while it's in-flight.
+      this.setCurrentCardIndex(nextIndex, {
+        resetFlip: true,
+        cancelAnimation: false,
+      });
     };
 
     if (this.prefersReducedMotion() || !this.flipCardEl) {
@@ -418,14 +537,55 @@ class FlashcardManager {
   normalizeCurrentIndex() {
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
+    const prev = this.currentCardIndex;
     if (!cards.length) {
       this.currentCardIndex = 0;
+      if (prev !== this.currentCardIndex) this.persistCurrentCardIndex();
       return;
     }
     if (this.currentCardIndex < 0) this.currentCardIndex = 0;
     if (this.currentCardIndex > cards.length - 1) {
       this.currentCardIndex = cards.length - 1;
     }
+
+    if (prev !== this.currentCardIndex) {
+      this.persistCurrentCardIndex();
+    }
+  }
+
+  updateJumpControls() {
+    if (!this.jumpSliderEl || !this.jumpInputEl || !this.jumpLabelEl) return;
+
+    const activeSet = this.getActiveSet();
+    const cards = activeSet?.cards || [];
+
+    if (!cards.length) {
+      this.jumpLabelEl.textContent = "0 / 0";
+      this.jumpSliderEl.min = "1";
+      this.jumpSliderEl.max = "1";
+      this.jumpSliderEl.value = "1";
+      this.jumpSliderEl.disabled = true;
+
+      this.jumpInputEl.min = "1";
+      this.jumpInputEl.max = "1";
+      this.jumpInputEl.value = "1";
+      this.jumpInputEl.disabled = true;
+      return;
+    }
+
+    const oneBased = Math.min(this.currentCardIndex + 1, cards.length);
+
+    this.jumpLabelEl.textContent = `${oneBased} / ${cards.length}`;
+
+    this.jumpSliderEl.disabled = cards.length <= 1;
+    this.jumpSliderEl.min = "1";
+    this.jumpSliderEl.max = String(cards.length);
+    this.jumpSliderEl.value = String(oneBased);
+
+    this.jumpInputEl.disabled = cards.length <= 1;
+    this.jumpInputEl.min = "1";
+    this.jumpInputEl.max = String(cards.length);
+    this.jumpInputEl.value = String(oneBased);
   }
 
   gotoNextCard() {
@@ -461,6 +621,7 @@ class FlashcardManager {
       }
 
       this.ensureAutoAdvanceState();
+      this.updateJumpControls();
       return;
     }
 
@@ -512,6 +673,7 @@ class FlashcardManager {
     }
 
     this.ensureAutoAdvanceState();
+    this.updateJumpControls();
   }
 
   // ---------- Settings UI ----------
@@ -523,6 +685,7 @@ class FlashcardManager {
     this.settingsDeleteSetBtn = document.getElementById(
       "flashcardsDeleteSetBtn"
     );
+    this.settingsNewSetBtn = document.getElementById("flashcardsNewSetBtn");
     this.settingsImportInput = document.getElementById("flashcardsImportInput");
     this.settingsAddCardBtn = document.getElementById("flashcardsAddCardBtn");
     this.settingsList = document.getElementById("flashcardsEditorList");
@@ -561,8 +724,8 @@ class FlashcardManager {
       const id = this.settingsSetSelect.value;
       this.setActiveSetId(id);
       this.settingsPage = 1;
-      this.currentCardIndex = 0;
       this.isFlipped = false;
+      this.restoreCurrentCardIndexForActiveSet();
       this.renderSettings();
       this.renderDashboard();
       this.ensureAutoAdvanceState({ reset: true });
@@ -641,6 +804,12 @@ class FlashcardManager {
       });
     }
 
+    if (this.settingsNewSetBtn) {
+      this.settingsNewSetBtn.addEventListener("click", () => {
+        this.createNewSet();
+      });
+    }
+
     if (this.settingsAddCardBtn) {
       this.settingsAddCardBtn.addEventListener("click", () => {
         this.addCardToActiveSet();
@@ -649,6 +818,8 @@ class FlashcardManager {
 
     // Inline editor events (delegation)
     this.settingsList.addEventListener("input", (e) => {
+      if (this.isDefaultActiveSet()) return;
+
       if (e.target && e.target.classList?.contains("flashcard-textarea")) {
         this.autoResizeTextarea(e.target);
       }
@@ -664,6 +835,7 @@ class FlashcardManager {
     });
 
     this.settingsList.addEventListener("click", (e) => {
+      if (this.isDefaultActiveSet()) return;
       const btn = e.target.closest("button");
       if (!btn) return;
       const action = btn.dataset.action;
@@ -695,6 +867,22 @@ class FlashcardManager {
 
     if (active) {
       this.settingsSetSelect.value = active.id;
+    }
+
+    this._settingsReadOnly = active?.id === "default";
+
+    if (this.settingsDeleteSetBtn) {
+      this.settingsDeleteSetBtn.disabled = this._settingsReadOnly;
+      this.settingsDeleteSetBtn.title = this._settingsReadOnly
+        ? "The default set cannot be deleted"
+        : "Delete set";
+    }
+
+    if (this.settingsAddCardBtn) {
+      this.settingsAddCardBtn.disabled = this._settingsReadOnly;
+      this.settingsAddCardBtn.title = this._settingsReadOnly
+        ? "The default set cannot be edited"
+        : "Add card";
     }
 
     // Meta
@@ -730,6 +918,7 @@ class FlashcardManager {
   renderEditorList() {
     const active = this.getActiveSet();
     const cards = active?.cards || [];
+    const readOnly = this._settingsReadOnly || active?.id === "default";
 
     const total = cards.length;
     const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
@@ -762,6 +951,7 @@ class FlashcardManager {
             rows="1"
             placeholder="Question"
             maxlength="500"
+            ${readOnly ? "disabled" : ""}
           >${this.escapeHtmlAttr(c.question || "")}</textarea>
           <textarea
             class="flashcard-cell flashcard-textarea setting-input"
@@ -769,6 +959,7 @@ class FlashcardManager {
             rows="1"
             placeholder="Answer"
             maxlength="1000"
+            ${readOnly ? "disabled" : ""}
           >${this.escapeHtmlAttr(c.answer || "")}</textarea>
           <button
             class="flashcard-row-delete"
@@ -776,6 +967,7 @@ class FlashcardManager {
             data-action="delete-card"
             title="Delete"
             aria-label="Delete card"
+            ${readOnly ? "disabled" : ""}
           >
             ×
           </button>
@@ -923,9 +1115,16 @@ class FlashcardManager {
     const name = this.inferSetNameFromFile(file.name);
 
     const sets = this.getSets();
-    const existing = sets.find(
+    let effectiveName = name;
+    let existing = sets.find(
       (s) => s.name.toLowerCase() === name.toLowerCase()
     );
+
+    // Never allow replacing the default set; instead create a new set with a unique name.
+    if (existing && existing.id === "default") {
+      existing = null;
+      effectiveName = this.makeUniqueSetName(effectiveName, sets);
+    }
 
     // Enforce set cap
     if (!existing && sets.length >= FlashcardManager.MAX_SETS) {
@@ -961,6 +1160,11 @@ class FlashcardManager {
       );
       if (!ok) return;
 
+      if (existing.id === "default") {
+        this.showToast("The default set cannot be replaced.", "error");
+        return;
+      }
+
       existing.cards = cards;
       existing.updatedAt = now;
       this.saveSets([...sets]);
@@ -969,13 +1173,15 @@ class FlashcardManager {
     } else {
       const newSet = {
         id: `set_${Date.now()}`,
-        name,
+        name: effectiveName,
         createdAt: now,
         cards,
       };
       this.saveSets([...sets, newSet]);
       this.setActiveSetId(newSet.id);
-      this.showToast(`Imported set: ${name}`, "success");
+      this.currentCardIndex = 0;
+      this.persistCurrentCardIndex();
+      this.showToast(`Imported set: ${effectiveName}`, "success");
     }
 
     this.settingsPage = 1;
@@ -1006,6 +1212,11 @@ class FlashcardManager {
     const active = this.getActiveSet();
     if (!active) return;
 
+    if (active.id === "default") {
+      this.showToast("The default set cannot be deleted.", "error");
+      return;
+    }
+
     if (sets.length <= 1) {
       this.showToast("You must keep at least one set.", "error");
       return;
@@ -1018,6 +1229,9 @@ class FlashcardManager {
     this.saveSets(nextSets);
     this.setActiveSetId(nextSets[0].id);
 
+    this.clearSavedCardIndexForSet(active.id);
+    this.restoreCurrentCardIndexForActiveSet();
+
     this.settingsPage = 1;
     this.showToast("Set deleted.", "success");
     this.renderSettings();
@@ -1029,6 +1243,11 @@ class FlashcardManager {
     const activeId = this.getActiveSetId();
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active) return;
+
+    if (active.id === "default") {
+      this.showToast("The default set cannot be edited.", "error");
+      return;
+    }
 
     active.cards = Array.isArray(active.cards) ? active.cards : [];
     active.cards.push({ question: "", answer: "" });
@@ -1049,6 +1268,8 @@ class FlashcardManager {
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active || !active.cards || !active.cards[globalIndex]) return;
 
+    if (active.id === "default") return;
+
     if (field !== "question" && field !== "answer") return;
 
     active.cards[globalIndex][field] = value;
@@ -1066,6 +1287,11 @@ class FlashcardManager {
     const activeId = this.getActiveSetId();
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active) return;
+
+    if (active.id === "default") {
+      this.showToast("The default set cannot be edited.", "error");
+      return;
+    }
 
     active.cards = Array.isArray(active.cards) ? active.cards : [];
     if (globalIndex < 0 || globalIndex >= active.cards.length) return;
@@ -1193,6 +1419,76 @@ class FlashcardManager {
       .trim();
     const safe = base || "Imported";
     return safe.slice(0, 40);
+  }
+
+  isDefaultActiveSet() {
+    return this.getActiveSet()?.id === "default";
+  }
+
+  makeUniqueSetName(baseName, sets) {
+    const normalized =
+      String(baseName || "New Set")
+        .trim()
+        .slice(0, 40) || "New Set";
+    const lower = normalized.toLowerCase();
+
+    const isTaken = (candidate) =>
+      sets.some(
+        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase()
+      );
+
+    if (!isTaken(normalized) && lower !== "default") return normalized;
+
+    for (let i = 2; i <= 99; i += 1) {
+      const candidate = `${normalized} (${i})`;
+      if (!isTaken(candidate) && candidate.toLowerCase() !== "default") {
+        return candidate.slice(0, 40);
+      }
+    }
+
+    return `Set ${Date.now()}`;
+  }
+
+  createNewSet() {
+    const sets = this.getSets();
+    if (sets.length >= FlashcardManager.MAX_SETS) {
+      this.showToast(
+        `You already have ${FlashcardManager.MAX_SETS} sets. Delete one first.`,
+        "error"
+      );
+      return;
+    }
+
+    const rawName = prompt("New set name:", "New Set");
+    if (rawName === null) return;
+    const trimmed = String(rawName).trim();
+    if (!trimmed) {
+      this.showToast("Set name cannot be empty.", "error");
+      return;
+    }
+
+    if (trimmed.toLowerCase() === "default") {
+      this.showToast("The name 'Default' is reserved.", "error");
+      return;
+    }
+
+    const name = this.makeUniqueSetName(trimmed, sets);
+    const now = new Date().toISOString();
+    const newSet = {
+      id: `set_${Date.now()}`,
+      name,
+      createdAt: now,
+      cards: [],
+    };
+
+    this.saveSets([...sets, newSet]);
+    this.setActiveSetId(newSet.id);
+    this.settingsPage = 1;
+    this.currentCardIndex = 0;
+    this.persistCurrentCardIndex();
+    this.renderSettings();
+    this.renderDashboard();
+    this.showToast(`Created set: ${name}`, "success");
   }
 
   slugify(name) {

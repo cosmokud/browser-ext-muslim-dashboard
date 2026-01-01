@@ -366,6 +366,33 @@
                 ❯
               </button>
             </div>
+
+            <div class="flashcard-jump" aria-label="Jump to flashcard">
+              <div class="flashcard-jump-label" id="flashcardJumpLabel">
+                0 / 0
+              </div>
+              <input
+                type="range"
+                class="flashcard-jump-slider"
+                id="flashcardJumpSlider"
+                min="1"
+                max="1"
+                value="1"
+                step="1"
+                aria-label="Flashcard position slider"
+              />
+              <input
+                type="number"
+                class="flashcard-jump-input"
+                id="flashcardJumpInput"
+                min="1"
+                max="1"
+                value="1"
+                step="1"
+                inputmode="numeric"
+                aria-label="Go to flashcard number"
+              />
+            </div>
           </section>
 
           <!-- Todo List Card -->
@@ -1451,6 +1478,9 @@
                   class="setting-select"
                   id="flashcardsSetSelect"
                 ></select>
+                <button class="setting-btn" id="flashcardsNewSetBtn">
+                  ➕ New Set
+                </button>
                 <button class="setting-btn" id="flashcardsDeleteSetBtn">
                   🗑️ Delete Set
                 </button>
@@ -1632,6 +1662,9 @@
               <div class="import-export-btns">
                 <button class="setting-btn" id="exportSettingsBtn">
                   📤 Export Settings
+                </button>
+                <button class="setting-btn" id="fullExportBtn">
+                  📦 Full Export
                 </button>
                 <button class="setting-btn" id="importSettingsBtn">
                   📥 Import Settings
