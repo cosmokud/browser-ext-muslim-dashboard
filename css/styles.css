@@ -558,9 +558,14 @@ body {
 
 @keyframes tilingCollapseIn {
   0% {
-    /* Start slightly visible immediately to avoid an "empty" gap */
-    opacity: 0.16;
+    opacity: 0;
     transform: scale(1.008);
+    box-shadow: none;
+  }
+  30% {
+    /* Become visible very quickly, but still avoid shadow stacking */
+    opacity: 0.22;
+    transform: scale(1.004);
     box-shadow: none;
   }
   100% {

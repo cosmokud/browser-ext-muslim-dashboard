@@ -53,6 +53,25 @@ class FloatingModeManager {
     this.collapseInMs = 90;
   }
 
+  removeCollapseProxy(key) {
+    const st = this.runtime.get(key);
+    if (!st) return;
+
+    if (st._collapseProxyRemoveTimer) {
+      try {
+        window.clearTimeout(st._collapseProxyRemoveTimer);
+      } catch (e) {}
+      st._collapseProxyRemoveTimer = null;
+    }
+
+    if (st._collapseProxy) {
+      try {
+        st._collapseProxy.remove();
+      } catch (e) {}
+      st._collapseProxy = null;
+    }
+  }
+
   ensureCollapseButton(key) {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
@@ -108,8 +127,12 @@ class FloatingModeManager {
     st._collapseBtn = null;
   }
 
-  createCollapseProxy(card) {
+  createCollapseProxy(key, card) {
     if (!card) return null;
+
+    // If a previous proxy is still fading, remove it to avoid overlap.
+    if (key) this.removeCollapseProxy(key);
+
     try {
       const rect = card.getBoundingClientRect();
       const proxy = card.cloneNode(true);
@@ -151,11 +174,58 @@ class FloatingModeManager {
       );
 
       document.body.appendChild(proxy);
-      window.setTimeout(() => {
+
+      // Guarantee the proxy lands on exact opacity: 0 at the end.
+      const onAnimEnd = () => {
         try {
-          proxy.remove();
+          proxy.style.opacity = "0";
         } catch (e) {}
-      }, this.collapseOutMs + 80);
+        try {
+          proxy.removeEventListener("animationend", onAnimEnd);
+        } catch (e) {}
+      };
+      try {
+        proxy.addEventListener("animationend", onAnimEnd);
+      } catch (e) {}
+
+      const removeAfterMs = this.collapseOutMs + 80;
+      if (key) {
+        const st = this.runtime.get(key);
+        if (st) {
+          st._collapseProxy = proxy;
+          st._collapseProxyRemoveTimer = window.setTimeout(() => {
+            const st2 = this.runtime.get(key);
+            if (st2) {
+              st2._collapseProxy = null;
+              st2._collapseProxyRemoveTimer = null;
+            }
+            try {
+              proxy.style.opacity = "0";
+            } catch (e) {}
+            try {
+              proxy.remove();
+            } catch (e) {}
+          }, removeAfterMs);
+        } else {
+          window.setTimeout(() => {
+            try {
+              proxy.style.opacity = "0";
+            } catch (e) {}
+            try {
+              proxy.remove();
+            } catch (e) {}
+          }, removeAfterMs);
+        }
+      } else {
+        window.setTimeout(() => {
+          try {
+            proxy.style.opacity = "0";
+          } catch (e) {}
+          try {
+            proxy.remove();
+          } catch (e) {}
+        }, removeAfterMs);
+      }
 
       return proxy;
     } catch (e) {
@@ -219,6 +289,8 @@ class FloatingModeManager {
         autoPositionChangedSinceLastSave: false,
         spaceSuspended: false,
         collapseTimer: null,
+        _collapseProxy: null,
+        _collapseProxyRemoveTimer: null,
         persistenceSuppressed: 0,
         resizeObserver: null,
         mutationObserver: null,
@@ -422,6 +494,16 @@ class FloatingModeManager {
     if (!st || !st.card) return;
 
     const card = st.card;
+
+    // When resizing around the horizontal-space threshold, a recent collapse can
+    // leave a fading proxy clone visible. Remove it immediately before re-floating.
+    this.removeCollapseProxy(key);
+
+    // If the card is mid "tiling" fade-in, clear that animation before detaching.
+    try {
+      card.classList.remove("tiling-collapse-in");
+      card.classList.remove("floating-collapse-out");
+    } catch (e) {}
 
     const cfg =
       this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
@@ -670,6 +752,9 @@ class FloatingModeManager {
     // If a collapse is already scheduled, don't double-run it.
     if (st.collapseTimer) return;
 
+    // Remove any previous proxy clone so we never stack fade-outs.
+    this.removeCollapseProxy(key);
+
     const prefersReducedMotion =
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -822,7 +907,7 @@ class FloatingModeManager {
     // Subtle collapse WITHOUT empty gap:
     // - Create a visual proxy that fades out where it was floating
     // - Immediately restore the real card into tiling, then fade it in quickly
-    this.createCollapseProxy(card);
+    this.createCollapseProxy(key, card);
 
     // Immediately restore the real card so the grid never looks empty.
     st.collapseTimer = window.setTimeout(() => {
