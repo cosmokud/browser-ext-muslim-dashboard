@@ -74,17 +74,23 @@ class FastingManager {
   render() {
     const now = new Date();
     const nowStart = this._startOfDay(now);
-    const settings = this.storage?.getSettings ? this.storage.getSettings() : {};
+    const settings = this.storage?.getSettings
+      ? this.storage.getSettings()
+      : {};
     const adjustment = Number(settings.hijriAdjustment || 0);
 
     // Required: derive Hijri first (with adjustment)
     const hijriNow = this.hijri.toHijri(now, adjustment);
 
     if (this.subtitle) {
-      this.subtitle.textContent = this.hijri.format(hijriNow, "medium", "en");
+      // Use full month name (no abbreviation)
+      this.subtitle.textContent = this.hijri.format(hijriNow, "full", "en");
     }
 
     const items = [];
+
+    // Compute Ramadan separately so we can always place it at the bottom.
+    const ramadanItem = this._ramadanCountdown(nowStart, hijriNow, adjustment);
 
     // Monday/Thursday fasts (weekday-based)
     // Max days in-between is 6, so width uses total=6 (full scale)
@@ -110,13 +116,10 @@ class FastingManager {
       aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
     });
 
-    // Ramadan (countdown to 1 Ramadan, or within Ramadan countdown to 29 Ramadan)
-    const ramadanItem = this._ramadanCountdown(nowStart, hijriNow, adjustment);
-    if (ramadanItem) items.push(ramadanItem);
-
     // 13th of Hijri months (Ayyam al-Beed) – exception: hide during Ramadan
     if (hijriNow.month !== 9) {
       const ayyam = this._thirteenthCountdown(nowStart, hijriNow, adjustment);
+      // Must be the third item after Thursday
       if (ayyam) items.push(ayyam);
     }
 
@@ -162,6 +165,9 @@ class FastingManager {
         badge: "9 Dhu al-Hijjah",
       });
     }
+
+    // Ramadan must always be at the bottom.
+    if (ramadanItem) items.push(ramadanItem);
 
     this._renderBars(items);
   }
@@ -271,12 +277,7 @@ class FastingManager {
     // Countdown to 1 Ramadan
     const hy = hijriNow.year;
     const targetYear = month > 9 ? hy + 1 : hy;
-    const target = this._targetGregorianForHijri(
-      targetYear,
-      9,
-      1,
-      adjustment
-    );
+    const target = this._targetGregorianForHijri(targetYear, 9, 1, adjustment);
     const daysLeft = this._diffDays(nowStart, target);
 
     // Width rule: treat as whole year scale
@@ -367,7 +368,10 @@ class FastingManager {
     // Therefore, the Gregorian day that *displays* as a given Hijri date
     // under adjustment adj is (toGregorian(hijri) - adj).
     const g = this.hijri.toGregorian(hy, hm, hd);
-    const shifted = this._addDays(this._startOfDay(g), -Number(adjustment || 0));
+    const shifted = this._addDays(
+      this._startOfDay(g),
+      -Number(adjustment || 0)
+    );
     return shifted;
   }
 

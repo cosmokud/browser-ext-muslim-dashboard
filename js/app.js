@@ -588,6 +588,16 @@ class MuslimDashboard {
       );
     }
 
+    // Fasting
+    const fastingCard = document.getElementById("fastingCard");
+    if (fastingCard) {
+      fastingCard.style.display = visibility.fasting === false ? "none" : "";
+      fastingCard.setAttribute(
+        "aria-hidden",
+        visibility.fasting === false ? "true" : "false"
+      );
+    }
+
     // Flashcards
     const flashcardCard = document.getElementById("flashcardCard");
     if (flashcardCard) {

@@ -4719,11 +4719,19 @@ body.sticky-note-resizing {
    LUNAR PHASE CARD
    ======================================== */
 
-.lunar-phase-content {
+.lunar-phase-card {
   display: flex;
-  gap: var(--spacing-lg);
+  flex-direction: column;
+}
+
+.lunar-phase-content {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--spacing-md);
   align-items: center;
-  justify-content: flex-start;
+  justify-items: center;
+  flex: 1 1 auto;
+  min-height: 260px;
 }
 
 .lunar-phase-location {
@@ -4736,17 +4744,26 @@ body.sticky-note-resizing {
 }
 
 .lunar-phase-moon {
-  width: 84px;
-  height: 84px;
+  width: 160px;
+  height: 160px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
 }
 
 .lunar-phase-moon svg {
-  width: 84px;
-  height: 84px;
+  width: 160px;
+  height: 160px;
   display: block;
+}
+
+.lunar-phase-text {
+  width: 100%;
+  text-align: center;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
 }
 
 .lunar-phase-name {

@@ -201,6 +201,7 @@ class SettingsManager {
     );
     this.visibilityWeather = document.getElementById("visibilityWeather");
     this.visibilityLunarPhase = document.getElementById("visibilityLunarPhase");
+    this.visibilityFasting = document.getElementById("visibilityFasting");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.weatherUnitRadios = document.querySelectorAll(
@@ -575,6 +576,8 @@ class SettingsManager {
       this.visibilityWeather.checked = visibility.weather !== false;
     if (this.visibilityLunarPhase)
       this.visibilityLunarPhase.checked = visibility.lunarPhase !== false;
+    if (this.visibilityFasting)
+      this.visibilityFasting.checked = visibility.fasting !== false;
     if (this.visibilityFlashcards)
       this.visibilityFlashcards.checked = visibility.flashcards !== false;
     if (this.visibilityTodoList)
@@ -1462,6 +1465,7 @@ class SettingsManager {
       qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
       weather: this.visibilityWeather?.checked ?? true,
       lunarPhase: this.visibilityLunarPhase?.checked ?? true,
+      fasting: this.visibilityFasting?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
     };
