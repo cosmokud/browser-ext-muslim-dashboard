@@ -1915,7 +1915,7 @@ class SettingsManager {
             const html = typeof n.html === "string" ? n.html : "";
             const rawScale =
               typeof n.scale === "number" || typeof n.scale === "string"
-                ? parseInt(n.scale, 10)
+                ? parseFloat(n.scale)
                 : 1;
             const scale = Number.isNaN(rawScale)
               ? 1

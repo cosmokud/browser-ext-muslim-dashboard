@@ -679,20 +679,22 @@
                 <span class="notes-tool-divider" aria-hidden="true"></span>
 
                 <div class="notes-scale-control" aria-label="Text size">
-                  <label class="notes-scale-label" for="notesScaleSelect">
+                  <label class="notes-scale-label" for="notesScaleRange">
                     Size
                   </label>
-                  <select
-                    class="notes-scale-select"
-                    id="notesScaleSelect"
+                  <input
+                    class="notes-scale-range"
+                    id="notesScaleRange"
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="0.05"
+                    value="1"
                     aria-label="Text size"
+                  />
+                  <span class="notes-scale-value" id="notesScaleValue"
+                    >1.00x</span
                   >
-                    <option value="1">1x</option>
-                    <option value="2">2x</option>
-                    <option value="3">3x</option>
-                    <option value="4">4x</option>
-                    <option value="5">5x</option>
-                  </select>
                 </div>
               </div>
 

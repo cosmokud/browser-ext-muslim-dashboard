@@ -478,17 +478,20 @@ body {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  border: none;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-new-btn:hover {
-  background: var(--glass-bg-hover);
-  transform: translateY(-1px);
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
 }
 
 .notes-delete-btn {
@@ -498,17 +501,17 @@ body {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  color: var(--text-primary);
+  border: none;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #ffffff;
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-delete-btn:hover {
-  background: var(--glass-bg-hover);
+  background: linear-gradient(135deg, #ff5252 0%, #e04848 100%);
   transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
 .notes-delete-btn:disabled {
@@ -662,18 +665,55 @@ body {
   color: var(--text-muted);
 }
 
-.notes-scale-select {
+.notes-scale-range {
+  width: 160px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  appearance: none;
   background: transparent;
-  color: var(--text-primary);
-  padding: 0 var(--spacing-sm);
   outline: none;
 }
 
-.notes-scale-select:focus {
-  background: var(--glass-bg-hover);
+.notes-scale-range::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.notes-scale-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -4px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gold);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.notes-scale-range::-moz-range-track {
+  height: 10px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.notes-scale-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gold);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.notes-scale-value {
+  min-width: 4.5ch;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 .notes-tool-btn {

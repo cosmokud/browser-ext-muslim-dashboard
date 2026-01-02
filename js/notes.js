@@ -36,7 +36,8 @@ class NotesManager {
     this.toolbar = document.getElementById("notesToolbar");
     this.editor = document.getElementById("notesEditor");
 
-    this.scaleSelect = document.getElementById("notesScaleSelect");
+    this.scaleRange = document.getElementById("notesScaleRange");
+    this.scaleValueEl = document.getElementById("notesScaleValue");
 
     if (this.deleteBtn) this.deleteBtn.disabled = true;
 
@@ -131,25 +132,26 @@ class NotesManager {
       this.renderList();
     });
 
-    if (this.scaleSelect) {
-      this.scaleSelect.addEventListener("change", () => {
+    if (this.scaleRange) {
+      const onScaleInput = () => {
         const note = this.getActiveNote();
         if (!note) return;
-        const scale = this.clampInt(
-          this.scaleSelect.value,
+
+        const scale = this.clampNumber(
+          this.scaleRange.value,
           NotesManager.SCALE_MIN,
           NotesManager.SCALE_MAX
         );
         note.scale = scale;
-        note.updatedAt = Date.now();
         this.applyScale(scale);
+        this.updateScaleUi(scale);
 
-        this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-        this.currentPage = this.getPageForNoteId(note.id);
-        this.storage.set("notes_page", this.currentPage);
+        // Persist without reordering the list while sliding.
         this.save();
-        this.renderList();
-      });
+      };
+
+      this.scaleRange.addEventListener("input", onScaleInput);
+      this.scaleRange.addEventListener("change", onScaleInput);
     }
 
     // Toolbar
@@ -184,8 +186,21 @@ class NotesManager {
     });
 
     this.editor.addEventListener("blur", () => {
+      // IMPORTANT: Avoid rerendering the list synchronously on blur.
+      // If the user clicks a note in the list, a synchronous rerender here can
+      // replace the clicked DOM node before the click event fires, forcing
+      // a second click.
       this.normalizeNow();
-      this.saveNow();
+      this.saveNow({ renderList: false });
+
+      // If the blur wasn't caused by focusing into the notes list, update list shortly after.
+      setTimeout(() => {
+        try {
+          const ae = document.activeElement;
+          if (ae && this.listEl && this.listEl.contains(ae)) return;
+        } catch (e) {}
+        this.renderList();
+      }, 0);
     });
 
     // Click checklist marker area to toggle checked
@@ -265,7 +280,7 @@ class NotesManager {
         const html = typeof n.html === "string" ? n.html : "";
         const rawScale =
           typeof n.scale === "number" || typeof n.scale === "string"
-            ? parseInt(n.scale, 10)
+            ? parseFloat(n.scale)
             : NotesManager.SCALE_MIN;
         const scale = Number.isNaN(rawScale)
           ? NotesManager.SCALE_MIN
@@ -298,7 +313,8 @@ class NotesManager {
     this.storage.set("notes_page", this.currentPage);
   }
 
-  saveNow() {
+  saveNow({ renderList } = {}) {
+    const shouldRenderList = renderList !== false;
     if (this._saveTimer) {
       clearTimeout(this._saveTimer);
       this._saveTimer = null;
@@ -319,7 +335,7 @@ class NotesManager {
     this.storage.set("notes_page", this.currentPage);
 
     this.save();
-    this.renderList();
+    if (shouldRenderList) this.renderList();
   }
 
   queueSave() {
@@ -364,16 +380,13 @@ class NotesManager {
     if (!note) return;
 
     if (this._hasSelectedNote && this.activeNoteId === id) {
-      this.applyScale(typeof note.scale === "number" ? note.scale : 1);
-      if (this.scaleSelect) {
-        this.scaleSelect.value = String(
-          this.clampInt(
-            note.scale,
-            NotesManager.SCALE_MIN,
-            NotesManager.SCALE_MAX
-          )
-        );
-      }
+      const s = this.clampNumber(
+        typeof note.scale === "number" ? note.scale : 1,
+        NotesManager.SCALE_MIN,
+        NotesManager.SCALE_MAX
+      );
+      this.applyScale(s);
+      this.updateScaleUi(s);
       return;
     }
 
@@ -393,14 +406,14 @@ class NotesManager {
     this.titleInput.value = note.title || "";
     this.editor.innerHTML = this.sanitizeHtml(note.html || "");
 
-    const scale = this.clampInt(
+    const scale = this.clampNumber(
       note.scale,
       NotesManager.SCALE_MIN,
       NotesManager.SCALE_MAX
     );
     note.scale = scale;
     this.applyScale(scale);
-    if (this.scaleSelect) this.scaleSelect.value = String(scale);
+    this.updateScaleUi(scale);
 
     if (this.deleteBtn) this.deleteBtn.disabled = false;
 
@@ -435,7 +448,7 @@ class NotesManager {
   }
 
   applyScale(scale) {
-    const n = this.clampInt(
+    const n = this.clampNumber(
       scale,
       NotesManager.SCALE_MIN,
       NotesManager.SCALE_MAX
@@ -444,6 +457,22 @@ class NotesManager {
       this.editor.style.setProperty("--notes-scale", String(n));
     } catch (e) {
       // ignore
+    }
+  }
+
+  updateScaleUi(scale) {
+    const n = this.clampNumber(
+      scale,
+      NotesManager.SCALE_MIN,
+      NotesManager.SCALE_MAX
+    );
+
+    if (this.scaleRange) {
+      // Keep exact-ish value within range; range uses step to constrain.
+      this.scaleRange.value = String(n);
+    }
+    if (this.scaleValueEl) {
+      this.scaleValueEl.textContent = `${n.toFixed(2)}x`;
     }
   }
 
@@ -848,6 +877,12 @@ class NotesManager {
 
   clampInt(value, min, max) {
     const n = parseInt(value, 10);
+    if (Number.isNaN(n)) return min;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  clampNumber(value, min, max) {
+    const n = typeof value === "number" ? value : parseFloat(value);
     if (Number.isNaN(n)) return min;
     return Math.max(min, Math.min(max, n));
   }
