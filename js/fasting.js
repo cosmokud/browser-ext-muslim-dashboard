@@ -298,9 +298,27 @@ class FastingManager {
     const hm = hijriNow.month;
     const hd = hijriNow.day;
 
+    // Ayyam al-Beed are the 13th–15th of each Hijri month.
+    // If we're currently within that window, it should count as "Today".
+    if (hd >= 13 && hd <= 15) {
+      const monthName = this.hijri.monthNames.en[hm - 1];
+      const badge = `13–15 ${monthName}`;
+      return {
+        key: "thirteenth",
+        title: "Ayyam al-Beed",
+        subtitle: "13th - 15th of the Hijri month",
+        daysLeft: 0,
+        totalDays: 29,
+        meta: "Today",
+        aria: `Ayyam al-Beed (${badge}): Today`,
+        badge,
+      };
+    }
+
     let targetYear = hy;
     let targetMonth = hm;
-    if (hd > 13) {
+    // After the 15th, the next Ayyam window starts next month.
+    if (hd > 15) {
       targetMonth = hm + 1;
       if (targetMonth > 12) {
         targetMonth = 1;
@@ -317,16 +335,17 @@ class FastingManager {
     const daysLeft = this._diffDays(nowStart, target);
 
     const monthName = this.hijri.monthNames.en[targetMonth - 1];
+    const badge = `13–15 ${monthName}`;
 
     return {
       key: "thirteenth",
       title: "Ayyam al-Beed",
-      subtitle: "13th of the Hijri month",
+      subtitle: "13th - 15th of the Hijri month",
       daysLeft,
       totalDays: 29,
       meta: this._daysLeftText(daysLeft),
-      aria: `13 ${monthName}: ${this._daysLeftText(daysLeft)}`,
-      badge: `13 ${monthName}`,
+      aria: `Ayyam al-Beed (${badge}): ${this._daysLeftText(daysLeft)}`,
+      badge,
     };
   }
 

@@ -725,10 +725,41 @@ class MuslimDashboard {
 
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
+  // Prevent browser scroll restoration from jumping to a saved (often bottom)
+  // scroll position on refresh/startup.
+  try {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+  } catch (e) {}
+
+  const scrollToTop = () => {
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    } catch (e) {
+      try {
+        window.scrollTo(0, 0);
+      } catch (e2) {}
+    }
+  };
+
+  // Ensure we start at the top even if layout shifts during first paint.
+  scrollToTop();
+  requestAnimationFrame(scrollToTop);
+
   const dashboard = new MuslimDashboard();
   // Expose instance for runtime interactions (settings live preview, debugging)
   window.dashboard = dashboard;
-  dashboard.init();
+  const initPromise = dashboard.init();
+
+  // If any async init (fetches, renders) triggers a late scroll adjustment,
+  // re-assert top once init settles.
+  if (initPromise && typeof initPromise.finally === "function") {
+    initPromise.finally(() => {
+      scrollToTop();
+      requestAnimationFrame(scrollToTop);
+    });
+  }
 });
 
 // Export for debugging
