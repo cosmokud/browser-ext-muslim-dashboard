@@ -3857,6 +3857,18 @@ body {
 }
 
 /* Container Width Styles */
+.main-container.container-extra-compact {
+  max-width: 800px;
+}
+
+.main-container.container-compact {
+  max-width: 1000px;
+}
+
+.main-container.container-slim {
+  max-width: 1200px;
+}
+
 .main-container.container-narrow {
   max-width: 1400px;
 }

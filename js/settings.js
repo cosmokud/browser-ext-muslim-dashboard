@@ -1479,6 +1479,9 @@ class SettingsManager {
 
     // Remove existing width classes
     mainContainer.classList.remove(
+      "container-extra-compact",
+      "container-compact",
+      "container-slim",
       "container-narrow",
       "container-medium",
       "container-wide",
@@ -1489,6 +1492,15 @@ class SettingsManager {
 
     // Apply new width
     switch (width) {
+      case "extra-compact":
+        mainContainer.classList.add("container-extra-compact");
+        break;
+      case "compact":
+        mainContainer.classList.add("container-compact");
+        break;
+      case "slim":
+        mainContainer.classList.add("container-slim");
+        break;
       case "medium":
         mainContainer.classList.add("container-medium");
         break;
@@ -1784,17 +1796,28 @@ class SettingsManager {
       });
     }
 
-    // Container width change - toggle custom width slider
+    // Container width change - toggle custom width slider and apply preview
     if (this.containerWidth) {
       this.containerWidth.addEventListener("change", (e) => {
         this.toggleCustomWidth(e.target.value === "custom");
+        // Apply preview immediately
+        this.applyContainerWidth(
+          e.target.value,
+          parseInt(this.containerWidthCustom?.value, 10) || 70
+        );
       });
     }
 
-    // Container width slider change - update label
+    // Container width slider change - update label and apply preview
     if (this.containerWidthCustom) {
       this.containerWidthCustom.addEventListener("input", () => {
         this.updateCustomWidthLabel();
+        this.applyContainerWidth(
+          this.containerWidth?.value === "custom"
+            ? "custom"
+            : this.containerWidth?.value,
+          parseInt(this.containerWidthCustom.value, 10)
+        );
       });
     }
 

@@ -152,7 +152,7 @@ class StorageManager {
       todoPosition: "bottom", // only 'bottom' now (full width)
 
       // Container width settings
-      containerWidth: "narrow", // 'narrow', 'medium', 'wide', 'full', 'custom'
+      containerWidth: "narrow", // 'extra-compact', 'compact', 'slim', 'narrow', 'medium', 'wide', 'full', 'custom'
       containerWidthCustom: 70, // percentage for custom width (50-98)
 
       // Calendar settings
