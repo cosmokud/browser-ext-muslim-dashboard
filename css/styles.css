@@ -1713,6 +1713,7 @@ body {
 .prayer-notification-offset-item label {
   font-size: 0.85rem;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .prayer-notification-offset-input {
@@ -1746,6 +1747,16 @@ body {
   font-size: 0.8rem;
 }
 
+.prayer-settings-list-header span {
+  display: block;
+}
+
+.prayer-settings-list-header span:nth-child(2),
+.prayer-settings-list-header span:nth-child(3),
+.prayer-settings-list-header span:nth-child(4) {
+  text-align: center;
+}
+
 .prayer-settings-row {
   display: grid;
   grid-template-columns: 1fr 60px 90px 60px;
@@ -1777,6 +1788,7 @@ body {
 }
 
 .prayer-settings-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1784,11 +1796,29 @@ body {
 }
 
 .prayer-settings-toggle input[type="checkbox"] {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .prayer-settings-toggle .toggle-switch {
   transform: scale(0.9);
+}
+
+/* Checked-state visuals for prayer settings toggles */
+.prayer-settings-toggle input[type="checkbox"]:checked + .toggle-switch {
+  background: var(--primary-color);
+}
+
+.prayer-settings-toggle input[type="checkbox"]:checked + .toggle-switch::after {
+  left: 25px;
+}
+
+.prayer-settings-toggle input[type="checkbox"]:focus-visible + .toggle-switch {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
 }
 
 .prayer-settings-adjust {

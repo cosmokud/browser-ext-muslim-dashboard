@@ -50,7 +50,9 @@ function storageSet(obj) {
 function alarmsGetAll() {
   return new Promise((resolve) => {
     try {
-      chrome.alarms.getAll((alarms) => resolve(Array.isArray(alarms) ? alarms : []));
+      chrome.alarms.getAll((alarms) =>
+        resolve(Array.isArray(alarms) ? alarms : [])
+      );
     } catch (e) {
       resolve([]);
     }
@@ -149,7 +151,11 @@ function pickLocation(settings, lastLocation) {
     };
   }
 
-  if (lastLocation && Number.isFinite(Number(lastLocation.latitude)) && Number.isFinite(Number(lastLocation.longitude))) {
+  if (
+    lastLocation &&
+    Number.isFinite(Number(lastLocation.latitude)) &&
+    Number.isFinite(Number(lastLocation.longitude))
+  ) {
     return {
       latitude: Number(lastLocation.latitude),
       longitude: Number(lastLocation.longitude),
@@ -165,7 +171,9 @@ async function clearPrayerAlarms() {
   const alarms = await alarmsGetAll();
   const toClear = alarms
     .map((a) => a && a.name)
-    .filter((name) => typeof name === "string" && name.startsWith(PRAYER_ALARM_PREFIX));
+    .filter(
+      (name) => typeof name === "string" && name.startsWith(PRAYER_ALARM_PREFIX)
+    );
 
   for (const name of toClear) {
     // eslint-disable-next-line no-await-in-loop
@@ -181,7 +189,11 @@ function scheduleDailyRescheduleAlarm(now = new Date()) {
 }
 
 function getPrayerNotificationsSettings(settings) {
-  const pn = settings.prayerNotifications && typeof settings.prayerNotifications === "object" ? settings.prayerNotifications : {};
+  const pn =
+    settings.prayerNotifications &&
+    typeof settings.prayerNotifications === "object"
+      ? settings.prayerNotifications
+      : {};
 
   return {
     enabled: Boolean(pn.enabled),
@@ -189,7 +201,8 @@ function getPrayerNotificationsSettings(settings) {
     afterMinutes: clampNumber(pn.afterMinutes, 0, 180, 0),
     // at-time notification always on when enabled
     atTimeEnabled: true,
-    perPrayer: (pn.perPrayer && typeof pn.perPrayer === "object") ? pn.perPrayer : null,
+    perPrayer:
+      pn.perPrayer && typeof pn.perPrayer === "object" ? pn.perPrayer : null,
   };
 }
 
@@ -202,18 +215,25 @@ function shouldNotifyForPrayer(prayerKey, settings, pn) {
   }
 
   // Fallback: notify for visible prayers.
-  const vis = settings.prayerVisibility && typeof settings.prayerVisibility === "object" ? settings.prayerVisibility : {};
+  const vis =
+    settings.prayerVisibility && typeof settings.prayerVisibility === "object"
+      ? settings.prayerVisibility
+      : {};
   return vis[prayerKey] === true;
 }
 
 async function schedulePrayerNotifications() {
-  const { [STORAGE_KEYS.settings]: settingsRaw, [STORAGE_KEYS.lastLocation]: lastLocationRaw } = await storageGet([
-    STORAGE_KEYS.settings,
-    STORAGE_KEYS.lastLocation,
-  ]);
+  const {
+    [STORAGE_KEYS.settings]: settingsRaw,
+    [STORAGE_KEYS.lastLocation]: lastLocationRaw,
+  } = await storageGet([STORAGE_KEYS.settings, STORAGE_KEYS.lastLocation]);
 
-  const settings = settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
-  const lastLocation = lastLocationRaw && typeof lastLocationRaw === "object" ? lastLocationRaw : null;
+  const settings =
+    settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
+  const lastLocation =
+    lastLocationRaw && typeof lastLocationRaw === "object"
+      ? lastLocationRaw
+      : null;
 
   const pn = getPrayerNotificationsSettings(settings);
 

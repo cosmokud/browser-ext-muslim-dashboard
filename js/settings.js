@@ -297,7 +297,8 @@ class SettingsManager {
     const perPrayer = pn.perPrayer || settings.prayerVisibility || {};
     for (const prayer in this.notificationCheckboxes) {
       if (this.notificationCheckboxes[prayer]) {
-        this.notificationCheckboxes[prayer].checked = perPrayer[prayer] === true;
+        this.notificationCheckboxes[prayer].checked =
+          perPrayer[prayer] === true;
       }
     }
 
