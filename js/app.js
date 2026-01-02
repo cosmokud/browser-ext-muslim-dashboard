@@ -24,6 +24,7 @@ class MuslimDashboard {
     this.weather = null; // Will be initialized after DOM
     this.lunarPhase = null; // Will be initialized after DOM
     this.flashcards = null; // Will be initialized after DOM
+    this.fasting = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -214,6 +215,10 @@ class MuslimDashboard {
     // Initialize calendar
     this.calendar = new CalendarManager(this.storage, this.hijri);
     this.calendar.init();
+
+    // Initialize fasting countdowns
+    this.fasting = new FastingManager(this.storage, this.hijri);
+    this.fasting.init();
 
     // Initialize sticky notes
     this.stickyNotes = new StickyNotesManager(this.storage);

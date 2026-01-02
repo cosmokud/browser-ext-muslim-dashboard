@@ -692,11 +692,16 @@ class SettingsManager {
           this.weatherCitySearchResults,
           results,
           (result) => {
-            if (this.weatherCityInput) this.weatherCityInput.value = result.city;
+            if (this.weatherCityInput)
+              this.weatherCityInput.value = result.city;
             if (this.weatherLatitudeInput)
-              this.weatherLatitudeInput.value = Number(result.latitude).toFixed(4);
+              this.weatherLatitudeInput.value = Number(result.latitude).toFixed(
+                4
+              );
             if (this.weatherLongitudeInput)
-              this.weatherLongitudeInput.value = Number(result.longitude).toFixed(4);
+              this.weatherLongitudeInput.value = Number(
+                result.longitude
+              ).toFixed(4);
 
             const pickedLabel = result.fullName
               ? `${result.city} (${result.fullName})`
@@ -1658,18 +1663,22 @@ class SettingsManager {
       const results = await this.prayerTimes.searchCity(cityName);
 
       if (results && results.length > 0) {
-        this._renderCitySearchResults(this.citySearchResults, results, (result) => {
-          if (this.cityInput) this.cityInput.value = result.city;
-          if (this.latitudeInput)
-            this.latitudeInput.value = Number(result.latitude).toFixed(4);
-          if (this.longitudeInput)
-            this.longitudeInput.value = Number(result.longitude).toFixed(4);
+        this._renderCitySearchResults(
+          this.citySearchResults,
+          results,
+          (result) => {
+            if (this.cityInput) this.cityInput.value = result.city;
+            if (this.latitudeInput)
+              this.latitudeInput.value = Number(result.latitude).toFixed(4);
+            if (this.longitudeInput)
+              this.longitudeInput.value = Number(result.longitude).toFixed(4);
 
-          const pickedLabel = result.fullName
-            ? `${result.city} (${result.fullName})`
-            : result.city;
-          this.showToast(`Selected: ${pickedLabel}`, "success");
-        });
+            const pickedLabel = result.fullName
+              ? `${result.city} (${result.fullName})`
+              : result.city;
+            this.showToast(`Selected: ${pickedLabel}`, "success");
+          }
+        );
         this.showToast("Select a city from the list below.", "info");
       } else {
         this.showToast("City not found. Please try a different name.", "error");

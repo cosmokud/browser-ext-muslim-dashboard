@@ -76,7 +76,10 @@ class LunarPhaseManager {
   _resolveLocation() {
     // Prefer the prayerTimes location object if available.
     try {
-      if (this.prayerTimes && typeof this.prayerTimes.getCurrentLocation === "function") {
+      if (
+        this.prayerTimes &&
+        typeof this.prayerTimes.getCurrentLocation === "function"
+      ) {
         const loc = this.prayerTimes.getCurrentLocation();
         if (loc && (loc.latitude != null || loc.longitude != null)) return loc;
       }
