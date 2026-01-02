@@ -1830,7 +1830,10 @@ body {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.95rem;
+  /* Ensure numeric values are centered across browsers */
   text-align: center;
+  text-align-last: center;
+  -webkit-text-align-last: center;
   width: 100%;
 }
 
@@ -1846,7 +1849,10 @@ body {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.95rem;
+  /* Ensure numeric values are centered across browsers */
   text-align: center;
+  text-align-last: center;
+  -webkit-text-align-last: center;
   width: 100%;
 }
 

@@ -329,8 +329,8 @@ class SettingsManager {
         entry && typeof entry === "object"
           ? entry.enabled === true
           : typeof entry === "boolean"
-            ? entry === true
-            : settings.prayerVisibility?.[prayer] === true;
+          ? entry === true
+          : settings.prayerVisibility?.[prayer] === true;
 
       if (this.notificationCheckboxes[prayer]) {
         this.notificationCheckboxes[prayer].checked = enabled;
@@ -360,7 +360,8 @@ class SettingsManager {
           String(beforeMinutes);
       }
       if (this.notificationAfterMinutesInputs?.[prayer]) {
-        this.notificationAfterMinutesInputs[prayer].value = String(afterMinutes);
+        this.notificationAfterMinutesInputs[prayer].value =
+          String(afterMinutes);
       }
     }
 
