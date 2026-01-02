@@ -187,6 +187,7 @@ class StorageManager {
         qiblaDirection: true,
         todoList: true,
         weather: true,
+        lunarPhase: true,
         flashcards: true,
       },
 

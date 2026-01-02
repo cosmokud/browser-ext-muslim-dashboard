@@ -41,6 +41,7 @@ class SettingsManager {
     this.latitudeInput = document.getElementById("latitudeInput");
     this.longitudeInput = document.getElementById("longitudeInput");
     this.searchCityBtn = document.getElementById("searchCityBtn");
+    this.citySearchResults = document.getElementById("citySearchResults");
     this.requestLocationBtn = document.getElementById("requestLocationBtn");
 
     // Prayer elements
@@ -199,6 +200,7 @@ class SettingsManager {
       "visibilityQiblaDirection"
     );
     this.visibilityWeather = document.getElementById("visibilityWeather");
+    this.visibilityLunarPhase = document.getElementById("visibilityLunarPhase");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.weatherUnitRadios = document.querySelectorAll(
@@ -218,6 +220,9 @@ class SettingsManager {
       "weatherLongitudeInput"
     );
     this.weatherSearchCityBtn = document.getElementById("weatherSearchCityBtn");
+    this.weatherCitySearchResults = document.getElementById(
+      "weatherCitySearchResults"
+    );
 
     // Pinned Apps tab elements
     this.pinnedAppsPerRow = document.getElementById("pinnedAppsPerRow");
@@ -568,10 +573,66 @@ class SettingsManager {
         visibility.qiblaDirection !== false;
     if (this.visibilityWeather)
       this.visibilityWeather.checked = visibility.weather !== false;
+    if (this.visibilityLunarPhase)
+      this.visibilityLunarPhase.checked = visibility.lunarPhase !== false;
     if (this.visibilityFlashcards)
       this.visibilityFlashcards.checked = visibility.flashcards !== false;
     if (this.visibilityTodoList)
       this.visibilityTodoList.checked = visibility.todoList !== false;
+  }
+
+  _clearCitySearchResults(container) {
+    if (!container) return;
+    container.innerHTML = "";
+    container.classList.remove("active");
+  }
+
+  _renderCitySearchResults(container, results, onPick) {
+    if (!container) return;
+    this._clearCitySearchResults(container);
+
+    const list = Array.isArray(results) ? results : [];
+    if (!list.length) return;
+
+    const frag = document.createDocumentFragment();
+    list.forEach((result, index) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "city-result-item";
+
+      const title = String(result.fullName || result.city || "").trim();
+      const lat = Number(result.latitude);
+      const lon = Number(result.longitude);
+
+      const primary = document.createElement("div");
+      primary.className = "city-result-primary";
+      primary.textContent = title || "Unknown";
+
+      const secondary = document.createElement("div");
+      secondary.className = "city-result-secondary";
+      secondary.textContent =
+        Number.isFinite(lat) && Number.isFinite(lon)
+          ? `${lat.toFixed(4)}, ${lon.toFixed(4)}`
+          : "";
+
+      btn.appendChild(primary);
+      btn.appendChild(secondary);
+
+      btn.addEventListener("click", () => {
+        try {
+          if (typeof onPick === "function") onPick(result);
+        } finally {
+          this._clearCitySearchResults(container);
+        }
+      });
+
+      // optional hint: 1..9 shortcuts (visual only if styled)
+      btn.dataset.shortcut = String(index + 1);
+      frag.appendChild(btn);
+    });
+
+    container.appendChild(frag);
+    container.classList.add("active");
   }
 
   /**
@@ -616,6 +677,8 @@ class SettingsManager {
       return;
     }
 
+    this._clearCitySearchResults(this.weatherCitySearchResults);
+
     if (this.weatherSearchCityBtn) {
       this.weatherSearchCityBtn.textContent = "🔍 Searching...";
       this.weatherSearchCityBtn.disabled = true;
@@ -625,13 +688,23 @@ class SettingsManager {
       const results = await this.prayerTimes.searchCity(cityName);
 
       if (results && results.length > 0) {
-        const result = results[0];
-        if (this.weatherCityInput) this.weatherCityInput.value = result.city;
-        if (this.weatherLatitudeInput)
-          this.weatherLatitudeInput.value = result.latitude.toFixed(4);
-        if (this.weatherLongitudeInput)
-          this.weatherLongitudeInput.value = result.longitude.toFixed(4);
-        this.showToast(`Found: ${result.city}`, "success");
+        this._renderCitySearchResults(
+          this.weatherCitySearchResults,
+          results,
+          (result) => {
+            if (this.weatherCityInput) this.weatherCityInput.value = result.city;
+            if (this.weatherLatitudeInput)
+              this.weatherLatitudeInput.value = Number(result.latitude).toFixed(4);
+            if (this.weatherLongitudeInput)
+              this.weatherLongitudeInput.value = Number(result.longitude).toFixed(4);
+
+            const pickedLabel = result.fullName
+              ? `${result.city} (${result.fullName})`
+              : result.city;
+            this.showToast(`Selected: ${pickedLabel}`, "success");
+          }
+        );
+        this.showToast("Select a city from the list below.", "info");
       } else {
         this.showToast("City not found. Please try a different name.", "error");
       }
@@ -1383,6 +1456,7 @@ class SettingsManager {
       hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
       qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
       weather: this.visibilityWeather?.checked ?? true,
+      lunarPhase: this.visibilityLunarPhase?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
     };
@@ -1573,6 +1647,8 @@ class SettingsManager {
       return;
     }
 
+    this._clearCitySearchResults(this.citySearchResults);
+
     if (this.searchCityBtn) {
       this.searchCityBtn.textContent = "🔍 Searching...";
       this.searchCityBtn.disabled = true;
@@ -1582,13 +1658,19 @@ class SettingsManager {
       const results = await this.prayerTimes.searchCity(cityName);
 
       if (results && results.length > 0) {
-        const result = results[0];
-        if (this.cityInput) this.cityInput.value = result.city;
-        if (this.latitudeInput)
-          this.latitudeInput.value = result.latitude.toFixed(4);
-        if (this.longitudeInput)
-          this.longitudeInput.value = result.longitude.toFixed(4);
-        this.showToast(`Found: ${result.city}`, "success");
+        this._renderCitySearchResults(this.citySearchResults, results, (result) => {
+          if (this.cityInput) this.cityInput.value = result.city;
+          if (this.latitudeInput)
+            this.latitudeInput.value = Number(result.latitude).toFixed(4);
+          if (this.longitudeInput)
+            this.longitudeInput.value = Number(result.longitude).toFixed(4);
+
+          const pickedLabel = result.fullName
+            ? `${result.city} (${result.fullName})`
+            : result.city;
+          this.showToast(`Selected: ${pickedLabel}`, "success");
+        });
+        this.showToast("Select a city from the list below.", "info");
       } else {
         this.showToast("City not found. Please try a different name.", "error");
       }
@@ -1701,10 +1783,16 @@ class SettingsManager {
     // Create toast
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
-      <span>${message}</span>
-    `;
+
+    const iconSpan = document.createElement("span");
+    iconSpan.textContent =
+      type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
+
+    const msgSpan = document.createElement("span");
+    msgSpan.textContent = String(message ?? "");
+
+    toast.appendChild(iconSpan);
+    toast.appendChild(msgSpan);
 
     container.appendChild(toast);
 
@@ -1762,6 +1850,12 @@ class SettingsManager {
       this.searchCityBtn.addEventListener("click", () => this.searchCity());
     }
 
+    if (this.cityInput) {
+      this.cityInput.addEventListener("input", () => {
+        this._clearCitySearchResults(this.citySearchResults);
+      });
+    }
+
     // Weather location mode toggle
     this.weatherLocationModeRadios.forEach((radio) => {
       radio.addEventListener("change", () => {
@@ -1774,6 +1868,12 @@ class SettingsManager {
       this.weatherSearchCityBtn.addEventListener("click", () =>
         this.searchWeatherCity()
       );
+    }
+
+    if (this.weatherCityInput) {
+      this.weatherCityInput.addEventListener("input", () => {
+        this._clearCitySearchResults(this.weatherCitySearchResults);
+      });
     }
 
     // Calculation method change - toggle custom angles and update display

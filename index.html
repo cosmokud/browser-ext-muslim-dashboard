@@ -301,6 +301,29 @@
           </div>
         </section>
 
+        <!-- Lunar Phase Card -->
+        <section class="card lunar-phase-card" id="lunarPhaseCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🌙</span>
+              Lunar Phase
+            </h2>
+            <div class="lunar-phase-location" id="lunarPhaseLocation">--</div>
+          </div>
+
+          <div class="lunar-phase-content">
+            <div
+              class="lunar-phase-moon"
+              id="lunarPhaseMoon"
+              aria-hidden="true"
+            ></div>
+            <div class="lunar-phase-text">
+              <div class="lunar-phase-name" id="lunarPhaseName">--</div>
+              <div class="lunar-phase-meta" id="lunarPhaseMeta">--</div>
+            </div>
+          </div>
+        </section>
+
         <!-- Flashcards + Todo Row -->
         <div class="flashcard-todo-row">
           <!-- Flashcards Card -->
@@ -621,6 +644,11 @@
               <button class="setting-btn" id="searchCityBtn">
                 🔍 Search City
               </button>
+              <div
+                class="city-search-results"
+                id="citySearchResults"
+                aria-live="polite"
+              ></div>
             </div>
           </div>
 
@@ -1570,6 +1598,12 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-name">Lunar Phase</span>
+                  <input type="checkbox" id="visibilityLunarPhase" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">🃏</span>
                   <span class="visibility-name">Flashcards</span>
                   <button
@@ -1689,6 +1723,11 @@
               <button class="setting-btn" id="weatherSearchCityBtn">
                 🔍 Search City
               </button>
+              <div
+                class="city-search-results"
+                id="weatherCitySearchResults"
+                aria-live="polite"
+              ></div>
             </div>
 
             <div class="setting-group">
@@ -2245,6 +2284,7 @@
     <script src="js/pinnedapps.js"></script>
     <script src="js/calendar.js"></script>
     <script src="js/weather.js"></script>
+    <script src="js/lunarphase.js"></script>
     <script src="js/flashcards.js"></script>
     <script src="js/floating.js"></script>
     <script src="js/settings.js"></script>

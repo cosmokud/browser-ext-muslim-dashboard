@@ -318,24 +318,6 @@ class BackgroundManager {
    * Get images array for a category
    */
   getImagesForCategory(category, settings) {
-    if (category === "allWithCustom" || category === "allNoCustom") {
-      const builtInImages = Object.keys(this.backgrounds).flatMap((key) => {
-        const arr = this.backgrounds[key];
-        return Array.isArray(arr) ? arr : [];
-      });
-
-      if (category === "allNoCustom") {
-        return builtInImages.length > 0
-          ? builtInImages
-          : this.backgrounds.nature;
-      }
-
-      const customBgs = settings.customBackgrounds || [];
-      const combined = builtInImages.concat(
-        Array.isArray(customBgs) && customBgs.length > 0 ? customBgs : []
-      );
-      return combined.length > 0 ? combined : this.backgrounds.nature;
-    }
     if (category === "custom") {
       const customBgs = settings.customBackgrounds || [];
       return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
@@ -467,7 +449,18 @@ class BackgroundManager {
     const cam = document.createElement("span");
     cam.textContent = "📷";
     cam.setAttribute("aria-hidden", "true");
-    cam.style.marginRight = "6px";
+    Object.assign(cam.style, {
+      display: "inline-flex",
+      justifyContent: "center",
+      alignItems: "center",
+      width: "20px",
+      height: "20px",
+      fontSize: "16px",
+      lineHeight: "20px",
+      verticalAlign: "middle",
+      transform: "translateY(-1px)",
+      marginRight: "6px",
+    });
 
     const label = document.createElement("span");
     label.textContent = "Photo by ";

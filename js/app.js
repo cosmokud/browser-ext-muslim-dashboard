@@ -22,6 +22,7 @@ class MuslimDashboard {
     this.calendar = null; // Will be initialized after DOM
     this.stickyNotes = null; // Will be initialized after DOM
     this.weather = null; // Will be initialized after DOM
+    this.lunarPhase = null; // Will be initialized after DOM
     this.flashcards = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
@@ -220,6 +221,10 @@ class MuslimDashboard {
     // Initialize weather
     this.weather = new WeatherManager(this.storage);
     await this.weather.init();
+
+    // Initialize lunar phase
+    this.lunarPhase = new LunarPhaseManager(this.storage, this.prayerTimes);
+    this.lunarPhase.init();
 
     // Initialize flashcards
     this.flashcards = new FlashcardManager(this.storage);
@@ -567,6 +572,17 @@ class MuslimDashboard {
       );
     }
 
+    // Lunar Phase
+    const lunarPhaseCard = document.getElementById("lunarPhaseCard");
+    if (lunarPhaseCard) {
+      lunarPhaseCard.style.display =
+        visibility.lunarPhase === false ? "none" : "";
+      lunarPhaseCard.setAttribute(
+        "aria-hidden",
+        visibility.lunarPhase === false ? "true" : "false"
+      );
+    }
+
     // Flashcards
     const flashcardCard = document.getElementById("flashcardCard");
     if (flashcardCard) {
@@ -665,6 +681,9 @@ class MuslimDashboard {
       const location = this.prayerTimes.getCurrentLocation();
       if (location) {
         this.qibla.updateLocation(location.latitude, location.longitude);
+        if (this.lunarPhase) {
+          this.lunarPhase.refresh();
+        }
       }
     };
   }
