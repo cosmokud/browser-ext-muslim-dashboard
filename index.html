@@ -494,6 +494,187 @@
             </div>
           </section>
         </div>
+
+        <!-- Notes (Full Width) -->
+        <section class="card notes-card" id="notesCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">📝</span>
+              Notes
+            </h2>
+            <button
+              class="notes-new-btn"
+              id="notesNewBtn"
+              type="button"
+              aria-label="Create new note"
+              title="New note"
+            >
+              +
+            </button>
+          </div>
+
+          <div class="notes-layout">
+            <div class="notes-list-wrap" aria-label="Notes list">
+              <div class="notes-list" id="notesList" role="list"></div>
+
+              <div class="notes-pagination" aria-label="Notes pagination">
+                <button
+                  class="notes-page-btn"
+                  id="notesPrevPageBtn"
+                  type="button"
+                  aria-label="Previous notes page"
+                >
+                  ❮
+                </button>
+                <div class="notes-page-info" id="notesPageInfo"></div>
+                <button
+                  class="notes-page-btn"
+                  id="notesNextPageBtn"
+                  type="button"
+                  aria-label="Next notes page"
+                >
+                  ❯
+                </button>
+              </div>
+            </div>
+
+            <div class="notes-editor-wrap" aria-label="Notes editor">
+              <input
+                type="text"
+                class="notes-title-input"
+                id="notesTitleInput"
+                placeholder="Note title"
+                maxlength="120"
+                aria-label="Note title"
+              />
+
+              <div class="notes-toolbar" id="notesToolbar" role="toolbar">
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="bold"
+                  aria-label="Bold"
+                  title="Bold"
+                >
+                  <b>B</b>
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="italic"
+                  aria-label="Italic"
+                  title="Italic"
+                >
+                  <i>I</i>
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="underline"
+                  aria-label="Underline"
+                  title="Underline"
+                >
+                  <u>U</u>
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="strikeThrough"
+                  aria-label="Strikethrough"
+                  title="Strikethrough"
+                >
+                  <s>S</s>
+                </button>
+
+                <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="insertUnorderedList"
+                  aria-label="Bullet list"
+                  title="Bullet list"
+                >
+                  •
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="insertOrderedList"
+                  aria-label="Numbered list"
+                  title="Numbered list"
+                >
+                  1.
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="checklist"
+                  aria-label="Checkmark list"
+                  title="Checkmark list"
+                >
+                  ☑
+                </button>
+
+                <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-block="H1"
+                  aria-label="Heading 1"
+                  title="H1"
+                >
+                  H1
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-block="H2"
+                  aria-label="Heading 2"
+                  title="H2"
+                >
+                  H2
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-block="H3"
+                  aria-label="Heading 3"
+                  title="H3"
+                >
+                  H3
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-block="H4"
+                  aria-label="Heading 4"
+                  title="H4"
+                >
+                  H4
+                </button>
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-block="P"
+                  aria-label="Paragraph"
+                  title="Paragraph"
+                >
+                  P
+                </button>
+              </div>
+
+              <div
+                class="notes-editor"
+                id="notesEditor"
+                contenteditable="true"
+                spellcheck="true"
+                aria-label="Note editor"
+              ></div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -587,6 +768,7 @@
             <button class="settings-tab" data-tab="flashcards">
               🃏 Flashcards
             </button>
+            <button class="settings-tab" data-tab="notes">📝 Notes</button>
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
@@ -1955,6 +2137,31 @@
             </div>
           </div>
 
+          <!-- Notes Settings -->
+          <div class="settings-panel" id="notesPanel">
+            <div class="setting-group">
+              <label class="setting-label">Import / Export Notes</label>
+              <p class="setting-hint">
+                Backup your Notes as JSON, or import a JSON file to add notes.
+              </p>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="importNotesBtn">
+                  📥 Import JSON
+                </button>
+                <button class="setting-btn" id="exportNotesBtn">
+                  📤 Export JSON
+                </button>
+                <input
+                  type="file"
+                  id="importNotesInput"
+                  accept=".json,application/json"
+                  style="display: none"
+                />
+              </div>
+              <p class="setting-hint" id="notesCountHint"></p>
+            </div>
+          </div>
+
           <!-- Background Settings -->
           <div class="settings-panel" id="backgroundPanel">
             <div class="setting-group">
@@ -2308,6 +2515,7 @@
     <script src="js/floating.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/stickynotes.js"></script>
+    <script src="js/notes.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

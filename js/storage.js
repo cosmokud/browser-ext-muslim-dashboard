@@ -50,6 +50,18 @@ class StorageManager {
   }
 
   /**
+   * Notes
+   */
+  getNotes() {
+    const notes = this.get("notes", []);
+    return Array.isArray(notes) ? notes : [];
+  }
+
+  saveNotes(notes) {
+    return this.set("notes", Array.isArray(notes) ? notes : []);
+  }
+
+  /**
    * Clear all dashboard storage
    */
   clear() {

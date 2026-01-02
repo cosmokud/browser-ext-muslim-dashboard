@@ -25,6 +25,7 @@ class MuslimDashboard {
     this.lunarPhase = null; // Will be initialized after DOM
     this.flashcards = null; // Will be initialized after DOM
     this.fasting = null; // Will be initialized after DOM
+    this.notes = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -234,6 +235,9 @@ class MuslimDashboard {
     // Initialize flashcards
     this.flashcards = new FlashcardManager(this.storage);
     await this.flashcards.init();
+
+    // Initialize notes (full-width component)
+    this.notes = new NotesManager(this.storage);
 
     // Initialize settings (after all other managers)
     this.settings = new SettingsManager(
