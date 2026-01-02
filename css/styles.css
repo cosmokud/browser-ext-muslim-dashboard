@@ -1684,6 +1684,144 @@ body {
   border-color: var(--accent-gold);
 }
 
+/* ========================================
+   PRAYER SETTINGS LIST (Show + Adjust + Notify)
+   ======================================== */
+
+.prayer-settings-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.prayer-notification-offsets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  align-items: flex-end;
+}
+
+.prayer-notification-offset-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.prayer-notification-offset-item label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.prayer-notification-offset-input {
+  width: 140px;
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.prayer-notification-offset-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.prayer-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.prayer-settings-list-header {
+  display: grid;
+  grid-template-columns: 1fr 60px 90px 60px;
+  gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.prayer-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 90px 60px;
+  gap: var(--spacing-md);
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.prayer-settings-row:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border);
+}
+
+.prayer-settings-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.95rem;
+}
+
+.prayer-settings-icon {
+  width: 28px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.prayer-settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.prayer-settings-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.prayer-settings-toggle .toggle-switch {
+  transform: scale(0.9);
+}
+
+.prayer-settings-adjust {
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: center;
+  width: 100%;
+}
+
+.prayer-settings-adjust:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+@media (max-width: 520px) {
+  .prayer-settings-list-header {
+    grid-template-columns: 1fr 54px 80px 54px;
+    padding: 0 var(--spacing-sm);
+  }
+  .prayer-settings-row {
+    grid-template-columns: 1fr 54px 80px 54px;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
+  .prayer-notification-offset-input {
+    width: 120px;
+  }
+}
+
 .setting-btn {
   padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--glass-bg);

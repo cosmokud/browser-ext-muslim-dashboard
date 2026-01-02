@@ -80,6 +80,25 @@ class SettingsManager {
       qiyam: document.getElementById("adjustQiyam"),
     };
 
+    // Prayer notification controls
+    this.enablePrayerNotifications = document.getElementById(
+      "enablePrayerNotifications"
+    );
+    this.notifyBeforeMinutes = document.getElementById("notifyBeforeMinutes");
+    this.notifyAfterMinutes = document.getElementById("notifyAfterMinutes");
+
+    this.notificationCheckboxes = {
+      fajr: document.getElementById("notifyFajr"),
+      sunrise: document.getElementById("notifySunrise"),
+      duha: document.getElementById("notifyDuha"),
+      dhuhr: document.getElementById("notifyDhuhr"),
+      asr: document.getElementById("notifyAsr"),
+      maghrib: document.getElementById("notifyMaghrib"),
+      isha: document.getElementById("notifyIsha"),
+      midnight: document.getElementById("notifyMidnight"),
+      qiyam: document.getElementById("notifyQiyam"),
+    };
+
     // Quote elements
     this.useDefaultQuotes = document.getElementById("useDefaultQuotes");
     this.useUserQuotes = document.getElementById("useUserQuotes");
@@ -256,6 +275,29 @@ class SettingsManager {
     for (const prayer in this.adjustmentInputs) {
       if (this.adjustmentInputs[prayer] && settings.adjustments) {
         this.adjustmentInputs[prayer].value = settings.adjustments[prayer] || 0;
+      }
+    }
+
+    // Prayer notifications
+    const pn = settings.prayerNotifications || {};
+    if (this.enablePrayerNotifications) {
+      this.enablePrayerNotifications.checked = pn.enabled === true;
+    }
+    if (this.notifyBeforeMinutes) {
+      this.notifyBeforeMinutes.value = String(
+        this.clampNumber(parseInt(pn.beforeMinutes, 10), 0, 180, 10)
+      );
+    }
+    if (this.notifyAfterMinutes) {
+      this.notifyAfterMinutes.value = String(
+        this.clampNumber(parseInt(pn.afterMinutes, 10), 0, 180, 0)
+      );
+    }
+
+    const perPrayer = pn.perPrayer || settings.prayerVisibility || {};
+    for (const prayer in this.notificationCheckboxes) {
+      if (this.notificationCheckboxes[prayer]) {
+        this.notificationCheckboxes[prayer].checked = perPrayer[prayer] === true;
       }
     }
 
@@ -1077,6 +1119,28 @@ class SettingsManager {
     for (const prayer in this.adjustmentInputs) {
       settings.adjustments[prayer] =
         parseInt(this.adjustmentInputs[prayer]?.value) || 0;
+    }
+
+    // Prayer notifications
+    settings.prayerNotifications = settings.prayerNotifications || {};
+    settings.prayerNotifications.enabled =
+      this.enablePrayerNotifications?.checked || false;
+    settings.prayerNotifications.beforeMinutes = this.clampNumber(
+      parseInt(this.notifyBeforeMinutes?.value, 10),
+      0,
+      180,
+      10
+    );
+    settings.prayerNotifications.afterMinutes = this.clampNumber(
+      parseInt(this.notifyAfterMinutes?.value, 10),
+      0,
+      180,
+      0
+    );
+    settings.prayerNotifications.perPrayer = {};
+    for (const prayer in this.notificationCheckboxes) {
+      settings.prayerNotifications.perPrayer[prayer] =
+        this.notificationCheckboxes[prayer]?.checked || false;
     }
 
     // Quote settings

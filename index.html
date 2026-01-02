@@ -764,153 +764,276 @@
               />
             </div>
 
-            <!-- Prayer Visibility -->
+            <!-- Prayer list (Show + Adjust + Notify) -->
             <div class="setting-group">
-              <label class="setting-label">Show Prayer Times</label>
-              <div class="visibility-grid">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showFajr" checked />
-                  <span>Fajr</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showSunrise" checked />
-                  <span>Sunrise</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showDuha" />
-                  <span>Duha</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showDhuhr" checked />
-                  <span>Dhuhr</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showAsr" checked />
-                  <span>Asr</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showMaghrib" checked />
-                  <span>Maghrib</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showIsha" checked />
-                  <span>Isha</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showMidnight" />
-                  <span>Midnight</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showQiyam" />
-                  <span>Qiyam</span>
-                </label>
-              </div>
-            </div>
+              <label class="setting-label">Prayer Times</label>
 
-            <!-- Time Adjustments -->
-            <div class="setting-group">
-              <label class="setting-label">Time Adjustments (minutes)</label>
-              <div class="adjustments-grid">
-                <div class="adjustment-item">
-                  <label>Fajr</label>
+              <div class="prayer-settings-toolbar">
+                <label class="checkbox-option" for="enablePrayerNotifications">
+                  <input type="checkbox" id="enablePrayerNotifications" />
+                  <span>Enable browser notifications</span>
+                </label>
+
+                <div class="prayer-notification-offsets">
+                  <div class="prayer-notification-offset-item">
+                    <label for="notifyBeforeMinutes">Notify before (min)</label>
+                    <input
+                      type="number"
+                      class="prayer-notification-offset-input"
+                      id="notifyBeforeMinutes"
+                      value="10"
+                      min="0"
+                      max="180"
+                    />
+                  </div>
+                  <div class="prayer-notification-offset-item">
+                    <label for="notifyAfterMinutes">Notify after (min)</label>
+                    <input
+                      type="number"
+                      class="prayer-notification-offset-input"
+                      id="notifyAfterMinutes"
+                      value="0"
+                      min="0"
+                      max="180"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="prayer-settings-list" role="list">
+                <div class="prayer-settings-list-header" aria-hidden="true">
+                  <span>Prayer</span>
+                  <span>Show</span>
+                  <span>Adjust</span>
+                  <span>Notify</span>
+                </div>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌙</span>
+                    <span>Fajr</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Fajr">
+                    <input type="checkbox" id="showFajr" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustFajr"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Fajr (minutes)"
                   />
+                  <label
+                    class="prayer-settings-toggle"
+                    aria-label="Notify for Fajr"
+                  >
+                    <input type="checkbox" id="notifyFajr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Sunrise</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌅</span>
+                    <span>Sunrise</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Sunrise">
+                    <input type="checkbox" id="showSunrise" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustSunrise"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Sunrise (minutes)"
                   />
+                  <label
+                    class="prayer-settings-toggle"
+                    aria-label="Notify for Sunrise"
+                  >
+                    <input type="checkbox" id="notifySunrise" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Duha</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">☀️</span>
+                    <span>Duha</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Duha">
+                    <input type="checkbox" id="showDuha" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustDuha"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Duha (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Duha">
+                    <input type="checkbox" id="notifyDuha" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Dhuhr</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌤️</span>
+                    <span>Dhuhr</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Dhuhr">
+                    <input type="checkbox" id="showDhuhr" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustDhuhr"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Dhuhr (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Dhuhr">
+                    <input type="checkbox" id="notifyDhuhr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Asr</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">⛅</span>
+                    <span>Asr</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Asr">
+                    <input type="checkbox" id="showAsr" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustAsr"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Asr (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Asr">
+                    <input type="checkbox" id="notifyAsr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Maghrib</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌇</span>
+                    <span>Maghrib</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Maghrib">
+                    <input type="checkbox" id="showMaghrib" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustMaghrib"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Maghrib (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Maghrib">
+                    <input type="checkbox" id="notifyMaghrib" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Isha</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌙</span>
+                    <span>Isha</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Isha">
+                    <input type="checkbox" id="showIsha" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustIsha"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Isha (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Isha">
+                    <input type="checkbox" id="notifyIsha" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Midnight</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🕛</span>
+                    <span>Midnight</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Midnight">
+                    <input type="checkbox" id="showMidnight" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustMidnight"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Midnight (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Midnight">
+                    <input type="checkbox" id="notifyMidnight" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
-                <div class="adjustment-item">
-                  <label>Qiyam</label>
+
+                <div class="prayer-settings-row" role="listitem">
+                  <div class="prayer-settings-title">
+                    <span class="prayer-settings-icon">🌃</span>
+                    <span>Qiyam</span>
+                  </div>
+                  <label class="prayer-settings-toggle" aria-label="Show Qiyam">
+                    <input type="checkbox" id="showQiyam" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                   <input
                     type="number"
-                    class="adjustment-input"
+                    class="prayer-settings-adjust"
                     id="adjustQiyam"
                     value="0"
                     min="-60"
                     max="60"
+                    aria-label="Adjust Qiyam (minutes)"
                   />
+                  <label class="prayer-settings-toggle" aria-label="Notify for Qiyam">
+                    <input type="checkbox" id="notifyQiyam" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
                 </div>
               </div>
+
+              <p class="setting-hint">
+                Toggle visibility, adjust times, and enable notifications per prayer.
+              </p>
             </div>
           </div>
 

@@ -696,4 +696,9 @@ class PrayTimes {
 }
 
 // Export for use
-window.PrayTimes = PrayTimes;
+try {
+  // Works in window, service worker, and other JS runtimes.
+  globalThis.PrayTimes = PrayTimes;
+} catch (e) {
+  // ignore
+}

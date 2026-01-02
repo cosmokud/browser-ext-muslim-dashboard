@@ -115,6 +115,26 @@ class StorageManager {
         qiyam: false,
       },
 
+      // Prayer notifications
+      // When enabled, the service worker schedules notifications at each prayer time,
+      // plus optional offsets before/after.
+      prayerNotifications: {
+        enabled: false,
+        beforeMinutes: 10,
+        afterMinutes: 0,
+        perPrayer: {
+          fajr: true,
+          sunrise: true,
+          duha: false,
+          dhuhr: true,
+          asr: true,
+          maghrib: true,
+          isha: true,
+          midnight: false,
+          qiyam: false,
+        },
+      },
+
       // Quote settings
       useDefaultQuotes: true,
       useUserQuotes: true,
@@ -293,7 +313,18 @@ class StorageManager {
    * Save settings
    */
   saveSettings(settings) {
-    return this.set("settings", settings);
+    const ok = this.set("settings", settings);
+
+    // Mirror settings to chrome.storage for MV3 background service worker.
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
+        chrome.storage.local.set({ md_settings: settings });
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return ok;
   }
 
   /**
@@ -335,7 +366,18 @@ class StorageManager {
    * Save last location
    */
   saveLastLocation(location) {
-    return this.set("lastLocation", location);
+    const ok = this.set("lastLocation", location);
+
+    // Mirror location to chrome.storage for MV3 background service worker.
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
+        chrome.storage.local.set({ md_lastLocation: location });
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return ok;
   }
 
   /**
