@@ -1740,7 +1740,7 @@ body {
 
 .prayer-settings-list-header {
   display: grid;
-  grid-template-columns: 1fr 60px 90px 60px;
+  grid-template-columns: 1fr 60px 90px 60px 90px 90px;
   gap: var(--spacing-md);
   padding: 0 var(--spacing-md);
   color: var(--text-muted);
@@ -1753,13 +1753,15 @@ body {
 
 .prayer-settings-list-header span:nth-child(2),
 .prayer-settings-list-header span:nth-child(3),
-.prayer-settings-list-header span:nth-child(4) {
+.prayer-settings-list-header span:nth-child(4),
+.prayer-settings-list-header span:nth-child(5),
+.prayer-settings-list-header span:nth-child(6) {
   text-align: center;
 }
 
 .prayer-settings-row {
   display: grid;
-  grid-template-columns: 1fr 60px 90px 60px;
+  grid-template-columns: 1fr 60px 90px 60px 90px 90px;
   gap: var(--spacing-md);
   align-items: center;
   padding: var(--spacing-md);
@@ -1837,13 +1839,29 @@ body {
   border-color: var(--accent-gold);
 }
 
+.prayer-settings-notify-offset {
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: center;
+  width: 100%;
+}
+
+.prayer-settings-notify-offset:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
 @media (max-width: 520px) {
   .prayer-settings-list-header {
-    grid-template-columns: 1fr 54px 80px 54px;
+    grid-template-columns: 1fr 54px 80px 54px 70px 70px;
     padding: 0 var(--spacing-sm);
   }
   .prayer-settings-row {
-    grid-template-columns: 1fr 54px 80px 54px;
+    grid-template-columns: 1fr 54px 80px 54px 70px 70px;
     padding: var(--spacing-sm);
     gap: var(--spacing-sm);
   }

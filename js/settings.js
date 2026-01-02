@@ -84,8 +84,6 @@ class SettingsManager {
     this.enablePrayerNotifications = document.getElementById(
       "enablePrayerNotifications"
     );
-    this.notifyBeforeMinutes = document.getElementById("notifyBeforeMinutes");
-    this.notifyAfterMinutes = document.getElementById("notifyAfterMinutes");
 
     this.notificationCheckboxes = {
       fajr: document.getElementById("notifyFajr"),
@@ -97,6 +95,30 @@ class SettingsManager {
       isha: document.getElementById("notifyIsha"),
       midnight: document.getElementById("notifyMidnight"),
       qiyam: document.getElementById("notifyQiyam"),
+    };
+
+    this.notificationBeforeMinutesInputs = {
+      fajr: document.getElementById("notifyFajrBeforeMinutes"),
+      sunrise: document.getElementById("notifySunriseBeforeMinutes"),
+      duha: document.getElementById("notifyDuhaBeforeMinutes"),
+      dhuhr: document.getElementById("notifyDhuhrBeforeMinutes"),
+      asr: document.getElementById("notifyAsrBeforeMinutes"),
+      maghrib: document.getElementById("notifyMaghribBeforeMinutes"),
+      isha: document.getElementById("notifyIshaBeforeMinutes"),
+      midnight: document.getElementById("notifyMidnightBeforeMinutes"),
+      qiyam: document.getElementById("notifyQiyamBeforeMinutes"),
+    };
+
+    this.notificationAfterMinutesInputs = {
+      fajr: document.getElementById("notifyFajrAfterMinutes"),
+      sunrise: document.getElementById("notifySunriseAfterMinutes"),
+      duha: document.getElementById("notifyDuhaAfterMinutes"),
+      dhuhr: document.getElementById("notifyDhuhrAfterMinutes"),
+      asr: document.getElementById("notifyAsrAfterMinutes"),
+      maghrib: document.getElementById("notifyMaghribAfterMinutes"),
+      isha: document.getElementById("notifyIshaAfterMinutes"),
+      midnight: document.getElementById("notifyMidnightAfterMinutes"),
+      qiyam: document.getElementById("notifyQiyamAfterMinutes"),
     };
 
     // Quote elements
@@ -283,22 +305,62 @@ class SettingsManager {
     if (this.enablePrayerNotifications) {
       this.enablePrayerNotifications.checked = pn.enabled === true;
     }
-    if (this.notifyBeforeMinutes) {
-      this.notifyBeforeMinutes.value = String(
-        this.clampNumber(parseInt(pn.beforeMinutes, 10), 0, 180, 10)
-      );
-    }
-    if (this.notifyAfterMinutes) {
-      this.notifyAfterMinutes.value = String(
-        this.clampNumber(parseInt(pn.afterMinutes, 10), 0, 180, 0)
-      );
-    }
 
-    const perPrayer = pn.perPrayer || settings.prayerVisibility || {};
+    const defaultBeforeMinutes = this.clampNumber(
+      parseInt(pn.beforeMinutes, 10),
+      0,
+      180,
+      10
+    );
+    const defaultAfterMinutes = this.clampNumber(
+      parseInt(pn.afterMinutes, 10),
+      0,
+      180,
+      0
+    );
+
+    const perPrayerRaw =
+      pn.perPrayer && typeof pn.perPrayer === "object" ? pn.perPrayer : null;
+
     for (const prayer in this.notificationCheckboxes) {
+      const entry = perPrayerRaw ? perPrayerRaw[prayer] : null;
+
+      const enabled =
+        entry && typeof entry === "object"
+          ? entry.enabled === true
+          : typeof entry === "boolean"
+            ? entry === true
+            : settings.prayerVisibility?.[prayer] === true;
+
       if (this.notificationCheckboxes[prayer]) {
-        this.notificationCheckboxes[prayer].checked =
-          perPrayer[prayer] === true;
+        this.notificationCheckboxes[prayer].checked = enabled;
+      }
+
+      const beforeMinutes =
+        entry && typeof entry === "object"
+          ? this.clampNumber(
+              parseInt(entry.beforeMinutes, 10),
+              0,
+              180,
+              defaultBeforeMinutes
+            )
+          : defaultBeforeMinutes;
+      const afterMinutes =
+        entry && typeof entry === "object"
+          ? this.clampNumber(
+              parseInt(entry.afterMinutes, 10),
+              0,
+              180,
+              defaultAfterMinutes
+            )
+          : defaultAfterMinutes;
+
+      if (this.notificationBeforeMinutesInputs?.[prayer]) {
+        this.notificationBeforeMinutesInputs[prayer].value =
+          String(beforeMinutes);
+      }
+      if (this.notificationAfterMinutesInputs?.[prayer]) {
+        this.notificationAfterMinutesInputs[prayer].value = String(afterMinutes);
       }
     }
 
@@ -1124,24 +1186,49 @@ class SettingsManager {
 
     // Prayer notifications
     settings.prayerNotifications = settings.prayerNotifications || {};
-    settings.prayerNotifications.enabled =
-      this.enablePrayerNotifications?.checked || false;
-    settings.prayerNotifications.beforeMinutes = this.clampNumber(
-      parseInt(this.notifyBeforeMinutes?.value, 10),
+
+    const existingBeforeMinutes = this.clampNumber(
+      settings.prayerNotifications.beforeMinutes,
       0,
       180,
       10
     );
-    settings.prayerNotifications.afterMinutes = this.clampNumber(
-      parseInt(this.notifyAfterMinutes?.value, 10),
+    const existingAfterMinutes = this.clampNumber(
+      settings.prayerNotifications.afterMinutes,
       0,
       180,
       0
     );
+
+    settings.prayerNotifications.enabled =
+      this.enablePrayerNotifications?.checked || false;
+
+    // Keep global defaults for backward compatibility / future fallbacks.
+    settings.prayerNotifications.beforeMinutes = existingBeforeMinutes;
+    settings.prayerNotifications.afterMinutes = existingAfterMinutes;
+
     settings.prayerNotifications.perPrayer = {};
     for (const prayer in this.notificationCheckboxes) {
-      settings.prayerNotifications.perPrayer[prayer] =
-        this.notificationCheckboxes[prayer]?.checked || false;
+      const enabled = this.notificationCheckboxes[prayer]?.checked || false;
+
+      const beforeMinutes = this.clampNumber(
+        parseInt(this.notificationBeforeMinutesInputs?.[prayer]?.value, 10),
+        0,
+        180,
+        existingBeforeMinutes
+      );
+      const afterMinutes = this.clampNumber(
+        parseInt(this.notificationAfterMinutesInputs?.[prayer]?.value, 10),
+        0,
+        180,
+        existingAfterMinutes
+      );
+
+      settings.prayerNotifications.perPrayer[prayer] = {
+        enabled,
+        beforeMinutes,
+        afterMinutes,
+      };
     }
 
     // Quote settings

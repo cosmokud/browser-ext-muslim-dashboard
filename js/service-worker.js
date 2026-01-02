@@ -195,31 +195,83 @@ function getPrayerNotificationsSettings(settings) {
       ? settings.prayerNotifications
       : {};
 
+  const defaultBeforeMinutes = clampNumber(pn.beforeMinutes, 0, 180, 10);
+  const defaultAfterMinutes = clampNumber(pn.afterMinutes, 0, 180, 0);
+
+  const perPrayerRaw =
+    pn.perPrayer && typeof pn.perPrayer === "object" ? pn.perPrayer : null;
+
+  const perPrayer = perPrayerRaw ? {} : null;
+  if (perPrayerRaw) {
+    for (const def of PRAYER_DEFS) {
+      const entry = perPrayerRaw[def.key];
+
+      // Legacy shape: boolean per prayer.
+      if (typeof entry === "boolean") {
+        perPrayer[def.key] = {
+          enabled: entry === true,
+          beforeMinutes: defaultBeforeMinutes,
+          afterMinutes: defaultAfterMinutes,
+          atTimeEnabled: true,
+        };
+        continue;
+      }
+
+      // New shape: object per prayer.
+      if (entry && typeof entry === "object") {
+        perPrayer[def.key] = {
+          enabled: entry.enabled === true,
+          beforeMinutes: clampNumber(
+            entry.beforeMinutes,
+            0,
+            180,
+            defaultBeforeMinutes
+          ),
+          afterMinutes: clampNumber(
+            entry.afterMinutes,
+            0,
+            180,
+            defaultAfterMinutes
+          ),
+          atTimeEnabled: true,
+        };
+      }
+    }
+  }
+
   return {
     enabled: Boolean(pn.enabled),
-    beforeMinutes: clampNumber(pn.beforeMinutes, 0, 180, 10),
-    afterMinutes: clampNumber(pn.afterMinutes, 0, 180, 0),
+    defaultBeforeMinutes,
+    defaultAfterMinutes,
     // at-time notification always on when enabled
     atTimeEnabled: true,
-    perPrayer:
-      pn.perPrayer && typeof pn.perPrayer === "object" ? pn.perPrayer : null,
+    perPrayer,
   };
 }
 
-function shouldNotifyForPrayer(prayerKey, settings, pn) {
-  if (!pn.enabled) return false;
+function getPrayerNotificationConfig(prayerKey, settings, pn) {
+  if (!pn.enabled) return null;
 
   // If user explicitly configured perPrayer, use it.
   if (pn.perPrayer) {
-    return pn.perPrayer[prayerKey] === true;
+    const cfg = pn.perPrayer[prayerKey];
+    if (!cfg || cfg.enabled !== true) return null;
+    return cfg;
   }
 
-  // Fallback: notify for visible prayers.
+  // Fallback: notify for visible prayers, using defaults.
   const vis =
     settings.prayerVisibility && typeof settings.prayerVisibility === "object"
       ? settings.prayerVisibility
       : {};
-  return vis[prayerKey] === true;
+  if (vis[prayerKey] !== true) return null;
+
+  return {
+    enabled: true,
+    beforeMinutes: pn.defaultBeforeMinutes,
+    afterMinutes: pn.defaultAfterMinutes,
+    atTimeEnabled: true,
+  };
 }
 
 async function schedulePrayerNotifications() {
@@ -273,14 +325,15 @@ async function schedulePrayerNotifications() {
   });
 
   for (const def of PRAYER_DEFS) {
-    if (!shouldNotifyForPrayer(def.key, settings, pn)) continue;
+    const cfg = getPrayerNotificationConfig(def.key, settings, pn);
+    if (!cfg) continue;
 
     const baseTimeStr = times[def.key];
     const baseDate = parseTimeToDate(baseTimeStr, today);
     if (!baseDate) continue;
 
     // Base (at-time)
-    if (pn.atTimeEnabled) {
+    if (pn.atTimeEnabled && cfg.atTimeEnabled) {
       const when = baseDate.getTime();
       if (when > Date.now() + 1000) {
         alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_at`, { when });
@@ -288,16 +341,16 @@ async function schedulePrayerNotifications() {
     }
 
     // Before
-    if (pn.beforeMinutes > 0) {
-      const when = baseDate.getTime() - pn.beforeMinutes * 60 * 1000;
+    if (cfg.beforeMinutes > 0) {
+      const when = baseDate.getTime() - cfg.beforeMinutes * 60 * 1000;
       if (when > Date.now() + 1000) {
         alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_before`, { when });
       }
     }
 
     // After
-    if (pn.afterMinutes > 0) {
-      const when = baseDate.getTime() + pn.afterMinutes * 60 * 1000;
+    if (cfg.afterMinutes > 0) {
+      const when = baseDate.getTime() + cfg.afterMinutes * 60 * 1000;
       if (when > Date.now() + 1000) {
         alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_after`, { when });
       }

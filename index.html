@@ -773,31 +773,6 @@
                   <input type="checkbox" id="enablePrayerNotifications" />
                   <span>Enable browser notifications</span>
                 </label>
-
-                <div class="prayer-notification-offsets">
-                  <div class="prayer-notification-offset-item">
-                    <label for="notifyBeforeMinutes">Notify before (min)</label>
-                    <input
-                      type="number"
-                      class="prayer-notification-offset-input"
-                      id="notifyBeforeMinutes"
-                      value="10"
-                      min="0"
-                      max="180"
-                    />
-                  </div>
-                  <div class="prayer-notification-offset-item">
-                    <label for="notifyAfterMinutes">Notify after (min)</label>
-                    <input
-                      type="number"
-                      class="prayer-notification-offset-input"
-                      id="notifyAfterMinutes"
-                      value="0"
-                      min="0"
-                      max="180"
-                    />
-                  </div>
-                </div>
               </div>
 
               <div class="prayer-settings-list" role="list">
@@ -806,6 +781,8 @@
                   <span>Show</span>
                   <span>Offset</span>
                   <span>Notify</span>
+                  <span>Before</span>
+                  <span>After</span>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -833,6 +810,24 @@
                     <input type="checkbox" id="notifyFajr" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyFajrBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Fajr (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyFajrAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Fajr (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -863,6 +858,24 @@
                     <input type="checkbox" id="notifySunrise" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifySunriseBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Sunrise (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifySunriseAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Sunrise (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -890,6 +903,24 @@
                     <input type="checkbox" id="notifyDuha" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyDuhaBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Duha (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyDuhaAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Duha (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -917,6 +948,24 @@
                     <input type="checkbox" id="notifyDhuhr" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyDhuhrBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Dhuhr (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyDhuhrAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Dhuhr (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -944,6 +993,24 @@
                     <input type="checkbox" id="notifyAsr" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyAsrBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Asr (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyAsrAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Asr (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -974,6 +1041,24 @@
                     <input type="checkbox" id="notifyMaghrib" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyMaghribBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Maghrib (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyMaghribAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Maghrib (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -1001,6 +1086,24 @@
                     <input type="checkbox" id="notifyIsha" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyIshaBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Isha (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyIshaAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Isha (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -1031,6 +1134,24 @@
                     <input type="checkbox" id="notifyMidnight" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyMidnightBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Midnight (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyMidnightAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Midnight (minutes)"
+                  />
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -1058,12 +1179,30 @@
                     <input type="checkbox" id="notifyQiyam" />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyQiyamBeforeMinutes"
+                    value="10"
+                    min="0"
+                    max="180"
+                    aria-label="Notify before Qiyam (minutes)"
+                  />
+                  <input
+                    type="number"
+                    class="prayer-settings-notify-offset"
+                    id="notifyQiyamAfterMinutes"
+                    value="0"
+                    min="0"
+                    max="180"
+                    aria-label="Notify after Qiyam (minutes)"
+                  />
                 </div>
               </div>
 
               <p class="setting-hint">
-                Toggle visibility, adjust times, and enable notifications per
-                prayer.
+                Toggle visibility, adjust times, and set notifications (with
+                before/after minutes) per prayer.
               </p>
             </div>
           </div>
