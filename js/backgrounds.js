@@ -11,77 +11,248 @@ class BackgroundManager {
     this.currentBg = 1;
     this.intervalId = null;
 
-    // High-quality nature background URLs from Unsplash (free to use)
+    // High-quality nature background metadata from Unsplash (free to use)
+    // Each image has a `url`, `credit` and `href` (dummy placeholders for now).
     // Use `this.imageParams` to control image size/quality globally (e.g., "w=1920&q=80")
     this.imageParams = "w=1920&q=80";
     this.backgrounds = {
       nature: [
-        "https://images.unsplash.com/photo-1758260990024-c8ad2660f1ff",
-        "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d",
-        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-        "https://images.unsplash.com/photo-1472214103451-9374bd1c798e",
-        "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-        "https://images.unsplash.com/photo-1501854140801-50d01698950b",
-        "https://images.unsplash.com/photo-1426604966848-d7adac402bff",
-        "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1",
-        "https://images.unsplash.com/photo-1758260990024-c8ad2660f1ff",
-      ],
-      mosque: [
-        "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f",
-        "https://images.unsplash.com/photo-1542816417-0983c9c9ad53",
+        {
+          url: "https://images.unsplash.com/photo-1758260990024-c8ad2660f1ff",
+          credit: "Ahmet Yüksek",
+          href: "https://unsplash.com/@ahmetyuksek",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d",
+          credit: "Tim Swaan",
+          href: "https://unsplash.com/@timswaanphotography",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
+          credit: "v2osk",
+          href: "https://unsplash.com/@v2osk",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+          credit: "Lukasz Szmigiel",
+          href: "https://unsplash.com/@szmigieldesign",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e",
+          credit: "Robert Lukeman",
+          href: "https://unsplash.com/@robertlukeman",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
+          credit: "enrico bet",
+          href: "https://unsplash.com/@henry_be",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1501854140801-50d01698950b",
+          credit: "Qingbao Meng",
+          href: "https://unsplash.com/@ideasboom",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1426604966848-d7adac402bff",
+          credit: "Adam Kool",
+          href: "https://unsplash.com/@adamkool",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1",
+          credit: "Quino Al",
+          href: "https://unsplash.com/@quinoal",
+        },
       ],
       landscape: [
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
-        "https://images.unsplash.com/photo-1493246507139-91e8fad9978e",
-        "https://images.unsplash.com/photo-1500534623283-312aade485b7",
-        "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-        "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8",
-        "https://images.unsplash.com/photo-1508739773434-c26b3d09e071",
-        "https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8",
+        {
+          url: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8",
+          credit: "Dawid Zawiła",
+          href: "https://unsplash.com/@davealmine",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8",
+          credit: "Ken Cheung",
+          href: "https://unsplash.com/@kencheungphoto",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869",
+          credit: "Johannes Plenio",
+          href: "https://unsplash.com/@jplenio",
+        },
       ],
       mountains: [
-        "https://images.unsplash.com/photo-1454496522488-7a8e488e8606",
-        "https://images.unsplash.com/photo-1519681393784-d120267933ba",
-        "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99",
-        "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
-        "https://images.unsplash.com/photo-1464278533981-50106e6176b1",
-        "https://images.unsplash.com/photo-1458668383970-8ddd3927deed",
-        "https://images.unsplash.com/photo-1491002052546-bf38f186af56",
-        "https://images.unsplash.com/photo-1445363692815-ebcd599f7621",
+        {
+          url: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071",
+          credit: "Cristina Gottardi",
+          href: "https://unsplash.com/@cristina_gottardi",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+          credit: "Samuel Ferrara",
+          href: "https://unsplash.com/@samferrara",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+          credit: "Kalen Emsley",
+          href: "https://unsplash.com/@kalenemsley",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e",
+          credit: "garrett parker",
+          href: "https://unsplash.com/@garrettpsystems",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1500534623283-312aade485b7",
+          credit: "Ivana Cajina",
+          href: "https://unsplash.com/@von_co",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606",
+          credit: "Rohit Tandon",
+          href: "https://unsplash.com/@sepoys",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1519681393784-d120267933ba",
+          credit: "Benjamin Voros",
+          href: "https://unsplash.com/@vorosbenisop",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99",
+          credit: "Jeremy Bishop",
+          href: "https://unsplash.com/@jeremybishop",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
+          credit: "Daniel Leone",
+          href: "https://unsplash.com/@danielleone",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1464278533981-50106e6176b1",
+          credit: "Garrett Sears",
+          href: "https://unsplash.com/@garrettsears",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1458668383970-8ddd3927deed",
+          credit: "samsommer",
+          href: "https://unsplash.com/@samsommer",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1491002052546-bf38f186af56",
+          credit: "Adam Chang",
+          href: "https://unsplash.com/@sametomorrow",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1445363692815-ebcd599f7621",
+          credit: "Cagatay Orhan",
+          href: "https://unsplash.com/@cagatayorhan",
+        },
       ],
       ocean: [
-        "https://images.unsplash.com/photo-1505118380757-91f5f5632de0",
-        "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
-        "https://images.unsplash.com/photo-1484291470158-b8f8d608850d",
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-        "https://images.unsplash.com/photo-1439405326854-014607f694d7",
-        "https://images.unsplash.com/photo-1476673160081-cf065bc4cf87",
-        "https://images.unsplash.com/photo-1488462237308-ecaa28b729d7",
-        "https://images.unsplash.com/photo-1471922694854-ff1b63b20054",
+        {
+          url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0",
+          credit: "Shifaaz shamoon",
+          href: "https://unsplash.com/@sotti",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+          credit: "Matt Hardy",
+          href: "https://unsplash.com/@matthardy",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1484291470158-b8f8d608850d",
+          credit: "Christoffer Engström",
+          href: "https://unsplash.com/@christoffere",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+          credit: "Sean Oulashin",
+          href: "https://unsplash.com/@oulashin",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1471922694854-ff1b63b20054",
+          credit: "frank mckenna",
+          href: "https://unsplash.com/@frankiefoto",
+        },
       ],
       forest: [
-        "https://images.unsplash.com/photo-1448375240586-882707db888b",
-        "https://images.unsplash.com/photo-1473448912268-2022ce9509d8",
-        "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
-        "https://images.unsplash.com/photo-1476231682828-37e571bc172f",
-        "https://images.unsplash.com/photo-1425913397330-cf8af2ff40a1",
-        "https://images.unsplash.com/photo-1462275646964-a0e3c8e67f07",
-        "https://images.unsplash.com/photo-1440581572325-0bea30075d9d",
-        "https://images.unsplash.com/photo-1503435824048-a799a3a84bf7",
+        {
+          url: "https://images.unsplash.com/photo-1448375240586-882707db888b",
+          credit: "Sebastian Unrau",
+          href: "https://unsplash.com/@sebastian_unrau",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8",
+          credit: "Luca Bravo",
+          href: "https://unsplash.com/@lucabravo",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
+          credit: "niko photos",
+          href: "https://unsplash.com/@niko_photos",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1476231682828-37e571bc172f",
+          credit: "Geranimo",
+          href: "https://unsplash.com/@geraninmo",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1425913397330-cf8af2ff40a1",
+          credit: "Steven Kamenar",
+          href: "https://unsplash.com/@skamenar",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1440581572325-0bea30075d9d",
+          credit: "Gustav Gullstrand",
+          href: "https://unsplash.com/@outoforbit",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1503435824048-a799a3a84bf7",
+          credit: "Filip Zrnzević",
+          href: "https://unsplash.com/@filipz",
+        },
       ],
       sky: [
-        "https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6",
-        "https://images.unsplash.com/photo-1534088568595-a066f410bcda",
-        "https://images.unsplash.com/photo-1513002749550-c59d786b8e6c",
-        "https://images.unsplash.com/photo-1419833173245-f59e1b93f9ee",
-        "https://images.unsplash.com/photo-1489549132488-d00b7eee80f1",
-        "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b",
-        "https://images.unsplash.com/photo-1477346611705-65d1883cee1e",
-        "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869",
+        {
+          url: "https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6",
+          credit: "CHUTTERSNAP",
+          href: "https://unsplash.com/@chuttersnap",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1534088568595-a066f410bcda",
+          credit: "Dadee Aissa",
+          href: "https://unsplash.com/@dannyeve",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1513002749550-c59d786b8e6c",
+          credit: "Taylor Van Riper",
+          href: "https://unsplash.com/@taylorvanriper925",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1419833173245-f59e1b93f9ee",
+          credit: "Sam Schooler",
+          href: "https://unsplash.com/@sam",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b",
+          credit: "Tom Barrett",
+          href: "https://unsplash.com/@wistomsin",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1477346611705-65d1883cee1e",
+          credit: "JOHN TOWNER",
+          href: "https://unsplash.com/@heytowner",
+        },
+      ],
+      nightSky: [
+        {
+          url: "https://images.unsplash.com/photo-1489549132488-d00b7eee80f1",
+          credit: "Diego PH",
+          href: "https://unsplash.com/@jdiegoph",
+        },
       ],
     };
+    // Create the attribution element that is shown at bottom-left of the page
+    this.createAttributionEl();
   }
 
   /**
@@ -136,8 +307,8 @@ class BackgroundManager {
       this.storage.saveSettings(settings);
     }
 
-    const imageUrl = images[index];
-    this.setBackground(imageUrl);
+    const imageObj = this.normalizeImage(images[index]);
+    this.setBackground(imageObj);
   }
 
   /**
@@ -160,10 +331,124 @@ class BackgroundManager {
   }
 
   /**
+   * Normalize image entry to { url, credit, href }.
+   * Accepts either a string (url) or an object with metadata.
+   */
+  normalizeImage(image) {
+    if (!image) {
+      return { url: "", credit: "", href: "" };
+    }
+    if (typeof image === "string") {
+      return {
+        url: image,
+        credit: "Dummy Name",
+        href: "https://unsplash.com/@",
+      };
+    }
+    return {
+      url: image.url || "",
+      credit: image.credit || "Dummy Name",
+      href: image.href || "https://unsplash.com/@",
+    };
+  }
+
+  /**
+   * Create a small attribution box and append to the document.
+   * It's styled inline so it works without needing CSS changes.
+   */
+  createAttributionEl() {
+    if (this.attributionEl) return;
+    if (!document.body) {
+      // If called too early, wait for DOMContentLoaded
+      document.addEventListener(
+        "DOMContentLoaded",
+        () => this.createAttributionEl(),
+        { once: true }
+      );
+      return;
+    }
+
+    const el = document.createElement("div");
+    el.id = "bg-attribution";
+    Object.assign(el.style, {
+      position: "fixed",
+      left: "12px",
+      bottom: "12px",
+      zIndex: "10000",
+      fontSize: "12px",
+      color: "rgba(255,255,255,0.95)",
+      background: "linear-gradient(135deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25))",
+      padding: "6px 10px",
+      borderRadius: "10px",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      backdropFilter: "blur(6px)",
+      boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
+      userSelect: "none",
+      opacity: "0",
+      transition: "opacity 0.22s ease, transform 0.22s ease",
+      transform: "translateY(6px)",
+      pointerEvents: "none",
+      maxWidth: "calc(100% - 36px)",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
+
+    const cam = document.createElement("span");
+    cam.textContent = "📷";
+    cam.setAttribute("aria-hidden", "true");
+    cam.style.marginRight = "6px";
+
+    const label = document.createElement("span");
+    label.textContent = "Photo by ";
+    label.style.opacity = "0.95";
+
+    const anchor = document.createElement("a");
+    anchor.id = "bg-attribution-link";
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    Object.assign(anchor.style, {
+      color: "inherit",
+      textDecoration: "underline",
+      fontWeight: "500",
+    });
+
+    el.appendChild(cam);
+    el.appendChild(label);
+    el.appendChild(anchor);
+
+    document.body.appendChild(el);
+
+    this.attributionEl = el;
+    this.attributionAnchor = anchor;
+  }
+
+  /**
+   * Update attribution box content and visibility
+   */
+  updateAttribution(imageObj) {
+    if (!this.attributionEl) this.createAttributionEl();
+    if (!imageObj || !imageObj.credit) {
+      this.attributionEl.style.opacity = "0";
+      this.attributionEl.style.transform = "translateY(6px)";
+      this.attributionEl.style.pointerEvents = "none";
+      return;
+    }
+    this.attributionAnchor.textContent = imageObj.credit;
+    this.attributionAnchor.href = imageObj.href || "#";
+    this.attributionEl.style.opacity = "1";
+    this.attributionEl.style.transform = "translateY(0)";
+    this.attributionEl.style.pointerEvents = "auto";
+  }
+
+  /**
    * Set background with fade transition
    */
-  setBackground(url) {
-    const fullUrl = this.getImageUrl(url);
+  setBackground(image) {
+    const imgObj = this.normalizeImage(image);
+    const fullUrl = this.getImageUrl(imgObj.url);
     const targetBg = this.currentBg === 1 ? this.bg2 : this.bg1;
     const currentBgEl = this.currentBg === 1 ? this.bg1 : this.bg2;
 
@@ -171,9 +456,12 @@ class BackgroundManager {
     const img = new Image();
     img.onload = () => {
       targetBg.style.backgroundImage = `url(${fullUrl})`;
+      targetBg.style.backgroundSize = "cover";
+      targetBg.style.backgroundPosition = "center center";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
       this.currentBg = this.currentBg === 1 ? 2 : 1;
+      this.updateAttribution(imgObj);
     };
     img.onerror = () => {
       // Use fallback gradient if image fails
@@ -181,6 +469,7 @@ class BackgroundManager {
         "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
+      this.updateAttribution(imgObj);
     };
     img.src = fullUrl;
   }
@@ -212,8 +501,8 @@ class BackgroundManager {
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
 
-    const imageUrl = images[index];
-    this.setBackground(imageUrl);
+    const imageObj = this.normalizeImage(images[index]);
+    this.setBackground(imageObj);
   }
 
   /**
@@ -228,7 +517,8 @@ class BackgroundManager {
 
     const images = this.getImagesForCategory(category, settings);
     if (images.length > 0) {
-      this.setBackground(images[0]);
+      const imageObj = this.normalizeImage(images[0]);
+      this.setBackground(imageObj);
     }
   }
 
