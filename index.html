@@ -58,6 +58,109 @@
         </div>
       </section>
 
+      <!-- Search Bar Section -->
+      <section class="search-bar-section" id="searchBarSection">
+        <div class="search-bar-shell" id="searchBarShell">
+          <div class="search-bar-engines" aria-label="Custom searches">
+            <button
+              class="search-bar-engine-arrow"
+              id="searchBarEnginesPrev"
+              type="button"
+              aria-label="Scroll searches left"
+            >
+              ❮
+            </button>
+            <div
+              class="search-bar-engine-viewport"
+              id="searchBarEngineViewport"
+            >
+              <div
+                class="search-bar-engine-strip"
+                id="searchBarEngineStrip"
+                role="tablist"
+                aria-label="Search engines"
+              ></div>
+            </div>
+            <button
+              class="search-bar-engine-arrow"
+              id="searchBarEnginesNext"
+              type="button"
+              aria-label="Scroll searches right"
+            >
+              ❯
+            </button>
+          </div>
+
+          <form class="search-bar-form" id="searchBarForm" autocomplete="off">
+            <input
+              class="search-bar-input"
+              id="searchBarInput"
+              type="text"
+              inputmode="search"
+              placeholder="Searching..."
+              aria-label="Search query"
+            />
+            <button
+              class="search-bar-btn search-bar-submit"
+              id="searchBarSubmit"
+              type="submit"
+              aria-label="Search"
+              title="Search"
+            >
+              🔎
+            </button>
+            <button
+              class="search-bar-btn search-bar-add"
+              id="searchBarAddBtn"
+              type="button"
+              aria-label="Add custom search"
+              title="Add custom search"
+            >
+              ＋
+            </button>
+          </form>
+        </div>
+
+        <div
+          class="search-bar-add-panel"
+          id="searchBarAddPanel"
+          aria-hidden="true"
+        >
+          <form class="search-bar-add-form" id="searchBarAddForm">
+            <input
+              class="search-bar-add-input"
+              id="searchBarNewName"
+              type="text"
+              placeholder="Name (e.g., Youtube)"
+              maxlength="40"
+              required
+            />
+            <input
+              class="search-bar-add-input"
+              id="searchBarNewUrl"
+              type="text"
+              placeholder="URL (use %s for query)"
+              required
+            />
+            <div class="search-bar-add-actions">
+              <button
+                class="search-bar-add-action search-bar-add-save"
+                type="submit"
+              >
+                Save
+              </button>
+              <button
+                class="search-bar-add-action search-bar-add-cancel"
+                id="searchBarAddCancel"
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <!-- Quote Section -->
       <section class="quote-section" id="quoteSection">
         <div class="quote-container">
@@ -796,6 +899,7 @@
             <button class="settings-tab" data-tab="pinnedApps">
               📌 Pinned Apps
             </button>
+            <button class="settings-tab" data-tab="searchBar">🔎 Search Bar</button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
             <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
             <button class="settings-tab" data-tab="flashcards">
@@ -1764,6 +1868,12 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🔎</span>
+                  <span class="visibility-name">Search Bar</span>
+                  <input type="checkbox" id="visibilitySearchBar" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">💬</span>
                   <span class="visibility-name">Quotes</span>
                   <input type="checkbox" id="visibilityQuotes" checked />
@@ -1888,6 +1998,30 @@
                 <span class="custom-width-value" id="pinnedAppsPerRowValue"
                   >10</span
                 >
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Bar Settings -->
+          <div class="settings-panel" id="searchBarPanel">
+            <div class="setting-group">
+              <label class="setting-label">Custom Searches</label>
+              <p class="setting-hint">
+                Backup or restore only your Search Bar custom searches.
+              </p>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="exportCustomSearchesBtn">
+                  📤 Export Custom Searches
+                </button>
+                <button class="setting-btn" id="importCustomSearchesBtn">
+                  📥 Import Custom Searches
+                </button>
+                <input
+                  type="file"
+                  id="importCustomSearchesInput"
+                  accept=".json"
+                  style="display: none"
+                />
               </div>
             </div>
           </div>
@@ -2540,6 +2674,7 @@
     <script src="js/prayertimes.js"></script>
     <script src="js/todo.js"></script>
     <script src="js/pinnedapps.js"></script>
+    <script src="js/searchbar.js"></script>
     <script src="js/calendar.js"></script>
     <script src="js/weather.js"></script>
     <script src="js/lunarphase.js"></script>

@@ -10,6 +10,7 @@
     "newtab": "index.html"
   },
   "permissions": ["storage", "geolocation", "alarms", "notifications"],
+  "host_permissions": ["https://www.google.com/s2/*"],
   "background": {
     "service_worker": "js/service-worker.js"
   },

@@ -19,6 +19,7 @@ class MuslimDashboard {
     this.quotes = new QuotesManager(this.storage);
     this.todos = new TodoManager(this.storage);
     this.pinnedApps = null; // Will be initialized after DOM
+    this.searchBar = null; // Will be initialized after DOM
     this.calendar = null; // Will be initialized after DOM
     this.stickyNotes = null; // Will be initialized after DOM
     this.weather = null; // Will be initialized after DOM
@@ -212,6 +213,9 @@ class MuslimDashboard {
 
     // Initialize pinned apps
     this.pinnedApps = new PinnedAppsManager(this.storage);
+
+    // Initialize search bar (custom searches)
+    this.searchBar = new SearchBarManager(this.storage);
 
     // Initialize calendar
     this.calendar = new CalendarManager(this.storage, this.hijri);
@@ -525,6 +529,17 @@ class MuslimDashboard {
       pinnedAppsSection.setAttribute(
         "aria-hidden",
         visibility.quickPins === false ? "true" : "false"
+      );
+    }
+
+    // Search Bar
+    const searchBarSection = document.getElementById("searchBarSection");
+    if (searchBarSection) {
+      searchBarSection.style.display =
+        visibility.searchBar === false ? "none" : "";
+      searchBarSection.setAttribute(
+        "aria-hidden",
+        visibility.searchBar === false ? "true" : "false"
       );
     }
 

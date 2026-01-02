@@ -193,6 +193,7 @@ class StorageManager {
       componentVisibility: {
         header: true,
         quickPins: true,
+        searchBar: true,
         quotes: true,
         prayerTimes: true,
         hijriCalendar: true,
@@ -405,6 +406,26 @@ class StorageManager {
    */
   savePinnedApps(apps) {
     return this.set("pinnedApps", apps);
+  }
+
+  /**
+   * Custom searches (Search Bar)
+   */
+  getCustomSearches() {
+    const searches = this.get("customSearches", []);
+    return Array.isArray(searches) ? searches : [];
+  }
+
+  saveCustomSearches(searches) {
+    return this.set("customSearches", Array.isArray(searches) ? searches : []);
+  }
+
+  getLastCustomSearchId() {
+    return this.get("customSearchLastId", null);
+  }
+
+  saveLastCustomSearchId(id) {
+    return this.set("customSearchLastId", id);
   }
 
   /**

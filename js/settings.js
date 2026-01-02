@@ -154,6 +154,17 @@ class SettingsManager {
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
 
+    // Custom searches import/export
+    this.exportCustomSearchesBtn = document.getElementById(
+      "exportCustomSearchesBtn"
+    );
+    this.importCustomSearchesBtn = document.getElementById(
+      "importCustomSearchesBtn"
+    );
+    this.importCustomSearchesInput = document.getElementById(
+      "importCustomSearchesInput"
+    );
+
     // Method angles display
     this.methodAnglesInfo = document.getElementById("methodAnglesInfo");
     this.methodFajrAngle = document.getElementById("methodFajrAngle");
@@ -189,6 +200,7 @@ class SettingsManager {
     // Component visibility elements
     this.visibilityHeader = document.getElementById("visibilityHeader");
     this.visibilityQuickPins = document.getElementById("visibilityQuickPins");
+    this.visibilitySearchBar = document.getElementById("visibilitySearchBar");
     this.visibilityQuotes = document.getElementById("visibilityQuotes");
     this.visibilityPrayerTimes = document.getElementById(
       "visibilityPrayerTimes"
@@ -573,6 +585,8 @@ class SettingsManager {
       this.visibilityHeader.checked = visibility.header !== false;
     if (this.visibilityQuickPins)
       this.visibilityQuickPins.checked = visibility.quickPins !== false;
+    if (this.visibilitySearchBar)
+      this.visibilitySearchBar.checked = visibility.searchBar !== false;
     if (this.visibilityQuotes)
       this.visibilityQuotes.checked = visibility.quotes !== false;
     if (this.visibilityPrayerTimes)
@@ -958,6 +972,14 @@ class SettingsManager {
     const pinnedApps = this.storage.getPinnedApps();
     const lastLocation = this.storage.getLastLocation();
 
+    const customSearches = this.storage.getCustomSearches
+      ? this.storage.getCustomSearches()
+      : this.storage.get("customSearches", []);
+
+    const customSearchLastId = this.storage.getLastCustomSearchId
+      ? this.storage.getLastCustomSearchId()
+      : this.storage.get("customSearchLastId", null);
+
     const exportData = {
       version: 1,
       exportDate: new Date().toISOString(),
@@ -966,6 +988,8 @@ class SettingsManager {
       userQuotes: userQuotes,
       pinnedApps: pinnedApps,
       lastLocation: lastLocation,
+      customSearches: Array.isArray(customSearches) ? customSearches : [],
+      customSearchLastId: customSearchLastId ?? null,
     };
 
     const json = JSON.stringify(exportData, null, 2);
@@ -986,6 +1010,98 @@ class SettingsManager {
   }
 
   /**
+   * Export custom searches only (Search Bar)
+   */
+  exportCustomSearches() {
+    const searches = this.storage.getCustomSearches
+      ? this.storage.getCustomSearches()
+      : this.storage.get("customSearches", []);
+
+    const lastId = this.storage.getLastCustomSearchId
+      ? this.storage.getLastCustomSearchId()
+      : this.storage.get("customSearchLastId", null);
+
+    const exportData = {
+      exportType: "customSearches",
+      version: 1,
+      exportDate: new Date().toISOString(),
+      searches: Array.isArray(searches) ? searches : [],
+      lastSelectedId: lastId ?? null,
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `muslim-dashboard-custom-searches-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast("Custom searches exported!", "success");
+  }
+
+  /**
+   * Import custom searches only (Search Bar)
+   */
+  importCustomSearches(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+
+      const searches = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.searches)
+        ? data.searches
+        : null;
+
+      if (!searches) {
+        throw new Error(
+          "Invalid format: expected an array or { searches: [] }"
+        );
+      }
+
+      const valid = searches
+        .filter(
+          (s) =>
+            s &&
+            typeof s.name === "string" &&
+            s.name.trim() !== "" &&
+            typeof s.url === "string" &&
+            s.url.trim() !== ""
+        )
+        .map((s) => ({
+          id: s.id ?? Date.now() + Math.random(),
+          name: String(s.name).trim().slice(0, 40),
+          url: String(s.url).trim(),
+          favicon: typeof s.favicon === "string" ? s.favicon : null,
+        }));
+
+      if (this.storage.saveCustomSearches) {
+        this.storage.saveCustomSearches(valid);
+      } else {
+        this.storage.set("customSearches", valid);
+      }
+
+      const incomingLast = data?.lastSelectedId ?? null;
+      if (this.storage.saveLastCustomSearchId) {
+        this.storage.saveLastCustomSearchId(incomingLast);
+      } else {
+        this.storage.set("customSearchLastId", incomingLast);
+      }
+
+      this.showToast("Custom searches imported! Reloading...", "success");
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (e) {
+      this.showToast("Import failed: " + e.message, "error");
+    }
+  }
+
+  /**
    * Export custom content (Flashcards sets, Custom backgrounds, Custom quotes)
    */
   exportFullExport() {
@@ -995,6 +1111,14 @@ class SettingsManager {
     const userQuotes = this.storage.getUserQuotes();
     const pinnedApps = this.storage.getPinnedApps();
     const lastLocation = this.storage.getLastLocation();
+
+    const customSearches = this.storage.getCustomSearches
+      ? this.storage.getCustomSearches()
+      : this.storage.get("customSearches", []);
+
+    const customSearchLastId = this.storage.getLastCustomSearchId
+      ? this.storage.getLastCustomSearchId()
+      : this.storage.get("customSearchLastId", null);
 
     // Extra payload = custom content not covered by settings export (custom flashcard sets)
     const customBackgrounds = Array.isArray(settings.customBackgrounds)
@@ -1031,6 +1155,10 @@ class SettingsManager {
       userQuotes: Array.isArray(userQuotes) ? userQuotes : [],
       pinnedApps,
       lastLocation,
+
+      // Search Bar
+      customSearches: Array.isArray(customSearches) ? customSearches : [],
+      customSearchLastId: customSearchLastId ?? null,
 
       // Additive / full-export-only fields
       flashcards: {
@@ -1084,6 +1212,22 @@ class SettingsManager {
 
     if (data.lastLocation) {
       this.storage.saveLastLocation(data.lastLocation);
+    }
+
+    if (Array.isArray(data.customSearches)) {
+      if (this.storage.saveCustomSearches) {
+        this.storage.saveCustomSearches(data.customSearches);
+      } else {
+        this.storage.set("customSearches", data.customSearches);
+      }
+    }
+
+    if ("customSearchLastId" in (data || {})) {
+      if (this.storage.saveLastCustomSearchId) {
+        this.storage.saveLastCustomSearchId(data.customSearchLastId ?? null);
+      } else {
+        this.storage.set("customSearchLastId", data.customSearchLastId ?? null);
+      }
     }
 
     // Continue with a fresh settings object so we can safely patch fields below.
@@ -1213,6 +1357,26 @@ class SettingsManager {
       // Import last location
       if (data.lastLocation) {
         this.storage.saveLastLocation(data.lastLocation);
+      }
+
+      // Import custom searches
+      if (Array.isArray(data.customSearches)) {
+        if (this.storage.saveCustomSearches) {
+          this.storage.saveCustomSearches(data.customSearches);
+        } else {
+          this.storage.set("customSearches", data.customSearches);
+        }
+      }
+
+      if ("customSearchLastId" in (data || {})) {
+        if (this.storage.saveLastCustomSearchId) {
+          this.storage.saveLastCustomSearchId(data.customSearchLastId ?? null);
+        } else {
+          this.storage.set(
+            "customSearchLastId",
+            data.customSearchLastId ?? null
+          );
+        }
       }
 
       this.showToast("Settings imported! Reloading...", "success");
@@ -1469,6 +1633,7 @@ class SettingsManager {
     settings.componentVisibility = {
       header: this.visibilityHeader?.checked ?? true,
       quickPins: this.visibilityQuickPins?.checked ?? true,
+      searchBar: this.visibilitySearchBar?.checked ?? true,
       quotes: this.visibilityQuotes?.checked ?? true,
       prayerTimes: this.visibilityPrayerTimes?.checked ?? true,
       hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
@@ -2154,6 +2319,13 @@ class SettingsManager {
       });
     }
 
+    // Export custom searches
+    if (this.exportCustomSearchesBtn) {
+      this.exportCustomSearchesBtn.addEventListener("click", () => {
+        this.exportCustomSearches();
+      });
+    }
+
     // Full export
     if (this.fullExportBtn) {
       this.fullExportBtn.addEventListener("click", () => {
@@ -2178,6 +2350,27 @@ class SettingsManager {
           };
           reader.readAsText(file);
           e.target.value = ""; // Reset input
+        }
+      });
+    }
+
+    // Import custom searches
+    if (this.importCustomSearchesBtn) {
+      this.importCustomSearchesBtn.addEventListener("click", () => {
+        this.importCustomSearchesInput?.click();
+      });
+    }
+
+    if (this.importCustomSearchesInput) {
+      this.importCustomSearchesInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            this.importCustomSearches(event.target.result);
+          };
+          reader.readAsText(file);
+          e.target.value = "";
         }
       });
     }
