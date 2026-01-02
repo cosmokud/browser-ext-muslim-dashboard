@@ -120,45 +120,6 @@
             </button>
           </form>
         </div>
-
-        <div
-          class="search-bar-add-panel"
-          id="searchBarAddPanel"
-          aria-hidden="true"
-        >
-          <form class="search-bar-add-form" id="searchBarAddForm">
-            <input
-              class="search-bar-add-input"
-              id="searchBarNewName"
-              type="text"
-              placeholder="Name (e.g., Youtube)"
-              maxlength="40"
-              required
-            />
-            <input
-              class="search-bar-add-input"
-              id="searchBarNewUrl"
-              type="text"
-              placeholder="URL (use %s for query)"
-              required
-            />
-            <div class="search-bar-add-actions">
-              <button
-                class="search-bar-add-action search-bar-add-save"
-                type="submit"
-              >
-                Save
-              </button>
-              <button
-                class="search-bar-add-action search-bar-add-cancel"
-                id="searchBarAddCancel"
-                type="button"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
       </section>
 
       <!-- Quote Section -->
@@ -899,7 +860,9 @@
             <button class="settings-tab" data-tab="pinnedApps">
               📌 Pinned Apps
             </button>
-            <button class="settings-tab" data-tab="searchBar">🔎 Search Bar</button>
+            <button class="settings-tab" data-tab="searchBar">
+              🔎 Search Bar
+            </button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
             <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
             <button class="settings-tab" data-tab="flashcards">
@@ -2632,6 +2595,141 @@
             class="modal-btn save-btn"
             type="submit"
             form="editPinnedAppForm"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (Search Bar) -->
+    <div
+      class="modal-overlay delete-confirm-modal"
+      id="searchBarDeleteConfirmModal"
+    >
+      <div class="delete-confirm-content">
+        <div class="delete-confirm-icon">⚠️</div>
+        <h3>Delete Search?</h3>
+        <p>
+          Are you sure you want to remove "<span
+            class="delete-app-name"
+            id="searchBarDeleteName"
+          ></span
+          >"?
+        </p>
+        <p
+          class="delete-confirm-hint"
+          style="font-size: 0.85rem; color: var(--text-muted)"
+        >
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button
+            class="delete-confirm-btn cancel"
+            id="cancelSearchBarDeleteBtn"
+          >
+            Cancel
+          </button>
+          <button
+            class="delete-confirm-btn confirm"
+            id="confirmSearchBarDeleteBtn"
+          >
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Custom Search Modal -->
+    <div class="modal-overlay" id="searchBarModal">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2 class="modal-title">🔎 Add Custom Search</h2>
+          <button class="modal-close" id="closeSearchBarModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="searchBarModalForm">
+            <div class="setting-group">
+              <label class="setting-label">Name</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="searchBarNewName"
+                placeholder="e.g., YouTube"
+                maxlength="40"
+                required
+              />
+            </div>
+            <div class="setting-group">
+              <label class="setting-label">URL Template</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="searchBarNewUrl"
+                placeholder="e.g., https://www.youtube.com/results?search_query=%s"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" id="cancelSearchBarModal">
+            Cancel
+          </button>
+          <button
+            class="modal-btn save-btn"
+            type="submit"
+            form="searchBarModalForm"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Custom Search Modal -->
+    <div class="modal-overlay" id="editSearchBarModal">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2 class="modal-title">✏️ Edit Custom Search</h2>
+          <button class="modal-close" id="closeEditSearchBarModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editSearchBarModalForm">
+            <div class="setting-group">
+              <label class="setting-label">Name</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="editSearchBarName"
+                placeholder="e.g., YouTube"
+                maxlength="40"
+                required
+              />
+            </div>
+            <div class="setting-group">
+              <label class="setting-label">URL Template</label>
+              <input
+                type="text"
+                class="setting-input"
+                id="editSearchBarUrl"
+                placeholder="e.g., https://www.youtube.com/results?search_query=%s"
+                required
+              />
+            </div>
+            <input type="hidden" id="editSearchBarId" />
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel-btn" id="cancelEditSearchBar">
+            Cancel
+          </button>
+          <button
+            class="modal-btn save-btn"
+            type="submit"
+            form="editSearchBarModalForm"
           >
             Save
           </button>

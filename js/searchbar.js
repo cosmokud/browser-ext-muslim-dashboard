@@ -20,7 +20,7 @@ class SearchBarManager {
     this.colorInFlight = new Map();
 
     this.contextMenu = null;
-    this.editingId = null;
+    this.pendingDeleteId = null;
 
     // Elements
     this.section = document.getElementById("searchBarSection");
@@ -35,13 +35,30 @@ class SearchBarManager {
     this.input = document.getElementById("searchBarInput");
     this.addBtn = document.getElementById("searchBarAddBtn");
 
-    this.addPanel = document.getElementById("searchBarAddPanel");
-    this.addForm = document.getElementById("searchBarAddForm");
+    // Add modal
+    this.addModal = document.getElementById("searchBarModal");
+    this.addModalForm = document.getElementById("searchBarModalForm");
+    this.addModalCloseBtn = document.getElementById("closeSearchBarModal");
+    this.addModalCancelBtn = document.getElementById("cancelSearchBarModal");
     this.newName = document.getElementById("searchBarNewName");
     this.newUrl = document.getElementById("searchBarNewUrl");
-    this.addCancel = document.getElementById("searchBarAddCancel");
 
-    this.addSaveBtn = this.addForm?.querySelector(".search-bar-add-save") || null;
+    // Edit modal
+    this.editModal = document.getElementById("editSearchBarModal");
+    this.editModalForm = document.getElementById("editSearchBarModalForm");
+    this.editModalCloseBtn = document.getElementById("closeEditSearchBarModal");
+    this.editModalCancelBtn = document.getElementById("cancelEditSearchBar");
+    this.editName = document.getElementById("editSearchBarName");
+    this.editUrl = document.getElementById("editSearchBarUrl");
+    this.editIdInput = document.getElementById("editSearchBarId");
+
+    // Delete confirm modal
+    this.deleteModal = document.getElementById("searchBarDeleteConfirmModal");
+    this.deleteNameEl = document.getElementById("searchBarDeleteName");
+    this.confirmDeleteBtn = document.getElementById(
+      "confirmSearchBarDeleteBtn"
+    );
+    this.cancelDeleteBtn = document.getElementById("cancelSearchBarDeleteBtn");
 
     this.init();
   }
@@ -153,60 +170,136 @@ class SearchBarManager {
 
     if (this.addBtn) {
       this.addBtn.addEventListener("click", () => {
-        this.editingId = null;
-        this._syncAddPanelMode();
-        this.toggleAddPanel(true);
+        this.showAddModal();
       });
     }
 
-    if (this.addCancel) {
-      this.addCancel.addEventListener("click", () =>
-        this.toggleAddPanel(false)
+    // Add modal events
+    if (this.addModalCloseBtn) {
+      this.addModalCloseBtn.addEventListener("click", () =>
+        this.hideAddModal()
       );
     }
-
-    if (this.addForm) {
-      this.addForm.addEventListener("submit", (e) => {
+    if (this.addModalCancelBtn) {
+      this.addModalCancelBtn.addEventListener("click", () =>
+        this.hideAddModal()
+      );
+    }
+    if (this.addModal) {
+      this.addModal.addEventListener("click", (e) => {
+        if (e.target === this.addModal) this.hideAddModal();
+      });
+    }
+    if (this.addModalForm) {
+      this.addModalForm.addEventListener("submit", (e) => {
         e.preventDefault();
-        this.saveCustomSearchFromForm();
+        this.addCustomSearchFromModal();
       });
     }
 
-    // Escape closes add panel.
+    // Edit modal events
+    if (this.editModalCloseBtn) {
+      this.editModalCloseBtn.addEventListener("click", () =>
+        this.hideEditModal()
+      );
+    }
+    if (this.editModalCancelBtn) {
+      this.editModalCancelBtn.addEventListener("click", () =>
+        this.hideEditModal()
+      );
+    }
+    if (this.editModal) {
+      this.editModal.addEventListener("click", (e) => {
+        if (e.target === this.editModal) this.hideEditModal();
+      });
+    }
+    if (this.editModalForm) {
+      this.editModalForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.updateCustomSearchFromModal();
+      });
+    }
+
+    // Delete modal events
+    if (this.cancelDeleteBtn) {
+      this.cancelDeleteBtn.addEventListener("click", () =>
+        this.hideDeleteConfirmation()
+      );
+    }
+    if (this.confirmDeleteBtn) {
+      this.confirmDeleteBtn.addEventListener("click", () =>
+        this.confirmDelete()
+      );
+    }
+    if (this.deleteModal) {
+      this.deleteModal.addEventListener("click", (e) => {
+        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
+      });
+    }
+
+    // Escape closes context menu + modals
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      if (this.addPanel?.classList.contains("active")) {
-        this.toggleAddPanel(false);
-      }
+      this.hideContextMenu();
+      this.hideAddModal();
+      this.hideEditModal();
+      this.hideDeleteConfirmation();
     });
   }
 
-  toggleAddPanel(open) {
-    if (!this.addPanel) return;
-
-    const nextOpen =
-      typeof open === "boolean"
-        ? open
-        : !this.addPanel.classList.contains("active");
-
-    this.addPanel.classList.toggle("active", nextOpen);
-    this.addPanel.setAttribute("aria-hidden", nextOpen ? "false" : "true");
-
-    if (nextOpen) {
-      this.newName?.focus();
-    } else {
-      this.editingId = null;
-      this._syncAddPanelMode();
-      try {
-        this.addForm?.reset();
-      } catch (e) {}
-      this.input?.focus();
-    }
+  showAddModal() {
+    if (!this.addModal) return;
+    try {
+      this.addModalForm?.reset();
+    } catch (e) {}
+    this.addModal.classList.add("active");
+    this.newName?.focus();
   }
 
-  _syncAddPanelMode() {
-    if (!this.addSaveBtn) return;
-    this.addSaveBtn.textContent = this.editingId != null ? "Update" : "Save";
+  hideAddModal() {
+    if (!this.addModal) return;
+    this.addModal.classList.remove("active");
+  }
+
+  showEditModal(engineId) {
+    const engine = this.searches.find((s) => String(s.id) === String(engineId));
+    if (!engine || !this.editModal) return;
+
+    if (this.editName) this.editName.value = engine.name;
+    if (this.editUrl) this.editUrl.value = engine.url;
+    if (this.editIdInput) this.editIdInput.value = String(engine.id);
+
+    this.editModal.classList.add("active");
+    this.editName?.focus();
+  }
+
+  hideEditModal() {
+    if (!this.editModal) return;
+    this.editModal.classList.remove("active");
+    try {
+      this.editModalForm?.reset();
+    } catch (e) {}
+  }
+
+  showDeleteConfirmation(engineId) {
+    const engine = this.searches.find((s) => String(s.id) === String(engineId));
+    if (!engine || !this.deleteModal) return;
+
+    this.pendingDeleteId = String(engine.id);
+    if (this.deleteNameEl) this.deleteNameEl.textContent = engine.name;
+    this.deleteModal.classList.add("active");
+  }
+
+  hideDeleteConfirmation() {
+    if (!this.deleteModal) return;
+    this.deleteModal.classList.remove("active");
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete() {
+    if (!this.pendingDeleteId) return;
+    this.deleteEngine(this.pendingDeleteId);
+    this.hideDeleteConfirmation();
   }
 
   createContextMenu() {
@@ -235,7 +328,7 @@ class SearchBarManager {
         e.stopPropagation();
         const id = this.contextMenu?.dataset?.engineId;
         this.hideContextMenu();
-        if (id != null) this.startEdit(id);
+        if (id != null) this.showEditModal(id);
       });
 
     this.contextMenu
@@ -245,7 +338,7 @@ class SearchBarManager {
         e.stopPropagation();
         const id = this.contextMenu?.dataset?.engineId;
         this.hideContextMenu();
-        if (id != null) this.deleteEngine(id);
+        if (id != null) this.showDeleteConfirmation(id);
       });
 
     document.addEventListener("click", (e) => {
@@ -292,25 +385,11 @@ class SearchBarManager {
     delete this.contextMenu.dataset.engineId;
   }
 
-  startEdit(engineId) {
-    const engine = this.searches.find((s) => String(s.id) === String(engineId));
-    if (!engine) return;
-
-    this.editingId = engine.id;
-    this._syncAddPanelMode();
-
-    if (this.newName) this.newName.value = engine.name;
-    if (this.newUrl) this.newUrl.value = engine.url;
-    this.toggleAddPanel(true);
-  }
-
   deleteEngine(engineId) {
-    const idx = this.searches.findIndex((s) => String(s.id) === String(engineId));
+    const idx = this.searches.findIndex(
+      (s) => String(s.id) === String(engineId)
+    );
     if (idx < 0) return;
-
-    const engine = this.searches[idx];
-    const ok = window.confirm(`Delete "${engine.name}"?`);
-    if (!ok) return;
 
     this.searches.splice(idx, 1);
 
@@ -318,11 +397,91 @@ class SearchBarManager {
       this.selectedId = null;
       this.scrollIndex = 0;
     } else if (String(this.selectedId) === String(engineId)) {
-      this.selectedId = this.searches[Math.min(idx, this.searches.length - 1)].id;
+      this.selectedId =
+        this.searches[Math.min(idx, this.searches.length - 1)].id;
     }
 
     this.persist();
     this.render();
+  }
+
+  _normalizeAndValidateTemplate(name, url) {
+    const cleanName = String(name || "").trim();
+    let cleanUrl = String(url || "").trim();
+
+    if (!cleanName || !cleanUrl) return null;
+    if (!cleanUrl.includes("%s")) {
+      this.notify("URL must include %s where the query goes.", "error");
+      return null;
+    }
+
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+      cleanUrl = "https://" + cleanUrl;
+    }
+
+    try {
+      new URL(cleanUrl.split("%s").join("test"));
+    } catch (e) {
+      this.notify("Please enter a valid URL template.", "error");
+      return null;
+    }
+
+    return { name: cleanName, url: cleanUrl };
+  }
+
+  addCustomSearchFromModal() {
+    const normalized = this._normalizeAndValidateTemplate(
+      this.newName?.value,
+      this.newUrl?.value
+    );
+    if (!normalized) return;
+
+    const favicon = this.getFaviconUrlFromTemplate(normalized.url);
+    const entry = {
+      id: Date.now(),
+      name: normalized.name,
+      url: normalized.url,
+      favicon,
+    };
+
+    this.searches.push(entry);
+    this.selectedId = entry.id;
+    this.persist();
+
+    this.hideAddModal();
+    this.render();
+    this.input?.focus();
+  }
+
+  updateCustomSearchFromModal() {
+    const id = this.editIdInput?.value;
+    if (!id) return;
+
+    const normalized = this._normalizeAndValidateTemplate(
+      this.editName?.value,
+      this.editUrl?.value
+    );
+    if (!normalized) return;
+
+    const idx = this.searches.findIndex((s) => String(s.id) === String(id));
+    if (idx < 0) return;
+
+    const favicon = this.getFaviconUrlFromTemplate(normalized.url);
+
+    this.searches[idx] = {
+      ...this.searches[idx],
+      name: normalized.name,
+      url: normalized.url,
+      favicon,
+    };
+
+    // Keep selection stable
+    this.selectedId = this.searches[idx].id;
+    this.persist();
+
+    this.hideEditModal();
+    this.render();
+    this.input?.focus();
   }
 
   setPlaceholder(text) {
@@ -451,72 +610,11 @@ class SearchBarManager {
     }
   }
 
-  async saveCustomSearchFromForm() {
-    const name = String(this.newName?.value || "").trim();
-    let url = String(this.newUrl?.value || "").trim();
-
-    if (!name || !url) return;
-
-    if (!url.includes("%s")) {
-      this.notify("URL must include %s where the query goes.", "error");
-      return;
-    }
-
-    // Ensure protocol.
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      url = "https://" + url;
-    }
-
-    // Validate parsable URL.
-    try {
-      // Replace %s so URL() accepts it.
-      new URL(url.split("%s").join("test"));
-    } catch (e) {
-      this.notify("Please enter a valid URL template.", "error");
-      return;
-    }
-
-    const favicon = this.getFaviconUrlFromTemplate(url);
-
-    if (this.editingId != null) {
-      const idx = this.searches.findIndex(
-        (s) => String(s.id) === String(this.editingId)
-      );
-      if (idx >= 0) {
-        this.searches[idx] = {
-          ...this.searches[idx],
-          name,
-          url,
-          favicon,
-        };
-        this.selectedId = this.searches[idx].id;
-      }
-    } else {
-      const entry = {
-        id: Date.now(),
-        name,
-        url,
-        favicon,
-      };
-
-      this.searches.push(entry);
-      this.selectedId = entry.id;
-    }
-
-    this.persist();
-
-    this.toggleAddPanel(false);
-    this.render();
-
-    // Focus the input so the user can immediately search.
-    this.input?.focus();
-  }
-
   runSearch() {
     const engine = this.getSelected();
 
     if (!engine) {
-      this.toggleAddPanel(true);
+      this.showAddModal();
       return;
     }
 
@@ -684,6 +782,12 @@ class SearchBarManager {
 
     if (this.shell) {
       this.shell.classList.toggle("has-engines", this.searches.length > 0);
+
+      const visible = Math.max(
+        1,
+        Math.min(SearchBarManager.MAX_VISIBLE, this.searches.length)
+      );
+      this.shell.style.setProperty("--sb-engine-visible", String(visible));
     }
 
     // Clear
