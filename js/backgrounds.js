@@ -14,7 +14,7 @@ class BackgroundManager {
     // High-quality nature background metadata from Unsplash (free to use)
     // Each image has a `url`, `credit` and `href` (dummy placeholders for now).
     // Use `this.imageParams` to control image size/quality globally (e.g., "w=1920&q=80")
-    this.imageParams = "w=1920&q=80";
+    this.imageParams = "w=2560&q=80";
     this.backgrounds = {
       nature: [
         {
@@ -146,6 +146,11 @@ class BackgroundManager {
           credit: "Cagatay Orhan",
           href: "https://unsplash.com/@cagatayorhan",
         },
+        {
+          url: "https://images.unsplash.com/photo-1477346611705-65d1883cee1e",
+          credit: "JOHN TOWNER",
+          href: "https://unsplash.com/@heytowner",
+        },
       ],
       ocean: [
         {
@@ -237,17 +242,62 @@ class BackgroundManager {
           credit: "Tom Barrett",
           href: "https://unsplash.com/@wistomsin",
         },
-        {
-          url: "https://images.unsplash.com/photo-1477346611705-65d1883cee1e",
-          credit: "JOHN TOWNER",
-          href: "https://unsplash.com/@heytowner",
-        },
       ],
-      nightSky: [
+      night: [
         {
-          url: "https://images.unsplash.com/photo-1489549132488-d00b7eee80f1",
-          credit: "Diego PH",
-          href: "https://unsplash.com/@jdiegoph",
+          url: "https://images.unsplash.com/photo-1444080748397-f442aa95c3e5",
+          credit: "Ryan Hutton",
+          href: "https://unsplash.com/@ryan_hutton_",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e",
+          credit: "Paul Lichtblau",
+          href: "https://unsplash.com/@laup",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1509773896068-7fd415d91e2e",
+          credit: "Jackson Hendry",
+          href: "https://unsplash.com/@actionjackson801",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1482385916434-814664df9c5b",
+          credit: "Nathan Anderson",
+          href: "https://unsplash.com/@nathananderson",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1488866022504-f2584929ca5f",
+          credit: "Nathan Anderson",
+          href: "https://unsplash.com/@nathananderson",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1476504825079-f50520ac761d",
+          credit: "Nathan Anderson",
+          href: "https://unsplash.com/@nathananderson",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1467810160588-c86c0deb5d16",
+          credit: "Thom Schneider",
+          href: "https://unsplash.com/@thomschneider",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1456154875099-97a3a56074d3",
+          credit: "Federico Beccari",
+          href: "https://unsplash.com/@federize",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1528818955841-a7f1425131b5",
+          credit: "Felix Mittermeier",
+          href: "https://unsplash.com/@felix_mittermeier",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1456530308602-976f6a4bb440",
+          credit: "Martin Jernberg",
+          href: "https://unsplash.com/@martinjernberg",
+        },
+        {
+          url: "https://images.unsplash.com/photo-1595520519880-a86c48ea536c",
+          credit: "Joshua Woroniecki",
+          href: "https://unsplash.com/@joshuaworoniecki",
         },
       ],
     };
@@ -275,7 +325,9 @@ class BackgroundManager {
       });
 
       if (category === "allNoCustom") {
-        return builtInImages.length > 0 ? builtInImages : this.backgrounds.nature;
+        return builtInImages.length > 0
+          ? builtInImages
+          : this.backgrounds.nature;
       }
 
       const customBgs = settings.customBackgrounds || [];
