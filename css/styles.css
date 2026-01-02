@@ -465,6 +465,12 @@ body {
   grid-column: 1 / -1;
 }
 
+.notes-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
 .notes-new-btn {
   display: inline-flex;
   align-items: center;
@@ -483,6 +489,32 @@ body {
 .notes-new-btn:hover {
   background: var(--glass-bg-hover);
   transform: translateY(-1px);
+}
+
+.notes-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.notes-delete-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.notes-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .notes-layout {
@@ -618,6 +650,32 @@ body {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
+.notes-scale-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-left: var(--spacing-xs);
+}
+
+.notes-scale-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.notes-scale-select {
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0 var(--spacing-sm);
+  outline: none;
+}
+
+.notes-scale-select:focus {
+  background: var(--glass-bg-hover);
+}
+
 .notes-tool-btn {
   display: inline-flex;
   align-items: center;
@@ -645,6 +703,7 @@ body {
 }
 
 .notes-editor {
+  --notes-scale: 1;
   width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
@@ -656,6 +715,7 @@ body {
   overflow-wrap: anywhere;
   word-break: break-word;
   line-height: 1.7;
+  font-size: calc(1rem * var(--notes-scale));
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 

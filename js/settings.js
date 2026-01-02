@@ -1913,12 +1913,19 @@ class SettingsManager {
 
             const title = String(n.title || "Untitled").slice(0, 120);
             const html = typeof n.html === "string" ? n.html : "";
+            const rawScale =
+              typeof n.scale === "number" || typeof n.scale === "string"
+                ? parseInt(n.scale, 10)
+                : 1;
+            const scale = Number.isNaN(rawScale)
+              ? 1
+              : Math.max(1, Math.min(5, rawScale));
             const createdAt =
               typeof n.createdAt === "number" ? n.createdAt : now;
             const updatedAt =
               typeof n.updatedAt === "number" ? n.updatedAt : createdAt;
 
-            return { id, title, html, createdAt, updatedAt };
+            return { id, title, html, scale, createdAt, updatedAt };
           });
 
         const merged = existing.concat(normalized);

@@ -502,15 +502,27 @@
               <span class="card-icon">📝</span>
               Notes
             </h2>
-            <button
-              class="notes-new-btn"
-              id="notesNewBtn"
-              type="button"
-              aria-label="Create new note"
-              title="New note"
-            >
-              +
-            </button>
+            <div class="notes-header-actions" aria-label="Notes actions">
+              <button
+                class="notes-new-btn"
+                id="notesNewBtn"
+                type="button"
+                aria-label="Create new note"
+                title="New note"
+              >
+                +
+              </button>
+              <button
+                class="notes-delete-btn"
+                id="notesDeleteBtn"
+                type="button"
+                aria-label="Delete current note"
+                title="Delete note"
+                disabled
+              >
+                🗑
+              </button>
+            </div>
           </div>
 
           <div class="notes-layout">
@@ -663,6 +675,25 @@
                 >
                   P
                 </button>
+
+                <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                <div class="notes-scale-control" aria-label="Text size">
+                  <label class="notes-scale-label" for="notesScaleSelect">
+                    Size
+                  </label>
+                  <select
+                    class="notes-scale-select"
+                    id="notesScaleSelect"
+                    aria-label="Text size"
+                  >
+                    <option value="1">1x</option>
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                    <option value="5">5x</option>
+                  </select>
+                </div>
               </div>
 
               <div

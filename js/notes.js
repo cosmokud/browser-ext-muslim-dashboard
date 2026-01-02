@@ -8,6 +8,8 @@
 class NotesManager {
   static STORAGE_KEY = "notes";
   static ITEMS_PER_PAGE = 10;
+  static SCALE_MIN = 1;
+  static SCALE_MAX = 5;
 
   constructor(storage) {
     this.storage = storage;
@@ -18,6 +20,7 @@ class NotesManager {
 
     this._saveTimer = null;
     this._normalizeTimer = null;
+    this._hasSelectedNote = false;
 
     // DOM
     this.card = document.getElementById("notesCard");
@@ -27,9 +30,15 @@ class NotesManager {
     this.nextPageBtn = document.getElementById("notesNextPageBtn");
     this.pageInfoEl = document.getElementById("notesPageInfo");
 
+    this.deleteBtn = document.getElementById("notesDeleteBtn");
+
     this.titleInput = document.getElementById("notesTitleInput");
     this.toolbar = document.getElementById("notesToolbar");
     this.editor = document.getElementById("notesEditor");
+
+    this.scaleSelect = document.getElementById("notesScaleSelect");
+
+    if (this.deleteBtn) this.deleteBtn.disabled = true;
 
     if (
       !this.card ||
@@ -49,16 +58,14 @@ class NotesManager {
     this.load();
 
     if (!this.notes.length) {
-      const note = this.createNote({ select: true });
-      // Ensure initial note is persisted
+      const note = this.createNote();
       this.save();
-      this.selectNote(note.id);
+      this.selectNote(note.id, { skipPersistCurrent: true });
     } else {
-      this.selectNote(this.activeNoteId || this.notes[0].id);
+      this.selectNote(this.activeNoteId || this.notes[0].id, {
+        skipPersistCurrent: true,
+      });
     }
-
-    this.renderList();
-    this.updatePaginationUI();
 
     this.setupEventListeners();
   }
@@ -66,11 +73,17 @@ class NotesManager {
   setupEventListeners() {
     if (this.newBtn) {
       this.newBtn.addEventListener("click", () => {
-        const note = this.createNote({ select: true });
-        this.save();
-        this.selectNote(note.id);
-        this.renderList();
-        this.ensureActiveVisible();
+        // Persist current note before creating a new one.
+        this.persistActiveNote({ updateTimestampIfChanged: true });
+
+        const note = this.createNote();
+        this.selectNote(note.id, { skipPersistCurrent: true });
+      });
+    }
+
+    if (this.deleteBtn) {
+      this.deleteBtn.addEventListener("click", () => {
+        this.deleteActiveNote();
       });
     }
 
@@ -102,7 +115,6 @@ class NotesManager {
       const id = item.dataset.noteId;
       if (!id) return;
       this.selectNote(id);
-      this.renderList();
     });
 
     // Title input
@@ -111,8 +123,34 @@ class NotesManager {
       if (!note) return;
       note.title = String(this.titleInput.value || "").slice(0, 120);
       note.updatedAt = Date.now();
-      this.queueSaveAndRerenderList();
+      // Keep ordering consistent with updates
+      this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      this.currentPage = this.getPageForNoteId(note.id);
+      this.storage.set("notes_page", this.currentPage);
+      this.save();
+      this.renderList();
     });
+
+    if (this.scaleSelect) {
+      this.scaleSelect.addEventListener("change", () => {
+        const note = this.getActiveNote();
+        if (!note) return;
+        const scale = this.clampInt(
+          this.scaleSelect.value,
+          NotesManager.SCALE_MIN,
+          NotesManager.SCALE_MAX
+        );
+        note.scale = scale;
+        note.updatedAt = Date.now();
+        this.applyScale(scale);
+
+        this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        this.currentPage = this.getPageForNoteId(note.id);
+        this.storage.set("notes_page", this.currentPage);
+        this.save();
+        this.renderList();
+      });
+    }
 
     // Toolbar
     this.toolbar.addEventListener("click", (e) => {
@@ -201,18 +239,17 @@ class NotesManager {
     const prevActive = this.activeNoteId;
     this.load();
     if (!this.notes.length) {
-      const note = this.createNote({ select: true });
+      const note = this.createNote();
       this.save();
-      this.selectNote(note.id);
+      this.selectNote(note.id, { skipPersistCurrent: true });
     } else {
       this.selectNote(
         prevActive && this.notes.some((n) => n.id === prevActive)
           ? prevActive
-          : this.notes[0].id
+          : this.notes[0].id,
+        { skipPersistCurrent: true }
       );
     }
-    this.renderList();
-    this.updatePaginationUI();
   }
 
   load() {
@@ -226,11 +263,21 @@ class NotesManager {
         const id = String(n.id || "").trim() || this.generateId();
         const title = String(n.title || "Untitled").slice(0, 120);
         const html = typeof n.html === "string" ? n.html : "";
+        const rawScale =
+          typeof n.scale === "number" || typeof n.scale === "string"
+            ? parseInt(n.scale, 10)
+            : NotesManager.SCALE_MIN;
+        const scale = Number.isNaN(rawScale)
+          ? NotesManager.SCALE_MIN
+          : Math.max(
+              NotesManager.SCALE_MIN,
+              Math.min(NotesManager.SCALE_MAX, rawScale)
+            );
         const createdAt =
           typeof n.createdAt === "number" ? n.createdAt : Date.now();
         const updatedAt =
           typeof n.updatedAt === "number" ? n.updatedAt : createdAt;
-        return { id, title, html, createdAt, updatedAt };
+        return { id, title, html, scale, createdAt, updatedAt };
       })
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
@@ -259,16 +306,20 @@ class NotesManager {
 
     const note = this.getActiveNote();
     if (note) {
-      note.html = this.getSanitizedHtmlFromEditor();
-      note.updatedAt = Date.now();
+      const nextHtml = this.getSanitizedHtmlFromEditor();
+      const changed = nextHtml !== note.html;
+      note.html = nextHtml;
+      if (changed) note.updatedAt = Date.now();
     }
 
     // Keep most-recent-first ordering
     this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
+    this.currentPage = this.getPageForNoteId(this.activeNoteId);
+    this.storage.set("notes_page", this.currentPage);
+
     this.save();
     this.renderList();
-    this.updatePaginationUI();
   }
 
   queueSave() {
@@ -286,12 +337,7 @@ class NotesManager {
     this.queueSave();
   }
 
-  queueSaveAndRerenderList() {
-    this.queueSave();
-    this.renderList();
-  }
-
-  createNote({ select } = {}) {
+  createNote() {
     const id = this.generateId();
     const now = Date.now();
 
@@ -299,34 +345,46 @@ class NotesManager {
       id,
       title: "Untitled",
       html: "<p></p>",
+      scale: NotesManager.SCALE_MIN,
       createdAt: now,
       updatedAt: now,
     };
 
     this.notes.unshift(note);
 
-    if (select) {
-      this.activeNoteId = id;
-      this.storage.set("notes_active", id);
-
-      // Ensure page contains new note (most recent -> page 1)
-      this.currentPage = 1;
-      this.storage.set("notes_page", 1);
-    }
+    // New notes should be visible (most recent -> page 1)
+    this.currentPage = 1;
+    this.storage.set("notes_page", 1);
 
     return note;
   }
 
-  selectNote(id) {
+  selectNote(id, { skipPersistCurrent } = {}) {
     const note = this.notes.find((n) => n.id === id);
     if (!note) return;
 
+    if (this._hasSelectedNote && this.activeNoteId === id) {
+      this.applyScale(typeof note.scale === "number" ? note.scale : 1);
+      if (this.scaleSelect) {
+        this.scaleSelect.value = String(
+          this.clampInt(
+            note.scale,
+            NotesManager.SCALE_MIN,
+            NotesManager.SCALE_MAX
+          )
+        );
+      }
+      return;
+    }
+
     // Persist current note before switching
-    const current = this.getActiveNote();
-    if (current) {
-      current.title = String(this.titleInput.value || "").slice(0, 120);
-      current.html = this.getSanitizedHtmlFromEditor();
-      current.updatedAt = Date.now();
+    if (!skipPersistCurrent) {
+      const changed = this.persistActiveNote({
+        updateTimestampIfChanged: true,
+      });
+      if (changed) {
+        this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      }
     }
 
     this.activeNoteId = id;
@@ -335,18 +393,94 @@ class NotesManager {
     this.titleInput.value = note.title || "";
     this.editor.innerHTML = this.sanitizeHtml(note.html || "");
 
+    const scale = this.clampInt(
+      note.scale,
+      NotesManager.SCALE_MIN,
+      NotesManager.SCALE_MAX
+    );
+    note.scale = scale;
+    this.applyScale(scale);
+    if (this.scaleSelect) this.scaleSelect.value = String(scale);
+
+    if (this.deleteBtn) this.deleteBtn.disabled = false;
+
     // Ensure links are present and safe
     this.normalizeNow();
 
     // Place caret at end
     this.placeCaretAtEnd(this.editor);
 
-    // Reorder after selection update
-    this.notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    this.currentPage = this.getPageForNoteId(id);
+    this.storage.set("notes_page", this.currentPage);
     this.save();
-
     this.renderList();
-    this.updatePaginationUI();
+
+    this._hasSelectedNote = true;
+  }
+
+  persistActiveNote({ updateTimestampIfChanged } = {}) {
+    const current = this.getActiveNote();
+    if (!current) return false;
+
+    const nextTitle = String(this.titleInput.value || "").slice(0, 120);
+    const nextHtml = this.getSanitizedHtmlFromEditor();
+
+    const changed =
+      nextTitle !== String(current.title || "") || nextHtml !== current.html;
+
+    current.title = nextTitle;
+    current.html = nextHtml;
+    if (changed && updateTimestampIfChanged) current.updatedAt = Date.now();
+    return changed;
+  }
+
+  applyScale(scale) {
+    const n = this.clampInt(
+      scale,
+      NotesManager.SCALE_MIN,
+      NotesManager.SCALE_MAX
+    );
+    try {
+      this.editor.style.setProperty("--notes-scale", String(n));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  deleteActiveNote() {
+    const note = this.getActiveNote();
+    if (!note) return;
+
+    const ok = window.confirm(
+      `Delete note "${String(
+        note.title || "Untitled"
+      )}"? This cannot be undone.`
+    );
+    if (!ok) return;
+
+    const id = note.id;
+    const idx = this.notes.findIndex((n) => n.id === id);
+    if (idx < 0) return;
+
+    this.notes.splice(idx, 1);
+
+    if (!this.notes.length) {
+      const created = this.createNote();
+      this.save();
+      this.selectNote(created.id, { skipPersistCurrent: true });
+      return;
+    }
+
+    const next = this.notes[idx] || this.notes[idx - 1] || this.notes[0];
+    this.save();
+    this.selectNote(next.id, { skipPersistCurrent: true });
+  }
+
+  getPageForNoteId(id) {
+    if (!id) return 1;
+    const idx = this.notes.findIndex((n) => n.id === id);
+    if (idx < 0) return 1;
+    return Math.floor(idx / NotesManager.ITEMS_PER_PAGE) + 1;
   }
 
   getActiveNote() {
