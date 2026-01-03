@@ -21,9 +21,9 @@ class SearchBarManager {
 
     this.customColorInput = null;
 
-    // Favicon-derived palette cache (ColorThief-style: dominant + palette)
-    this.faviconPaletteCache = new Map();
-    this.faviconPaletteInFlight = new Map();
+    // Favicon-derived dominant color cache (1px-canvas hack)
+    this.faviconDominantCache = new Map();
+    this.faviconDominantInFlight = new Map();
 
     // Elements
     this.section = document.getElementById("searchBarSection");
@@ -563,6 +563,9 @@ class SearchBarManager {
     this.hideAddModal();
     this.render();
     this.input?.focus();
+
+    // Best-effort: set default accent from favicon immediately after adding.
+    this._ensureDefaultAccentForEngine(entry).catch(() => {});
   }
 
   updateCustomSearchFromModal() {
@@ -637,8 +640,7 @@ class SearchBarManager {
       this.persist();
     }
 
-    const colors10 = await this._getFaviconColors10(faviconUrl);
-    const dominant = colors10?.[0];
+    const dominant = await this._getFaviconDominantRgb(faviconUrl);
     if (!dominant) return;
 
     // Persist default accent for this engine.
@@ -839,78 +841,93 @@ class SearchBarManager {
     return `${c.r}, ${c.g}, ${c.b}`;
   }
 
-  _getRainbowPalette20() {
-    // 20 common “rainbow range” colors (fixed, predictable, covers hue spectrum).
-    // Returned as "r, g, b" strings.
-    const hexes = [
-      "#ff0000", // red
-      "#ff3b00", // red-orange
-      "#ff7a00", // orange
-      "#ffb300", // amber
-      "#ffe600", // yellow
-      "#c8ff00", // yellow-green
-      "#7dff00", // lime
-      "#00ff00", // green
-      "#00ff6a", // spring green
-      "#00ffa8", // mint
-      "#00ffff", // cyan
-      "#00a6ff", // sky
-      "#0066ff", // blue
-      "#0033ff", // deep blue
-      "#4b00ff", // indigo
-      "#7f00ff", // violet
-      "#b800ff", // purple
-      "#ff00ff", // magenta
-      "#ff0099", // hot pink
-      "#ff0055", // rose
-    ];
+  _hslToRgb(h, s, l) {
+    const hh = (((Number(h) || 0) % 360) + 360) % 360;
+    const ss = Math.max(0, Math.min(100, Number(s) || 0)) / 100;
+    const ll = Math.max(0, Math.min(100, Number(l) || 0)) / 100;
 
+    const c = (1 - Math.abs(2 * ll - 1)) * ss;
+    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+    const m = ll - c / 2;
+
+    let r1 = 0;
+    let g1 = 0;
+    let b1 = 0;
+
+    if (hh < 60) {
+      r1 = c;
+      g1 = x;
+    } else if (hh < 120) {
+      r1 = x;
+      g1 = c;
+    } else if (hh < 180) {
+      g1 = c;
+      b1 = x;
+    } else if (hh < 240) {
+      g1 = x;
+      b1 = c;
+    } else if (hh < 300) {
+      r1 = x;
+      b1 = c;
+    } else {
+      r1 = c;
+      b1 = x;
+    }
+
+    return {
+      r: Math.round((r1 + m) * 255),
+      g: Math.round((g1 + m) * 255),
+      b: Math.round((b1 + m) * 255),
+    };
+  }
+
+  _getRainbowPalette(count) {
+    const n = Math.max(1, Math.floor(Number(count) || 0));
     const out = [];
-    for (const h of hexes) {
-      const rgb = this._hexToRgbString(h);
-      if (rgb) out.push(rgb);
+    for (let i = 0; i < n; i++) {
+      const hue = (i * 360) / n;
+      const rgb = this._hslToRgb(hue, 95, 55);
+      out.push(`${rgb.r}, ${rgb.g}, ${rgb.b}`);
     }
     return out;
   }
 
-  async _getFaviconColors10(faviconUrl) {
+  async _getFaviconDominantRgb(faviconUrl) {
     const key = String(faviconUrl || "");
     if (!key) return null;
 
-    const cached = this.faviconPaletteCache.get(key);
+    const cached = this.faviconDominantCache.get(key);
     if (cached) return cached;
 
-    if (this.faviconPaletteInFlight.has(key)) {
+    if (this.faviconDominantInFlight.has(key)) {
       try {
-        await this.faviconPaletteInFlight.get(key);
+        await this.faviconDominantInFlight.get(key);
       } catch (e) {}
-      return this.faviconPaletteCache.get(key) || null;
+      return this.faviconDominantCache.get(key) || null;
     }
 
-    const p = this._computeFaviconColors10(key)
-      .then((colors) => {
-        if (Array.isArray(colors) && colors.length) {
-          this.faviconPaletteCache.set(key, colors);
+    const p = this._computeFaviconDominantRgb(key)
+      .then((rgb) => {
+        if (this._isValidRgbString(rgb)) {
+          this.faviconDominantCache.set(key, this._normalizeRgbString(rgb));
         }
       })
       .finally(() => {
-        this.faviconPaletteInFlight.delete(key);
+        this.faviconDominantInFlight.delete(key);
       });
 
-    this.faviconPaletteInFlight.set(key, p);
+    this.faviconDominantInFlight.set(key, p);
 
     try {
       await p;
     } catch (e) {}
 
-    return this.faviconPaletteCache.get(key) || null;
+    return this.faviconDominantCache.get(key) || null;
   }
 
-  async _computeFaviconColors10(url) {
-    // ColorThief-style approach (dominant + palette) implemented locally:
-    // - decode favicon into canvas
-    // - build quantized histogram
-    // - pick top colors with distance threshold to avoid duplicates
+  async _computeFaviconDominantRgb(url) {
+    // "Hack" dominant color: draw the whole image into a 1x1 canvas.
+    // We still fetch->blob->objectURL to avoid CORS/canvas taint issues.
     let blob;
     try {
       const resp = await fetch(url, { cache: "force-cache" });
@@ -920,122 +937,52 @@ class SearchBarManager {
       return null;
     }
 
-    const sampleSize = 64;
-    const canvas = document.createElement("canvas");
-    canvas.width = sampleSize;
-    canvas.height = sampleSize;
-
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return null;
-
+    const objectUrl = URL.createObjectURL(blob);
     try {
-      if (typeof createImageBitmap === "function") {
-        const bmp = await createImageBitmap(blob);
-        ctx.drawImage(bmp, 0, 0, sampleSize, sampleSize);
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.decoding = "async";
+      img.src = objectUrl;
+
+      if (typeof img.decode === "function") {
+        try {
+          await img.decode();
+        } catch (e) {
+          await new Promise((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = reject;
+          });
+        }
       } else {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(blob);
         await new Promise((resolve, reject) => {
           img.onload = () => resolve();
           img.onerror = reject;
-          img.src = objectUrl;
         });
-        ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+      }
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return null;
+      canvas.width = 1;
+      canvas.height = 1;
+
+      try {
+        ctx.drawImage(img, 0, 0, 1, 1);
+        const data = ctx.getImageData(0, 0, 1, 1).data;
+        const r = data[0];
+        const g = data[1];
+        const b = data[2];
+        const a = data[3];
+        if (a != null && a < 8) return null;
+        return `${r}, ${g}, ${b}`;
+      } catch (e) {
+        return null;
+      }
+    } finally {
+      try {
         URL.revokeObjectURL(objectUrl);
-      }
-    } catch (e) {
-      return null;
+      } catch (e) {}
     }
-
-    let data;
-    try {
-      data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
-    } catch (e) {
-      return null;
-    }
-
-    // Quantization: 5 bits/channel => 32 levels.
-    const shift = 3;
-    const stride = 2;
-
-    const bins = new Map();
-
-    for (let y = 0; y < sampleSize; y += stride) {
-      for (let x = 0; x < sampleSize; x += stride) {
-        const i = (y * sampleSize + x) * 4;
-        const a = data[i + 3];
-        if (a < 32) continue;
-
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Ignore near-white padding
-        if (r > 245 && g > 245 && b > 245) continue;
-
-        const rQ = r >> shift;
-        const gQ = g >> shift;
-        const bQ = b >> shift;
-        const key = (rQ << 10) | (gQ << 5) | bQ;
-
-        const prev = bins.get(key);
-        if (prev) {
-          prev.count += 1;
-          prev.r += r;
-          prev.g += g;
-          prev.b += b;
-        } else {
-          bins.set(key, { count: 1, r, g, b });
-        }
-      }
-    }
-
-    if (!bins.size) return null;
-
-    const entries = Array.from(bins.values())
-      .map((v) => ({
-        count: v.count,
-        r: Math.round(v.r / v.count),
-        g: Math.round(v.g / v.count),
-        b: Math.round(v.b / v.count),
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    const chosen = [];
-    const dist2 = (c1, c2) => {
-      const dr = c1.r - c2.r;
-      const dg = c1.g - c2.g;
-      const db = c1.b - c2.b;
-      return dr * dr + dg * dg + db * db;
-    };
-
-    const clamp = (v) => Math.max(20, Math.min(235, v));
-    const toRgbStr = (c) => `${clamp(c.r)}, ${clamp(c.g)}, ${clamp(c.b)}`;
-
-    // Prefer distinct colors; fall back by relaxing the distance if needed.
-    const thresholds = [80, 65, 50, 35];
-    for (const minDist of thresholds) {
-      chosen.length = 0;
-
-      for (const c of entries) {
-        if (!chosen.length) {
-          chosen.push(c);
-          if (chosen.length >= 10) break;
-          continue;
-        }
-
-        const ok = chosen.every((p) => dist2(c, p) >= minDist * minDist);
-        if (!ok) continue;
-        chosen.push(c);
-        if (chosen.length >= 10) break;
-      }
-
-      if (chosen.length >= 6) break;
-    }
-
-    // Ensure we return up to 10 colors; dominant is first.
-    const out = chosen.slice(0, 10).map(toRgbStr);
-    return out.length ? out : null;
   }
 
   async _renderAccentPaletteForEngine(engineId) {
@@ -1045,34 +992,42 @@ class SearchBarManager {
     );
     if (!paletteEl) return;
 
-    const rainbow = this._getRainbowPalette20();
+    const rainbow29 = this._getRainbowPalette(29);
+    while (rainbow29.length < 29) rainbow29.push("255, 255, 255");
 
-    // Always render 30 swatches.
-    const initial = new Array(10).fill("255, 255, 255").concat(rainbow);
-    this._renderSwatches(paletteEl, initial);
+    // If no engine is selected yet, show a full rainbow row.
+    if (!engineId) {
+      const rainbow30 = this._getRainbowPalette(30);
+      while (rainbow30.length < 30) rainbow30.push("255, 255, 255");
+      this._renderSwatches(paletteEl, rainbow30.slice(0, 30));
+      return;
+    }
 
-    if (!engineId) return;
     const engine = this.searches.find((s) => String(s.id) === String(engineId));
     if (!engine) return;
+
+    const initialDominant = this._isValidRgbString(engine.accentRgb)
+      ? this._normalizeRgbString(engine.accentRgb)
+      : rainbow29[0] || "255, 255, 255";
+    this._renderSwatches(paletteEl, [initialDominant, ...rainbow29]);
 
     const faviconUrl =
       engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
     if (!faviconUrl) return;
 
-    const colors10 = await this._getFaviconColors10(faviconUrl);
-    if (!colors10) return;
+    let dominant;
+    try {
+      dominant = await this._getFaviconDominantRgb(faviconUrl);
+    } catch (e) {
+      dominant = null;
+    }
+    if (!dominant) return;
 
     // If the menu moved to another engine while awaiting, abort.
     if (String(this.contextMenu?.dataset?.engineId) !== String(engineId))
       return;
 
-    const dominant = colors10[0] || "255, 255, 255";
-    const palette9 = colors10.slice(1, 10);
-    while (palette9.length < 9)
-      palette9.push(rainbow[palette9.length] || "255, 255, 255");
-
-    const all = [dominant, ...palette9, ...rainbow];
-    this._renderSwatches(paletteEl, all);
+    this._renderSwatches(paletteEl, [dominant, ...rainbow29]);
   }
 
   _renderSwatches(paletteEl, rgbList) {
