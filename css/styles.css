@@ -3105,6 +3105,21 @@ body {
   border-radius: 8px;
 }
 
+/* Search bar engine ghost: smaller and perfectly round */
+.pinned-app-drag-ghost.search-bar-drag-ghost {
+  border-radius: var(--radius-full);
+}
+
+.pinned-app-drag-ghost.search-bar-drag-ghost img {
+  width: 70%;
+  height: 70%;
+  border-radius: var(--radius-full);
+}
+
+.pinned-app-drag-ghost.search-bar-drag-ghost .pinned-app-fallback {
+  font-size: 1rem;
+}
+
 .pinned-app-drag-ghost .pinned-app-fallback {
   display: flex;
   align-items: center;

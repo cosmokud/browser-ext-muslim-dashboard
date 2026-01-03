@@ -765,7 +765,20 @@ class SearchBarManager {
   _createEngineDragGhost(engine, sourceElement) {
     const ghost = document.createElement("div");
     // Reuse the same visual/animation as Pinned Apps
-    ghost.className = "pinned-app-drag-ghost";
+    ghost.className = "pinned-app-drag-ghost search-bar-drag-ghost";
+
+    // Size: ~110% of the actual circular tab
+    try {
+      const r = sourceElement.getBoundingClientRect();
+      const base = Math.max(1, Math.min(r.width, r.height));
+      const size = Math.max(24, Math.round(base * 1.1));
+      ghost.style.width = `${size}px`;
+      ghost.style.height = `${size}px`;
+      ghost.style.borderRadius = "9999px";
+
+      // Cancel the default pinned ghost scaling (we already sized it up)
+      ghost.style.transform = "translate(-50%, -50%)";
+    } catch (e) {}
 
     const iconEl = sourceElement.querySelector(".search-bar-engine-icon");
     const imgEl = iconEl?.querySelector("img");
