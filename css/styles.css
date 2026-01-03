@@ -2612,8 +2612,8 @@ body {
   gap: var(--spacing-md);
   width: 100%;
   padding: var(--spacing-md);
-  background: rgba(var(--sb-accent-rgb), 0.14);
-  border: 1px solid rgba(var(--sb-accent-rgb), 0.28);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
@@ -2656,7 +2656,7 @@ body {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
+  border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   cursor: pointer;
@@ -2669,7 +2669,7 @@ body {
 .search-bar-engine-arrow:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(var(--sb-accent-rgb), 0.35);
+  border-color: var(--primary-light);
 }
 
 .search-bar-engine-arrow:active {
@@ -8132,6 +8132,81 @@ body.sticky-note-resizing {
   transform: scale(1);
 }
 
+/* Customizable theme card styling */
+.theme-card.customizable .theme-card-desc {
+  padding-right: var(--spacing-xl);
+}
+
+.theme-card-customize {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-sm);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all var(--transition-fast);
+}
+
+.theme-card:hover .theme-card-customize,
+.theme-card.active .theme-card-customize {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.theme-card-customize:hover {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+/* Accent Color Picker */
+.theme-accent-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.theme-accent-picker:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--accent-gold);
+}
+
+.theme-accent-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.theme-accent-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.theme-accent-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
 /* Light Mode Adjustments */
 [data-theme-mode="light"] .modal {
   background: rgba(255, 255, 255, 0.95);
@@ -8159,32 +8234,82 @@ body.sticky-note-resizing {
 }
 
 [data-glass-enabled="false"] .card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Search bar glass disabled - disable transparency on shell but keep input accent color */
+[data-glass-enabled="false"] .quote-container,
+[data-glass-enabled="false"] .modal {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+/* Search bar glass disabled - disable blur on shell but keep theme glass colors */
 [data-glass-enabled="false"] .search-bar-shell {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: var(--glass-bg);
-  border-color: var(--glass-border);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 [data-glass-enabled="false"] .search-bar-engine-tab,
 [data-glass-enabled="false"] .search-bar-engine-arrow,
 [data-glass-enabled="false"] .search-bar-btn {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+[data-glass-enabled="false"] .search-bar-engine-tab:hover,
+[data-glass-enabled="false"] .search-bar-engine-arrow:hover,
+[data-glass-enabled="false"] .search-bar-btn:hover {
+  background: var(--glass-bg-hover);
+}
+
+[data-glass-enabled="false"] .search-bar-engine-tab[aria-selected="true"] {
+  background: color-mix(
+    in srgb,
+    rgb(var(--sb-accent-rgb)) 22%,
+    var(--glass-bg) 78%
+  );
+  border-color: color-mix(
+    in srgb,
+    rgb(var(--sb-accent-rgb)) 45%,
+    var(--glass-border) 55%
+  );
 }
 
 /* Keep search bar input accent color working in glass disabled mode */
 [data-glass-enabled="false"] .search-bar-input {
-  border: 1px solid rgba(var(--sb-accent-rgb), 0.35);
-  background: rgba(var(--sb-accent-rgb), 0.15);
+  border: 1px solid
+    color-mix(in srgb, rgb(var(--sb-accent-rgb)) 28%, var(--glass-border) 72%);
+  background: color-mix(
+    in srgb,
+    rgb(var(--sb-accent-rgb)) 12%,
+    var(--glass-bg) 88%
+  );
 }
 
 [data-glass-enabled="false"] .search-bar-input:focus {
-  border-color: rgba(var(--sb-accent-rgb), 0.55);
-  background: rgba(var(--sb-accent-rgb), 0.22);
-  box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.22);
+  border-color: color-mix(
+    in srgb,
+    rgb(var(--sb-accent-rgb)) 52%,
+    var(--glass-border) 48%
+  );
+  background: color-mix(
+    in srgb,
+    rgb(var(--sb-accent-rgb)) 18%,
+    var(--glass-bg) 82%
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, rgb(var(--sb-accent-rgb)) 35%, var(--glass-bg) 65%);
+}
+
+/* Hidden native color input used by the theme-card customize button */
+.theme-accent-input--hidden {
+  position: fixed;
+  left: -200vw;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }

@@ -1090,6 +1090,9 @@ class SettingsManager {
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";
     this.updateThemePickerActiveState(activeTheme);
+
+    // Update accent color picker visibility for customizable themes
+    this.updateAccentColorPickerVisibility();
   }
 
   /**
@@ -1160,24 +1163,41 @@ class SettingsManager {
 
     const themes = ThemeManager.THEMES;
     const settings = this.storage.getSettings();
-    const currentMode = settings.theme?.mode || "dark";
-    const activeTheme = settings.theme?.name || "emerald";
+    const currentMode =
+      window.dashboard?.themes?.getCurrentMode?.() ||
+      settings.theme?.mode ||
+      "dark";
+    const activeTheme =
+      window.dashboard?.themes?.getCurrentTheme?.() ||
+      settings.theme?.name ||
+      "emerald";
+    const customAccent =
+      window.dashboard?.themes?.getCustomAccent?.() ||
+      settings.theme?.customAccent ||
+      "#d4af37";
 
     let html = "";
 
     for (const [id, theme] of Object.entries(themes)) {
       const colors = theme[currentMode];
       const isActive = id === activeTheme;
+      const isCustomizable = theme.customizable || false;
+
+      // For customizable themes that are active, use custom accent in preview
+      let accentColor = colors.accent;
+      if (isCustomizable && isActive && customAccent) {
+        accentColor = customAccent;
+      }
 
       html += `
-        <div class="theme-card${isActive ? " active" : ""}" data-theme="${id}">
+        <div class="theme-card${isActive ? " active" : ""}${
+        isCustomizable ? " customizable" : ""
+      }" data-theme="${id}" data-customizable="${isCustomizable}">
           <div class="theme-card-preview">
             <div class="theme-preview-primary" style="background: ${
               colors.primary
             }"></div>
-            <div class="theme-preview-accent" style="background: ${
-              colors.accent
-            }"></div>
+            <div class="theme-preview-accent" style="background: ${accentColor}"></div>
             <div class="theme-preview-bg" style="background: ${
               colors.bodyBg
             }"></div>
@@ -1187,12 +1207,36 @@ class SettingsManager {
             <span class="theme-card-name">${theme.name}</span>
           </div>
           <div class="theme-card-desc">${theme.description}</div>
+          ${
+            isCustomizable
+              ? '<div class="theme-card-customize" title="Customize accent color">🎨</div>'
+              : ""
+          }
           <div class="theme-card-check">✓</div>
         </div>
       `;
     }
 
     this.themePickerGrid.innerHTML = html;
+
+    // Keep hidden accent color input synced (used by Customize button)
+    this.updateAccentColorPickerVisibility();
+  }
+
+  /**
+   * Update accent color picker visibility based on theme
+   */
+  updateAccentColorPickerVisibility() {
+    const accentInput = document.getElementById("themeAccentColor");
+    if (!accentInput) return;
+
+    const isCustomizable =
+      window.dashboard?.themes?.isCurrentThemeCustomizable();
+    if (!isCustomizable) return;
+
+    const currentAccent =
+      window.dashboard?.themes?.getCustomAccent() || "#d4af37";
+    accentInput.value = currentAccent;
   }
 
   /**
@@ -1253,6 +1297,36 @@ class SettingsManager {
     // Theme picker cards
     if (this.themePickerGrid) {
       this.themePickerGrid.addEventListener("click", (e) => {
+        // Check if clicking on customize button
+        const customizeBtn = e.target.closest(".theme-card-customize");
+        if (customizeBtn) {
+          e.stopPropagation();
+
+          const card = customizeBtn.closest(".theme-card");
+          const themeName = card?.dataset?.theme;
+          const isCustomizable = card?.dataset?.customizable === "true";
+
+          if (themeName) {
+            this.updateThemePickerActiveState(themeName);
+            if (window.dashboard?.themes) {
+              window.dashboard.themes.setTheme(themeName, false);
+            }
+          }
+
+          if (isCustomizable) {
+            const accentInput = document.getElementById("themeAccentColor");
+            if (accentInput) {
+              const currentAccent =
+                window.dashboard?.themes?.getCustomAccent?.() ||
+                this.storage.getSettings().theme?.customAccent ||
+                "#d4af37";
+              accentInput.value = currentAccent;
+              accentInput.click();
+            }
+          }
+          return;
+        }
+
         const card = e.target.closest(".theme-card");
         if (!card) return;
 
@@ -1263,6 +1337,27 @@ class SettingsManager {
         if (window.dashboard?.themes) {
           window.dashboard.themes.setTheme(themeName, false);
         }
+
+        // Update accent color picker visibility
+        this.updateAccentColorPickerVisibility();
+        // Re-render to update preview colors
+        this.renderThemePickerGrid();
+      });
+    }
+
+    // Accent color picker for customizable themes
+    const accentInput = document.getElementById("themeAccentColor");
+    if (accentInput) {
+      accentInput.addEventListener("input", (e) => {
+        const color = e.target.value;
+
+        // Apply custom accent immediately
+        if (window.dashboard?.themes) {
+          window.dashboard.themes.setCustomAccent(color, false);
+        }
+
+        // Update preview in theme card
+        this.renderThemePickerGrid();
       });
     }
 
@@ -1314,11 +1409,16 @@ class SettingsManager {
       activeTheme = activeCard.dataset.theme;
     }
 
+    // Get custom accent color for customizable themes
+    const accentInput = document.getElementById("themeAccentColor");
+    const customAccent = accentInput?.value || null;
+
     // Save theme settings
     settings.theme = {
       name: activeTheme,
       mode: mode,
       glassEnabled: glassEnabled,
+      customAccent: customAccent,
     };
 
     // Save blur power (now from Themes panel)

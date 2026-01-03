@@ -508,6 +508,91 @@ class ThemeManager {
         bodyBg: "#f8fafc",
       },
     },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CUSTOMIZABLE THEMES (Pure transparent glass with custom accent)
+    // ═══════════════════════════════════════════════════════════════════════════
+    pureWhite: {
+      name: "Pure White",
+      icon: "⬜",
+      description: "Clean white glass with customizable accent",
+      customizable: true,
+      dark: {
+        primary: "#ffffff",
+        primaryLight: "#ffffff",
+        primaryDark: "#e0e0e0",
+        accent: "#d4af37",
+        accentLight: "#e6c866",
+        accentBlue: "#64b5f6",
+        settingsColor: "#42a5f5",
+        settingsLight: "#90caf9",
+        glassBg: "rgba(255, 255, 255, 0.12)",
+        glassBgHover: "rgba(255, 255, 255, 0.18)",
+        glassBorder: "rgba(255, 255, 255, 0.2)",
+        textPrimary: "#ffffff",
+        textSecondary: "rgba(255, 255, 255, 0.85)",
+        textMuted: "rgba(255, 255, 255, 0.6)",
+        bodyBg: "#1a1a2e",
+      },
+      light: {
+        primary: "#424242",
+        primaryLight: "#616161",
+        primaryDark: "#212121",
+        accent: "#b8941f",
+        accentLight: "#d4af37",
+        accentBlue: "#1976d2",
+        settingsColor: "#1e88e5",
+        settingsLight: "#42a5f5",
+        glassBg: "rgba(255, 255, 255, 0.65)",
+        glassBgHover: "rgba(255, 255, 255, 0.75)",
+        glassBorder: "rgba(0, 0, 0, 0.1)",
+        textPrimary: "#212121",
+        textSecondary: "rgba(0, 0, 0, 0.75)",
+        textMuted: "rgba(0, 0, 0, 0.55)",
+        bodyBg: "#fafafa",
+      },
+    },
+
+    pureBlack: {
+      name: "Pure Black",
+      icon: "⬛",
+      description: "Deep black glass with customizable accent",
+      customizable: true,
+      dark: {
+        primary: "#212121",
+        primaryLight: "#424242",
+        primaryDark: "#000000",
+        accent: "#d4af37",
+        accentLight: "#e6c866",
+        accentBlue: "#64b5f6",
+        settingsColor: "#42a5f5",
+        settingsLight: "#90caf9",
+        glassBg: "rgba(0, 0, 0, 0.45)",
+        glassBgHover: "rgba(0, 0, 0, 0.55)",
+        glassBorder: "rgba(255, 255, 255, 0.12)",
+        textPrimary: "#ffffff",
+        textSecondary: "rgba(255, 255, 255, 0.85)",
+        textMuted: "rgba(255, 255, 255, 0.6)",
+        bodyBg: "#000000",
+      },
+      light: {
+        primary: "#9e9e9e",
+        primaryLight: "#bdbdbd",
+        primaryDark: "#757575",
+        accent: "#b8941f",
+        accentLight: "#d4af37",
+        accentBlue: "#1976d2",
+        settingsColor: "#1e88e5",
+        settingsLight: "#42a5f5",
+        glassBg: "rgba(0, 0, 0, 0.08)",
+        glassBgHover: "rgba(0, 0, 0, 0.12)",
+        glassBorder: "rgba(0, 0, 0, 0.15)",
+        textPrimary: "#212121",
+        textSecondary: "rgba(0, 0, 0, 0.75)",
+        textMuted: "rgba(0, 0, 0, 0.55)",
+        bodyBg: "#f5f5f5",
+      },
+    },
   };
 
   constructor(storage) {
@@ -515,6 +600,7 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
+    this._customAccent = null; // For customizable themes
 
     this.init();
   }
@@ -534,6 +620,7 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
+    this._customAccent = themeSettings.customAccent || null;
 
     // Validate theme exists
     if (!ThemeManager.THEMES[this._currentTheme]) {
@@ -550,6 +637,7 @@ class ThemeManager {
       name: this._currentTheme,
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
+      customAccent: this._customAccent,
     };
     this.storage.saveSettings(settings);
   }
@@ -643,6 +731,7 @@ class ThemeManager {
       name: theme.name,
       icon: theme.icon,
       description: theme.description,
+      customizable: theme.customizable || false,
     }));
   }
 
@@ -656,7 +745,89 @@ class ThemeManager {
     const theme = ThemeManager.THEMES[name];
     if (!theme) return null;
 
-    return theme[colorMode];
+    // Clone to avoid mutating original
+    const colors = { ...theme[colorMode] };
+
+    // Apply custom accent for customizable themes
+    if (theme.customizable && this._customAccent) {
+      const accentRgb = this.hexToRgb(this._customAccent);
+      if (accentRgb) {
+        colors.accent = this._customAccent;
+        // Generate lighter version
+        colors.accentLight = this._lightenColor(this._customAccent, 20);
+        // Use accent as accentBlue too for consistency
+        colors.accentBlue = this._lightenColor(this._customAccent, 10);
+        colors.settingsColor = this._customAccent;
+        colors.settingsLight = this._lightenColor(this._customAccent, 25);
+      }
+    }
+
+    return colors;
+  }
+
+  /**
+   * Set custom accent color for customizable themes
+   */
+  setCustomAccent(hexColor, save = true) {
+    this._customAccent = hexColor;
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  /**
+   * Get current custom accent color
+   */
+  getCustomAccent() {
+    return this._customAccent;
+  }
+
+  /**
+   * Check if current theme is customizable
+   */
+  isCurrentThemeCustomizable() {
+    const theme = ThemeManager.THEMES[this._currentTheme];
+    return theme?.customizable || false;
+  }
+
+  /**
+   * Lighten a hex color by a percentage
+   */
+  _lightenColor(hex, percent) {
+    const rgb = this.hexToRgb(hex);
+    if (!rgb) return hex;
+
+    const lighten = (c) =>
+      Math.min(255, Math.round(c + (255 - c) * (percent / 100)));
+    const r = lighten(rgb.r);
+    const g = lighten(rgb.g);
+    const b = lighten(rgb.b);
+
+    return `#${r.toString(16).padStart(2, "0")}${g
+      .toString(16)
+      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  }
+
+  /**
+   * Mix two hex colors and return an opaque rgb() string.
+   * @param {string} baseHex
+   * @param {string} mixHex
+   * @param {number} mixWeight 0..1 amount of mixHex
+   */
+  _mixHexToRgb(baseHex, mixHex, mixWeight) {
+    const base = this.hexToRgb(baseHex);
+    const mix = this.hexToRgb(mixHex);
+    if (!base || !mix) return null;
+
+    const w = Math.max(0, Math.min(1, Number(mixWeight)));
+    const blend = (a, b) => Math.round(a * (1 - w) + b * w);
+
+    return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
+      base.b,
+      mix.b
+    )})`;
   }
 
   /**
@@ -688,20 +859,27 @@ class ThemeManager {
       root.style.setProperty("--glass-border", colors.glassBorder);
       root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
     } else {
-      // Solid mode - use more opaque backgrounds
+      // Solid mode - NO transparency in the base surfaces.
+      // We mix theme colors into the body background to get fully-opaque panel colors.
       const isLight = this._currentMode === "light";
-      root.style.setProperty(
-        "--glass-bg",
-        isLight ? "rgba(255, 255, 255, 0.85)" : "rgba(30, 30, 50, 0.9)"
-      );
-      root.style.setProperty(
-        "--glass-bg-hover",
-        isLight ? "rgba(255, 255, 255, 0.92)" : "rgba(40, 40, 60, 0.95)"
-      );
-      root.style.setProperty(
-        "--glass-border",
-        isLight ? "rgba(0, 0, 0, 0.12)" : "rgba(255, 255, 255, 0.15)"
-      );
+
+      const bgMix = isLight ? 0.12 : 0.38;
+      const bgHoverMix = isLight ? 0.18 : 0.48;
+      const borderMix = isLight ? 0.25 : 0.58;
+
+      const solidBg =
+        this._mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
+        (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
+      const solidHover =
+        this._mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
+        (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
+      const solidBorder =
+        this._mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
+        (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
+
+      root.style.setProperty("--glass-bg", solidBg);
+      root.style.setProperty("--glass-bg-hover", solidHover);
+      root.style.setProperty("--glass-border", solidBorder);
       root.style.setProperty("--glass-shadow", "0 4px 20px rgba(0, 0, 0, 0.2)");
     }
 
