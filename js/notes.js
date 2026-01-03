@@ -32,6 +32,13 @@ class NotesManager {
 
     this.deleteBtn = document.getElementById("notesDeleteBtn");
 
+    // Delete confirmation modal
+    this.deleteModal = document.getElementById("notesDeleteConfirmModal");
+    this.deleteNameEl = document.getElementById("notesDeleteName");
+    this.confirmDeleteBtn = document.getElementById("confirmNotesDeleteBtn");
+    this.cancelDeleteBtn = document.getElementById("cancelNotesDeleteBtn");
+    this.pendingDeleteId = null;
+
     this.titleInput = document.getElementById("notesTitleInput");
     this.toolbar = document.getElementById("notesToolbar");
     this.editor = document.getElementById("notesEditor");
@@ -84,9 +91,30 @@ class NotesManager {
 
     if (this.deleteBtn) {
       this.deleteBtn.addEventListener("click", () => {
-        this.deleteActiveNote();
+        this.showDeleteConfirmation();
       });
     }
+
+    if (this.cancelDeleteBtn) {
+      this.cancelDeleteBtn.addEventListener("click", () =>
+        this.hideDeleteConfirmation()
+      );
+    }
+    if (this.confirmDeleteBtn) {
+      this.confirmDeleteBtn.addEventListener("click", () =>
+        this.confirmDelete()
+      );
+    }
+    if (this.deleteModal) {
+      this.deleteModal.addEventListener("click", (e) => {
+        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      this.hideDeleteConfirmation();
+    });
 
     if (this.prevPageBtn) {
       this.prevPageBtn.addEventListener("click", () => {
@@ -480,13 +508,6 @@ class NotesManager {
     const note = this.getActiveNote();
     if (!note) return;
 
-    const ok = window.confirm(
-      `Delete note "${String(
-        note.title || "Untitled"
-      )}"? This cannot be undone.`
-    );
-    if (!ok) return;
-
     const id = note.id;
     const idx = this.notes.findIndex((n) => n.id === id);
     if (idx < 0) return;
@@ -503,6 +524,38 @@ class NotesManager {
     const next = this.notes[idx] || this.notes[idx - 1] || this.notes[0];
     this.save();
     this.selectNote(next.id, { skipPersistCurrent: true });
+  }
+
+  showDeleteConfirmation() {
+    const note = this.getActiveNote();
+    if (!note || !this.deleteModal) return;
+
+    this.pendingDeleteId = note.id;
+    if (this.deleteNameEl) {
+      this.deleteNameEl.textContent = String(note.title || "Untitled");
+    }
+
+    this.deleteModal.classList.add("active");
+  }
+
+  hideDeleteConfirmation() {
+    if (this.deleteModal) {
+      this.deleteModal.classList.remove("active");
+    }
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete() {
+    if (!this.pendingDeleteId) return;
+    // Ensure we delete the currently-confirmed note.
+    if (String(this.activeNoteId) === String(this.pendingDeleteId)) {
+      this.deleteActiveNote();
+    } else {
+      // If active note changed while modal open, reselect then delete.
+      this.selectNote(this.pendingDeleteId, { skipPersistCurrent: true });
+      this.deleteActiveNote();
+    }
+    this.hideDeleteConfirmation();
   }
 
   getPageForNoteId(id) {

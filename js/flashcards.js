@@ -858,13 +858,13 @@ class FlashcardManager {
         const q = this.clampNumber(
           parseInt(this.settingsQuestionFontSize.value, 10),
           12,
-          72,
+          144,
           22
         );
         const a = this.clampNumber(
           parseInt(this.settingsAnswerFontSize.value, 10),
           12,
-          72,
+          144,
           18
         );
         this.setFlashcardSettings({ questionFontSize: q, answerFontSize: a });
@@ -1125,13 +1125,13 @@ class FlashcardManager {
       question: this.clampNumber(
         parseInt(settings.questionFontSize, 10),
         12,
-        72,
+        144,
         22
       ),
       answer: this.clampNumber(
         parseInt(settings.answerFontSize, 10),
         12,
-        72,
+        144,
         18
       ),
     };

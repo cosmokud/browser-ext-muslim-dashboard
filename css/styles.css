@@ -1077,7 +1077,8 @@ body {
 }
 
 .next-prayer {
-  margin-top: var(--spacing-lg);
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);
   background: linear-gradient(
     135deg,
@@ -2762,7 +2763,7 @@ body {
   padding: 0 var(--spacing-md);
   border-radius: var(--radius-xl);
   border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--sb-accent-rgb), 0.12);
   color: var(--text-primary);
   outline: none;
   transition: border-color var(--transition-fast),
@@ -2775,7 +2776,7 @@ body {
 
 .search-bar-input:focus {
   border-color: rgba(var(--sb-accent-rgb), 0.45);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(var(--sb-accent-rgb), 0.16);
   box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.18);
 }
 
@@ -3178,6 +3179,65 @@ body {
   opacity: 1;
   transform: scale(1) translateY(0);
   pointer-events: auto;
+}
+
+/* Search Bar context menu extras (accent color picker) */
+.pinned-app-context-menu.search-bar-context-menu {
+  min-width: 220px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  margin: 6px 8px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.context-menu-accent {
+  padding: 2px 6px 6px;
+}
+
+.context-menu-accent-title {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 4px 6px 6px;
+}
+
+.context-menu-accent-palette {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  padding: 0 6px 6px;
+}
+
+.context-menu-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform var(--transition-fast),
+    border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.context-menu-swatch:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.context-menu-swatch:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.context-menu-color-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .context-menu-item {
@@ -5395,16 +5455,17 @@ body.sticky-note-resizing {
 }
 
 .lunar-phase-moon {
-  width: 160px;
-  height: 160px;
+  width: 90%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
 }
 
 .lunar-phase-moon svg {
-  width: 160px;
-  height: 160px;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 

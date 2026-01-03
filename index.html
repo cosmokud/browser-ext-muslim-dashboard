@@ -168,15 +168,15 @@
                 </button>
               </div>
             </div>
-            <div class="prayer-list" id="prayerList">
-              <!-- Prayer items will be dynamically generated based on visibility settings -->
-            </div>
             <div class="next-prayer" id="nextPrayer">
               <span class="next-prayer-label">Next Prayer:</span>
               <span class="next-prayer-name" id="nextPrayerName">--</span>
               <span class="next-prayer-countdown" id="nextPrayerCountdown"
                 >--:--:--</span
               >
+            </div>
+            <div class="prayer-list" id="prayerList">
+              <!-- Prayer items will be dynamically generated based on visibility settings -->
             </div>
           </section>
 
@@ -2211,7 +2211,7 @@
                     type="range"
                     id="flashcardsQuestionFontSize"
                     min="12"
-                    max="72"
+                    max="144"
                     step="1"
                   />
                   <span
@@ -2226,7 +2226,7 @@
                     type="range"
                     id="flashcardsAnswerFontSize"
                     min="12"
-                    max="72"
+                    max="144"
                     step="1"
                   />
                   <span
@@ -2634,6 +2634,38 @@
             class="delete-confirm-btn confirm"
             id="confirmSearchBarDeleteBtn"
           >
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (Notes) -->
+    <div
+      class="modal-overlay delete-confirm-modal"
+      id="notesDeleteConfirmModal"
+    >
+      <div class="delete-confirm-content">
+        <div class="delete-confirm-icon">⚠️</div>
+        <h3>Delete Note?</h3>
+        <p>
+          Are you sure you want to delete "<span
+            class="delete-app-name"
+            id="notesDeleteName"
+          ></span
+          >"?
+        </p>
+        <p
+          class="delete-confirm-hint"
+          style="font-size: 0.85rem; color: var(--text-muted)"
+        >
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button class="delete-confirm-btn cancel" id="cancelNotesDeleteBtn">
+            Cancel
+          </button>
+          <button class="delete-confirm-btn confirm" id="confirmNotesDeleteBtn">
             🗑️ Delete
           </button>
         </div>

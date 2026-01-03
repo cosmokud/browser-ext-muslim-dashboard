@@ -3,7 +3,7 @@
  * - Stores custom searches in localStorage
  * - Shows favicon tabs (Google favicon service)
  * - Scroll arrows appear when searches > 10
- * - Computes a favicon-derived accent color for the bar (best-effort)
+ * - Lets the user choose an accent color per engine (via right-click menu)
  */
 
 class SearchBarManager {
@@ -16,11 +16,10 @@ class SearchBarManager {
     this.selectedId = null;
     this.scrollIndex = 0;
 
-    this.colorCache = new Map();
-    this.colorInFlight = new Map();
-
     this.contextMenu = null;
     this.pendingDeleteId = null;
+
+    this.customColorInput = null;
 
     // Elements
     this.section = document.getElementById("searchBarSection");
@@ -119,7 +118,9 @@ class SearchBarManager {
           .slice(0, 40);
         const url = String(s.url || "").trim();
         const favicon = typeof s.favicon === "string" ? s.favicon : null;
-        return { id, name, url, favicon };
+        const accentRgb =
+          typeof s.accentRgb === "string" ? String(s.accentRgb) : null;
+        return { id, name, url, favicon, accentRgb };
       })
       .filter((s) => s.name && s.url);
 
@@ -307,11 +308,22 @@ class SearchBarManager {
 
     const menu = document.createElement("div");
     menu.className = "pinned-app-context-menu";
+    menu.classList.add("search-bar-context-menu");
     menu.innerHTML = `
       <button class="context-menu-item context-menu-edit" type="button">
         <span class="context-menu-icon">✏️</span>
         <span>Edit</span>
       </button>
+      <div class="context-menu-divider" role="separator"></div>
+      <div class="context-menu-accent" aria-label="Accent color">
+        <div class="context-menu-accent-title">Accent color</div>
+        <div class="context-menu-accent-palette" data-role="accent-palette"></div>
+        <button class="context-menu-item context-menu-accent-custom" type="button">
+          <span class="context-menu-icon">🎨</span>
+          <span>Custom color…</span>
+        </button>
+      </div>
+      <div class="context-menu-divider" role="separator"></div>
       <button class="context-menu-item context-menu-delete" type="button">
         <span class="context-menu-icon">🗑️</span>
         <span>Delete</span>
@@ -320,6 +332,18 @@ class SearchBarManager {
 
     document.body.appendChild(menu);
     this.contextMenu = menu;
+
+    // Hidden color input to allow arbitrary selection.
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.className = "context-menu-color-input";
+    colorInput.setAttribute("aria-label", "Pick custom accent color");
+    colorInput.tabIndex = -1;
+    menu.appendChild(colorInput);
+    this.customColorInput = colorInput;
+
+    // Build palette swatches from theme primitives.
+    this._renderAccentPalette();
 
     this.contextMenu
       .querySelector(".context-menu-edit")
@@ -330,6 +354,57 @@ class SearchBarManager {
         this.hideContextMenu();
         if (id != null) this.showEditModal(id);
       });
+
+    this.contextMenu
+      .querySelector(".context-menu-accent-custom")
+      .addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const engineId = this.contextMenu?.dataset?.engineId;
+        if (!engineId || !this.customColorInput) return;
+
+        const engine = this.searches.find(
+          (s) => String(s.id) === String(engineId)
+        );
+        const current = this._normalizeRgbString(engine?.accentRgb);
+        this.customColorInput.value =
+          this._rgbStringToHex(current) || "#ffffff";
+
+        // Trigger native picker.
+        this.customColorInput.click();
+      });
+
+    if (this.customColorInput) {
+      this.customColorInput.addEventListener("input", (e) => {
+        const engineId = this.contextMenu?.dataset?.engineId;
+        const hex = String(e.target?.value || "").trim();
+        if (!engineId) return;
+
+        const rgb = this._hexToRgbString(hex);
+        if (!rgb) return;
+
+        this.setEngineAccent(engineId, rgb);
+        this.hideContextMenu();
+      });
+    }
+
+    const palette = this.contextMenu.querySelector(
+      '[data-role="accent-palette"]'
+    );
+    if (palette) {
+      palette.addEventListener("click", (e) => {
+        const btn = e.target.closest("button.context-menu-swatch");
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const engineId = this.contextMenu?.dataset?.engineId;
+        const rgb = btn.dataset.rgb;
+        if (!engineId || !rgb) return;
+        this.setEngineAccent(engineId, rgb);
+        this.hideContextMenu();
+      });
+    }
 
     this.contextMenu
       .querySelector(".context-menu-delete")
@@ -383,6 +458,27 @@ class SearchBarManager {
     if (!this.contextMenu) return;
     this.contextMenu.classList.remove("active");
     delete this.contextMenu.dataset.engineId;
+  }
+
+  setEngineAccent(engineId, rgbString) {
+    const idx = this.searches.findIndex(
+      (s) => String(s.id) === String(engineId)
+    );
+    if (idx < 0) return;
+
+    const normalized = this._normalizeRgbString(rgbString);
+    this.searches[idx] = {
+      ...this.searches[idx],
+      accentRgb: normalized,
+    };
+
+    // If this engine is selected, apply immediately.
+    if (String(this.selectedId) === String(engineId)) {
+      this.applyEngineAccent(this.searches[idx]);
+    }
+
+    this.persist();
+    this.render();
   }
 
   deleteEngine(engineId) {
@@ -442,6 +538,7 @@ class SearchBarManager {
       name: normalized.name,
       url: normalized.url,
       favicon,
+      accentRgb: null,
     };
 
     this.searches.push(entry);
@@ -638,143 +735,155 @@ class SearchBarManager {
     }
   }
 
-  async applyEngineAccent(engine) {
+  applyEngineAccent(engine) {
     if (!this.shell) return;
-
-    const faviconUrl =
-      engine?.favicon || this.getFaviconUrlFromTemplate(engine?.url);
-    if (!faviconUrl) return;
-
-    const cached = this.colorCache.get(faviconUrl);
-    if (cached) {
-      this.shell.style.setProperty(
-        "--sb-accent-rgb",
-        `${cached.r}, ${cached.g}, ${cached.b}`
-      );
-      return;
-    }
-
-    // Deduplicate concurrent fetches.
-    if (this.colorInFlight.has(faviconUrl)) {
-      try {
-        await this.colorInFlight.get(faviconUrl);
-      } catch (e) {}
-      const after = this.colorCache.get(faviconUrl);
-      if (after) {
-        this.shell.style.setProperty(
-          "--sb-accent-rgb",
-          `${after.r}, ${after.g}, ${after.b}`
-        );
-      }
-      return;
-    }
-
-    const p = this.computeAverageColorFromImageUrl(faviconUrl)
-      .then((rgb) => {
-        if (rgb) this.colorCache.set(faviconUrl, rgb);
-      })
-      .finally(() => {
-        this.colorInFlight.delete(faviconUrl);
-      });
-
-    this.colorInFlight.set(faviconUrl, p);
-
-    try {
-      await p;
-      const rgb = this.colorCache.get(faviconUrl);
-      if (rgb) {
-        this.shell.style.setProperty(
-          "--sb-accent-rgb",
-          `${rgb.r}, ${rgb.g}, ${rgb.b}`
-        );
-      }
-    } catch (e) {
-      // Best-effort only.
-    }
+    const rgb = this._normalizeRgbString(engine?.accentRgb);
+    this.shell.style.setProperty("--sb-accent-rgb", rgb);
   }
 
-  async computeAverageColorFromImageUrl(url) {
-    // Best-effort: fetch + decode and sample pixels.
-    // On Chrome extension pages, this is reliable if host_permissions allow the URL.
-    let blob;
-    try {
-      const resp = await fetch(url, { cache: "force-cache" });
-      if (!resp.ok) return null;
-      blob = await resp.blob();
-    } catch (e) {
-      return null;
-    }
+  _normalizeRgbString(rgbString) {
+    const fallback = "255, 255, 255";
+    if (typeof rgbString !== "string") return fallback;
+    const m = rgbString
+      .trim()
+      .match(/^\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*$/);
+    if (!m) return fallback;
+    const clamp = (n) => Math.max(0, Math.min(255, n));
+    const r = clamp(parseInt(m[1], 10));
+    const g = clamp(parseInt(m[2], 10));
+    const b = clamp(parseInt(m[3], 10));
+    return `${r}, ${g}, ${b}`;
+  }
 
-    const sampleSize = 32;
-    const canvas = document.createElement("canvas");
-    canvas.width = sampleSize;
-    canvas.height = sampleSize;
+  _hexToRgbString(hex) {
+    const s = String(hex || "").trim();
+    const m = s.match(/^#?([0-9a-fA-F]{6})$/);
+    if (!m) return null;
+    const raw = m[1];
+    const r = parseInt(raw.slice(0, 2), 16);
+    const g = parseInt(raw.slice(2, 4), 16);
+    const b = parseInt(raw.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  }
 
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return null;
+  _rgbStringToHex(rgbString) {
+    const m = String(rgbString || "")
+      .trim()
+      .match(/^\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*$/);
+    if (!m) return null;
+    const clamp = (n) => Math.max(0, Math.min(255, n));
+    const r = clamp(parseInt(m[1], 10));
+    const g = clamp(parseInt(m[2], 10));
+    const b = clamp(parseInt(m[3], 10));
+    const toHex2 = (n) => n.toString(16).padStart(2, "0");
+    return `#${toHex2(r)}${toHex2(g)}${toHex2(b)}`;
+  }
 
-    try {
-      if (typeof createImageBitmap === "function") {
-        const bmp = await createImageBitmap(blob);
-        ctx.drawImage(bmp, 0, 0, sampleSize, sampleSize);
-      } else {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(blob);
-        await new Promise((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = reject;
-          img.src = objectUrl;
-        });
-        ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
-        URL.revokeObjectURL(objectUrl);
+  _parseHexColor(hex) {
+    const rgb = this._hexToRgbString(hex);
+    if (!rgb) return null;
+    const m = rgb.match(/^(\d+),\s*(\d+),\s*(\d+)$/);
+    if (!m) return null;
+    return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+  }
+
+  _mixRgb(a, b, t) {
+    const mix = (x, y) => Math.round(x + (y - x) * t);
+    return { r: mix(a.r, b.r), g: mix(a.g, b.g), b: mix(a.b, b.b) };
+  }
+
+  _rgbToString(c) {
+    return `${c.r}, ${c.g}, ${c.b}`;
+  }
+
+  _getThemeAccentPalette() {
+    const root = getComputedStyle(document.documentElement);
+    const read = (name) => String(root.getPropertyValue(name) || "").trim();
+
+    const baseVars = [
+      "--primary-color",
+      "--primary-light",
+      "--primary-dark",
+      "--accent-gold",
+      "--accent-gold-light",
+      "--accent-blue",
+      "--settings-color",
+      "--settings-light",
+    ];
+
+    const whiteHex = read("--text-primary") || "#ffffff";
+    const darkHex = read("--primary-dark") || "#0d3d2e";
+
+    const white = this._parseHexColor(whiteHex);
+    const dark = this._parseHexColor(darkHex);
+
+    const uniq = new Set();
+    const out = [];
+
+    const push = (rgbStr) => {
+      const norm = this._normalizeRgbString(rgbStr);
+      if (uniq.has(norm)) return;
+      uniq.add(norm);
+      out.push(norm);
+    };
+
+    const bases = baseVars
+      .map((v) => this._parseHexColor(read(v)))
+      .filter(Boolean);
+
+    // First: include the base colors.
+    bases.forEach((c) => push(this._rgbToString(c)));
+
+    // Then: generate derived variants (lighter + deeper) until we have >= 20.
+    const lightT = [0.22, 0.38];
+    const darkT = [0.22, 0.38];
+    for (const c of bases) {
+      if (white) {
+        lightT.forEach((t) =>
+          push(this._rgbToString(this._mixRgb(c, white, t)))
+        );
       }
-    } catch (e) {
-      return null;
+      if (dark) {
+        darkT.forEach((t) => push(this._rgbToString(this._mixRgb(c, dark, t))));
+      }
+      if (out.length >= 20) break;
     }
 
-    let data;
-    try {
-      data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
-    } catch (e) {
-      return null;
-    }
-
-    let r = 0;
-    let g = 0;
-    let b = 0;
-    let n = 0;
-
-    // Sample every 2 pixels (fast + stable).
-    const stride = 2;
-    for (let y = 0; y < sampleSize; y += stride) {
-      for (let x = 0; x < sampleSize; x += stride) {
-        const i = (y * sampleSize + x) * 4;
-        const a = data[i + 3];
-        if (a < 32) continue;
-
-        const rr = data[i];
-        const gg = data[i + 1];
-        const bb = data[i + 2];
-
-        // Ignore near-white pixels (common favicon padding).
-        if (rr > 245 && gg > 245 && bb > 245) continue;
-
-        r += rr;
-        g += gg;
-        b += bb;
-        n++;
+    // Ensure at least 20; if not, repeat with more mixes.
+    if (out.length < 20 && white && dark) {
+      const extraT = [0.55, 0.7];
+      for (const c of bases) {
+        extraT.forEach((t) =>
+          push(this._rgbToString(this._mixRgb(c, white, t)))
+        );
+        extraT.forEach((t) =>
+          push(this._rgbToString(this._mixRgb(c, dark, t)))
+        );
+        if (out.length >= 20) break;
       }
     }
 
-    if (!n) return null;
+    return out.slice(0, 20);
+  }
 
-    r = Math.round(r / n);
-    g = Math.round(g / n);
-    b = Math.round(b / n);
+  _renderAccentPalette() {
+    if (!this.contextMenu) return;
+    const paletteEl = this.contextMenu.querySelector(
+      '[data-role="accent-palette"]'
+    );
+    if (!paletteEl) return;
 
-    // Clamp to avoid extremes that look harsh behind white text.
-    const clamp = (v) => Math.max(20, Math.min(235, v));
-    return { r: clamp(r), g: clamp(g), b: clamp(b) };
+    paletteEl.innerHTML = "";
+    const colors = this._getThemeAccentPalette();
+    colors.forEach((rgb) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "context-menu-swatch";
+      btn.dataset.rgb = rgb;
+      btn.setAttribute("aria-label", `Set accent color ${rgb}`);
+      btn.style.background = `rgb(${rgb})`;
+      paletteEl.appendChild(btn);
+    });
   }
 
   render() {
