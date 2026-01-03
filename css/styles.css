@@ -6920,6 +6920,11 @@ body.sticky-note-resizing {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  /* Ensure blur settings affect the full Pocket Quran area too.
+     Use a near-transparent background so Chromium reliably composites backdrop-filter. */
+  background: rgba(255, 255, 255, 0.001);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-controls {
@@ -6933,6 +6938,7 @@ body.sticky-note-resizing {
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-ayah-nav {
@@ -7073,6 +7079,10 @@ body.sticky-note-resizing {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  /* Let global/per-card blur power affect the content region itself. */
+  background: rgba(255, 255, 255, 0.001);
+  backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-ayah {
@@ -7082,6 +7092,7 @@ body.sticky-note-resizing {
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   transition: transform var(--transition-fast),
     background var(--transition-fast);
 }
@@ -7150,6 +7161,7 @@ body.sticky-note-resizing {
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   display: flex;
   align-items: center;
   justify-content: center;

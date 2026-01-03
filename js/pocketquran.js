@@ -710,7 +710,10 @@ class PocketQuranManager {
     const { preserveAyah = false } = opts;
 
     const surah = this.clampNumber(surahNumber, 1, 114, 1);
-    if (surah === this._activeSurah && this.contentEl?.children?.length) {
+    const versesAlreadyRendered = Boolean(
+      this.contentEl?.querySelector?.(".pocket-quran-ayah")
+    );
+    if (surah === this._activeSurah && versesAlreadyRendered) {
       // still ensure highlight nav works
       this.updateSurahActiveState();
       this.updateSurahInputValue({ force: true });
