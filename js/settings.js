@@ -154,6 +154,24 @@ class SettingsManager {
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
 
+    // Themes panel elements
+    this.themeModeButtons = document.querySelectorAll(".theme-mode-btn");
+    this.themeGlassEnabled = document.getElementById("themeGlassEnabled");
+    this.themeBlurPower = document.getElementById("themeBlurPower");
+    this.themeBlurPowerValue = document.getElementById("themeBlurPowerValue");
+    this.themeBlurGroup = document.getElementById("themeBlurGroup");
+    this.themePickerGrid = document.getElementById("themePickerGrid");
+    this.themeContainerWidth = document.getElementById("themeContainerWidth");
+    this.themeContainerWidthCustom = document.getElementById(
+      "themeContainerWidthCustom"
+    );
+    this.themeCustomWidthGroup = document.getElementById(
+      "themeCustomWidthGroup"
+    );
+    this.themeCustomWidthValue = document.getElementById(
+      "themeCustomWidthValue"
+    );
+
     // Custom searches import/export
     this.exportCustomSearchesBtn = document.getElementById(
       "exportCustomSearchesBtn"
@@ -292,6 +310,9 @@ class SettingsManager {
 
     this.updateNotesCountHint();
     this.updatePocketQuranBookmarkStats();
+
+    // Initialize themes panel
+    this.initThemesPanel();
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
@@ -1008,6 +1029,325 @@ class SettingsManager {
     } catch (e) {}
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // THEMES PANEL METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Initialize themes panel
+   */
+  initThemesPanel() {
+    this.renderThemePickerGrid();
+    this.loadThemePanelSettings();
+    this.setupThemePanelEventListeners();
+  }
+
+  /**
+   * Load theme panel settings from storage
+   */
+  loadThemePanelSettings() {
+    const settings = this.storage.getSettings();
+    const themeSettings = settings.theme || {};
+
+    // Load mode
+    const mode = themeSettings.mode || "dark";
+    this.updateThemeModeButtons(mode);
+
+    // Load glass enabled
+    const glassEnabled = themeSettings.glassEnabled !== false;
+    if (this.themeGlassEnabled) {
+      this.themeGlassEnabled.checked = glassEnabled;
+    }
+    this.updateThemeBlurGroupState(glassEnabled);
+
+    // Load blur power
+    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+    if (this.themeBlurPower) {
+      this.themeBlurPower.value = String(blurPower);
+    }
+    this.updateThemeBlurPowerLabel();
+
+    // Load container width (now in Themes panel)
+    if (this.themeContainerWidth) {
+      this.themeContainerWidth.value = settings.containerWidth || "narrow";
+    }
+    if (settings.containerWidth === "custom") {
+      this.toggleThemeCustomWidth(true);
+      if (this.themeContainerWidthCustom) {
+        const clamped = this.clampNumber(
+          settings.containerWidthCustom,
+          20,
+          98,
+          70
+        );
+        this.themeContainerWidthCustom.value = String(clamped);
+      }
+      this.updateThemeCustomWidthLabel();
+    } else {
+      this.toggleThemeCustomWidth(false);
+    }
+
+    // Highlight active theme
+    const activeTheme = themeSettings.name || "emerald";
+    this.updateThemePickerActiveState(activeTheme);
+  }
+
+  /**
+   * Update theme mode buttons active state
+   */
+  updateThemeModeButtons(mode) {
+    this.themeModeButtons.forEach((btn) => {
+      const btnMode = btn.dataset.mode;
+      btn.classList.toggle("active", btnMode === mode);
+    });
+  }
+
+  /**
+   * Update theme blur group visibility based on glass enabled
+   */
+  updateThemeBlurGroupState(glassEnabled) {
+    if (this.themeBlurGroup) {
+      this.themeBlurGroup.classList.toggle("disabled", !glassEnabled);
+    }
+  }
+
+  /**
+   * Update theme blur power label
+   */
+  updateThemeBlurPowerLabel() {
+    if (this.themeBlurPowerValue && this.themeBlurPower) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeBlurPower.value, 10),
+        0,
+        200,
+        100
+      );
+      this.themeBlurPower.value = String(clamped);
+      this.themeBlurPowerValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Toggle theme custom width visibility
+   */
+  toggleThemeCustomWidth(show) {
+    if (this.themeCustomWidthGroup) {
+      this.themeCustomWidthGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Update theme custom width label
+   */
+  updateThemeCustomWidthLabel() {
+    if (this.themeCustomWidthValue && this.themeContainerWidthCustom) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeContainerWidthCustom.value, 10),
+        20,
+        98,
+        70
+      );
+      this.themeContainerWidthCustom.value = String(clamped);
+      this.themeCustomWidthValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Render the theme picker grid
+   */
+  renderThemePickerGrid() {
+    if (!this.themePickerGrid || typeof ThemeManager === "undefined") return;
+
+    const themes = ThemeManager.THEMES;
+    const settings = this.storage.getSettings();
+    const currentMode = settings.theme?.mode || "dark";
+    const activeTheme = settings.theme?.name || "emerald";
+
+    let html = "";
+
+    for (const [id, theme] of Object.entries(themes)) {
+      const colors = theme[currentMode];
+      const isActive = id === activeTheme;
+
+      html += `
+        <div class="theme-card${isActive ? " active" : ""}" data-theme="${id}">
+          <div class="theme-card-preview">
+            <div class="theme-preview-primary" style="background: ${
+              colors.primary
+            }"></div>
+            <div class="theme-preview-accent" style="background: ${
+              colors.accent
+            }"></div>
+            <div class="theme-preview-bg" style="background: ${
+              colors.bodyBg
+            }"></div>
+          </div>
+          <div class="theme-card-header">
+            <span class="theme-card-icon">${theme.icon}</span>
+            <span class="theme-card-name">${theme.name}</span>
+          </div>
+          <div class="theme-card-desc">${theme.description}</div>
+          <div class="theme-card-check">✓</div>
+        </div>
+      `;
+    }
+
+    this.themePickerGrid.innerHTML = html;
+  }
+
+  /**
+   * Update theme picker active state
+   */
+  updateThemePickerActiveState(activeTheme) {
+    if (!this.themePickerGrid) return;
+
+    const cards = this.themePickerGrid.querySelectorAll(".theme-card");
+    cards.forEach((card) => {
+      const themeName = card.dataset.theme;
+      card.classList.toggle("active", themeName === activeTheme);
+    });
+  }
+
+  /**
+   * Setup theme panel event listeners
+   */
+  setupThemePanelEventListeners() {
+    // Theme mode buttons
+    this.themeModeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        this.updateThemeModeButtons(mode);
+
+        // Apply theme mode immediately
+        if (window.dashboard?.themes) {
+          window.dashboard.themes.setMode(mode, false);
+        }
+
+        // Re-render theme picker with new mode colors
+        this.renderThemePickerGrid();
+      });
+    });
+
+    // Glass enabled toggle
+    if (this.themeGlassEnabled) {
+      this.themeGlassEnabled.addEventListener("change", () => {
+        const enabled = this.themeGlassEnabled.checked;
+        this.updateThemeBlurGroupState(enabled);
+
+        // Apply glass toggle immediately
+        if (window.dashboard?.themes) {
+          window.dashboard.themes.setGlassEnabled(enabled, false);
+        }
+      });
+    }
+
+    // Blur power slider
+    if (this.themeBlurPower) {
+      this.themeBlurPower.addEventListener("input", () => {
+        this.updateThemeBlurPowerLabel();
+        const power = parseInt(this.themeBlurPower.value, 10);
+        this.applyUiBlurPower(power);
+      });
+    }
+
+    // Theme picker cards
+    if (this.themePickerGrid) {
+      this.themePickerGrid.addEventListener("click", (e) => {
+        const card = e.target.closest(".theme-card");
+        if (!card) return;
+
+        const themeName = card.dataset.theme;
+        this.updateThemePickerActiveState(themeName);
+
+        // Apply theme immediately
+        if (window.dashboard?.themes) {
+          window.dashboard.themes.setTheme(themeName, false);
+        }
+      });
+    }
+
+    // Container width (in Themes panel)
+    if (this.themeContainerWidth) {
+      this.themeContainerWidth.addEventListener("change", (e) => {
+        this.toggleThemeCustomWidth(e.target.value === "custom");
+        this.applyContainerWidth(
+          e.target.value,
+          parseInt(this.themeContainerWidthCustom?.value, 10) || 70
+        );
+      });
+    }
+
+    // Custom width slider (in Themes panel)
+    if (this.themeContainerWidthCustom) {
+      this.themeContainerWidthCustom.addEventListener("input", () => {
+        this.updateThemeCustomWidthLabel();
+        this.applyContainerWidth(
+          this.themeContainerWidth?.value === "custom"
+            ? "custom"
+            : this.themeContainerWidth?.value,
+          parseInt(this.themeContainerWidthCustom.value, 10)
+        );
+      });
+    }
+  }
+
+  /**
+   * Save theme settings
+   */
+  saveThemeSettings(settings) {
+    // Get current mode from buttons
+    let mode = "dark";
+    this.themeModeButtons.forEach((btn) => {
+      if (btn.classList.contains("active")) {
+        mode = btn.dataset.mode;
+      }
+    });
+
+    // Get glass enabled
+    const glassEnabled = this.themeGlassEnabled?.checked !== false;
+
+    // Get active theme
+    let activeTheme = "emerald";
+    const activeCard =
+      this.themePickerGrid?.querySelector(".theme-card.active");
+    if (activeCard) {
+      activeTheme = activeCard.dataset.theme;
+    }
+
+    // Save theme settings
+    settings.theme = {
+      name: activeTheme,
+      mode: mode,
+      glassEnabled: glassEnabled,
+    };
+
+    // Save blur power (now from Themes panel)
+    settings.uiBlurPower = this.clampNumber(
+      parseInt(this.themeBlurPower?.value, 10),
+      0,
+      200,
+      100
+    );
+
+    // Save container width (now from Themes panel)
+    settings.containerWidth = this.themeContainerWidth?.value || "narrow";
+    if (settings.containerWidth === "custom") {
+      settings.containerWidthCustom = this.clampNumber(
+        parseInt(this.themeContainerWidthCustom?.value, 10),
+        20,
+        98,
+        70
+      );
+    }
+
+    // Apply theme manager settings
+    if (window.dashboard?.themes) {
+      window.dashboard.themes.setTheme(activeTheme, true);
+      window.dashboard.themes.setMode(mode, true);
+      window.dashboard.themes.setGlassEnabled(glassEnabled, true);
+    }
+  }
+
   /**
    * Update method angles display
    */
@@ -1666,24 +2006,8 @@ class SettingsManager {
     }
     settings.bgCategory = this.bgCategory?.value || "nature";
 
-    // Container width settings
-    settings.containerWidth = this.containerWidth?.value || "narrow";
-    if (settings.containerWidth === "custom") {
-      settings.containerWidthCustom = this.clampNumber(
-        parseInt(this.containerWidthCustom?.value, 10),
-        20,
-        98,
-        70
-      );
-    }
-
-    // UI blur power
-    settings.uiBlurPower = this.clampNumber(
-      parseInt(this.uiBlurPower?.value, 10),
-      0,
-      200,
-      100
-    );
+    // Theme settings (container width, blur power, and theme selection are now in Themes panel)
+    this.saveThemeSettings(settings);
 
     // Pinned Apps per-row
     settings.pinnedAppsPerRow = this.clampNumber(

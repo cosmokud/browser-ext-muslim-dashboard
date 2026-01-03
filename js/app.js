@@ -12,6 +12,9 @@ class MuslimDashboard {
     // Floating mode manager (detached draggable/resizable cards)
     this.floating = new FloatingModeManager(this.storage);
 
+    // Initialize Theme Manager
+    this.themes = new ThemeManager(this.storage);
+
     // Initialize managers
     this.backgrounds = new BackgroundManager(this.storage);
     this.prayerTimes = new PrayerTimesManager(this.storage);
@@ -183,6 +186,9 @@ class MuslimDashboard {
    */
   async init() {
     console.log("🕌 Muslim Dashboard initializing...");
+
+    // Initialize themes first (applies CSS variables before any UI renders)
+    this.themes.init();
 
     // Start background first for visual appeal
     this.backgrounds.init();

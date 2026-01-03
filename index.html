@@ -1233,6 +1233,7 @@
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
+            <button class="settings-tab" data-tab="themes">🎨 Themes</button>
             <button class="settings-tab" data-tab="credits">✨ Credits</button>
             <button class="settings-tab" data-tab="general">⚙️ General</button>
           </div>
@@ -2823,6 +2824,110 @@
             </div>
           </div>
 
+          <!-- Themes Settings -->
+          <div class="settings-panel" id="themesPanel">
+            <div class="setting-group">
+              <label class="setting-label">Color Mode</label>
+              <p class="setting-hint">
+                Switch between dark and light appearance.
+              </p>
+              <div class="theme-mode-toggle">
+                <button
+                  class="theme-mode-btn active"
+                  id="themeModeBtn-dark"
+                  data-mode="dark"
+                  type="button"
+                >
+                  <span class="theme-mode-icon">🌙</span>
+                  <span class="theme-mode-label">Dark</span>
+                </button>
+                <button
+                  class="theme-mode-btn"
+                  id="themeModeBtn-light"
+                  data-mode="light"
+                  type="button"
+                >
+                  <span class="theme-mode-icon">☀️</span>
+                  <span class="theme-mode-label">Light</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Glass Effect (Transparency)</label>
+              <p class="setting-hint">
+                Enable or disable the transparent glass effect on UI elements.
+              </p>
+              <label class="checkbox-option theme-glass-toggle">
+                <input type="checkbox" id="themeGlassEnabled" checked />
+                <span>Enable Glass Effect</span>
+              </label>
+            </div>
+
+            <div class="setting-group theme-blur-group" id="themeBlurGroup">
+              <label class="setting-label">Blur Power (Glass Effect)</label>
+              <p class="setting-hint">
+                Controls the blur intensity across all glass/overlay elements.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="themeBlurPower"
+                  min="0"
+                  max="200"
+                  value="100"
+                />
+                <span class="custom-width-value" id="themeBlurPowerValue"
+                  >100%</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Color Theme</label>
+              <p class="setting-hint">
+                Choose a color palette that suits your style. Each theme works
+                with both dark and light modes.
+              </p>
+              <div class="theme-picker-grid" id="themePickerGrid">
+                <!-- Theme cards will be dynamically generated -->
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Dashboard Width</label>
+              <select class="setting-select" id="themeContainerWidth">
+                <option value="extra-compact">Extra Compact (800px)</option>
+                <option value="compact">Compact (1000px)</option>
+                <option value="slim">Slim (1200px)</option>
+                <option value="narrow" selected>Narrow (1400px)</option>
+                <option value="medium">Medium (1600px)</option>
+                <option value="wide">Wide (1800px)</option>
+                <option value="full">Full Width (98%)</option>
+                <option value="custom">Custom Width</option>
+              </select>
+            </div>
+            <div
+              class="setting-group custom-width-group"
+              id="themeCustomWidthGroup"
+              style="display: none"
+            >
+              <label class="setting-label">Custom Width</label>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="themeContainerWidthCustom"
+                  min="20"
+                  max="98"
+                  value="70"
+                />
+                <span class="custom-width-value" id="themeCustomWidthValue"
+                  >70%</span
+                >
+              </div>
+            </div>
+          </div>
+
           <!-- Credits Settings -->
           <div class="settings-panel" id="creditsPanel">
             <div class="setting-group">
@@ -2876,58 +2981,6 @@
                   accept=".json"
                   style="display: none"
                 />
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Dashboard Width</label>
-              <select class="setting-select" id="containerWidth">
-                <option value="extra-compact">Extra Compact (800px)</option>
-                <option value="compact">Compact (1000px)</option>
-                <option value="slim">Slim (1200px)</option>
-                <option value="narrow" selected>Narrow (1400px)</option>
-                <option value="medium">Medium (1600px)</option>
-                <option value="wide">Wide (1800px)</option>
-                <option value="full">Full Width (98%)</option>
-                <option value="custom">Custom Width</option>
-              </select>
-            </div>
-            <div
-              class="setting-group custom-width-group"
-              id="customWidthGroup"
-              style="display: none"
-            >
-              <label class="setting-label">Custom Width</label>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="containerWidthCustom"
-                  min="20"
-                  max="98"
-                  value="70"
-                />
-                <span class="custom-width-value" id="customWidthValue"
-                  >70%</span
-                >
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Blur Power (Glass Effect)</label>
-              <p class="setting-hint">
-                Controls the blur intensity across all glass/overlay elements.
-              </p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="uiBlurPower"
-                  min="0"
-                  max="200"
-                  value="100"
-                />
-                <span class="custom-width-value" id="uiBlurPowerValue"
-                  >100%</span
-                >
               </div>
             </div>
           </div>
@@ -3256,6 +3309,7 @@
     <script src="js/praytimes.js"></script>
     <script src="js/hijri.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/themes.js"></script>
     <script src="js/backgrounds.js"></script>
     <script src="js/quotes.js"></script>
     <script src="js/qibla.js"></script>

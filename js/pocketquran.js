@@ -259,7 +259,10 @@ class PocketQuranManager {
     const openAyahDropdown = () => {
       if (!this.ayahDropdown) return;
       this.openDropdown(this.ayahDropdown);
-      this.updateAyahDropdownActiveState();
+      // Use requestAnimationFrame to ensure the dropdown is visible before scrolling
+      requestAnimationFrame(() => {
+        this.updateAyahDropdownActiveState();
+      });
     };
 
     const jumpToAyahFromInput = () => {
@@ -1473,13 +1476,43 @@ class PocketQuranManager {
     if (!this.ayahListEl) return;
     const max = this.getActiveSurahAyahCount() || 286;
     const current = this.clampNumber(this._activeAyah, 1, max, 1);
+
+    let activeBtn = null;
     for (const btn of this.ayahListEl.querySelectorAll(
       ".pocket-quran-ayah-option"
     )) {
       const n = parseInt(btn.dataset.ayah, 10);
-      btn.classList.toggle("active", n === current);
-      btn.setAttribute("aria-selected", n === current ? "true" : "false");
+      const isActive = n === current;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      if (isActive) {
+        activeBtn = btn;
+      }
     }
+
+    // Scroll the dropdown list to show the active ayah at the top
+    if (activeBtn && !this.ayahDropdown?.hidden) {
+      this.scrollAyahDropdownToActive(activeBtn);
+    }
+  }
+
+  /**
+   * Scroll the ayah dropdown list so the active button is positioned at the top.
+   */
+  scrollAyahDropdownToActive(activeBtn) {
+    if (!activeBtn || !this.ayahListEl) return;
+
+    // Get the scroll container (the dropdown list itself)
+    const scrollContainer = this.ayahListEl;
+
+    // Calculate the offset of the active button relative to the scroll container
+    const btnOffsetTop = activeBtn.offsetTop;
+
+    // Scroll so the active ayah is at the top of the visible area
+    // Use a small offset (e.g., 4px) for visual padding
+    const targetScrollTop = Math.max(0, btnOffsetTop - 4);
+
+    scrollContainer.scrollTop = targetScrollTop;
   }
 
   getActiveSurahAyahCount() {
