@@ -6943,6 +6943,12 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah-nav {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pocket-quran-ayah-row {
+  display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }

@@ -914,6 +914,16 @@ class SettingsManager {
       "--ui-blur-multiplier",
       String(multiplier)
     );
+
+    // Notify components that render UI outside their card's DOM subtree
+    // (e.g., portalled dropdowns) to resync blur values.
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:ui-blur-update", {
+          detail: { multiplier },
+        })
+      );
+    } catch (e) {}
   }
 
   /**

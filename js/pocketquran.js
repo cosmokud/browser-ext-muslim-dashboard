@@ -113,6 +113,9 @@ class PocketQuranManager {
     this.loadChaptersAndRenderSurahPicker().then(() => {
       this.setActiveSurah(this._activeSurah, {
         preserveAyah: true,
+        // IMPORTANT: Don't scroll the entire dashboard to Pocket Quran on load/refresh.
+        // Users expect the dashboard to stay at the top on startup.
+        autoScroll: false,
       });
     });
   }
@@ -366,17 +369,28 @@ class PocketQuranManager {
       this.syncDropdownBlurMultiplier(this.surahDropdown);
       this.syncDropdownBlurMultiplier(this.ayahDropdown);
     });
+
+    // React to global dashboard blur changes (emitted by settings.js)
+    document.addEventListener("md:ui-blur-update", () => {
+      this.syncDropdownBlurMultiplier(this.surahDropdown);
+      this.syncDropdownBlurMultiplier(this.ayahDropdown);
+    });
   }
 
   getEffectiveBlurMultiplier() {
-    try {
-      const source = this.card || document.documentElement;
-      const raw =
-        getComputedStyle(source).getPropertyValue("--ui-blur-multiplier") || "";
-      const n = parseFloat(String(raw).trim());
-      if (Number.isFinite(n) && n >= 0) return n;
-    } catch (e) {}
-    return 1;
+    const read = (el) => {
+      if (!el) return null;
+      try {
+        const raw =
+          getComputedStyle(el).getPropertyValue("--ui-blur-multiplier") || "";
+        const n = parseFloat(String(raw).trim());
+        if (Number.isFinite(n) && n >= 0) return n;
+      } catch (e) {}
+      return null;
+    };
+
+    // Prefer per-card override when present, otherwise fall back to global.
+    return read(this.card) ?? read(document.documentElement) ?? 1;
   }
 
   syncDropdownBlurMultiplier(el) {
@@ -707,7 +721,7 @@ class PocketQuranManager {
   }
 
   async setActiveSurah(surahNumber, opts = {}) {
-    const { preserveAyah = false } = opts;
+    const { preserveAyah = false, autoScroll = true } = opts;
 
     const surah = this.clampNumber(surahNumber, 1, 114, 1);
     const versesAlreadyRendered = Boolean(
@@ -733,10 +747,11 @@ class PocketQuranManager {
     this.updateSurahActiveState();
     this.updateSurahInputValue({ force: true });
 
-    await this.loadSurah(surah);
+    await this.loadSurah(surah, { autoScroll });
   }
 
-  async loadSurah(surah) {
+  async loadSurah(surah, opts = {}) {
+    const { autoScroll = true } = opts;
     const chapter = this._chapters.find((c) => c.id === surah);
     const surahName = chapter?.name_simple || `Surah ${surah}`;
     const surahNameAr = chapter?.name_arabic || "";
@@ -787,7 +802,11 @@ class PocketQuranManager {
         1
       );
       if (this.ayahInput) this.ayahInput.value = String(desired);
-      this.scrollToAyah(desired, { persist: false, smooth: false });
+      this.scrollToAyah(desired, {
+        persist: false,
+        smooth: false,
+        skipScroll: !autoScroll,
+      });
       this.updateAyahDropdownActiveState();
     } catch (e) {
       if (e?.name === "AbortError") return;
@@ -805,9 +824,7 @@ class PocketQuranManager {
       PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label ||
       "Translation";
 
-    this.headerMeta.textContent = `${surah} · ${surahName}${
-      surahNameAr ? ` · ${surahNameAr}` : ""
-    } · ${versesCount} ayahs · ${translation}`;
+    this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
   }
 
   updateAyahControls(ayahCount) {
@@ -943,7 +960,7 @@ class PocketQuranManager {
   }
 
   scrollToAyah(ayahNumber, opts = {}) {
-    const { persist = true, smooth = true } = opts;
+    const { persist = true, smooth = true, skipScroll = false } = opts;
 
     const max = this.getActiveSurahAyahCount() || 286;
     const n = this.clampNumber(ayahNumber, 1, max, 1);
@@ -952,17 +969,19 @@ class PocketQuranManager {
     const el = document.getElementById(`pocketQuranAyah-${n}`);
     if (!el) return;
 
-    try {
-      el.scrollIntoView({
-        behavior: smooth ? "smooth" : "auto",
-        block: "start",
-      });
-    } catch (e) {
-      // fallback
+    if (!skipScroll) {
       try {
-        const y = el.getBoundingClientRect().top + window.scrollY - 80;
-        window.scrollTo({ top: y, behavior: smooth ? "smooth" : "auto" });
-      } catch (_) {}
+        el.scrollIntoView({
+          behavior: smooth ? "smooth" : "auto",
+          block: "start",
+        });
+      } catch (e) {
+        // fallback
+        try {
+          const y = el.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: y, behavior: smooth ? "smooth" : "auto" });
+        } catch (_) {}
+      }
     }
 
     if (this._scrollHighlightTimer) clearTimeout(this._scrollHighlightTimer);
