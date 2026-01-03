@@ -265,17 +265,6 @@ class SettingsManager {
     this.pocketQuranTranslationSelect = document.getElementById(
       "pocketQuranTranslationSelect"
     );
-
-    // Pocket Quran bookmarks import/export
-    this.pocketQuranBookmarksImportBtn = document.getElementById(
-      "pocketQuranBookmarksImportBtn"
-    );
-    this.pocketQuranBookmarksExportBtn = document.getElementById(
-      "pocketQuranBookmarksExportBtn"
-    );
-    this.pocketQuranBookmarksImportInput = document.getElementById(
-      "pocketQuranBookmarksImportInput"
-    );
   }
 
   /**
@@ -2264,153 +2253,6 @@ class SettingsManager {
     ).slice(0, 24);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Pocket Quran bookmarks import/export
-  // ─────────────────────────────────────────────────────────────────────────
-
-  _normalizePocketQuranBookmarksStore(raw) {
-    const now = Date.now();
-    const safe = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-    const categoriesRaw = Array.isArray(safe.categories) ? safe.categories : [];
-
-    const generateId = () =>
-      (
-        Date.now().toString(36) +
-        Math.random().toString(36).slice(2) +
-        Math.random().toString(36).slice(2)
-      )
-        .slice(0, 24)
-        .replace(/[^a-z0-9]/gi, "");
-
-    const categories = categoriesRaw
-      .filter((c) => c && typeof c === "object" && !Array.isArray(c))
-      .map((c) => {
-        const id = String(c.id || "").trim() || generateId();
-        const name =
-          String(c.name || "Untitled").trim().slice(0, 80) || "Untitled";
-        const itemsRaw = Array.isArray(c.items) ? c.items : [];
-        const items = itemsRaw
-          .filter((it) => it && typeof it === "object" && !Array.isArray(it))
-          .map((it) => {
-            const surah = Math.min(114, Math.max(1, parseInt(it.surah, 10) || 1));
-            const ayah = Math.min(286, Math.max(1, parseInt(it.ayah, 10) || 1));
-            const addedAt =
-              typeof it.addedAt === "number" && Number.isFinite(it.addedAt)
-                ? it.addedAt
-                : now;
-            return { surah, ayah, addedAt };
-          });
-
-        // De-dup within category
-        const seen = new Set();
-        const deduped = [];
-        for (const it of items) {
-          const key = `${it.surah}:${it.ayah}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          deduped.push(it);
-        }
-
-        return {
-          id,
-          name,
-          createdAt: typeof c.createdAt === "number" ? c.createdAt : now,
-          updatedAt: typeof c.updatedAt === "number" ? c.updatedAt : now,
-          items: deduped,
-        };
-      });
-
-    const hasDefault = categories.some((c) => c.id === "bookmarked");
-    if (!hasDefault) {
-      categories.unshift({
-        id: "bookmarked",
-        name: "Bookmarked",
-        createdAt: now,
-        updatedAt: now,
-        items: [],
-      });
-    }
-
-    return {
-      exportType: "pocketQuranBookmarks",
-      version: 1,
-      updatedAt: now,
-      categories,
-    };
-  }
-
-  exportPocketQuranBookmarks() {
-    const raw = this.storage.get("pocketQuranBookmarks", null);
-    const store = this._normalizePocketQuranBookmarksStore(raw);
-
-    const payload = {
-      exportType: "pocketQuranBookmarks",
-      version: 1,
-      exportDate: new Date().toISOString(),
-      bookmarks: store,
-    };
-
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `muslim-dashboard-pocket-quran-bookmarks-${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    this.showToast("Pocket Quran bookmarks exported!", "success");
-  }
-
-  handlePocketQuranBookmarksImport(e) {
-    const input = e && e.target;
-    const file = input && input.files && input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const text = String(reader.result || "");
-        const data = JSON.parse(text);
-
-        const incoming =
-          (data && typeof data === "object" && data.bookmarks) ||
-          (data && typeof data === "object" && data.categories ? data : null);
-
-        if (!incoming) {
-          this.showToast("Invalid Pocket Quran bookmarks JSON format.", "error");
-          return;
-        }
-
-        const normalized = this._normalizePocketQuranBookmarksStore(incoming);
-        this.storage.set("pocketQuranBookmarks", normalized);
-
-        this.showToast("Pocket Quran bookmarks imported!", "success");
-      } catch (err) {
-        console.error("Pocket Quran bookmarks import error:", err);
-        this.showToast("Failed to import bookmarks JSON.", "error");
-      } finally {
-        try {
-          input.value = "";
-        } catch (e2) {}
-      }
-    };
-
-    reader.onerror = () => {
-      this.showToast("Failed to read file.", "error");
-      try {
-        input.value = "";
-      } catch (e2) {}
-    };
-
-    reader.readAsText(file);
-  }
-
   /**
    * Setup event listeners
    */
@@ -2454,31 +2296,6 @@ class SettingsManager {
       this.importNotesInput.addEventListener("change", (e) =>
         this.handleNotesImport(e)
       );
-    }
-
-    // Pocket Quran bookmarks import/export
-    if (
-      this.pocketQuranBookmarksImportBtn &&
-      this.pocketQuranBookmarksImportInput
-    ) {
-      this.pocketQuranBookmarksImportBtn.addEventListener("click", () => {
-        try {
-          this.pocketQuranBookmarksImportInput.value = "";
-        } catch (e) {}
-        this.pocketQuranBookmarksImportInput.click();
-      });
-    }
-
-    if (this.pocketQuranBookmarksExportBtn) {
-      this.pocketQuranBookmarksExportBtn.addEventListener("click", () => {
-        this.exportPocketQuranBookmarks();
-      });
-    }
-
-    if (this.pocketQuranBookmarksImportInput) {
-      this.pocketQuranBookmarksImportInput.addEventListener("change", (e) => {
-        this.handlePocketQuranBookmarksImport(e);
-      });
     }
 
     // Location method toggle
