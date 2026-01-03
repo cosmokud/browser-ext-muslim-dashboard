@@ -37,6 +37,10 @@ class PocketQuranManager {
   static BUFFER_AYAHS = 3; // Extra ayahs above/below viewport
   static SCROLL_THROTTLE_MS = 16; // ~60fps throttle
 
+  // How many pixels of an ayah should be visible before we consider it "active".
+  // Increasing this makes the active-ayah detection less "tight".
+  static ACTIVE_AYAH_VISIBILITY_PX = 48;
+
   // Bookmark constants
   static BOOKMARKS_PER_PAGE = 10;
   static CATEGORIES_PER_PAGE = 10;
@@ -609,6 +613,32 @@ class PocketQuranManager {
   }
 
   /**
+   * Find the first rendered ayah that is meaningfully visible in the viewport.
+   * This uses DOM geometry (more accurate than height estimates), and applies
+   * a visibility threshold so we don't count an ayah that's basically gone.
+   */
+  getFirstVisibleRenderedAyahIndex() {
+    if (!this._virtualContainer || !this._virtualContent) return null;
+
+    const containerRect = this._virtualContainer.getBoundingClientRect();
+    const threshold = PocketQuranManager.ACTIVE_AYAH_VISIBILITY_PX;
+    const minBottom = containerRect.top + threshold;
+
+    const ayahEls = this._virtualContent.querySelectorAll(
+      ".pocket-quran-ayah[data-index]"
+    );
+
+    for (const el of ayahEls) {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom <= minBottom) continue;
+      const index = parseInt(el.dataset.index, 10);
+      if (Number.isFinite(index)) return index;
+    }
+
+    return null;
+  }
+
+  /**
    * Handle scroll events with RAF throttling.
    */
   handleVirtualScroll() {
@@ -675,7 +705,12 @@ class PocketQuranManager {
       }
 
       // Update active ayah for UI
-      this._activeAyah = firstVisibleIndex + 1;
+      const domVisibleIndex = this.getFirstVisibleRenderedAyahIndex();
+      const activeIndex = Number.isFinite(domVisibleIndex)
+        ? domVisibleIndex
+        : firstVisibleIndex;
+
+      this._activeAyah = activeIndex + 1;
       if (this.ayahInput && document.activeElement !== this.ayahInput) {
         this.ayahInput.value = String(this._activeAyah);
       }
