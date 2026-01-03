@@ -372,8 +372,7 @@ class PocketQuranManager {
     try {
       const source = this.card || document.documentElement;
       const raw =
-        getComputedStyle(source).getPropertyValue("--ui-blur-multiplier") ||
-        "";
+        getComputedStyle(source).getPropertyValue("--ui-blur-multiplier") || "";
       const n = parseFloat(String(raw).trim());
       if (Number.isFinite(n) && n >= 0) return n;
     } catch (e) {}

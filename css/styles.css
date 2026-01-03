@@ -6885,7 +6885,7 @@ body.sticky-note-resizing {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-gold);
+  color: var(--text-primary);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -7103,7 +7103,7 @@ body.sticky-note-resizing {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-gold);
+  color: var(--text-primary);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
