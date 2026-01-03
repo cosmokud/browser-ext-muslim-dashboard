@@ -282,6 +282,9 @@ class MuslimDashboard {
     // Apply pinned apps layout settings
     this.applyPinnedAppsSettings();
 
+    // Apply per-card blur overrides (readability-first components)
+    this.initReadabilityBlurOverrides();
+
     // Add global Refresh Background button handler (bottom-right UI)
     const refreshBtn = document.getElementById("refreshBgBtn");
     if (refreshBtn) {
@@ -301,6 +304,172 @@ class MuslimDashboard {
     this.setupLocationUpdates();
 
     console.log("✅ Muslim Dashboard ready!");
+  }
+
+  initReadabilityBlurOverrides() {
+    const clampNumber = (value, min, max, fallback) => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
+    };
+
+    const popoverPairs = [];
+
+    const setup = ({
+      cardId,
+      toggleId,
+      rangeId,
+      valueId,
+      menuBtnId,
+      popoverId,
+      enabledKey,
+      powerKey,
+    }) => {
+      const card = document.getElementById(cardId);
+      const toggle = document.getElementById(toggleId);
+      const range = document.getElementById(rangeId);
+      const valueEl = document.getElementById(valueId);
+
+      const menuBtn = menuBtnId ? document.getElementById(menuBtnId) : null;
+      const popover = popoverId ? document.getElementById(popoverId) : null;
+
+      if (!card || !toggle || !range || !valueEl) return;
+
+      const readSettings = () => this.storage.getSettings();
+      const writeSettings = (patch) => {
+        const current = this.storage.get("settings", {});
+        this.storage.set("settings", { ...current, ...patch });
+      };
+
+      const apply = (enabled, powerPercent) => {
+        const clampedPower = clampNumber(powerPercent, 0, 200, 100);
+
+        toggle.checked = Boolean(enabled);
+        range.disabled = !toggle.checked;
+
+        if (toggle.checked) {
+          range.value = String(clampedPower);
+          valueEl.textContent = `${clampedPower}%`;
+          card.style.setProperty(
+            "--ui-blur-multiplier",
+            String(clampedPower / 100)
+          );
+        } else {
+          valueEl.textContent = "Dashboard";
+          card.style.removeProperty("--ui-blur-multiplier");
+        }
+      };
+
+      const settings = readSettings();
+      const initialEnabled = Boolean(settings?.[enabledKey]);
+      const initialPower = clampNumber(settings?.[powerKey], 0, 200, 100);
+      apply(initialEnabled, initialPower);
+
+      toggle.addEventListener("change", () => {
+        const enabled = toggle.checked;
+        const power = clampNumber(range.value, 0, 200, 100);
+        apply(enabled, power);
+        writeSettings({ [enabledKey]: enabled, [powerKey]: power });
+      });
+
+      range.addEventListener("input", () => {
+        const power = clampNumber(range.value, 0, 200, 100);
+        if (toggle.checked) {
+          valueEl.textContent = `${power}%`;
+          card.style.setProperty("--ui-blur-multiplier", String(power / 100));
+        }
+        writeSettings({ [enabledKey]: toggle.checked, [powerKey]: power });
+      });
+
+      if (menuBtn && popover) {
+        popoverPairs.push({ menuBtn, popover });
+
+        const setOpen = (open) => {
+          popover.hidden = !open;
+          menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        };
+
+        menuBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(popover.hidden);
+        });
+
+        popover.addEventListener("click", (e) => {
+          // allow interacting with controls without closing
+          e.stopPropagation();
+        });
+
+        // start closed
+        setOpen(false);
+      }
+    };
+
+    setup({
+      cardId: "pocketQuranCard",
+      toggleId: "pocketQuranBlurOverrideToggle",
+      rangeId: "pocketQuranBlurOverrideRange",
+      valueId: "pocketQuranBlurOverrideValue",
+      menuBtnId: "pocketQuranBlurMenuBtn",
+      popoverId: "pocketQuranBlurPopover",
+      enabledKey: "pocketQuranBlurOverrideEnabled",
+      powerKey: "pocketQuranBlurOverridePower",
+    });
+
+    setup({
+      cardId: "todoCard",
+      toggleId: "todoBlurOverrideToggle",
+      rangeId: "todoBlurOverrideRange",
+      valueId: "todoBlurOverrideValue",
+      menuBtnId: "todoBlurMenuBtn",
+      popoverId: "todoBlurPopover",
+      enabledKey: "todoBlurOverrideEnabled",
+      powerKey: "todoBlurOverridePower",
+    });
+
+    setup({
+      cardId: "flashcardCard",
+      toggleId: "flashcardBlurOverrideToggle",
+      rangeId: "flashcardBlurOverrideRange",
+      valueId: "flashcardBlurOverrideValue",
+      menuBtnId: "flashcardBlurMenuBtn",
+      popoverId: "flashcardBlurPopover",
+      enabledKey: "flashcardBlurOverrideEnabled",
+      powerKey: "flashcardBlurOverridePower",
+    });
+
+    setup({
+      cardId: "notesCard",
+      toggleId: "notesBlurOverrideToggle",
+      rangeId: "notesBlurOverrideRange",
+      valueId: "notesBlurOverrideValue",
+      menuBtnId: "notesBlurMenuBtn",
+      popoverId: "notesBlurPopover",
+      enabledKey: "notesBlurOverrideEnabled",
+      powerKey: "notesBlurOverridePower",
+    });
+
+    // Close popovers on outside click / Escape.
+    if (popoverPairs.length) {
+      document.addEventListener("click", (e) => {
+        const t = e.target;
+        for (const { menuBtn, popover } of popoverPairs) {
+          if (popover.hidden) continue;
+          if (menuBtn.contains(t) || popover.contains(t)) continue;
+          popover.hidden = true;
+          menuBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        for (const { menuBtn, popover } of popoverPairs) {
+          if (popover.hidden) continue;
+          popover.hidden = true;
+          menuBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
   }
 
   applyPinnedAppsSettings() {

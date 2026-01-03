@@ -1961,6 +1961,12 @@ body {
   background: #1e2a32;
 }
 
+/* Ensure <optgroup label> stays readable in native dropdowns (some UAs ignore option background on optgroup headers) */
+.setting-select optgroup {
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
 .setting-options {
   display: flex;
   flex-direction: column;
@@ -6611,6 +6617,10 @@ body.sticky-note-resizing {
   position: relative;
 }
 
+.pocket-quran-combobox.pq-open {
+  z-index: 10001;
+}
+
 .pocket-quran-surah-picker {
   display: flex;
   flex-direction: column;
@@ -6621,7 +6631,8 @@ body.sticky-note-resizing {
 .pocket-quran-pill-input {
   width: 100%;
   padding: 0.55rem 0.9rem;
-  border-radius: var(--radius-full);
+  /* Capsule box (rounded rectangle) instead of full pill */
+  border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-primary);
@@ -6639,22 +6650,173 @@ body.sticky-note-resizing {
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 10001;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  /* Some Chromium builds can have hit-testing issues with backdrop-filter on interactive layers.
+     Keep the blur on a non-interactive pseudo-layer so list items remain clickable. */
+  background: transparent;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
   overflow: hidden;
+  pointer-events: auto;
+}
+
+.pocket-quran-dropdown::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--glass-bg-hover);
+  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pocket-quran-dropdown-list {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs);
   max-height: 400px; /* ~10 items visible */
   overflow: auto;
+}
+
+.pocket-quran-controls {
+  overflow: visible;
+}
+
+.pocket-quran-dropdown,
+.pocket-quran-dropdown-list,
+.pocket-quran-surah-item,
+.pocket-quran-ayah-option {
+  pointer-events: auto;
+}
+
+/* ========================================
+   Per-card Blur Override Controls (Readability)
+   ======================================== */
+
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.card-blur-override {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.card-blur-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-blur-btn {
+  height: 34px;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.card-blur-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.card-blur-btn:active {
+  transform: translateY(0);
+}
+
+.card-blur-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+.card-blur-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 10000;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  box-shadow: var(--glass-shadow);
+  padding: var(--spacing-sm);
+  min-width: 260px;
+}
+
+.card-blur-popover .card-blur-override {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.card-blur-popover .custom-width-slider {
+  width: 100%;
+  gap: var(--spacing-sm);
+}
+
+.card-blur-popover .card-blur-slider input[type="range"] {
+  width: 160px;
+}
+
+.card-blur-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-blur-toggle input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-blur-toggle .toggle-switch {
+  transform: scale(0.75);
+}
+
+.card-blur-toggle-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.card-blur-slider {
+  min-width: 170px;
+}
+
+.card-blur-slider input[type="range"] {
+  flex: 0 0 120px;
+  width: 120px;
 }
 
 .pocket-quran-dropdown-empty {

@@ -409,15 +409,65 @@
                 <span class="card-icon">🃏</span>
                 Flashcards
               </h2>
-              <button
-                class="flashcard-mode-toggle-btn"
-                id="flashcardModeToggleBtn"
-                type="button"
-                aria-label="Toggle flashcard mode"
-                title="Toggle flashcard mode"
-              >
-                <span class="mode-icon">📖</span>
-              </button>
+              <div class="card-header-actions">
+                <button
+                  class="flashcard-mode-toggle-btn"
+                  id="flashcardModeToggleBtn"
+                  type="button"
+                  aria-label="Toggle flashcard mode"
+                  title="Toggle flashcard mode"
+                >
+                  <span class="mode-icon">📖</span>
+                </button>
+
+                <div class="card-blur-menu" aria-label="Flashcards blur menu">
+                  <button
+                    class="card-blur-btn"
+                    id="flashcardBlurMenuBtn"
+                    type="button"
+                    aria-label="Open Flashcards blur settings"
+                    aria-expanded="false"
+                    aria-controls="flashcardBlurPopover"
+                  >
+                    Blur
+                  </button>
+                  <div
+                    class="card-blur-popover"
+                    id="flashcardBlurPopover"
+                    hidden
+                  >
+                    <div class="card-blur-override">
+                      <label
+                        class="card-blur-toggle"
+                        for="flashcardBlurOverrideToggle"
+                      >
+                        <input
+                          id="flashcardBlurOverrideToggle"
+                          type="checkbox"
+                          aria-label="Use custom blur for Flashcards"
+                        />
+                        <span class="toggle-switch" aria-hidden="true"></span>
+                        <span class="card-blur-toggle-label">Custom blur</span>
+                      </label>
+                      <div class="custom-width-slider card-blur-slider">
+                        <input
+                          type="range"
+                          id="flashcardBlurOverrideRange"
+                          min="0"
+                          max="200"
+                          value="100"
+                          aria-label="Flashcards blur power"
+                        />
+                        <span
+                          class="custom-width-value"
+                          id="flashcardBlurOverrideValue"
+                          >Dashboard</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="flashcard-viewer">
               <button
@@ -521,7 +571,53 @@
                 <span class="card-icon">✅</span>
                 My Tasks
               </h2>
-              <span class="todo-count" id="todoCount">0 tasks</span>
+              <div class="card-header-actions">
+                <span class="todo-count" id="todoCount">0 tasks</span>
+
+                <div class="card-blur-menu" aria-label="Todo blur menu">
+                  <button
+                    class="card-blur-btn"
+                    id="todoBlurMenuBtn"
+                    type="button"
+                    aria-label="Open Todo blur settings"
+                    aria-expanded="false"
+                    aria-controls="todoBlurPopover"
+                  >
+                    Blur
+                  </button>
+                  <div class="card-blur-popover" id="todoBlurPopover" hidden>
+                    <div class="card-blur-override">
+                      <label
+                        class="card-blur-toggle"
+                        for="todoBlurOverrideToggle"
+                      >
+                        <input
+                          id="todoBlurOverrideToggle"
+                          type="checkbox"
+                          aria-label="Use custom blur for Todo"
+                        />
+                        <span class="toggle-switch" aria-hidden="true"></span>
+                        <span class="card-blur-toggle-label">Custom blur</span>
+                      </label>
+                      <div class="custom-width-slider card-blur-slider">
+                        <input
+                          type="range"
+                          id="todoBlurOverrideRange"
+                          min="0"
+                          max="200"
+                          value="100"
+                          aria-label="Todo blur power"
+                        />
+                        <span
+                          class="custom-width-value"
+                          id="todoBlurOverrideValue"
+                          >Dashboard</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="todo-input-container">
               <input
@@ -566,26 +662,72 @@
               <span class="card-icon">📝</span>
               Notes
             </h2>
-            <div class="notes-header-actions" aria-label="Notes actions">
-              <button
-                class="notes-new-btn"
-                id="notesNewBtn"
-                type="button"
-                aria-label="Create new note"
-                title="New note"
-              >
-                +
-              </button>
-              <button
-                class="notes-delete-btn"
-                id="notesDeleteBtn"
-                type="button"
-                aria-label="Delete current note"
-                title="Delete note"
-                disabled
-              >
-                🗑
-              </button>
+            <div class="card-header-actions">
+              <div class="notes-header-actions" aria-label="Notes actions">
+                <button
+                  class="notes-new-btn"
+                  id="notesNewBtn"
+                  type="button"
+                  aria-label="Create new note"
+                  title="New note"
+                >
+                  +
+                </button>
+                <button
+                  class="notes-delete-btn"
+                  id="notesDeleteBtn"
+                  type="button"
+                  aria-label="Delete current note"
+                  title="Delete note"
+                  disabled
+                >
+                  🗑
+                </button>
+              </div>
+
+              <div class="card-blur-menu" aria-label="Notes blur menu">
+                <button
+                  class="card-blur-btn"
+                  id="notesBlurMenuBtn"
+                  type="button"
+                  aria-label="Open Notes blur settings"
+                  aria-expanded="false"
+                  aria-controls="notesBlurPopover"
+                >
+                  Blur
+                </button>
+                <div class="card-blur-popover" id="notesBlurPopover" hidden>
+                  <div class="card-blur-override">
+                    <label
+                      class="card-blur-toggle"
+                      for="notesBlurOverrideToggle"
+                    >
+                      <input
+                        id="notesBlurOverrideToggle"
+                        type="checkbox"
+                        aria-label="Use custom blur for Notes"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                      <span class="card-blur-toggle-label">Custom blur</span>
+                    </label>
+                    <div class="custom-width-slider card-blur-slider">
+                      <input
+                        type="range"
+                        id="notesBlurOverrideRange"
+                        min="0"
+                        max="200"
+                        value="100"
+                        aria-label="Notes blur power"
+                      />
+                      <span
+                        class="custom-width-value"
+                        id="notesBlurOverrideValue"
+                        >Dashboard</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -780,8 +922,58 @@
               <span class="card-icon">📖</span>
               Pocket Quran
             </h2>
-            <div class="pocket-quran-header-meta" id="pocketQuranHeaderMeta">
-              Loading…
+            <div class="card-header-actions">
+              <div class="pocket-quran-header-meta" id="pocketQuranHeaderMeta">
+                Loading…
+              </div>
+
+              <div class="card-blur-menu" aria-label="Pocket Quran blur menu">
+                <button
+                  class="card-blur-btn"
+                  id="pocketQuranBlurMenuBtn"
+                  type="button"
+                  aria-label="Open Pocket Quran blur settings"
+                  aria-expanded="false"
+                  aria-controls="pocketQuranBlurPopover"
+                >
+                  Blur
+                </button>
+                <div
+                  class="card-blur-popover"
+                  id="pocketQuranBlurPopover"
+                  hidden
+                >
+                  <div class="card-blur-override">
+                    <label
+                      class="card-blur-toggle"
+                      for="pocketQuranBlurOverrideToggle"
+                    >
+                      <input
+                        id="pocketQuranBlurOverrideToggle"
+                        type="checkbox"
+                        aria-label="Use custom blur for Pocket Quran"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                      <span class="card-blur-toggle-label">Custom blur</span>
+                    </label>
+                    <div class="custom-width-slider card-blur-slider">
+                      <input
+                        type="range"
+                        id="pocketQuranBlurOverrideRange"
+                        min="0"
+                        max="200"
+                        value="100"
+                        aria-label="Pocket Quran blur power"
+                      />
+                      <span
+                        class="custom-width-value"
+                        id="pocketQuranBlurOverrideValue"
+                        >Dashboard</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -175,6 +175,16 @@ class StorageManager {
       timeFormat: "24h",
       uiBlurPower: 100, // percentage (100 = current blur, 0 = no blur)
 
+      // Readability: per-card blur overrides (percent; applied as local --ui-blur-multiplier)
+      pocketQuranBlurOverrideEnabled: false,
+      pocketQuranBlurOverridePower: 100,
+      todoBlurOverrideEnabled: false,
+      todoBlurOverridePower: 100,
+      flashcardBlurOverrideEnabled: false,
+      flashcardBlurOverridePower: 100,
+      notesBlurOverrideEnabled: false,
+      notesBlurOverridePower: 100,
+
       // Pinned Apps settings
       pinnedApps: [],
       pinnedAppsPerRow: 10,

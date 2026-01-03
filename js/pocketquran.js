@@ -330,11 +330,19 @@ class PocketQuranManager {
 
   openDropdown(el) {
     if (!el) return;
+    try {
+      const combo = el.closest(".pocket-quran-combobox");
+      if (combo) combo.classList.add("pq-open");
+    } catch (e) {}
     el.hidden = false;
   }
 
   closeDropdown(el) {
     if (!el) return;
+    try {
+      const combo = el.closest(".pocket-quran-combobox");
+      if (combo) combo.classList.remove("pq-open");
+    } catch (e) {}
     el.hidden = true;
   }
 
