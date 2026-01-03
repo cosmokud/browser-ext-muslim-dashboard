@@ -1,12 +1,12 @@
 /**
  * Flashcard Manager
  * - Loads default cards from data/flashcard_default.csv on first run
- * - Supports up to 10 flashcard sets (CSV import)
+ * - Supports up to 100 flashcard sets (CSV import)
  * - Dashboard viewer + Settings tab editor (20 cards/page)
  */
 
 class FlashcardManager {
-  static MAX_SETS = 10;
+  static MAX_SETS = 100;
   static PAGE_SIZE = 20;
 
   static FLIP_ANIM_MS = 320;
@@ -23,6 +23,7 @@ class FlashcardManager {
     this.questionEl = document.getElementById("flashcardQuestion");
     this.answerEl = document.getElementById("flashcardAnswer");
     this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
+    this.setPickerBtn = document.getElementById("flashcardSetPickerBtn");
 
     // Dashboard jump controls
     this.jumpLabelEl = document.getElementById("flashcardJumpLabel");
@@ -76,6 +77,10 @@ class FlashcardManager {
     );
     this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
     this.autoAdvanceWrapEl = document.getElementById("flashcardAutoWrap");
+
+    // Set picker modal state
+    this._setPickerModal = null;
+    this._setPickerState = { query: "", page: 1 };
   }
 
   async init() {
@@ -461,6 +466,13 @@ class FlashcardManager {
       });
     }
 
+    if (this.setPickerBtn) {
+      this.setPickerBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openSetPickerModal();
+      });
+    }
+
     if (this.prevBtn) {
       this.prevBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -546,6 +558,248 @@ class FlashcardManager {
   toggleFlip() {
     if (this.isStudyMode()) return;
     this.animateFlipSwap();
+  }
+
+  // ---------- Dashboard: Set picker modal ----------
+
+  ensureModalBase({ overlayId, title }) {
+    const existing = document.getElementById(overlayId);
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = overlayId;
+
+    const modal = document.createElement("div");
+    modal.className = "modal modal-large";
+
+    const header = document.createElement("div");
+    header.className = "modal-header";
+
+    const h = document.createElement("div");
+    h.className = "modal-title";
+    h.textContent = title;
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "modal-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "Close");
+
+    const body = document.createElement("div");
+    body.className = "modal-body";
+
+    const footer = document.createElement("div");
+    footer.className = "modal-footer";
+
+    header.appendChild(h);
+    header.appendChild(close);
+    modal.appendChild(header);
+    modal.appendChild(body);
+    modal.appendChild(footer);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const closeModal = () => overlay.classList.remove("active");
+    close.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("active")) {
+        closeModal();
+      }
+    });
+
+    return overlay;
+  }
+
+  renderSimplePagination(container, { page, totalPages, onPage }) {
+    if (!container) return;
+    if (totalPages <= 1) {
+      container.innerHTML = "";
+      return;
+    }
+
+    const currentPage = this.clampNumber(page, 1, totalPages, 1);
+
+    let html = `
+      <button class="pagination-btn" data-page="prev" ${
+        currentPage === 1 ? "disabled" : ""
+      }>
+        ‹ Prev
+      </button>
+      <span class="pagination-info">Page ${currentPage} / ${totalPages}</span>
+    `;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+      html += `<button class="pagination-btn" data-page="1">1</button>`;
+      if (startPage > 2) html += `<span class="pagination-ellipsis">…</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i += 1) {
+      html += `
+        <button class="pagination-btn ${
+          i === currentPage ? "active" : ""
+        }" data-page="${i}">${i}</button>
+      `;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) html += `<span class="pagination-ellipsis">…</span>`;
+      html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
+    }
+
+    html += `
+      <button class="pagination-btn" data-page="next" ${
+        currentPage === totalPages ? "disabled" : ""
+      }>
+        Next ›
+      </button>
+    `;
+
+    container.innerHTML = html;
+    container.querySelectorAll(".pagination-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const p = btn.dataset.page;
+        if (p === "prev") onPage(Math.max(1, currentPage - 1));
+        else if (p === "next") onPage(Math.min(totalPages, currentPage + 1));
+        else {
+          const n = parseInt(p, 10);
+          if (Number.isFinite(n)) onPage(this.clampNumber(n, 1, totalPages, 1));
+        }
+      });
+    });
+  }
+
+  escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  openSetPickerModal() {
+    this._setPickerModal = this.ensureModalBase({
+      overlayId: "flashcardSetPickerModal",
+      title: "Select Flashcard Set",
+    });
+
+    const body = this._setPickerModal.querySelector(".modal-body");
+    const footer = this._setPickerModal.querySelector(".modal-footer");
+    if (!body || !footer) return;
+
+    body.innerHTML = "";
+    footer.innerHTML = "";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "pq-bookmarks-toolbar";
+
+    const search = document.createElement("input");
+    search.type = "text";
+    search.className = "setting-input";
+    search.placeholder = "Search sets…";
+    search.value = this._setPickerState.query || "";
+    toolbar.appendChild(search);
+
+    const list = document.createElement("div");
+    list.className = "pq-bookmarks-list";
+
+    const pagination = document.createElement("div");
+    pagination.className = "quotes-pagination";
+
+    body.appendChild(toolbar);
+    body.appendChild(list);
+    body.appendChild(pagination);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "modal-btn cancel-btn";
+    closeBtn.textContent = "Close";
+    closeBtn.addEventListener("click", () => {
+      this._setPickerModal.classList.remove("active");
+    });
+    footer.appendChild(closeBtn);
+
+    const render = () => {
+      const sets = this.getSets();
+      const q = String(this._setPickerState.query || "").toLowerCase();
+      const filtered = sets.filter((s) =>
+        String(s?.name || "").toLowerCase().includes(q)
+      );
+
+      const pageSize = 10;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      this._setPickerState.page = this.clampNumber(
+        this._setPickerState.page,
+        1,
+        totalPages,
+        1
+      );
+
+      const active = this.getActiveSet();
+      const start = (this._setPickerState.page - 1) * pageSize;
+      const slice = filtered.slice(start, start + pageSize);
+
+      list.innerHTML = "";
+      if (!slice.length) {
+        const empty = document.createElement("div");
+        empty.className = "pq-bookmarks-meta";
+        empty.textContent = "No sets found.";
+        list.appendChild(empty);
+      } else {
+        for (const s of slice) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pq-bookmarks-item-btn";
+          btn.classList.toggle("active", s?.id && active?.id === s.id);
+          btn.innerHTML = `${this.escapeHtml(s?.name || "Untitled")} <span class="pq-bookmarks-meta">${
+            s?.id && active?.id === s.id ? "(active)" : ""
+          }</span>`;
+          btn.addEventListener("click", () => {
+            if (!s?.id) return;
+            this.setActiveSetId(s.id);
+            this.currentCardIndex = 0;
+            this.persistCurrentCardIndex();
+            this.isFlipped = false;
+            this.renderDashboard();
+            this.ensureAutoAdvanceState({ reset: true });
+            try {
+              this.renderSettings();
+            } catch (e) {}
+            this._setPickerModal.classList.remove("active");
+          });
+          list.appendChild(btn);
+        }
+      }
+
+      this.renderSimplePagination(pagination, {
+        page: this._setPickerState.page,
+        totalPages,
+        onPage: (p) => {
+          this._setPickerState.page = p;
+          render();
+        },
+      });
+    };
+
+    search.addEventListener("input", () => {
+      this._setPickerState.query = search.value || "";
+      this._setPickerState.page = 1;
+      render();
+    });
+
+    this._setPickerModal.classList.add("active");
+    render();
   }
 
   prefersReducedMotion() {

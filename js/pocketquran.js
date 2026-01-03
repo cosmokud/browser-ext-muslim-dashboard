@@ -52,6 +52,7 @@ class PocketQuranManager {
     this.ayahInput = document.getElementById("pocketQuranAyahInput");
     this.ayahDropdown = document.getElementById("pocketQuranAyahDropdown");
     this.ayahListEl = document.getElementById("pocketQuranAyahList");
+    this.bookmarksBtn = document.getElementById("pocketQuranBookmarksBtn");
     this.arabicSizeRange = document.getElementById(
       "pocketQuranArabicSizeRange"
     );
@@ -99,6 +100,17 @@ class PocketQuranManager {
     // Dropdown portal state
     this._dropdownPortalled = new WeakSet();
     this._dropdownPositionRaf = null;
+
+    // Programmatic scroll lock to prevent scroll handler overwriting ayah input
+    // while we are animating to a target (fixes occasional double-click next/prev).
+    this._programmaticScroll = null;
+    this._programmaticScrollRaf = null;
+
+    // Bookmarks UI state
+    this._bookmarksBrowserModal = null;
+    this._bookmarkAyahModal = null;
+    this._bookmarksBrowserState = { query: "", page: 1, activeCategoryId: "bookmarked" };
+    this._bookmarkAyahState = { query: "", page: 1, surah: 1, ayah: 1, selectedCategoryIds: new Set() };
 
     this.init();
   }
@@ -274,6 +286,37 @@ class PocketQuranManager {
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
+      });
+    }
+
+    // Bookmarks (header button)
+    if (this.bookmarksBtn) {
+      this.bookmarksBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openBookmarksBrowserModal();
+      });
+    }
+
+    // Bookmarks (per-ayah star button) - event delegation (virtualized content)
+    if (this.contentEl) {
+      this.contentEl.addEventListener("click", (e) => {
+        const btn = e.target?.closest?.(".pocket-quran-ayah-star-btn");
+        if (!btn) return;
+        e.preventDefault();
+        const surah = this.clampNumber(
+          parseInt(btn.dataset.surah, 10),
+          1,
+          114,
+          this._activeSurah
+        );
+        const max = this.getActiveSurahAyahCount() || 286;
+        const ayah = this.clampNumber(
+          parseInt(btn.dataset.ayah, 10),
+          1,
+          max,
+          this._activeAyah
+        );
+        this.openBookmarkAyahModal({ surah, ayah });
       });
     }
 
@@ -566,9 +609,13 @@ class PocketQuranManager {
       }
 
       // Update active ayah for UI
-      this._activeAyah = firstVisibleIndex + 1;
-      if (this.ayahInput && document.activeElement !== this.ayahInput) {
-        this.ayahInput.value = String(this._activeAyah);
+      // During programmatic scroll (next/prev/jump), do not overwrite the
+      // chosen ayah input value with intermediate scroll positions.
+      if (!this._programmaticScroll) {
+        this._activeAyah = firstVisibleIndex + 1;
+        if (this.ayahInput && document.activeElement !== this.ayahInput) {
+          this.ayahInput.value = String(this._activeAyah);
+        }
       }
       this.updateAyahDropdownActiveState();
     });
@@ -698,6 +745,14 @@ class PocketQuranManager {
       const index = n - 1; // Convert to 0-indexed
       const offset = this.getAyahOffset(index);
 
+      // Lock scroll-driven ayah updates until we reach the target.
+      this._programmaticScroll = {
+        targetTop: offset,
+        targetAyah: n,
+        startedAt: Date.now(),
+      };
+      this.startProgrammaticScrollMonitor();
+
       // Ensure the ayah is rendered first
       const buffer = PocketQuranManager.BUFFER_AYAHS;
       const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
@@ -765,6 +820,15 @@ class PocketQuranManager {
     ayahEl.dataset.ayah = String(ayahNumber);
     ayahEl.dataset.index = String(index);
 
+    const starBtn = document.createElement("button");
+    starBtn.type = "button";
+    starBtn.className = "pocket-quran-ayah-star-btn";
+    starBtn.textContent = "⭐";
+    starBtn.title = "Bookmark ayah";
+    starBtn.setAttribute("aria-label", "Bookmark ayah");
+    starBtn.dataset.surah = String(this._activeSurah);
+    starBtn.dataset.ayah = String(ayahNumber);
+
     const badge = document.createElement("div");
     badge.className = "pocket-quran-ayah-badge";
     badge.textContent = String(ayahNumber);
@@ -781,11 +845,705 @@ class PocketQuranManager {
       : "";
     tr.textContent = this.stripHtmlToText(rawTranslation || "");
 
+    ayahEl.appendChild(starBtn);
     ayahEl.appendChild(badge);
     ayahEl.appendChild(ar);
     ayahEl.appendChild(tr);
 
     return ayahEl;
+  }
+
+  startProgrammaticScrollMonitor() {
+    if (this._programmaticScrollRaf) {
+      try {
+        cancelAnimationFrame(this._programmaticScrollRaf);
+      } catch (e) {}
+      this._programmaticScrollRaf = null;
+    }
+
+    const tick = () => {
+      if (!this._virtualContainer || !this._programmaticScroll) {
+        this._programmaticScrollRaf = null;
+        return;
+      }
+
+      const now = Date.now();
+      const { targetTop, startedAt } = this._programmaticScroll;
+      const currentTop = this._virtualContainer.scrollTop;
+      const delta = Math.abs(currentTop - targetTop);
+
+      // Consider the scroll "done" once we are close enough, or after a timeout.
+      if (delta < 2 || now - startedAt > 1200) {
+        this._programmaticScroll = null;
+        this._programmaticScrollRaf = null;
+        if (this.ayahInput) this.ayahInput.value = String(this._activeAyah);
+        return;
+      }
+
+      this._programmaticScrollRaf = requestAnimationFrame(tick);
+    };
+
+    this._programmaticScrollRaf = requestAnimationFrame(tick);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BOOKMARKS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  _generateBookmarkCategoryId() {
+    return (
+      Date.now().toString(36) +
+      Math.random().toString(36).slice(2) +
+      Math.random().toString(36).slice(2)
+    )
+      .slice(0, 24)
+      .replace(/[^a-z0-9]/gi, "");
+  }
+
+  getBookmarksStore() {
+    const raw = this.storage.get("pocketQuranBookmarks", null);
+    return this.normalizeBookmarksStore(raw);
+  }
+
+  saveBookmarksStore(store) {
+    return this.storage.set("pocketQuranBookmarks", store);
+  }
+
+  normalizeBookmarksStore(raw) {
+    const now = Date.now();
+    const safe = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+
+    const categoriesRaw = Array.isArray(safe.categories) ? safe.categories : [];
+    const categories = categoriesRaw
+      .filter((c) => c && typeof c === "object" && !Array.isArray(c))
+      .map((c) => {
+        const id = String(c.id || "").trim() || this._generateBookmarkCategoryId();
+        const name = String(c.name || "").trim() || "Untitled";
+        const itemsRaw = Array.isArray(c.items) ? c.items : [];
+        const items = itemsRaw
+          .filter((it) => it && typeof it === "object" && !Array.isArray(it))
+          .map((it) => {
+            const surah = this.clampNumber(parseInt(it.surah, 10), 1, 114, 1);
+            const ayah = this.clampNumber(parseInt(it.ayah, 10), 1, 286, 1);
+            const addedAt =
+              typeof it.addedAt === "number" && Number.isFinite(it.addedAt)
+                ? it.addedAt
+                : now;
+            return { surah, ayah, addedAt };
+          });
+
+        // De-dup within category
+        const seen = new Set();
+        const deduped = [];
+        for (const it of items) {
+          const key = `${it.surah}:${it.ayah}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          deduped.push(it);
+        }
+
+        return {
+          id,
+          name: name.slice(0, 80),
+          createdAt: typeof c.createdAt === "number" ? c.createdAt : now,
+          updatedAt: typeof c.updatedAt === "number" ? c.updatedAt : now,
+          items: deduped,
+        };
+      });
+
+    // Ensure default category exists
+    const hasDefault = categories.some((c) => c.id === "bookmarked");
+    if (!hasDefault) {
+      categories.unshift({
+        id: "bookmarked",
+        name: "Bookmarked",
+        createdAt: now,
+        updatedAt: now,
+        items: [],
+      });
+    }
+
+    return {
+      exportType: "pocketQuranBookmarks",
+      version: 1,
+      updatedAt: now,
+      categories,
+    };
+  }
+
+  makeUniqueCategoryName(baseName, categories) {
+    const normalized =
+      String(baseName || "New Category")
+        .trim()
+        .slice(0, 80) || "New Category";
+    const isTaken = (candidate) =>
+      categories.some(
+        (c) => String(c.name || "").toLowerCase() === candidate.toLowerCase()
+      );
+
+    if (!isTaken(normalized)) return normalized;
+    for (let i = 2; i <= 9999; i += 1) {
+      const candidate = `${normalized} (${i})`;
+      if (!isTaken(candidate)) return candidate.slice(0, 80);
+    }
+    return `Category ${Date.now()}`;
+  }
+
+  addCategory(name) {
+    const store = this.getBookmarksStore();
+    const now = Date.now();
+    const trimmed = String(name || "").trim();
+    if (!trimmed) return null;
+
+    const finalName = this.makeUniqueCategoryName(trimmed, store.categories);
+    const id = this._generateBookmarkCategoryId();
+    store.categories.push({
+      id,
+      name: finalName,
+      createdAt: now,
+      updatedAt: now,
+      items: [],
+    });
+    store.updatedAt = now;
+    this.saveBookmarksStore(store);
+    return { id, name: finalName };
+  }
+
+  setAyahBookmarks({ surah, ayah, categoryIds }) {
+    const store = this.getBookmarksStore();
+    const desired = new Set(Array.isArray(categoryIds) ? categoryIds : []);
+    const now = Date.now();
+
+    for (const cat of store.categories) {
+      // Always allow adding/removing in default category too
+      const has = (cat.items || []).some((it) => it.surah === surah && it.ayah === ayah);
+      const wants = desired.has(cat.id);
+      if (wants && !has) {
+        cat.items = Array.isArray(cat.items) ? cat.items : [];
+        cat.items.push({ surah, ayah, addedAt: now });
+        cat.updatedAt = now;
+      } else if (!wants && has) {
+        cat.items = (cat.items || []).filter((it) => !(it.surah === surah && it.ayah === ayah));
+        cat.updatedAt = now;
+      }
+    }
+
+    store.updatedAt = now;
+    this.saveBookmarksStore(store);
+  }
+
+  getAyahBookmarkedCategoryIds({ surah, ayah }) {
+    const store = this.getBookmarksStore();
+    const ids = [];
+    for (const cat of store.categories) {
+      if ((cat.items || []).some((it) => it.surah === surah && it.ayah === ayah)) {
+        ids.push(cat.id);
+      }
+    }
+    return ids;
+  }
+
+  getSurahName(surah) {
+    const c = this._chapters?.find?.((x) => x.id === surah);
+    return c?.name_simple || `Surah ${surah}`;
+  }
+
+  async goToSurahAyah({ surah, ayah }) {
+    const desiredSurah = this.clampNumber(surah, 1, 114, 1);
+    const desiredAyah = this.clampNumber(ayah, 1, 286, 1);
+
+    if (desiredSurah === this._activeSurah) {
+      this.scrollToAyah(desiredAyah, { persist: true, smooth: false });
+      return;
+    }
+
+    await this.setActiveSurah(desiredSurah, {
+      preserveAyah: true,
+      autoScroll: false,
+      preserveDashboardScroll: true,
+    });
+    this.scrollToAyah(desiredAyah, { persist: true, smooth: false });
+  }
+
+  ensureModalBase({ overlayId, title }) {
+    const existing = document.getElementById(overlayId);
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = overlayId;
+
+    const modal = document.createElement("div");
+    modal.className = "modal modal-large";
+
+    const header = document.createElement("div");
+    header.className = "modal-header";
+
+    const h = document.createElement("div");
+    h.className = "modal-title";
+    h.textContent = title;
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "modal-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "Close");
+
+    const body = document.createElement("div");
+    body.className = "modal-body";
+
+    const footer = document.createElement("div");
+    footer.className = "modal-footer";
+
+    header.appendChild(h);
+    header.appendChild(close);
+    modal.appendChild(header);
+    modal.appendChild(body);
+    modal.appendChild(footer);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      overlay.classList.remove("active");
+    };
+
+    close.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("active")) {
+        closeModal();
+      }
+    });
+
+    return overlay;
+  }
+
+  openBookmarksBrowserModal() {
+    this._bookmarksBrowserModal = this.ensureModalBase({
+      overlayId: "pocketQuranBookmarksBrowserModal",
+      title: "Pocket Quran Bookmarks",
+    });
+
+    const modal = this._bookmarksBrowserModal.querySelector(".modal");
+    const body = this._bookmarksBrowserModal.querySelector(".modal-body");
+    const footer = this._bookmarksBrowserModal.querySelector(".modal-footer");
+    if (!modal || !body || !footer) return;
+
+    body.innerHTML = "";
+    footer.innerHTML = "";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "pq-bookmarks-toolbar";
+
+    const search = document.createElement("input");
+    search.type = "text";
+    search.className = "setting-input";
+    search.placeholder = "Search categories…";
+    search.value = this._bookmarksBrowserState.query || "";
+
+    const newName = document.createElement("input");
+    newName.type = "text";
+    newName.className = "setting-input";
+    newName.placeholder = "New category name…";
+
+    const createBtn = document.createElement("button");
+    createBtn.type = "button";
+    createBtn.className = "setting-btn";
+    createBtn.textContent = "➕ Create";
+
+    toolbar.appendChild(search);
+    toolbar.appendChild(newName);
+    toolbar.appendChild(createBtn);
+
+    const split = document.createElement("div");
+    split.className = "pq-bookmarks-split";
+
+    const left = document.createElement("div");
+    const right = document.createElement("div");
+
+    const leftTitle = document.createElement("div");
+    leftTitle.className = "pq-bookmarks-section-title";
+    leftTitle.textContent = "Categories";
+
+    const catList = document.createElement("div");
+    catList.className = "pq-bookmarks-list";
+
+    const catPagination = document.createElement("div");
+    catPagination.className = "quotes-pagination";
+
+    const rightTitle = document.createElement("div");
+    rightTitle.className = "pq-bookmarks-section-title";
+    rightTitle.textContent = "Bookmarks";
+
+    const ayahList = document.createElement("div");
+    ayahList.className = "pq-bookmarks-list";
+
+    left.appendChild(leftTitle);
+    left.appendChild(catList);
+    left.appendChild(catPagination);
+
+    right.appendChild(rightTitle);
+    right.appendChild(ayahList);
+
+    split.appendChild(left);
+    split.appendChild(right);
+
+    body.appendChild(toolbar);
+    body.appendChild(split);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "modal-btn cancel-btn";
+    closeBtn.textContent = "Close";
+    closeBtn.addEventListener("click", () => {
+      this._bookmarksBrowserModal.classList.remove("active");
+    });
+    footer.appendChild(closeBtn);
+
+    const render = () => {
+      const store = this.getBookmarksStore();
+      const q = String(this._bookmarksBrowserState.query || "").toLowerCase();
+      const filtered = store.categories.filter((c) =>
+        String(c.name || "").toLowerCase().includes(q)
+      );
+
+      const pageSize = 10;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      this._bookmarksBrowserState.page = this.clampNumber(
+        this._bookmarksBrowserState.page,
+        1,
+        totalPages,
+        1
+      );
+
+      if (!filtered.some((c) => c.id === this._bookmarksBrowserState.activeCategoryId)) {
+        this._bookmarksBrowserState.activeCategoryId = filtered[0]?.id || "bookmarked";
+      }
+
+      const start = (this._bookmarksBrowserState.page - 1) * pageSize;
+      const slice = filtered.slice(start, start + pageSize);
+
+      catList.innerHTML = "";
+      if (!slice.length) {
+        const empty = document.createElement("div");
+        empty.className = "pq-bookmarks-meta";
+        empty.textContent = "No categories found.";
+        catList.appendChild(empty);
+      } else {
+        for (const c of slice) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pq-bookmarks-item-btn";
+          btn.classList.toggle("active", c.id === this._bookmarksBrowserState.activeCategoryId);
+          btn.innerHTML = `${this.escapeHtml(c.name)} <span class="pq-bookmarks-meta">(${(c.items || []).length})</span>`;
+          btn.addEventListener("click", () => {
+            this._bookmarksBrowserState.activeCategoryId = c.id;
+            render();
+          });
+          catList.appendChild(btn);
+        }
+      }
+
+      // Categories pagination
+      this.renderSimplePagination(catPagination, {
+        page: this._bookmarksBrowserState.page,
+        totalPages,
+        onPage: (p) => {
+          this._bookmarksBrowserState.page = p;
+          render();
+        },
+      });
+
+      // Bookmarks list
+      const active = store.categories.find((c) => c.id === this._bookmarksBrowserState.activeCategoryId);
+      const items = Array.isArray(active?.items) ? [...active.items] : [];
+      items.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+
+      ayahList.innerHTML = "";
+      if (!active) {
+        const empty = document.createElement("div");
+        empty.className = "pq-bookmarks-meta";
+        empty.textContent = "Select a category.";
+        ayahList.appendChild(empty);
+      } else if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "pq-bookmarks-meta";
+        empty.textContent = `No bookmarks in "${active.name}".`;
+        ayahList.appendChild(empty);
+      } else {
+        for (const it of items) {
+          const label = `${it.surah}. ${this.getSurahName(it.surah)} • Ayah ${it.ayah}`;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pq-bookmarks-item-btn";
+          btn.textContent = label;
+          btn.addEventListener("click", async () => {
+            this._bookmarksBrowserModal.classList.remove("active");
+            await this.goToSurahAyah({ surah: it.surah, ayah: it.ayah });
+          });
+          ayahList.appendChild(btn);
+        }
+      }
+    };
+
+    search.addEventListener("input", () => {
+      this._bookmarksBrowserState.query = search.value || "";
+      this._bookmarksBrowserState.page = 1;
+      render();
+    });
+
+    createBtn.addEventListener("click", () => {
+      const created = this.addCategory(newName.value);
+      if (!created) return;
+      newName.value = "";
+      this._bookmarksBrowserState.activeCategoryId = created.id;
+      this._bookmarksBrowserState.page = 1;
+      render();
+    });
+
+    this._bookmarksBrowserModal.classList.add("active");
+    render();
+  }
+
+  openBookmarkAyahModal({ surah, ayah }) {
+    this._bookmarkAyahModal = this.ensureModalBase({
+      overlayId: "pocketQuranBookmarkAyahModal",
+      title: "Bookmark Ayah",
+    });
+
+    const body = this._bookmarkAyahModal.querySelector(".modal-body");
+    const footer = this._bookmarkAyahModal.querySelector(".modal-footer");
+    if (!body || !footer) return;
+
+    body.innerHTML = "";
+    footer.innerHTML = "";
+
+    const s = this.clampNumber(surah, 1, 114, this._activeSurah);
+    const max = this.getActiveSurahAyahCount() || 286;
+    const a = this.clampNumber(ayah, 1, max, this._activeAyah);
+
+    this._bookmarkAyahState.surah = s;
+    this._bookmarkAyahState.ayah = a;
+    this._bookmarkAyahState.query = "";
+    this._bookmarkAyahState.page = 1;
+    this._bookmarkAyahState.selectedCategoryIds = new Set(
+      this.getAyahBookmarkedCategoryIds({ surah: s, ayah: a })
+    );
+
+    const meta = document.createElement("div");
+    meta.className = "pq-bookmarks-meta";
+    meta.textContent = `${s}. ${this.getSurahName(s)} • Ayah ${a}`;
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "pq-bookmarks-toolbar";
+
+    const search = document.createElement("input");
+    search.type = "text";
+    search.className = "setting-input";
+    search.placeholder = "Search categories…";
+
+    const newName = document.createElement("input");
+    newName.type = "text";
+    newName.className = "setting-input";
+    newName.placeholder = "New category name…";
+
+    const createBtn = document.createElement("button");
+    createBtn.type = "button";
+    createBtn.className = "setting-btn";
+    createBtn.textContent = "➕ Create";
+
+    toolbar.appendChild(search);
+    toolbar.appendChild(newName);
+    toolbar.appendChild(createBtn);
+
+    const title = document.createElement("div");
+    title.className = "pq-bookmarks-section-title";
+    title.textContent = "Choose categories (multi-select)";
+
+    const catList = document.createElement("div");
+    catList.className = "pq-bookmarks-list";
+
+    const pagination = document.createElement("div");
+    pagination.className = "quotes-pagination";
+
+    body.appendChild(meta);
+    body.appendChild(toolbar);
+    body.appendChild(title);
+    body.appendChild(catList);
+    body.appendChild(pagination);
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.className = "modal-btn cancel-btn";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => {
+      this._bookmarkAyahModal.classList.remove("active");
+    });
+
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "modal-btn save-btn";
+    saveBtn.textContent = "Save";
+    saveBtn.addEventListener("click", () => {
+      this.setAyahBookmarks({
+        surah: s,
+        ayah: a,
+        categoryIds: Array.from(this._bookmarkAyahState.selectedCategoryIds),
+      });
+      this._bookmarkAyahModal.classList.remove("active");
+    });
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(saveBtn);
+
+    const render = () => {
+      const store = this.getBookmarksStore();
+      const q = String(this._bookmarkAyahState.query || "").toLowerCase();
+      const filtered = store.categories.filter((c) =>
+        String(c.name || "").toLowerCase().includes(q)
+      );
+
+      const pageSize = 10;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      this._bookmarkAyahState.page = this.clampNumber(
+        this._bookmarkAyahState.page,
+        1,
+        totalPages,
+        1
+      );
+
+      const start = (this._bookmarkAyahState.page - 1) * pageSize;
+      const slice = filtered.slice(start, start + pageSize);
+
+      catList.innerHTML = "";
+      if (!slice.length) {
+        const empty = document.createElement("div");
+        empty.className = "pq-bookmarks-meta";
+        empty.textContent = "No categories found.";
+        catList.appendChild(empty);
+      } else {
+        for (const c of slice) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pq-bookmarks-item-btn";
+          const selected = this._bookmarkAyahState.selectedCategoryIds.has(c.id);
+          btn.classList.toggle("active", selected);
+          btn.innerHTML = `${this.escapeHtml(c.name)} <span class="pq-bookmarks-meta">${selected ? "(selected)" : ""}</span>`;
+          btn.addEventListener("click", () => {
+            if (this._bookmarkAyahState.selectedCategoryIds.has(c.id)) {
+              this._bookmarkAyahState.selectedCategoryIds.delete(c.id);
+            } else {
+              this._bookmarkAyahState.selectedCategoryIds.add(c.id);
+            }
+            render();
+          });
+          catList.appendChild(btn);
+        }
+      }
+
+      this.renderSimplePagination(pagination, {
+        page: this._bookmarkAyahState.page,
+        totalPages,
+        onPage: (p) => {
+          this._bookmarkAyahState.page = p;
+          render();
+        },
+      });
+    };
+
+    search.addEventListener("input", () => {
+      this._bookmarkAyahState.query = search.value || "";
+      this._bookmarkAyahState.page = 1;
+      render();
+    });
+
+    createBtn.addEventListener("click", () => {
+      const created = this.addCategory(newName.value);
+      if (!created) return;
+      this._bookmarkAyahState.selectedCategoryIds.add(created.id);
+      newName.value = "";
+      render();
+    });
+
+    this._bookmarkAyahModal.classList.add("active");
+    render();
+  }
+
+  renderSimplePagination(container, { page, totalPages, onPage }) {
+    if (!container) return;
+    if (totalPages <= 1) {
+      container.innerHTML = "";
+      return;
+    }
+
+    const currentPage = this.clampNumber(page, 1, totalPages, 1);
+
+    let html = `
+      <button class="pagination-btn" data-page="prev" ${
+        currentPage === 1 ? "disabled" : ""
+      }>
+        ‹ Prev
+      </button>
+      <span class="pagination-info">Page ${currentPage} / ${totalPages}</span>
+    `;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+      html += `<button class="pagination-btn" data-page="1">1</button>`;
+      if (startPage > 2) html += `<span class="pagination-ellipsis">…</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i += 1) {
+      html += `
+        <button class="pagination-btn ${
+          i === currentPage ? "active" : ""
+        }" data-page="${i}">${i}</button>
+      `;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) html += `<span class="pagination-ellipsis">…</span>`;
+      html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
+    }
+
+    html += `
+      <button class="pagination-btn" data-page="next" ${
+        currentPage === totalPages ? "disabled" : ""
+      }>
+        Next ›
+      </button>
+    `;
+
+    container.innerHTML = html;
+    container.querySelectorAll(".pagination-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const p = btn.dataset.page;
+        if (p === "prev") onPage(Math.max(1, currentPage - 1));
+        else if (p === "next") onPage(Math.min(totalPages, currentPage + 1));
+        else {
+          const n = parseInt(p, 10);
+          if (Number.isFinite(n)) onPage(this.clampNumber(n, 1, totalPages, 1));
+        }
+      });
+    });
+  }
+
+  escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   /**

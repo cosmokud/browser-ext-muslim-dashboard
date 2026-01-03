@@ -4504,6 +4504,12 @@ body {
 }
 
 .pagination-info {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0 var(--spacing-xs);
+}
+
+.pagination-info {
   color: var(--text-muted);
   font-size: 0.85rem;
   padding: 0 var(--spacing-xs);
@@ -7097,6 +7103,7 @@ body.sticky-note-resizing {
 .pocket-quran-ayah {
   position: relative;
   padding: var(--spacing-md) var(--spacing-lg);
+  padding-bottom: calc(var(--spacing-md) + 56px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
@@ -7113,7 +7120,7 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah-badge {
   position: absolute;
-  top: var(--spacing-md);
+  bottom: var(--spacing-md);
   left: var(--spacing-md);
   width: 34px;
   height: 34px;
@@ -7126,6 +7133,99 @@ body.sticky-note-resizing {
   color: var(--text-primary);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.pocket-quran-ayah-star-btn {
+  position: absolute;
+  bottom: calc(var(--spacing-md) + 38px);
+  left: var(--spacing-md);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast),
+    transform var(--transition-fast);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.pocket-quran-ayah-star-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.pocket-quran-ayah-star-btn:active {
+  transform: translateY(0);
+}
+
+.pocket-quran-ayah-star-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+/* Pocket Quran bookmarks modal (uses existing modal primitives) */
+.pq-bookmarks-toolbar {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-md);
+}
+
+.pq-bookmarks-split {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 900px) {
+  .pq-bookmarks-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pq-bookmarks-section-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.pq-bookmarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.pq-bookmarks-item-btn {
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.pq-bookmarks-item-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.pq-bookmarks-item-btn.active {
+  border-color: rgba(212, 175, 55, 0.65);
+}
+
+.pq-bookmarks-meta {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
 }
 
 .pocket-quran-ayah-ar {
@@ -7235,7 +7335,7 @@ body.sticky-note-resizing {
 
 .pq-virtual-container {
   position: relative;
-  height: 600px;
+  height: 1000px;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
@@ -7294,7 +7394,7 @@ body.sticky-note-resizing {
   }
 
   .pq-virtual-container {
-    height: 500px;
+    height: 600px;
   }
 }
 
