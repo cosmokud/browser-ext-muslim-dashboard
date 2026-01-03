@@ -1090,9 +1090,6 @@ class SettingsManager {
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";
     this.updateThemePickerActiveState(activeTheme);
-
-    // Update accent color picker visibility for customizable themes
-    this.updateAccentColorPickerVisibility();
   }
 
   /**
@@ -1171,10 +1168,6 @@ class SettingsManager {
       window.dashboard?.themes?.getCurrentTheme?.() ||
       settings.theme?.name ||
       "emerald";
-    const customAccent =
-      window.dashboard?.themes?.getCustomAccent?.() ||
-      settings.theme?.customAccent ||
-      "#d4af37";
 
     let html = "";
 
@@ -1183,24 +1176,24 @@ class SettingsManager {
       const isActive = id === activeTheme;
       const isCustomizable = theme.customizable || false;
 
-      // For customizable themes that are active, use custom accent in preview
-      let accentColor = colors.accent;
-      if (isCustomizable && isActive && customAccent) {
-        accentColor = customAccent;
-      }
+      // For customizable themes, preview using the saved/custom palette (per theme + mode)
+      const palette = isCustomizable
+        ? window.dashboard?.themes?.getCustomPalette?.(id, currentMode) ||
+          settings.theme?.customPalettes?.[id]?.[currentMode] ||
+          null
+        : null;
+      const previewPrimary = palette?.primary || colors.primary;
+      const previewAccent = palette?.accent || colors.accent;
+      const previewBg = palette?.bodyBg || colors.bodyBg;
 
       html += `
         <div class="theme-card${isActive ? " active" : ""}${
         isCustomizable ? " customizable" : ""
       }" data-theme="${id}" data-customizable="${isCustomizable}">
           <div class="theme-card-preview">
-            <div class="theme-preview-primary" style="background: ${
-              colors.primary
-            }"></div>
-            <div class="theme-preview-accent" style="background: ${accentColor}"></div>
-            <div class="theme-preview-bg" style="background: ${
-              colors.bodyBg
-            }"></div>
+            <div class="theme-preview-primary" style="background: ${previewPrimary}"></div>
+            <div class="theme-preview-accent" style="background: ${previewAccent}"></div>
+            <div class="theme-preview-bg" style="background: ${previewBg}"></div>
           </div>
           <div class="theme-card-header">
             <span class="theme-card-icon">${theme.icon}</span>
@@ -1209,7 +1202,7 @@ class SettingsManager {
           <div class="theme-card-desc">${theme.description}</div>
           ${
             isCustomizable
-              ? '<div class="theme-card-customize" title="Customize accent color">🎨</div>'
+              ? '<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">🎨</span><span>Customize</span></button>'
               : ""
           }
           <div class="theme-card-check">✓</div>
@@ -1218,25 +1211,94 @@ class SettingsManager {
     }
 
     this.themePickerGrid.innerHTML = html;
-
-    // Keep hidden accent color input synced (used by Customize button)
-    this.updateAccentColorPickerVisibility();
   }
 
-  /**
-   * Update accent color picker visibility based on theme
-   */
-  updateAccentColorPickerVisibility() {
-    const accentInput = document.getElementById("themeAccentColor");
-    if (!accentInput) return;
+  openThemePaletteModal(themeName) {
+    const overlay = document.getElementById("themePaletteModal");
+    if (!overlay) return;
 
-    const isCustomizable =
-      window.dashboard?.themes?.isCurrentThemeCustomizable();
-    if (!isCustomizable) return;
+    const theme = ThemeManager.THEMES?.[themeName];
+    if (!theme?.customizable) return;
 
-    const currentAccent =
-      window.dashboard?.themes?.getCustomAccent() || "#d4af37";
-    accentInput.value = currentAccent;
+    // Select the theme first so changes apply to dashboard immediately
+    this.updateThemePickerActiveState(themeName);
+    if (window.dashboard?.themes) {
+      window.dashboard.themes.setTheme(themeName, false);
+    }
+
+    this._paletteModalTheme = themeName;
+    this._paletteModalMode =
+      window.dashboard?.themes?.getCurrentMode?.() || "dark";
+
+    const title = document.getElementById("themePaletteModalTitle");
+    if (title) {
+      title.textContent = `🎨 Customize ${theme.name} Palette`;
+    }
+
+    this.updateThemePaletteModeButtons(this._paletteModalMode);
+    this.syncThemePaletteModalInputs();
+
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  closeThemePaletteModal() {
+    const overlay = document.getElementById("themePaletteModal");
+    if (!overlay) return;
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  updateThemePaletteModeButtons(mode) {
+    const darkBtn = document.getElementById("themePaletteModeDark");
+    const lightBtn = document.getElementById("themePaletteModeLight");
+    if (darkBtn) darkBtn.classList.toggle("active", mode === "dark");
+    if (lightBtn) lightBtn.classList.toggle("active", mode === "light");
+  }
+
+  syncThemePaletteModalInputs() {
+    const themeName = this._paletteModalTheme;
+    const mode = this._paletteModalMode || "dark";
+    if (!themeName) return;
+
+    const primaryEl = document.getElementById("themePalettePrimary");
+    const accentEl = document.getElementById("themePaletteAccent");
+    const bgEl = document.getElementById("themePaletteBackground");
+    if (!primaryEl || !accentEl || !bgEl) return;
+
+    const base = ThemeManager.THEMES[themeName]?.[mode];
+    if (!base) return;
+
+    const palette =
+      window.dashboard?.themes?.getCustomPalette?.(themeName, mode) || null;
+
+    primaryEl.value = palette?.primary || base.primary;
+    accentEl.value = palette?.accent || base.accent;
+    bgEl.value = palette?.bodyBg || base.bodyBg;
+  }
+
+  applyThemePaletteFromModal(save = true) {
+    const themeName = this._paletteModalTheme;
+    const mode = this._paletteModalMode || "dark";
+    if (!themeName || !window.dashboard?.themes) return;
+
+    const primaryEl = document.getElementById("themePalettePrimary");
+    const accentEl = document.getElementById("themePaletteAccent");
+    const bgEl = document.getElementById("themePaletteBackground");
+    if (!primaryEl || !accentEl || !bgEl) return;
+
+    window.dashboard.themes.setCustomPalette(
+      themeName,
+      mode,
+      {
+        primary: primaryEl.value,
+        accent: accentEl.value,
+        bodyBg: bgEl.value,
+      },
+      save
+    );
+
+    this.renderThemePickerGrid();
   }
 
   /**
@@ -1301,29 +1363,9 @@ class SettingsManager {
         const customizeBtn = e.target.closest(".theme-card-customize");
         if (customizeBtn) {
           e.stopPropagation();
-
           const card = customizeBtn.closest(".theme-card");
           const themeName = card?.dataset?.theme;
-          const isCustomizable = card?.dataset?.customizable === "true";
-
-          if (themeName) {
-            this.updateThemePickerActiveState(themeName);
-            if (window.dashboard?.themes) {
-              window.dashboard.themes.setTheme(themeName, false);
-            }
-          }
-
-          if (isCustomizable) {
-            const accentInput = document.getElementById("themeAccentColor");
-            if (accentInput) {
-              const currentAccent =
-                window.dashboard?.themes?.getCustomAccent?.() ||
-                this.storage.getSettings().theme?.customAccent ||
-                "#d4af37";
-              accentInput.value = currentAccent;
-              accentInput.click();
-            }
-          }
+          if (themeName) this.openThemePaletteModal(themeName);
           return;
         }
 
@@ -1338,28 +1380,55 @@ class SettingsManager {
           window.dashboard.themes.setTheme(themeName, false);
         }
 
-        // Update accent color picker visibility
-        this.updateAccentColorPickerVisibility();
         // Re-render to update preview colors
         this.renderThemePickerGrid();
       });
     }
 
-    // Accent color picker for customizable themes
-    const accentInput = document.getElementById("themeAccentColor");
-    if (accentInput) {
-      accentInput.addEventListener("input", (e) => {
-        const color = e.target.value;
+    // Theme palette modal event listeners
+    const paletteOverlay = document.getElementById("themePaletteModal");
+    const paletteClose = document.getElementById("themePaletteClose");
+    const paletteDone = document.getElementById("themePaletteDone");
+    const modeDark = document.getElementById("themePaletteModeDark");
+    const modeLight = document.getElementById("themePaletteModeLight");
+    const primaryEl = document.getElementById("themePalettePrimary");
+    const accentEl = document.getElementById("themePaletteAccent");
+    const bgEl = document.getElementById("themePaletteBackground");
 
-        // Apply custom accent immediately
-        if (window.dashboard?.themes) {
-          window.dashboard.themes.setCustomAccent(color, false);
-        }
-
-        // Update preview in theme card
-        this.renderThemePickerGrid();
+    if (paletteOverlay) {
+      paletteOverlay.addEventListener("click", (evt) => {
+        if (evt.target === paletteOverlay) this.closeThemePaletteModal();
       });
     }
+    if (paletteClose) {
+      paletteClose.addEventListener("click", () =>
+        this.closeThemePaletteModal()
+      );
+    }
+    if (paletteDone) {
+      paletteDone.addEventListener("click", () =>
+        this.closeThemePaletteModal()
+      );
+    }
+    if (modeDark) {
+      modeDark.addEventListener("click", () => {
+        this._paletteModalMode = "dark";
+        this.updateThemePaletteModeButtons("dark");
+        this.syncThemePaletteModalInputs();
+      });
+    }
+    if (modeLight) {
+      modeLight.addEventListener("click", () => {
+        this._paletteModalMode = "light";
+        this.updateThemePaletteModeButtons("light");
+        this.syncThemePaletteModalInputs();
+      });
+    }
+
+    const onPaletteInput = () => this.applyThemePaletteFromModal(true);
+    if (primaryEl) primaryEl.addEventListener("input", onPaletteInput);
+    if (accentEl) accentEl.addEventListener("input", onPaletteInput);
+    if (bgEl) bgEl.addEventListener("input", onPaletteInput);
 
     // Container width (in Themes panel)
     if (this.themeContainerWidth) {
@@ -1409,9 +1478,11 @@ class SettingsManager {
       activeTheme = activeCard.dataset.theme;
     }
 
-    // Get custom accent color for customizable themes
-    const accentInput = document.getElementById("themeAccentColor");
-    const customAccent = accentInput?.value || null;
+    const customAccent = window.dashboard?.themes?.getCustomAccent?.() || null;
+    const customPalettes =
+      window.dashboard?.themes?.getCustomPalettes?.() ||
+      settings.theme?.customPalettes ||
+      {};
 
     // Save theme settings
     settings.theme = {
@@ -1419,6 +1490,7 @@ class SettingsManager {
       mode: mode,
       glassEnabled: glassEnabled,
       customAccent: customAccent,
+      customPalettes: customPalettes,
     };
 
     // Save blur power (now from Themes panel)

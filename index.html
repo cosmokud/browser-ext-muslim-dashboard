@@ -2892,16 +2892,6 @@
               <div class="theme-picker-grid" id="themePickerGrid">
                 <!-- Theme cards will be dynamically generated -->
               </div>
-
-              <!-- Hidden color input used by the "Customize" button on Pure themes -->
-              <input
-                type="color"
-                id="themeAccentColor"
-                value="#d4af37"
-                class="theme-accent-input theme-accent-input--hidden"
-                aria-hidden="true"
-                tabindex="-1"
-              />
             </div>
 
             <div class="setting-group">
@@ -2998,6 +2988,90 @@
         <div class="modal-footer">
           <button class="modal-btn save-btn" id="saveSettingsBtn">
             💾 Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Theme Palette Modal (Pure White / Pure Black customization) -->
+    <div class="modal-overlay" id="themePaletteModal" aria-hidden="true">
+      <div
+        class="modal modal-small theme-palette-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="modal-header">
+          <h2 class="modal-title" id="themePaletteModalTitle">
+            🎨 Customize Theme Palette
+          </h2>
+          <button class="modal-close" id="themePaletteClose" type="button">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div
+            class="theme-palette-mode-toggle"
+            role="tablist"
+            aria-label="Palette mode"
+          >
+            <button
+              class="theme-palette-mode-btn active"
+              id="themePaletteModeDark"
+              type="button"
+              data-mode="dark"
+            >
+              🌙 Dark
+            </button>
+            <button
+              class="theme-palette-mode-btn"
+              id="themePaletteModeLight"
+              type="button"
+              data-mode="light"
+            >
+              ☀️ Light
+            </button>
+          </div>
+
+          <div class="theme-palette-fields">
+            <div class="theme-palette-field">
+              <label class="setting-label" for="themePalettePrimary"
+                >Primary</label
+              >
+              <input
+                type="color"
+                id="themePalettePrimary"
+                class="theme-palette-color"
+              />
+            </div>
+            <div class="theme-palette-field">
+              <label class="setting-label" for="themePaletteAccent"
+                >Accent</label
+              >
+              <input
+                type="color"
+                id="themePaletteAccent"
+                class="theme-palette-color"
+              />
+            </div>
+            <div class="theme-palette-field">
+              <label class="setting-label" for="themePaletteBackground"
+                >Background</label
+              >
+              <input
+                type="color"
+                id="themePaletteBackground"
+                class="theme-palette-color"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="modal-btn save-btn"
+            id="themePaletteDone"
+            type="button"
+          >
+            Done
           </button>
         </div>
       </div>

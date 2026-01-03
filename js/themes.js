@@ -600,7 +600,11 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
-    this._customAccent = null; // For customizable themes
+    // Legacy single-color accent override (kept for backward compatibility)
+    this._customAccent = null;
+    // New: per-theme per-mode palette overrides for customizable themes
+    // Shape: { [themeId]: { dark: {primary, accent, bodyBg}, light: {...} } }
+    this._customPalettes = {};
 
     this.init();
   }
@@ -621,10 +625,32 @@ class ThemeManager {
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
     this._customAccent = themeSettings.customAccent || null;
+    this._customPalettes = themeSettings.customPalettes || {};
 
     // Validate theme exists
     if (!ThemeManager.THEMES[this._currentTheme]) {
       this._currentTheme = ThemeManager.DEFAULT_THEME;
+    }
+
+    // Migrate legacy customAccent into palettes for the current theme (non-destructive)
+    if (this._customAccent && !themeSettings.customPalettes) {
+      const theme = ThemeManager.THEMES[this._currentTheme];
+      if (theme?.customizable) {
+        const baseDark = theme.dark;
+        const baseLight = theme.light;
+        this._customPalettes[this._currentTheme] = {
+          dark: {
+            primary: baseDark.primary,
+            accent: this._customAccent,
+            bodyBg: baseDark.bodyBg,
+          },
+          light: {
+            primary: baseLight.primary,
+            accent: this._customAccent,
+            bodyBg: baseLight.bodyBg,
+          },
+        };
+      }
     }
   }
 
@@ -638,6 +664,7 @@ class ThemeManager {
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
       customAccent: this._customAccent,
+      customPalettes: this._customPalettes,
     };
     this.storage.saveSettings(settings);
   }
@@ -748,14 +775,66 @@ class ThemeManager {
     // Clone to avoid mutating original
     const colors = { ...theme[colorMode] };
 
-    // Apply custom accent for customizable themes
-    if (theme.customizable && this._customAccent) {
-      const accentRgb = this.hexToRgb(this._customAccent);
-      if (accentRgb) {
+    // Apply 3-color palette overrides for customizable themes
+    if (theme.customizable) {
+      const palette = this.getCustomPalette(name, colorMode);
+      if (palette) {
+        if (palette.primary) {
+          colors.primary = palette.primary;
+          colors.primaryLight = this._lightenColor(palette.primary, 18);
+          colors.primaryDark = this._darkenColor(palette.primary, 18);
+        }
+        if (palette.accent) {
+          colors.accent = palette.accent;
+          colors.accentLight = this._lightenColor(palette.accent, 18);
+          colors.accentBlue = this._lightenColor(palette.accent, 10);
+          colors.settingsColor = palette.accent;
+          colors.settingsLight = this._lightenColor(palette.accent, 25);
+        } else if (this._customAccent) {
+          // Legacy fallback
+          colors.accent = this._customAccent;
+          colors.accentLight = this._lightenColor(this._customAccent, 20);
+          colors.accentBlue = this._lightenColor(this._customAccent, 10);
+          colors.settingsColor = this._customAccent;
+          colors.settingsLight = this._lightenColor(this._customAccent, 25);
+        }
+        if (palette.bodyBg) {
+          colors.bodyBg = palette.bodyBg;
+
+          const isDarkBg = this._isDarkColor(palette.bodyBg);
+          colors.textPrimary = isDarkBg ? "#ffffff" : "#1a1a2e";
+          colors.textSecondary = isDarkBg
+            ? "rgba(255, 255, 255, 0.85)"
+            : "rgba(0, 0, 0, 0.75)";
+          colors.textMuted = isDarkBg
+            ? "rgba(255, 255, 255, 0.6)"
+            : "rgba(0, 0, 0, 0.55)";
+        }
+
+        // Make glass surfaces follow the custom primary tint (preserve original alpha values)
+        if (palette.primary) {
+          const primaryRgb = this.hexToRgb(colors.primary);
+          if (primaryRgb) {
+            const base = theme[colorMode];
+            const aBg =
+              this._parseRgbaAlpha(base.glassBg) ??
+              (colorMode === "light" ? 0.2 : 0.35);
+            const aHover =
+              this._parseRgbaAlpha(base.glassBgHover) ??
+              (colorMode === "light" ? 0.28 : 0.45);
+            const aBorder =
+              this._parseRgbaAlpha(base.glassBorder) ??
+              (colorMode === "light" ? 0.25 : 0.4);
+
+            colors.glassBg = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBg})`;
+            colors.glassBgHover = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aHover})`;
+            colors.glassBorder = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBorder})`;
+          }
+        }
+      } else if (this._customAccent) {
+        // Backward compatible: accent-only override
         colors.accent = this._customAccent;
-        // Generate lighter version
         colors.accentLight = this._lightenColor(this._customAccent, 20);
-        // Use accent as accentBlue too for consistency
         colors.accentBlue = this._lightenColor(this._customAccent, 10);
         colors.settingsColor = this._customAccent;
         colors.settingsLight = this._lightenColor(this._customAccent, 25);
@@ -770,6 +849,27 @@ class ThemeManager {
    */
   setCustomAccent(hexColor, save = true) {
     this._customAccent = hexColor;
+
+    // Also reflect in palette for the current theme/mode (for compatibility)
+    if (this.isCurrentThemeCustomizable()) {
+      const current = this.getCustomPalette(
+        this._currentTheme,
+        this._currentMode
+      ) || {
+        primary:
+          ThemeManager.THEMES[this._currentTheme][this._currentMode].primary,
+        accent: hexColor,
+        bodyBg:
+          ThemeManager.THEMES[this._currentTheme][this._currentMode].bodyBg,
+      };
+      this.setCustomPalette(
+        this._currentTheme,
+        this._currentMode,
+        { ...current, accent: hexColor },
+        false
+      );
+    }
+
     this.applyTheme();
 
     if (save) {
@@ -782,6 +882,50 @@ class ThemeManager {
    */
   getCustomAccent() {
     return this._customAccent;
+  }
+
+  /**
+   * Get palette override for a theme + mode.
+   */
+  getCustomPalette(themeName = null, mode = null) {
+    const name = themeName || this._currentTheme;
+    const colorMode = mode || this._currentMode;
+    const entry = this._customPalettes?.[name]?.[colorMode];
+    return entry ? { ...entry } : null;
+  }
+
+  /**
+   * Get all custom palettes (for Settings UI persistence).
+   */
+  getCustomPalettes() {
+    return JSON.parse(JSON.stringify(this._customPalettes || {}));
+  }
+
+  /**
+   * Set palette override for a theme + mode.
+   */
+  setCustomPalette(themeName, mode, palette, save = true) {
+    if (!ThemeManager.THEMES[themeName]) return;
+    const theme = ThemeManager.THEMES[themeName];
+    if (!theme?.customizable) return;
+
+    const colorMode = mode === "light" ? "light" : "dark";
+    this._customPalettes ||= {};
+    this._customPalettes[themeName] ||= { dark: {}, light: {} };
+
+    this._customPalettes[themeName][colorMode] = {
+      primary: palette?.primary || theme[colorMode].primary,
+      accent: palette?.accent || theme[colorMode].accent,
+      bodyBg: palette?.bodyBg || theme[colorMode].bodyBg,
+    };
+
+    if (this._currentTheme === themeName && this._currentMode === colorMode) {
+      this.applyTheme();
+    }
+
+    if (save) {
+      this.saveThemeSettings();
+    }
   }
 
   /**
@@ -808,6 +952,41 @@ class ThemeManager {
     return `#${r.toString(16).padStart(2, "0")}${g
       .toString(16)
       .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  }
+
+  /**
+   * Darken a hex color by a percentage
+   */
+  _darkenColor(hex, percent) {
+    const rgb = this.hexToRgb(hex);
+    if (!rgb) return hex;
+
+    const darken = (c) => Math.max(0, Math.round(c * (1 - percent / 100)));
+    const r = darken(rgb.r);
+    const g = darken(rgb.g);
+    const b = darken(rgb.b);
+
+    return `#${r.toString(16).padStart(2, "0")}${g
+      .toString(16)
+      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  }
+
+  _isDarkColor(hex) {
+    const rgb = this.hexToRgb(hex);
+    if (!rgb) return false;
+    // relative luminance approximation
+    const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+    return luminance < 0.5;
+  }
+
+  _parseRgbaAlpha(value) {
+    if (typeof value !== "string") return null;
+    const match = value
+      .replace(/\s+/g, "")
+      .match(/^rgba\((\d+),(\d+),(\d+),([0-9.]+)\)$/i);
+    if (!match) return null;
+    const alpha = Number(match[4]);
+    return Number.isFinite(alpha) ? alpha : null;
   }
 
   /**
