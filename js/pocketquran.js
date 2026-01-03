@@ -119,6 +119,9 @@ class PocketQuranManager {
     // Programmatic scroll lock (prevents scroll handler from overriding active ayah)
     this._programmaticScroll = null;
 
+    // Timer for restoring scroll-behavior after manual seeks
+    this._restoreScrollBehaviorTimer = null;
+
     // Navigation debounce flags
     this._navProcessing = false;
 
@@ -168,6 +171,22 @@ class PocketQuranManager {
   // ═══════════════════════════════════════════════════════════════════════════
 
   setupEventListeners() {
+    const stopSmoothScrollForManualSeek = () => {
+      if (!this._virtualContainer) return;
+
+      // Cancel any in-flight smooth scroll immediately.
+      if (this._restoreScrollBehaviorTimer) {
+        clearTimeout(this._restoreScrollBehaviorTimer);
+      }
+      this._virtualContainer.style.scrollBehavior = "auto";
+
+      // Restore quickly so other scrolls can still animate.
+      this._restoreScrollBehaviorTimer = setTimeout(() => {
+        if (!this._virtualContainer) return;
+        this._virtualContainer.style.scrollBehavior = "";
+      }, 120);
+    };
+
     // Surah selection (event delegation)
     this.surahListEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-surah]");
@@ -281,6 +300,8 @@ class PocketQuranManager {
         if (this._navProcessing) return;
         this._navProcessing = true;
 
+        stopSmoothScrollForManualSeek();
+
         const max = this.getActiveSurahAyahCount() || 286;
         const current =
           document.activeElement === this.ayahInput
@@ -288,7 +309,7 @@ class PocketQuranManager {
             : this.clampNumber(this._activeAyah, 1, max, 1);
         const next = this.clampNumber(current - 1, 1, max, 1);
         if (this.ayahInput) this.ayahInput.value = String(next);
-        this.scrollToAyah(next, { persist: true });
+        this.scrollToAyah(next, { persist: true, smooth: false });
 
         setTimeout(() => {
           this._navProcessing = false;
@@ -303,6 +324,8 @@ class PocketQuranManager {
         if (this._navProcessing) return;
         this._navProcessing = true;
 
+        stopSmoothScrollForManualSeek();
+
         const max = this.getActiveSurahAyahCount() || 286;
         const current =
           document.activeElement === this.ayahInput
@@ -310,7 +333,7 @@ class PocketQuranManager {
             : this.clampNumber(this._activeAyah, 1, max, 1);
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
-        this.scrollToAyah(next, { persist: true });
+        this.scrollToAyah(next, { persist: true, smooth: false });
 
         setTimeout(() => {
           this._navProcessing = false;
@@ -637,16 +660,18 @@ class PocketQuranManager {
         const delta = Math.abs(scrollTop - targetOffset);
         const timedOut = now - startedAt > 2000;
 
+        // Always pin UI to the requested ayah while the lock exists, and do
+        // not fall through to scroll-derived updates in the same RAF tick.
+        this._activeAyah = targetAyah;
+        if (this.ayahInput && document.activeElement !== this.ayahInput) {
+          this.ayahInput.value = String(targetAyah);
+        }
+        this.updateAyahDropdownActiveState();
+
         if (delta < 2 || timedOut) {
           this._programmaticScroll = null;
-        } else {
-          this._activeAyah = targetAyah;
-          if (this.ayahInput && document.activeElement !== this.ayahInput) {
-            this.ayahInput.value = String(targetAyah);
-          }
-          this.updateAyahDropdownActiveState();
-          return;
         }
+        return;
       }
 
       // Update active ayah for UI
