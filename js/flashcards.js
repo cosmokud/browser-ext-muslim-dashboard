@@ -1719,19 +1719,23 @@ class FlashcardManager {
     this._setModal = modal;
 
     // Event listeners
-    modal.querySelector(".flashcard-set-modal-close").addEventListener("click", () => {
-      this.closeSetSelectorModal();
-    });
+    modal
+      .querySelector(".flashcard-set-modal-close")
+      .addEventListener("click", () => {
+        this.closeSetSelectorModal();
+      });
 
     modal.addEventListener("click", (e) => {
       if (e.target === modal) this.closeSetSelectorModal();
     });
 
-    modal.querySelector(".flashcard-set-search-input").addEventListener("input", (e) => {
-      this._setModalSearchQuery = e.target.value;
-      this._setModalPage = 1;
-      this.renderSetSelectorModal();
-    });
+    modal
+      .querySelector(".flashcard-set-search-input")
+      .addEventListener("input", (e) => {
+        this._setModalSearchQuery = e.target.value;
+        this._setModalPage = 1;
+        this.renderSetSelectorModal();
+      });
   }
 
   /**
@@ -1767,16 +1771,16 @@ class FlashcardManager {
     if (!modal) return;
 
     const listContainer = modal.querySelector(".flashcard-set-list");
-    const paginationContainer = modal.querySelector(".flashcard-set-pagination");
+    const paginationContainer = modal.querySelector(
+      ".flashcard-set-pagination"
+    );
 
     let sets = this.getSets();
     const searchQuery = this._setModalSearchQuery.toLowerCase();
     const activeSetId = this.getActiveSetId();
 
     if (searchQuery) {
-      sets = sets.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery)
-      );
+      sets = sets.filter((s) => s.name.toLowerCase().includes(searchQuery));
     }
 
     const SETS_PER_PAGE = 10;
@@ -1796,12 +1800,22 @@ class FlashcardManager {
           const cardCount = Array.isArray(s.cards) ? s.cards.length : 0;
           const isActive = s.id === activeSetId;
           return `
-            <div class="flashcard-set-item ${isActive ? "active" : ""}" data-set-id="${s.id}">
+            <div class="flashcard-set-item ${
+              isActive ? "active" : ""
+            }" data-set-id="${s.id}">
               <div class="flashcard-set-item-info">
-                <span class="flashcard-set-item-name">${this.escapeHtmlAttr(s.name)}</span>
-                <span class="flashcard-set-item-meta">${cardCount} card${cardCount === 1 ? "" : "s"}</span>
+                <span class="flashcard-set-item-name">${this.escapeHtmlAttr(
+                  s.name
+                )}</span>
+                <span class="flashcard-set-item-meta">${cardCount} card${
+            cardCount === 1 ? "" : "s"
+          }</span>
               </div>
-              ${isActive ? '<span style="color: var(--accent-gold);">✓</span>' : ""}
+              ${
+                isActive
+                  ? '<span style="color: var(--accent-gold);">✓</span>'
+                  : ""
+              }
             </div>
           `;
         })
@@ -1817,7 +1831,7 @@ class FlashcardManager {
           this.renderDashboard();
           this.ensureAutoAdvanceState({ reset: true });
           this.closeSetSelectorModal();
-          
+
           const set = this.getSets().find((s) => s.id === setId);
           if (set) {
             this.showToast(`Switched to: ${set.name}`, "success");
@@ -1869,15 +1883,21 @@ class FlashcardManager {
     }
 
     container.innerHTML = `
-      <button type="button" class="flashcard-set-page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""}>←</button>
+      <button type="button" class="flashcard-set-page-btn" data-page="${
+        currentPage - 1
+      }" ${currentPage === 1 ? "disabled" : ""}>←</button>
       ${pages
         .map((p) =>
           p === "..."
             ? `<span class="flashcard-set-page-btn" style="cursor: default; border: none;">...</span>`
-            : `<button type="button" class="flashcard-set-page-btn ${p === currentPage ? "active" : ""}" data-page="${p}">${p}</button>`
+            : `<button type="button" class="flashcard-set-page-btn ${
+                p === currentPage ? "active" : ""
+              }" data-page="${p}">${p}</button>`
         )
         .join("")}
-      <button type="button" class="flashcard-set-page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? "disabled" : ""}>→</button>
+      <button type="button" class="flashcard-set-page-btn" data-page="${
+        currentPage + 1
+      }" ${currentPage === totalPages ? "disabled" : ""}>→</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {

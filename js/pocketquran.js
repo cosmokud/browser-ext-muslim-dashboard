@@ -5,7 +5,7 @@
  *
  * Features a high-performance virtualized infinite scroll that renders only
  * ~20 ayahs at a time while maintaining smooth scrolling and stable positions.
- * 
+ *
  * Bookmark system: Supports multiple bookmark categories with full CRUD operations.
  */
 
@@ -36,7 +36,7 @@ class PocketQuranManager {
   static ESTIMATED_AYAH_HEIGHT = 180; // Initial estimate, recalculated dynamically
   static BUFFER_AYAHS = 3; // Extra ayahs above/below viewport
   static SCROLL_THROTTLE_MS = 16; // ~60fps throttle
-  
+
   // Bookmark constants
   static BOOKMARKS_PER_PAGE = 10;
   static CATEGORIES_PER_PAGE = 10;
@@ -115,6 +115,9 @@ class PocketQuranManager {
     this._bookmarkCategorySearchQuery = "";
     this._selectedCategoryId = null;
     this._pendingBookmarkAyah = null;
+
+    // Programmatic scroll lock (prevents scroll handler from overriding active ayah)
+    this._programmaticScroll = null;
 
     // Navigation debounce flags
     this._navProcessing = false;
@@ -277,19 +280,19 @@ class PocketQuranManager {
         e.stopPropagation();
         if (this._navProcessing) return;
         this._navProcessing = true;
-        
+
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(
-          parseInt(this.ayahInput?.value, 10),
-          1,
-          max,
-          1
-        );
+        const current =
+          document.activeElement === this.ayahInput
+            ? this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1)
+            : this.clampNumber(this._activeAyah, 1, max, 1);
         const next = this.clampNumber(current - 1, 1, max, 1);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
-        
-        setTimeout(() => { this._navProcessing = false; }, 100);
+
+        setTimeout(() => {
+          this._navProcessing = false;
+        }, 100);
       });
     }
 
@@ -299,19 +302,19 @@ class PocketQuranManager {
         e.stopPropagation();
         if (this._navProcessing) return;
         this._navProcessing = true;
-        
+
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(
-          parseInt(this.ayahInput?.value, 10),
-          1,
-          max,
-          1
-        );
+        const current =
+          document.activeElement === this.ayahInput
+            ? this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1)
+            : this.clampNumber(this._activeAyah, 1, max, 1);
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
-        
-        setTimeout(() => { this._navProcessing = false; }, 100);
+
+        setTimeout(() => {
+          this._navProcessing = false;
+        }, 100);
       });
     }
 
@@ -497,6 +500,24 @@ class PocketQuranManager {
       { passive: true }
     );
 
+    // If the user starts interacting, cancel any programmatic scroll lock
+    const cancelProgrammaticScroll = () => {
+      this._programmaticScroll = null;
+    };
+    this._virtualContainer.addEventListener("wheel", cancelProgrammaticScroll, {
+      passive: true,
+    });
+    this._virtualContainer.addEventListener(
+      "touchstart",
+      cancelProgrammaticScroll,
+      { passive: true }
+    );
+    this._virtualContainer.addEventListener(
+      "pointerdown",
+      cancelProgrammaticScroll,
+      { passive: true }
+    );
+
     // Observe container resize
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
@@ -601,6 +622,30 @@ class PocketQuranManager {
         end !== this._renderedRange.end
       ) {
         this.renderVisibleAyahs(start, end);
+      }
+
+      // During programmatic smooth scroll, keep the active ayah pinned so
+      // nav buttons don't read a scroll-updated value mid-animation.
+      if (this._programmaticScroll) {
+        const now =
+          typeof performance !== "undefined" && performance.now
+            ? performance.now()
+            : Date.now();
+        const { targetOffset, targetAyah, startedAt } = this._programmaticScroll;
+
+        const delta = Math.abs(scrollTop - targetOffset);
+        const timedOut = now - startedAt > 2000;
+
+        if (delta < 2 || timedOut) {
+          this._programmaticScroll = null;
+        } else {
+          this._activeAyah = targetAyah;
+          if (this.ayahInput && document.activeElement !== this.ayahInput) {
+            this.ayahInput.value = String(targetAyah);
+          }
+          this.updateAyahDropdownActiveState();
+          return;
+        }
       }
 
       // Update active ayah for UI
@@ -735,6 +780,17 @@ class PocketQuranManager {
     if (!skipScroll && this._virtualContainer && this._activeVerses?.length) {
       const index = n - 1; // Convert to 0-indexed
       const offset = this.getAyahOffset(index);
+
+      // Prevent scroll handler from overwriting the active ayah mid smooth-scroll.
+      const now =
+        typeof performance !== "undefined" && performance.now
+          ? performance.now()
+          : Date.now();
+      this._programmaticScroll = {
+        targetOffset: offset,
+        targetAyah: n,
+        startedAt: now,
+      };
 
       // Ensure the ayah is rendered first
       const buffer = PocketQuranManager.BUFFER_AYAHS;
@@ -1562,7 +1618,9 @@ class PocketQuranManager {
    */
   createBookmarkCategory(name) {
     const categories = this.getBookmarkCategories();
-    const trimmed = String(name || "").trim().slice(0, 50);
+    const trimmed = String(name || "")
+      .trim()
+      .slice(0, 50);
     if (!trimmed) return null;
 
     const existing = categories.find(
@@ -1589,7 +1647,9 @@ class PocketQuranManager {
     const category = categories.find((c) => c.id === categoryId);
     if (!category) return false;
 
-    const trimmed = String(newName || "").trim().slice(0, 50);
+    const trimmed = String(newName || "")
+      .trim()
+      .slice(0, 50);
     if (!trimmed) return false;
 
     category.name = trimmed;
@@ -1622,8 +1682,7 @@ class PocketQuranManager {
 
     // Check if already bookmarked in this category
     const existing = bookmarks.find(
-      (b) =>
-        b.categoryId === categoryId && b.surah === surah && b.ayah === ayah
+      (b) => b.categoryId === categoryId && b.surah === surah && b.ayah === ayah
     );
     if (existing) return existing;
 
@@ -1860,29 +1919,35 @@ class PocketQuranManager {
       this._bookmarkModal = modal;
 
       // Event listeners
-      modal.querySelector(".pq-bookmark-modal-close").addEventListener("click", () => {
-        this.closeBookmarkModal();
-      });
+      modal
+        .querySelector(".pq-bookmark-modal-close")
+        .addEventListener("click", () => {
+          this.closeBookmarkModal();
+        });
 
       modal.addEventListener("click", (e) => {
         if (e.target === modal) this.closeBookmarkModal();
       });
 
-      modal.querySelector(".pq-bookmark-search-input").addEventListener("input", (e) => {
-        this._bookmarkSearchQuery = e.target.value;
-        this._bookmarkCurrentPage = 1;
-        this.renderBookmarkModal();
-      });
+      modal
+        .querySelector(".pq-bookmark-search-input")
+        .addEventListener("input", (e) => {
+          this._bookmarkSearchQuery = e.target.value;
+          this._bookmarkCurrentPage = 1;
+          this.renderBookmarkModal();
+        });
 
-      modal.querySelector(".pq-bookmark-add-category").addEventListener("click", () => {
-        const name = prompt("Enter category name:");
-        if (name) {
-          const cat = this.createBookmarkCategory(name);
-          if (cat) {
-            this.renderBookmarkModal();
+      modal
+        .querySelector(".pq-bookmark-add-category")
+        .addEventListener("click", () => {
+          const name = prompt("Enter category name:");
+          if (name) {
+            const cat = this.createBookmarkCategory(name);
+            if (cat) {
+              this.renderBookmarkModal();
+            }
           }
-        }
-      });
+        });
     }
 
     // Category selection modal (for bookmarking an ayah)
@@ -1914,32 +1979,42 @@ class PocketQuranManager {
       this._bookmarkCategoryModal = modal;
 
       // Event listeners
-      modal.querySelector(".pq-bookmark-modal-close").addEventListener("click", () => {
-        this.closeCategorySelectionModal();
-      });
+      modal
+        .querySelector(".pq-bookmark-modal-close")
+        .addEventListener("click", () => {
+          this.closeCategorySelectionModal();
+        });
 
       modal.addEventListener("click", (e) => {
         if (e.target === modal) this.closeCategorySelectionModal();
       });
 
-      modal.querySelector(".pq-bookmark-search-input").addEventListener("input", (e) => {
-        this._bookmarkCategorySearchQuery = e.target.value;
-        this._bookmarkCategoryPage = 1;
-        this.renderCategorySelectionModal();
-      });
+      modal
+        .querySelector(".pq-bookmark-search-input")
+        .addEventListener("input", (e) => {
+          this._bookmarkCategorySearchQuery = e.target.value;
+          this._bookmarkCategoryPage = 1;
+          this.renderCategorySelectionModal();
+        });
 
-      modal.querySelector(".pq-bookmark-add-category").addEventListener("click", () => {
-        const name = prompt("Enter category name:");
-        if (name) {
-          const cat = this.createBookmarkCategory(name);
-          if (cat) {
-            this.renderCategorySelectionModal();
+      modal
+        .querySelector(".pq-bookmark-add-category")
+        .addEventListener("click", () => {
+          const name = prompt("Enter category name:");
+          if (name) {
+            const cat = this.createBookmarkCategory(name);
+            if (cat) {
+              this.renderCategorySelectionModal();
+            }
           }
-        }
-      });
+        });
 
-      const buttons = modal.querySelectorAll(".pq-bookmark-modal-footer .pq-bookmark-modal-btn");
-      buttons[0].addEventListener("click", () => this.closeCategorySelectionModal());
+      const buttons = modal.querySelectorAll(
+        ".pq-bookmark-modal-footer .pq-bookmark-modal-btn"
+      );
+      buttons[0].addEventListener("click", () =>
+        this.closeCategorySelectionModal()
+      );
       buttons[1].addEventListener("click", () => this.saveBookmarkSelection());
     }
   }
@@ -2000,17 +2075,23 @@ class PocketQuranManager {
           <div class="pq-bookmark-category active">
             <div class="pq-bookmark-category-info">
               <button type="button" class="pq-bookmark-category-btn back" title="Back to categories">←</button>
-              <span class="pq-bookmark-category-name">${this.escapeHtml(category.name)}</span>
-              <span class="pq-bookmark-category-count">(${this.getBookmarkCount(category.id)} ayahs)</span>
+              <span class="pq-bookmark-category-name">${this.escapeHtml(
+                category.name
+              )}</span>
+              <span class="pq-bookmark-category-count">(${this.getBookmarkCount(
+                category.id
+              )} ayahs)</span>
             </div>
           </div>
         `;
 
-        categoriesContainer.querySelector(".back").addEventListener("click", () => {
-          this._selectedCategoryId = null;
-          this._bookmarkCurrentPage = 1;
-          this.renderBookmarkModal();
-        });
+        categoriesContainer
+          .querySelector(".back")
+          .addEventListener("click", () => {
+            this._selectedCategoryId = null;
+            this._bookmarkCurrentPage = 1;
+            this.renderBookmarkModal();
+          });
 
         // Render bookmarks
         const bookmarks = this.getBookmarksForCategory(
@@ -2039,11 +2120,21 @@ class PocketQuranManager {
           ayahsContainer.innerHTML = pageBookmarks
             .map(
               (b) => `
-            <div class="pq-bookmark-ayah" data-bookmark-id="${b.id}" data-surah="${b.surah}" data-ayah="${b.ayah}">
+            <div class="pq-bookmark-ayah" data-bookmark-id="${
+              b.id
+            }" data-surah="${b.surah}" data-ayah="${b.ayah}">
               <div class="pq-bookmark-ayah-badge">${b.surah}:${b.ayah}</div>
               <div class="pq-bookmark-ayah-text">
-                <div class="pq-bookmark-ayah-arabic">${this.escapeHtml(b.arabicText || "").slice(0, 100)}${(b.arabicText || "").length > 100 ? "..." : ""}</div>
-                <div class="pq-bookmark-ayah-translation">${this.escapeHtml(b.translationText || "").slice(0, 150)}${(b.translationText || "").length > 150 ? "..." : ""}</div>
+                <div class="pq-bookmark-ayah-arabic">${this.escapeHtml(
+                  b.arabicText || ""
+                ).slice(0, 100)}${
+                (b.arabicText || "").length > 100 ? "..." : ""
+              }</div>
+                <div class="pq-bookmark-ayah-translation">${this.escapeHtml(
+                  b.translationText || ""
+                ).slice(0, 150)}${
+                (b.translationText || "").length > 150 ? "..." : ""
+              }</div>
               </div>
               <button type="button" class="pq-bookmark-ayah-remove" title="Remove bookmark">🗑️</button>
             </div>
@@ -2062,18 +2153,20 @@ class PocketQuranManager {
             });
           });
 
-          ayahsContainer.querySelectorAll(".pq-bookmark-ayah-remove").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const ayahEl = btn.closest(".pq-bookmark-ayah");
-              const bookmarkId = ayahEl.dataset.bookmarkId;
-              if (confirm("Remove this bookmark?")) {
-                this.removeBookmark(bookmarkId);
-                this.renderBookmarkModal();
-                this.refreshAyahStars();
-              }
+          ayahsContainer
+            .querySelectorAll(".pq-bookmark-ayah-remove")
+            .forEach((btn) => {
+              btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const ayahEl = btn.closest(".pq-bookmark-ayah");
+                const bookmarkId = ayahEl.dataset.bookmarkId;
+                if (confirm("Remove this bookmark?")) {
+                  this.removeBookmark(bookmarkId);
+                  this.renderBookmarkModal();
+                  this.refreshAyahStars();
+                }
+              });
             });
-          });
         }
 
         // Render pagination
@@ -2115,12 +2208,24 @@ class PocketQuranManager {
             (c) => `
           <div class="pq-bookmark-category" data-category-id="${c.id}">
             <div class="pq-bookmark-category-info">
-              <span class="pq-bookmark-category-name">${this.escapeHtml(c.name)}</span>
-              <span class="pq-bookmark-category-count">(${this.getBookmarkCount(c.id)} ayahs)</span>
+              <span class="pq-bookmark-category-name">${this.escapeHtml(
+                c.name
+              )}</span>
+              <span class="pq-bookmark-category-count">(${this.getBookmarkCount(
+                c.id
+              )} ayahs)</span>
             </div>
             <div class="pq-bookmark-category-actions">
-              ${c.id !== "default" ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename">✏️</button>` : ""}
-              ${c.id !== "default" ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete">🗑️</button>` : ""}
+              ${
+                c.id !== "default"
+                  ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename">✏️</button>`
+                  : ""
+              }
+              ${
+                c.id !== "default"
+                  ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete">🗑️</button>`
+                  : ""
+              }
             </div>
           </div>
         `
@@ -2128,14 +2233,16 @@ class PocketQuranManager {
           .join("");
 
         // Click handlers
-        categoriesContainer.querySelectorAll(".pq-bookmark-category").forEach((el) => {
-          el.addEventListener("click", (e) => {
-            if (e.target.closest(".pq-bookmark-category-btn")) return;
-            this._selectedCategoryId = el.dataset.categoryId;
-            this._bookmarkCurrentPage = 1;
-            this.renderBookmarkModal();
+        categoriesContainer
+          .querySelectorAll(".pq-bookmark-category")
+          .forEach((el) => {
+            el.addEventListener("click", (e) => {
+              if (e.target.closest(".pq-bookmark-category-btn")) return;
+              this._selectedCategoryId = el.dataset.categoryId;
+              this._bookmarkCurrentPage = 1;
+              this.renderBookmarkModal();
+            });
           });
-        });
 
         categoriesContainer.querySelectorAll(".rename").forEach((btn) => {
           btn.addEventListener("click", (e) => {
@@ -2158,11 +2265,7 @@ class PocketQuranManager {
             e.stopPropagation();
             const categoryEl = btn.closest(".pq-bookmark-category");
             const categoryId = categoryEl.dataset.categoryId;
-            if (
-              confirm(
-                "Delete this category and all its bookmarks?"
-              )
-            ) {
+            if (confirm("Delete this category and all its bookmarks?")) {
               this.deleteBookmarkCategory(categoryId);
               this.renderBookmarkModal();
               this.refreshAyahStars();
@@ -2192,9 +2295,7 @@ class PocketQuranManager {
       ayah,
       arabicText: verse?.text_uthmani || "",
       translationText: this.stripHtmlToText(
-        Array.isArray(verse?.translations)
-          ? verse.translations[0]?.text
-          : ""
+        Array.isArray(verse?.translations) ? verse.translations[0]?.text : ""
       ),
     };
     this._bookmarkCategorySearchQuery = "";
@@ -2242,8 +2343,7 @@ class PocketQuranManager {
       categories.length / PocketQuranManager.CATEGORIES_PER_PAGE
     );
     const start =
-      (this._bookmarkCategoryPage - 1) *
-      PocketQuranManager.CATEGORIES_PER_PAGE;
+      (this._bookmarkCategoryPage - 1) * PocketQuranManager.CATEGORIES_PER_PAGE;
     const pageCategories = categories.slice(
       start,
       start + PocketQuranManager.CATEGORIES_PER_PAGE
@@ -2263,10 +2363,16 @@ class PocketQuranManager {
         .map((c) => {
           const isChecked = this.isAyahBookmarkedInCategory(c.id, surah, ayah);
           return `
-            <div class="pq-bookmark-category ${isChecked ? "active" : ""}" data-category-id="${c.id}">
+            <div class="pq-bookmark-category ${
+              isChecked ? "active" : ""
+            }" data-category-id="${c.id}">
               <div class="pq-bookmark-category-info">
-                <div class="pq-bookmark-checkbox ${isChecked ? "checked" : ""}"></div>
-                <span class="pq-bookmark-category-name">${this.escapeHtml(c.name)}</span>
+                <div class="pq-bookmark-checkbox ${
+                  isChecked ? "checked" : ""
+                }"></div>
+                <span class="pq-bookmark-category-name">${this.escapeHtml(
+                  c.name
+                )}</span>
               </div>
             </div>
           `;
@@ -2274,30 +2380,32 @@ class PocketQuranManager {
         .join("");
 
       // Click handlers
-      categoriesContainer.querySelectorAll(".pq-bookmark-category").forEach((el) => {
-        el.addEventListener("click", () => {
-          const categoryId = el.dataset.categoryId;
-          const checkbox = el.querySelector(".pq-bookmark-checkbox");
-          const isCurrentlyChecked = checkbox.classList.contains("checked");
+      categoriesContainer
+        .querySelectorAll(".pq-bookmark-category")
+        .forEach((el) => {
+          el.addEventListener("click", () => {
+            const categoryId = el.dataset.categoryId;
+            const checkbox = el.querySelector(".pq-bookmark-checkbox");
+            const isCurrentlyChecked = checkbox.classList.contains("checked");
 
-          if (isCurrentlyChecked) {
-            this.removeBookmarkByAyah(categoryId, surah, ayah);
-            checkbox.classList.remove("checked");
-            el.classList.remove("active");
-          } else {
-            const { arabicText, translationText } = this._pendingBookmarkAyah;
-            this.addBookmark(
-              categoryId,
-              surah,
-              ayah,
-              arabicText,
-              translationText
-            );
-            checkbox.classList.add("checked");
-            el.classList.add("active");
-          }
+            if (isCurrentlyChecked) {
+              this.removeBookmarkByAyah(categoryId, surah, ayah);
+              checkbox.classList.remove("checked");
+              el.classList.remove("active");
+            } else {
+              const { arabicText, translationText } = this._pendingBookmarkAyah;
+              this.addBookmark(
+                categoryId,
+                surah,
+                ayah,
+                arabicText,
+                translationText
+              );
+              checkbox.classList.add("checked");
+              el.classList.add("active");
+            }
+          });
         });
-      });
     }
 
     this.renderPagination(
@@ -2394,15 +2502,21 @@ class PocketQuranManager {
     }
 
     container.innerHTML = `
-      <button type="button" class="pq-bookmark-page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""}>←</button>
+      <button type="button" class="pq-bookmark-page-btn" data-page="${
+        currentPage - 1
+      }" ${currentPage === 1 ? "disabled" : ""}>←</button>
       ${pages
         .map((p) =>
           p === "..."
             ? `<span class="pq-bookmark-page-btn" style="cursor: default; border: none;">...</span>`
-            : `<button type="button" class="pq-bookmark-page-btn ${p === currentPage ? "active" : ""}" data-page="${p}">${p}</button>`
+            : `<button type="button" class="pq-bookmark-page-btn ${
+                p === currentPage ? "active" : ""
+              }" data-page="${p}">${p}</button>`
         )
         .join("")}
-      <button type="button" class="pq-bookmark-page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? "disabled" : ""}>→</button>
+      <button type="button" class="pq-bookmark-page-btn" data-page="${
+        currentPage + 1
+      }" ${currentPage === totalPages ? "disabled" : ""}>→</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {

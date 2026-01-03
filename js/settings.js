@@ -563,7 +563,9 @@ class SettingsManager {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `pocket-quran-bookmarks-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `pocket-quran-bookmarks-${new Date()
+        .toISOString()
+        .slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -2501,7 +2503,10 @@ class SettingsManager {
         this.exportPocketQuranBookmarks();
       });
     }
-    if (this.pocketQuranImportBookmarksBtn && this.pocketQuranImportBookmarksInput) {
+    if (
+      this.pocketQuranImportBookmarksBtn &&
+      this.pocketQuranImportBookmarksInput
+    ) {
       this.pocketQuranImportBookmarksBtn.addEventListener("click", () => {
         this.pocketQuranImportBookmarksInput.click();
       });

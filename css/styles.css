@@ -7376,7 +7376,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  transition: opacity var(--transition-normal),
+    visibility var(--transition-normal);
 }
 
 .pq-bookmark-modal.active {
@@ -7769,7 +7770,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  transition: opacity var(--transition-normal),
+    visibility var(--transition-normal);
 }
 
 .flashcard-set-modal.active {
@@ -7944,4 +7946,3 @@ body.sticky-note-resizing {
   padding: var(--spacing-xl);
   color: var(--text-muted);
 }
-
