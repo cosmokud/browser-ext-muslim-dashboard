@@ -631,7 +631,8 @@ class PocketQuranManager {
           typeof performance !== "undefined" && performance.now
             ? performance.now()
             : Date.now();
-        const { targetOffset, targetAyah, startedAt } = this._programmaticScroll;
+        const { targetOffset, targetAyah, startedAt } =
+          this._programmaticScroll;
 
         const delta = Math.abs(scrollTop - targetOffset);
         const timedOut = now - startedAt > 2000;
