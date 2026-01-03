@@ -7220,9 +7220,77 @@ body.sticky-note-resizing {
   transform: translateY(-1px);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   VIRTUALIZED SCROLL CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pq-virtual-container {
+  position: relative;
+  height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: var(--radius-lg);
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+.pq-virtual-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pq-virtual-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pq-virtual-container::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.pq-virtual-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.6);
+  background-clip: padding-box;
+}
+
+.pq-virtual-spacer {
+  position: relative;
+  width: 100%;
+  pointer-events: none;
+}
+
+.pq-virtual-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  pointer-events: auto;
+  will-change: transform;
+}
+
+/* Ensure ayahs inside virtual container maintain proper styling */
+.pq-virtual-content .pocket-quran-ayah {
+  flex-shrink: 0;
+}
+
 @media (max-width: 899px) {
   .pocket-quran-surah-picker {
     width: 100%;
     min-width: 0;
+  }
+  
+  .pq-virtual-container {
+    height: 500px;
+  }
+}
+
+@media (max-width: 599px) {
+  .pq-virtual-container {
+    height: 400px;
   }
 }

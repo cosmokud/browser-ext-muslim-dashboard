@@ -2,6 +2,9 @@
  * Pocket Quran Manager
  * Full-width Quran reader with Surah selector, Ayah navigation, and per-language translations.
  * Data source: https://api.quran.com (public API v4)
+ * 
+ * Features a high-performance virtualized infinite scroll that renders only
+ * ~20 ayahs at a time while maintaining smooth scrolling and stable positions.
  */
 
 class PocketQuranManager {
@@ -26,77 +29,66 @@ class PocketQuranManager {
     },
   };
 
+  // Virtualization constants
+  static VISIBLE_AYAH_COUNT = 20;        // Max ayahs rendered at once
+  static ESTIMATED_AYAH_HEIGHT = 180;    // Initial estimate, recalculated dynamically
+  static BUFFER_AYAHS = 3;               // Extra ayahs above/below viewport
+  static SCROLL_THROTTLE_MS = 16;        // ~60fps throttle
+
   constructor(storage) {
     this.storage = storage;
 
-    // DOM
+    // DOM references
     this.card = document.getElementById("pocketQuranCard");
     this.headerMeta = document.getElementById("pocketQuranHeaderMeta");
-
-    // Surah selector (combobox)
     this.surahCombobox = document.getElementById("pocketQuranSurahCombobox");
     this.surahInput = document.getElementById("pocketQuranSurahInput");
     this.surahDropdown = document.getElementById("pocketQuranSurahDropdown");
     this.surahListEl = document.getElementById("pocketQuranSurahList");
-
     this.contentEl = document.getElementById("pocketQuranContent");
-
     this.ayahPrevBtn = document.getElementById("pocketQuranAyahPrev");
     this.ayahNextBtn = document.getElementById("pocketQuranAyahNext");
-
-    // Ayah selector (combobox)
     this.ayahCombobox = document.getElementById("pocketQuranAyahCombobox");
     this.ayahInput = document.getElementById("pocketQuranAyahInput");
     this.ayahDropdown = document.getElementById("pocketQuranAyahDropdown");
     this.ayahListEl = document.getElementById("pocketQuranAyahList");
-
-    this.arabicSizeRange = document.getElementById(
-      "pocketQuranArabicSizeRange"
-    );
-    this.arabicSizeValue = document.getElementById(
-      "pocketQuranArabicSizeValue"
-    );
-    this.translationSizeRange = document.getElementById(
-      "pocketQuranTranslationSizeRange"
-    );
-    this.translationSizeValue = document.getElementById(
-      "pocketQuranTranslationSizeValue"
-    );
+    this.arabicSizeRange = document.getElementById("pocketQuranArabicSizeRange");
+    this.arabicSizeValue = document.getElementById("pocketQuranArabicSizeValue");
+    this.translationSizeRange = document.getElementById("pocketQuranTranslationSizeRange");
+    this.translationSizeValue = document.getElementById("pocketQuranTranslationSizeValue");
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
-      // Component is optional depending on markup.
       return;
     }
 
+    // State
     this._chapters = [];
     this._activeSurah = 1;
     this._activeAyah = 1;
     this._activeTranslationId = 85;
-
     this._fetchController = null;
     this._scrollHighlightTimer = null;
     this._ayahJumpTimer = null;
     this._surahQuery = "";
 
-    // Verse caching + windowed rendering (keeps DOM small for long surahs)
+    // Verse caching
     this._versesCache = new Map();
-    this._activeVerses = null; // full verses for active surah/translation
-    this._activeVersesKey = null;
-    this._renderedAyahStart = 1;
-    this._renderedAyahEnd = 0;
-    // Render window tuning
-    // Keep this small to reduce DOM size and keep blur/backdrop-filter stable.
-    this._ayahWindowSize = 25;
-    this._ayahWindowBefore = 12; // centers target ayah in a 25-size window
-    this._windowObserver = null;
-    this._windowTopSentinel = null;
-    this._windowBottomSentinel = null;
-    this._lastScrollY = window.scrollY || 0;
-    this._scrollDir = null;
-    this._lastWindowShiftAt = 0;
-    this._windowShiftInProgress = false;
+    this._activeVerses = null;
 
-    // Dropdown portal (fixes stacking-context click-through on blurred UIs)
+    // Virtualization state
+    this._virtualContainer = null;
+    this._virtualSpacer = null;
+    this._virtualContent = null;
+    this._ayahHeights = new Map();           // Measured heights per ayah
+    this._avgAyahHeight = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
+    this._renderedRange = { start: 0, end: 0 };
+    this._scrollRAF = null;
+    this._isScrolling = false;
+    this._lastScrollTop = 0;
+    this._scrollDirection = 'down';
+    this._resizeObserver = null;
+
+    // Dropdown portal state
     this._dropdownPortalled = new WeakSet();
     this._dropdownPositionRaf = null;
 
@@ -108,17 +100,10 @@ class PocketQuranManager {
 
     this._activeSurah = this.clampNumber(pq.lastSurahNumber, 1, 114, 1);
     this._activeAyah = this.clampNumber(pq.lastAyahNumber, 1, 286, 1);
-    this._activeTranslationId = this.normalizeTranslationId(
-      pq.translationResourceId
-    );
+    this._activeTranslationId = this.normalizeTranslationId(pq.translationResourceId);
 
     const arabicFontSize = this.clampNumber(pq.arabicFontSize, 8, 144, 32);
-    const translationFontSize = this.clampNumber(
-      pq.translationFontSize,
-      8,
-      144,
-      18
-    );
+    const translationFontSize = this.clampNumber(pq.translationFontSize, 8, 144, 18);
 
     this.applyFontSizes(arabicFontSize, translationFontSize, {
       syncInputs: true,
@@ -131,12 +116,14 @@ class PocketQuranManager {
     this.loadChaptersAndRenderSurahPicker().then(() => {
       this.setActiveSurah(this._activeSurah, {
         preserveAyah: true,
-        // IMPORTANT: Don't scroll the entire dashboard to Pocket Quran on load/refresh.
-        // Users expect the dashboard to stay at the top on startup.
         autoScroll: false,
       });
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EVENT LISTENERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   setupEventListeners() {
     // Surah selection (event delegation)
@@ -160,9 +147,7 @@ class PocketQuranManager {
     if (this.surahInput) {
       this.surahInput.addEventListener("focus", () => {
         this._surahQuery = "";
-        try {
-          this.surahInput.select();
-        } catch (e) {}
+        try { this.surahInput.select(); } catch (e) {}
         openSurahDropdown();
       });
       this.surahInput.addEventListener("click", () => {
@@ -210,7 +195,6 @@ class PocketQuranManager {
       this.updateAyahDropdownActiveState();
     };
 
-    // Ayah navigation
     const jumpToAyahFromInput = () => {
       const n = this.clampNumber(
         parseInt(this.ayahInput?.value, 10),
@@ -226,13 +210,9 @@ class PocketQuranManager {
       this.ayahInput.addEventListener("focus", openAyahDropdown);
       this.ayahInput.addEventListener("click", openAyahDropdown);
       this.ayahInput.addEventListener("input", () => {
-        // debounce so manual typing doesn't aggressively scroll
         if (this._ayahJumpTimer) clearTimeout(this._ayahJumpTimer);
-        this._ayahJumpTimer = setTimeout(() => {
-          jumpToAyahFromInput();
-        }, 250);
+        this._ayahJumpTimer = setTimeout(() => jumpToAyahFromInput(), 250);
       });
-
       this.ayahInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           this.closeDropdown(this.ayahDropdown);
@@ -244,7 +224,6 @@ class PocketQuranManager {
         jumpToAyahFromInput();
         this.closeDropdown(this.ayahDropdown);
       });
-
       this.ayahInput.addEventListener("change", () => {
         if (this._ayahJumpTimer) clearTimeout(this._ayahJumpTimer);
         jumpToAyahFromInput();
@@ -254,12 +233,7 @@ class PocketQuranManager {
     if (this.ayahPrevBtn) {
       this.ayahPrevBtn.addEventListener("click", () => {
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(
-          parseInt(this.ayahInput?.value, 10),
-          1,
-          max,
-          1
-        );
+        const current = this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1);
         const next = this.clampNumber(current - 1, 1, max, 1);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
@@ -269,108 +243,65 @@ class PocketQuranManager {
     if (this.ayahNextBtn) {
       this.ayahNextBtn.addEventListener("click", () => {
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(
-          parseInt(this.ayahInput?.value, 10),
-          1,
-          max,
-          1
-        );
+        const current = this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1);
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
       });
     }
 
-    // Font size controls (component-local but persisted into settings)
+    // Font size controls
     if (this.arabicSizeRange) {
       this.arabicSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(
-          parseInt(this.arabicSizeRange.value, 10),
-          8,
-          144,
-          32
-        );
-        const t = this.clampNumber(
-          parseInt(this.translationSizeRange?.value, 10),
-          8,
-          144,
-          18
-        );
+        const a = this.clampNumber(parseInt(this.arabicSizeRange.value, 10), 8, 144, 32);
+        const t = this.clampNumber(parseInt(this.translationSizeRange?.value, 10), 8, 144, 18);
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
+        // Invalidate height cache when font size changes
+        this._ayahHeights.clear();
+        this.recalculateVirtualization();
       });
       this.arabicSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          arabicFontSize: this.clampNumber(
-            parseInt(this.arabicSizeRange.value, 10),
-            8,
-            144,
-            32
-          ),
+          arabicFontSize: this.clampNumber(parseInt(this.arabicSizeRange.value, 10), 8, 144, 32),
         });
       });
     }
 
     if (this.translationSizeRange) {
       this.translationSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(
-          parseInt(this.arabicSizeRange?.value, 10),
-          8,
-          144,
-          32
-        );
-        const t = this.clampNumber(
-          parseInt(this.translationSizeRange.value, 10),
-          8,
-          144,
-          18
-        );
+        const a = this.clampNumber(parseInt(this.arabicSizeRange?.value, 10), 8, 144, 32);
+        const t = this.clampNumber(parseInt(this.translationSizeRange.value, 10), 8, 144, 18);
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
+        // Invalidate height cache when font size changes
+        this._ayahHeights.clear();
+        this.recalculateVirtualization();
       });
       this.translationSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          translationFontSize: this.clampNumber(
-            parseInt(this.translationSizeRange.value, 10),
-            8,
-            144,
-            18
-          ),
+          translationFontSize: this.clampNumber(parseInt(this.translationSizeRange.value, 10), 8, 144, 18),
         });
       });
     }
 
-    // React to settings changes after a save/reload isn't needed, but we do support
-    // live changes if the user changes translation in settings and reloads.
-
     // Close dropdowns when clicking outside
     document.addEventListener("click", (e) => {
       const t = e.target;
-      const inSurahDropdown =
-        this.surahDropdown &&
+      const inSurahDropdown = this.surahDropdown &&
         (this.surahDropdown === t || this.surahDropdown.contains(t));
-      const inAyahDropdown =
-        this.ayahDropdown &&
+      const inAyahDropdown = this.ayahDropdown &&
         (this.ayahDropdown === t || this.ayahDropdown.contains(t));
 
-      if (
-        this.surahCombobox &&
-        !this.surahCombobox.contains(t) &&
-        !inSurahDropdown
-      ) {
+      if (this.surahCombobox && !this.surahCombobox.contains(t) && !inSurahDropdown) {
         this.closeDropdown(this.surahDropdown);
       }
-      if (
-        this.ayahCombobox &&
-        !this.ayahCombobox.contains(t) &&
-        !inAyahDropdown
-      ) {
+      if (this.ayahCombobox && !this.ayahCombobox.contains(t) && !inAyahDropdown) {
         this.closeDropdown(this.ayahDropdown);
       }
     });
 
-    // Reposition any open dropdowns on scroll/resize
+    // Reposition dropdowns on scroll/resize
     const reposition = () => {
-      if (this._dropdownPositionRaf)
-        cancelAnimationFrame(this._dropdownPositionRaf);
+      if (this._dropdownPositionRaf) cancelAnimationFrame(this._dropdownPositionRaf);
       this._dropdownPositionRaf = requestAnimationFrame(() => {
         this.positionDropdown(this.surahDropdown);
         this.positionDropdown(this.ayahDropdown);
@@ -380,20 +311,7 @@ class PocketQuranManager {
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
 
-    // Track scroll direction for seamless window shifting
-    window.addEventListener(
-      "scroll",
-      () => {
-        const y = window.scrollY || 0;
-        const delta = y - (this._lastScrollY || 0);
-        if (delta > 2) this._scrollDir = "down";
-        else if (delta < -2) this._scrollDir = "up";
-        this._lastScrollY = y;
-      },
-      { passive: true }
-    );
-
-    // React to per-card blur overrides (emitted by app.js)
+    // Blur update events
     document.addEventListener("md:card-blur-update", (e) => {
       const cardId = e?.detail?.cardId;
       if (cardId && cardId !== "pocketQuranCard") return;
@@ -401,218 +319,413 @@ class PocketQuranManager {
       this.syncDropdownBlurMultiplier(this.ayahDropdown);
     });
 
-    // React to global dashboard blur changes (emitted by settings.js)
     document.addEventListener("md:ui-blur-update", () => {
       this.syncDropdownBlurMultiplier(this.surahDropdown);
       this.syncDropdownBlurMultiplier(this.ayahDropdown);
     });
   }
 
-  getVersesCacheKey(surah, translationId) {
-    return `${surah}|${translationId}`;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VIRTUALIZATION ENGINE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Initialize the virtualized scroll container.
+   * Creates a structure with:
+   * - A fixed-height scroll container
+   * - A spacer div that sets total scrollable height
+   * - An absolutely positioned content div for rendered ayahs
+   */
+  initVirtualization() {
+    if (!this.contentEl || !this._activeVerses?.length) return;
+
+    // Clear previous content
+    this.contentEl.innerHTML = "";
+    this._ayahHeights.clear();
+    this._renderedRange = { start: 0, end: 0 };
+
+    // Create virtual scroll container
+    this._virtualContainer = document.createElement("div");
+    this._virtualContainer.className = "pq-virtual-container";
+    this._virtualContainer.style.cssText = `
+      position: relative;
+      height: 600px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border-radius: var(--radius-lg);
+    `;
+
+    // Create spacer that determines total scroll height
+    this._virtualSpacer = document.createElement("div");
+    this._virtualSpacer.className = "pq-virtual-spacer";
+    this._virtualSpacer.style.cssText = `
+      position: relative;
+      width: 100%;
+      pointer-events: none;
+    `;
+
+    // Create content container for rendered ayahs
+    this._virtualContent = document.createElement("div");
+    this._virtualContent.className = "pq-virtual-content";
+    this._virtualContent.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    `;
+
+    this._virtualSpacer.appendChild(this._virtualContent);
+    this._virtualContainer.appendChild(this._virtualSpacer);
+    this.contentEl.appendChild(this._virtualContainer);
+
+    // Calculate initial total height
+    this.updateTotalHeight();
+
+    // Attach scroll listener with throttling
+    this._virtualContainer.addEventListener("scroll", this.handleVirtualScroll.bind(this), { passive: true });
+
+    // Observe container resize
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+    }
+    this._resizeObserver = new ResizeObserver(() => {
+      this.recalculateVirtualization();
+    });
+    this._resizeObserver.observe(this._virtualContainer);
+
+    // Initial render
+    this.renderVisibleAyahs(0);
   }
 
-  computeAyahWindowRange(targetAyah, totalAyahs) {
-    const total = this.clampNumber(totalAyahs, 1, 1000, 1);
-    const windowSize = this.clampNumber(this._ayahWindowSize, 1, 300, 25);
-    const before = this.clampNumber(
-      this._ayahWindowBefore,
-      0,
-      windowSize - 1,
-      0
-    );
+  /**
+   * Calculate the total scrollable height based on estimated/measured ayah heights.
+   */
+  updateTotalHeight() {
+    if (!this._virtualSpacer || !this._activeVerses?.length) return;
 
-    if (total <= windowSize) {
-      return { start: 1, end: total };
+    let totalHeight = 0;
+    const total = this._activeVerses.length;
+    const gap = 16; // var(--spacing-md) ≈ 16px
+
+    for (let i = 0; i < total; i++) {
+      const measuredHeight = this._ayahHeights.get(i);
+      totalHeight += (measuredHeight ?? this._avgAyahHeight) + gap;
     }
 
-    const n = this.clampNumber(targetAyah, 1, total, 1);
-    let start = n - before;
-    start = Math.max(1, start);
-
-    // Ensure window stays within bounds.
-    const maxStart = Math.max(1, total - windowSize + 1);
-    start = Math.min(start, maxStart);
-
-    const end = Math.min(total, start + windowSize - 1);
-    return { start, end };
+    this._virtualSpacer.style.height = `${totalHeight}px`;
   }
 
-  ensureWindowObserver() {
-    if (this._windowObserver) return;
-    if (typeof IntersectionObserver === "undefined") return;
+  /**
+   * Get the scroll offset for a specific ayah index.
+   */
+  getAyahOffset(index) {
+    let offset = 0;
+    const gap = 16;
 
-    this._windowObserver = new IntersectionObserver(
-      (entries) => {
-        if (this._windowShiftInProgress) return;
-        if (!this._activeVerses || !Array.isArray(this._activeVerses)) return;
+    for (let i = 0; i < index; i++) {
+      const height = this._ayahHeights.get(i) ?? this._avgAyahHeight;
+      offset += height + gap;
+    }
 
-        const total = this._activeVerses.length || 0;
-        if (total <= this._ayahWindowSize) return;
+    return offset;
+  }
 
-        const dir = this._scrollDir;
-        if (!dir) return;
+  /**
+   * Find which ayah index is at a given scroll offset.
+   */
+  getAyahAtOffset(scrollTop) {
+    if (!this._activeVerses?.length) return 0;
 
-        const now = Date.now();
-        if (now - (this._lastWindowShiftAt || 0) < 250) return;
+    let offset = 0;
+    const gap = 16;
+    const total = this._activeVerses.length;
 
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const kind = entry?.target?.dataset?.pqSentinel;
-
-          if (kind === "bottom" && dir === "down") {
-            const nextAyah = this.clampNumber(
-              (this._renderedAyahEnd || 0) + 1,
-              1,
-              total,
-              total
-            );
-            if (nextAyah > (this._renderedAyahEnd || 0) && nextAyah <= total) {
-              this._lastWindowShiftAt = now;
-              this.shiftWindowToAyah(nextAyah, { direction: "down" });
-            }
-          }
-
-          if (kind === "top" && dir === "up") {
-            const prevAyah = this.clampNumber(
-              (this._renderedAyahStart || 1) - 1,
-              1,
-              total,
-              1
-            );
-            if (prevAyah < (this._renderedAyahStart || 1) && prevAyah >= 1) {
-              this._lastWindowShiftAt = now;
-              this.shiftWindowToAyah(prevAyah, { direction: "up" });
-            }
-          }
-        }
-      },
-      {
-        root: null,
-        // Trigger slightly before fully reaching the edges.
-        rootMargin: "600px 0px 600px 0px",
-        threshold: 0.01,
+    for (let i = 0; i < total; i++) {
+      const height = this._ayahHeights.get(i) ?? this._avgAyahHeight;
+      if (offset + height + gap > scrollTop) {
+        return i;
       }
-    );
+      offset += height + gap;
+    }
+
+    return total - 1;
   }
 
-  getViewportAnchorAyah(direction) {
-    if (!this.contentEl) return null;
-    const ayahEls = Array.from(
-      this.contentEl.querySelectorAll(".pocket-quran-ayah")
-    );
-    if (!ayahEls.length) return null;
+  /**
+   * Handle scroll events with RAF throttling.
+   */
+  handleVirtualScroll() {
+    if (this._scrollRAF) return;
 
-    const viewportHeight =
-      window.innerHeight || document.documentElement?.clientHeight || 0;
+    this._scrollRAF = requestAnimationFrame(() => {
+      this._scrollRAF = null;
 
-    const inView = [];
-    for (const el of ayahEls) {
+      if (!this._virtualContainer) return;
+
+      const scrollTop = this._virtualContainer.scrollTop;
+      
+      // Track scroll direction
+      this._scrollDirection = scrollTop > this._lastScrollTop ? 'down' : 'up';
+      this._lastScrollTop = scrollTop;
+
+      // Find the ayah at current scroll position
+      const firstVisibleIndex = this.getAyahAtOffset(scrollTop);
+      
+      // Calculate visible range with buffer
+      const buffer = PocketQuranManager.BUFFER_AYAHS;
+      const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
+      const total = this._activeVerses?.length || 0;
+
+      const start = Math.max(0, firstVisibleIndex - buffer);
+      const end = Math.min(total - 1, firstVisibleIndex + visibleCount + buffer);
+
+      // Only re-render if range changed significantly
+      if (start !== this._renderedRange.start || end !== this._renderedRange.end) {
+        this.renderVisibleAyahs(start, end);
+      }
+
+      // Update active ayah for UI
+      this._activeAyah = firstVisibleIndex + 1;
+      if (this.ayahInput && document.activeElement !== this.ayahInput) {
+        this.ayahInput.value = String(this._activeAyah);
+      }
+      this.updateAyahDropdownActiveState();
+    });
+  }
+
+  /**
+   * Render only the visible ayahs within the given range.
+   */
+  renderVisibleAyahs(start, end) {
+    if (!this._virtualContent || !this._activeVerses?.length) return;
+
+    const total = this._activeVerses.length;
+    start = Math.max(0, start ?? 0);
+    end = Math.min(total - 1, end ?? (start + PocketQuranManager.VISIBLE_AYAH_COUNT - 1));
+
+    // Skip if same range
+    if (start === this._renderedRange.start && end === this._renderedRange.end) {
+      return;
+    }
+
+    this._renderedRange = { start, end };
+
+    // Calculate top offset for positioning
+    const topOffset = this.getAyahOffset(start);
+    this._virtualContent.style.transform = `translateY(${topOffset}px)`;
+
+    // Build fragment for new ayahs
+    const fragment = document.createDocumentFragment();
+
+    for (let i = start; i <= end; i++) {
+      const verse = this._activeVerses[i];
+      if (!verse) continue;
+
+      const ayahEl = this.createAyahElement(verse, i);
+      fragment.appendChild(ayahEl);
+    }
+
+    // Replace content
+    this._virtualContent.innerHTML = "";
+    this._virtualContent.appendChild(fragment);
+
+    // Measure rendered ayahs and update heights
+    requestAnimationFrame(() => {
+      this.measureRenderedAyahs();
+    });
+  }
+
+  /**
+   * Measure the actual heights of rendered ayahs and update the cache.
+   */
+  measureRenderedAyahs() {
+    if (!this._virtualContent) return;
+
+    const ayahEls = this._virtualContent.querySelectorAll(".pocket-quran-ayah");
+    let totalMeasured = 0;
+    let measureCount = 0;
+
+    ayahEls.forEach((el) => {
+      const index = parseInt(el.dataset.index, 10);
+      if (!Number.isFinite(index)) return;
+
       const rect = el.getBoundingClientRect();
-      if (rect.bottom > 0 && rect.top < viewportHeight) {
-        const n = parseInt(el.dataset.ayah, 10);
-        if (Number.isFinite(n)) inView.push({ el, rect, n });
+      const height = rect.height;
+
+      if (height > 0) {
+        this._ayahHeights.set(index, height);
+        totalMeasured += height;
+        measureCount++;
       }
+    });
+
+    // Update average height
+    if (measureCount > 0) {
+      const newAvg = totalMeasured / measureCount;
+      // Smooth the average to avoid sudden jumps
+      this._avgAyahHeight = this._avgAyahHeight * 0.7 + newAvg * 0.3;
     }
 
-    const pool = inView.length ? inView : null;
-    if (!pool) {
-      const fallback = ayahEls[0];
-      const rect = fallback.getBoundingClientRect();
-      const n = parseInt(fallback.dataset.ayah, 10);
-      if (!Number.isFinite(n)) return null;
-      return { ayahNumber: n, top: rect.top };
-    }
-
-    let chosen = pool[0];
-    for (const item of pool) {
-      if (direction === "up") {
-        if (item.rect.top > chosen.rect.top) chosen = item;
-      } else {
-        if (item.rect.top < chosen.rect.top) chosen = item;
-      }
-    }
-
-    return { ayahNumber: chosen.n, top: chosen.rect.top };
+    // Update total height if measurements changed
+    this.updateTotalHeight();
   }
 
-  shiftWindowToAyah(targetAyah, opts = {}) {
-    const { direction = "down" } = opts;
-    if (!this._activeVerses || !Array.isArray(this._activeVerses)) return;
-    const total = this._activeVerses.length || 0;
-    if (!total) return;
+  /**
+   * Recalculate virtualization after resize or content changes.
+   */
+  recalculateVirtualization() {
+    if (!this._virtualContainer || !this._activeVerses?.length) return;
 
-    const n = this.clampNumber(targetAyah, 1, total, 1);
-    const within = n >= this._renderedAyahStart && n <= this._renderedAyahEnd;
-    if (within) return;
+    const scrollTop = this._virtualContainer.scrollTop;
+    const firstVisible = this.getAyahAtOffset(scrollTop);
 
-    const anchor = this.getViewportAnchorAyah(direction);
+    this.updateTotalHeight();
+    
+    const buffer = PocketQuranManager.BUFFER_AYAHS;
+    const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
+    const total = this._activeVerses.length;
 
-    this._windowShiftInProgress = true;
-    try {
-      this.renderVersesWindow(this._activeVerses, n);
-    } finally {
-      // Preserve visual position by keeping an anchor ayah at the same viewport offset.
-      requestAnimationFrame(() => {
-        try {
-          if (anchor?.ayahNumber) {
-            const anchorEl = document.getElementById(
-              `pocketQuranAyah-${anchor.ayahNumber}`
-            );
-            if (anchorEl) {
-              const newTop = anchorEl.getBoundingClientRect().top;
-              const delta = newTop - anchor.top;
-              if (Number.isFinite(delta) && Math.abs(delta) > 0.5) {
-                window.scrollBy(0, delta);
-              }
-            }
-          }
-        } catch (e) {}
+    const start = Math.max(0, firstVisible - buffer);
+    const end = Math.min(total - 1, firstVisible + visibleCount + buffer);
 
-        this._windowShiftInProgress = false;
+    // Force re-render
+    this._renderedRange = { start: -1, end: -1 };
+    this.renderVisibleAyahs(start, end);
+  }
+
+  /**
+   * Scroll to a specific ayah number (1-indexed).
+   */
+  scrollToAyah(ayahNumber, opts = {}) {
+    const { persist = true, smooth = true, skipScroll = false } = opts;
+
+    const max = this.getActiveSurahAyahCount() || 286;
+    const n = this.clampNumber(ayahNumber, 1, max, 1);
+    this._activeAyah = n;
+
+    if (this.ayahInput) {
+      this.ayahInput.value = String(n);
+    }
+
+    if (!skipScroll && this._virtualContainer && this._activeVerses?.length) {
+      const index = n - 1; // Convert to 0-indexed
+      const offset = this.getAyahOffset(index);
+
+      // Ensure the ayah is rendered first
+      const buffer = PocketQuranManager.BUFFER_AYAHS;
+      const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
+      const total = this._activeVerses.length;
+
+      const start = Math.max(0, index - buffer);
+      const end = Math.min(total - 1, index + visibleCount + buffer);
+
+      this.renderVisibleAyahs(start, end);
+
+      // Scroll to the ayah
+      this._virtualContainer.scrollTo({
+        top: offset,
+        behavior: smooth ? "smooth" : "auto",
+      });
+
+      // Highlight the ayah after scroll
+      setTimeout(() => {
+        this.highlightAyah(n);
+      }, smooth ? 300 : 50);
+    }
+
+    if (persist) {
+      this.persistPocketQuranSettings({
+        lastAyahNumber: n,
+        lastSurahNumber: this._activeSurah,
       });
     }
+
+    this.updateAyahDropdownActiveState();
   }
 
-  observeWindowSentinels() {
-    if (!this._windowObserver) return;
+  /**
+   * Apply highlight animation to an ayah.
+   */
+  highlightAyah(ayahNumber) {
+    const el = this._virtualContent?.querySelector(`[data-ayah="${ayahNumber}"]`);
+    if (!el) return;
 
-    try {
-      if (this._windowTopSentinel)
-        this._windowObserver.unobserve(this._windowTopSentinel);
-      if (this._windowBottomSentinel)
-        this._windowObserver.unobserve(this._windowBottomSentinel);
-    } catch (e) {}
+    if (this._scrollHighlightTimer) clearTimeout(this._scrollHighlightTimer);
+    
+    el.classList.remove("pq-highlight");
+    void el.offsetWidth; // Force reflow
+    el.classList.add("pq-highlight");
 
-    try {
-      if (this._windowTopSentinel)
-        this._windowObserver.observe(this._windowTopSentinel);
-      if (this._windowBottomSentinel)
-        this._windowObserver.observe(this._windowBottomSentinel);
-    } catch (e) {}
+    this._scrollHighlightTimer = setTimeout(() => {
+      el.classList.remove("pq-highlight");
+    }, 1400);
   }
 
-  resetWindowState() {
-    this._activeVerses = null;
-    this._activeVersesKey = null;
-    this._renderedAyahStart = 1;
-    this._renderedAyahEnd = 0;
-    this._windowTopSentinel = null;
-    this._windowBottomSentinel = null;
-    try {
-      if (this._windowObserver) this._windowObserver.disconnect();
-    } catch (e) {}
-    this._windowObserver = null;
+  /**
+   * Create an ayah DOM element.
+   */
+  createAyahElement(verse, index) {
+    const ayahNumber = verse?.verse_number;
+    
+    const ayahEl = document.createElement("div");
+    ayahEl.className = "pocket-quran-ayah";
+    ayahEl.id = `pocketQuranAyah-${ayahNumber}`;
+    ayahEl.dataset.ayah = String(ayahNumber);
+    ayahEl.dataset.index = String(index);
+
+    const badge = document.createElement("div");
+    badge.className = "pocket-quran-ayah-badge";
+    badge.textContent = String(ayahNumber);
+
+    const ar = document.createElement("div");
+    ar.className = "pocket-quran-ayah-ar";
+    ar.setAttribute("dir", "rtl");
+    ar.textContent = verse?.text_uthmani || "";
+
+    const tr = document.createElement("div");
+    tr.className = "pocket-quran-ayah-tr";
+    const rawTranslation = Array.isArray(verse?.translations)
+      ? verse.translations[0]?.text
+      : "";
+    tr.textContent = this.stripHtmlToText(rawTranslation || "");
+
+    ayahEl.appendChild(badge);
+    ayahEl.appendChild(ar);
+    ayahEl.appendChild(tr);
+
+    return ayahEl;
   }
+
+  /**
+   * Clean up virtualization resources.
+   */
+  destroyVirtualization() {
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+    if (this._scrollRAF) {
+      cancelAnimationFrame(this._scrollRAF);
+      this._scrollRAF = null;
+    }
+    this._virtualContainer = null;
+    this._virtualSpacer = null;
+    this._virtualContent = null;
+    this._ayahHeights.clear();
+    this._renderedRange = { start: 0, end: 0 };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DROPDOWN MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
 
   getEffectiveBlurMultiplier() {
-    // First, check if the card has an explicit inline style override.
-    // This takes precedence over inherited values.
     if (this.card) {
       try {
-        const inlineVal = this.card.style.getPropertyValue(
-          "--ui-blur-multiplier"
-        );
+        const inlineVal = this.card.style.getPropertyValue("--ui-blur-multiplier");
         if (inlineVal) {
           const n = parseFloat(String(inlineVal).trim());
           if (Number.isFinite(n) && n >= 0) return n;
@@ -620,26 +733,21 @@ class PocketQuranManager {
       } catch (e) {}
     }
 
-    // Fall back to the computed value (inherited from root or set elsewhere).
     const readComputed = (el) => {
       if (!el) return null;
       try {
-        const raw =
-          getComputedStyle(el).getPropertyValue("--ui-blur-multiplier") || "";
+        const raw = getComputedStyle(el).getPropertyValue("--ui-blur-multiplier") || "";
         const n = parseFloat(String(raw).trim());
         if (Number.isFinite(n) && n >= 0) return n;
       } catch (e) {}
       return null;
     };
 
-    return (
-      readComputed(this.card) ?? readComputed(document.documentElement) ?? 1
-    );
+    return readComputed(this.card) ?? readComputed(document.documentElement) ?? 1;
   }
 
   syncDropdownBlurMultiplier(el) {
     if (!el) return;
-    // Only needed once the dropdown is open/portalled, but safe either way.
     const multiplier = this.getEffectiveBlurMultiplier();
     try {
       el.style.setProperty("--ui-blur-multiplier", String(multiplier));
@@ -654,15 +762,12 @@ class PocketQuranManager {
       el.classList.add("pq-portal");
       this._dropdownPortalled.add(el);
     } catch (e) {}
-
-    // Ensure blur multiplier is inherited even when portalled to <body>.
     this.syncDropdownBlurMultiplier(el);
   }
 
   positionDropdown(el) {
     if (!el || el.hidden) return;
 
-    // Keep blur multiplier in sync while open (e.g., after changing card blur).
     this.syncDropdownBlurMultiplier(el);
 
     let anchor = null;
@@ -674,32 +779,20 @@ class PocketQuranManager {
     const gap = 8;
     const viewportPadding = 10;
 
-    // Compute available space and choose direction for best fit.
     const belowSpace = window.innerHeight - rect.bottom - gap - viewportPadding;
     const aboveSpace = rect.top - gap - viewportPadding;
-
     const preferAbove = belowSpace < 200 && aboveSpace > belowSpace;
 
     const left = Math.max(viewportPadding, Math.round(rect.left));
     const width = Math.max(220, Math.round(rect.width));
+    const maxListHeight = Math.min(420, Math.max(180, Math.floor((preferAbove ? aboveSpace : belowSpace) - 10)));
 
-    // Max list height: fit viewport, but don't exceed design cap.
-    const maxListHeight = Math.min(
-      420,
-      Math.max(180, Math.floor((preferAbove ? aboveSpace : belowSpace) - 10))
-    );
-
-    // Position the container.
     el.style.left = `${left}px`;
     el.style.width = `${width}px`;
     el.style.right = "auto";
 
     if (preferAbove) {
-      // Place above anchor; we don't know dropdown height exactly, so use bottom positioning.
-      const bottom = Math.max(
-        viewportPadding,
-        Math.round(window.innerHeight - rect.top + gap)
-      );
+      const bottom = Math.max(viewportPadding, Math.round(window.innerHeight - rect.top + gap));
       el.style.top = "auto";
       el.style.bottom = `${bottom}px`;
     } else {
@@ -718,11 +811,8 @@ class PocketQuranManager {
     if (!el) return;
     this.ensureDropdownPortal(el);
     try {
-      // If the dropdown is portalled to <body>, it won't have a combobox ancestor.
-      if (el === this.surahDropdown && this.surahCombobox)
-        this.surahCombobox.classList.add("pq-open");
-      if (el === this.ayahDropdown && this.ayahCombobox)
-        this.ayahCombobox.classList.add("pq-open");
+      if (el === this.surahDropdown && this.surahCombobox) this.surahCombobox.classList.add("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox) this.ayahCombobox.classList.add("pq-open");
     } catch (e) {}
     el.hidden = false;
     this.syncDropdownBlurMultiplier(el);
@@ -732,13 +822,15 @@ class PocketQuranManager {
   closeDropdown(el) {
     if (!el) return;
     try {
-      if (el === this.surahDropdown && this.surahCombobox)
-        this.surahCombobox.classList.remove("pq-open");
-      if (el === this.ayahDropdown && this.ayahCombobox)
-        this.ayahCombobox.classList.remove("pq-open");
+      if (el === this.surahDropdown && this.surahCombobox) this.surahCombobox.classList.remove("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox) this.ayahCombobox.classList.remove("pq-open");
     } catch (e) {}
     el.hidden = true;
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SURAH MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
 
   formatSurahLabel(ch) {
     if (!ch) return "";
@@ -787,19 +879,345 @@ class PocketQuranManager {
 
     if (/^\d+$/.test(q)) {
       const id = parseInt(q, 10);
-      const ch = this._chapters.find((c) => c.id === id);
-      return ch || null;
+      return this._chapters.find((c) => c.id === id) || null;
     }
 
     const lower = q.toLowerCase();
-    const exact = this._chapters.find(
-      (c) => String(c.name_simple || "").toLowerCase() === lower
-    );
+    const exact = this._chapters.find((c) => String(c.name_simple || "").toLowerCase() === lower);
     if (exact) return exact;
 
     const filtered = this.getFilteredChapters(q);
     return filtered.length ? filtered[0] : null;
   }
+
+  getVersesCacheKey(surah, translationId) {
+    return `${surah}|${translationId}`;
+  }
+
+  async loadChaptersAndRenderSurahPicker() {
+    try {
+      const cached = this.storage.get("pocketQuran_chapters_cache", null);
+      const cachedAt = this.storage.get("pocketQuran_chapters_cache_at", 0);
+      const freshEnough = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+
+      if (cached && Array.isArray(cached) && freshEnough) {
+        this._chapters = cached;
+        this.renderSurahList();
+        this.updateSurahInputValue({ force: true });
+        return;
+      }
+
+      const url = `${PocketQuranManager.API_BASE}/chapters?language=en`;
+      const data = await this.fetchJson(url, { timeoutMs: 15000 });
+      const chapters = Array.isArray(data?.chapters) ? data.chapters : [];
+
+      this._chapters = chapters
+        .map((c) => ({
+          id: c.id,
+          name_simple: c.name_simple,
+          name_arabic: c.name_arabic,
+          verses_count: c.verses_count,
+        }))
+        .filter((c) => Number.isFinite(c.id));
+
+      this.storage.set("pocketQuran_chapters_cache", this._chapters);
+      this.storage.set("pocketQuran_chapters_cache_at", Date.now());
+
+      this.renderSurahList();
+      this.updateSurahInputValue({ force: true });
+    } catch (e) {
+      console.error("PocketQuran: failed to load chapters", e);
+      this._chapters = [];
+      this.renderSurahList({ failed: true });
+      this.renderError("Could not load Surah list. Check your internet connection.");
+    }
+  }
+
+  renderSurahList(opts = {}) {
+    const { failed = false } = opts;
+
+    if (!this.surahListEl) return;
+    this.surahListEl.innerHTML = "";
+
+    if (failed) {
+      const div = document.createElement("div");
+      div.className = "pocket-quran-dropdown-empty";
+      div.textContent = "Surah list unavailable";
+      this.surahListEl.appendChild(div);
+      return;
+    }
+
+    const chapters = this.getFilteredChapters(this._surahQuery);
+    const frag = document.createDocumentFragment();
+
+    for (const ch of chapters) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "pocket-quran-surah-item";
+      btn.dataset.surah = String(ch.id);
+
+      const num = document.createElement("span");
+      num.className = "pq-surah-num";
+      num.textContent = String(ch.id);
+
+      const names = document.createElement("span");
+      names.className = "pq-surah-names";
+
+      const en = document.createElement("span");
+      en.className = "pq-surah-en";
+      en.textContent = ch.name_simple || `Surah ${ch.id}`;
+
+      const ar = document.createElement("span");
+      ar.className = "pq-surah-ar";
+      ar.setAttribute("dir", "rtl");
+      ar.textContent = ch.name_arabic || "";
+
+      names.appendChild(en);
+      names.appendChild(ar);
+      btn.appendChild(num);
+      btn.appendChild(names);
+      frag.appendChild(btn);
+    }
+
+    this.surahListEl.appendChild(frag);
+    this.updateSurahActiveState();
+  }
+
+  updateSurahActiveState() {
+    if (!this.surahListEl) return;
+    for (const btn of this.surahListEl.querySelectorAll(".pocket-quran-surah-item")) {
+      const surah = parseInt(btn.dataset.surah, 10);
+      btn.classList.toggle("active", surah === this._activeSurah);
+      btn.setAttribute("aria-current", surah === this._activeSurah ? "true" : "false");
+    }
+  }
+
+  async setActiveSurah(surahNumber, opts = {}) {
+    const { preserveAyah = false, autoScroll = true } = opts;
+
+    const surah = this.clampNumber(surahNumber, 1, 114, 1);
+    const versesAlreadyRendered = Boolean(this.contentEl?.querySelector?.(".pocket-quran-ayah"));
+    
+    if (surah === this._activeSurah && versesAlreadyRendered) {
+      this.updateSurahActiveState();
+      this.updateSurahInputValue({ force: true });
+      return;
+    }
+
+    this._activeSurah = surah;
+    if (!preserveAyah) this._activeAyah = 1;
+
+    const persistPatch = {
+      lastSurahNumber: surah,
+      translationResourceId: this._activeTranslationId,
+    };
+    if (!preserveAyah) persistPatch.lastAyahNumber = 1;
+    this.persistPocketQuranSettings(persistPatch);
+
+    this.updateSurahActiveState();
+    this.updateSurahInputValue({ force: true });
+
+    await this.loadSurah(surah, { autoScroll });
+  }
+
+  async loadSurah(surah, opts = {}) {
+    const { autoScroll = true } = opts;
+    const chapter = this._chapters.find((c) => c.id === surah);
+    const surahName = chapter?.name_simple || `Surah ${surah}`;
+    const surahNameAr = chapter?.name_arabic || "";
+
+    // Clean up previous virtualization
+    this.destroyVirtualization();
+    this.renderLoading(`Loading ${surahName}…`);
+
+    try {
+      if (this._fetchController) this._fetchController.abort();
+    } catch (e) {}
+
+    const controller = new AbortController();
+    this._fetchController = controller;
+
+    try {
+      const translationId = this.normalizeTranslationId(
+        this.storage.getSettings()?.pocketQuran?.translationResourceId
+      );
+      this._activeTranslationId = translationId;
+
+      const cacheKey = this.getVersesCacheKey(surah, translationId);
+      const cached = this._versesCache.get(cacheKey);
+      const hasCached = cached && Array.isArray(cached.verses) && cached.verses.length;
+
+      let verses = [];
+      if (hasCached) {
+        verses = cached.verses;
+      } else {
+        const url = `${PocketQuranManager.API_BASE}/verses/by_chapter/${surah}?fields=text_uthmani,verse_number,verse_key&translations=${translationId}&per_page=300`;
+        const data = await this.fetchJson(url, {
+          signal: controller.signal,
+          timeoutMs: 20000,
+        });
+        verses = Array.isArray(data?.verses) ? data.verses : [];
+        this._versesCache.set(cacheKey, { verses, fetchedAt: Date.now() });
+      }
+
+      if (!verses.length) {
+        this.renderError("No verses returned by the API.");
+        return;
+      }
+
+      this._activeVerses = verses;
+
+      this.renderSurahHeader({
+        surah,
+        surahName,
+        surahNameAr,
+        versesCount: verses.length,
+      });
+
+      // Initialize virtualized rendering
+      this.initVirtualization();
+
+      this.updateAyahControls(verses.length);
+
+      const desired = this.clampNumber(
+        this.storage.getSettings()?.pocketQuran?.lastAyahNumber,
+        1,
+        verses.length,
+        1
+      );
+
+      if (this.ayahInput) this.ayahInput.value = String(desired);
+
+      // Scroll to the desired ayah
+      if (autoScroll && desired > 1) {
+        setTimeout(() => {
+          this.scrollToAyah(desired, { persist: false, smooth: false });
+        }, 100);
+      }
+
+      this.updateAyahDropdownActiveState();
+    } catch (e) {
+      if (e?.name === "AbortError") return;
+      console.error("PocketQuran: failed to load surah", e);
+      this.renderError("Could not load this Surah. Please try again.");
+    } finally {
+      if (this._fetchController === controller) this._fetchController = null;
+    }
+  }
+
+  renderSurahHeader({ surah, surahName, surahNameAr, versesCount }) {
+    if (!this.headerMeta) return;
+    const translation = PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label || "Translation";
+    this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AYAH CONTROLS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  updateAyahControls(ayahCount) {
+    const max = this.clampNumber(ayahCount, 1, 286, 1);
+    if (this.ayahInput && !this.ayahInput.value) {
+      this.ayahInput.value = "1";
+    }
+
+    if (this.ayahListEl) {
+      this.ayahListEl.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      for (let i = 1; i <= max; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pocket-quran-ayah-option";
+        btn.dataset.ayah = String(i);
+        btn.textContent = String(i);
+        frag.appendChild(btn);
+      }
+      this.ayahListEl.appendChild(frag);
+    }
+
+    this.updateAyahDropdownActiveState();
+  }
+
+  updateAyahDropdownActiveState() {
+    if (!this.ayahListEl) return;
+    const max = this.getActiveSurahAyahCount() || 286;
+    const current = this.clampNumber(this._activeAyah, 1, max, 1);
+    for (const btn of this.ayahListEl.querySelectorAll(".pocket-quran-ayah-option")) {
+      const n = parseInt(btn.dataset.ayah, 10);
+      btn.classList.toggle("active", n === current);
+      btn.setAttribute("aria-selected", n === current ? "true" : "false");
+    }
+  }
+
+  getActiveSurahAyahCount() {
+    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    const count = chapter?.verses_count;
+    return Number.isFinite(count) ? count : null;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDERING UTILITIES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  renderLoading(message) {
+    if (!this.contentEl) return;
+    this.destroyVirtualization();
+    this.contentEl.innerHTML = "";
+
+    const div = document.createElement("div");
+    div.className = "pocket-quran-loading";
+
+    const spinner = document.createElement("div");
+    spinner.className = "pocket-quran-spinner";
+
+    const text = document.createElement("div");
+    text.className = "pocket-quran-loading-text";
+    text.textContent = message || "Loading…";
+
+    div.appendChild(spinner);
+    div.appendChild(text);
+    this.contentEl.appendChild(div);
+  }
+
+  renderError(message) {
+    if (!this.contentEl) return;
+    this.destroyVirtualization();
+    this.contentEl.innerHTML = "";
+
+    const div = document.createElement("div");
+    div.className = "pocket-quran-error";
+
+    const text = document.createElement("div");
+    text.className = "pocket-quran-error-text";
+    text.textContent = message || "Something went wrong.";
+
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "pocket-quran-retry-btn";
+    retry.textContent = "Retry";
+    retry.addEventListener("click", () => this.loadSurah(this._activeSurah));
+
+    div.appendChild(text);
+    div.appendChild(retry);
+    this.contentEl.appendChild(div);
+  }
+
+  stripHtmlToText(html) {
+    try {
+      const div = document.createElement("div");
+      div.innerHTML = String(html || "");
+      return (div.textContent || "").replace(/\s+/g, " ").trim();
+    } catch (e) {
+      return String(html || "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UTILITIES
+  // ═══════════════════════════════════════════════════════════════════════════
 
   normalizeTranslationId(value) {
     const n = parseInt(value, 10);
@@ -835,11 +1253,9 @@ class PocketQuranManager {
 
     if (syncInputs) {
       if (this.arabicSizeRange) this.arabicSizeRange.value = String(a);
-      if (this.translationSizeRange)
-        this.translationSizeRange.value = String(t);
+      if (this.translationSizeRange) this.translationSizeRange.value = String(t);
       if (this.arabicSizeValue) this.arabicSizeValue.textContent = `${a}px`;
-      if (this.translationSizeValue)
-        this.translationSizeValue.textContent = `${t}px`;
+      if (this.translationSizeValue) this.translationSizeValue.textContent = `${t}px`;
     }
 
     if (persist) {
@@ -848,475 +1264,6 @@ class PocketQuranManager {
         translationFontSize: t,
       });
     }
-  }
-
-  getActiveSurahAyahCount() {
-    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
-    const count = chapter?.verses_count;
-    return Number.isFinite(count) ? count : null;
-  }
-
-  async loadChaptersAndRenderSurahPicker() {
-    try {
-      const cached = this.storage.get("pocketQuran_chapters_cache", null);
-      const cachedAt = this.storage.get("pocketQuran_chapters_cache_at", 0);
-      const freshEnough =
-        Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7; // 7 days
-
-      if (cached && Array.isArray(cached) && freshEnough) {
-        this._chapters = cached;
-        this.renderSurahList();
-        this.updateSurahInputValue({ force: true });
-        return;
-      }
-
-      const url = `${PocketQuranManager.API_BASE}/chapters?language=en`;
-      const data = await this.fetchJson(url, { timeoutMs: 15000 });
-      const chapters = Array.isArray(data?.chapters) ? data.chapters : [];
-
-      this._chapters = chapters
-        .map((c) => ({
-          id: c.id,
-          name_simple: c.name_simple,
-          name_arabic: c.name_arabic,
-          verses_count: c.verses_count,
-        }))
-        .filter((c) => Number.isFinite(c.id));
-
-      this.storage.set("pocketQuran_chapters_cache", this._chapters);
-      this.storage.set("pocketQuran_chapters_cache_at", Date.now());
-
-      this.renderSurahList();
-      this.updateSurahInputValue({ force: true });
-    } catch (e) {
-      console.error("PocketQuran: failed to load chapters", e);
-      this._chapters = [];
-      this.renderSurahList({ failed: true });
-      this.renderError(
-        "Could not load Surah list. Check your internet connection."
-      );
-    }
-  }
-
-  renderSurahList(opts = {}) {
-    const { failed = false } = opts;
-
-    if (!this.surahListEl) return;
-    this.surahListEl.innerHTML = "";
-
-    if (failed) {
-      const div = document.createElement("div");
-      div.className = "pocket-quran-dropdown-empty";
-      div.textContent = "Surah list unavailable";
-      this.surahListEl.appendChild(div);
-      return;
-    }
-
-    const chapters = this.getFilteredChapters(this._surahQuery);
-
-    const frag = document.createDocumentFragment();
-
-    for (const ch of chapters) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "pocket-quran-surah-item";
-      btn.dataset.surah = String(ch.id);
-
-      const num = document.createElement("span");
-      num.className = "pq-surah-num";
-      num.textContent = String(ch.id);
-
-      const names = document.createElement("span");
-      names.className = "pq-surah-names";
-
-      const en = document.createElement("span");
-      en.className = "pq-surah-en";
-      en.textContent = ch.name_simple || `Surah ${ch.id}`;
-
-      const ar = document.createElement("span");
-      ar.className = "pq-surah-ar";
-      ar.setAttribute("dir", "rtl");
-      ar.textContent = ch.name_arabic || "";
-
-      names.appendChild(en);
-      names.appendChild(ar);
-      btn.appendChild(num);
-      btn.appendChild(names);
-
-      frag.appendChild(btn);
-    }
-
-    this.surahListEl.appendChild(frag);
-    this.updateSurahActiveState();
-  }
-
-  updateSurahActiveState() {
-    if (!this.surahListEl) return;
-    for (const btn of this.surahListEl.querySelectorAll(
-      ".pocket-quran-surah-item"
-    )) {
-      const surah = parseInt(btn.dataset.surah, 10);
-      btn.classList.toggle("active", surah === this._activeSurah);
-      btn.setAttribute(
-        "aria-current",
-        surah === this._activeSurah ? "true" : "false"
-      );
-    }
-  }
-
-  async setActiveSurah(surahNumber, opts = {}) {
-    const { preserveAyah = false, autoScroll = true } = opts;
-
-    const surah = this.clampNumber(surahNumber, 1, 114, 1);
-    const versesAlreadyRendered = Boolean(
-      this.contentEl?.querySelector?.(".pocket-quran-ayah")
-    );
-    if (surah === this._activeSurah && versesAlreadyRendered) {
-      // still ensure highlight nav works
-      this.updateSurahActiveState();
-      this.updateSurahInputValue({ force: true });
-      return;
-    }
-
-    this._activeSurah = surah;
-    if (!preserveAyah) this._activeAyah = 1;
-
-    const persistPatch = {
-      lastSurahNumber: surah,
-      translationResourceId: this._activeTranslationId,
-    };
-    if (!preserveAyah) persistPatch.lastAyahNumber = 1;
-    this.persistPocketQuranSettings(persistPatch);
-
-    this.updateSurahActiveState();
-    this.updateSurahInputValue({ force: true });
-
-    await this.loadSurah(surah, { autoScroll });
-  }
-
-  async loadSurah(surah, opts = {}) {
-    const { autoScroll = true } = opts;
-    const chapter = this._chapters.find((c) => c.id === surah);
-    const surahName = chapter?.name_simple || `Surah ${surah}`;
-    const surahNameAr = chapter?.name_arabic || "";
-
-    this.renderLoading(`Loading ${surahName}…`);
-
-    // cancel any in-flight request
-    try {
-      if (this._fetchController) this._fetchController.abort();
-    } catch (e) {}
-
-    const controller = new AbortController();
-    this._fetchController = controller;
-
-    try {
-      const translationId = this.normalizeTranslationId(
-        this.storage.getSettings()?.pocketQuran?.translationResourceId
-      );
-      this._activeTranslationId = translationId;
-
-      const cacheKey = this.getVersesCacheKey(surah, translationId);
-      const cached = this._versesCache.get(cacheKey);
-      const hasCached =
-        cached && Array.isArray(cached.verses) && cached.verses.length;
-
-      let verses = [];
-      if (hasCached) {
-        verses = cached.verses;
-      } else {
-        const url = `${PocketQuranManager.API_BASE}/verses/by_chapter/${surah}?fields=text_uthmani,verse_number,verse_key&translations=${translationId}&per_page=300`;
-        const data = await this.fetchJson(url, {
-          signal: controller.signal,
-          timeoutMs: 20000,
-        });
-        verses = Array.isArray(data?.verses) ? data.verses : [];
-        this._versesCache.set(cacheKey, { verses, fetchedAt: Date.now() });
-      }
-
-      if (!verses.length) {
-        this.renderError("No verses returned by the API.");
-        return;
-      }
-
-      this._activeVerses = verses;
-      this._activeVersesKey = cacheKey;
-
-      this.renderSurahHeader({
-        surah,
-        surahName,
-        surahNameAr,
-        versesCount: verses.length,
-      });
-
-      // Render only a window of ayahs to keep the DOM small (important for blur/backdrop-filter stability).
-      // We'll center the window around the desired ayah.
-      const desired = this.clampNumber(
-        this.storage.getSettings()?.pocketQuran?.lastAyahNumber,
-        1,
-        verses.length,
-        1
-      );
-      this.renderVersesWindow(verses, desired);
-
-      this.updateAyahControls(verses.length);
-
-      if (this.ayahInput) this.ayahInput.value = String(desired);
-      this.scrollToAyah(desired, {
-        persist: false,
-        smooth: false,
-        skipScroll: !autoScroll,
-      });
-      this.updateAyahDropdownActiveState();
-    } catch (e) {
-      if (e?.name === "AbortError") return;
-      console.error("PocketQuran: failed to load surah", e);
-      this.renderError("Could not load this Surah. Please try again.");
-    } finally {
-      if (this._fetchController === controller) this._fetchController = null;
-    }
-  }
-
-  renderSurahHeader({ surah, surahName, surahNameAr, versesCount }) {
-    if (!this.headerMeta) return;
-
-    const translation =
-      PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label ||
-      "Translation";
-
-    this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
-  }
-
-  updateAyahControls(ayahCount) {
-    const max = this.clampNumber(ayahCount, 1, 286, 1);
-    if (this.ayahInput) {
-      if (!this.ayahInput.value) this.ayahInput.value = "1";
-    }
-
-    if (this.ayahListEl) {
-      this.ayahListEl.innerHTML = "";
-      const frag = document.createDocumentFragment();
-      for (let i = 1; i <= max; i++) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "pocket-quran-ayah-option";
-        btn.dataset.ayah = String(i);
-        btn.textContent = String(i);
-        frag.appendChild(btn);
-      }
-      this.ayahListEl.appendChild(frag);
-    }
-
-    this.updateAyahDropdownActiveState();
-  }
-
-  updateAyahDropdownActiveState() {
-    if (!this.ayahListEl) return;
-    const max = this.getActiveSurahAyahCount() || 286;
-    const current = this.clampNumber(this._activeAyah, 1, max, 1);
-    for (const btn of this.ayahListEl.querySelectorAll(
-      ".pocket-quran-ayah-option"
-    )) {
-      const n = parseInt(btn.dataset.ayah, 10);
-      btn.classList.toggle("active", n === current);
-      btn.setAttribute("aria-selected", n === current ? "true" : "false");
-    }
-  }
-
-  renderLoading(message) {
-    if (!this.contentEl) return;
-    this.resetWindowState();
-    this.contentEl.innerHTML = "";
-
-    const div = document.createElement("div");
-    div.className = "pocket-quran-loading";
-
-    const spinner = document.createElement("div");
-    spinner.className = "pocket-quran-spinner";
-
-    const text = document.createElement("div");
-    text.className = "pocket-quran-loading-text";
-    text.textContent = message || "Loading…";
-
-    div.appendChild(spinner);
-    div.appendChild(text);
-    this.contentEl.appendChild(div);
-  }
-
-  renderError(message) {
-    if (!this.contentEl) return;
-    this.resetWindowState();
-    this.contentEl.innerHTML = "";
-
-    const div = document.createElement("div");
-    div.className = "pocket-quran-error";
-
-    const text = document.createElement("div");
-    text.className = "pocket-quran-error-text";
-    text.textContent = message || "Something went wrong.";
-
-    const retry = document.createElement("button");
-    retry.type = "button";
-    retry.className = "pocket-quran-retry-btn";
-    retry.textContent = "Retry";
-    retry.addEventListener("click", () => this.loadSurah(this._activeSurah));
-
-    div.appendChild(text);
-    div.appendChild(retry);
-    this.contentEl.appendChild(div);
-  }
-
-  createAyahElement(v) {
-    const ayahNumber = v?.verse_number;
-    const ayahEl = document.createElement("div");
-    ayahEl.className = "pocket-quran-ayah";
-    ayahEl.id = `pocketQuranAyah-${ayahNumber}`;
-    ayahEl.dataset.ayah = String(ayahNumber);
-
-    const badge = document.createElement("div");
-    badge.className = "pocket-quran-ayah-badge";
-    badge.textContent = String(ayahNumber);
-
-    const ar = document.createElement("div");
-    ar.className = "pocket-quran-ayah-ar";
-    ar.setAttribute("dir", "rtl");
-    ar.textContent = v?.text_uthmani || "";
-
-    const tr = document.createElement("div");
-    tr.className = "pocket-quran-ayah-tr";
-
-    const rawTranslation = Array.isArray(v?.translations)
-      ? v.translations[0]?.text
-      : "";
-    tr.textContent = this.stripHtmlToText(rawTranslation || "");
-
-    ayahEl.appendChild(badge);
-    ayahEl.appendChild(ar);
-    ayahEl.appendChild(tr);
-
-    return ayahEl;
-  }
-
-  renderVersesWindow(verses, targetAyah) {
-    if (!this.contentEl) return;
-    if (!Array.isArray(verses) || !verses.length) return;
-
-    const { start, end } = this.computeAyahWindowRange(
-      targetAyah,
-      verses.length
-    );
-
-    this._renderedAyahStart = start;
-    this._renderedAyahEnd = end;
-
-    this.contentEl.innerHTML = "";
-
-    const frag = document.createDocumentFragment();
-
-    // Sentinels allow shifting the window when the user scrolls.
-    const topSentinel = document.createElement("div");
-    topSentinel.dataset.pqSentinel = "top";
-    topSentinel.setAttribute("aria-hidden", "true");
-    topSentinel.style.height = "1px";
-    topSentinel.style.pointerEvents = "none";
-
-    const bottomSentinel = document.createElement("div");
-    bottomSentinel.dataset.pqSentinel = "bottom";
-    bottomSentinel.setAttribute("aria-hidden", "true");
-    bottomSentinel.style.height = "1px";
-    bottomSentinel.style.pointerEvents = "none";
-
-    frag.appendChild(topSentinel);
-
-    for (let i = start; i <= end; i++) {
-      const v = verses[i - 1];
-      if (!v) continue;
-      frag.appendChild(this.createAyahElement(v));
-    }
-
-    frag.appendChild(bottomSentinel);
-    this.contentEl.appendChild(frag);
-
-    this._windowTopSentinel = topSentinel;
-    this._windowBottomSentinel = bottomSentinel;
-
-    this.ensureWindowObserver();
-    this.observeWindowSentinels();
-  }
-
-  stripHtmlToText(html) {
-    // Quran.com translations may include <sup foot_note="...">...</sup> markup.
-    // Convert safely to plain text.
-    try {
-      const div = document.createElement("div");
-      div.innerHTML = String(html || "");
-      return (div.textContent || "").replace(/\s+/g, " ").trim();
-    } catch (e) {
-      return String(html || "")
-        .replace(/<[^>]*>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-  }
-
-  scrollToAyah(ayahNumber, opts = {}) {
-    const { persist = true, smooth = true, skipScroll = false } = opts;
-
-    const max = this.getActiveSurahAyahCount() || 286;
-    const n = this.clampNumber(ayahNumber, 1, max, 1);
-    this._activeAyah = n;
-
-    // Ensure the requested ayah is currently rendered (windowed list).
-    if (this._activeVerses && Array.isArray(this._activeVerses)) {
-      const within = n >= this._renderedAyahStart && n <= this._renderedAyahEnd;
-      if (!within) {
-        this._windowShiftInProgress = true;
-        try {
-          this.renderVersesWindow(this._activeVerses, n);
-        } finally {
-          // Allow observer to run again after this tick.
-          setTimeout(() => {
-            this._windowShiftInProgress = false;
-          }, 0);
-        }
-      }
-    }
-
-    const el = document.getElementById(`pocketQuranAyah-${n}`);
-    if (!el) return;
-
-    if (!skipScroll) {
-      try {
-        el.scrollIntoView({
-          behavior: smooth ? "smooth" : "auto",
-          block: "start",
-        });
-      } catch (e) {
-        // fallback
-        try {
-          const y = el.getBoundingClientRect().top + window.scrollY - 80;
-          window.scrollTo({ top: y, behavior: smooth ? "smooth" : "auto" });
-        } catch (_) {}
-      }
-    }
-
-    if (this._scrollHighlightTimer) clearTimeout(this._scrollHighlightTimer);
-    el.classList.remove("pq-highlight");
-    // force reflow so animation restarts
-    void el.offsetWidth;
-    el.classList.add("pq-highlight");
-    this._scrollHighlightTimer = setTimeout(() => {
-      el.classList.remove("pq-highlight");
-    }, 1400);
-
-    if (persist) {
-      this.persistPocketQuranSettings({
-        lastAyahNumber: n,
-        lastSurahNumber: this._activeSurah,
-      });
-    }
-
-    this.updateAyahDropdownActiveState();
   }
 
   async fetchJson(url, opts = {}) {
