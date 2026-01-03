@@ -1963,7 +1963,7 @@ body {
 
 /* Ensure <optgroup label> stays readable in native dropdowns (some UAs ignore option background on optgroup headers) */
 .setting-select optgroup {
-  color: var(--primary-dark);
+  color: var(--primary-light);
   font-weight: 600;
 }
 
