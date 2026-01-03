@@ -78,6 +78,10 @@ class PocketQuranManager {
     this._ayahJumpTimer = null;
     this._surahQuery = "";
 
+    // Dropdown portal (fixes stacking-context click-through on blurred UIs)
+    this._dropdownPortalled = new WeakSet();
+    this._dropdownPositionRaf = null;
+
     this.init();
   }
 
@@ -319,29 +323,126 @@ class PocketQuranManager {
     // Close dropdowns when clicking outside
     document.addEventListener("click", (e) => {
       const t = e.target;
-      if (this.surahCombobox && !this.surahCombobox.contains(t)) {
+      const inSurahDropdown =
+        this.surahDropdown &&
+        (this.surahDropdown === t || this.surahDropdown.contains(t));
+      const inAyahDropdown =
+        this.ayahDropdown &&
+        (this.ayahDropdown === t || this.ayahDropdown.contains(t));
+
+      if (
+        this.surahCombobox &&
+        !this.surahCombobox.contains(t) &&
+        !inSurahDropdown
+      ) {
         this.closeDropdown(this.surahDropdown);
       }
-      if (this.ayahCombobox && !this.ayahCombobox.contains(t)) {
+      if (
+        this.ayahCombobox &&
+        !this.ayahCombobox.contains(t) &&
+        !inAyahDropdown
+      ) {
         this.closeDropdown(this.ayahDropdown);
       }
     });
+
+    // Reposition any open dropdowns on scroll/resize
+    const reposition = () => {
+      if (this._dropdownPositionRaf)
+        cancelAnimationFrame(this._dropdownPositionRaf);
+      this._dropdownPositionRaf = requestAnimationFrame(() => {
+        this.positionDropdown(this.surahDropdown);
+        this.positionDropdown(this.ayahDropdown);
+      });
+    };
+
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+  }
+
+  ensureDropdownPortal(el) {
+    if (!el) return;
+    if (this._dropdownPortalled?.has(el)) return;
+    try {
+      document.body.appendChild(el);
+      el.classList.add("pq-portal");
+      this._dropdownPortalled.add(el);
+    } catch (e) {}
+  }
+
+  positionDropdown(el) {
+    if (!el || el.hidden) return;
+
+    let anchor = null;
+    if (el === this.surahDropdown) anchor = this.surahCombobox;
+    if (el === this.ayahDropdown) anchor = this.ayahCombobox;
+    if (!anchor) return;
+
+    const rect = anchor.getBoundingClientRect();
+    const gap = 8;
+    const viewportPadding = 10;
+
+    // Compute available space and choose direction for best fit.
+    const belowSpace = window.innerHeight - rect.bottom - gap - viewportPadding;
+    const aboveSpace = rect.top - gap - viewportPadding;
+
+    const preferAbove = belowSpace < 200 && aboveSpace > belowSpace;
+
+    const left = Math.max(viewportPadding, Math.round(rect.left));
+    const width = Math.max(220, Math.round(rect.width));
+
+    // Max list height: fit viewport, but don't exceed design cap.
+    const maxListHeight = Math.min(
+      420,
+      Math.max(180, Math.floor((preferAbove ? aboveSpace : belowSpace) - 10))
+    );
+
+    // Position the container.
+    el.style.left = `${left}px`;
+    el.style.width = `${width}px`;
+    el.style.right = "auto";
+
+    if (preferAbove) {
+      // Place above anchor; we don't know dropdown height exactly, so use bottom positioning.
+      const bottom = Math.max(
+        viewportPadding,
+        Math.round(window.innerHeight - rect.top + gap)
+      );
+      el.style.top = "auto";
+      el.style.bottom = `${bottom}px`;
+    } else {
+      const top = Math.max(viewportPadding, Math.round(rect.bottom + gap));
+      el.style.top = `${top}px`;
+      el.style.bottom = "auto";
+    }
+
+    const list = el.querySelector(".pocket-quran-dropdown-list");
+    if (list) {
+      list.style.maxHeight = `${maxListHeight}px`;
+    }
   }
 
   openDropdown(el) {
     if (!el) return;
+    this.ensureDropdownPortal(el);
     try {
-      const combo = el.closest(".pocket-quran-combobox");
-      if (combo) combo.classList.add("pq-open");
+      // If the dropdown is portalled to <body>, it won't have a combobox ancestor.
+      if (el === this.surahDropdown && this.surahCombobox)
+        this.surahCombobox.classList.add("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox)
+        this.ayahCombobox.classList.add("pq-open");
     } catch (e) {}
     el.hidden = false;
+    this.positionDropdown(el);
   }
 
   closeDropdown(el) {
     if (!el) return;
     try {
-      const combo = el.closest(".pocket-quran-combobox");
-      if (combo) combo.classList.remove("pq-open");
+      if (el === this.surahDropdown && this.surahCombobox)
+        this.surahCombobox.classList.remove("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox)
+        this.ayahCombobox.classList.remove("pq-open");
     } catch (e) {}
     el.hidden = true;
   }

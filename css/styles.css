@@ -6694,6 +6694,15 @@ body.sticky-note-resizing {
   pointer-events: auto;
 }
 
+/* Portal-mode dropdown: lifted to <body> to avoid stacking-context click-through */
+.pocket-quran-dropdown.pq-portal {
+  position: fixed !important;
+  left: 0;
+  top: 0;
+  right: auto;
+  z-index: 2147483647;
+}
+
 /* ========================================
    Per-card Blur Override Controls (Readability)
    ======================================== */
@@ -6731,7 +6740,8 @@ body.sticky-note-resizing {
   background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background var(--transition-fast),
+    transform var(--transition-fast);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
@@ -6802,6 +6812,20 @@ body.sticky-note-resizing {
 
 .card-blur-toggle .toggle-switch {
   transform: scale(0.75);
+}
+
+/* Checked-state visuals for card blur toggles */
+.card-blur-toggle input[type="checkbox"]:checked + .toggle-switch {
+  background: var(--primary-color);
+}
+
+.card-blur-toggle input[type="checkbox"]:checked + .toggle-switch::after {
+  left: 25px;
+}
+
+.card-blur-toggle input[type="checkbox"]:focus-visible + .toggle-switch {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
 }
 
 .card-blur-toggle-label {
