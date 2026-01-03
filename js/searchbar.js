@@ -626,7 +626,10 @@ class SearchBarManager {
   _syncDomOrderToSearches() {
     if (!this.strip) return;
     const existing = new Map(
-      this._getEngineTabElements().map((el) => [String(el.getAttribute("data-id")), el])
+      this._getEngineTabElements().map((el) => [
+        String(el.getAttribute("data-id")),
+        el,
+      ])
     );
 
     const frag = document.createDocumentFragment();
@@ -715,7 +718,10 @@ class SearchBarManager {
 
     const targetId = String(targetEl.getAttribute("data-id"));
     const targetEngine = this.searches.find((s) => String(s.id) === targetId);
-    if (!targetEngine || String(targetEngine.id) === String(this.draggedEngine.id)) {
+    if (
+      !targetEngine ||
+      String(targetEngine.id) === String(this.draggedEngine.id)
+    ) {
       this.currentDropTarget = null;
       return;
     }
@@ -773,7 +779,8 @@ class SearchBarManager {
       // Use pinned-app fallback styling to match the ghost
       const fallbackClone = document.createElement("span");
       fallbackClone.className = "pinned-app-fallback";
-      fallbackClone.textContent = fallbackEl.textContent || engine.name.charAt(0).toUpperCase();
+      fallbackClone.textContent =
+        fallbackEl.textContent || engine.name.charAt(0).toUpperCase();
       ghost.appendChild(fallbackClone);
     } else {
       const fallbackClone = document.createElement("span");
