@@ -84,12 +84,15 @@ class PocketQuranManager {
     this._activeVersesKey = null;
     this._renderedAyahStart = 1;
     this._renderedAyahEnd = 0;
-    this._ayahWindowSize = 50;
-    this._ayahWindowBefore = 24; // puts target ayah roughly ~25th in a 50-size window
+    // Render window tuning
+    // Keep this small to reduce DOM size and keep blur/backdrop-filter stable.
+    this._ayahWindowSize = 25;
+    this._ayahWindowBefore = 12; // centers target ayah in a 25-size window
     this._windowObserver = null;
     this._windowTopSentinel = null;
     this._windowBottomSentinel = null;
     this._lastScrollY = window.scrollY || 0;
+    this._scrollDir = null;
     this._lastWindowShiftAt = 0;
     this._windowShiftInProgress = false;
 
@@ -377,11 +380,15 @@ class PocketQuranManager {
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
 
-    // Track scroll direction for window shifting
+    // Track scroll direction for seamless window shifting
     window.addEventListener(
       "scroll",
       () => {
-        this._lastScrollY = window.scrollY || 0;
+        const y = window.scrollY || 0;
+        const delta = y - (this._lastScrollY || 0);
+        if (delta > 2) this._scrollDir = "down";
+        else if (delta < -2) this._scrollDir = "up";
+        this._lastScrollY = y;
       },
       { passive: true }
     );
@@ -407,7 +414,7 @@ class PocketQuranManager {
 
   computeAyahWindowRange(targetAyah, totalAyahs) {
     const total = this.clampNumber(totalAyahs, 1, 1000, 1);
-    const windowSize = this.clampNumber(this._ayahWindowSize, 1, 300, 50);
+    const windowSize = this.clampNumber(this._ayahWindowSize, 1, 300, 25);
     const before = this.clampNumber(
       this._ayahWindowBefore,
       0,
@@ -439,21 +446,20 @@ class PocketQuranManager {
       (entries) => {
         if (this._windowShiftInProgress) return;
         if (!this._activeVerses || !Array.isArray(this._activeVerses)) return;
+
         const total = this._activeVerses.length || 0;
         if (total <= this._ayahWindowSize) return;
+
+        const dir = this._scrollDir;
+        if (!dir) return;
 
         const now = Date.now();
         if (now - (this._lastWindowShiftAt || 0) < 250) return;
 
-        // Determine approximate scroll direction.
-        const currentY = window.scrollY || 0;
-        const delta = currentY - (this._lastScrollY || 0);
-        const dir = delta > 2 ? "down" : delta < -2 ? "up" : null;
-        this._lastScrollY = currentY;
-
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const kind = entry?.target?.dataset?.pqSentinel;
+
           if (kind === "bottom" && dir === "down") {
             const nextAyah = this.clampNumber(
               (this._renderedAyahEnd || 0) + 1,
@@ -463,10 +469,7 @@ class PocketQuranManager {
             );
             if (nextAyah > (this._renderedAyahEnd || 0) && nextAyah <= total) {
               this._lastWindowShiftAt = now;
-              this.scrollToAyah(nextAyah, {
-                persist: false,
-                smooth: false,
-              });
+              this.shiftWindowToAyah(nextAyah, { direction: "down" });
             }
           }
 
@@ -479,10 +482,7 @@ class PocketQuranManager {
             );
             if (prevAyah < (this._renderedAyahStart || 1) && prevAyah >= 1) {
               this._lastWindowShiftAt = now;
-              this.scrollToAyah(prevAyah, {
-                persist: false,
-                smooth: false,
-              });
+              this.shiftWindowToAyah(prevAyah, { direction: "up" });
             }
           }
         }
@@ -494,6 +494,84 @@ class PocketQuranManager {
         threshold: 0.01,
       }
     );
+  }
+
+  getViewportAnchorAyah(direction) {
+    if (!this.contentEl) return null;
+    const ayahEls = Array.from(
+      this.contentEl.querySelectorAll(".pocket-quran-ayah")
+    );
+    if (!ayahEls.length) return null;
+
+    const viewportHeight =
+      window.innerHeight || document.documentElement?.clientHeight || 0;
+
+    const inView = [];
+    for (const el of ayahEls) {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < viewportHeight) {
+        const n = parseInt(el.dataset.ayah, 10);
+        if (Number.isFinite(n)) inView.push({ el, rect, n });
+      }
+    }
+
+    const pool = inView.length ? inView : null;
+    if (!pool) {
+      const fallback = ayahEls[0];
+      const rect = fallback.getBoundingClientRect();
+      const n = parseInt(fallback.dataset.ayah, 10);
+      if (!Number.isFinite(n)) return null;
+      return { ayahNumber: n, top: rect.top };
+    }
+
+    let chosen = pool[0];
+    for (const item of pool) {
+      if (direction === "up") {
+        if (item.rect.top > chosen.rect.top) chosen = item;
+      } else {
+        if (item.rect.top < chosen.rect.top) chosen = item;
+      }
+    }
+
+    return { ayahNumber: chosen.n, top: chosen.rect.top };
+  }
+
+  shiftWindowToAyah(targetAyah, opts = {}) {
+    const { direction = "down" } = opts;
+    if (!this._activeVerses || !Array.isArray(this._activeVerses)) return;
+    const total = this._activeVerses.length || 0;
+    if (!total) return;
+
+    const n = this.clampNumber(targetAyah, 1, total, 1);
+    const within = n >= this._renderedAyahStart && n <= this._renderedAyahEnd;
+    if (within) return;
+
+    const anchor = this.getViewportAnchorAyah(direction);
+
+    this._windowShiftInProgress = true;
+    try {
+      this.renderVersesWindow(this._activeVerses, n);
+    } finally {
+      // Preserve visual position by keeping an anchor ayah at the same viewport offset.
+      requestAnimationFrame(() => {
+        try {
+          if (anchor?.ayahNumber) {
+            const anchorEl = document.getElementById(
+              `pocketQuranAyah-${anchor.ayahNumber}`
+            );
+            if (anchorEl) {
+              const newTop = anchorEl.getBoundingClientRect().top;
+              const delta = newTop - anchor.top;
+              if (Number.isFinite(delta) && Math.abs(delta) > 0.5) {
+                window.scrollBy(0, delta);
+              }
+            }
+          }
+        } catch (e) {}
+
+        this._windowShiftInProgress = false;
+      });
+    }
   }
 
   observeWindowSentinels() {
