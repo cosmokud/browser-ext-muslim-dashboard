@@ -786,26 +786,47 @@
           </div>
 
           <div class="pocket-quran-shell">
-            <aside
-              class="pocket-quran-sidebar"
-              id="pocketQuranSidebar"
-              aria-label="Surah list"
-            >
-              <div class="pocket-quran-sidebar-header">
-                <span class="pocket-quran-sidebar-title">Surah</span>
-              </div>
-              <div
-                class="pocket-quran-surah-list"
-                id="pocketQuranSurahList"
-                role="list"
-              ></div>
-            </aside>
-
             <div class="pocket-quran-main">
               <div
                 class="pocket-quran-controls"
                 aria-label="Pocket Quran controls"
               >
+                <div
+                  class="pocket-quran-surah-picker"
+                  aria-label="Surah selection"
+                >
+                  <label
+                    class="pocket-quran-control-label"
+                    for="pocketQuranSurahInput"
+                    >Surah</label
+                  >
+                  <div
+                    class="pocket-quran-combobox"
+                    id="pocketQuranSurahCombobox"
+                  >
+                    <input
+                      class="pocket-quran-pill-input"
+                      id="pocketQuranSurahInput"
+                      type="text"
+                      autocomplete="off"
+                      spellcheck="false"
+                      aria-label="Search surah"
+                    />
+                    <div
+                      class="pocket-quran-dropdown"
+                      id="pocketQuranSurahDropdown"
+                      role="listbox"
+                      aria-label="Surah list"
+                      hidden
+                    >
+                      <div
+                        class="pocket-quran-dropdown-list"
+                        id="pocketQuranSurahList"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="pocket-quran-ayah-nav" aria-label="Ayah navigation">
                   <button
                     class="pocket-quran-nav-btn"
@@ -823,17 +844,32 @@
                       for="pocketQuranAyahInput"
                       >Ayah</label
                     >
-                    <input
-                      class="pocket-quran-ayah-input"
-                      id="pocketQuranAyahInput"
-                      type="number"
-                      min="1"
-                      step="1"
-                      inputmode="numeric"
-                      list="pocketQuranAyahList"
-                      aria-label="Jump to ayah"
-                    />
-                    <datalist id="pocketQuranAyahList"></datalist>
+                    <div
+                      class="pocket-quran-combobox"
+                      id="pocketQuranAyahCombobox"
+                    >
+                      <input
+                        class="pocket-quran-pill-input pocket-quran-ayah-input"
+                        id="pocketQuranAyahInput"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="Jump to ayah"
+                      />
+                      <div
+                        class="pocket-quran-dropdown"
+                        id="pocketQuranAyahDropdown"
+                        role="listbox"
+                        aria-label="Ayah list"
+                        hidden
+                      >
+                        <div
+                          class="pocket-quran-dropdown-list"
+                          id="pocketQuranAyahList"
+                        ></div>
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -2425,6 +2461,73 @@
             </div>
           </div>
 
+          <!-- Pocket Quran Settings -->
+          <div class="settings-panel" id="pocketQuranPanel">
+            <div class="setting-group">
+              <label class="setting-label">Default Arabic Text Size</label>
+              <p class="setting-hint">Choose a default Arabic font size.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranArabicSize"
+                  min="8"
+                  max="144"
+                  value="32"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranArabicSizeSettingValue"
+                  >32px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Default Translation Text Size</label>
+              <p class="setting-hint">
+                Choose a default translation font size.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranTranslationSize"
+                  min="8"
+                  max="144"
+                  value="18"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranTranslationSizeSettingValue"
+                  >18px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Translation</label>
+              <p class="setting-hint">Select a translation (free and open).</p>
+              <select class="setting-select" id="pocketQuranTranslationSelect">
+                <optgroup label="English">
+                  <option value="85">M.A.S. Abdel Haleem</option>
+                  <option value="84">T. Usmani</option>
+                  <option value="95">A. Maududi (Tafhim commentary)</option>
+                  <option value="19">M. Pickthall</option>
+                  <option value="22">A Yusuf Ali</option>
+                  <option value="20">Saheeh International</option>
+                  <option value="203">Al-Hilali &amp; Khan</option>
+                  <option value="57">Transliteration</option>
+                </optgroup>
+                <optgroup label="Indonesian">
+                  <option value="134">King Fahad Quran Complex</option>
+                  <option value="141">The Sabiq Company</option>
+                  <option value="33">
+                    Indonesian Islamic Affairs Ministry
+                  </option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
           <!-- Background Settings -->
           <div class="settings-panel" id="backgroundPanel">
             <div class="setting-group">
@@ -2519,76 +2622,6 @@
                     target="_blank"
                     rel="noopener noreferrer"
                     >Visit Zmokhtar on Quizlet</a
-
-          <!-- Pocket Quran Settings -->
-          <div class="settings-panel" id="pocketQuranPanel">
-            <div class="setting-group">
-              <label class="setting-label">Default Arabic Text Size</label>
-              <p class="setting-hint">Choose a default Arabic font size.</p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranArabicSize"
-                  min="8"
-                  max="144"
-                  value="32"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranArabicSizeSettingValue"
-                  >32px</span
-                >
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Default Translation Text Size</label>
-              <p class="setting-hint">
-                Choose a default translation font size.
-              </p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranTranslationSize"
-                  min="8"
-                  max="144"
-                  value="18"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranTranslationSizeSettingValue"
-                  >18px</span
-                >
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Translation</label>
-              <p class="setting-hint">
-                Select a translation (free and open).
-              </p>
-              <select
-                class="setting-select"
-                id="pocketQuranTranslationSelect"
-              >
-                <optgroup label="English">
-                  <option value="85">M.A.S. Abdel Haleem</option>
-                  <option value="84">T. Usmani</option>
-                  <option value="95">A. Maududi (Tafhim commentary)</option>
-                  <option value="19">M. Pickthall</option>
-                  <option value="22">A Yusuf Ali</option>
-                  <option value="20">Saheeh International</option>
-                  <option value="203">Al-Hilali &amp; Khan</option>
-                  <option value="57">Transliteration</option>
-                </optgroup>
-                <optgroup label="Indonesian">
-                  <option value="134">King Fahad Quran Complex</option>
-                  <option value="141">The Sabiq Company</option>
-                  <option value="33">Indonesian Islamic Affairs Ministry</option>
-                </optgroup>
-              </select>
-            </div>
-          </div>
                   >
                 </div>
               </div>

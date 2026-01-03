@@ -1,6 +1,6 @@
 /**
  * Pocket Quran Manager
- * Full-width Quran reader with Surah sidebar, Ayah navigation, and per-language translations.
+ * Full-width Quran reader with Surah selector, Ayah navigation, and per-language translations.
  * Data source: https://api.quran.com (public API v4)
  */
 
@@ -32,13 +32,23 @@ class PocketQuranManager {
     // DOM
     this.card = document.getElementById("pocketQuranCard");
     this.headerMeta = document.getElementById("pocketQuranHeaderMeta");
+
+    // Surah selector (combobox)
+    this.surahCombobox = document.getElementById("pocketQuranSurahCombobox");
+    this.surahInput = document.getElementById("pocketQuranSurahInput");
+    this.surahDropdown = document.getElementById("pocketQuranSurahDropdown");
     this.surahListEl = document.getElementById("pocketQuranSurahList");
+
     this.contentEl = document.getElementById("pocketQuranContent");
 
     this.ayahPrevBtn = document.getElementById("pocketQuranAyahPrev");
     this.ayahNextBtn = document.getElementById("pocketQuranAyahNext");
+
+    // Ayah selector (combobox)
+    this.ayahCombobox = document.getElementById("pocketQuranAyahCombobox");
     this.ayahInput = document.getElementById("pocketQuranAyahInput");
-    this.ayahDatalist = document.getElementById("pocketQuranAyahList");
+    this.ayahDropdown = document.getElementById("pocketQuranAyahDropdown");
+    this.ayahListEl = document.getElementById("pocketQuranAyahList");
 
     this.arabicSizeRange = document.getElementById(
       "pocketQuranArabicSizeRange"
@@ -66,6 +76,7 @@ class PocketQuranManager {
     this._fetchController = null;
     this._scrollHighlightTimer = null;
     this._ayahJumpTimer = null;
+    this._surahQuery = "";
 
     this.init();
   }
@@ -95,23 +106,84 @@ class PocketQuranManager {
     this.setupEventListeners();
 
     this.renderLoading("Loading Surah list…");
-    this.loadChaptersAndRenderSidebar().then(() => {
+    this.loadChaptersAndRenderSurahPicker().then(() => {
       this.setActiveSurah(this._activeSurah, {
-        scrollSidebarIntoView: true,
         preserveAyah: true,
       });
     });
   }
 
   setupEventListeners() {
-    // Sidebar: Surah selection (event delegation)
+    // Surah selection (event delegation)
     this.surahListEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-surah]");
       if (!btn) return;
       const surah = parseInt(btn.dataset.surah, 10);
       if (!Number.isFinite(surah)) return;
-      this.setActiveSurah(surah, { scrollSidebarIntoView: false });
+      this._surahQuery = "";
+      this.setActiveSurah(surah, { preserveAyah: false });
+      this.updateSurahInputValue({ force: true });
+      this.closeDropdown(this.surahDropdown);
     });
+
+    const openSurahDropdown = () => {
+      if (!this.surahDropdown) return;
+      this.renderSurahList();
+      this.openDropdown(this.surahDropdown);
+    };
+
+    if (this.surahInput) {
+      this.surahInput.addEventListener("focus", () => {
+        this._surahQuery = "";
+        try {
+          this.surahInput.select();
+        } catch (e) {}
+        openSurahDropdown();
+      });
+      this.surahInput.addEventListener("click", () => {
+        this._surahQuery = "";
+        openSurahDropdown();
+      });
+      this.surahInput.addEventListener("input", () => {
+        this._surahQuery = this.surahInput.value || "";
+        openSurahDropdown();
+      });
+      this.surahInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          this.closeDropdown(this.surahDropdown);
+          return;
+        }
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const match = this.findSurahFromQuery(this.surahInput.value);
+        if (!match) return;
+        this._surahQuery = "";
+        this.setActiveSurah(match.id, { preserveAyah: false });
+        this.updateSurahInputValue({ force: true });
+        this.closeDropdown(this.surahDropdown);
+      });
+    }
+
+    // Ayah list click
+    this.ayahListEl?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-ayah]");
+      if (!btn) return;
+      const n = this.clampNumber(
+        parseInt(btn.dataset.ayah, 10),
+        1,
+        this.getActiveSurahAyahCount() || 286,
+        1
+      );
+      if (this.ayahInput) this.ayahInput.value = String(n);
+      this.scrollToAyah(n, { persist: true });
+      this.closeDropdown(this.ayahDropdown);
+    });
+
+    const openAyahDropdown = () => {
+      if (!this.ayahDropdown) return;
+      this.openDropdown(this.ayahDropdown);
+      this.updateAyahDropdownActiveState();
+    };
 
     // Ayah navigation
     const jumpToAyahFromInput = () => {
@@ -126,6 +198,8 @@ class PocketQuranManager {
     };
 
     if (this.ayahInput) {
+      this.ayahInput.addEventListener("focus", openAyahDropdown);
+      this.ayahInput.addEventListener("click", openAyahDropdown);
       this.ayahInput.addEventListener("input", () => {
         // debounce so manual typing doesn't aggressively scroll
         if (this._ayahJumpTimer) clearTimeout(this._ayahJumpTimer);
@@ -135,10 +209,15 @@ class PocketQuranManager {
       });
 
       this.ayahInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          this.closeDropdown(this.ayahDropdown);
+          return;
+        }
         if (e.key !== "Enter") return;
         e.preventDefault();
         if (this._ayahJumpTimer) clearTimeout(this._ayahJumpTimer);
         jumpToAyahFromInput();
+        this.closeDropdown(this.ayahDropdown);
       });
 
       this.ayahInput.addEventListener("change", () => {
@@ -236,6 +315,88 @@ class PocketQuranManager {
 
     // React to settings changes after a save/reload isn't needed, but we do support
     // live changes if the user changes translation in settings and reloads.
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (this.surahCombobox && !this.surahCombobox.contains(t)) {
+        this.closeDropdown(this.surahDropdown);
+      }
+      if (this.ayahCombobox && !this.ayahCombobox.contains(t)) {
+        this.closeDropdown(this.ayahDropdown);
+      }
+    });
+  }
+
+  openDropdown(el) {
+    if (!el) return;
+    el.hidden = false;
+  }
+
+  closeDropdown(el) {
+    if (!el) return;
+    el.hidden = true;
+  }
+
+  formatSurahLabel(ch) {
+    if (!ch) return "";
+    const en = ch.name_simple || `Surah ${ch.id}`;
+    const ar = ch.name_arabic ? ` ${ch.name_arabic}` : "";
+    return `${ch.id}. ${en}${ar}`;
+  }
+
+  updateSurahInputValue(opts = {}) {
+    const { force = false } = opts;
+    if (!this.surahInput) return;
+    if (!force && document.activeElement === this.surahInput) return;
+    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    this.surahInput.value = this.formatSurahLabel(chapter);
+  }
+
+  getFilteredChapters(query) {
+    const q = String(query || "").trim();
+    if (!q) return this._chapters;
+
+    const lower = q.toLowerCase();
+    const isNumber = /^\d+$/.test(q);
+
+    return this._chapters.filter((c) => {
+      if (isNumber) {
+        return String(c.id).startsWith(q);
+      }
+      const en = String(c.name_simple || "").toLowerCase();
+      const ar = String(c.name_arabic || "");
+      return en.includes(lower) || ar.includes(q);
+    });
+  }
+
+  findSurahFromQuery(query) {
+    const q = String(query || "").trim();
+    if (!q) return null;
+
+    const leadingNumber = q.match(/^\s*(\d{1,3})\b/);
+    if (leadingNumber) {
+      const id = parseInt(leadingNumber[1], 10);
+      if (Number.isFinite(id)) {
+        const ch = this._chapters.find((c) => c.id === id);
+        if (ch) return ch;
+      }
+    }
+
+    if (/^\d+$/.test(q)) {
+      const id = parseInt(q, 10);
+      const ch = this._chapters.find((c) => c.id === id);
+      return ch || null;
+    }
+
+    const lower = q.toLowerCase();
+    const exact = this._chapters.find(
+      (c) => String(c.name_simple || "").toLowerCase() === lower
+    );
+    if (exact) return exact;
+
+    const filtered = this.getFilteredChapters(q);
+    return filtered.length ? filtered[0] : null;
   }
 
   normalizeTranslationId(value) {
@@ -293,7 +454,7 @@ class PocketQuranManager {
     return Number.isFinite(count) ? count : null;
   }
 
-  async loadChaptersAndRenderSidebar() {
+  async loadChaptersAndRenderSurahPicker() {
     try {
       const cached = this.storage.get("pocketQuran_chapters_cache", null);
       const cachedAt = this.storage.get("pocketQuran_chapters_cache_at", 0);
@@ -302,7 +463,8 @@ class PocketQuranManager {
 
       if (cached && Array.isArray(cached) && freshEnough) {
         this._chapters = cached;
-        this.renderSurahSidebar();
+        this.renderSurahList();
+        this.updateSurahInputValue({ force: true });
         return;
       }
 
@@ -322,18 +484,19 @@ class PocketQuranManager {
       this.storage.set("pocketQuran_chapters_cache", this._chapters);
       this.storage.set("pocketQuran_chapters_cache_at", Date.now());
 
-      this.renderSurahSidebar();
+      this.renderSurahList();
+      this.updateSurahInputValue({ force: true });
     } catch (e) {
       console.error("PocketQuran: failed to load chapters", e);
       this._chapters = [];
-      this.renderSurahSidebar({ failed: true });
+      this.renderSurahList({ failed: true });
       this.renderError(
         "Could not load Surah list. Check your internet connection."
       );
     }
   }
 
-  renderSurahSidebar(opts = {}) {
+  renderSurahList(opts = {}) {
     const { failed = false } = opts;
 
     if (!this.surahListEl) return;
@@ -341,15 +504,17 @@ class PocketQuranManager {
 
     if (failed) {
       const div = document.createElement("div");
-      div.className = "pocket-quran-sidebar-empty";
+      div.className = "pocket-quran-dropdown-empty";
       div.textContent = "Surah list unavailable";
       this.surahListEl.appendChild(div);
       return;
     }
 
+    const chapters = this.getFilteredChapters(this._surahQuery);
+
     const frag = document.createDocumentFragment();
 
-    for (const ch of this._chapters) {
+    for (const ch of chapters) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "pocket-quran-surah-item";
@@ -380,10 +545,10 @@ class PocketQuranManager {
     }
 
     this.surahListEl.appendChild(frag);
-    this.updateSidebarActiveState();
+    this.updateSurahActiveState();
   }
 
-  updateSidebarActiveState() {
+  updateSurahActiveState() {
     if (!this.surahListEl) return;
     for (const btn of this.surahListEl.querySelectorAll(
       ".pocket-quran-surah-item"
@@ -398,12 +563,13 @@ class PocketQuranManager {
   }
 
   async setActiveSurah(surahNumber, opts = {}) {
-    const { scrollSidebarIntoView = false, preserveAyah = false } = opts;
+    const { preserveAyah = false } = opts;
 
     const surah = this.clampNumber(surahNumber, 1, 114, 1);
     if (surah === this._activeSurah && this.contentEl?.children?.length) {
       // still ensure highlight nav works
-      this.updateSidebarActiveState();
+      this.updateSurahActiveState();
+      this.updateSurahInputValue({ force: true });
       return;
     }
 
@@ -417,16 +583,8 @@ class PocketQuranManager {
     if (!preserveAyah) persistPatch.lastAyahNumber = 1;
     this.persistPocketQuranSettings(persistPatch);
 
-    this.updateSidebarActiveState();
-
-    if (scrollSidebarIntoView) {
-      const activeBtn = this.surahListEl?.querySelector(
-        `.pocket-quran-surah-item[data-surah="${surah}"]`
-      );
-      try {
-        activeBtn?.scrollIntoView({ block: "nearest" });
-      } catch (e) {}
-    }
+    this.updateSurahActiveState();
+    this.updateSurahInputValue({ force: true });
 
     await this.loadSurah(surah);
   }
@@ -483,6 +641,7 @@ class PocketQuranManager {
       );
       if (this.ayahInput) this.ayahInput.value = String(desired);
       this.scrollToAyah(desired, { persist: false, smooth: false });
+      this.updateAyahDropdownActiveState();
     } catch (e) {
       if (e?.name === "AbortError") return;
       console.error("PocketQuran: failed to load surah", e);
@@ -507,20 +666,36 @@ class PocketQuranManager {
   updateAyahControls(ayahCount) {
     const max = this.clampNumber(ayahCount, 1, 286, 1);
     if (this.ayahInput) {
-      this.ayahInput.min = "1";
-      this.ayahInput.max = String(max);
       if (!this.ayahInput.value) this.ayahInput.value = "1";
     }
 
-    if (this.ayahDatalist) {
-      this.ayahDatalist.innerHTML = "";
+    if (this.ayahListEl) {
+      this.ayahListEl.innerHTML = "";
       const frag = document.createDocumentFragment();
       for (let i = 1; i <= max; i++) {
-        const opt = document.createElement("option");
-        opt.value = String(i);
-        frag.appendChild(opt);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pocket-quran-ayah-option";
+        btn.dataset.ayah = String(i);
+        btn.textContent = String(i);
+        frag.appendChild(btn);
       }
-      this.ayahDatalist.appendChild(frag);
+      this.ayahListEl.appendChild(frag);
+    }
+
+    this.updateAyahDropdownActiveState();
+  }
+
+  updateAyahDropdownActiveState() {
+    if (!this.ayahListEl) return;
+    const max = this.getActiveSurahAyahCount() || 286;
+    const current = this.clampNumber(this._activeAyah, 1, max, 1);
+    for (const btn of this.ayahListEl.querySelectorAll(
+      ".pocket-quran-ayah-option"
+    )) {
+      const n = parseInt(btn.dataset.ayah, 10);
+      btn.classList.toggle("active", n === current);
+      btn.setAttribute("aria-selected", n === current ? "true" : "false");
     }
   }
 
@@ -658,6 +833,8 @@ class PocketQuranManager {
         lastSurahNumber: this._activeSurah,
       });
     }
+
+    this.updateAyahDropdownActiveState();
   }
 
   async fetchJson(url, opts = {}) {
