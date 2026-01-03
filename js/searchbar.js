@@ -21,6 +21,10 @@ class SearchBarManager {
 
     this.customColorInput = null;
 
+    // Favicon-derived palette cache (ColorThief-style: dominant + palette)
+    this.faviconPaletteCache = new Map();
+    this.faviconPaletteInFlight = new Map();
+
     // Elements
     this.section = document.getElementById("searchBarSection");
     this.shell = document.getElementById("searchBarShell");
@@ -343,7 +347,7 @@ class SearchBarManager {
     this.customColorInput = colorInput;
 
     // Build palette swatches from theme primitives.
-    this._renderAccentPalette();
+    this._renderAccentPaletteForEngine(null);
 
     this.contextMenu
       .querySelector(".context-menu-edit")
@@ -441,6 +445,10 @@ class SearchBarManager {
     if (!this.contextMenu) return;
 
     this.contextMenu.dataset.engineId = String(engineId);
+
+    // Refresh the palette for the current engine.
+    this._renderAccentPaletteForEngine(engineId);
+
     this.contextMenu.style.left = `${x}px`;
     this.contextMenu.style.top = `${y}px`;
     this.contextMenu.classList.add("active");
@@ -479,6 +487,13 @@ class SearchBarManager {
 
     this.persist();
     this.render();
+  }
+
+  _isValidRgbString(rgbString) {
+    return (
+      typeof rgbString === "string" &&
+      /^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$/.test(rgbString)
+    );
   }
 
   deleteEngine(engineId) {
@@ -606,6 +621,28 @@ class SearchBarManager {
     this.ensureSelectionInView();
     this.updateSelectionUi();
     this.applyEngineAccent(found);
+  }
+
+  async _ensureDefaultAccentForEngine(engine) {
+    if (!engine) return;
+    if (this._isValidRgbString(engine.accentRgb)) return;
+
+    const faviconUrl =
+      engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
+    if (!faviconUrl) return;
+
+    // Ensure favicon is stored for future loads.
+    if (!engine.favicon) {
+      engine.favicon = faviconUrl;
+      this.persist();
+    }
+
+    const colors10 = await this._getFaviconColors10(faviconUrl);
+    const dominant = colors10?.[0];
+    if (!dominant) return;
+
+    // Persist default accent for this engine.
+    this.setEngineAccent(engine.id, dominant);
   }
 
   ensureSelectionInView() {
@@ -737,8 +774,14 @@ class SearchBarManager {
 
   applyEngineAccent(engine) {
     if (!this.shell) return;
+
     const rgb = this._normalizeRgbString(engine?.accentRgb);
     this.shell.style.setProperty("--sb-accent-rgb", rgb);
+
+    // If unset, default to dominant favicon color (best-effort).
+    if (engine && !this._isValidRgbString(engine.accentRgb)) {
+      this._ensureDefaultAccentForEngine(engine).catch(() => {});
+    }
   }
 
   _normalizeRgbString(rgbString) {
@@ -796,91 +839,251 @@ class SearchBarManager {
     return `${c.r}, ${c.g}, ${c.b}`;
   }
 
-  _getThemeAccentPalette() {
-    const root = getComputedStyle(document.documentElement);
-    const read = (name) => String(root.getPropertyValue(name) || "").trim();
-
-    const baseVars = [
-      "--primary-color",
-      "--primary-light",
-      "--primary-dark",
-      "--accent-gold",
-      "--accent-gold-light",
-      "--accent-blue",
-      "--settings-color",
-      "--settings-light",
+  _getRainbowPalette20() {
+    // 20 common “rainbow range” colors (fixed, predictable, covers hue spectrum).
+    // Returned as "r, g, b" strings.
+    const hexes = [
+      "#ff0000", // red
+      "#ff3b00", // red-orange
+      "#ff7a00", // orange
+      "#ffb300", // amber
+      "#ffe600", // yellow
+      "#c8ff00", // yellow-green
+      "#7dff00", // lime
+      "#00ff00", // green
+      "#00ff6a", // spring green
+      "#00ffa8", // mint
+      "#00ffff", // cyan
+      "#00a6ff", // sky
+      "#0066ff", // blue
+      "#0033ff", // deep blue
+      "#4b00ff", // indigo
+      "#7f00ff", // violet
+      "#b800ff", // purple
+      "#ff00ff", // magenta
+      "#ff0099", // hot pink
+      "#ff0055", // rose
     ];
 
-    const whiteHex = read("--text-primary") || "#ffffff";
-    const darkHex = read("--primary-dark") || "#0d3d2e";
-
-    const white = this._parseHexColor(whiteHex);
-    const dark = this._parseHexColor(darkHex);
-
-    const uniq = new Set();
     const out = [];
-
-    const push = (rgbStr) => {
-      const norm = this._normalizeRgbString(rgbStr);
-      if (uniq.has(norm)) return;
-      uniq.add(norm);
-      out.push(norm);
-    };
-
-    const bases = baseVars
-      .map((v) => this._parseHexColor(read(v)))
-      .filter(Boolean);
-
-    // First: include the base colors.
-    bases.forEach((c) => push(this._rgbToString(c)));
-
-    // Then: generate derived variants (lighter + deeper) until we have >= 20.
-    const lightT = [0.22, 0.38];
-    const darkT = [0.22, 0.38];
-    for (const c of bases) {
-      if (white) {
-        lightT.forEach((t) =>
-          push(this._rgbToString(this._mixRgb(c, white, t)))
-        );
-      }
-      if (dark) {
-        darkT.forEach((t) => push(this._rgbToString(this._mixRgb(c, dark, t))));
-      }
-      if (out.length >= 20) break;
+    for (const h of hexes) {
+      const rgb = this._hexToRgbString(h);
+      if (rgb) out.push(rgb);
     }
-
-    // Ensure at least 20; if not, repeat with more mixes.
-    if (out.length < 20 && white && dark) {
-      const extraT = [0.55, 0.7];
-      for (const c of bases) {
-        extraT.forEach((t) =>
-          push(this._rgbToString(this._mixRgb(c, white, t)))
-        );
-        extraT.forEach((t) =>
-          push(this._rgbToString(this._mixRgb(c, dark, t)))
-        );
-        if (out.length >= 20) break;
-      }
-    }
-
-    return out.slice(0, 20);
+    return out;
   }
 
-  _renderAccentPalette() {
+  async _getFaviconColors10(faviconUrl) {
+    const key = String(faviconUrl || "");
+    if (!key) return null;
+
+    const cached = this.faviconPaletteCache.get(key);
+    if (cached) return cached;
+
+    if (this.faviconPaletteInFlight.has(key)) {
+      try {
+        await this.faviconPaletteInFlight.get(key);
+      } catch (e) {}
+      return this.faviconPaletteCache.get(key) || null;
+    }
+
+    const p = this._computeFaviconColors10(key)
+      .then((colors) => {
+        if (Array.isArray(colors) && colors.length) {
+          this.faviconPaletteCache.set(key, colors);
+        }
+      })
+      .finally(() => {
+        this.faviconPaletteInFlight.delete(key);
+      });
+
+    this.faviconPaletteInFlight.set(key, p);
+
+    try {
+      await p;
+    } catch (e) {}
+
+    return this.faviconPaletteCache.get(key) || null;
+  }
+
+  async _computeFaviconColors10(url) {
+    // ColorThief-style approach (dominant + palette) implemented locally:
+    // - decode favicon into canvas
+    // - build quantized histogram
+    // - pick top colors with distance threshold to avoid duplicates
+    let blob;
+    try {
+      const resp = await fetch(url, { cache: "force-cache" });
+      if (!resp.ok) return null;
+      blob = await resp.blob();
+    } catch (e) {
+      return null;
+    }
+
+    const sampleSize = 64;
+    const canvas = document.createElement("canvas");
+    canvas.width = sampleSize;
+    canvas.height = sampleSize;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+
+    try {
+      if (typeof createImageBitmap === "function") {
+        const bmp = await createImageBitmap(blob);
+        ctx.drawImage(bmp, 0, 0, sampleSize, sampleSize);
+      } else {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(blob);
+        await new Promise((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = reject;
+          img.src = objectUrl;
+        });
+        ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch (e) {
+      return null;
+    }
+
+    let data;
+    try {
+      data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+    } catch (e) {
+      return null;
+    }
+
+    // Quantization: 5 bits/channel => 32 levels.
+    const shift = 3;
+    const stride = 2;
+
+    const bins = new Map();
+
+    for (let y = 0; y < sampleSize; y += stride) {
+      for (let x = 0; x < sampleSize; x += stride) {
+        const i = (y * sampleSize + x) * 4;
+        const a = data[i + 3];
+        if (a < 32) continue;
+
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Ignore near-white padding
+        if (r > 245 && g > 245 && b > 245) continue;
+
+        const rQ = r >> shift;
+        const gQ = g >> shift;
+        const bQ = b >> shift;
+        const key = (rQ << 10) | (gQ << 5) | bQ;
+
+        const prev = bins.get(key);
+        if (prev) {
+          prev.count += 1;
+          prev.r += r;
+          prev.g += g;
+          prev.b += b;
+        } else {
+          bins.set(key, { count: 1, r, g, b });
+        }
+      }
+    }
+
+    if (!bins.size) return null;
+
+    const entries = Array.from(bins.values())
+      .map((v) => ({
+        count: v.count,
+        r: Math.round(v.r / v.count),
+        g: Math.round(v.g / v.count),
+        b: Math.round(v.b / v.count),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const chosen = [];
+    const dist2 = (c1, c2) => {
+      const dr = c1.r - c2.r;
+      const dg = c1.g - c2.g;
+      const db = c1.b - c2.b;
+      return dr * dr + dg * dg + db * db;
+    };
+
+    const clamp = (v) => Math.max(20, Math.min(235, v));
+    const toRgbStr = (c) => `${clamp(c.r)}, ${clamp(c.g)}, ${clamp(c.b)}`;
+
+    // Prefer distinct colors; fall back by relaxing the distance if needed.
+    const thresholds = [80, 65, 50, 35];
+    for (const minDist of thresholds) {
+      chosen.length = 0;
+
+      for (const c of entries) {
+        if (!chosen.length) {
+          chosen.push(c);
+          if (chosen.length >= 10) break;
+          continue;
+        }
+
+        const ok = chosen.every((p) => dist2(c, p) >= minDist * minDist);
+        if (!ok) continue;
+        chosen.push(c);
+        if (chosen.length >= 10) break;
+      }
+
+      if (chosen.length >= 6) break;
+    }
+
+    // Ensure we return up to 10 colors; dominant is first.
+    const out = chosen.slice(0, 10).map(toRgbStr);
+    return out.length ? out : null;
+  }
+
+  async _renderAccentPaletteForEngine(engineId) {
     if (!this.contextMenu) return;
     const paletteEl = this.contextMenu.querySelector(
       '[data-role="accent-palette"]'
     );
     if (!paletteEl) return;
 
+    const rainbow = this._getRainbowPalette20();
+
+    // Always render 30 swatches.
+    const initial = new Array(10).fill("255, 255, 255").concat(rainbow);
+    this._renderSwatches(paletteEl, initial);
+
+    if (!engineId) return;
+    const engine = this.searches.find((s) => String(s.id) === String(engineId));
+    if (!engine) return;
+
+    const faviconUrl =
+      engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
+    if (!faviconUrl) return;
+
+    const colors10 = await this._getFaviconColors10(faviconUrl);
+    if (!colors10) return;
+
+    // If the menu moved to another engine while awaiting, abort.
+    if (String(this.contextMenu?.dataset?.engineId) !== String(engineId))
+      return;
+
+    const dominant = colors10[0] || "255, 255, 255";
+    const palette9 = colors10.slice(1, 10);
+    while (palette9.length < 9)
+      palette9.push(rainbow[palette9.length] || "255, 255, 255");
+
+    const all = [dominant, ...palette9, ...rainbow];
+    this._renderSwatches(paletteEl, all);
+  }
+
+  _renderSwatches(paletteEl, rgbList) {
     paletteEl.innerHTML = "";
-    const colors = this._getThemeAccentPalette();
-    colors.forEach((rgb) => {
+    rgbList.forEach((rgb, idx) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "context-menu-swatch";
       btn.dataset.rgb = rgb;
       btn.setAttribute("aria-label", `Set accent color ${rgb}`);
+      btn.setAttribute("title", idx === 0 ? "Dominant favicon color" : "");
       btn.style.background = `rgb(${rgb})`;
       paletteEl.appendChild(btn);
     });
