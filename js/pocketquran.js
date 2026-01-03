@@ -669,6 +669,22 @@ class PocketQuranManager {
         this.updateAyahDropdownActiveState();
 
         if (delta < 2 || timedOut) {
+          const currentAyahAtTop = firstVisibleIndex + 1;
+          const diff = targetAyah - currentAyahAtTop;
+
+          // If our offset estimate is slightly off (commonly by 1), nudge the
+          // scroll position by a small amount and keep the lock until aligned.
+          if (
+            diff !== 0 &&
+            Math.abs(diff) <= 3 &&
+            this._virtualContainer &&
+            Number.isFinite(this._avgAyahHeight)
+          ) {
+            const step = diff * (this._avgAyahHeight + 16);
+            this._virtualContainer.scrollTop = scrollTop + step;
+            return;
+          }
+
           this._programmaticScroll = null;
         }
         return;
