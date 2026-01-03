@@ -2695,6 +2695,12 @@ body {
   will-change: transform;
 }
 
+/* While dragging, disable hover transforms that change layout/rects (prevents jitter). */
+.search-bar-engine-strip.is-dragging
+  .search-bar-engine-tab:hover:not(.dragging) {
+  transform: translateZ(0);
+}
+
 .search-bar-engine-tab {
   width: var(--sb-engine-size);
   height: var(--sb-engine-size);
@@ -2704,9 +2710,30 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: grab;
   transition: transform var(--transition-fast),
     background-color var(--transition-fast), border-color var(--transition-fast);
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.search-bar-engine-tab:active {
+  cursor: grabbing;
+}
+
+.search-bar-engine-tab.dragging {
+  opacity: 0.4;
+  transform: scale(0.95) translateZ(0);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.search-bar-engine-tab.drag-over {
+  transform: translateZ(0);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+  animation: dragOverPulse 0.8s ease-in-out infinite;
 }
 
 .search-bar-engine-tab:hover {
