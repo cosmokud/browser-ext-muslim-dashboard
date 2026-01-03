@@ -417,7 +417,7 @@ class PocketQuranManager {
     this._virtualContainer.className = "pq-virtual-container";
     this._virtualContainer.style.cssText = `
       position: relative;
-      height: 600px;
+      height: 1000px;
       overflow-y: auto;
       overflow-x: hidden;
       border-radius: var(--radius-lg);
@@ -1107,7 +1107,15 @@ class PocketQuranManager {
   }
 
   async setActiveSurah(surahNumber, opts = {}) {
-    const { preserveAyah = false, autoScroll = true } = opts;
+    const {
+      preserveAyah = false,
+      autoScroll = true,
+      preserveDashboardScroll = true,
+    } = opts;
+
+    const restorePos = preserveDashboardScroll
+      ? { x: window.scrollX || 0, y: window.scrollY || 0 }
+      : null;
 
     const surah = this.clampNumber(surahNumber, 1, 114, 1);
     const versesAlreadyRendered = Boolean(
@@ -1133,11 +1141,22 @@ class PocketQuranManager {
     this.updateSurahActiveState();
     this.updateSurahInputValue({ force: true });
 
-    await this.loadSurah(surah, { autoScroll });
+    await this.loadSurah(surah, { autoScroll, restorePos });
+
+    if (restorePos) {
+      // Double-rAF: wait for layout/paint so we don't fight reflow.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            window.scrollTo(restorePos.x, restorePos.y);
+          } catch (e) {}
+        });
+      });
+    }
   }
 
   async loadSurah(surah, opts = {}) {
-    const { autoScroll = true } = opts;
+    const { autoScroll = true, restorePos = null } = opts;
     const chapter = this._chapters.find((c) => c.id === surah);
     const surahName = chapter?.name_simple || `Surah ${surah}`;
     const surahNameAr = chapter?.name_arabic || "";
@@ -1145,6 +1164,16 @@ class PocketQuranManager {
     // Clean up previous virtualization
     this.destroyVirtualization();
     this.renderLoading(`Loading ${surahName}…`);
+
+    // Some browsers' scroll anchoring + dynamic card height can cause
+    // unexpected dashboard jumps. Restore immediately after we mutate DOM.
+    if (restorePos) {
+      requestAnimationFrame(() => {
+        try {
+          window.scrollTo(restorePos.x, restorePos.y);
+        } catch (e) {}
+      });
+    }
 
     try {
       if (this._fetchController) this._fetchController.abort();
@@ -1193,6 +1222,16 @@ class PocketQuranManager {
 
       // Initialize virtualized rendering
       this.initVirtualization();
+
+      // Restore again after the main content mounts (covers jumps triggered
+      // by height changes between loading state and the virtual container).
+      if (restorePos) {
+        requestAnimationFrame(() => {
+          try {
+            window.scrollTo(restorePos.x, restorePos.y);
+          } catch (e) {}
+        });
+      }
 
       this.updateAyahControls(verses.length);
 
