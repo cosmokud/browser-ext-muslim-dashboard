@@ -358,6 +358,15 @@ class MuslimDashboard {
           valueEl.textContent = "Dashboard";
           card.style.removeProperty("--ui-blur-multiplier");
         }
+
+        // Notify components that portal UI may need syncing.
+        try {
+          document.dispatchEvent(
+            new CustomEvent("md:card-blur-update", {
+              detail: { cardId },
+            })
+          );
+        } catch (e) {}
       };
 
       const settings = readSettings();
@@ -379,6 +388,14 @@ class MuslimDashboard {
           card.style.setProperty("--ui-blur-multiplier", String(power / 100));
         }
         writeSettings({ [enabledKey]: toggle.checked, [powerKey]: power });
+
+        try {
+          document.dispatchEvent(
+            new CustomEvent("md:card-blur-update", {
+              detail: { cardId },
+            })
+          );
+        } catch (e) {}
       });
 
       if (menuBtn && popover) {

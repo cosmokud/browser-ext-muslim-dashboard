@@ -358,6 +358,35 @@ class PocketQuranManager {
 
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
+
+    // React to per-card blur overrides (emitted by app.js)
+    document.addEventListener("md:card-blur-update", (e) => {
+      const cardId = e?.detail?.cardId;
+      if (cardId && cardId !== "pocketQuranCard") return;
+      this.syncDropdownBlurMultiplier(this.surahDropdown);
+      this.syncDropdownBlurMultiplier(this.ayahDropdown);
+    });
+  }
+
+  getEffectiveBlurMultiplier() {
+    try {
+      const source = this.card || document.documentElement;
+      const raw =
+        getComputedStyle(source).getPropertyValue("--ui-blur-multiplier") ||
+        "";
+      const n = parseFloat(String(raw).trim());
+      if (Number.isFinite(n) && n >= 0) return n;
+    } catch (e) {}
+    return 1;
+  }
+
+  syncDropdownBlurMultiplier(el) {
+    if (!el) return;
+    // Only needed once the dropdown is open/portalled, but safe either way.
+    const multiplier = this.getEffectiveBlurMultiplier();
+    try {
+      el.style.setProperty("--ui-blur-multiplier", String(multiplier));
+    } catch (e) {}
   }
 
   ensureDropdownPortal(el) {
@@ -368,10 +397,16 @@ class PocketQuranManager {
       el.classList.add("pq-portal");
       this._dropdownPortalled.add(el);
     } catch (e) {}
+
+    // Ensure blur multiplier is inherited even when portalled to <body>.
+    this.syncDropdownBlurMultiplier(el);
   }
 
   positionDropdown(el) {
     if (!el || el.hidden) return;
+
+    // Keep blur multiplier in sync while open (e.g., after changing card blur).
+    this.syncDropdownBlurMultiplier(el);
 
     let anchor = null;
     if (el === this.surahDropdown) anchor = this.surahCombobox;
@@ -433,6 +468,7 @@ class PocketQuranManager {
         this.ayahCombobox.classList.add("pq-open");
     } catch (e) {}
     el.hidden = false;
+    this.syncDropdownBlurMultiplier(el);
     this.positionDropdown(el);
   }
 
