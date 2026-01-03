@@ -2718,6 +2718,36 @@
                 </optgroup>
               </select>
             </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Bookmarks</label>
+              <p class="setting-hint">
+                Export or import your ayah bookmarks and categories.
+              </p>
+              <div class="setting-buttons">
+                <button
+                  type="button"
+                  class="setting-btn"
+                  id="pocketQuranExportBookmarksBtn"
+                >
+                  📤 Export Bookmarks
+                </button>
+                <button
+                  type="button"
+                  class="setting-btn"
+                  id="pocketQuranImportBookmarksBtn"
+                >
+                  📥 Import Bookmarks
+                </button>
+                <input
+                  type="file"
+                  id="pocketQuranImportBookmarksInput"
+                  accept=".json"
+                  style="display: none"
+                />
+              </div>
+              <p class="setting-hint" id="pocketQuranBookmarkStats"></p>
+            </div>
           </div>
 
           <!-- Background Settings -->

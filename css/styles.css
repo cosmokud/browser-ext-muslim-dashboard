@@ -7113,7 +7113,7 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah-badge {
   position: absolute;
-  top: var(--spacing-md);
+  bottom: var(--spacing-md);
   left: var(--spacing-md);
   width: 34px;
   height: 34px;
@@ -7126,6 +7126,36 @@ body.sticky-note-resizing {
   color: var(--text-primary);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  z-index: 1;
+}
+
+.pocket-quran-ayah-star {
+  position: absolute;
+  bottom: calc(var(--spacing-md) + 42px);
+  left: var(--spacing-md);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 1;
+}
+
+.pocket-quran-ayah-star:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.1);
+}
+
+.pocket-quran-ayah-star.bookmarked {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
 }
 
 .pocket-quran-ayah-ar {
@@ -7134,6 +7164,7 @@ body.sticky-note-resizing {
   line-height: 1.95;
   text-align: right;
   padding-left: 56px;
+  padding-bottom: var(--spacing-md);
 }
 
 .pocket-quran-ayah-tr {
@@ -7141,6 +7172,7 @@ body.sticky-note-resizing {
   font-size: var(--pq-translation-size);
   color: var(--text-secondary);
   padding-left: 56px;
+  padding-bottom: calc(var(--spacing-xl) + 34px);
 }
 
 .pocket-quran-ayah.pq-highlight {
@@ -7303,3 +7335,613 @@ body.sticky-note-resizing {
     height: 400px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POCKET QURAN BOOKMARK SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pq-bookmark-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-left: var(--spacing-sm);
+}
+
+.pq-bookmark-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+/* Bookmark Modal */
+.pq-bookmark-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.pq-bookmark-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pq-bookmark-modal-content {
+  background: rgba(30, 40, 50, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--glass-shadow);
+  transform: scale(0.95) translateY(20px);
+  transition: transform var(--transition-normal);
+}
+
+.pq-bookmark-modal.active .pq-bookmark-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.pq-bookmark-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.pq-bookmark-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pq-bookmark-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-modal-close:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.pq-bookmark-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.pq-bookmark-search {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.pq-bookmark-search-input {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.pq-bookmark-search-input:focus {
+  border-color: var(--accent-gold);
+}
+
+.pq-bookmark-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.pq-bookmark-add-category {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-add-category:hover {
+  background: var(--glass-bg-hover);
+}
+
+.pq-bookmark-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.pq-bookmark-category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-category:hover {
+  background: var(--glass-bg-hover);
+  transform: translateX(4px);
+}
+
+.pq-bookmark-category.active {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.pq-bookmark-category-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pq-bookmark-category-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pq-bookmark-category-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pq-bookmark-category-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.pq-bookmark-category-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-category-btn:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.pq-bookmark-category-btn.delete:hover {
+  color: #ff6b6b;
+}
+
+.pq-bookmark-ayahs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.pq-bookmark-ayah {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-ayah:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-2px);
+}
+
+.pq-bookmark-ayah-badge {
+  min-width: 45px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pq-bookmark-ayah-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.pq-bookmark-ayah-arabic {
+  font-family: var(--font-arabic);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  direction: rtl;
+  color: var(--text-primary);
+}
+
+.pq-bookmark-ayah-translation {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.pq-bookmark-ayah-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-ayah-remove:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.pq-bookmark-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--spacing-md);
+}
+
+.pq-bookmark-page-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-page-btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.pq-bookmark-page-btn.active {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.pq-bookmark-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pq-bookmark-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+}
+
+.pq-bookmark-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Checkbox style for category selection */
+.pq-bookmark-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.pq-bookmark-checkbox.checked {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.pq-bookmark-checkbox.checked::after {
+  content: "✓";
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.pq-bookmark-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--glass-border);
+}
+
+.pq-bookmark-modal-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-modal-btn:hover {
+  background: var(--glass-bg-hover);
+}
+
+.pq-bookmark-modal-btn.primary {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.pq-bookmark-modal-btn.primary:hover {
+  background: var(--accent-gold-light);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLASHCARD SET SELECTOR MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.flashcard-set-selector-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-left: var(--spacing-sm);
+}
+
+.flashcard-set-selector-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.flashcard-set-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.flashcard-set-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.flashcard-set-modal-content {
+  background: rgba(30, 40, 50, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 450px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--glass-shadow);
+  transform: scale(0.95) translateY(20px);
+  transition: transform var(--transition-normal);
+}
+
+.flashcard-set-modal.active .flashcard-set-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.flashcard-set-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.flashcard-set-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.flashcard-set-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.flashcard-set-modal-close:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.flashcard-set-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.flashcard-set-search {
+  margin-bottom: var(--spacing-md);
+}
+
+.flashcard-set-search-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.flashcard-set-search-input:focus {
+  border-color: var(--accent-gold);
+}
+
+.flashcard-set-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.flashcard-set-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.flashcard-set-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.flashcard-set-item:hover {
+  background: var(--glass-bg-hover);
+  transform: translateX(4px);
+}
+
+.flashcard-set-item.active {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.flashcard-set-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.flashcard-set-item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.flashcard-set-item-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.flashcard-set-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--spacing-md);
+}
+
+.flashcard-set-page-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.flashcard-set-page-btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.flashcard-set-page-btn.active {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.flashcard-set-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flashcard-set-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+}
+

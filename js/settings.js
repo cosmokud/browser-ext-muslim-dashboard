@@ -265,6 +265,20 @@ class SettingsManager {
     this.pocketQuranTranslationSelect = document.getElementById(
       "pocketQuranTranslationSelect"
     );
+
+    // Pocket Quran bookmark elements
+    this.pocketQuranExportBookmarksBtn = document.getElementById(
+      "pocketQuranExportBookmarksBtn"
+    );
+    this.pocketQuranImportBookmarksBtn = document.getElementById(
+      "pocketQuranImportBookmarksBtn"
+    );
+    this.pocketQuranImportBookmarksInput = document.getElementById(
+      "pocketQuranImportBookmarksInput"
+    );
+    this.pocketQuranBookmarkStats = document.getElementById(
+      "pocketQuranBookmarkStats"
+    );
   }
 
   /**
@@ -277,6 +291,7 @@ class SettingsManager {
     this.renderCustomBackgrounds();
 
     this.updateNotesCountHint();
+    this.updatePocketQuranBookmarkStats();
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
@@ -525,6 +540,71 @@ class SettingsManager {
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
+  }
+
+  updatePocketQuranBookmarkStats() {
+    if (!this.pocketQuranBookmarkStats) return;
+    const categories = this.storage.get("pocketQuran_bookmarkCategories", []);
+    const bookmarks = this.storage.get("pocketQuran_bookmarks", []);
+    this.pocketQuranBookmarkStats.textContent = `${categories.length} categories, ${bookmarks.length} bookmarked ayahs`;
+  }
+
+  exportPocketQuranBookmarks() {
+    try {
+      const pocketQuran = window.dashboard?.pocketQuran;
+      if (!pocketQuran) {
+        this.showToast("Pocket Quran not initialized", "error");
+        return;
+      }
+
+      const json = pocketQuran.exportBookmarksJSON();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `pocket-quran-bookmarks-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+      this.showToast("Bookmarks exported successfully", "success");
+    } catch (e) {
+      console.error("Failed to export bookmarks:", e);
+      this.showToast("Failed to export bookmarks", "error");
+    }
+  }
+
+  importPocketQuranBookmarks(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const pocketQuran = window.dashboard?.pocketQuran;
+        if (!pocketQuran) {
+          this.showToast("Pocket Quran not initialized", "error");
+          return;
+        }
+
+        const result = pocketQuran.importBookmarksJSON(e.target.result);
+        if (result.success) {
+          this.updatePocketQuranBookmarkStats();
+          this.showToast(
+            `Imported ${result.categoriesCount} categories, ${result.bookmarksCount} bookmarks`,
+            "success"
+          );
+        } else {
+          this.showToast(`Import failed: ${result.error}`, "error");
+        }
+      } catch (err) {
+        console.error("Failed to import bookmarks:", err);
+        this.showToast("Failed to import bookmarks", "error");
+      }
+    };
+    reader.onerror = () => {
+      this.showToast("Failed to read file", "error");
+    };
+    reader.readAsText(file);
   }
 
   updatePinnedAppsPerRowLabel() {
@@ -2412,6 +2492,25 @@ class SettingsManager {
     if (this.pocketQuranTranslationSize) {
       this.pocketQuranTranslationSize.addEventListener("input", () => {
         this.updatePocketQuranTranslationSizeLabel();
+      });
+    }
+
+    // Pocket Quran bookmark export/import
+    if (this.pocketQuranExportBookmarksBtn) {
+      this.pocketQuranExportBookmarksBtn.addEventListener("click", () => {
+        this.exportPocketQuranBookmarks();
+      });
+    }
+    if (this.pocketQuranImportBookmarksBtn && this.pocketQuranImportBookmarksInput) {
+      this.pocketQuranImportBookmarksBtn.addEventListener("click", () => {
+        this.pocketQuranImportBookmarksInput.click();
+      });
+      this.pocketQuranImportBookmarksInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          this.importPocketQuranBookmarks(file);
+          e.target.value = "";
+        }
       });
     }
 
