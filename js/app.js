@@ -350,13 +350,18 @@ class MuslimDashboard {
         if (toggle.checked) {
           range.value = String(clampedPower);
           valueEl.textContent = `${clampedPower}%`;
-          card.style.setProperty(
-            "--ui-blur-multiplier",
-            String(clampedPower / 100)
-          );
+
+          // Apply the blur multiplier as an inline CSS custom property.
+          // Use both setProperty and setAttribute to ensure maximum compatibility.
+          const multiplierValue = String(clampedPower / 100);
+          card.style.setProperty("--ui-blur-multiplier", multiplierValue);
+
+          // Also add a data attribute for debugging/CSS fallback.
+          card.dataset.blurOverride = multiplierValue;
         } else {
           valueEl.textContent = "Dashboard";
           card.style.removeProperty("--ui-blur-multiplier");
+          delete card.dataset.blurOverride;
         }
 
         // Notify components that portal UI may need syncing.
@@ -384,8 +389,10 @@ class MuslimDashboard {
       range.addEventListener("input", () => {
         const power = clampNumber(range.value, 0, 200, 100);
         if (toggle.checked) {
+          const multiplierValue = String(power / 100);
           valueEl.textContent = `${power}%`;
-          card.style.setProperty("--ui-blur-multiplier", String(power / 100));
+          card.style.setProperty("--ui-blur-multiplier", multiplierValue);
+          card.dataset.blurOverride = multiplierValue;
         }
         writeSettings({ [enabledKey]: toggle.checked, [powerKey]: power });
 

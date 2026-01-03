@@ -378,7 +378,22 @@ class PocketQuranManager {
   }
 
   getEffectiveBlurMultiplier() {
-    const read = (el) => {
+    // First, check if the card has an explicit inline style override.
+    // This takes precedence over inherited values.
+    if (this.card) {
+      try {
+        const inlineVal = this.card.style.getPropertyValue(
+          "--ui-blur-multiplier"
+        );
+        if (inlineVal) {
+          const n = parseFloat(String(inlineVal).trim());
+          if (Number.isFinite(n) && n >= 0) return n;
+        }
+      } catch (e) {}
+    }
+
+    // Fall back to the computed value (inherited from root or set elsewhere).
+    const readComputed = (el) => {
       if (!el) return null;
       try {
         const raw =
@@ -389,8 +404,9 @@ class PocketQuranManager {
       return null;
     };
 
-    // Prefer per-card override when present, otherwise fall back to global.
-    return read(this.card) ?? read(document.documentElement) ?? 1;
+    return (
+      readComputed(this.card) ?? readComputed(document.documentElement) ?? 1
+    );
   }
 
   syncDropdownBlurMultiplier(el) {
