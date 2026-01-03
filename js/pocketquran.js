@@ -2,7 +2,7 @@
  * Pocket Quran Manager
  * Full-width Quran reader with Surah selector, Ayah navigation, and per-language translations.
  * Data source: https://api.quran.com (public API v4)
- * 
+ *
  * Features a high-performance virtualized infinite scroll that renders only
  * ~20 ayahs at a time while maintaining smooth scrolling and stable positions.
  */
@@ -30,10 +30,10 @@ class PocketQuranManager {
   };
 
   // Virtualization constants
-  static VISIBLE_AYAH_COUNT = 20;        // Max ayahs rendered at once
-  static ESTIMATED_AYAH_HEIGHT = 180;    // Initial estimate, recalculated dynamically
-  static BUFFER_AYAHS = 3;               // Extra ayahs above/below viewport
-  static SCROLL_THROTTLE_MS = 16;        // ~60fps throttle
+  static VISIBLE_AYAH_COUNT = 20; // Max ayahs rendered at once
+  static ESTIMATED_AYAH_HEIGHT = 180; // Initial estimate, recalculated dynamically
+  static BUFFER_AYAHS = 3; // Extra ayahs above/below viewport
+  static SCROLL_THROTTLE_MS = 16; // ~60fps throttle
 
   constructor(storage) {
     this.storage = storage;
@@ -52,10 +52,18 @@ class PocketQuranManager {
     this.ayahInput = document.getElementById("pocketQuranAyahInput");
     this.ayahDropdown = document.getElementById("pocketQuranAyahDropdown");
     this.ayahListEl = document.getElementById("pocketQuranAyahList");
-    this.arabicSizeRange = document.getElementById("pocketQuranArabicSizeRange");
-    this.arabicSizeValue = document.getElementById("pocketQuranArabicSizeValue");
-    this.translationSizeRange = document.getElementById("pocketQuranTranslationSizeRange");
-    this.translationSizeValue = document.getElementById("pocketQuranTranslationSizeValue");
+    this.arabicSizeRange = document.getElementById(
+      "pocketQuranArabicSizeRange"
+    );
+    this.arabicSizeValue = document.getElementById(
+      "pocketQuranArabicSizeValue"
+    );
+    this.translationSizeRange = document.getElementById(
+      "pocketQuranTranslationSizeRange"
+    );
+    this.translationSizeValue = document.getElementById(
+      "pocketQuranTranslationSizeValue"
+    );
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
@@ -79,13 +87,13 @@ class PocketQuranManager {
     this._virtualContainer = null;
     this._virtualSpacer = null;
     this._virtualContent = null;
-    this._ayahHeights = new Map();           // Measured heights per ayah
+    this._ayahHeights = new Map(); // Measured heights per ayah
     this._avgAyahHeight = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
     this._renderedRange = { start: 0, end: 0 };
     this._scrollRAF = null;
     this._isScrolling = false;
     this._lastScrollTop = 0;
-    this._scrollDirection = 'down';
+    this._scrollDirection = "down";
     this._resizeObserver = null;
 
     // Dropdown portal state
@@ -100,10 +108,17 @@ class PocketQuranManager {
 
     this._activeSurah = this.clampNumber(pq.lastSurahNumber, 1, 114, 1);
     this._activeAyah = this.clampNumber(pq.lastAyahNumber, 1, 286, 1);
-    this._activeTranslationId = this.normalizeTranslationId(pq.translationResourceId);
+    this._activeTranslationId = this.normalizeTranslationId(
+      pq.translationResourceId
+    );
 
     const arabicFontSize = this.clampNumber(pq.arabicFontSize, 8, 144, 32);
-    const translationFontSize = this.clampNumber(pq.translationFontSize, 8, 144, 18);
+    const translationFontSize = this.clampNumber(
+      pq.translationFontSize,
+      8,
+      144,
+      18
+    );
 
     this.applyFontSizes(arabicFontSize, translationFontSize, {
       syncInputs: true,
@@ -147,7 +162,9 @@ class PocketQuranManager {
     if (this.surahInput) {
       this.surahInput.addEventListener("focus", () => {
         this._surahQuery = "";
-        try { this.surahInput.select(); } catch (e) {}
+        try {
+          this.surahInput.select();
+        } catch (e) {}
         openSurahDropdown();
       });
       this.surahInput.addEventListener("click", () => {
@@ -233,7 +250,12 @@ class PocketQuranManager {
     if (this.ayahPrevBtn) {
       this.ayahPrevBtn.addEventListener("click", () => {
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1);
+        const current = this.clampNumber(
+          parseInt(this.ayahInput?.value, 10),
+          1,
+          max,
+          1
+        );
         const next = this.clampNumber(current - 1, 1, max, 1);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
@@ -243,7 +265,12 @@ class PocketQuranManager {
     if (this.ayahNextBtn) {
       this.ayahNextBtn.addEventListener("click", () => {
         const max = this.getActiveSurahAyahCount() || 286;
-        const current = this.clampNumber(parseInt(this.ayahInput?.value, 10), 1, max, 1);
+        const current = this.clampNumber(
+          parseInt(this.ayahInput?.value, 10),
+          1,
+          max,
+          1
+        );
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true });
@@ -253,8 +280,18 @@ class PocketQuranManager {
     // Font size controls
     if (this.arabicSizeRange) {
       this.arabicSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(parseInt(this.arabicSizeRange.value, 10), 8, 144, 32);
-        const t = this.clampNumber(parseInt(this.translationSizeRange?.value, 10), 8, 144, 18);
+        const a = this.clampNumber(
+          parseInt(this.arabicSizeRange.value, 10),
+          8,
+          144,
+          32
+        );
+        const t = this.clampNumber(
+          parseInt(this.translationSizeRange?.value, 10),
+          8,
+          144,
+          18
+        );
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
         // Invalidate height cache when font size changes
         this._ayahHeights.clear();
@@ -262,15 +299,30 @@ class PocketQuranManager {
       });
       this.arabicSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          arabicFontSize: this.clampNumber(parseInt(this.arabicSizeRange.value, 10), 8, 144, 32),
+          arabicFontSize: this.clampNumber(
+            parseInt(this.arabicSizeRange.value, 10),
+            8,
+            144,
+            32
+          ),
         });
       });
     }
 
     if (this.translationSizeRange) {
       this.translationSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(parseInt(this.arabicSizeRange?.value, 10), 8, 144, 32);
-        const t = this.clampNumber(parseInt(this.translationSizeRange.value, 10), 8, 144, 18);
+        const a = this.clampNumber(
+          parseInt(this.arabicSizeRange?.value, 10),
+          8,
+          144,
+          32
+        );
+        const t = this.clampNumber(
+          parseInt(this.translationSizeRange.value, 10),
+          8,
+          144,
+          18
+        );
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
         // Invalidate height cache when font size changes
         this._ayahHeights.clear();
@@ -278,7 +330,12 @@ class PocketQuranManager {
       });
       this.translationSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          translationFontSize: this.clampNumber(parseInt(this.translationSizeRange.value, 10), 8, 144, 18),
+          translationFontSize: this.clampNumber(
+            parseInt(this.translationSizeRange.value, 10),
+            8,
+            144,
+            18
+          ),
         });
       });
     }
@@ -286,22 +343,33 @@ class PocketQuranManager {
     // Close dropdowns when clicking outside
     document.addEventListener("click", (e) => {
       const t = e.target;
-      const inSurahDropdown = this.surahDropdown &&
+      const inSurahDropdown =
+        this.surahDropdown &&
         (this.surahDropdown === t || this.surahDropdown.contains(t));
-      const inAyahDropdown = this.ayahDropdown &&
+      const inAyahDropdown =
+        this.ayahDropdown &&
         (this.ayahDropdown === t || this.ayahDropdown.contains(t));
 
-      if (this.surahCombobox && !this.surahCombobox.contains(t) && !inSurahDropdown) {
+      if (
+        this.surahCombobox &&
+        !this.surahCombobox.contains(t) &&
+        !inSurahDropdown
+      ) {
         this.closeDropdown(this.surahDropdown);
       }
-      if (this.ayahCombobox && !this.ayahCombobox.contains(t) && !inAyahDropdown) {
+      if (
+        this.ayahCombobox &&
+        !this.ayahCombobox.contains(t) &&
+        !inAyahDropdown
+      ) {
         this.closeDropdown(this.ayahDropdown);
       }
     });
 
     // Reposition dropdowns on scroll/resize
     const reposition = () => {
-      if (this._dropdownPositionRaf) cancelAnimationFrame(this._dropdownPositionRaf);
+      if (this._dropdownPositionRaf)
+        cancelAnimationFrame(this._dropdownPositionRaf);
       this._dropdownPositionRaf = requestAnimationFrame(() => {
         this.positionDropdown(this.surahDropdown);
         this.positionDropdown(this.ayahDropdown);
@@ -385,7 +453,11 @@ class PocketQuranManager {
     this.updateTotalHeight();
 
     // Attach scroll listener with throttling
-    this._virtualContainer.addEventListener("scroll", this.handleVirtualScroll.bind(this), { passive: true });
+    this._virtualContainer.addEventListener(
+      "scroll",
+      this.handleVirtualScroll.bind(this),
+      { passive: true }
+    );
 
     // Observe container resize
     if (this._resizeObserver) {
@@ -466,24 +538,30 @@ class PocketQuranManager {
       if (!this._virtualContainer) return;
 
       const scrollTop = this._virtualContainer.scrollTop;
-      
+
       // Track scroll direction
-      this._scrollDirection = scrollTop > this._lastScrollTop ? 'down' : 'up';
+      this._scrollDirection = scrollTop > this._lastScrollTop ? "down" : "up";
       this._lastScrollTop = scrollTop;
 
       // Find the ayah at current scroll position
       const firstVisibleIndex = this.getAyahAtOffset(scrollTop);
-      
+
       // Calculate visible range with buffer
       const buffer = PocketQuranManager.BUFFER_AYAHS;
       const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
       const total = this._activeVerses?.length || 0;
 
       const start = Math.max(0, firstVisibleIndex - buffer);
-      const end = Math.min(total - 1, firstVisibleIndex + visibleCount + buffer);
+      const end = Math.min(
+        total - 1,
+        firstVisibleIndex + visibleCount + buffer
+      );
 
       // Only re-render if range changed significantly
-      if (start !== this._renderedRange.start || end !== this._renderedRange.end) {
+      if (
+        start !== this._renderedRange.start ||
+        end !== this._renderedRange.end
+      ) {
         this.renderVisibleAyahs(start, end);
       }
 
@@ -504,10 +582,16 @@ class PocketQuranManager {
 
     const total = this._activeVerses.length;
     start = Math.max(0, start ?? 0);
-    end = Math.min(total - 1, end ?? (start + PocketQuranManager.VISIBLE_AYAH_COUNT - 1));
+    end = Math.min(
+      total - 1,
+      end ?? start + PocketQuranManager.VISIBLE_AYAH_COUNT - 1
+    );
 
     // Skip if same range
-    if (start === this._renderedRange.start && end === this._renderedRange.end) {
+    if (
+      start === this._renderedRange.start &&
+      end === this._renderedRange.end
+    ) {
       return;
     }
 
@@ -583,7 +667,7 @@ class PocketQuranManager {
     const firstVisible = this.getAyahAtOffset(scrollTop);
 
     this.updateTotalHeight();
-    
+
     const buffer = PocketQuranManager.BUFFER_AYAHS;
     const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
     const total = this._activeVerses.length;
@@ -631,9 +715,12 @@ class PocketQuranManager {
       });
 
       // Highlight the ayah after scroll
-      setTimeout(() => {
-        this.highlightAyah(n);
-      }, smooth ? 300 : 50);
+      setTimeout(
+        () => {
+          this.highlightAyah(n);
+        },
+        smooth ? 300 : 50
+      );
     }
 
     if (persist) {
@@ -650,11 +737,13 @@ class PocketQuranManager {
    * Apply highlight animation to an ayah.
    */
   highlightAyah(ayahNumber) {
-    const el = this._virtualContent?.querySelector(`[data-ayah="${ayahNumber}"]`);
+    const el = this._virtualContent?.querySelector(
+      `[data-ayah="${ayahNumber}"]`
+    );
     if (!el) return;
 
     if (this._scrollHighlightTimer) clearTimeout(this._scrollHighlightTimer);
-    
+
     el.classList.remove("pq-highlight");
     void el.offsetWidth; // Force reflow
     el.classList.add("pq-highlight");
@@ -669,7 +758,7 @@ class PocketQuranManager {
    */
   createAyahElement(verse, index) {
     const ayahNumber = verse?.verse_number;
-    
+
     const ayahEl = document.createElement("div");
     ayahEl.className = "pocket-quran-ayah";
     ayahEl.id = `pocketQuranAyah-${ayahNumber}`;
@@ -725,7 +814,9 @@ class PocketQuranManager {
   getEffectiveBlurMultiplier() {
     if (this.card) {
       try {
-        const inlineVal = this.card.style.getPropertyValue("--ui-blur-multiplier");
+        const inlineVal = this.card.style.getPropertyValue(
+          "--ui-blur-multiplier"
+        );
         if (inlineVal) {
           const n = parseFloat(String(inlineVal).trim());
           if (Number.isFinite(n) && n >= 0) return n;
@@ -736,14 +827,17 @@ class PocketQuranManager {
     const readComputed = (el) => {
       if (!el) return null;
       try {
-        const raw = getComputedStyle(el).getPropertyValue("--ui-blur-multiplier") || "";
+        const raw =
+          getComputedStyle(el).getPropertyValue("--ui-blur-multiplier") || "";
         const n = parseFloat(String(raw).trim());
         if (Number.isFinite(n) && n >= 0) return n;
       } catch (e) {}
       return null;
     };
 
-    return readComputed(this.card) ?? readComputed(document.documentElement) ?? 1;
+    return (
+      readComputed(this.card) ?? readComputed(document.documentElement) ?? 1
+    );
   }
 
   syncDropdownBlurMultiplier(el) {
@@ -785,14 +879,20 @@ class PocketQuranManager {
 
     const left = Math.max(viewportPadding, Math.round(rect.left));
     const width = Math.max(220, Math.round(rect.width));
-    const maxListHeight = Math.min(420, Math.max(180, Math.floor((preferAbove ? aboveSpace : belowSpace) - 10)));
+    const maxListHeight = Math.min(
+      420,
+      Math.max(180, Math.floor((preferAbove ? aboveSpace : belowSpace) - 10))
+    );
 
     el.style.left = `${left}px`;
     el.style.width = `${width}px`;
     el.style.right = "auto";
 
     if (preferAbove) {
-      const bottom = Math.max(viewportPadding, Math.round(window.innerHeight - rect.top + gap));
+      const bottom = Math.max(
+        viewportPadding,
+        Math.round(window.innerHeight - rect.top + gap)
+      );
       el.style.top = "auto";
       el.style.bottom = `${bottom}px`;
     } else {
@@ -811,8 +911,10 @@ class PocketQuranManager {
     if (!el) return;
     this.ensureDropdownPortal(el);
     try {
-      if (el === this.surahDropdown && this.surahCombobox) this.surahCombobox.classList.add("pq-open");
-      if (el === this.ayahDropdown && this.ayahCombobox) this.ayahCombobox.classList.add("pq-open");
+      if (el === this.surahDropdown && this.surahCombobox)
+        this.surahCombobox.classList.add("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox)
+        this.ayahCombobox.classList.add("pq-open");
     } catch (e) {}
     el.hidden = false;
     this.syncDropdownBlurMultiplier(el);
@@ -822,8 +924,10 @@ class PocketQuranManager {
   closeDropdown(el) {
     if (!el) return;
     try {
-      if (el === this.surahDropdown && this.surahCombobox) this.surahCombobox.classList.remove("pq-open");
-      if (el === this.ayahDropdown && this.ayahCombobox) this.ayahCombobox.classList.remove("pq-open");
+      if (el === this.surahDropdown && this.surahCombobox)
+        this.surahCombobox.classList.remove("pq-open");
+      if (el === this.ayahDropdown && this.ayahCombobox)
+        this.ayahCombobox.classList.remove("pq-open");
     } catch (e) {}
     el.hidden = true;
   }
@@ -883,7 +987,9 @@ class PocketQuranManager {
     }
 
     const lower = q.toLowerCase();
-    const exact = this._chapters.find((c) => String(c.name_simple || "").toLowerCase() === lower);
+    const exact = this._chapters.find(
+      (c) => String(c.name_simple || "").toLowerCase() === lower
+    );
     if (exact) return exact;
 
     const filtered = this.getFilteredChapters(q);
@@ -898,7 +1004,8 @@ class PocketQuranManager {
     try {
       const cached = this.storage.get("pocketQuran_chapters_cache", null);
       const cachedAt = this.storage.get("pocketQuran_chapters_cache_at", 0);
-      const freshEnough = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+      const freshEnough =
+        Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
 
       if (cached && Array.isArray(cached) && freshEnough) {
         this._chapters = cached;
@@ -929,7 +1036,9 @@ class PocketQuranManager {
       console.error("PocketQuran: failed to load chapters", e);
       this._chapters = [];
       this.renderSurahList({ failed: true });
-      this.renderError("Could not load Surah list. Check your internet connection.");
+      this.renderError(
+        "Could not load Surah list. Check your internet connection."
+      );
     }
   }
 
@@ -985,10 +1094,15 @@ class PocketQuranManager {
 
   updateSurahActiveState() {
     if (!this.surahListEl) return;
-    for (const btn of this.surahListEl.querySelectorAll(".pocket-quran-surah-item")) {
+    for (const btn of this.surahListEl.querySelectorAll(
+      ".pocket-quran-surah-item"
+    )) {
       const surah = parseInt(btn.dataset.surah, 10);
       btn.classList.toggle("active", surah === this._activeSurah);
-      btn.setAttribute("aria-current", surah === this._activeSurah ? "true" : "false");
+      btn.setAttribute(
+        "aria-current",
+        surah === this._activeSurah ? "true" : "false"
+      );
     }
   }
 
@@ -996,8 +1110,10 @@ class PocketQuranManager {
     const { preserveAyah = false, autoScroll = true } = opts;
 
     const surah = this.clampNumber(surahNumber, 1, 114, 1);
-    const versesAlreadyRendered = Boolean(this.contentEl?.querySelector?.(".pocket-quran-ayah"));
-    
+    const versesAlreadyRendered = Boolean(
+      this.contentEl?.querySelector?.(".pocket-quran-ayah")
+    );
+
     if (surah === this._activeSurah && versesAlreadyRendered) {
       this.updateSurahActiveState();
       this.updateSurahInputValue({ force: true });
@@ -1045,7 +1161,8 @@ class PocketQuranManager {
 
       const cacheKey = this.getVersesCacheKey(surah, translationId);
       const cached = this._versesCache.get(cacheKey);
-      const hasCached = cached && Array.isArray(cached.verses) && cached.verses.length;
+      const hasCached =
+        cached && Array.isArray(cached.verses) && cached.verses.length;
 
       let verses = [];
       if (hasCached) {
@@ -1107,7 +1224,9 @@ class PocketQuranManager {
 
   renderSurahHeader({ surah, surahName, surahNameAr, versesCount }) {
     if (!this.headerMeta) return;
-    const translation = PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label || "Translation";
+    const translation =
+      PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label ||
+      "Translation";
     this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
   }
 
@@ -1142,7 +1261,9 @@ class PocketQuranManager {
     if (!this.ayahListEl) return;
     const max = this.getActiveSurahAyahCount() || 286;
     const current = this.clampNumber(this._activeAyah, 1, max, 1);
-    for (const btn of this.ayahListEl.querySelectorAll(".pocket-quran-ayah-option")) {
+    for (const btn of this.ayahListEl.querySelectorAll(
+      ".pocket-quran-ayah-option"
+    )) {
       const n = parseInt(btn.dataset.ayah, 10);
       btn.classList.toggle("active", n === current);
       btn.setAttribute("aria-selected", n === current ? "true" : "false");
@@ -1253,9 +1374,11 @@ class PocketQuranManager {
 
     if (syncInputs) {
       if (this.arabicSizeRange) this.arabicSizeRange.value = String(a);
-      if (this.translationSizeRange) this.translationSizeRange.value = String(t);
+      if (this.translationSizeRange)
+        this.translationSizeRange.value = String(t);
       if (this.arabicSizeValue) this.arabicSizeValue.textContent = `${a}px`;
-      if (this.translationSizeValue) this.translationSizeValue.textContent = `${t}px`;
+      if (this.translationSizeValue)
+        this.translationSizeValue.textContent = `${t}px`;
     }
 
     if (persist) {
