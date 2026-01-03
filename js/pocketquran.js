@@ -252,7 +252,14 @@ class PocketQuranManager {
         1
       );
       if (this.ayahInput) this.ayahInput.value = String(n);
-      this.scrollToAyah(n, { persist: true });
+      // When selecting from the dropdown, don't allow user input to interrupt
+      // the in-progress scroll animation.
+      this.scrollToAyah(n, {
+        persist: true,
+        smooth: true,
+        lockUserInput: true,
+        alignToTop: true,
+      });
       this.closeDropdown(this.ayahDropdown);
     });
 
@@ -527,23 +534,32 @@ class PocketQuranManager {
       { passive: true }
     );
 
-    // If the user starts interacting, cancel any programmatic scroll lock
-    const cancelProgrammaticScroll = () => {
+    // User interaction vs programmatic scroll:
+    // - Normally: user input cancels any programmatic scroll lock.
+    // - For dropdown jumps: lockUserInput=true blocks interaction until finished.
+    const onUserInterrupt = (e) => {
+      if (this._programmaticScroll?.lockUserInput) {
+        // Prevent wheel/drag/click from interfering with smooth scrolling.
+        if (e?.cancelable) e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       this._programmaticScroll = null;
     };
-    this._virtualContainer.addEventListener("wheel", cancelProgrammaticScroll, {
-      passive: true,
+
+    // wheel/touchmove must be passive:false to allow preventDefault
+    this._virtualContainer.addEventListener("wheel", onUserInterrupt, {
+      passive: false,
     });
-    this._virtualContainer.addEventListener(
-      "touchstart",
-      cancelProgrammaticScroll,
-      { passive: true }
-    );
-    this._virtualContainer.addEventListener(
-      "pointerdown",
-      cancelProgrammaticScroll,
-      { passive: true }
-    );
+    this._virtualContainer.addEventListener("touchstart", onUserInterrupt, {
+      passive: false,
+    });
+    this._virtualContainer.addEventListener("touchmove", onUserInterrupt, {
+      passive: false,
+    });
+    this._virtualContainer.addEventListener("pointerdown", onUserInterrupt, {
+      passive: false,
+    });
 
     // Observe container resize
     if (this._resizeObserver) {
@@ -684,7 +700,7 @@ class PocketQuranManager {
           typeof performance !== "undefined" && performance.now
             ? performance.now()
             : Date.now();
-        const { targetOffset, targetAyah, startedAt } =
+        const { targetOffset, targetAyah, startedAt, alignToTop } =
           this._programmaticScroll;
 
         const delta = Math.abs(scrollTop - targetOffset);
@@ -697,6 +713,57 @@ class PocketQuranManager {
           this.ayahInput.value = String(targetAyah);
         }
         this.updateAyahDropdownActiveState();
+
+        // If requested, ensure the target ayah ends up pinned to the top.
+        if (alignToTop && this._virtualContainer) {
+          // Make sure the target is rendered so we can measure it.
+          const el = this._virtualContent?.querySelector(
+            `[data-ayah="${targetAyah}"]`
+          );
+
+          if (!el && this._activeVerses?.length) {
+            const max = this.getActiveSurahAyahCount() || 286;
+            const idx = this.clampNumber(targetAyah, 1, max, 1) - 1;
+            const buffer = PocketQuranManager.BUFFER_AYAHS;
+            const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
+            const total = this._activeVerses.length;
+            const start = Math.max(0, idx - buffer);
+            const end = Math.min(total - 1, idx + visibleCount + buffer);
+            this.renderVisibleAyahs(start, end);
+            return;
+          }
+
+          if (el) {
+            const containerRect = this._virtualContainer.getBoundingClientRect();
+            const rect = el.getBoundingClientRect();
+            const topDelta = rect.top - containerRect.top;
+
+            // Ensure the ayah is actually aligned to the top.
+            // Keep the smooth animation by doing a small smooth correction only
+            // near the end of the current programmatic scroll.
+            const canAlignNow = delta < 4 || timedOut;
+            if (canAlignNow && Math.abs(topDelta) > 2 && !timedOut) {
+              const attempts = this._programmaticScroll?.alignAttempts || 0;
+              if (attempts < 3) {
+                const desiredTop = scrollTop + topDelta;
+                this._programmaticScroll = {
+                  ...this._programmaticScroll,
+                  targetOffset: desiredTop,
+                  startedAt: now,
+                  alignAttempts: attempts + 1,
+                };
+                this._virtualContainer.scrollTo({
+                  top: desiredTop,
+                  behavior: "smooth",
+                });
+                return;
+              }
+            }
+
+            this._programmaticScroll = null;
+            return;
+          }
+        }
 
         if (delta < 2 || timedOut) {
           this._programmaticScroll = null;
@@ -828,7 +895,13 @@ class PocketQuranManager {
    * Scroll to a specific ayah number (1-indexed).
    */
   scrollToAyah(ayahNumber, opts = {}) {
-    const { persist = true, smooth = true, skipScroll = false } = opts;
+    const {
+      persist = true,
+      smooth = true,
+      skipScroll = false,
+      lockUserInput = false,
+      alignToTop = false,
+    } = opts;
 
     const max = this.getActiveSurahAyahCount() || 286;
     const n = this.clampNumber(ayahNumber, 1, max, 1);
@@ -851,6 +924,8 @@ class PocketQuranManager {
         targetOffset: offset,
         targetAyah: n,
         startedAt: now,
+        lockUserInput,
+        alignToTop,
       };
 
       // Ensure the ayah is rendered first
