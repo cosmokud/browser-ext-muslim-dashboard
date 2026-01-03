@@ -302,7 +302,8 @@ class FastingManager {
     // If we're currently within that window, it should count as "Today".
     if (hd >= 13 && hd <= 15) {
       const monthName = this.hijri.monthNames.en[hm - 1];
-      const badge = `13–15 ${monthName}`;
+      // Show the current Hijri day (e.g., "14 Ramadan") while treating it as Today.
+      const badge = `${hd} ${monthName}`;
       return {
         key: "thirteenth",
         title: "Ayyam al-Beed",
