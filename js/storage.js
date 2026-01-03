@@ -259,6 +259,15 @@ class StorageManager {
         answerFontSize: 18,
       },
 
+      // Pocket Quran settings
+      pocketQuran: {
+        arabicFontSize: 32,
+        translationFontSize: 18,
+        translationResourceId: 85, // M.A.S. Abdel Haleem
+        lastSurahNumber: 1,
+        lastAyahNumber: 1,
+      },
+
       // Heading customization settings
       heading: {
         // Greeting settings

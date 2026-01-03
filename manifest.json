@@ -11,6 +11,7 @@
   },
   "permissions": ["storage", "geolocation", "alarms", "notifications"],
   "host_permissions": [
+    "https://api.quran.com/*",
     "https://www.google.com/s2/*",
     "https://*.gstatic.com/*"
   ],

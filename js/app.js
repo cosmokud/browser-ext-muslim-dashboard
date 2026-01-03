@@ -27,6 +27,7 @@ class MuslimDashboard {
     this.flashcards = null; // Will be initialized after DOM
     this.fasting = null; // Will be initialized after DOM
     this.notes = null; // Will be initialized after DOM
+    this.pocketQuran = null; // Will be initialized after DOM
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -242,6 +243,9 @@ class MuslimDashboard {
 
     // Initialize notes (full-width component)
     this.notes = new NotesManager(this.storage);
+
+    // Initialize pocket quran (full-width component)
+    this.pocketQuran = new PocketQuranManager(this.storage);
 
     // Initialize settings (after all other managers)
     this.settings = new SettingsManager(

@@ -272,7 +272,6 @@ class HijriDate {
         nameAr: "رأس السنة الهجرية",
       },
       { month: 1, day: 10, name: "Day of Ashura", nameAr: "يوم عاشوراء" },
-      { month: 3, day: 12, name: "Mawlid al-Nabi", nameAr: "المولد النبوي" },
       {
         month: 7,
         day: 27,

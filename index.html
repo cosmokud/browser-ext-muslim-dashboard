@@ -772,6 +772,136 @@
             </div>
           </div>
         </section>
+
+        <!-- Pocket Quran (Full Width) -->
+        <section class="card pocket-quran-card" id="pocketQuranCard">
+          <div class="card-header pocket-quran-header">
+            <h2 class="card-title">
+              <span class="card-icon">📖</span>
+              Pocket Quran
+            </h2>
+            <div class="pocket-quran-header-meta" id="pocketQuranHeaderMeta">
+              Loading…
+            </div>
+          </div>
+
+          <div class="pocket-quran-shell">
+            <aside
+              class="pocket-quran-sidebar"
+              id="pocketQuranSidebar"
+              aria-label="Surah list"
+            >
+              <div class="pocket-quran-sidebar-header">
+                <span class="pocket-quran-sidebar-title">Surah</span>
+              </div>
+              <div
+                class="pocket-quran-surah-list"
+                id="pocketQuranSurahList"
+                role="list"
+              ></div>
+            </aside>
+
+            <div class="pocket-quran-main">
+              <div
+                class="pocket-quran-controls"
+                aria-label="Pocket Quran controls"
+              >
+                <div class="pocket-quran-ayah-nav" aria-label="Ayah navigation">
+                  <button
+                    class="pocket-quran-nav-btn"
+                    id="pocketQuranAyahPrev"
+                    type="button"
+                    aria-label="Previous ayah"
+                    title="Previous ayah"
+                  >
+                    ❮
+                  </button>
+
+                  <div class="pocket-quran-ayah-input-wrap">
+                    <label
+                      class="pocket-quran-control-label"
+                      for="pocketQuranAyahInput"
+                      >Ayah</label
+                    >
+                    <input
+                      class="pocket-quran-ayah-input"
+                      id="pocketQuranAyahInput"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputmode="numeric"
+                      list="pocketQuranAyahList"
+                      aria-label="Jump to ayah"
+                    />
+                    <datalist id="pocketQuranAyahList"></datalist>
+                  </div>
+
+                  <button
+                    class="pocket-quran-nav-btn"
+                    id="pocketQuranAyahNext"
+                    type="button"
+                    aria-label="Next ayah"
+                    title="Next ayah"
+                  >
+                    ❯
+                  </button>
+                </div>
+
+                <div class="pocket-quran-size-controls" aria-label="Text size">
+                  <div class="pocket-quran-size-control">
+                    <label
+                      class="pocket-quran-control-label"
+                      for="pocketQuranArabicSizeRange"
+                      >Arabic</label
+                    >
+                    <input
+                      class="pocket-quran-size-range"
+                      id="pocketQuranArabicSizeRange"
+                      type="range"
+                      min="8"
+                      max="144"
+                      value="32"
+                      aria-label="Arabic text size"
+                    />
+                    <span
+                      class="pocket-quran-size-value"
+                      id="pocketQuranArabicSizeValue"
+                      >32px</span
+                    >
+                  </div>
+
+                  <div class="pocket-quran-size-control">
+                    <label
+                      class="pocket-quran-control-label"
+                      for="pocketQuranTranslationSizeRange"
+                      >Translation</label
+                    >
+                    <input
+                      class="pocket-quran-size-range"
+                      id="pocketQuranTranslationSizeRange"
+                      type="range"
+                      min="8"
+                      max="144"
+                      value="18"
+                      aria-label="Translation text size"
+                    />
+                    <span
+                      class="pocket-quran-size-value"
+                      id="pocketQuranTranslationSizeValue"
+                      >18px</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="pocket-quran-content"
+                id="pocketQuranContent"
+                aria-live="polite"
+              ></div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -869,6 +999,9 @@
               🃏 Flashcards
             </button>
             <button class="settings-tab" data-tab="notes">📝 Notes</button>
+            <button class="settings-tab" data-tab="pocketQuran">
+              📖 Pocket Quran
+            </button>
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
@@ -2386,6 +2519,76 @@
                     target="_blank"
                     rel="noopener noreferrer"
                     >Visit Zmokhtar on Quizlet</a
+
+          <!-- Pocket Quran Settings -->
+          <div class="settings-panel" id="pocketQuranPanel">
+            <div class="setting-group">
+              <label class="setting-label">Default Arabic Text Size</label>
+              <p class="setting-hint">Choose a default Arabic font size.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranArabicSize"
+                  min="8"
+                  max="144"
+                  value="32"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranArabicSizeSettingValue"
+                  >32px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Default Translation Text Size</label>
+              <p class="setting-hint">
+                Choose a default translation font size.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranTranslationSize"
+                  min="8"
+                  max="144"
+                  value="18"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranTranslationSizeSettingValue"
+                  >18px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Translation</label>
+              <p class="setting-hint">
+                Select a translation (free and open).
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranTranslationSelect"
+              >
+                <optgroup label="English">
+                  <option value="85">M.A.S. Abdel Haleem</option>
+                  <option value="84">T. Usmani</option>
+                  <option value="95">A. Maududi (Tafhim commentary)</option>
+                  <option value="19">M. Pickthall</option>
+                  <option value="22">A Yusuf Ali</option>
+                  <option value="20">Saheeh International</option>
+                  <option value="203">Al-Hilali &amp; Khan</option>
+                  <option value="57">Transliteration</option>
+                </optgroup>
+                <optgroup label="Indonesian">
+                  <option value="134">King Fahad Quran Complex</option>
+                  <option value="141">The Sabiq Company</option>
+                  <option value="33">Indonesian Islamic Affairs Ministry</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
                   >
                 </div>
               </div>
@@ -2814,6 +3017,7 @@
     <script src="js/settings.js"></script>
     <script src="js/stickynotes.js"></script>
     <script src="js/notes.js"></script>
+    <script src="js/pocketquran.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

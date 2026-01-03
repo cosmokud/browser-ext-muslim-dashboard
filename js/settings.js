@@ -248,6 +248,23 @@ class SettingsManager {
     this.exportNotesBtn = document.getElementById("exportNotesBtn");
     this.importNotesInput = document.getElementById("importNotesInput");
     this.notesCountHint = document.getElementById("notesCountHint");
+
+    // Pocket Quran tab elements
+    this.pocketQuranArabicSize = document.getElementById(
+      "pocketQuranArabicSize"
+    );
+    this.pocketQuranArabicSizeValue = document.getElementById(
+      "pocketQuranArabicSizeSettingValue"
+    );
+    this.pocketQuranTranslationSize = document.getElementById(
+      "pocketQuranTranslationSize"
+    );
+    this.pocketQuranTranslationSizeValue = document.getElementById(
+      "pocketQuranTranslationSizeSettingValue"
+    );
+    this.pocketQuranTranslationSelect = document.getElementById(
+      "pocketQuranTranslationSelect"
+    );
   }
 
   /**
@@ -443,6 +460,33 @@ class SettingsManager {
       this.updatePinnedAppsPerRowLabel();
     }
 
+    // Pocket Quran settings
+    const pq = settings.pocketQuran || {};
+
+    if (this.pocketQuranArabicSize) {
+      const clamped = this.clampNumber(pq.arabicFontSize, 8, 144, 32);
+      this.pocketQuranArabicSize.value = String(clamped);
+      this.updatePocketQuranArabicSizeLabel();
+    }
+
+    if (this.pocketQuranTranslationSize) {
+      const clamped = this.clampNumber(pq.translationFontSize, 8, 144, 18);
+      this.pocketQuranTranslationSize.value = String(clamped);
+      this.updatePocketQuranTranslationSizeLabel();
+    }
+
+    if (this.pocketQuranTranslationSelect) {
+      const desired = parseInt(pq.translationResourceId, 10);
+      const hasOption =
+        Number.isFinite(desired) &&
+        this.pocketQuranTranslationSelect.querySelector(
+          `option[value="${desired}"]`
+        );
+      this.pocketQuranTranslationSelect.value = hasOption
+        ? String(desired)
+        : "85";
+    }
+
     // Load heading settings
     this.loadHeadingSettings(settings);
 
@@ -453,6 +497,34 @@ class SettingsManager {
     this.loadWeatherSettings(settings);
 
     this.updateNotesCountHint();
+  }
+
+  updatePocketQuranArabicSizeLabel() {
+    if (!this.pocketQuranArabicSize || !this.pocketQuranArabicSizeValue) return;
+    const clamped = this.clampNumber(
+      parseInt(this.pocketQuranArabicSize.value, 10),
+      8,
+      144,
+      32
+    );
+    this.pocketQuranArabicSize.value = String(clamped);
+    this.pocketQuranArabicSizeValue.textContent = `${clamped}px`;
+  }
+
+  updatePocketQuranTranslationSizeLabel() {
+    if (
+      !this.pocketQuranTranslationSize ||
+      !this.pocketQuranTranslationSizeValue
+    )
+      return;
+    const clamped = this.clampNumber(
+      parseInt(this.pocketQuranTranslationSize.value, 10),
+      8,
+      144,
+      18
+    );
+    this.pocketQuranTranslationSize.value = String(clamped);
+    this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
   }
 
   updatePinnedAppsPerRowLabel() {
@@ -1529,6 +1601,34 @@ class SettingsManager {
       10
     );
 
+    // Pocket Quran settings
+    const existingPocketQuran =
+      settings.pocketQuran && typeof settings.pocketQuran === "object"
+        ? settings.pocketQuran
+        : {};
+
+    settings.pocketQuran = {
+      ...existingPocketQuran,
+      arabicFontSize: this.clampNumber(
+        parseInt(this.pocketQuranArabicSize?.value, 10),
+        8,
+        144,
+        existingPocketQuran.arabicFontSize ?? 32
+      ),
+      translationFontSize: this.clampNumber(
+        parseInt(this.pocketQuranTranslationSize?.value, 10),
+        8,
+        144,
+        existingPocketQuran.translationFontSize ?? 18
+      ),
+      translationResourceId: this.clampNumber(
+        parseInt(this.pocketQuranTranslationSelect?.value, 10),
+        1,
+        10000,
+        existingPocketQuran.translationResourceId ?? 85
+      ),
+    };
+
     // Save heading settings
     this.saveHeadingSettings(settings);
 
@@ -2290,6 +2390,18 @@ class SettingsManager {
     if (this.pinnedAppsPerRow) {
       this.pinnedAppsPerRow.addEventListener("input", () => {
         this.updatePinnedAppsPerRowLabel();
+      });
+    }
+
+    // Pocket Quran sliders - update labels
+    if (this.pocketQuranArabicSize) {
+      this.pocketQuranArabicSize.addEventListener("input", () => {
+        this.updatePocketQuranArabicSizeLabel();
+      });
+    }
+    if (this.pocketQuranTranslationSize) {
+      this.pocketQuranTranslationSize.addEventListener("input", () => {
+        this.updatePocketQuranTranslationSizeLabel();
       });
     }
 
