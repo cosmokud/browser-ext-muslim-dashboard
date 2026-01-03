@@ -8161,3 +8161,30 @@ body.sticky-note-resizing {
 [data-glass-enabled="false"] .card {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
+
+/* Search bar glass disabled - disable transparency on shell but keep input accent color */
+[data-glass-enabled="false"] .search-bar-shell {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+[data-glass-enabled="false"] .search-bar-engine-tab,
+[data-glass-enabled="false"] .search-bar-engine-arrow,
+[data-glass-enabled="false"] .search-bar-btn {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Keep search bar input accent color working in glass disabled mode */
+[data-glass-enabled="false"] .search-bar-input {
+  border: 1px solid rgba(var(--sb-accent-rgb), 0.35);
+  background: rgba(var(--sb-accent-rgb), 0.15);
+}
+
+[data-glass-enabled="false"] .search-bar-input:focus {
+  border-color: rgba(var(--sb-accent-rgb), 0.55);
+  background: rgba(var(--sb-accent-rgb), 0.22);
+  box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.22);
+}
