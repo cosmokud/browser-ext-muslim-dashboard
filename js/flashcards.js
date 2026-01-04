@@ -12,6 +12,26 @@ class FlashcardManager {
   static FLIP_ANIM_MS = 320;
   static NAV_ANIM_MS = 320;
 
+  // Default sets that are provided read-only to all users.
+  // Each entry: { id, name, file, parser } where parser may be 'csv' or 'pipe'.
+  static DEFAULT_SETS = [
+    {
+      id: "default",
+      name: "Default",
+      file: "data/flashcard_default.csv",
+      parser: "csv",
+    },
+    {
+      id: "default_99names",
+      name: "99 Names",
+      file: "data/flashcard_99names.csv",
+      parser: "pipe",
+    },
+  ];
+
+  // IDs of sets that are protected (cannot be edited or deleted).
+  static PROTECTED_SET_IDS = ["default", "default_99names"];
+
   constructor(storage) {
     this.storage = storage;
 
@@ -416,45 +436,103 @@ class FlashcardManager {
 
   async ensureDefaultSet() {
     const sets = this.getSets();
-    if (Array.isArray(sets) && sets.length > 0) {
-      // Ensure active set is valid
-      const activeId = this.getActiveSetId();
-      if (!activeId || !sets.some((s) => s.id === activeId)) {
-        this.setActiveSetId(sets[0].id);
+    const defs = Array.isArray(FlashcardManager.DEFAULT_SETS)
+      ? FlashcardManager.DEFAULT_SETS
+      : [
+          {
+            id: "default",
+            name: "Default",
+            file: "data/flashcard_default.csv",
+            parser: "csv",
+          },
+        ];
+
+    const existingSets = Array.isArray(sets) ? sets : [];
+
+    // Fresh install: create all default sets
+    if (existingSets.length === 0) {
+      const created = [];
+      for (const def of defs) {
+        try {
+          const res = await fetch(def.file, { cache: "no-store" });
+          if (!res.ok)
+            throw new Error(`Failed to load default CSV: ${res.status}`);
+          const text = await res.text();
+          const cards =
+            def.parser === "pipe"
+              ? this.parsePipeTwoColumns(text)
+              : this.parseCsvTwoColumns(text);
+          created.push({
+            id: def.id,
+            name: def.name,
+            createdAt: new Date().toISOString(),
+            cards,
+          });
+        } catch (e) {
+          console.error(
+            `Flashcards: failed to initialize default set ${def.id}`,
+            e
+          );
+          created.push({
+            id: def.id,
+            name: def.name,
+            createdAt: new Date().toISOString(),
+            cards: [],
+          });
+        }
       }
+      this.saveSets(created);
+      this.setActiveSetId(created[0]?.id || "default");
       return;
     }
 
-    try {
-      const res = await fetch("data/flashcard_default.csv", {
-        cache: "no-store",
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to load default CSV: ${res.status}`);
+    // Upgrade path: ensure each default set exists (do not overwrite existing user sets)
+    let changed = false;
+    const existingIds = new Set(existingSets.map((s) => s.id));
+    for (const def of defs) {
+      if (!existingIds.has(def.id)) {
+        try {
+          const res = await fetch(def.file, { cache: "no-store" });
+          let cards = [];
+          if (res.ok) {
+            const text = await res.text();
+            cards =
+              def.parser === "pipe"
+                ? this.parsePipeTwoColumns(text)
+                : this.parseCsvTwoColumns(text);
+          } else {
+            console.warn(
+              `Flashcards: failed to load default CSV (${def.file}): ${res.status}`
+            );
+          }
+          const newSet = {
+            id: def.id,
+            name: def.name,
+            createdAt: new Date().toISOString(),
+            cards,
+          };
+          existingSets.push(newSet);
+          changed = true;
+        } catch (e) {
+          console.error(`Flashcards: failed to fetch default set ${def.id}`, e);
+          const newSet = {
+            id: def.id,
+            name: def.name,
+            createdAt: new Date().toISOString(),
+            cards: [],
+          };
+          existingSets.push(newSet);
+          changed = true;
+        }
       }
-      const text = await res.text();
-      const cards = this.parseCsvTwoColumns(text);
+    }
 
-      const defaultSet = {
-        id: "default",
-        name: "Default",
-        createdAt: new Date().toISOString(),
-        cards,
-      };
+    if (changed) this.saveSets(existingSets);
 
-      this.saveSets([defaultSet]);
-      this.setActiveSetId(defaultSet.id);
-    } catch (e) {
-      console.error("Flashcards: failed to initialize default set", e);
-      // Ensure we at least have an empty set to avoid crashing UI
-      const fallback = {
-        id: "default",
-        name: "Default",
-        createdAt: new Date().toISOString(),
-        cards: [],
-      };
-      this.saveSets([fallback]);
-      this.setActiveSetId(fallback.id);
+    // Ensure active set is valid
+    const activeId = this.getActiveSetId();
+    if (!activeId || !existingSets.some((s) => s.id === activeId)) {
+      this.setActiveSetId(existingSets[0].id);
     }
   }
 
@@ -992,19 +1070,19 @@ class FlashcardManager {
       this.settingsSetSelect.value = active.id;
     }
 
-    this._settingsReadOnly = active?.id === "default";
+    this._settingsReadOnly = this.isProtectedSetId(active?.id);
 
     if (this.settingsDeleteSetBtn) {
       this.settingsDeleteSetBtn.disabled = this._settingsReadOnly;
       this.settingsDeleteSetBtn.title = this._settingsReadOnly
-        ? "The default set cannot be deleted"
+        ? "This default set cannot be deleted"
         : "Delete set";
     }
 
     if (this.settingsAddCardBtn) {
       this.settingsAddCardBtn.disabled = this._settingsReadOnly;
       this.settingsAddCardBtn.title = this._settingsReadOnly
-        ? "The default set cannot be edited"
+        ? "This default set cannot be edited"
         : "Add card";
     }
 
@@ -1041,7 +1119,8 @@ class FlashcardManager {
   renderEditorList() {
     const active = this.getActiveSet();
     const cards = active?.cards || [];
-    const readOnly = this._settingsReadOnly || active?.id === "default";
+    const readOnly =
+      this._settingsReadOnly || this.isProtectedSetId(active?.id);
 
     const total = cards.length;
     const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
@@ -1243,8 +1322,8 @@ class FlashcardManager {
       (s) => s.name.toLowerCase() === name.toLowerCase()
     );
 
-    // Never allow replacing the default set; instead create a new set with a unique name.
-    if (existing && existing.id === "default") {
+    // Never allow replacing a protected default set; instead create a new set with a unique name.
+    if (existing && this.isProtectedSetId(existing.id)) {
       existing = null;
       effectiveName = this.makeUniqueSetName(effectiveName, sets);
     }
@@ -1283,8 +1362,8 @@ class FlashcardManager {
       );
       if (!ok) return;
 
-      if (existing.id === "default") {
-        this.showToast("The default set cannot be replaced.", "error");
+      if (this.isProtectedSetId(existing.id)) {
+        this.showToast("This default set cannot be replaced.", "error");
         return;
       }
 
@@ -1335,8 +1414,8 @@ class FlashcardManager {
     const active = this.getActiveSet();
     if (!active) return;
 
-    if (active.id === "default") {
-      this.showToast("The default set cannot be deleted.", "error");
+    if (this.isProtectedSetId(active.id)) {
+      this.showToast("This default set cannot be deleted.", "error");
       return;
     }
 
@@ -1367,8 +1446,8 @@ class FlashcardManager {
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active) return;
 
-    if (active.id === "default") {
-      this.showToast("The default set cannot be edited.", "error");
+    if (this.isProtectedSetId(active.id)) {
+      this.showToast("This default set cannot be edited.", "error");
       return;
     }
 
@@ -1391,7 +1470,7 @@ class FlashcardManager {
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active || !active.cards || !active.cards[globalIndex]) return;
 
-    if (active.id === "default") return;
+    if (this.isProtectedSetId(active.id)) return;
 
     if (field !== "question" && field !== "answer") return;
 
@@ -1411,8 +1490,8 @@ class FlashcardManager {
     const active = sets.find((s) => s.id === activeId) || sets[0];
     if (!active) return;
 
-    if (active.id === "default") {
-      this.showToast("The default set cannot be edited.", "error");
+    if (this.isProtectedSetId(active.id)) {
+      this.showToast("This default set cannot be edited.", "error");
       return;
     }
 
@@ -1453,6 +1532,33 @@ class FlashcardManager {
       cards.push({ question, answer });
     }
 
+    return cards;
+  }
+
+  parsePipeTwoColumns(text) {
+    if (!text) return [];
+    const lines = String(text).split(/\r?\n/);
+    const cards = [];
+    for (const raw of lines) {
+      const line = (raw || "").trim();
+      if (!line) continue;
+      const idx = line.indexOf("|");
+      if (idx === -1) {
+        // Fallback to CSV parsing for this line if no pipe found
+        const rows = this.parseCsv(line);
+        for (const row of rows) {
+          const question = (row[0] ?? "").trim();
+          const answer = (row[1] ?? "").trim();
+          if (!question && !answer) continue;
+          cards.push({ question, answer });
+        }
+        continue;
+      }
+      const question = line.slice(0, idx).trim();
+      const answer = line.slice(idx + 1).trim();
+      if (!question && !answer) continue;
+      cards.push({ question, answer });
+    }
     return cards;
   }
 
@@ -1544,8 +1650,15 @@ class FlashcardManager {
     return safe.slice(0, 40);
   }
 
+  isProtectedSetId(id) {
+    return (
+      Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
+      FlashcardManager.PROTECTED_SET_IDS.includes(String(id))
+    );
+  }
+
   isDefaultActiveSet() {
-    return this.getActiveSet()?.id === "default";
+    return this.isProtectedSetId(this.getActiveSet()?.id);
   }
 
   makeUniqueSetName(baseName, sets) {
@@ -1560,11 +1673,21 @@ class FlashcardManager {
         (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase()
       );
 
-    if (!isTaken(normalized) && lower !== "default") return normalized;
+    const protectedNames = Array.isArray(FlashcardManager.DEFAULT_SETS)
+      ? FlashcardManager.DEFAULT_SETS.map((d) =>
+          String(d.name || "").toLowerCase()
+        )
+      : ["default"];
+
+    if (!isTaken(normalized) && !protectedNames.includes(lower))
+      return normalized;
 
     for (let i = 2; i <= 99; i += 1) {
       const candidate = `${normalized} (${i})`;
-      if (!isTaken(candidate) && candidate.toLowerCase() !== "default") {
+      if (
+        !isTaken(candidate) &&
+        !protectedNames.includes(candidate.toLowerCase())
+      ) {
         return candidate.slice(0, 40);
       }
     }
@@ -1590,8 +1713,14 @@ class FlashcardManager {
       return;
     }
 
-    if (trimmed.toLowerCase() === "default") {
-      this.showToast("The name 'Default' is reserved.", "error");
+    const protectedNames = Array.isArray(FlashcardManager.DEFAULT_SETS)
+      ? FlashcardManager.DEFAULT_SETS.map((d) =>
+          String(d.name || "").toLowerCase()
+        )
+      : ["default"];
+
+    if (protectedNames.includes(trimmed.toLowerCase())) {
+      this.showToast(`The name '${trimmed}' is reserved.`, "error");
       return;
     }
 
@@ -1811,6 +1940,12 @@ class FlashcardManager {
             cardCount === 1 ? "" : "s"
           }</span>
               </div>
+              ${
+                Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
+                FlashcardManager.PROTECTED_SET_IDS.includes(s.id)
+                  ? '<span class="flashcard-set-item-lock" title="Default set — read only">🔒</span>'
+                  : ""
+              }
               ${
                 isActive
                   ? '<span style="color: var(--accent-gold);">✓</span>'

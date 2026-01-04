@@ -2150,8 +2150,14 @@ class SettingsManager {
       ? this.flashcards.getSets()
       : this.storage.get("flashcardSets", []);
 
+    const protectedIds =
+      typeof FlashcardManager !== "undefined" &&
+      Array.isArray(FlashcardManager.PROTECTED_SET_IDS)
+        ? FlashcardManager.PROTECTED_SET_IDS
+        : ["default"];
+
     const customSets = (Array.isArray(sets) ? sets : [])
-      .filter((s) => s && s.id && s.id !== "default")
+      .filter((s) => s && s.id && !protectedIds.includes(s.id))
       .map((s) => ({
         id: String(s.id),
         name: String(s.name || "Imported").slice(0, 40),
@@ -2346,23 +2352,36 @@ class SettingsManager {
 
     // Flashcards (replace custom sets, keep default)
     const existingSets = this.storage.get("flashcardSets", []);
-    const existingDefault = Array.isArray(existingSets)
-      ? existingSets.find((s) => s && s.id === "default")
-      : null;
 
-    const defaultSet = existingDefault || {
-      id: "default",
-      name: "Default",
-      createdAt: new Date().toISOString(),
-      cards: [],
-    };
+    const protectedIds =
+      typeof FlashcardManager !== "undefined" &&
+      Array.isArray(FlashcardManager.PROTECTED_SET_IDS)
+        ? FlashcardManager.PROTECTED_SET_IDS
+        : ["default"];
+
+    const defaultDefs = Array.isArray(FlashcardManager.DEFAULT_SETS)
+      ? FlashcardManager.DEFAULT_SETS
+      : [{ id: "default", name: "Default" }];
+
+    const protectedSetsOrdered = defaultDefs.map((def) => {
+      const existing = Array.isArray(existingSets)
+        ? existingSets.find((s) => s && s.id === def.id)
+        : null;
+      if (existing) return existing;
+      return {
+        id: def.id,
+        name: def.name || "Default",
+        createdAt: new Date().toISOString(),
+        cards: [],
+      };
+    });
 
     const incomingSetsRaw =
       data.flashcards?.sets || data.flashcardSets || data.flashcards || [];
     const incomingSets = Array.isArray(incomingSetsRaw) ? incomingSetsRaw : [];
 
     const cleanedCustomSets = incomingSets
-      .filter((s) => s && s.id && s.id !== "default")
+      .filter((s) => s && s.id && !protectedIds.includes(s.id))
       .map((s, i) => ({
         id: String(s.id || `set_${Date.now()}_${i}`),
         name: String(s.name || "Imported").slice(0, 40),
@@ -2377,17 +2396,21 @@ class SettingsManager {
               }))
           : [],
       }))
-      .slice(0, Math.max(0, maxSets - 1));
+      .slice(0, Math.max(0, maxSets - protectedSetsOrdered.length));
 
-    this.storage.set("flashcardSets", [defaultSet, ...cleanedCustomSets]);
+    // Prepend protected default sets in their canonical order and truncate to maxSets
+    this.storage.set(
+      "flashcardSets",
+      [...protectedSetsOrdered, ...cleanedCustomSets].slice(0, maxSets)
+    );
 
     // Flashcards active set (optional)
     const incomingActiveSetId = data.flashcards?.activeSetId;
     if (
       incomingActiveSetId &&
       typeof incomingActiveSetId === "string" &&
-      incomingActiveSetId !== "default" &&
-      cleanedCustomSets.some((s) => s.id === incomingActiveSetId)
+      (protectedIds.includes(incomingActiveSetId) ||
+        cleanedCustomSets.some((s) => s.id === incomingActiveSetId))
     ) {
       settings.flashcards = {
         ...(settings.flashcards || {}),
@@ -2396,7 +2419,7 @@ class SettingsManager {
     } else {
       settings.flashcards = {
         ...(settings.flashcards || {}),
-        activeSetId: "default",
+        activeSetId: protectedSetsOrdered[0]?.id || "default",
       };
     }
 

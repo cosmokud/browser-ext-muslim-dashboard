@@ -49,7 +49,12 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Choose to display default quotes, custom quotes, or both
 - Smooth fade transitions
 
-### 🖼️ Dynamic Backgrounds
+### � Flashcards
+
+- Two built-in read-only default sets are included: `Default` and `99 Names`.
+- Import your own flashcards via CSV, create/edit custom sets (defaults are protected), and study or quiz yourself.
+
+### �🖼️ Dynamic Backgrounds
 
 - High-resolution nature backgrounds from Unsplash
 - Multiple categories: Nature, Mosques, Landscapes, Mountains, Ocean, Forests, Sky
