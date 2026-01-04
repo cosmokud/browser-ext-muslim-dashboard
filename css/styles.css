@@ -6135,6 +6135,7 @@ body.sticky-note-resizing {
   gap: var(--spacing-lg);
   grid-column: 1 / 2;
   justify-self: start;
+  min-width: 310px;
 }
 
 .weather-icon {
@@ -6227,7 +6228,7 @@ body.sticky-note-resizing {
   grid-column: 3 / 4;
   justify-self: end;
   width: auto;
-  min-width: 310px !important;
+  min-width: 310px;
 }
 
 .weather-detail-item {
@@ -9003,5 +9004,5 @@ body.sticky-note-resizing {
 
 /* Enforce minimum width for weather details (explicit requirement) */
 .weather-details {
-  min-width: 310px !important;
+  min-width: 310px;
 }
