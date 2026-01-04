@@ -559,7 +559,11 @@ class BackgroundManager {
     try {
       this.attributionEl.setAttribute("aria-hidden", "false");
     } catch (e) {}
-    this.attributionEl.classList.remove("autohide", "hot-visible", "exit-animate");
+    this.attributionEl.classList.remove(
+      "autohide",
+      "hot-visible",
+      "exit-animate"
+    );
     this.attributionEl.classList.add("entrance-animate");
 
     // After a longer visible period, fade out beautifully and then switch to autohide
