@@ -32,6 +32,13 @@ class SettingsManager {
     this.tabs = document.querySelectorAll(".settings-tab");
     this.panels = document.querySelectorAll(".settings-panel");
 
+    // Debug mode (gated)
+    this.debugEnabled = globalThis.ENABLE_DEBUG_MODE === true;
+    this.debugTab = document.getElementById("debugTab");
+    this.debugPanel = document.getElementById("debugPanel");
+    this.testNotificationBtn = document.getElementById("testNotificationBtn");
+    this.applyDebugModeVisibility();
+
     // Location elements
     this.locationMethodRadios = document.querySelectorAll(
       'input[name="locationMethod"]'
@@ -3210,6 +3217,8 @@ class SettingsManager {
    * Switch tab
    */
   switchTab(tabName) {
+    if (tabName === "debug" && !this.debugEnabled) return;
+
     // Update tabs
     this.tabs.forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.tab === tabName);
@@ -3226,6 +3235,26 @@ class SettingsManager {
 
     if (tabName === "notes") {
       this.updateNotesCountHint();
+    }
+  }
+
+  applyDebugModeVisibility() {
+    const enabled = globalThis.ENABLE_DEBUG_MODE === true;
+    this.debugEnabled = enabled;
+
+    if (this.debugTab) {
+      this.debugTab.classList.toggle("hidden", !enabled);
+      this.debugTab.setAttribute("aria-hidden", enabled ? "false" : "true");
+      this.debugTab.toggleAttribute("disabled", !enabled);
+    }
+
+    if (this.debugPanel) {
+      this.debugPanel.classList.toggle("hidden", !enabled);
+    }
+
+    // Safety: if debug is disabled while the tab is active, go back to Location.
+    if (!enabled && this.debugPanel?.classList.contains("active")) {
+      this.switchTab("location");
     }
   }
 
@@ -3257,11 +3286,33 @@ class SettingsManager {
 
     container.appendChild(toast);
 
-    // Remove after delay
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      setTimeout(() => toast.remove(), 300);
-    }, 2000);
+    const removeToast = () => {
+      try {
+        toast.remove();
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    const hideToast = () => {
+      toast.classList.add("toast-hiding");
+
+      // Remove after transition; also keep a safety timeout.
+      const fallbackMs = 350;
+      const t = setTimeout(removeToast, fallbackMs);
+
+      toast.addEventListener(
+        "transitionend",
+        (e) => {
+          if (e && e.propertyName && e.propertyName !== "opacity") return;
+          clearTimeout(t);
+          removeToast();
+        },
+        { once: true }
+      );
+    };
+
+    setTimeout(hideToast, 2500);
   }
 
   updateNotesCountHint() {
@@ -3439,6 +3490,12 @@ class SettingsManager {
     this.tabs.forEach((tab) => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
+
+    if (this.testNotificationBtn) {
+      this.testNotificationBtn.addEventListener("click", () =>
+        this.testBrowserNotification()
+      );
+    }
 
     // Notes import/export
     if (this.importNotesBtn && this.importNotesInput) {
@@ -3993,6 +4050,64 @@ class SettingsManager {
         this.closeModal();
       }
     });
+  }
+
+  testBrowserNotification() {
+    if (!this.debugEnabled) return;
+
+    try {
+      const hasChromeNotifications =
+        typeof chrome !== "undefined" &&
+        chrome.notifications &&
+        typeof chrome.notifications.create === "function";
+
+      const hasBrowserNotifications =
+        typeof browser !== "undefined" &&
+        browser.notifications &&
+        typeof browser.notifications.create === "function";
+
+      if (!hasChromeNotifications && !hasBrowserNotifications) {
+        this.showToast("Notifications API not available here.", "error");
+        return;
+      }
+
+      const options = {
+        type: "basic",
+        iconUrl: "icons/icon128.png",
+        title: "Muslim Dashboard",
+        message: "This is a test notification from the Debug tab.",
+        priority: 0,
+      };
+
+      if (hasChromeNotifications) {
+        chrome.notifications.create(options, (notificationId) => {
+          const err = chrome.runtime?.lastError;
+          if (err) {
+            this.showToast(
+              `Notification failed: ${err.message || String(err)}`,
+              "error"
+            );
+            return;
+          }
+          this.showToast(
+            `Test notification sent${
+              notificationId ? ": " + notificationId : ""
+            }.`,
+            "success"
+          );
+        });
+        return;
+      }
+
+      // Firefox-style promise API
+      Promise.resolve(browser.notifications.create("md-debug-test", options))
+        .then(() => this.showToast("Test notification sent.", "success"))
+        .catch((e) =>
+          this.showToast(`Notification failed: ${e?.message || e}`, "error")
+        );
+    } catch (e) {
+      this.showToast(`Notification failed: ${e?.message || e}`, "error");
+    }
   }
 }
 

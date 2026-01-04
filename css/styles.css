@@ -3003,9 +3003,25 @@ body {
   border-radius: var(--radius-md);
   color: var(--text-primary);
   animation: slideInRight 0.3s ease-out;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 220ms ease, transform 220ms ease;
+  will-change: opacity, transform;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.toast.toast-hiding {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+    transition: none;
+  }
 }
 
 .toast.success {

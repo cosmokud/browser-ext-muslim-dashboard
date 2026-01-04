@@ -1249,6 +1249,14 @@
             </button>
             <button class="settings-tab" data-tab="themes">🎨 Themes</button>
             <button class="settings-tab" data-tab="credits">✨ Credits</button>
+            <button
+              class="settings-tab hidden"
+              data-tab="debug"
+              id="debugTab"
+              type="button"
+            >
+              🐞 Debug
+            </button>
             <button class="settings-tab" data-tab="general">⚙️ General</button>
           </div>
 
@@ -3094,8 +3102,154 @@
             <div class="setting-group">
               <label class="setting-label">Credits</label>
               <p class="setting-hint">
-                Acknowledgements for default content and assets.
+                Attributions for external services, algorithms, and default
+                content.
               </p>
+
+              <div class="credits-card">
+                <div class="credits-icon">📖</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Quran API</h3>
+                  <p class="credits-desc">
+                    Pocket Quran content is powered by
+                    <strong>Quran.com</strong>
+                    (api.quran.com).
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://quran.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit Quran.com</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🕌</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Prayer Times Algorithm</h3>
+                  <p class="credits-desc">
+                    Prayer times are calculated using the methodology from
+                    <strong>PrayTimes.org</strong>.
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="http://praytimes.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit PrayTimes.org</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🗺️</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Geocoding API</h3>
+                  <p class="credits-desc">
+                    Location search and reverse geocoding use
+                    <strong>OpenStreetMap Nominatim</strong>.
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://nominatim.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit Nominatim</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🌦️</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Weather API</h3>
+                  <p class="credits-desc">
+                    Weather forecasts are powered by <strong>Open-Meteo</strong>
+                    (no API key).
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://open-meteo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit Open-Meteo</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">📍</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Weather Geocoding (Extra)</h3>
+                  <p class="credits-desc">
+                    Some weather location lookups use the
+                    <strong>Open-Meteo Geocoding API</strong>.
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://open-meteo.com/en/docs/geocoding-api"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Open Geocoding Docs</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🔖</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Favicons API</h3>
+                  <p class="credits-desc">
+                    Favicons are fetched via Google’s
+                    <strong>S2</strong> favicon service.
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Google</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🖼️</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Background Images</h3>
+                  <p class="credits-desc">
+                    Default background photos are sourced from
+                    <strong>Unsplash</strong>.
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://unsplash.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit Unsplash</a
+                  >
+                </div>
+              </div>
+
+              <div class="credits-card">
+                <div class="credits-icon">🔤</div>
+                <div class="credits-card-body">
+                  <h3 class="credits-title">Fonts (Extra)</h3>
+                  <p class="credits-desc">
+                    Typography uses <strong>Google Fonts</strong> (Amiri,
+                    Poppins, Noto Naskh Arabic).
+                  </p>
+                  <a
+                    class="setting-btn credits-cta"
+                    href="https://fonts.google.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Visit Google Fonts</a
+                  >
+                </div>
+              </div>
 
               <div class="credits-card">
                 <div class="credits-icon">🎴</div>
@@ -3124,6 +3278,26 @@
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Debug Settings (only visible when ENABLE_DEBUG_MODE === true) -->
+          <div class="settings-panel hidden" id="debugPanel">
+            <div class="setting-group">
+              <label class="setting-label">Debug</label>
+              <p class="setting-hint">
+                Developer tools for troubleshooting. Enable by setting
+                <strong>ENABLE_DEBUG_MODE</strong> to <strong>true</strong> in
+                <strong>js/config.js</strong>.
+              </p>
+
+              <button
+                class="setting-btn"
+                id="testNotificationBtn"
+                type="button"
+              >
+                🔔 Test Browser Notification
+              </button>
             </div>
           </div>
 
@@ -3646,6 +3820,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/config.js"></script>
     <script src="js/praytimes.js"></script>
     <script src="js/hijri.js"></script>
     <script src="js/storage.js"></script>

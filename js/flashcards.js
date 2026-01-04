@@ -1860,10 +1860,32 @@ class FlashcardManager {
 
     container.appendChild(toast);
 
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    const removeToast = () => {
+      try {
+        toast.remove();
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    const hideToast = () => {
+      toast.classList.add("toast-hiding");
+
+      const fallbackMs = 350;
+      const t = setTimeout(removeToast, fallbackMs);
+
+      toast.addEventListener(
+        "transitionend",
+        (e) => {
+          if (e && e.propertyName && e.propertyName !== "opacity") return;
+          clearTimeout(t);
+          removeToast();
+        },
+        { once: true }
+      );
+    };
+
+    setTimeout(hideToast, 3000);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
