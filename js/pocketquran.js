@@ -27,7 +27,10 @@ class PocketQuranManager {
     87: { label: "Sadiq and Sani", language: "Amharic" },
 
     // Assamese
-    120: { label: "Shaykh Rafeequl Islam Habibur-Rahman", language: "Assamese" },
+    120: {
+      label: "Shaykh Rafeequl Islam Habibur-Rahman",
+      language: "Assamese",
+    },
 
     // Azeri
     75: { label: "Alikhan Musayev", language: "Azeri" },
@@ -52,13 +55,19 @@ class PocketQuranManager {
     237: { label: "Tzvetan Theophanov", language: "Bulgarian" },
 
     // Central Khmer
-    128: { label: "Cambodian Muslim Community Development", language: "Central Khmer" },
+    128: {
+      label: "Cambodian Muslim Community Development",
+      language: "Central Khmer",
+    },
 
     // Chechen
     106: { label: "Magomed Magomedov", language: "Chechen" },
 
     // Chinese
-    56: { label: "Chinese Translation (Simplified) - Ma Jian", language: "Chinese" },
+    56: {
+      label: "Chinese Translation (Simplified) - Ma Jian",
+      language: "Chinese",
+    },
     109: { label: "Muhammad Makin", language: "Chinese" },
 
     // Czech
@@ -117,7 +126,10 @@ class PocketQuranManager {
     // Indonesian
     134: { label: "King Fahad Quran Complex", language: "Indonesian" },
     141: { label: "The Sabiq Company", language: "Indonesian" },
-    33: { label: "Indonesian Islamic Affairs Ministry", language: "Indonesian" },
+    33: {
+      label: "Indonesian Islamic Affairs Ministry",
+      language: "Indonesian",
+    },
 
     // Italian
     153: { label: "Hamza Roberto Piccardo", language: "Italian" },
@@ -135,7 +147,10 @@ class PocketQuranManager {
     113: { label: "Khalifah Altai", language: "Kazakh" },
 
     // Kinyarwanda
-    774: { label: "The Rwanda Muslims Association team", language: "Kinyarwanda" },
+    774: {
+      label: "The Rwanda Muslims Association team",
+      language: "Kinyarwanda",
+    },
 
     // Korean
     36: { label: "Korean", language: "Korean" },
@@ -149,9 +164,18 @@ class PocketQuranManager {
     39: { label: "Abdullah Muhammad Basmeih", language: "Malay" },
 
     // Malayalam
-    80: { label: "Muhammad Karakunnu and Vanidas Elayavoor", language: "Malayalam" },
-    224: { label: "Abdul-Hamid Haidar & Kanhi Muhammad", language: "Malayalam" },
-    37: { label: "Malayalam Translation (Abdul Hameed and Kunhi)", language: "Malayalam" },
+    80: {
+      label: "Muhammad Karakunnu and Vanidas Elayavoor",
+      language: "Malayalam",
+    },
+    224: {
+      label: "Abdul-Hamid Haidar & Kanhi Muhammad",
+      language: "Malayalam",
+    },
+    37: {
+      label: "Malayalam Translation (Abdul Hameed and Kunhi)",
+      language: "Malayalam",
+    },
 
     // Maranao
     38: { label: "Maranao", language: "Maranao" },
@@ -160,7 +184,10 @@ class PocketQuranManager {
     226: { label: "Muhammad Shafi'i Ansari", language: "Marathi" },
 
     // Nepali
-    108: { label: "Ahl Al-Hadith Central Society of Nepal", language: "Nepali" },
+    108: {
+      label: "Ahl Al-Hadith Central Society of Nepal",
+      language: "Nepali",
+    },
 
     // Norwegian
     41: { label: "Norwegian", language: "Norwegian" },
@@ -206,7 +233,10 @@ class PocketQuranManager {
     199: { label: "Noor International Center", language: "Spanish" },
 
     // Swahili
-    231: { label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis", language: "Swahili" },
+    231: {
+      label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis",
+      language: "Swahili",
+    },
     49: { label: "Ali Muhsin Al-Barwani", language: "Swahili" },
 
     // Swedish
@@ -233,7 +263,10 @@ class PocketQuranManager {
 
     // Thai
     230: { label: "Society of Institutes and Universities", language: "Thai" },
-    51: { label: "Thai Translation (King Fahad Quran Complex)", language: "Thai" },
+    51: {
+      label: "Thai Translation (King Fahad Quran Complex)",
+      language: "Thai",
+    },
 
     // Turkish
     210: { label: "Dar Al-Salam Center", language: "Turkish" },
@@ -252,7 +285,10 @@ class PocketQuranManager {
     234: { label: "Fatah Muhammad Jalandhari", language: "Urdu" },
     54: { label: "Maulana Muhammad Junagarhi", language: "Urdu" },
     156: { label: "Fe Zilal al-Qur'an (Sayyid Qutb)", language: "Urdu" },
-    151: { label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)", language: "Urdu" },
+    151: {
+      label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)",
+      language: "Urdu",
+    },
     158: { label: "Bayan-ul-Quran (Dr. Israr Ahmad)", language: "Urdu" },
     97: { label: "Tafheem e Qur'an - Syed Abu Ali Maududi", language: "Urdu" },
     831: { label: "Abul Ala Maududi (Roman Urdu)", language: "Urdu" },
@@ -401,6 +437,7 @@ class PocketQuranManager {
     this.ensureDefaultBookmarkCategory();
     this.createBookmarkButton();
     this.createBookmarkModals();
+    this.createTranslationModal();
 
     this.setupEventListeners();
 
@@ -1688,6 +1725,24 @@ class PocketQuranManager {
     this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
   }
 
+  /**
+   * Reload the current surah with a new translation.
+   * Called when user changes translation from settings or modal.
+   */
+  reloadTranslation(newTranslationId) {
+    const id = this.normalizeTranslationId(newTranslationId);
+    if (id === this._activeTranslationId) return;
+
+    this._activeTranslationId = id;
+
+    // Clear the cache for this surah so we fetch fresh data with new translation
+    const cacheKey = this.getVersesCacheKey(this._activeSurah, id);
+    this._versesCache.delete(cacheKey);
+
+    // Reload the current surah
+    this.loadSurah(this._activeSurah, { autoScroll: false });
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // AYAH CONTROLS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -2354,6 +2409,188 @@ class PocketQuranManager {
       );
       buttons[1].addEventListener("click", () => this.saveBookmarkSelection());
     }
+  }
+
+  /**
+   * Create the translation selection modal.
+   */
+  createTranslationModal() {
+    if (document.getElementById("pqTranslationModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "pqTranslationModal";
+    modal.className = "pq-bookmark-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-translation-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">🌐 Select Translation</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="pq-bookmark-search">
+            <input type="text" class="pq-bookmark-search-input pq-translation-search" placeholder="Search by language or translator..." />
+          </div>
+          <div class="pq-translation-list"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    this._translationModal = modal;
+
+    // Close button
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => {
+        this.closeTranslationModal();
+      });
+
+    // Click outside to close
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closeTranslationModal();
+    });
+
+    // Search input
+    const searchInput = modal.querySelector(".pq-translation-search");
+    searchInput.addEventListener("input", () => {
+      this.renderTranslationList(searchInput.value);
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.closeTranslationModal();
+      }
+    });
+
+    // Make header meta clickable
+    if (this.headerMeta) {
+      this.headerMeta.style.cursor = "pointer";
+      this.headerMeta.title = "Click to change translation";
+      this.headerMeta.addEventListener("click", () => {
+        this.openTranslationModal();
+      });
+    }
+  }
+
+  /**
+   * Open the translation selection modal.
+   */
+  openTranslationModal() {
+    const modal = document.getElementById("pqTranslationModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".pq-translation-search");
+    if (searchInput) searchInput.value = "";
+
+    this.renderTranslationList("");
+    modal.classList.add("active");
+
+    // Focus search input
+    setTimeout(() => {
+      if (searchInput) searchInput.focus();
+    }, 100);
+  }
+
+  /**
+   * Close the translation selection modal.
+   */
+  closeTranslationModal() {
+    const modal = document.getElementById("pqTranslationModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  /**
+   * Render the translation list in the modal.
+   */
+  renderTranslationList(query = "") {
+    const modal = document.getElementById("pqTranslationModal");
+    if (!modal) return;
+
+    const container = modal.querySelector(".pq-translation-list");
+    if (!container) return;
+
+    const q = String(query || "").toLowerCase().trim();
+
+    // Group translations by language
+    const byLanguage = {};
+    for (const [id, info] of Object.entries(PocketQuranManager.TRANSLATIONS)) {
+      const lang = info.language || "Other";
+      if (!byLanguage[lang]) byLanguage[lang] = [];
+      byLanguage[lang].push({ id: parseInt(id, 10), ...info });
+    }
+
+    // Sort languages alphabetically
+    const sortedLanguages = Object.keys(byLanguage).sort((a, b) =>
+      a.localeCompare(b)
+    );
+
+    // Filter languages and translations by query
+    const filteredLanguages = [];
+    for (const lang of sortedLanguages) {
+      const langMatches = lang.toLowerCase().includes(q);
+      const translations = byLanguage[lang].filter(
+        (t) => langMatches || t.label.toLowerCase().includes(q)
+      );
+      if (translations.length > 0) {
+        filteredLanguages.push({ language: lang, translations });
+      }
+    }
+
+    // Build HTML
+    let html = "";
+    for (const group of filteredLanguages) {
+      html += `<div class="pq-translation-group">
+        <div class="pq-translation-lang-header">${this.escapeHtml(group.language)}</div>
+        <div class="pq-translation-items">`;
+
+      for (const t of group.translations) {
+        const isActive = t.id === this._activeTranslationId;
+        html += `<button type="button" class="pq-translation-item ${isActive ? "active" : ""}" data-translation-id="${t.id}">
+          <span class="pq-translation-name">${this.escapeHtml(t.label)}</span>
+          ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+        </button>`;
+      }
+
+      html += `</div></div>`;
+    }
+
+    if (!html) {
+      html = `<div class="pq-translation-empty">No translations found for "${this.escapeHtml(query)}"</div>`;
+    }
+
+    container.innerHTML = html;
+
+    // Add click handlers
+    container.querySelectorAll(".pq-translation-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = parseInt(btn.dataset.translationId, 10);
+        if (Number.isFinite(id)) {
+          this.selectTranslation(id);
+        }
+      });
+    });
+
+    // Scroll active translation into view
+    const activeItem = container.querySelector(".pq-translation-item.active");
+    if (activeItem && !q) {
+      setTimeout(() => {
+        activeItem.scrollIntoView({ block: "center", behavior: "auto" });
+      }, 50);
+    }
+  }
+
+  /**
+   * Select a translation from the modal.
+   */
+  selectTranslation(translationId) {
+    const id = this.normalizeTranslationId(translationId);
+
+    // Close modal
+    this.closeTranslationModal();
+
+    // Persist and reload
+    this.persistPocketQuranSettings({ translationResourceId: id });
+    this.reloadTranslation(id);
   }
 
   /**

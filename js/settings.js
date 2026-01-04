@@ -2992,6 +2992,28 @@ class SettingsManager {
         }
       }
 
+      // Update Pocket Quran translation
+      if (window.dashboard && window.dashboard.pocketQuran) {
+        try {
+          const pqSettings = settings.pocketQuran || {};
+          if (pqSettings.translationResourceId) {
+            window.dashboard.pocketQuran.reloadTranslation(
+              pqSettings.translationResourceId
+            );
+          }
+          // Also apply font sizes
+          if (pqSettings.arabicFontSize || pqSettings.translationFontSize) {
+            window.dashboard.pocketQuran.applyFontSizes(
+              pqSettings.arabicFontSize ?? 32,
+              pqSettings.translationFontSize ?? 18,
+              { syncInputs: true, persist: false }
+            );
+          }
+        } catch (e) {
+          // Pocket Quran refresh is non-critical
+        }
+      }
+
       // Notify that settings have been applied (for any listeners)
       try {
         document.dispatchEvent(
@@ -3654,6 +3676,11 @@ class SettingsManager {
       });
     }
 
+    // Pocket Quran translation select - enhanced keyboard search by language
+    if (this.pocketQuranTranslationSelect) {
+      this.setupTranslationSelectKeyboardSearch();
+    }
+
     // Pocket Quran bookmark export/import
     if (this.pocketQuranExportBookmarksBtn) {
       this.pocketQuranExportBookmarksBtn.addEventListener("click", () => {
@@ -4110,6 +4137,55 @@ class SettingsManager {
     } catch (e) {
       this.showToast(`Notification failed: ${e?.message || e}`, "error");
     }
+  }
+
+  /**
+   * Setup enhanced keyboard search for translation select.
+   * Allows searching by language label (optgroup) in addition to option text.
+   */
+  setupTranslationSelectKeyboardSearch() {
+    const select = this.pocketQuranTranslationSelect;
+    if (!select) return;
+
+    // Track typed characters for search buffer
+    let searchBuffer = "";
+    let searchTimeout = null;
+
+    select.addEventListener("keydown", (e) => {
+      // Only intercept printable characters for search
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Clear existing timeout
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      // Append to search buffer
+      searchBuffer += e.key.toLowerCase();
+
+      // Clear buffer after 1 second of inactivity
+      searchTimeout = setTimeout(() => {
+        searchBuffer = "";
+      }, 1000);
+
+      // First, try to find a language (optgroup label) that starts with the search buffer
+      const optgroups = select.querySelectorAll("optgroup");
+      for (const optgroup of optgroups) {
+        const label = (optgroup.label || "").toLowerCase();
+        if (label.startsWith(searchBuffer)) {
+          // Select the first option in this optgroup
+          const firstOption = optgroup.querySelector("option");
+          if (firstOption) {
+            e.preventDefault();
+            select.value = firstOption.value;
+            // Dispatch change event for any listeners
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            return;
+          }
+        }
+      }
+
+      // If no language match, fall back to searching option text (default behavior)
+      // Don't prevent default here to allow native type-ahead on options
+    });
   }
 }
 
