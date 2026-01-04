@@ -125,10 +125,16 @@ class MuslimDashboard {
       if (left < margin) {
         left = x + offset;
       }
-      left = Math.max(margin, Math.min(left, window.innerWidth - rect.width - margin));
+      left = Math.max(
+        margin,
+        Math.min(left, window.innerWidth - rect.width - margin)
+      );
 
       let top = y - rect.height / 2;
-      top = Math.max(margin, Math.min(top, window.innerHeight - rect.height - margin));
+      top = Math.max(
+        margin,
+        Math.min(top, window.innerHeight - rect.height - margin)
+      );
 
       tip.style.left = `${left}px`;
       tip.style.top = `${top}px`;
