@@ -1830,15 +1830,15 @@ body {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   user-select: none;
   opacity: 0;
-  visibility: hidden;
   transform: translateY(10px) scale(0.95);
   pointer-events: none;
+  will-change: opacity, transform;
   max-width: calc(100% - 36px);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: opacity 220ms ease, transform 220ms ease,
-    visibility 0s linear 220ms;
+  transition: opacity 320ms cubic-bezier(0.2, 0, 0, 1),
+    transform 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Bouncy entrance animation for attribution */
@@ -1863,15 +1863,12 @@ body {
 /* Show on entrance with bounce */
 #bg-attribution.entrance-animate {
   animation: attrBounceIn 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-  visibility: visible;
   pointer-events: auto;
-  transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
 }
 
 /* After entrance, hide but show on hover */
 #bg-attribution.autohide {
   opacity: 0;
-  visibility: hidden;
   transform: translateY(6px);
   pointer-events: none;
 }
@@ -1879,10 +1876,8 @@ body {
 #bg-attribution.autohide:hover,
 #bg-attribution.autohide.hot-visible {
   opacity: 1;
-  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
-  transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
 }
 
 /* Hover zone to trigger attribution visibility */
@@ -1899,7 +1894,6 @@ body {
 .bg-attribution-hover-zone:hover ~ #bg-attribution.autohide,
 #bg-attribution.autohide:hover {
   opacity: 1;
-  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
 }

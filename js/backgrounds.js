@@ -457,27 +457,63 @@ class BackgroundManager {
     el.appendChild(anchor);
 
     document.body.appendChild(el);
+    // Initially hide from assistive tech; visible state will set aria-hidden=false
+    el.setAttribute("aria-hidden", "true");
 
     this.attributionEl = el;
     this.attributionAnchor = anchor;
     this.hoverZone = hoverZone;
 
-    // Setup hover zone to show attribution
-    hoverZone.addEventListener("mouseenter", () => {
+    // Setup hover zone to show attribution with graceful fade and delayed hide
+    let _bgAttrHideTimer = null;
+    const _BG_ATTR_HIDE_DELAY = 3000; // ms (user-requested)
+    const _BG_ATTR_FADE_MS = 360; // ms (CSS transition + small buffer)
+
+    const cancelBgAttrHide = () => {
+      if (_bgAttrHideTimer) {
+        clearTimeout(_bgAttrHideTimer);
+        _bgAttrHideTimer = null;
+      }
+    };
+
+    const showBgAttr = () => {
+      cancelBgAttrHide();
       if (el.classList.contains("autohide")) {
         el.classList.add("hot-visible");
+        try {
+          el.setAttribute("aria-hidden", "false");
+        } catch (e) {}
       }
-    });
-    hoverZone.addEventListener("mouseleave", () => {
-      setTimeout(() => {
-        if (!el.matches(":hover")) {
-          el.classList.remove("hot-visible");
-        }
-      }, 300);
-    });
-    el.addEventListener("mouseleave", () => {
-      el.classList.remove("hot-visible");
-    });
+    };
+
+    const scheduleHideBgAttr = (delay = _BG_ATTR_HIDE_DELAY) => {
+      cancelBgAttrHide();
+      _bgAttrHideTimer = setTimeout(() => {
+        // Trigger fade by removing visible state (CSS controls opacity/transform)
+        el.classList.remove("hot-visible");
+        // After fade completes, mark element hidden for assistive tech
+        setTimeout(() => {
+          try {
+            if (!el.classList.contains("hot-visible")) {
+              el.setAttribute("aria-hidden", "true");
+            }
+          } catch (e) {}
+        }, _BG_ATTR_FADE_MS);
+        _bgAttrHideTimer = null;
+      }, delay);
+    };
+
+    hoverZone.addEventListener("mouseenter", showBgAttr, { passive: true });
+    hoverZone.addEventListener(
+      "mouseleave",
+      () => scheduleHideBgAttr(),
+      { passive: true }
+    );
+    el.addEventListener("mouseenter", showBgAttr, { passive: true });
+    el.addEventListener("mouseleave", () => scheduleHideBgAttr());
+    // Support keyboard focus as well
+    el.addEventListener("focusin", showBgAttr);
+    el.addEventListener("focusout", () => scheduleHideBgAttr());
   }
 
   /**
@@ -497,6 +533,9 @@ class BackgroundManager {
     this.attributionAnchor.href = imageObj.href || "#";
 
     // Show with bouncy entrance animation
+    try {
+      this.attributionEl.setAttribute("aria-hidden", "false");
+    } catch (e) {}
     this.attributionEl.classList.remove("autohide", "hot-visible");
     this.attributionEl.classList.add("entrance-animate");
 
@@ -504,7 +543,15 @@ class BackgroundManager {
     setTimeout(() => {
       this.attributionEl.classList.remove("entrance-animate");
       this.attributionEl.classList.add("autohide");
-    }, 2600); // Animation duration (600ms) + visible time (2000ms)
+      // After fade completes, mark hidden for assistive tech unless user re-hovered
+      setTimeout(() => {
+        try {
+          if (!this.attributionEl.classList.contains("hot-visible")) {
+            this.attributionEl.setAttribute("aria-hidden", "true");
+          }
+        } catch (e) {}
+      }, 360);
+    }, 2600); // Animation duration + visible time (kept as original)
   }
 
   /**
