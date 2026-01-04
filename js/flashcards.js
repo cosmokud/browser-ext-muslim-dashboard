@@ -22,15 +22,25 @@ class FlashcardManager {
       parser: "csv",
     },
     {
-      id: "default_99names",
-      name: "99 Names of Allah",
-      file: "data/flashcard_99names.csv",
+      id: "default_99names_ar",
+      name: "99 Names of Allah (Arabic)",
+      file: "data/flashcard_99names_ar.csv",
+      parser: "pipe",
+    },
+    {
+      id: "default_99names_en",
+      name: "99 Names of Allah (English)",
+      file: "data/flashcard_99names_en.csv",
       parser: "pipe",
     },
   ];
 
   // IDs of sets that are protected (cannot be edited or deleted).
-  static PROTECTED_SET_IDS = ["default", "default_99names"];
+  static PROTECTED_SET_IDS = [
+    "default",
+    "default_99names_ar",
+    "default_99names_en",
+  ];
 
   constructor(storage) {
     this.storage = storage;
