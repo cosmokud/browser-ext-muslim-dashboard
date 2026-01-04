@@ -820,17 +820,6 @@ class MuslimDashboard {
       );
     }
 
-    // Lunar + Fasting row layout: if only one is visible, let it consume full width.
-    const lunarFastingRow = document.getElementById("lunarFastingRow");
-    if (lunarFastingRow) {
-      const isLunarVisible =
-        !!lunarPhaseCard && lunarPhaseCard.style.display !== "none";
-      const isFastingVisible =
-        !!fastingCard && fastingCard.style.display !== "none";
-      const visibleCount = (isLunarVisible ? 1 : 0) + (isFastingVisible ? 1 : 0);
-      lunarFastingRow.dataset.visibleCount = String(visibleCount);
-    }
-
     // Flashcards
     const flashcardCard = document.getElementById("flashcardCard");
     if (flashcardCard) {
