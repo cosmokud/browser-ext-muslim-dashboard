@@ -16,9 +16,9 @@ class FlashcardManager {
   // Each entry: { id, name, file, parser } where parser may be 'csv' or 'pipe'.
   static DEFAULT_SETS = [
     {
-      id: "default",
+      id: "default_top300wordforms",
       name: "Top 300 Word Forms in Quran",
-      file: "data/flashcard_default.csv",
+      file: "data/flashcard_top300wordforms.csv",
       parser: "csv",
     },
     {
@@ -37,7 +37,7 @@ class FlashcardManager {
 
   // IDs of sets that are protected (cannot be edited or deleted).
   static PROTECTED_SET_IDS = [
-    "default",
+    "default_top300wordforms",
     "default_99names_ar",
     "default_99names_en",
   ];
@@ -450,10 +450,10 @@ class FlashcardManager {
       ? FlashcardManager.DEFAULT_SETS
       : [
           {
-            id: "default",
-            name: "Top 300 Word Forms in Quran",
-            file: "data/flashcard_default.csv",
-            parser: "csv",
+            id: "default_99names_ar",
+            name: "99 Names of Allah (Arabic)",
+            file: "data/flashcard_99names_ar.csv",
+            parser: "pipe",
           },
         ];
 
