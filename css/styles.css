@@ -6305,6 +6305,7 @@ body.sticky-note-resizing {
   display: inline-flex;
   align-items: center;
   margin-left: var(--spacing-sm);
+  cursor: pointer;
 }
 
 .toggle-switch {
@@ -6314,6 +6315,7 @@ body.sticky-note-resizing {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 13px;
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .toggle-switch::after {
