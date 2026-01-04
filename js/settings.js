@@ -3267,6 +3267,17 @@ class SettingsManager {
       });
     }
 
+    // Reset grid layout button
+    const resetGridLayoutBtn = document.getElementById("resetGridLayoutBtn");
+    if (resetGridLayoutBtn) {
+      resetGridLayoutBtn.addEventListener("click", () => {
+        if (window.dashboard && window.dashboard.gridLayout) {
+          window.dashboard.gridLayout.resetToDefault();
+          this.showToast("Layout reset to default!", "success");
+        }
+      });
+    }
+
     // Export settings
     if (this.exportSettingsBtn) {
       this.exportSettingsBtn.addEventListener("click", () => {

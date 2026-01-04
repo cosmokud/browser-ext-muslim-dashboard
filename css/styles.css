@@ -8421,3 +8421,219 @@ body.sticky-note-resizing {
   height: 1px;
   opacity: 0;
 }
+
+/* ========================================
+   Grid Layout - Drag and Drop System
+   ======================================== */
+
+/* Flex row container for grid items */
+.grid-flex-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--spacing-xl);
+  width: 100%;
+  min-height: 50px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+/* When grid is in drag mode */
+.grid-is-dragging .grid-flex-row {
+  min-height: 80px;
+}
+
+/* Target row highlight during drag */
+.grid-flex-row.grid-row-target {
+  background-color: rgba(var(--accent-gold), 0.08);
+  outline: 2px dashed var(--accent-gold);
+  outline-offset: -2px;
+}
+
+/* New row placeholder during drag */
+.grid-flex-row.grid-flex-row-new {
+  background-color: rgba(26, 95, 74, 0.1);
+  border: 2px dashed var(--primary-light);
+  min-height: 100px;
+}
+
+/* Draggable grid items */
+.grid-draggable {
+  cursor: grab;
+  touch-action: manipulation;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, flex 0.3s ease;
+  user-select: none;
+  position: relative;
+}
+
+/* Hover state for draggable items */
+.grid-draggable:hover:not(.grid-dragging) {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Visual drag handle indicator */
+.grid-draggable::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 20%, 
+    rgba(255, 255, 255, 0.3) 80%, 
+    transparent 100%
+  );
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.grid-draggable:hover::before,
+.grid-is-dragging .grid-draggable::before {
+  opacity: 1;
+}
+
+/* Active dragging state */
+.grid-draggable.grid-dragging {
+  cursor: grabbing;
+  opacity: 0.95;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 3px var(--accent-gold);
+  transform: scale(1.02) rotate(1deg);
+  z-index: 10000 !important;
+  border-radius: var(--radius-lg);
+}
+
+/* Placeholder for drop position */
+.grid-placeholder {
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.15) 0%, 
+    rgba(212, 175, 55, 0.08) 100%
+  );
+  border: 2px dashed var(--accent-gold);
+  border-radius: var(--radius-lg);
+  min-height: 100px;
+  transition: all 0.2s ease;
+  animation: placeholderPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes placeholderPulse {
+  0%, 100% {
+    opacity: 0.6;
+    border-color: var(--accent-gold);
+  }
+  50% {
+    opacity: 1;
+    border-color: var(--accent-gold-light);
+  }
+}
+
+/* Prevent text selection during drag */
+.grid-is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.grid-is-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Smooth transitions for non-dragged items when repositioning */
+.grid-is-dragging .grid-draggable:not(.grid-dragging) {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Dim other items slightly during drag */
+.grid-is-dragging .grid-draggable:not(.grid-dragging):not(.grid-placeholder) {
+  opacity: 0.85;
+}
+
+/* Override grid styles when using flex rows */
+/* Class-based approach for maximum compatibility */
+.content-grid.grid-layout-active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* :has() selector as enhancement for browsers that support it */
+@supports selector(:has(*)) {
+  .content-grid:has(.grid-flex-row) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+}
+
+/* Ensure cards fill flex containers properly */
+.grid-flex-row > .card,
+.grid-flex-row > .header,
+.grid-flex-row > section {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Full-width components always take 100% */
+.grid-flex-row > .header,
+.grid-flex-row > #pinnedAppsSection,
+.grid-flex-row > #searchBarSection,
+.grid-flex-row > #quoteSection,
+.grid-flex-row > #pocketQuranCard {
+  flex: 1 1 100% !important;
+  max-width: 100% !important;
+}
+
+/* Responsive adjustments for flex rows */
+@media (max-width: 900px) {
+  .grid-flex-row {
+    flex-wrap: wrap;
+  }
+  
+  .grid-flex-row > * {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+  .grid-draggable::before {
+    width: 50px;
+    height: 6px;
+    top: 6px;
+    opacity: 0.5;
+  }
+  
+  .grid-draggable:hover::before {
+    opacity: 0.7;
+  }
+}
+
+/* Accessibility: focus indicator for keyboard navigation */
+.grid-draggable:focus-visible {
+  outline: 3px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* Animation for items settling into place */
+@keyframes settleInPlace {
+  0% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(0.99);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.grid-draggable:not(.grid-dragging) {
+  animation: settleInPlace 0.3s ease-out;
+}

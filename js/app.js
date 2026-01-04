@@ -32,6 +32,9 @@ class MuslimDashboard {
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
 
+    // Grid layout manager for drag-and-drop
+    this.gridLayout = null; // Will be initialized after DOM
+
     // Settings will be initialized after other managers
     this.settings = null;
 
@@ -281,6 +284,14 @@ class MuslimDashboard {
 
     // Apply component visibility
     this.applyComponentVisibility();
+
+    // Initialize grid layout manager for drag-and-drop (after visibility is applied)
+    try {
+      this.gridLayout = new GridLayoutManager(this.storage);
+      this.gridLayout.init();
+    } catch (e) {
+      console.warn("GridLayoutManager init failed:", e);
+    }
 
     // Apply heading settings
     this.applyHeadingSettings();
@@ -839,6 +850,16 @@ class MuslimDashboard {
         "aria-hidden",
         visibility.todoList === false ? "true" : "false"
       );
+    }
+
+    // Notify grid layout manager to recalculate layout
+    try {
+      document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+    } catch (e) {
+      // Fallback for older browsers
+      if (this.gridLayout) {
+        this.gridLayout.recalculateLayout();
+      }
     }
   }
 
