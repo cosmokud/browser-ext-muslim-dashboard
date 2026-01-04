@@ -1649,17 +1649,23 @@ body {
 }
 
 .layout-edit-btn.active {
-  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold),
+    var(--accent-gold-light)
+  );
   box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
   animation: layoutEditPulse 2s ease-in-out infinite;
 }
 
 @keyframes layoutEditPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
   }
   50% {
-    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7), 0 0 0 4px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7),
+      0 0 0 4px rgba(212, 175, 55, 0.2);
   }
 }
 
@@ -1706,7 +1712,11 @@ body {
 
 .grid-toast-error {
   border-color: #ff6b6b;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.3), var(--glass-bg));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.3),
+    var(--glass-bg)
+  );
 }
 
 /* Settings Button */

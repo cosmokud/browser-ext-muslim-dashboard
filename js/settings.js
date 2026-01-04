@@ -2639,27 +2639,42 @@ class SettingsManager {
   applyLiveUpdates(settings) {
     try {
       // Update greeting
-      if (window.dashboard && typeof window.dashboard.updateGreeting === "function") {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.updateGreeting === "function"
+      ) {
         window.dashboard.updateGreeting();
       }
 
       // Update date display
-      if (window.dashboard && typeof window.dashboard.updateDate === "function") {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.updateDate === "function"
+      ) {
         window.dashboard.updateDate();
       }
 
       // Update time display
-      if (window.dashboard && typeof window.dashboard.updateTime === "function") {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.updateTime === "function"
+      ) {
         window.dashboard.updateTime();
       }
 
       // Apply heading settings (clock style, seconds visibility, etc.)
-      if (window.dashboard && typeof window.dashboard.applyHeadingSettings === "function") {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.applyHeadingSettings === "function"
+      ) {
         window.dashboard.applyHeadingSettings();
       }
 
       // Apply pinned apps settings
-      if (window.dashboard && typeof window.dashboard.applyPinnedAppsSettings === "function") {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.applyPinnedAppsSettings === "function"
+      ) {
         window.dashboard.applyPinnedAppsSettings();
       }
 
@@ -2706,11 +2721,12 @@ class SettingsManager {
 
       // Notify that settings have been applied (for any listeners)
       try {
-        document.dispatchEvent(new CustomEvent("md:settings-applied", {
-          detail: { settings }
-        }));
+        document.dispatchEvent(
+          new CustomEvent("md:settings-applied", {
+            detail: { settings },
+          })
+        );
       } catch (e) {}
-
     } catch (e) {
       console.warn("Some live updates failed:", e);
     }
