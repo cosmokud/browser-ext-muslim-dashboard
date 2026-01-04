@@ -17,13 +17,13 @@ class FlashcardManager {
   static DEFAULT_SETS = [
     {
       id: "default",
-      name: "Default",
+      name: "Top 300 Word Forms in Quran",
       file: "data/flashcard_default.csv",
       parser: "csv",
     },
     {
       id: "default_99names",
-      name: "99 Names",
+      name: "99 Names of Allah",
       file: "data/flashcard_99names.csv",
       parser: "pipe",
     },
@@ -441,7 +441,7 @@ class FlashcardManager {
       : [
           {
             id: "default",
-            name: "Default",
+            name: "Top 300 Word Forms in Quran",
             file: "data/flashcard_default.csv",
             parser: "csv",
           },
