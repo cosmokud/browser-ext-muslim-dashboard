@@ -1229,9 +1229,6 @@ body {
 }
 
 /* Todo Card */
-#todoCard {
-  grid-column: 1 / -1; /* Full width - spans all columns */
-}
 
 #todoCard:hover {
   /* transform: translateY(-5px) translateZ(0); */
