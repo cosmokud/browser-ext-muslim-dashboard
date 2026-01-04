@@ -22,129 +22,132 @@
 
     <!-- Main Container -->
     <div class="main-container">
-      <!-- Header Section -->
-      <header class="header">
-        <div class="greeting-section">
-          <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
-          <p class="date-display" id="dateDisplay"></p>
-        </div>
-        <div class="time-section">
-          <div class="current-time" id="currentTime">00:00</div>
-          <div class="current-seconds" id="currentSeconds">:00</div>
-          <div class="current-ampm" id="currentAmPm" aria-hidden="true"></div>
-        </div>
-      </header>
-
-      <!-- Pinned Apps Section -->
-      <section class="pinned-apps-section" id="pinnedAppsSection">
-        <div class="pinned-apps-grid" id="pinnedAppsGrid">
-          <div
-            class="pinned-apps-spacer pinned-apps-spacer-left"
-            aria-hidden="true"
-          ></div>
-
-          <div class="pinned-apps-track" id="pinnedAppsTrack">
-            <!-- Apps will be dynamically added here -->
-            <div class="pinned-app-add" id="addPinnedAppBtn">
-              <div class="add-icon">+</div>
-              <span class="add-text">Add Site</span>
-            </div>
-          </div>
-
-          <div
-            class="pinned-apps-spacer pinned-apps-spacer-right"
-            aria-hidden="true"
-          ></div>
-        </div>
-      </section>
-
-      <!-- Search Bar Section -->
-      <section class="search-bar-section" id="searchBarSection">
-        <div class="search-bar-shell" id="searchBarShell">
-          <div class="search-bar-engines" aria-label="Custom searches">
-            <button
-              class="search-bar-engine-arrow"
-              id="searchBarEnginesPrev"
-              type="button"
-              aria-label="Scroll searches left"
-            >
-              ❮
-            </button>
-            <div
-              class="search-bar-engine-viewport"
-              id="searchBarEngineViewport"
-            >
-              <div
-                class="search-bar-engine-strip"
-                id="searchBarEngineStrip"
-                role="tablist"
-                aria-label="Search engines"
-              ></div>
-            </div>
-            <button
-              class="search-bar-engine-arrow"
-              id="searchBarEnginesNext"
-              type="button"
-              aria-label="Scroll searches right"
-            >
-              ❯
-            </button>
-          </div>
-
-          <form class="search-bar-form" id="searchBarForm" autocomplete="off">
-            <input
-              class="search-bar-input"
-              id="searchBarInput"
-              type="text"
-              inputmode="search"
-              placeholder="Searching..."
-              aria-label="Search query"
-            />
-            <button
-              class="search-bar-btn search-bar-submit"
-              id="searchBarSubmit"
-              type="submit"
-              aria-label="Search"
-              title="Search"
-            >
-              🔎
-            </button>
-            <button
-              class="search-bar-btn search-bar-add"
-              id="searchBarAddBtn"
-              type="button"
-              aria-label="Add custom search"
-              title="Add custom search"
-            >
-              ＋
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Quote Section -->
-      <section class="quote-section" id="quoteSection">
-        <div class="quote-container">
-          <div class="quote-icon">❝</div>
-          <p class="quote-text" id="quoteText">Loading inspiration...</p>
-          <p class="quote-source" id="quoteSource"></p>
-          <button class="quote-refresh" id="quoteRefresh" title="New Quote">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-              />
-            </svg>
-          </button>
-        </div>
-      </section>
+      <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
 
       <!-- Main Content Grid -->
       <main class="content-grid">
+
+        <!-- Header Section -->
+        <header class="header">
+          <div class="greeting-section">
+            <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
+            <p class="date-display" id="dateDisplay"></p>
+          </div>
+          <div class="time-section">
+            <div class="current-time" id="currentTime">00:00</div>
+            <div class="current-seconds" id="currentSeconds">:00</div>
+            <div class="current-ampm" id="currentAmPm" aria-hidden="true"></div>
+          </div>
+        </header>
+
+        <!-- Pinned Apps Section -->
+        <section class="pinned-apps-section" id="pinnedAppsSection">
+          <div class="pinned-apps-grid" id="pinnedAppsGrid">
+            <div
+              class="pinned-apps-spacer pinned-apps-spacer-left"
+              aria-hidden="true"
+            ></div>
+
+            <div class="pinned-apps-track" id="pinnedAppsTrack">
+              <!-- Apps will be dynamically added here -->
+              <div class="pinned-app-add" id="addPinnedAppBtn">
+                <div class="add-icon">+</div>
+                <span class="add-text">Add Site</span>
+              </div>
+            </div>
+
+            <div
+              class="pinned-apps-spacer pinned-apps-spacer-right"
+              aria-hidden="true"
+            ></div>
+          </div>
+        </section>
+
+        <!-- Search Bar Section -->
+        <section class="search-bar-section" id="searchBarSection">
+          <div class="search-bar-shell" id="searchBarShell">
+            <div class="search-bar-engines" aria-label="Custom searches">
+              <button
+                class="search-bar-engine-arrow"
+                id="searchBarEnginesPrev"
+                type="button"
+                aria-label="Scroll searches left"
+              >
+                ❮
+              </button>
+              <div
+                class="search-bar-engine-viewport"
+                id="searchBarEngineViewport"
+              >
+                <div
+                  class="search-bar-engine-strip"
+                  id="searchBarEngineStrip"
+                  role="tablist"
+                  aria-label="Search engines"
+                ></div>
+              </div>
+              <button
+                class="search-bar-engine-arrow"
+                id="searchBarEnginesNext"
+                type="button"
+                aria-label="Scroll searches right"
+              >
+                ❯
+              </button>
+            </div>
+
+            <form class="search-bar-form" id="searchBarForm" autocomplete="off">
+              <input
+                class="search-bar-input"
+                id="searchBarInput"
+                type="text"
+                inputmode="search"
+                placeholder="Searching..."
+                aria-label="Search query"
+              />
+              <button
+                class="search-bar-btn search-bar-submit"
+                id="searchBarSubmit"
+                type="submit"
+                aria-label="Search"
+                title="Search"
+              >
+                🔎
+              </button>
+              <button
+                class="search-bar-btn search-bar-add"
+                id="searchBarAddBtn"
+                type="button"
+                aria-label="Add custom search"
+                title="Add custom search"
+              >
+                ＋
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Quote Section -->
+        <section class="quote-section" id="quoteSection">
+          <div class="quote-container">
+            <div class="quote-icon">❝</div>
+            <p class="quote-text" id="quoteText">Loading inspiration...</p>
+            <p class="quote-source" id="quoteSource"></p>
+            <button class="quote-refresh" id="quoteRefresh" title="New Quote">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                />
+              </svg>
+            </button>
+          </div>
+        </section>
+
         <!-- Top features (Prayer, Calendar, Qibla) -->
         <div class="top-features">
           <!-- Prayer Times Card -->

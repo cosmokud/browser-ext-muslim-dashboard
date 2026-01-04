@@ -396,6 +396,15 @@ body {
   flex: 1;
 }
 
+/* Utility: when UI sections are placed inside the grid make them full width and rely on the grid gap for spacing */
+.content-grid > .header,
+.content-grid > .pinned-apps-section,
+.content-grid > .search-bar-section,
+.content-grid > .quote-section {
+  grid-column: 1 / -1;
+  margin-bottom: 0; /* grid gap handles vertical spacing */
+}
+
 /* Flashcard & Todo Row - make both occupy a single row together */
 
 .flashcard-todo-row {
