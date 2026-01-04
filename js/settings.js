@@ -3685,7 +3685,10 @@ class SettingsManager {
     }
 
     // Pocket Quran translation search (filters dropdown)
-    if (this.pocketQuranTranslationSearch && this.pocketQuranTranslationSelect) {
+    if (
+      this.pocketQuranTranslationSearch &&
+      this.pocketQuranTranslationSelect
+    ) {
       this.setupTranslationSelectSearch();
     }
 
@@ -4233,7 +4236,9 @@ class SettingsManager {
     const select = this.pocketQuranTranslationSelect;
     if (!select) return;
 
-    const q = String(query || "").trim().toLowerCase();
+    const q = String(query || "")
+      .trim()
+      .toLowerCase();
     const hasQuery = Boolean(q);
 
     const selectedValue = select.value;
@@ -4247,8 +4252,10 @@ class SettingsManager {
       const options = optgroup.querySelectorAll("option");
       options.forEach((opt) => {
         const text = String(opt.textContent || "").toLowerCase();
-        const optionMatches = groupMatches || (!hasQuery ? true : text.includes(q));
-        const keepSelected = hasQuery && String(opt.value) === String(selectedValue);
+        const optionMatches =
+          groupMatches || (!hasQuery ? true : text.includes(q));
+        const keepSelected =
+          hasQuery && String(opt.value) === String(selectedValue);
 
         const visible = optionMatches || keepSelected;
         opt.hidden = !visible;
