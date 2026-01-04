@@ -4183,7 +4183,8 @@ class SettingsManager {
     const optText = String(opt?.textContent || "").trim();
     const lang = String(opt?.closest?.("optgroup")?.label || "").trim();
 
-    labelEl.textContent = lang && optText ? `${lang} · ${optText}` : "Select translation…";
+    labelEl.textContent =
+      lang && optText ? `${lang} · ${optText}` : "Select translation…";
   }
 }
 
