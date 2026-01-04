@@ -161,6 +161,11 @@ class SettingsManager {
     );
     this.nukeAllDataBtn = document.getElementById("nukeAllDataBtn");
 
+    // General: refresh default content
+    this.refreshDefaultDataBtn = document.getElementById(
+      "refreshDefaultDataBtn"
+    );
+
     // Reset/Nuke confirmation modal
     this.resetNukeConfirmModal = document.getElementById(
       "resetNukeConfirmModal"
@@ -3638,6 +3643,41 @@ class SettingsManager {
         if (window.dashboard && window.dashboard.gridLayout) {
           window.dashboard.gridLayout.resetToDefault();
           this.showToast("Layout reset to default!", "success");
+        }
+      });
+    }
+
+    // Refresh default flashcards + default quotes
+    if (this.refreshDefaultDataBtn) {
+      this.refreshDefaultDataBtn.addEventListener("click", async () => {
+        const btn = this.refreshDefaultDataBtn;
+        const prevText = btn.textContent;
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Refreshing…";
+
+        try {
+          const tasks = [];
+
+          if (this.flashcards?.refreshDefaultSets) {
+            tasks.push(this.flashcards.refreshDefaultSets());
+          }
+
+          if (this.quotes?.refreshDefaultQuotes) {
+            tasks.push(this.quotes.refreshDefaultQuotes());
+          } else if (this.quotes?.loadDefaultQuotes) {
+            // Backward-compatible fallback
+            tasks.push(this.quotes.loadDefaultQuotes());
+          }
+
+          await Promise.all(tasks);
+          this.showToast("Default flashcards and quotes refreshed!", "success");
+        } catch (e) {
+          console.error("Failed to refresh default data:", e);
+          this.showToast("Failed to refresh default data.", "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = prevText;
         }
       });
     }

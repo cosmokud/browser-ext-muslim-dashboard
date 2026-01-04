@@ -536,6 +536,74 @@ class FlashcardManager {
     }
   }
 
+  /**
+   * Reload default (protected) sets from the bundled files.
+   * This updates existing default sets in storage so extension updates can
+   * deliver new/updated default content without requiring a full reset.
+   */
+  async refreshDefaultSets() {
+    const defs = Array.isArray(FlashcardManager.DEFAULT_SETS)
+      ? FlashcardManager.DEFAULT_SETS
+      : [];
+
+    const setsRaw = this.getSets();
+    const sets = Array.isArray(setsRaw) ? setsRaw : [];
+
+    let changed = false;
+    const byId = new Map(sets.map((s) => [String(s?.id || ""), s]));
+
+    for (const def of defs) {
+      if (!def?.id || !def?.file) continue;
+
+      let cards = [];
+      try {
+        const res = await fetch(def.file, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(
+            `Failed to load default set ${def.id}: ${res.status}`
+          );
+        }
+        const text = await res.text();
+        cards =
+          def.parser === "pipe"
+            ? this.parsePipeTwoColumns(text)
+            : this.parseCsvTwoColumns(text);
+      } catch (e) {
+        console.error(`Flashcards: failed to refresh default set ${def.id}`, e);
+        cards = [];
+      }
+
+      const existing = byId.get(String(def.id));
+      if (existing) {
+        existing.name = def.name || existing.name;
+        existing.cards = cards;
+        if (!existing.createdAt) {
+          existing.createdAt = new Date().toISOString();
+        }
+        changed = true;
+      } else {
+        sets.push({
+          id: def.id,
+          name: def.name,
+          createdAt: new Date().toISOString(),
+          cards,
+        });
+        byId.set(String(def.id), sets[sets.length - 1]);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.saveSets(sets);
+    }
+
+    // Keep the UI consistent with potentially changed card counts.
+    this.restoreCurrentCardIndexForActiveSet();
+    this.renderDashboard();
+    this.renderSettings();
+    this.ensureAutoAdvanceState({ reset: true });
+  }
+
   // ---------- Dashboard ----------
 
   bindDashboardEvents() {

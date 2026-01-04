@@ -78,7 +78,9 @@ class QuotesManager {
    */
   async loadDefaultQuotes() {
     try {
-      const response = await fetch("data/quotes_default.json");
+      const response = await fetch("data/quotes_default.json", {
+        cache: "no-store",
+      });
       if (response.ok) {
         this.defaultQuotes = await response.json();
       }
@@ -103,6 +105,16 @@ class QuotesManager {
         },
       ];
     }
+  }
+
+  /**
+   * Reload the bundled default quotes from the data folder.
+   */
+  async refreshDefaultQuotes() {
+    await this.loadDefaultQuotes();
+    // If defaults are enabled (or no other source is enabled), this will
+    // immediately reflect the refreshed data.
+    this.displayRandomQuote();
   }
 
   /**
