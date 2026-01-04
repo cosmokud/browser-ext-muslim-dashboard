@@ -307,9 +307,9 @@ class MuslimDashboard {
     });
 
     // Startup sequence: hidden → quick bounce in → stay visible a bit → fade out.
-    const startupDelay = 120; // ms
+    const startupDelay = 0; // ms
     const bounceMs = 350; // ms
-    const visibleMs = 2200; // ms
+    const visibleMs = 5200; // ms
     const fadeMs = 220; // ms
 
     setTimeout(() => {
