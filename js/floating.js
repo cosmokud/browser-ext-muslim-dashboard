@@ -302,14 +302,14 @@ class FloatingModeManager {
 
       if (button) {
         button.addEventListener("click", (e) => {
-          // The button lives inside a <label>; prevent toggling the visibility checkbox.
+          // Prevent label-based toggling when the button is clicked (defensive: button may be inside a label).
           e.preventDefault();
           e.stopPropagation();
           if (this.isViewportSuspended) return;
           this.toggle(key);
         });
 
-        // Avoid label-click toggling when mouse down on the button
+        // Prevent propagation on pointer-down so accidental label toggles don't occur while pressing the button
         button.addEventListener("mousedown", (e) => {
           e.stopPropagation();
         });

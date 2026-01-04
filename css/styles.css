@@ -6300,6 +6300,13 @@ body.sticky-note-resizing {
   color: var(--text-secondary);
 }
 
+/* Small container for the checkbox + visual switch when the button is outside the main label */
+.visibility-toggle-control {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--spacing-sm);
+}
+
 .toggle-switch {
   position: relative;
   width: 48px;
