@@ -511,7 +511,9 @@ class SettingsManager {
       const hasOption = this.quoteLayoutStyleSelect.querySelector(
         `option[value="${quoteLayoutStyle}"]`
       );
-      this.quoteLayoutStyleSelect.value = hasOption ? quoteLayoutStyle : "classic";
+      this.quoteLayoutStyleSelect.value = hasOption
+        ? quoteLayoutStyle
+        : "classic";
     }
 
     // Background settings
