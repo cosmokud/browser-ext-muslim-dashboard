@@ -282,7 +282,6 @@ body {
 
 /* Quote Section */
 .quote-section {
-  margin-bottom: var(--spacing-xl);
   isolation: isolate;
   contain: layout style;
 }
@@ -2646,14 +2645,12 @@ body {
 
 /* Pinned Apps Section */
 .pinned-apps-section {
-  margin-bottom: var(--spacing-xl);
   isolation: isolate;
   contain: layout style;
 }
 
 /* Search Bar Section (Custom Searches) */
 .search-bar-section {
-  margin-bottom: var(--spacing-xl);
   isolation: isolate;
   contain: layout style;
 }

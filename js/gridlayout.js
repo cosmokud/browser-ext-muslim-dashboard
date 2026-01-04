@@ -52,14 +52,13 @@ class GridLayoutManager {
      * Format: componentId -> minWidth in pixels
      */
     this.componentMinWidths = {
-      prayerTimesCard: 350,
+      prayerTimesCard: 360,
       calendarCard: 310,
       qiblaCard: 280,
       lunarPhaseCard: 250,
       fastingCard: 250,
       flashcardCard: 300,
       todoCard: 300,
-      // Add more components here as needed
     };
 
     // Track current effective spans (calculated based on viewport)
