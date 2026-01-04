@@ -396,6 +396,11 @@ body {
   flex: 1;
 }
 
+/* Prevent grid items from expanding tracks and causing horizontal overflow */
+.content-grid > * {
+  min-width: 0;
+}
+
 /* Utility: when UI sections are placed inside the grid make them full width and rely on the grid gap for spacing */
 .content-grid > .header,
 .content-grid > .pinned-apps-section,
@@ -409,7 +414,8 @@ body {
 
 .flashcard-todo-row {
   grid-column: 1 / -1;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-xl);
   align-items: stretch; /* keep cards the same height visually */
   width: 100%;
@@ -420,23 +426,16 @@ body {
   min-height: 220px;
   display: flex;
   flex-direction: column;
-  flex: 1 1 50%; /* consume half the available width each */
   min-width: 0; /* allow internal content to shrink instead of overflowing */
-}
-
-.flashcard-todo-row .card.todo-card {
-  /* explicit rule to ensure todo card matches layout expectations */
-  flex: 1 1 50%;
 }
 
 /* Responsive: stack vertically on small screens */
 @media (max-width: 699px) {
   .flashcard-todo-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: var(--spacing-md);
   }
   .flashcard-todo-row .card {
-    flex: 0 0 auto;
     width: 100%;
   }
 }
