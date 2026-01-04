@@ -336,8 +336,11 @@ class SettingsManager {
     this.pocketQuranTranslationSizeValue = document.getElementById(
       "pocketQuranTranslationSizeSettingValue"
     );
-    this.pocketQuranTranslationSearch = document.getElementById(
-      "pocketQuranTranslationSearch"
+    this.pocketQuranTranslationPickerBtn = document.getElementById(
+      "pocketQuranTranslationPickerBtn"
+    );
+    this.pocketQuranTranslationPickerLabel = document.getElementById(
+      "pocketQuranTranslationPickerLabel"
     );
     this.pocketQuranTranslationSelect = document.getElementById(
       "pocketQuranTranslationSelect"
@@ -592,6 +595,8 @@ class SettingsManager {
         ? String(desired)
         : "85";
     }
+
+    this.updatePocketQuranTranslationPickerLabel();
 
     // Compact weather settings
     if (this.compactWeatherEnabled) {
@@ -3679,18 +3684,36 @@ class SettingsManager {
       });
     }
 
-    // Pocket Quran translation select - enhanced keyboard search by language
-    if (this.pocketQuranTranslationSelect) {
-      this.setupTranslationSelectKeyboardSearch();
+    // Pocket Quran translation picker: open the existing pqTranslationModal
+    if (this.pocketQuranTranslationPickerBtn) {
+      this.pocketQuranTranslationPickerBtn.addEventListener("click", () => {
+        try {
+          if (window.dashboard?.pocketQuran?.openTranslationModal) {
+            window.dashboard.pocketQuran.openTranslationModal();
+            return;
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
     }
 
-    // Pocket Quran translation search (filters dropdown)
-    if (
-      this.pocketQuranTranslationSearch &&
-      this.pocketQuranTranslationSelect
-    ) {
-      this.setupTranslationSelectSearch();
-    }
+    // Keep Settings UI in sync when translation changes from anywhere (header modal or settings modal)
+    document.addEventListener("md:pq-translation-selected", (e) => {
+      const id = parseInt(e?.detail?.translationId, 10);
+      if (!Number.isFinite(id)) return;
+
+      if (this.pocketQuranTranslationSelect) {
+        const has = this.pocketQuranTranslationSelect.querySelector(
+          `option[value="${id}"]`
+        );
+        if (has) {
+          this.pocketQuranTranslationSelect.value = String(id);
+        }
+      }
+
+      this.updatePocketQuranTranslationPickerLabel();
+    });
 
     // Pocket Quran bookmark export/import
     if (this.pocketQuranExportBookmarksBtn) {
@@ -4150,120 +4173,17 @@ class SettingsManager {
     }
   }
 
-  /**
-   * Setup enhanced keyboard search for translation select.
-   * Allows searching by language label (optgroup) in addition to option text.
-   */
-  setupTranslationSelectKeyboardSearch() {
+  updatePocketQuranTranslationPickerLabel() {
+    const btn = this.pocketQuranTranslationPickerBtn;
+    const labelEl = this.pocketQuranTranslationPickerLabel;
     const select = this.pocketQuranTranslationSelect;
-    if (!select) return;
+    if (!btn || !labelEl || !select) return;
 
-    // Track typed characters for search buffer
-    let searchBuffer = "";
-    let searchTimeout = null;
+    const opt = select.selectedOptions?.[0] || null;
+    const optText = String(opt?.textContent || "").trim();
+    const lang = String(opt?.closest?.("optgroup")?.label || "").trim();
 
-    select.addEventListener("keydown", (e) => {
-      // Only intercept printable characters for search
-      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
-
-      // Clear existing timeout
-      if (searchTimeout) clearTimeout(searchTimeout);
-
-      // Append to search buffer
-      searchBuffer += e.key.toLowerCase();
-
-      // Clear buffer after 1 second of inactivity
-      searchTimeout = setTimeout(() => {
-        searchBuffer = "";
-      }, 1000);
-
-      // First, try to find a language (optgroup label) that starts with the search buffer
-      const optgroups = select.querySelectorAll("optgroup");
-      for (const optgroup of optgroups) {
-        const label = (optgroup.label || "").toLowerCase();
-        if (label.startsWith(searchBuffer)) {
-          // Select the first option in this optgroup
-          const firstOption = optgroup.querySelector("option");
-          if (firstOption) {
-            e.preventDefault();
-            select.value = firstOption.value;
-            // Dispatch change event for any listeners
-            select.dispatchEvent(new Event("change", { bubbles: true }));
-            return;
-          }
-        }
-      }
-
-      // If no language match, fall back to searching option text (default behavior)
-      // Don't prevent default here to allow native type-ahead on options
-    });
-  }
-
-  /**
-   * Adds a search box that filters the translation <select> by language (optgroup)
-   * and by translation name (option text).
-   */
-  setupTranslationSelectSearch() {
-    const input = this.pocketQuranTranslationSearch;
-    const select = this.pocketQuranTranslationSelect;
-    if (!input || !select) return;
-
-    const apply = () => {
-      this.filterPocketQuranTranslationSelect(input.value);
-    };
-
-    input.addEventListener("input", apply);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        input.value = "";
-        apply();
-        return;
-      }
-
-      if (e.key === "Enter") {
-        // Convenient: after searching, jump into the select.
-        try {
-          select.focus();
-        } catch (err) {}
-      }
-    });
-
-    // Ensure initial state is unfiltered.
-    apply();
-  }
-
-  filterPocketQuranTranslationSelect(query) {
-    const select = this.pocketQuranTranslationSelect;
-    if (!select) return;
-
-    const q = String(query || "")
-      .trim()
-      .toLowerCase();
-    const hasQuery = Boolean(q);
-
-    const selectedValue = select.value;
-
-    const optgroups = select.querySelectorAll("optgroup");
-    optgroups.forEach((optgroup) => {
-      const label = String(optgroup.label || "").toLowerCase();
-      const groupMatches = hasQuery ? label.includes(q) : true;
-
-      let anyVisible = false;
-      const options = optgroup.querySelectorAll("option");
-      options.forEach((opt) => {
-        const text = String(opt.textContent || "").toLowerCase();
-        const optionMatches =
-          groupMatches || (!hasQuery ? true : text.includes(q));
-        const keepSelected =
-          hasQuery && String(opt.value) === String(selectedValue);
-
-        const visible = optionMatches || keepSelected;
-        opt.hidden = !visible;
-        if (visible) anyVisible = true;
-      });
-
-      optgroup.hidden = !anyVisible;
-    });
+    labelEl.textContent = lang && optText ? `${lang} · ${optText}` : "Select translation…";
   }
 }
 

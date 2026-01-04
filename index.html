@@ -2839,15 +2839,26 @@
               <p class="setting-hint">
                 Select a translation (provided by quran.com).
               </p>
-              <input
-                type="text"
-                class="setting-input"
-                id="pocketQuranTranslationSearch"
-                placeholder="Search by language or translator…"
-                aria-label="Search Pocket Quran translations"
-                autocomplete="off"
-              />
-              <select class="setting-select" id="pocketQuranTranslationSelect">
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranTranslationPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqTranslationModal"
+              >
+                <span id="pocketQuranTranslationPickerLabel"
+                  >Select translation…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
+
+              <select
+                class="setting-select"
+                id="pocketQuranTranslationSelect"
+                hidden
+                aria-hidden="true"
+                tabindex="-1"
+              >
                 <optgroup label="Albanian">
                   <option value="88">Hasan Efendi Nahi</option>
                   <option value="47">Albanian</option>

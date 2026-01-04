@@ -2431,6 +2431,16 @@ body {
   font-weight: 600;
 }
 
+/* Pocket Quran translation picker (Settings -> Pocket Quran) */
+.pq-translation-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
 .setting-options {
   display: flex;
   flex-direction: column;

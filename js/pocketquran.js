@@ -2596,6 +2596,15 @@ class PocketQuranManager {
     // Close modal
     this.closeTranslationModal();
 
+    // Notify listeners (e.g. Settings UI) that translation changed
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:pq-translation-selected", {
+          detail: { translationId: id },
+        })
+      );
+    } catch (e) {}
+
     // Persist and reload
     this.persistPocketQuranSettings({ translationResourceId: id });
     this.reloadTranslation(id);
