@@ -486,16 +486,20 @@ class BackgroundManager {
   updateAttribution(imageObj) {
     if (!this.attributionEl) this.createAttributionEl();
     if (!imageObj || !imageObj.credit) {
-      this.attributionEl.classList.remove("entrance-animate", "autohide", "hot-visible");
+      this.attributionEl.classList.remove(
+        "entrance-animate",
+        "autohide",
+        "hot-visible"
+      );
       return;
     }
     this.attributionAnchor.textContent = imageObj.credit;
     this.attributionAnchor.href = imageObj.href || "#";
-    
+
     // Show with bouncy entrance animation
     this.attributionEl.classList.remove("autohide", "hot-visible");
     this.attributionEl.classList.add("entrance-animate");
-    
+
     // After animation, switch to autohide mode (show on hover)
     setTimeout(() => {
       this.attributionEl.classList.remove("entrance-animate");

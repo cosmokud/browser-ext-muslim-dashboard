@@ -59,7 +59,7 @@ class QuotesManager {
     if (!this.quoteContainer) return;
     const settings = this.storage.getSettings();
     const style = settings.quoteLayoutStyle || "classic";
-    
+
     // Remove all style classes
     this.quoteContainer.classList.remove(
       "quote-style-classic",
@@ -68,7 +68,7 @@ class QuotesManager {
       "quote-style-card",
       "quote-style-banner"
     );
-    
+
     // Add the selected style class
     this.quoteContainer.classList.add(`quote-style-${style}`);
   }

@@ -234,7 +234,7 @@ class WeatherManager {
    */
   initCompactWeather() {
     const settings = this.storage.getSettings();
-    
+
     // Check if compact weather should be enabled
     if (!settings.compactWeatherEnabled) {
       this.hideCompactWeather();
@@ -264,7 +264,7 @@ class WeatherManager {
       rightSection.style.display = "flex";
       rightSection.style.alignItems = "center";
       rightSection.style.gap = "var(--spacing-md)";
-      
+
       // Move time section into the wrapper
       timeSection.parentNode.insertBefore(rightSection, timeSection);
       rightSection.appendChild(timeSection);
@@ -294,14 +294,14 @@ class WeatherManager {
    */
   updateCompactWeather() {
     const settings = this.storage.getSettings();
-    
+
     if (!settings.compactWeatherEnabled) {
       this.hideCompactWeather();
       return;
     }
 
     this.ensureCompactWeatherElement();
-    
+
     const compactEl = document.getElementById("compactWeather");
     if (!compactEl) return;
 
@@ -312,7 +312,10 @@ class WeatherManager {
     }
 
     const mode = settings.compactWeatherMode || "simple";
-    const weatherInfo = this.weatherCodes[weather.weatherCode] || { icon: "🌡️", desc: "Unknown" };
+    const weatherInfo = this.weatherCodes[weather.weatherCode] || {
+      icon: "🌡️",
+      desc: "Unknown",
+    };
     const unitSymbol = weather.unit === "fahrenheit" ? "°F" : "°C";
     const windUnitLabel = weather.unit === "fahrenheit" ? "mph" : "km/h";
 
@@ -325,30 +328,37 @@ class WeatherManager {
 
     if (iconEl) iconEl.textContent = weatherInfo.icon;
     if (tempEl) {
-      tempEl.textContent = weather.temperature === null
-        ? `--${unitSymbol}`
-        : `${weather.temperature}${unitSymbol}`;
+      tempEl.textContent =
+        weather.temperature === null
+          ? `--${unitSymbol}`
+          : `${weather.temperature}${unitSymbol}`;
     }
 
     // Detailed mode shows extra info
     if (feelsEl) {
-      feelsEl.textContent = weather.feelsLike === null
-        ? `Feels --${unitSymbol}`
-        : `Feels ${weather.feelsLike}${unitSymbol}`;
+      feelsEl.textContent =
+        weather.feelsLike === null
+          ? `Feels --${unitSymbol}`
+          : `Feels ${weather.feelsLike}${unitSymbol}`;
     }
     if (humidityEl) {
-      humidityEl.textContent = weather.humidity === null
-        ? `Humidity --%`
-        : `Humidity ${weather.humidity}%`;
+      humidityEl.textContent =
+        weather.humidity === null
+          ? `Humidity --%`
+          : `Humidity ${weather.humidity}%`;
     }
     if (windEl) {
-      windEl.textContent = weather.windSpeed === null
-        ? `Wind -- ${windUnitLabel}`
-        : `Wind ${weather.windSpeed} ${windUnitLabel}`;
+      windEl.textContent =
+        weather.windSpeed === null
+          ? `Wind -- ${windUnitLabel}`
+          : `Wind ${weather.windSpeed} ${windUnitLabel}`;
     }
 
     // Apply mode class
-    compactEl.classList.remove("compact-weather-simple", "compact-weather-detailed");
+    compactEl.classList.remove(
+      "compact-weather-simple",
+      "compact-weather-detailed"
+    );
     compactEl.classList.add(`compact-weather-${mode}`);
     compactEl.classList.add("active");
   }

@@ -479,13 +479,18 @@ body {
 }
 .quote-container.quote-style-elegant::before,
 .quote-container.quote-style-elegant::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   width: 60px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-gold),
+    transparent
+  );
 }
 .quote-container.quote-style-elegant::before {
   top: var(--spacing-md);
@@ -2150,6 +2155,14 @@ body {
 
 .modal-small {
   max-width: 400px;
+}
+
+.modal-medium {
+  max-width: 600px;
+}
+
+.modal-wide {
+  max-width: 800px;
 }
 
 .modal-header {

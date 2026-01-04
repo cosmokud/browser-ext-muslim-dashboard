@@ -2149,14 +2149,27 @@
                   <span>Enable Compact Weather in Header</span>
                 </label>
               </div>
-              <div class="compact-weather-options" id="compactWeatherOptions" style="display: none;">
+              <div
+                class="compact-weather-options"
+                id="compactWeatherOptions"
+                style="display: none"
+              >
                 <div class="setting-options">
                   <label class="radio-option">
-                    <input type="radio" name="compactWeatherMode" value="simple" checked />
+                    <input
+                      type="radio"
+                      name="compactWeatherMode"
+                      value="simple"
+                      checked
+                    />
                     <span>Simple (Icon + Temperature)</span>
                   </label>
                   <label class="radio-option">
-                    <input type="radio" name="compactWeatherMode" value="detailed" />
+                    <input
+                      type="radio"
+                      name="compactWeatherMode"
+                      value="detailed"
+                    />
                     <span>Detailed (+ Humidity, Feels Like, Wind)</span>
                   </label>
                 </div>
@@ -2567,7 +2580,12 @@
               </p>
               <div class="quote-style-picker" id="quoteStylePicker">
                 <label class="quote-style-option">
-                  <input type="radio" name="quoteLayoutStyle" value="classic" checked />
+                  <input
+                    type="radio"
+                    name="quoteLayoutStyle"
+                    value="classic"
+                    checked
+                  />
                   <div class="quote-style-preview quote-style-classic">
                     <span class="preview-icon">❝</span>
                     <span class="preview-text">Classic</span>
@@ -3279,7 +3297,7 @@
 
     <!-- Add Pinned App Modal -->
     <div class="modal-overlay" id="pinnedAppModal">
-      <div class="modal modal-small">
+      <div class="modal modal-medium">
         <div class="modal-header">
           <h2 class="modal-title">🔗 Add Website</h2>
           <button class="modal-close" id="closePinnedAppModal">&times;</button>
@@ -3321,7 +3339,7 @@
 
     <!-- Edit Pinned App Modal -->
     <div class="modal-overlay" id="editPinnedAppModal">
-      <div class="modal modal-small">
+      <div class="modal modal-medium">
         <div class="modal-header">
           <h2 class="modal-title">✏️ Edit Website</h2>
           <button class="modal-close" id="closeEditPinnedAppModal">
@@ -3440,7 +3458,7 @@
 
     <!-- Add Custom Search Modal -->
     <div class="modal-overlay" id="searchBarModal">
-      <div class="modal modal-small">
+      <div class="modal modal-medium">
         <div class="modal-header">
           <h2 class="modal-title">🔎 Add Custom Search</h2>
           <button class="modal-close" id="closeSearchBarModal">&times;</button>
@@ -3467,7 +3485,9 @@
                 placeholder="e.g., https://www.youtube.com/results?search_query=%s"
                 required
               />
-              <p class="setting-hint search-url-hint">URL with <code>%s</code> in place of query</p>
+              <p class="setting-hint search-url-hint">
+                URL with <code>%s</code> in place of query
+              </p>
             </div>
           </form>
         </div>
@@ -3488,7 +3508,7 @@
 
     <!-- Edit Custom Search Modal -->
     <div class="modal-overlay" id="editSearchBarModal">
-      <div class="modal modal-small">
+      <div class="modal modal-medium">
         <div class="modal-header">
           <h2 class="modal-title">✏️ Edit Custom Search</h2>
           <button class="modal-close" id="closeEditSearchBarModal">
@@ -3538,7 +3558,7 @@
 
     <!-- Edit Todo Modal -->
     <div class="modal-overlay" id="editTodoModal">
-      <div class="modal modal-small">
+      <div class="modal modal-wide">
         <div class="modal-header">
           <h2 class="modal-title">✏️ Edit Task</h2>
           <button class="modal-close" id="editTodoClose">&times;</button>

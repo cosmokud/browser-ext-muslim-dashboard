@@ -236,7 +236,9 @@ class SettingsManager {
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.visibilityNotes = document.getElementById("visibilityNotes");
-    this.visibilityPocketQuran = document.getElementById("visibilityPocketQuran");
+    this.visibilityPocketQuran = document.getElementById(
+      "visibilityPocketQuran"
+    );
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]'
     );
@@ -247,8 +249,12 @@ class SettingsManager {
     );
 
     // Compact weather elements
-    this.compactWeatherEnabled = document.getElementById("compactWeatherEnabled");
-    this.compactWeatherOptions = document.getElementById("compactWeatherOptions");
+    this.compactWeatherEnabled = document.getElementById(
+      "compactWeatherEnabled"
+    );
+    this.compactWeatherOptions = document.getElementById(
+      "compactWeatherOptions"
+    );
     this.compactWeatherModeRadios = document.querySelectorAll(
       'input[name="compactWeatherMode"]'
     );
@@ -550,7 +556,8 @@ class SettingsManager {
 
     // Compact weather settings
     if (this.compactWeatherEnabled) {
-      this.compactWeatherEnabled.checked = settings.compactWeatherEnabled === true;
+      this.compactWeatherEnabled.checked =
+        settings.compactWeatherEnabled === true;
       this.toggleCompactWeatherOptions(settings.compactWeatherEnabled === true);
     }
     const compactWeatherMode = settings.compactWeatherMode || "simple";
@@ -2430,7 +2437,7 @@ class SettingsManager {
     // Quote settings
     settings.useDefaultQuotes = this.useDefaultQuotes?.checked ?? true;
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
-    
+
     // Quote layout style
     const quoteLayoutStyleRadio = document.querySelector(
       'input[name="quoteLayoutStyle"]:checked'
@@ -2438,7 +2445,8 @@ class SettingsManager {
     settings.quoteLayoutStyle = quoteLayoutStyleRadio?.value || "classic";
 
     // Compact weather settings
-    settings.compactWeatherEnabled = this.compactWeatherEnabled?.checked ?? false;
+    settings.compactWeatherEnabled =
+      this.compactWeatherEnabled?.checked ?? false;
     const compactWeatherModeRadio = document.querySelector(
       'input[name="compactWeatherMode"]:checked'
     );

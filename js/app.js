@@ -879,7 +879,8 @@ class MuslimDashboard {
     // Pocket Quran
     const pocketQuranCard = document.getElementById("pocketQuranCard");
     if (pocketQuranCard) {
-      pocketQuranCard.style.display = visibility.pocketQuran === false ? "none" : "";
+      pocketQuranCard.style.display =
+        visibility.pocketQuran === false ? "none" : "";
       pocketQuranCard.setAttribute(
         "aria-hidden",
         visibility.pocketQuran === false ? "true" : "false"
@@ -892,7 +893,10 @@ class MuslimDashboard {
     }
 
     // Update compact weather display
-    if (this.weather && typeof this.weather.updateCompactWeather === "function") {
+    if (
+      this.weather &&
+      typeof this.weather.updateCompactWeather === "function"
+    ) {
       this.weather.updateCompactWeather();
     }
 
