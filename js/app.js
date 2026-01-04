@@ -309,7 +309,7 @@ class MuslimDashboard {
     // Startup sequence: hidden → quick bounce in → stay visible a bit → fade out.
     const startupDelay = 0; // ms
     const bounceMs = 350; // ms
-    const visibleMs = 5200; // ms
+    const visibleMs = 4630; // ms
     const fadeMs = 220; // ms
 
     setTimeout(() => {

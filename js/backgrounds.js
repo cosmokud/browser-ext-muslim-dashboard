@@ -465,41 +465,59 @@ class BackgroundManager {
     this.hoverZone = hoverZone;
 
     // Setup hover zone to show attribution with graceful fade and delayed hide
-    let _bgAttrHideTimer = null;
-    const _BG_ATTR_HIDE_DELAY = 3000; // ms (user-requested)
-    const _BG_ATTR_FADE_MS = 360; // ms (CSS transition + small buffer)
+    // Store timers on the instance so other methods (e.g., updateAttribution)
+    // can cancel or reschedule them reliably.
+    this._bgAttrHideTimer = null;
+    this._BG_ATTR_HIDE_DELAY = 3000; // ms (user-requested for hover)
+    this._BG_ATTR_FADE_MS = 420; // ms (match CSS fade duration)
 
     const cancelBgAttrHide = () => {
-      if (_bgAttrHideTimer) {
-        clearTimeout(_bgAttrHideTimer);
-        _bgAttrHideTimer = null;
+      if (this._bgAttrHideTimer) {
+        clearTimeout(this._bgAttrHideTimer);
+        this._bgAttrHideTimer = null;
+      }
+      if (this._bgAttrStartupTimer) {
+        clearTimeout(this._bgAttrStartupTimer);
+        this._bgAttrStartupTimer = null;
       }
     };
 
     const showBgAttr = () => {
       cancelBgAttrHide();
-      if (el.classList.contains("autohide")) {
-        el.classList.add("hot-visible");
-        try {
-          el.setAttribute("aria-hidden", "false");
-        } catch (e) {}
-      }
+      // If an exit animation was running or autohide was applied, cancel that and make visible
+      el.classList.remove("exit-animate", "autohide");
+      el.classList.add("hot-visible");
+      try {
+        el.setAttribute("aria-hidden", "false");
+      } catch (e) {}
     };
 
-    const scheduleHideBgAttr = (delay = _BG_ATTR_HIDE_DELAY) => {
+    const scheduleHideBgAttr = (delay = this._BG_ATTR_HIDE_DELAY) => {
       cancelBgAttrHide();
-      _bgAttrHideTimer = setTimeout(() => {
-        // Trigger fade by removing visible state (CSS controls opacity/transform)
+      this._bgAttrHideTimer = setTimeout(() => {
+        // Start a dedicated exit animation for a beautiful fade
+        el.classList.add("exit-animate");
+        // Remove visible state immediately so animation contrasts with visible look
         el.classList.remove("hot-visible");
-        // After fade completes, mark element hidden for assistive tech
+
+        // After fade completes, finish hide by applying autohide and updating ARIA
         setTimeout(() => {
-          try {
-            if (!el.classList.contains("hot-visible")) {
+          el.classList.remove("exit-animate");
+          if (!el.classList.contains("hot-visible")) {
+            el.classList.add("autohide");
+            try {
               el.setAttribute("aria-hidden", "true");
-            }
-          } catch (e) {}
-        }, _BG_ATTR_FADE_MS);
-        _bgAttrHideTimer = null;
+            } catch (e) {}
+          } else {
+            // If re-hovered during fade, keep visible
+            el.classList.remove("autohide");
+            try {
+              el.setAttribute("aria-hidden", "false");
+            } catch (e) {}
+          }
+        }, this._BG_ATTR_FADE_MS);
+
+        this._bgAttrHideTimer = null;
       }, delay);
     };
 
@@ -530,26 +548,53 @@ class BackgroundManager {
     this.attributionAnchor.textContent = imageObj.credit;
     this.attributionAnchor.href = imageObj.href || "#";
 
-    // Show with bouncy entrance animation
+    // Show with bouncy entrance animation and ensure any previous hide is cancelled
+    try {
+      if (this._bgAttrHideTimer) {
+        clearTimeout(this._bgAttrHideTimer);
+        this._bgAttrHideTimer = null;
+      }
+    } catch (e) {}
+
     try {
       this.attributionEl.setAttribute("aria-hidden", "false");
     } catch (e) {}
-    this.attributionEl.classList.remove("autohide", "hot-visible");
+    this.attributionEl.classList.remove("autohide", "hot-visible", "exit-animate");
     this.attributionEl.classList.add("entrance-animate");
 
-    // After animation, switch to autohide mode (show on hover)
-    setTimeout(() => {
+    // After a longer visible period, fade out beautifully and then switch to autohide
+    const _STARTUP_VISIBLE_MS = 5200; // ms (user requested)
+    const _fadeMs = this._BG_ATTR_FADE_MS || 420;
+
+    // Clear any previous startup timer, then schedule the exit
+    if (this._bgAttrStartupTimer) {
+      clearTimeout(this._bgAttrStartupTimer);
+      this._bgAttrStartupTimer = null;
+    }
+
+    this._bgAttrStartupTimer = setTimeout(() => {
+      this._bgAttrStartupTimer = null;
       this.attributionEl.classList.remove("entrance-animate");
-      this.attributionEl.classList.add("autohide");
-      // After fade completes, mark hidden for assistive tech unless user re-hovered
+      // Begin a pretty exit animation
+      this.attributionEl.classList.add("exit-animate");
+
+      // When animation ends, finalize autohide and update ARIA
       setTimeout(() => {
-        try {
-          if (!this.attributionEl.classList.contains("hot-visible")) {
+        this.attributionEl.classList.remove("exit-animate");
+        if (!this.attributionEl.classList.contains("hot-visible")) {
+          this.attributionEl.classList.add("autohide");
+          try {
             this.attributionEl.setAttribute("aria-hidden", "true");
-          }
-        } catch (e) {}
-      }, 360);
-    }, 2600); // Animation duration + visible time (kept as original)
+          } catch (e) {}
+        } else {
+          // If re-hovered, keep visible
+          this.attributionEl.classList.remove("autohide");
+          try {
+            this.attributionEl.setAttribute("aria-hidden", "false");
+          } catch (e) {}
+        }
+      }, _fadeMs);
+    }, _STARTUP_VISIBLE_MS);
   }
 
   /**
