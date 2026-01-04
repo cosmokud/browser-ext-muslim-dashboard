@@ -198,6 +198,20 @@ class MuslimDashboard {
       setTimeout(() => setHotVisible(false), 300);
     });
 
+    // Protect middle-click autoscroll from being blocked by any event handlers.
+    // This ensures the browser's native middle-click scroll behavior works.
+    document.addEventListener(
+      "auxclick",
+      (e) => {
+        // Middle mouse button is button === 1
+        if (e.button === 1) {
+          // Don't prevent default - allow browser's autoscroll
+          e.stopPropagation();
+        }
+      },
+      { capture: true }
+    );
+
     // Close on Escape
     document.addEventListener("keydown", (e) => {
       if (!isOpen()) return;

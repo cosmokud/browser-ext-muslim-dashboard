@@ -806,7 +806,41 @@ class WeatherManager {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=auto&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
 
       console.debug("Weather URL:", url);
-      const response = await fetch(url);
+
+      // Fetch with retry logic for network errors (common in Chrome extensions)
+      let response;
+      let lastError;
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          response = await fetch(url);
+          break; // Success, exit retry loop
+        } catch (networkError) {
+          lastError = networkError;
+          console.warn(
+            `Weather fetch attempt ${attempt}/${maxRetries} failed:`,
+            networkError?.message || networkError
+          );
+          if (attempt < maxRetries) {
+            // Wait before retrying
+            await new Promise((resolve) =>
+              setTimeout(resolve, retryDelay * attempt)
+            );
+          }
+        }
+      }
+
+      // If all retries failed, throw a user-friendly error
+      if (!response) {
+        const errorMsg =
+          lastError?.message === "Failed to fetch"
+            ? "Network error - check your internet connection"
+            : lastError?.message || "Unable to connect to weather service";
+        throw new Error(errorMsg);
+      }
+
       if (!response.ok) {
         const text = await response.text().catch(() => "");
         console.error(
