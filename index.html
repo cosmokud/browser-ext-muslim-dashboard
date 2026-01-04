@@ -148,114 +148,110 @@
         </section>
 
         <!-- Top features (Prayer, Calendar, Qibla) -->
-        <div class="top-features">
-          <!-- Prayer Times Card -->
-          <section class="card prayer-times-card" id="prayerTimesCard">
-            <div class="card-header">
-              <h2 class="card-title">
-                <span class="card-icon">🕌</span>
-                Prayer Times
-              </h2>
-              <div class="location-display" id="locationDisplay">
-                <span class="location-icon">📍</span>
-                <span class="location-text" id="locationText"
-                  >Detecting...</span
-                >
-                <button
-                  class="location-refresh-btn"
-                  id="detectLocationBtn"
-                  title="Refresh Location"
-                >
-                  🔄
-                </button>
-              </div>
-            </div>
-            <div class="next-prayer" id="nextPrayer">
-              <span class="next-prayer-label">Next Prayer:</span>
-              <span class="next-prayer-name" id="nextPrayerName">--</span>
-              <span class="next-prayer-countdown" id="nextPrayerCountdown"
-                >--:--:--</span
+        <!-- Prayer Times Card -->
+        <section class="card prayer-times-card" id="prayerTimesCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🕌</span>
+              Prayer Times
+            </h2>
+            <div class="location-display" id="locationDisplay">
+              <span class="location-icon">📍</span>
+              <span class="location-text" id="locationText">Detecting...</span>
+              <button
+                class="location-refresh-btn"
+                id="detectLocationBtn"
+                title="Refresh Location"
               >
+                🔄
+              </button>
             </div>
-            <div class="prayer-list" id="prayerList">
-              <!-- Prayer items will be dynamically generated based on visibility settings -->
-            </div>
-          </section>
+          </div>
+          <div class="next-prayer" id="nextPrayer">
+            <span class="next-prayer-label">Next Prayer:</span>
+            <span class="next-prayer-name" id="nextPrayerName">--</span>
+            <span class="next-prayer-countdown" id="nextPrayerCountdown"
+              >--:--:--</span
+            >
+          </div>
+          <div class="prayer-list" id="prayerList">
+            <!-- Prayer items will be dynamically generated based on visibility settings -->
+          </div>
+        </section>
 
-          <!-- Calendar Card -->
-          <section class="card calendar-card" id="calendarCard">
-            <div class="card-header">
-              <h2 class="card-title">
-                <span class="card-icon">📅</span>
-                Calendar
-              </h2>
-              <div class="calendar-toggle-btns">
-                <button class="calendar-type-btn active" data-type="hijri">
-                  Hijri
-                </button>
-                <button class="calendar-type-btn" data-type="gregorian">
-                  Gregorian
-                </button>
-              </div>
+        <!-- Calendar Card -->
+        <section class="card calendar-card" id="calendarCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">📅</span>
+              Calendar
+            </h2>
+            <div class="calendar-toggle-btns">
+              <button class="calendar-type-btn active" data-type="hijri">
+                Hijri
+              </button>
+              <button class="calendar-type-btn" data-type="gregorian">
+                Gregorian
+              </button>
             </div>
-            <div class="calendar-container" id="calendarContainer">
-              <div class="calendar-header">
-                <button class="calendar-nav-btn" id="prevMonth">❮</button>
-                <div class="calendar-month-year">
-                  <span class="calendar-month" id="calendarMonth">--</span>
-                  <span class="calendar-year" id="calendarYear">----</span>
-                </div>
-                <button class="calendar-nav-btn" id="nextMonth">❯</button>
+          </div>
+          <div class="calendar-container" id="calendarContainer">
+            <div class="calendar-header">
+              <button class="calendar-nav-btn" id="prevMonth">❮</button>
+              <div class="calendar-month-year">
+                <span class="calendar-month" id="calendarMonth">--</span>
+                <span class="calendar-year" id="calendarYear">----</span>
               </div>
-              <div class="calendar-weekdays">
-                <span>Sun</span>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-              </div>
-              <div class="calendar-days" id="calendarDays">
-                <!-- Calendar days will be dynamically generated -->
-              </div>
-              <div class="calendar-today-info" id="calendarTodayInfo">
-                <span class="hijri-date" id="hijriDateDisplay">--</span>
-                <span class="gregorian-date" id="gregorianDateDisplay">--</span>
-              </div>
+              <button class="calendar-nav-btn" id="nextMonth">❯</button>
             </div>
-          </section>
+            <div class="calendar-weekdays">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div class="calendar-days" id="calendarDays">
+              <!-- Calendar days will be dynamically generated -->
+            </div>
+            <div class="calendar-today-info" id="calendarTodayInfo">
+              <span class="hijri-date" id="hijriDateDisplay">--</span>
+              <span class="gregorian-date" id="gregorianDateDisplay">--</span>
+            </div>
+          </div>
+        </section>
 
-          <!-- Qibla Direction Card -->
-          <section class="card qibla-card" id="qiblaCard">
-            <div class="card-header">
-              <h2 class="card-title">
-                <span class="card-icon">🧭</span>
-                Qibla Direction
-              </h2>
-            </div>
-            <div class="qibla-compass-container">
-              <div class="compass-outer">
-                <div class="compass-ring">
-                  <span class="compass-direction north">N</span>
-                  <span class="compass-direction east">E</span>
-                  <span class="compass-direction south">S</span>
-                  <span class="compass-direction west">W</span>
-                </div>
-                <div class="compass-inner" id="compassInner">
-                  <div class="qibla-needle" id="qiblaNeedle">
-                    <div class="needle-point"></div>
-                    <div class="kaaba-icon">🕋</div>
-                  </div>
+        <!-- Qibla Direction Card -->
+        <section class="card qibla-card" id="qiblaCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🧭</span>
+              Qibla Direction
+            </h2>
+          </div>
+          <div class="qibla-compass-container">
+            <div class="compass-outer">
+              <div class="compass-ring">
+                <span class="compass-direction north">N</span>
+                <span class="compass-direction east">E</span>
+                <span class="compass-direction south">S</span>
+                <span class="compass-direction west">W</span>
+              </div>
+              <div class="compass-inner" id="compassInner">
+                <div class="qibla-needle" id="qiblaNeedle">
+                  <div class="needle-point"></div>
+                  <div class="kaaba-icon">🕋</div>
                 </div>
               </div>
-              <div class="qibla-degree" id="qiblaDegree">--°</div>
-              <p class="qibla-instruction">
-                Point your device north for accurate direction
-              </p>
             </div>
-          </section>
-        </div>
+            <div class="qibla-degree" id="qiblaDegree">--°</div>
+            <p class="qibla-instruction">
+              Point your device north for accurate direction
+            </p>
+          </div>
+        </section>
 
         <!-- Weather Card -->
         <section class="card weather-card" id="weatherCard">
@@ -403,259 +399,253 @@
         </section>
 
         <!-- Flashcards + Todo Row -->
-        <div class="flashcard-todo-row">
-          <!-- Flashcards Card -->
-          <section class="card flashcard-card" id="flashcardCard">
-            <div class="card-header">
-              <h2 class="card-title">
-                <span class="card-icon">🃏</span>
-                Flashcards
-              </h2>
-              <div class="card-header-actions">
-                <button
-                  class="flashcard-mode-toggle-btn"
-                  id="flashcardModeToggleBtn"
-                  type="button"
-                  aria-label="Toggle flashcard mode"
-                  title="Toggle flashcard mode"
-                >
-                  <span class="mode-icon">📖</span>
-                </button>
-
-                <div class="card-blur-menu" aria-label="Flashcards blur menu">
-                  <button
-                    class="card-blur-btn"
-                    id="flashcardBlurMenuBtn"
-                    type="button"
-                    aria-label="Open Flashcards blur settings"
-                    aria-expanded="false"
-                    aria-controls="flashcardBlurPopover"
-                  >
-                    ✨
-                  </button>
-                  <div
-                    class="card-blur-popover"
-                    id="flashcardBlurPopover"
-                    hidden
-                  >
-                    <div class="card-blur-override">
-                      <label
-                        class="card-blur-toggle"
-                        for="flashcardBlurOverrideToggle"
-                      >
-                        <input
-                          id="flashcardBlurOverrideToggle"
-                          type="checkbox"
-                          aria-label="Use custom blur for Flashcards"
-                        />
-                        <span class="toggle-switch" aria-hidden="true"></span>
-                        <span class="card-blur-toggle-label">Custom blur</span>
-                      </label>
-                      <div class="custom-width-slider card-blur-slider">
-                        <input
-                          type="range"
-                          id="flashcardBlurOverrideRange"
-                          min="0"
-                          max="200"
-                          value="100"
-                          aria-label="Flashcards blur power"
-                        />
-                        <span
-                          class="custom-width-value"
-                          id="flashcardBlurOverrideValue"
-                          >Dashboard</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="flashcard-viewer">
+        <!-- Flashcards Card -->
+        <section class="card flashcard-card" id="flashcardCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">🃏</span>
+              Flashcards
+            </h2>
+            <div class="card-header-actions">
               <button
-                class="flashcard-nav flashcard-nav-prev"
-                id="flashcardPrevBtn"
+                class="flashcard-mode-toggle-btn"
+                id="flashcardModeToggleBtn"
                 type="button"
-                aria-label="Previous card"
-                title="Previous"
+                aria-label="Toggle flashcard mode"
+                title="Toggle flashcard mode"
               >
-                ❮
+                <span class="mode-icon">📖</span>
               </button>
 
-              <div class="flashcard-flip-scene" id="flashcardFlipScene">
-                <div
-                  class="flashcard-flip-card"
-                  id="flashcardFlipCard"
-                  role="button"
-                  tabindex="0"
-                  aria-label="Flip flashcard"
+              <div class="card-blur-menu" aria-label="Flashcards blur menu">
+                <button
+                  class="card-blur-btn"
+                  id="flashcardBlurMenuBtn"
+                  type="button"
+                  aria-label="Open Flashcards blur settings"
+                  aria-expanded="false"
+                  aria-controls="flashcardBlurPopover"
                 >
-                  <div class="flashcard-face flashcard-face-front">
-                    <div
-                      class="flashcard-face-content flashcard-question"
-                      id="flashcardQuestion"
+                  ✨
+                </button>
+                <div class="card-blur-popover" id="flashcardBlurPopover" hidden>
+                  <div class="card-blur-override">
+                    <label
+                      class="card-blur-toggle"
+                      for="flashcardBlurOverrideToggle"
                     >
-                      Loading...
-                    </div>
-                  </div>
-                  <div class="flashcard-face flashcard-face-back">
-                    <div
-                      class="flashcard-face-content flashcard-answer"
-                      id="flashcardAnswer"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                class="flashcard-nav flashcard-nav-next"
-                id="flashcardNextBtn"
-                type="button"
-                aria-label="Next card"
-                title="Next"
-              >
-                ❯
-              </button>
-            </div>
-
-            <div class="flashcard-jump" aria-label="Jump to flashcard">
-              <div class="flashcard-jump-label" id="flashcardJumpLabel">
-                0 / 0
-              </div>
-              <input
-                type="range"
-                class="flashcard-jump-slider"
-                id="flashcardJumpSlider"
-                min="1"
-                max="1"
-                value="1"
-                step="1"
-                aria-label="Flashcard position slider"
-              />
-              <input
-                type="number"
-                class="flashcard-jump-input"
-                id="flashcardJumpInput"
-                min="1"
-                max="1"
-                value="1"
-                step="1"
-                inputmode="numeric"
-                aria-label="Go to flashcard number"
-              />
-
-              <div
-                class="flashcard-auto-wrap"
-                id="flashcardAutoWrap"
-                aria-label="Auto-advance controls"
-              >
-                <button
-                  class="flashcard-auto-toggle-btn"
-                  id="flashcardAutoAdvanceToggleBtn"
-                  type="button"
-                  aria-pressed="false"
-                  title="Pause auto-advance"
-                  aria-label="Pause auto-advance"
-                >
-                  <span class="auto-icon" aria-hidden="true">⏸</span>
-                </button>
-                <div class="flashcard-auto-status" id="flashcardAutoStatus">
-                  Auto
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Todo List Card -->
-          <section class="card todo-card" id="todoCard">
-            <div class="card-header">
-              <h2 class="card-title">
-                <span class="card-icon">✅</span>
-                My Tasks
-              </h2>
-              <div class="card-header-actions">
-                <span class="todo-count" id="todoCount">0 tasks</span>
-
-                <div class="card-blur-menu" aria-label="Todo blur menu">
-                  <button
-                    class="card-blur-btn"
-                    id="todoBlurMenuBtn"
-                    type="button"
-                    aria-label="Open Todo blur settings"
-                    aria-expanded="false"
-                    aria-controls="todoBlurPopover"
-                  >
-                    ✨
-                  </button>
-                  <div class="card-blur-popover" id="todoBlurPopover" hidden>
-                    <div class="card-blur-override">
-                      <label
-                        class="card-blur-toggle"
-                        for="todoBlurOverrideToggle"
+                      <input
+                        id="flashcardBlurOverrideToggle"
+                        type="checkbox"
+                        aria-label="Use custom blur for Flashcards"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                      <span class="card-blur-toggle-label">Custom blur</span>
+                    </label>
+                    <div class="custom-width-slider card-blur-slider">
+                      <input
+                        type="range"
+                        id="flashcardBlurOverrideRange"
+                        min="0"
+                        max="200"
+                        value="100"
+                        aria-label="Flashcards blur power"
+                      />
+                      <span
+                        class="custom-width-value"
+                        id="flashcardBlurOverrideValue"
+                        >Dashboard</span
                       >
-                        <input
-                          id="todoBlurOverrideToggle"
-                          type="checkbox"
-                          aria-label="Use custom blur for Todo"
-                        />
-                        <span class="toggle-switch" aria-hidden="true"></span>
-                        <span class="card-blur-toggle-label">Custom blur</span>
-                      </label>
-                      <div class="custom-width-slider card-blur-slider">
-                        <input
-                          type="range"
-                          id="todoBlurOverrideRange"
-                          min="0"
-                          max="200"
-                          value="100"
-                          aria-label="Todo blur power"
-                        />
-                        <span
-                          class="custom-width-value"
-                          id="todoBlurOverrideValue"
-                          >Dashboard</span
-                        >
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="todo-input-container">
-              <input
-                type="text"
-                class="todo-input"
-                id="todoInput"
-                placeholder="Add a new task..."
-                maxlength="200"
-              />
-              <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
+          </div>
+          <div class="flashcard-viewer">
+            <button
+              class="flashcard-nav flashcard-nav-prev"
+              id="flashcardPrevBtn"
+              type="button"
+              aria-label="Previous card"
+              title="Previous"
+            >
+              ❮
+            </button>
+
+            <div class="flashcard-flip-scene" id="flashcardFlipScene">
+              <div
+                class="flashcard-flip-card"
+                id="flashcardFlipCard"
+                role="button"
+                tabindex="0"
+                aria-label="Flip flashcard"
+              >
+                <div class="flashcard-face flashcard-face-front">
+                  <div
+                    class="flashcard-face-content flashcard-question"
+                    id="flashcardQuestion"
+                  >
+                    Loading...
+                  </div>
+                </div>
+                <div class="flashcard-face flashcard-face-back">
+                  <div
+                    class="flashcard-face-content flashcard-answer"
+                    id="flashcardAnswer"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              class="flashcard-nav flashcard-nav-next"
+              id="flashcardNextBtn"
+              type="button"
+              aria-label="Next card"
+              title="Next"
+            >
+              ❯
+            </button>
+          </div>
+
+          <div class="flashcard-jump" aria-label="Jump to flashcard">
+            <div class="flashcard-jump-label" id="flashcardJumpLabel">
+              0 / 0
+            </div>
+            <input
+              type="range"
+              class="flashcard-jump-slider"
+              id="flashcardJumpSlider"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              aria-label="Flashcard position slider"
+            />
+            <input
+              type="number"
+              class="flashcard-jump-input"
+              id="flashcardJumpInput"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              inputmode="numeric"
+              aria-label="Go to flashcard number"
+            />
+
+            <div
+              class="flashcard-auto-wrap"
+              id="flashcardAutoWrap"
+              aria-label="Auto-advance controls"
+            >
+              <button
+                class="flashcard-auto-toggle-btn"
+                id="flashcardAutoAdvanceToggleBtn"
+                type="button"
+                aria-pressed="false"
+                title="Pause auto-advance"
+                aria-label="Pause auto-advance"
+              >
+                <span class="auto-icon" aria-hidden="true">⏸</span>
+              </button>
+              <div class="flashcard-auto-status" id="flashcardAutoStatus">
+                Auto
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Todo List Card -->
+        <section class="card todo-card" id="todoCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">✅</span>
+              My Tasks
+            </h2>
+            <div class="card-header-actions">
+              <span class="todo-count" id="todoCount">0 tasks</span>
+
+              <div class="card-blur-menu" aria-label="Todo blur menu">
+                <button
+                  class="card-blur-btn"
+                  id="todoBlurMenuBtn"
+                  type="button"
+                  aria-label="Open Todo blur settings"
+                  aria-expanded="false"
+                  aria-controls="todoBlurPopover"
                 >
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-              </button>
+                  ✨
+                </button>
+                <div class="card-blur-popover" id="todoBlurPopover" hidden>
+                  <div class="card-blur-override">
+                    <label
+                      class="card-blur-toggle"
+                      for="todoBlurOverrideToggle"
+                    >
+                      <input
+                        id="todoBlurOverrideToggle"
+                        type="checkbox"
+                        aria-label="Use custom blur for Todo"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                      <span class="card-blur-toggle-label">Custom blur</span>
+                    </label>
+                    <div class="custom-width-slider card-blur-slider">
+                      <input
+                        type="range"
+                        id="todoBlurOverrideRange"
+                        min="0"
+                        max="200"
+                        value="100"
+                        aria-label="Todo blur power"
+                      />
+                      <span
+                        class="custom-width-value"
+                        id="todoBlurOverrideValue"
+                        >Dashboard</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="todo-filters">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="active">Active</button>
-              <button class="filter-btn" data-filter="completed">
-                Completed
-              </button>
-            </div>
-            <ul class="todo-list" id="todoList"></ul>
-            <div class="todo-actions">
-              <button class="clear-completed-btn" id="clearCompletedBtn">
-                Clear Completed
-              </button>
-            </div>
-          </section>
-        </div>
+          </div>
+          <div class="todo-input-container">
+            <input
+              type="text"
+              class="todo-input"
+              id="todoInput"
+              placeholder="Add a new task..."
+              maxlength="200"
+            />
+            <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="todo-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="completed">
+              Completed
+            </button>
+          </div>
+          <ul class="todo-list" id="todoList"></ul>
+          <div class="todo-actions">
+            <button class="clear-completed-btn" id="clearCompletedBtn">
+              Clear Completed
+            </button>
+          </div>
+        </section>
 
         <!-- Notes (Full Width) -->
         <section class="card notes-card" id="notesCard">

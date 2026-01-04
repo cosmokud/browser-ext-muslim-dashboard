@@ -464,39 +464,6 @@ body {
   grid-column: span 6;
 }
 
-/* Ensure wrapper nodes don't block grid placement of their children */
-.top-features {
-  display: contents;
-}
-
-.flashcard-todo-row {
-  display: contents;
-}
-
-/* Flashcard & Todo Row - fallback layout when `display: contents` isn't supported */
-@supports not (display: contents) {
-  .flashcard-todo-row {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-xl);
-    align-items: stretch; /* keep cards the same height visually */
-    width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-.flashcard-todo-row {
-  grid-column: 1 / -1; /* ignored when display: contents; harmless in fallback */
-}
-
-.flashcard-todo-row .card {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  min-width: 0; /* allow internal content to shrink instead of overflowing */
-}
-
 /* Responsive spans (prefer container queries so layout responds to Dashboard Width setting) */
 @supports (container-type: inline-size) {
   .main-container {
@@ -1102,8 +1069,6 @@ body {
   cursor: move;
 }
 
-/* When detached from .flashcard-todo-row, keep flashcard layout as a flex column
-   so the viewer can fill height and remain vertically centered. */
 .floating-card.flashcard-card {
   display: flex;
   flex-direction: column;
@@ -6656,34 +6621,6 @@ body.sticky-note-resizing {
   display: flex;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
-}
-
-/* Top features (prayer, calendar, qibla) are now placed directly in the main 6-column content grid. */
-.top-features {
-  display: contents;
-}
-
-/* Fallback: keep the legacy internal grid if `display: contents` isn't supported. */
-@supports not (display: contents) {
-  /* JS may add a class on .top-features like columns-3 / columns-2 / columns-1 */
-  .top-features {
-    grid-column: 1 / -1;
-    display: grid;
-    gap: var(--spacing-xl);
-    align-items: stretch;
-    transition: grid-template-columns 0.25s ease;
-  }
-
-  .top-features.columns-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .top-features.columns-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .top-features.columns-1,
-  .top-features.columns-0 {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ========================================

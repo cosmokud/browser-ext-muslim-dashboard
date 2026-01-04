@@ -554,7 +554,6 @@ class FloatingModeManager {
 
     this.ensureCollapseButton(key);
 
-    // Update top-features columns if this card used to live there.
     this.notifyLayoutChanged();
 
     // Safe startup animation (no transforms)
@@ -894,7 +893,6 @@ class FloatingModeManager {
         card.style.pointerEvents = "";
       } catch (e) {}
 
-      // Ensure the top-features grid updates back to 3 columns when these cards
       // return from floating.
       this.notifyLayoutChanged();
     };

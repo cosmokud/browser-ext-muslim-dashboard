@@ -840,32 +840,6 @@ class MuslimDashboard {
         visibility.todoList === false ? "true" : "false"
       );
     }
-
-    // Update top-features columns based on visible top features (prayer, hijri, qibla)
-    const topFeatures = document.querySelector(".top-features");
-    if (topFeatures) {
-      // Count only cards that are actually still inside the grid (not floating)
-      const prayerTimesCard = document.getElementById("prayerTimesCard");
-      const calendarCard = document.getElementById("calendarCard");
-      const qiblaCard = document.getElementById("qiblaCard");
-
-      const topVisibleCount = [prayerTimesCard, calendarCard, qiblaCard].filter(
-        (el) =>
-          el &&
-          el.parentElement === topFeatures &&
-          el.getAttribute("aria-hidden") !== "true" &&
-          el.style.display !== "none"
-      ).length;
-
-      // clean previously applied classes
-      topFeatures.classList.remove(
-        "columns-0",
-        "columns-1",
-        "columns-2",
-        "columns-3"
-      );
-      topFeatures.classList.add(`columns-${topVisibleCount}`);
-    }
   }
 
   /**

@@ -3355,21 +3355,6 @@ class SettingsManager {
         qiblaCard.style.display = qiblaChecked ? "" : "none";
         qiblaCard.setAttribute("aria-hidden", qiblaChecked ? "false" : "true");
       }
-
-      const count =
-        (prayerChecked ? 1 : 0) +
-        (hijriChecked ? 1 : 0) +
-        (qiblaChecked ? 1 : 0);
-      const topFeatures = document.querySelector(".top-features");
-      if (topFeatures) {
-        topFeatures.classList.remove(
-          "columns-0",
-          "columns-1",
-          "columns-2",
-          "columns-3"
-        );
-        topFeatures.classList.add(`columns-${count}`);
-      }
     };
 
     [
