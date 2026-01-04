@@ -1622,6 +1622,93 @@ body {
   transform: scale(1.06);
 }
 
+/* Layout Edit Button in FAB Menu */
+.layout-edit-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #5c6bc0, #7986cb);
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(92, 107, 192, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.layout-edit-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.layout-edit-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(92, 107, 192, 0.5);
+}
+
+.layout-edit-btn.active {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  animation: layoutEditPulse 2s ease-in-out infinite;
+}
+
+@keyframes layoutEditPulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7), 0 0 0 4px rgba(212, 175, 55, 0.2);
+  }
+}
+
+.layout-edit-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+/* Grid Toast Notifications (fallback when settings manager not available) */
+.grid-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 10001;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.grid-toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.grid-toast-success {
+  border-color: var(--primary-light);
+  background: linear-gradient(135deg, rgba(26, 95, 74, 0.3), var(--glass-bg));
+}
+
+.grid-toast-info {
+  border-color: var(--settings-light);
+  background: linear-gradient(135deg, rgba(0, 102, 170, 0.3), var(--glass-bg));
+}
+
+.grid-toast-error {
+  border-color: #ff6b6b;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.3), var(--glass-bg));
+}
+
 /* Settings Button */
 .settings-btn {
   position: fixed;
@@ -8292,6 +8379,19 @@ body.sticky-note-resizing {
    Grid Layout - Drag and Drop System
    ======================================== */
 
+/* Hide grid during initial layout calculation to prevent jumbled appearance */
+.grid-layout-loading {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Smooth reveal after layout is ready */
+.grid-layout-ready {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease-out;
+}
+
 /* Flex row container for grid items */
 .grid-flex-row {
   display: flex;
@@ -8323,17 +8423,21 @@ body.sticky-note-resizing {
   min-height: 100px;
 }
 
-/* Draggable grid items */
+/* Draggable grid items - only show drag affordances when edit mode is enabled */
 .grid-draggable {
-  cursor: grab;
   touch-action: manipulation;
   transition: transform 0.15s ease, box-shadow 0.15s ease, flex 0.3s ease;
   user-select: none;
   position: relative;
 }
 
-/* Hover state for draggable items */
-.grid-draggable:hover:not(.grid-dragging) {
+/* Edit mode enabled - allow dragging */
+.grid-edit-mode .grid-draggable {
+  cursor: grab;
+}
+
+/* Hover state for draggable items - only in edit mode */
+.grid-edit-mode .grid-draggable:hover:not(.grid-dragging) {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
@@ -8360,7 +8464,8 @@ body.sticky-note-resizing {
   z-index: 10;
 }
 
-.grid-draggable:hover::before,
+/* Only show drag handle in edit mode */
+.grid-edit-mode .grid-draggable:hover::before,
 .grid-is-dragging .grid-draggable::before {
   opacity: 1;
 }
@@ -8490,7 +8595,7 @@ body.sticky-note-resizing {
   outline-offset: 2px;
 }
 
-/* Animation for items settling into place */
+/* Animation for items settling into place - only in edit mode */
 @keyframes settleInPlace {
   0% {
     transform: scale(1.02);
@@ -8503,6 +8608,6 @@ body.sticky-note-resizing {
   }
 }
 
-.grid-draggable:not(.grid-dragging) {
+.grid-edit-mode .grid-draggable:not(.grid-dragging) {
   animation: settleInPlace 0.3s ease-out;
 }

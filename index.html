@@ -25,7 +25,7 @@
       <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
 
       <!-- Main Content Grid -->
-      <main class="content-grid">
+      <main class="content-grid grid-layout-loading">
         <!-- Header Section -->
         <header class="header">
           <div class="greeting-section">
@@ -1136,6 +1136,28 @@
       <div class="fab-menu-items" id="fabMenuItems" aria-hidden="true">
         <!-- Dynamic items (e.g., Sticky Notes buttons) are injected here -->
         <div class="fab-menu-dynamic" id="fabMenuDynamicItems"></div>
+
+        <button
+          class="layout-edit-btn"
+          id="layoutEditBtn"
+          title="Toggle Layout Edit Mode"
+          aria-label="Toggle layout edit mode"
+          aria-pressed="false"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </button>
 
         <button
           class="refresh-bg-btn"

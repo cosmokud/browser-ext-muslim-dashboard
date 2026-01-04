@@ -2,6 +2,7 @@
  * GridLayoutManager - Drag and Drop Grid Layout System
  * Enables repositioning of dashboard components via drag-and-drop
  * Uses flex-based rows with automatic component expansion
+ * Includes responsive breakpoint system for dynamic span adjustment
  */
 
 class GridLayoutManager {
@@ -14,11 +15,14 @@ class GridLayoutManager {
     this.draggedItemRect = null;
     this.placeholder = null;
     this.isDragging = false;
+    this.isEditModeEnabled = false; // Drag-drop mode disabled by default
     this.dragOffsetX = 0;
     this.dragOffsetY = 0;
     this.initialMouseX = 0;
     this.initialMouseY = 0;
     this.scrollInterval = null;
+    this.resizeObserver = null;
+    this.breakpointDebounceTimer = null;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -38,6 +42,24 @@ class GridLayoutManager {
       notesCard: { id: "notesCard", span: 6, minSpan: 3 },
       pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
     };
+
+    /**
+     * Responsive breakpoint configuration for components
+     * When a component's width falls below the specified breakpointWidth,
+     * it will request expandedSpan instead of its default span.
+     * This enables automatic row reflow for better responsiveness.
+     *
+     * Format: componentId -> { breakpointWidth: number, expandedSpan: number }
+     */
+    this.responsiveBreakpoints = {
+      prayerTimesCard: { breakpointWidth: 350, expandedSpan: 3 },
+      calendarCard: { breakpointWidth: 310, expandedSpan: 3 },
+      // Add more components here as needed:
+      // componentId: { breakpointWidth: 300, expandedSpan: 4 },
+    };
+
+    // Track which components are currently in expanded state
+    this.expandedComponents = new Set();
 
     // Default row structure (component IDs in order)
     this.defaultLayout = [
@@ -61,6 +83,7 @@ class GridLayoutManager {
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleBreakpointCheck = this.handleBreakpointCheck.bind(this);
   }
 
   /**
@@ -76,18 +99,290 @@ class GridLayoutManager {
     // Load saved layout or use default
     this.loadLayout();
 
+    // Load edit mode state from settings (default OFF)
+    const settings = this.storage.getSettings();
+    this.isEditModeEnabled = settings.gridEditModeEnabled === true;
+
     // Apply the layout to create flex rows
     this.applyLayout();
 
-    // Setup event listeners for drag and drop
+    // Setup event listeners for drag and drop (only active when edit mode is enabled)
     this.setupEventListeners();
+
+    // Setup responsive breakpoint monitoring
+    this.setupBreakpointObserver();
+
+    // Setup edit mode toggle button
+    this.setupEditModeToggle();
 
     // Listen for visibility changes
     document.addEventListener("md:visibility-changed", () => {
       this.recalculateLayout();
     });
 
+    // Remove the loading state to reveal the grid
+    requestAnimationFrame(() => {
+      this.grid.classList.remove("grid-layout-loading");
+      this.grid.classList.add("grid-layout-ready");
+    });
+
     console.log("✅ GridLayoutManager initialized");
+  }
+
+  /**
+   * Setup the edit mode toggle button in the FAB menu
+   */
+  setupEditModeToggle() {
+    const toggleBtn = document.getElementById("layoutEditBtn");
+    if (!toggleBtn) return;
+
+    // Set initial state
+    this.updateEditModeUI(toggleBtn);
+
+    // Handle toggle click
+    toggleBtn.addEventListener("click", () => {
+      this.toggleEditMode();
+    });
+  }
+
+  /**
+   * Toggle drag-and-drop edit mode
+   */
+  toggleEditMode() {
+    this.isEditModeEnabled = !this.isEditModeEnabled;
+
+    // Save state to settings
+    const settings = this.storage.getSettings();
+    settings.gridEditModeEnabled = this.isEditModeEnabled;
+    this.storage.saveSettings(settings);
+
+    // Update UI
+    const toggleBtn = document.getElementById("layoutEditBtn");
+    this.updateEditModeUI(toggleBtn);
+
+    // Update grid state
+    if (this.grid) {
+      this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+    }
+
+    // Show toast notification
+    this.showToast(
+      this.isEditModeEnabled
+        ? "Layout edit mode enabled - drag components to reposition"
+        : "Layout edit mode disabled",
+      this.isEditModeEnabled ? "success" : "info"
+    );
+  }
+
+  /**
+   * Update the edit mode toggle button UI
+   */
+  updateEditModeUI(toggleBtn) {
+    if (!toggleBtn) return;
+
+    toggleBtn.setAttribute(
+      "aria-pressed",
+      this.isEditModeEnabled ? "true" : "false"
+    );
+    toggleBtn.classList.toggle("active", this.isEditModeEnabled);
+    toggleBtn.title = this.isEditModeEnabled
+      ? "Disable Layout Edit Mode"
+      : "Enable Layout Edit Mode";
+
+    // Update grid class
+    if (this.grid) {
+      this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+    }
+  }
+
+  /**
+   * Show a toast notification
+   */
+  showToast(message, type = "info") {
+    // Try to use the settings manager toast if available
+    if (
+      window.dashboard &&
+      window.dashboard.settings &&
+      typeof window.dashboard.settings.showToast === "function"
+    ) {
+      window.dashboard.settings.showToast(message, type);
+      return;
+    }
+
+    // Fallback: create a simple toast
+    const existingToast = document.querySelector(".grid-toast");
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `grid-toast grid-toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.add("grid-toast-visible");
+    });
+
+    setTimeout(() => {
+      toast.classList.remove("grid-toast-visible");
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  }
+
+  /**
+   * Setup ResizeObserver for responsive breakpoint monitoring
+   */
+  setupBreakpointObserver() {
+    // Check if ResizeObserver is supported
+    if (typeof ResizeObserver === "undefined") {
+      console.warn(
+        "GridLayoutManager: ResizeObserver not supported, breakpoints disabled"
+      );
+      return;
+    }
+
+    // Create observer for components with breakpoint configurations
+    this.resizeObserver = new ResizeObserver((entries) => {
+      // Debounce breakpoint checks to prevent excessive recalculations
+      if (this.breakpointDebounceTimer) {
+        clearTimeout(this.breakpointDebounceTimer);
+      }
+
+      this.breakpointDebounceTimer = setTimeout(() => {
+        this.handleBreakpointCheck(entries);
+      }, 100);
+    });
+
+    // Observe all components that have breakpoint configurations
+    Object.keys(this.responsiveBreakpoints).forEach((componentId) => {
+      const element = document.getElementById(componentId);
+      if (element) {
+        this.resizeObserver.observe(element);
+      }
+    });
+  }
+
+  /**
+   * Handle breakpoint checks when component sizes change
+   */
+  handleBreakpointCheck(entries) {
+    let needsReflow = false;
+
+    entries.forEach((entry) => {
+      const componentId = entry.target.id;
+      const breakpointConfig = this.responsiveBreakpoints[componentId];
+
+      if (!breakpointConfig) return;
+
+      const currentWidth = entry.contentRect.width;
+      const { breakpointWidth, expandedSpan } = breakpointConfig;
+      const wasExpanded = this.expandedComponents.has(componentId);
+
+      // Check if component crossed the breakpoint threshold
+      if (currentWidth > 0 && currentWidth < breakpointWidth && !wasExpanded) {
+        // Component is now below breakpoint - needs expansion
+        this.expandedComponents.add(componentId);
+        needsReflow = true;
+      } else if (currentWidth >= breakpointWidth && wasExpanded) {
+        // Component is now above breakpoint - can contract
+        this.expandedComponents.delete(componentId);
+        needsReflow = true;
+      }
+    });
+
+    // Trigger layout reflow if any components changed state
+    if (needsReflow) {
+      this.reflowLayoutForBreakpoints();
+    }
+  }
+
+  /**
+   * Get the effective span for a component (considering breakpoint state)
+   */
+  getEffectiveSpan(componentId) {
+    const baseConfig = this.componentSpans[componentId];
+    if (!baseConfig) return 2; // Default fallback
+
+    // Check if component is in expanded state due to breakpoint
+    if (this.expandedComponents.has(componentId)) {
+      const breakpointConfig = this.responsiveBreakpoints[componentId];
+      if (breakpointConfig) {
+        return breakpointConfig.expandedSpan;
+      }
+    }
+
+    return baseConfig.span;
+  }
+
+  /**
+   * Reflow layout when breakpoint states change
+   * This reorganizes rows to accommodate span changes
+   */
+  reflowLayoutForBreakpoints() {
+    if (!this.grid || this.isDragging) return;
+
+    // Rebuild rows based on current effective spans
+    const newRows = [];
+    let currentRow = [];
+    let currentRowSpan = 0;
+
+    // Flatten all component IDs in order
+    const allComponentIds = this.rows.flat();
+
+    allComponentIds.forEach((componentId) => {
+      const el = this.getElementByComponentId(componentId);
+      if (!el || this.isComponentHidden(el)) return;
+
+      const effectiveSpan = this.getEffectiveSpan(componentId);
+      const config = this.componentSpans[componentId];
+
+      // Full-width components always get their own row
+      if (config && config.span === 6 && config.minSpan === 6) {
+        if (currentRow.length > 0) {
+          newRows.push(currentRow);
+          currentRow = [];
+          currentRowSpan = 0;
+        }
+        newRows.push([componentId]);
+        return;
+      }
+
+      // Check if component fits in current row
+      if (currentRowSpan + effectiveSpan <= 6) {
+        currentRow.push(componentId);
+        currentRowSpan += effectiveSpan;
+      } else {
+        // Start a new row
+        if (currentRow.length > 0) {
+          newRows.push(currentRow);
+        }
+        currentRow = [componentId];
+        currentRowSpan = effectiveSpan;
+      }
+    });
+
+    // Don't forget the last row
+    if (currentRow.length > 0) {
+      newRows.push(currentRow);
+    }
+
+    // Only update if layout actually changed
+    if (JSON.stringify(newRows) !== JSON.stringify(this.rows)) {
+      this.rows = newRows;
+      this.applyLayout();
+      this.saveLayout();
+    }
+  }
+
+  /**
+   * Get element by component ID
+   */
+  getElementByComponentId(componentId) {
+    if (componentId === "header") {
+      return this.grid?.querySelector(".header");
+    }
+    return document.getElementById(componentId);
   }
 
   /**
@@ -220,6 +515,9 @@ class GridLayoutManager {
       return;
     }
 
+    // Get effective span (considering breakpoint state)
+    const effectiveSpan = this.getEffectiveSpan(id);
+
     // Calculate flex basis percentage
     let flexPercent;
     if (visibleCount === 0 || visibleCount === 1) {
@@ -229,8 +527,8 @@ class GridLayoutManager {
     } else if (visibleCount === 3) {
       flexPercent = 33.333;
     } else {
-      // More than 3 items, use original span ratio
-      flexPercent = (config.span / 6) * 100;
+      // More than 3 items, use effective span ratio
+      flexPercent = (effectiveSpan / 6) * 100;
     }
 
     // For full-width components, always use 100%
@@ -241,6 +539,9 @@ class GridLayoutManager {
     el.style.flex = `1 1 calc(${flexPercent}% - var(--spacing-xl))`;
     el.style.maxWidth = `${flexPercent}%`;
     el.style.minWidth = `${Math.max(200, (config.minSpan / 6) * 100)}px`;
+
+    // Add data attribute for debugging/CSS targeting
+    el.dataset.effectiveSpan = effectiveSpan;
   }
 
   /**
@@ -352,6 +653,9 @@ class GridLayoutManager {
     // Only left mouse button
     if (e.button !== 0) return;
 
+    // Check if edit mode is enabled
+    if (!this.isEditModeEnabled) return;
+
     const draggable = this.getDraggableFromTarget(e.target);
     if (!draggable) return;
 
@@ -364,6 +668,9 @@ class GridLayoutManager {
    */
   handleTouchStart(e) {
     if (e.touches.length !== 1) return;
+
+    // Check if edit mode is enabled
+    if (!this.isEditModeEnabled) return;
 
     const touch = e.touches[0];
     const draggable = this.getDraggableFromTarget(touch.target);
@@ -884,6 +1191,7 @@ class GridLayoutManager {
    */
   resetToDefault() {
     this.rows = JSON.parse(JSON.stringify(this.defaultLayout));
+    this.expandedComponents.clear(); // Clear breakpoint states
     this.applyLayout();
     this.saveLayout();
   }
@@ -904,6 +1212,92 @@ class GridLayoutManager {
       this.applyLayout();
       this.saveLayout();
     }
+  }
+
+  /**
+   * Enable edit mode programmatically
+   */
+  enableEditMode() {
+    if (!this.isEditModeEnabled) {
+      this.toggleEditMode();
+    }
+  }
+
+  /**
+   * Disable edit mode programmatically
+   */
+  disableEditMode() {
+    if (this.isEditModeEnabled) {
+      this.toggleEditMode();
+    }
+  }
+
+  /**
+   * Check if edit mode is currently enabled
+   */
+  isEditMode() {
+    return this.isEditModeEnabled;
+  }
+
+  /**
+   * Add a responsive breakpoint configuration for a component
+   * @param {string} componentId - The ID of the component
+   * @param {number} breakpointWidth - Width threshold in pixels
+   * @param {number} expandedSpan - Span to use when below breakpoint
+   */
+  addResponsiveBreakpoint(componentId, breakpointWidth, expandedSpan) {
+    this.responsiveBreakpoints[componentId] = {
+      breakpointWidth,
+      expandedSpan,
+    };
+
+    // Start observing the element if not already
+    const element = document.getElementById(componentId);
+    if (element && this.resizeObserver) {
+      this.resizeObserver.observe(element);
+    }
+  }
+
+  /**
+   * Remove a responsive breakpoint configuration
+   * @param {string} componentId - The ID of the component
+   */
+  removeResponsiveBreakpoint(componentId) {
+    delete this.responsiveBreakpoints[componentId];
+    this.expandedComponents.delete(componentId);
+
+    // Stop observing if no longer needed
+    const element = document.getElementById(componentId);
+    if (element && this.resizeObserver) {
+      this.resizeObserver.unobserve(element);
+    }
+  }
+
+  /**
+   * Cleanup when component is destroyed
+   */
+  destroy() {
+    // Stop observing resize events
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // Clear any pending timers
+    if (this.breakpointDebounceTimer) {
+      clearTimeout(this.breakpointDebounceTimer);
+    }
+
+    // Remove event listeners
+    if (this.grid) {
+      this.grid.removeEventListener("mousedown", this.handleMouseDown);
+      this.grid.removeEventListener("touchstart", this.handleTouchStart);
+    }
+    document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("touchmove", this.handleTouchMove);
+    document.removeEventListener("touchend", this.handleTouchEnd);
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
 }
 

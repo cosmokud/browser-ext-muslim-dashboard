@@ -2628,10 +2628,92 @@ class SettingsManager {
       this.weather.fetchWeather();
     }
 
-    // Reload page to apply all settings properly
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+    // Apply all live updates without page reload
+    this.applyLiveUpdates(settings);
+  }
+
+  /**
+   * Apply live updates to all components without page reload
+   * This replaces the previous window.location.reload() approach
+   */
+  applyLiveUpdates(settings) {
+    try {
+      // Update greeting
+      if (window.dashboard && typeof window.dashboard.updateGreeting === "function") {
+        window.dashboard.updateGreeting();
+      }
+
+      // Update date display
+      if (window.dashboard && typeof window.dashboard.updateDate === "function") {
+        window.dashboard.updateDate();
+      }
+
+      // Update time display
+      if (window.dashboard && typeof window.dashboard.updateTime === "function") {
+        window.dashboard.updateTime();
+      }
+
+      // Apply heading settings (clock style, seconds visibility, etc.)
+      if (window.dashboard && typeof window.dashboard.applyHeadingSettings === "function") {
+        window.dashboard.applyHeadingSettings();
+      }
+
+      // Apply pinned apps settings
+      if (window.dashboard && typeof window.dashboard.applyPinnedAppsSettings === "function") {
+        window.dashboard.applyPinnedAppsSettings();
+      }
+
+      // Recalculate grid layout
+      if (window.dashboard && window.dashboard.gridLayout) {
+        window.dashboard.gridLayout.recalculateLayout();
+      }
+
+      // Refresh quotes if settings changed
+      if (window.dashboard && window.dashboard.quotes) {
+        try {
+          window.dashboard.quotes.refreshQuote();
+        } catch (e) {
+          // Quote refresh is non-critical
+        }
+      }
+
+      // Refresh lunar phase display
+      if (window.dashboard && window.dashboard.lunarPhase) {
+        try {
+          window.dashboard.lunarPhase.refresh();
+        } catch (e) {
+          // Lunar phase refresh is non-critical
+        }
+      }
+
+      // Refresh fasting display
+      if (window.dashboard && window.dashboard.fasting) {
+        try {
+          window.dashboard.fasting.render();
+        } catch (e) {
+          // Fasting refresh is non-critical
+        }
+      }
+
+      // Update calendar
+      if (window.dashboard && window.dashboard.calendar) {
+        try {
+          window.dashboard.calendar.render();
+        } catch (e) {
+          // Calendar refresh is non-critical
+        }
+      }
+
+      // Notify that settings have been applied (for any listeners)
+      try {
+        document.dispatchEvent(new CustomEvent("md:settings-applied", {
+          detail: { settings }
+        }));
+      } catch (e) {}
+
+    } catch (e) {
+      console.warn("Some live updates failed:", e);
+    }
   }
 
   /**
