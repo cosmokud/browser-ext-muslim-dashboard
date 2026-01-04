@@ -391,8 +391,9 @@ body {
 /* Content Grid */
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--spacing-xl);
+  grid-auto-flow: row dense;
   flex: 1;
 }
 
@@ -406,20 +407,87 @@ body {
 .content-grid > .pinned-apps-section,
 .content-grid > .search-bar-section,
 .content-grid > .quote-section {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* 6-span */
   margin-bottom: 0; /* grid gap handles vertical spacing */
 }
 
-/* Flashcard & Todo Row - make both occupy a single row together */
+/* Card spans (6-column content grid) */
+#pinnedAppsSection {
+  grid-column: span 6;
+}
+
+#searchBarSection {
+  grid-column: span 6;
+}
+
+#quoteSection {
+  grid-column: span 6;
+}
+
+#prayerTimesCard {
+  grid-column: span 2;
+}
+
+#calendarCard {
+  grid-column: span 2;
+}
+
+#qiblaCard {
+  grid-column: span 2;
+}
+
+#weatherCard {
+  grid-column: span 6;
+}
+
+#lunarPhaseCard {
+  grid-column: span 2;
+}
+
+#fastingCard {
+  grid-column: span 2;
+}
+
+#flashcardCard {
+  grid-column: span 3;
+}
+
+#todoCard {
+  grid-column: span 3;
+}
+
+#notesCard {
+  grid-column: span 6;
+}
+
+#pocketQuranCard {
+  grid-column: span 6;
+}
+
+/* Ensure wrapper nodes don't block grid placement of their children */
+.top-features {
+  display: contents;
+}
 
 .flashcard-todo-row {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-xl);
-  align-items: stretch; /* keep cards the same height visually */
-  width: 100%;
-  box-sizing: border-box;
+  display: contents;
+}
+
+/* Flashcard & Todo Row - fallback layout when `display: contents` isn't supported */
+@supports not (display: contents) {
+  .flashcard-todo-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-xl);
+    align-items: stretch; /* keep cards the same height visually */
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.flashcard-todo-row {
+  grid-column: 1 / -1; /* ignored when display: contents; harmless in fallback */
 }
 
 .flashcard-todo-row .card {
@@ -429,38 +497,92 @@ body {
   min-width: 0; /* allow internal content to shrink instead of overflowing */
 }
 
-/* Responsive: stack vertically on small screens */
-@media (max-width: 699px) {
-  .flashcard-todo-row {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
-  .flashcard-todo-row .card {
-    width: 100%;
-  }
-}
-
-/* Prefer container queries so layout responds to Dashboard Width setting */
+/* Responsive spans (prefer container queries so layout responds to Dashboard Width setting) */
 @supports (container-type: inline-size) {
   .main-container {
     container-type: inline-size;
   }
 
-  @container (min-width: 1050px) {
-    .content-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+  @container (max-width: 1114px) {
+    #prayerTimesCard {
+      grid-column: span 6;
+    }
+
+    #calendarCard {
+      grid-column: span 3;
+    }
+
+    #qiblaCard {
+      grid-column: span 3;
+    }
+
+    #lunarPhaseCard {
+      grid-column: span 3;
+    }
+
+    #fastingCard {
+      grid-column: span 3;
     }
   }
 
-  @container (min-width: 700px) and (max-width: 1049px) {
-    .content-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  @container (max-width: 768px) {
+    #pinnedAppsSection,
+    #searchBarSection,
+    #quoteSection,
+    #prayerTimesCard,
+    #calendarCard,
+    #qiblaCard,
+    #weatherCard,
+    #lunarPhaseCard,
+    #fastingCard,
+    #flashcardCard,
+    #todoCard,
+    #notesCard,
+    #pocketQuranCard {
+      grid-column: span 6;
+    }
+  }
+}
+
+/* Media-query fallback (when container queries are unavailable) */
+@supports not (container-type: inline-size) {
+  @media (max-width: 1114px) {
+    #prayerTimesCard {
+      grid-column: span 6;
+    }
+
+    #calendarCard {
+      grid-column: span 3;
+    }
+
+    #qiblaCard {
+      grid-column: span 3;
+    }
+
+    #lunarPhaseCard {
+      grid-column: span 3;
+    }
+
+    #fastingCard {
+      grid-column: span 3;
     }
   }
 
-  @container (max-width: 699px) {
-    .content-grid {
-      grid-template-columns: 1fr;
+  @media (max-width: 768px) {
+    #pinnedAppsSection,
+    #searchBarSection,
+    #quoteSection,
+    #prayerTimesCard,
+    #calendarCard,
+    #qiblaCard,
+    #weatherCard,
+    #lunarPhaseCard,
+    #fastingCard,
+    #flashcardCard,
+    #todoCard,
+    #notesCard,
+    #pocketQuranCard {
+      grid-column: span 6;
     }
   }
 }
@@ -470,7 +592,7 @@ body {
    ======================================== */
 
 .notes-card {
-  grid-column: 1 / -1;
+  grid-column: span 3;
 }
 
 .notes-header-actions {
@@ -6536,62 +6658,31 @@ body.sticky-note-resizing {
   flex-wrap: wrap;
 }
 
-/* Top features responsive columns (prayer, hijri, qibla) */
-/* JS will add a class on .top-features like columns-3 / columns-2 / columns-1 */
+/* Top features (prayer, calendar, qibla) are now placed directly in the main 6-column content grid. */
 .top-features {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: var(--spacing-xl);
-  align-items: stretch;
-  transition: grid-template-columns 0.25s ease;
+  display: contents;
 }
 
-.top-features.columns-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.top-features.columns-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.top-features.columns-1 {
-  grid-template-columns: 1fr;
-}
-.top-features.columns-0 {
-  grid-template-columns: 1fr;
-}
-
-/* Container-query aware fallbacks to ensure responsiveness */
-@supports (container-type: inline-size) {
-  @container (min-width: 1050px) {
-    .top-features.columns-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .top-features.columns-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .top-features.columns-1,
-    .top-features.columns-0 {
-      grid-template-columns: 1fr;
-    }
+/* Fallback: keep the legacy internal grid if `display: contents` isn't supported. */
+@supports not (display: contents) {
+  /* JS may add a class on .top-features like columns-3 / columns-2 / columns-1 */
+  .top-features {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: var(--spacing-xl);
+    align-items: stretch;
+    transition: grid-template-columns 0.25s ease;
   }
 
-  @container (min-width: 700px) and (max-width: 1049px) {
-    .top-features.columns-3,
-    .top-features.columns-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .top-features.columns-1,
-    .top-features.columns-0 {
-      grid-template-columns: 1fr;
-    }
+  .top-features.columns-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  @container (max-width: 699px) {
-    .top-features.columns-3,
-    .top-features.columns-2,
-    .top-features.columns-1,
-    .top-features.columns-0 {
-      grid-template-columns: 1fr;
-    }
+  .top-features.columns-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .top-features.columns-1,
+  .top-features.columns-0 {
+    grid-template-columns: 1fr;
   }
 }
 
