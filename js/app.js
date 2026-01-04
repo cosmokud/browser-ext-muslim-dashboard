@@ -335,6 +335,8 @@ class MuslimDashboard {
 
   /**
    * Initialize the dashboard
+   * Non-blocking startup: All UI components render immediately, 
+   * API-dependent data loads in background without blocking interaction
    */
   async init() {
     console.log("🕌 Muslim Dashboard initializing...");
@@ -345,67 +347,53 @@ class MuslimDashboard {
     // Start background first for visual appeal
     this.backgrounds.init();
 
-    // Initialize time display
+    // Initialize time display (synchronous - no network)
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
 
-    // Initialize date display
+    // Initialize date display (synchronous - no network)
     this.updateDate();
 
-    // Initialize greeting
+    // Initialize greeting (synchronous - no network)
     this.updateGreeting();
 
-    // Initialize prayer times
-    await this.prayerTimes.init();
-
-    // Initialize qibla after location is available
-    const location = this.prayerTimes.getCurrentLocation();
-    if (location) {
-      this.qibla.init(location.latitude, location.longitude);
-    }
-
-    // Initialize quotes
-    await this.quotes.init();
-
-    // Initialize todos
+    // Initialize todos (synchronous - uses localStorage)
     this.todos.init();
 
-    // Initialize pinned apps
+    // Initialize pinned apps (synchronous - uses localStorage)
     this.pinnedApps = new PinnedAppsManager(this.storage);
 
-    // Initialize search bar (custom searches)
+    // Initialize search bar (synchronous - uses localStorage)
     this.searchBar = new SearchBarManager(this.storage);
 
-    // Initialize calendar
+    // Initialize calendar (synchronous - uses localStorage)
     this.calendar = new CalendarManager(this.storage, this.hijri);
     this.calendar.init();
 
-    // Initialize fasting countdowns
+    // Initialize fasting countdowns (synchronous - no network)
     this.fasting = new FastingManager(this.storage, this.hijri);
     this.fasting.init();
 
-    // Initialize sticky notes
+    // Initialize sticky notes (synchronous - uses localStorage)
     this.stickyNotes = new StickyNotesManager(this.storage);
 
-    // Initialize weather
-    this.weather = new WeatherManager(this.storage);
-    await this.weather.init();
-
-    // Initialize lunar phase
+    // Initialize lunar phase (synchronous initial render)
     this.lunarPhase = new LunarPhaseManager(this.storage, this.prayerTimes);
     this.lunarPhase.init();
 
-    // Initialize flashcards
-    this.flashcards = new FlashcardManager(this.storage);
-    await this.flashcards.init();
-
-    // Initialize notes (full-width component)
+    // Initialize notes (synchronous - uses localStorage)
     this.notes = new NotesManager(this.storage);
 
-    // Initialize pocket quran (full-width component)
+    // Initialize pocket quran (renders loading state, fetches in background)
     this.pocketQuran = new PocketQuranManager(this.storage);
 
-    // Initialize settings (after all other managers)
+    // Initialize weather manager (renders loading state synchronously)
+    this.weather = new WeatherManager(this.storage);
+
+    // Initialize flashcards manager (renders loading state synchronously)
+    this.flashcards = new FlashcardManager(this.storage);
+
+    // Initialize settings manager (needs references to other managers)
     this.settings = new SettingsManager(
       this.storage,
       this.prayerTimes,
@@ -469,7 +457,59 @@ class MuslimDashboard {
     // Setup location updates
     this.setupLocationUpdates();
 
-    console.log("✅ Muslim Dashboard ready!");
+    console.log("✅ Muslim Dashboard UI ready!");
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ASYNC BACKGROUND INITIALIZATION
+    // All network-dependent operations run in parallel, non-blocking
+    // Components show loading states immediately, then update when data arrives
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Track background async tasks for potential error handling
+    const backgroundTasks = [];
+
+    // Prayer times initialization (includes geolocation + reverse geocoding)
+    backgroundTasks.push(
+      this.prayerTimes.init().then(() => {
+        // Initialize qibla after location is available
+        const location = this.prayerTimes.getCurrentLocation();
+        if (location) {
+          this.qibla.init(location.latitude, location.longitude);
+        }
+        // Refresh lunar phase with new location
+        if (this.lunarPhase) {
+          this.lunarPhase.refresh();
+        }
+      }).catch(err => {
+        console.warn("Prayer times init background error:", err);
+      })
+    );
+
+    // Quotes initialization (loads default quotes JSON)
+    backgroundTasks.push(
+      this.quotes.init().catch(err => {
+        console.warn("Quotes init background error:", err);
+      })
+    );
+
+    // Weather initialization (includes geolocation + weather API)
+    backgroundTasks.push(
+      this.weather.init().catch(err => {
+        console.warn("Weather init background error:", err);
+      })
+    );
+
+    // Flashcards initialization (loads CSV data)
+    backgroundTasks.push(
+      this.flashcards.init().catch(err => {
+        console.warn("Flashcards init background error:", err);
+      })
+    );
+
+    // Wait for all background tasks to complete (non-blocking for UI)
+    Promise.allSettled(backgroundTasks).then(() => {
+      console.log("✅ Muslim Dashboard fully loaded (all data fetched)!");
+    });
   }
 
   initReadabilityBlurOverrides() {

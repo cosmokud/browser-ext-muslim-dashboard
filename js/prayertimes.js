@@ -36,6 +36,7 @@ class PrayerTimesManager {
 
   /**
    * Initialize prayer times
+   * Shows UI immediately with default/cached values, then updates when location is available
    */
   async init() {
     const settings = this.storage.getSettings();
@@ -43,7 +44,7 @@ class PrayerTimesManager {
     // Configure prayer times calculator
     this.configureCalculator(settings);
 
-    // Render prayer list based on visibility settings
+    // Render prayer list based on visibility settings (immediate)
     this.renderPrayerList(settings.prayerVisibility);
 
     // Bind location button
@@ -51,7 +52,25 @@ class PrayerTimesManager {
       this.locationBtn.addEventListener("click", () => this.requestLocation());
     }
 
-    // Get location
+    // Show loading state
+    if (this.locationText) {
+      this.locationText.textContent = "Detecting...";
+    }
+    if (this.nextPrayerName) {
+      this.nextPrayerName.textContent = "Loading...";
+    }
+    if (this.nextPrayerCountdown) {
+      this.nextPrayerCountdown.textContent = "--:--:--";
+    }
+
+    // Try to use cached location first for immediate display
+    const lastLocation = this.storage.getLastLocation();
+    if (lastLocation) {
+      this.location = lastLocation;
+      this.updatePrayerTimes(); // Show cached data immediately
+    }
+
+    // Get fresh location (async, may take time)
     await this.getLocation();
   }
 

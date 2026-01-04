@@ -98,18 +98,32 @@ class WeatherManager {
 
   /**
    * Initialize weather manager
+   * Shows loading state immediately, fetches data in background
    */
   async init() {
     this.setupEventListeners();
-    await this.fetchWeather();
+    
+    // Show loading state immediately (non-blocking)
+    this.showLoadingState();
+    
+    // Initialize compact weather (will show loading state)
+    this.initCompactWeather();
+
+    // Fetch weather data (may take time due to geolocation + API)
+    try {
+      await this.fetchWeather();
+    } catch (err) {
+      console.warn("Weather fetch error during init:", err);
+      this.showErrorState();
+    }
 
     // Trigger the hourly chart animation on initial load so it animates
     // the same way it does when switching metric tabs.
     this._startHourlyChartAnimation();
     this.renderHourlyChart();
 
-    // Initialize compact weather
-    this.initCompactWeather();
+    // Update compact weather with fetched data
+    this.updateCompactWeather();
 
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
@@ -944,6 +958,43 @@ class WeatherManager {
         ctx.clearRect(0, 0, this.weatherChart.width, this.weatherChart.height);
       }
     }
+  }
+
+  /**
+   * Show loading state - displays placeholder UI while fetching data
+   */
+  showLoadingState() {
+    if (this.weatherIcon) {
+      this.weatherIcon.textContent = "🌡️";
+    }
+    if (this.weatherTemp) {
+      this.weatherTemp.textContent = "--°";
+    }
+    if (this.weatherDesc) {
+      this.weatherDesc.textContent = "Loading weather...";
+    }
+    if (this.weatherLocation) {
+      this.weatherLocation.textContent = "Detecting location...";
+    }
+    if (this.weatherFeelsLike) {
+      this.weatherFeelsLike.textContent = "Feels like --°";
+    }
+    if (this.weatherHumidity) {
+      this.weatherHumidity.textContent = "Humidity --%";
+    }
+    if (this.weatherWind) {
+      this.weatherWind.textContent = "Wind --";
+    }
+    if (this.weatherForecast) {
+      this.weatherForecast.innerHTML = '<div class="weather-loading-placeholder">Loading forecast...</div>';
+    }
+  }
+
+  /**
+   * Show error state - displays error UI when fetch fails
+   */
+  showErrorState() {
+    this.showError("Failed to load weather data");
   }
 
   /**

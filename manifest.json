@@ -12,6 +12,9 @@
   "permissions": ["storage", "geolocation", "alarms", "notifications"],
   "host_permissions": [
     "https://api.quran.com/*",
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*",
+    "https://nominatim.openstreetmap.org/*",
     "https://www.google.com/s2/*",
     "https://*.gstatic.com/*"
   ],
