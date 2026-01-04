@@ -12,23 +12,266 @@
 class PocketQuranManager {
   static API_BASE = "https://api.quran.com/api/v4";
 
-  // Hard-coded to only free/open translations we verified exist in the Quran.com API.
+  // All translations available from the Quran.com API, organized by language.
+  // Source: https://api.quran.com/api/v4/resources/translations
   static TRANSLATIONS = {
+    // Albanian
+    88: { label: "Hasan Efendi Nahi", language: "Albanian" },
+    47: { label: "Albanian", language: "Albanian" },
+    89: { label: "Albanian Translation (Sherif Ahmeti)", language: "Albanian" },
+
+    // Amazigh
+    236: { label: "Ramdane At Mansour", language: "Amazigh" },
+
+    // Amharic
+    87: { label: "Sadiq and Sani", language: "Amharic" },
+
+    // Assamese
+    120: { label: "Shaykh Rafeequl Islam Habibur-Rahman", language: "Assamese" },
+
+    // Azeri
+    75: { label: "Alikhan Musayev", language: "Azeri" },
+    23: { label: "Azerbaijani", language: "Azeri" },
+
+    // Bambara
+    795: { label: "Suliman Kanti", language: "Bambara" },
+    796: { label: "Baba Mamady Jani", language: "Bambara" },
+
+    // Bengali
+    161: { label: "Taisirul Quran", language: "Bengali" },
+    163: { label: "Sheikh Mujibur Rahman", language: "Bengali" },
+    162: { label: "Rawai Al-bayan", language: "Bengali" },
+    213: { label: "Dr. Abu Bakr Muhammad Zakaria", language: "Bengali" },
+
+    // Bosnian
+    214: { label: "Dar Al-Salam Center", language: "Bosnian" },
+    25: { label: "Muhamed Mehanović", language: "Bosnian" },
+    126: { label: "Besim Korkut", language: "Bosnian" },
+
+    // Bulgarian
+    237: { label: "Tzvetan Theophanov", language: "Bulgarian" },
+
+    // Central Khmer
+    128: { label: "Cambodian Muslim Community Development", language: "Central Khmer" },
+
+    // Chechen
+    106: { label: "Magomed Magomedov", language: "Chechen" },
+
+    // Chinese
+    56: { label: "Chinese Translation (Simplified) - Ma Jian", language: "Chinese" },
+    109: { label: "Muhammad Makin", language: "Chinese" },
+
+    // Czech
+    26: { label: "Czech", language: "Czech" },
+
+    // Dari
+    785: { label: "Mawlawi Muhammad Anwar Badkhashani", language: "Dari" },
+
+    // Divehi (Maldivian)
+    86: { label: "Office of the President of Maldives", language: "Divehi" },
+    840: { label: "Abu Bakr Ibrahim Ali (Bakurube)", language: "Divehi" },
+
+    // Dutch
+    235: { label: "Malak Faris Abdalsalaam", language: "Dutch" },
+    144: { label: "Sofian S. Siregar", language: "Dutch" },
+
+    // English
     85: { label: "M.A.S. Abdel Haleem", language: "English" },
+    149: { label: "Fadel Soliman, Bridges' translation", language: "English" },
     84: { label: "T. Usmani", language: "English" },
     95: { label: "A. Maududi (Tafhim commentary)", language: "English" },
     19: { label: "M. Pickthall", language: "English" },
-    22: { label: "A Yusuf Ali", language: "English" },
+    22: { label: "A. Yusuf Ali", language: "English" },
     20: { label: "Saheeh International", language: "English" },
     203: { label: "Al-Hilali & Khan", language: "English" },
     57: { label: "Transliteration", language: "English" },
 
+    // Finnish
+    30: { label: "Finnish", language: "Finnish" },
+
+    // French
+    136: { label: "Montada Islamic Foundation", language: "French" },
+    31: { label: "Muhammad Hamidullah", language: "French" },
+    779: { label: "Rashid Maash", language: "French" },
+
+    // Ganda (Luganda)
+    232: { label: "African Development Foundation", language: "Ganda" },
+
+    // German
+    208: { label: "Abu Reda Muhammad ibn Ahmad", language: "German" },
+    27: { label: "Frank Bubenheim and Nadeem", language: "German" },
+
+    // Gujarati
+    225: { label: "Rabila Al-Umry", language: "Gujarati" },
+
+    // Hausa
+    32: { label: "Hausa Translation (Abubakar Gumi)", language: "Hausa" },
+    115: { label: "Abubakar Mahmood Jummi", language: "Hausa" },
+
+    // Hebrew
+    233: { label: "Dar Al-Salam Center", language: "Hebrew" },
+
+    // Hindi
+    122: { label: "Maulana Azizul Haque al-Umari", language: "Hindi" },
+
+    // Indonesian
     134: { label: "King Fahad Quran Complex", language: "Indonesian" },
     141: { label: "The Sabiq Company", language: "Indonesian" },
-    33: {
-      label: "Indonesian Islamic Affairs Ministry",
-      language: "Indonesian",
-    },
+    33: { label: "Indonesian Islamic Affairs Ministry", language: "Indonesian" },
+
+    // Italian
+    153: { label: "Hamza Roberto Piccardo", language: "Italian" },
+    209: { label: "Othman al-Sharif", language: "Italian" },
+
+    // Japanese
+    35: { label: "Ryoichi Mita", language: "Japanese" },
+    218: { label: "Saeed Sato", language: "Japanese" },
+
+    // Kannada
+    771: { label: "Kannada Translation", language: "Kannada" },
+
+    // Kazakh
+    222: { label: "Khalifa Altay", language: "Kazakh" },
+    113: { label: "Khalifah Altai", language: "Kazakh" },
+
+    // Kinyarwanda
+    774: { label: "The Rwanda Muslims Association team", language: "Kinyarwanda" },
+
+    // Korean
+    36: { label: "Korean", language: "Korean" },
+    219: { label: "Hamed Choi", language: "Korean" },
+
+    // Kurdish
+    81: { label: "Burhan Muhammad-Amin", language: "Kurdish" },
+    143: { label: "Muhammad Saleh Bamoki", language: "Kurdish" },
+
+    // Malay
+    39: { label: "Abdullah Muhammad Basmeih", language: "Malay" },
+
+    // Malayalam
+    80: { label: "Muhammad Karakunnu and Vanidas Elayavoor", language: "Malayalam" },
+    224: { label: "Abdul-Hamid Haidar & Kanhi Muhammad", language: "Malayalam" },
+    37: { label: "Malayalam Translation (Abdul Hameed and Kunhi)", language: "Malayalam" },
+
+    // Maranao
+    38: { label: "Maranao", language: "Maranao" },
+
+    // Marathi
+    226: { label: "Muhammad Shafi'i Ansari", language: "Marathi" },
+
+    // Nepali
+    108: { label: "Ahl Al-Hadith Central Society of Nepal", language: "Nepali" },
+
+    // Norwegian
+    41: { label: "Norwegian", language: "Norwegian" },
+
+    // Oromo
+    111: { label: "Ghali Apapur Apaghuna", language: "Oromo" },
+
+    // Pashto
+    118: { label: "Zakaria Abulsalam", language: "Pashto" },
+
+    // Persian
+    135: { label: "IslamHouse.com", language: "Persian" },
+    29: { label: "Hussein Taji Kal Dari", language: "Persian" },
+
+    // Polish
+    42: { label: "Józef Bielawski", language: "Polish" },
+
+    // Portuguese
+    103: { label: "Helmi Nasr", language: "Portuguese" },
+    43: { label: "Portuguese Translation (Samir)", language: "Portuguese" },
+
+    // Romanian
+    44: { label: "Grigore", language: "Romanian" },
+    782: { label: "Islamic and Cultural League", language: "Romanian" },
+
+    // Russian
+    78: { label: "Ministry of Awqaf, Egypt", language: "Russian" },
+    79: { label: "Abu Adel", language: "Russian" },
+    45: { label: "Russian Translation (Elmir Kuliev)", language: "Russian" },
+
+    // Sindhi
+    238: { label: "Taj Mehmood Amroti", language: "Sindhi" },
+
+    // Sinhala
+    228: { label: "Ruwwad Center", language: "Sinhala" },
+
+    // Somali
+    46: { label: "Mahmud Muhammad Abduh", language: "Somali" },
+
+    // Spanish
+    83: { label: "Sheikh Isa Garcia", language: "Spanish" },
+    140: { label: "Montada Islamic Foundation", language: "Spanish" },
+    199: { label: "Noor International Center", language: "Spanish" },
+
+    // Swahili
+    231: { label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis", language: "Swahili" },
+    49: { label: "Ali Muhsin Al-Barwani", language: "Swahili" },
+
+    // Swedish
+    48: { label: "Knut Bernström", language: "Swedish" },
+
+    // Tagalog
+    211: { label: "Dar Al-Salam Center", language: "Tagalog" },
+
+    // Tajik
+    139: { label: "Khawaja Mirof & Khawaja Mir", language: "Tajik" },
+    74: { label: "Tajik (AbdolMohammad Ayati)", language: "Tajik" },
+    223: { label: "Pioneers of Translation Center", language: "Tajik" },
+
+    // Tamil
+    229: { label: "Sheikh Omar Sharif bin Abdul Salam", language: "Tamil" },
+    50: { label: "Jan Trust Foundation", language: "Tamil" },
+    133: { label: "Abdul Hameed Baqavi", language: "Tamil" },
+
+    // Tatar
+    53: { label: "Tatar", language: "Tatar" },
+
+    // Telugu
+    227: { label: "Maulana Abder-Rahim ibn Muhammad", language: "Telugu" },
+
+    // Thai
+    230: { label: "Society of Institutes and Universities", language: "Thai" },
+    51: { label: "Thai Translation (King Fahad Quran Complex)", language: "Thai" },
+
+    // Turkish
+    210: { label: "Dar Al-Salam Center", language: "Turkish" },
+    77: { label: "Turkish Translation (Diyanet)", language: "Turkish" },
+    124: { label: "Muslim Shahin", language: "Turkish" },
+    112: { label: "Shaban Britch", language: "Turkish" },
+    52: { label: "Elmalili Hamdi Yazir", language: "Turkish" },
+
+    // Uighur (Uyghur)
+    76: { label: "Muhammad Saleh", language: "Uighur" },
+
+    // Ukrainian
+    217: { label: "Dr. Mikhailo Yaqubovic", language: "Ukrainian" },
+
+    // Urdu
+    234: { label: "Fatah Muhammad Jalandhari", language: "Urdu" },
+    54: { label: "Maulana Muhammad Junagarhi", language: "Urdu" },
+    156: { label: "Fe Zilal al-Qur'an (Sayyid Qutb)", language: "Urdu" },
+    151: { label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)", language: "Urdu" },
+    158: { label: "Bayan-ul-Quran (Dr. Israr Ahmad)", language: "Urdu" },
+    97: { label: "Tafheem e Qur'an - Syed Abu Ali Maududi", language: "Urdu" },
+    831: { label: "Abul Ala Maududi (Roman Urdu)", language: "Urdu" },
+    819: { label: "Maulana Wahiduddin Khan", language: "Urdu" },
+
+    // Uzbek
+    55: { label: "Muhammad Sodiq Muhammad Yusuf (Latin)", language: "Uzbek" },
+    101: { label: "Alauddin Mansour", language: "Uzbek" },
+    127: { label: "Muhammad Sodik Muhammad Yusuf", language: "Uzbek" },
+
+    // Vietnamese
+    220: { label: "Ruwwad Center", language: "Vietnamese" },
+    221: { label: "Hasan Abdul-Karim", language: "Vietnamese" },
+
+    // Yau/Yuw
+    798: { label: "Abdul Hamid Silika", language: "Yau" },
+
+    // Yoruba
+    125: { label: "Shaykh Abu Rahimah Mikael Aykyuni", language: "Yoruba" },
   };
 
   // Virtualization constants
