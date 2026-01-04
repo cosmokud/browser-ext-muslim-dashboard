@@ -17,6 +17,19 @@ class WeatherManager {
     this.weatherWind = document.getElementById("weatherWind");
     this.weatherRefreshBtn = document.getElementById("weatherRefreshBtn");
 
+    // Compact header weather (beside clock) elements
+    this.headerWeather = document.getElementById("headerWeather");
+    this.headerWeatherIcon = document.getElementById("headerWeatherIcon");
+    this.headerWeatherTemp = document.getElementById("headerWeatherTemp");
+    this.headerWeatherDetails = document.getElementById("headerWeatherDetails");
+    this.headerWeatherFeelsLike = document.getElementById(
+      "headerWeatherFeelsLike"
+    );
+    this.headerWeatherHumidity = document.getElementById(
+      "headerWeatherHumidity"
+    );
+    this.headerWeatherWind = document.getElementById("headerWeatherWind");
+
     this.weatherForecast = document.getElementById("weatherForecast");
     this.weatherChart = document.getElementById("weatherChart");
     this.weatherChartLegend = document.getElementById("weatherChartLegend");
@@ -107,6 +120,9 @@ class WeatherManager {
     // the same way it does when switching metric tabs.
     this._startHourlyChartAnimation();
     this.renderHourlyChart();
+
+    // Ensure header weather visibility matches current settings
+    this.updateHeaderWeatherDisplay();
 
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
@@ -224,6 +240,93 @@ class WeatherManager {
       ctx.fillText(hourLabel, x, plotBottom + 6);
     }
     */
+  }
+
+  updateHeaderWeatherDisplay() {
+    if (!this.headerWeather) return;
+
+    const settings = this.storage.getSettings();
+    const heading = settings.heading || {};
+    const enabled = heading.headerWeatherEnabled === true;
+    const mode =
+      heading.headerWeatherMode === "detailed" ? "detailed" : "simple";
+
+    if (!enabled) {
+      this.headerWeather.hidden = true;
+      this.headerWeather.setAttribute("aria-hidden", "true");
+      return;
+    }
+
+    this.headerWeather.hidden = false;
+    this.headerWeather.setAttribute("aria-hidden", "false");
+
+    if (this.headerWeatherDetails) {
+      this.headerWeatherDetails.hidden = mode !== "detailed";
+    }
+
+    const weather = this.currentWeather;
+    const unitSymbolSetting =
+      (settings.weatherUnit || "celsius") === "fahrenheit" ? "°F" : "°C";
+
+    const unitSymbol = weather
+      ? weather.unit === "fahrenheit"
+        ? "°F"
+        : "°C"
+      : unitSymbolSetting;
+
+    const windUnitLabel = weather
+      ? weather.unit === "fahrenheit"
+        ? "mph"
+        : "km/h"
+      : (settings.weatherUnit || "celsius") === "fahrenheit"
+      ? "mph"
+      : "km/h";
+
+    const weatherInfo = weather
+      ? this.weatherCodes[weather.weatherCode] || { icon: "🌡️", desc: "" }
+      : { icon: "🌡️", desc: "" };
+
+    if (this.headerWeatherIcon) {
+      this.headerWeatherIcon.textContent = weatherInfo.icon || "🌡️";
+    }
+
+    if (this.headerWeatherTemp) {
+      const t = weather?.temperature;
+      this.headerWeatherTemp.textContent =
+        t === null || t === undefined ? `--${unitSymbol}` : `${t}${unitSymbol}`;
+    }
+
+    if (mode === "detailed") {
+      if (this.headerWeatherFeelsLike) {
+        const f = weather?.feelsLike;
+        this.headerWeatherFeelsLike.textContent =
+          f === null || f === undefined
+            ? `Feels --${unitSymbol}`
+            : `Feels ${f}${unitSymbol}`;
+      }
+
+      if (this.headerWeatherHumidity) {
+        const h = weather?.humidity;
+        this.headerWeatherHumidity.textContent =
+          h === null || h === undefined ? `--%` : `${h}%`;
+      }
+
+      if (this.headerWeatherWind) {
+        const w = weather?.windSpeed;
+        this.headerWeatherWind.textContent =
+          w === null || w === undefined
+            ? `-- ${windUnitLabel}`
+            : `${w} ${windUnitLabel}`;
+      }
+    }
+
+    try {
+      const loc = weather?.location ? ` • ${weather.location}` : "";
+      const desc = weatherInfo.desc ? `${weatherInfo.desc}` : "Weather";
+      this.headerWeather.title = `${desc}${loc}`;
+    } catch (e) {
+      // ignore
+    }
   }
 
   setupEventListeners() {
@@ -876,6 +979,13 @@ window.WeatherManager = WeatherManager;
    * Update the weather display
    */
   updateDisplay() {
+    // Update header-weather UI even if currentWeather is not ready yet.
+    try {
+      this.updateHeaderWeatherDisplay();
+    } catch (e) {
+      // ignore
+    }
+
     if (!this.currentWeather) return;
 
     const weather = this.currentWeather;
@@ -928,6 +1038,12 @@ window.WeatherManager = WeatherManager;
     this.render7DayForecast();
     this.updateMetricTabs();
     this.renderHourlyChart();
+
+    try {
+      this.updateHeaderWeatherDisplay();
+    } catch (e) {
+      // ignore
+    }
   }
 
   render7DayForecast() {
@@ -986,7 +1102,7 @@ window.WeatherManager = WeatherManager;
 
     this.weatherForecast.innerHTML = items.join("");
 
-    // Click to select day (updates chart)
+    // Click to select day (updates chart with animation)
     this.weatherForecast
       .querySelectorAll(".weather-forecast-day")
       .forEach((el) => {
@@ -995,6 +1111,8 @@ window.WeatherManager = WeatherManager;
           if (!Number.isFinite(idx)) return;
           this.selectedForecastIndex = Math.max(0, Math.min(6, idx));
           this.render7DayForecast();
+          // Trigger the bar animation when changing days
+          this._startHourlyChartAnimation();
           this.renderHourlyChart();
         });
       });

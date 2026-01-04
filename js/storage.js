@@ -151,6 +151,7 @@ class StorageManager {
       useDefaultQuotes: true,
       useUserQuotes: true,
       quotesPerPage: 10,
+      quoteLayout: "classic", // 'classic', 'compact', 'tight', 'minimal', 'inline'
 
       // Background settings
       bgInterval: 60, // minutes
@@ -210,6 +211,8 @@ class StorageManager {
         qiblaDirection: true,
         todoList: true,
         weather: true,
+        notes: true,
+        pocketQuran: true,
         lunarPhase: true,
         flashcards: true,
       },
@@ -265,8 +268,8 @@ class StorageManager {
         mode: "study", // 'study' or 'test'
         studyAutoAdvanceSeconds: 10,
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
-        questionFontSize: 22,
-        answerFontSize: 18,
+        questionFontSize: 64,
+        answerFontSize: 32,
       },
 
       // Pocket Quran settings
@@ -314,6 +317,19 @@ class StorageManager {
         dateFormat: "full-weekday", // 'full-weekday', 'full', 'medium-weekday', 'medium', 'short'
         dateCalendar: "hijri", // 'hijri', 'gregorian', 'both'
         showIslamicEvents: true,
+
+        // Compact header weather (beside clock)
+        headerWeatherEnabled: false,
+        headerWeatherMode: "simple", // 'simple' or 'detailed'
+      },
+
+      // Theme settings
+      theme: {
+        name: "pureWhite",
+        mode: "light",
+        glassEnabled: true,
+        customAccent: null,
+        customPalettes: {},
       },
     };
   }

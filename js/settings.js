@@ -130,6 +130,9 @@ class SettingsManager {
     this.newQuoteSource = document.getElementById("newQuoteSource");
     this.newQuoteArabic = document.getElementById("newQuoteArabic");
     this.addQuoteBtn = document.getElementById("addQuoteBtn");
+    this.quoteLayoutRadios = document.querySelectorAll(
+      'input[name="quoteLayout"]'
+    );
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -216,6 +219,14 @@ class SettingsManager {
       'input[name="dateCalendar"]'
     );
 
+    // Header weather (compact weather beside clock)
+    this.headerWeatherEnabled = document.getElementById(
+      "headerWeatherEnabled"
+    );
+    this.headerWeatherModeRadios = document.querySelectorAll(
+      'input[name="headerWeatherMode"]'
+    );
+
     // Component visibility elements
     this.visibilityHeader = document.getElementById("visibilityHeader");
     this.visibilityQuickPins = document.getElementById("visibilityQuickPins");
@@ -231,6 +242,10 @@ class SettingsManager {
       "visibilityQiblaDirection"
     );
     this.visibilityWeather = document.getElementById("visibilityWeather");
+    this.visibilityNotes = document.getElementById("visibilityNotes");
+    this.visibilityPocketQuran = document.getElementById(
+      "visibilityPocketQuran"
+    );
     this.visibilityLunarPhase = document.getElementById("visibilityLunarPhase");
     this.visibilityFasting = document.getElementById("visibilityFasting");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
@@ -452,6 +467,15 @@ class SettingsManager {
     if (this.useDefaultQuotes)
       this.useDefaultQuotes.checked = settings.useDefaultQuotes;
     if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
+
+    // Quote layout
+    {
+      const quoteLayout = settings.quoteLayout || "classic";
+      const quoteLayoutRadio = document.querySelector(
+        `input[name="quoteLayout"][value="${quoteLayout}"]`
+      );
+      if (quoteLayoutRadio) quoteLayoutRadio.checked = true;
+    }
 
     // Background settings
     if (settings.bgIntervalCustom && settings.bgInterval === "custom") {
@@ -752,6 +776,17 @@ class SettingsManager {
       `input[name="dateCalendar"][value="${dateCalendar}"]`
     );
     if (dateCalendarRadio) dateCalendarRadio.checked = true;
+
+    // Header weather
+    if (this.headerWeatherEnabled) {
+      this.headerWeatherEnabled.checked = heading.headerWeatherEnabled === true;
+    }
+
+    const headerWeatherMode = heading.headerWeatherMode || "simple";
+    const headerWeatherModeRadio = document.querySelector(
+      `input[name="headerWeatherMode"][value="${headerWeatherMode}"]`
+    );
+    if (headerWeatherModeRadio) headerWeatherModeRadio.checked = true;
   }
 
   /**
@@ -777,6 +812,10 @@ class SettingsManager {
         visibility.qiblaDirection !== false;
     if (this.visibilityWeather)
       this.visibilityWeather.checked = visibility.weather !== false;
+    if (this.visibilityNotes)
+      this.visibilityNotes.checked = visibility.notes !== false;
+    if (this.visibilityPocketQuran)
+      this.visibilityPocketQuran.checked = visibility.pocketQuran !== false;
     if (this.visibilityLunarPhase)
       this.visibilityLunarPhase.checked = visibility.lunarPhase !== false;
     if (this.visibilityFasting)
@@ -2386,6 +2425,11 @@ class SettingsManager {
     settings.useDefaultQuotes = this.useDefaultQuotes?.checked ?? true;
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
 
+    const quoteLayoutRadio = document.querySelector(
+      'input[name="quoteLayout"]:checked'
+    );
+    settings.quoteLayout = quoteLayoutRadio?.value || settings.quoteLayout || "classic";
+
     // Background settings
     const bgIntervalValue = this.bgInterval?.value;
     if (bgIntervalValue === "custom") {
@@ -2531,6 +2575,15 @@ class SettingsManager {
       'input[name="dateCalendar"]:checked'
     );
     settings.heading.dateCalendar = dateCalendarRadio?.value || "hijri";
+
+    // Header weather
+    settings.heading.headerWeatherEnabled =
+      this.headerWeatherEnabled?.checked ?? false;
+    const headerWeatherModeRadio = document.querySelector(
+      'input[name="headerWeatherMode"]:checked'
+    );
+    settings.heading.headerWeatherMode =
+      headerWeatherModeRadio?.value || "simple";
   }
 
   /**
@@ -2546,6 +2599,8 @@ class SettingsManager {
       hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
       qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
       weather: this.visibilityWeather?.checked ?? true,
+      notes: this.visibilityNotes?.checked ?? true,
+      pocketQuran: this.visibilityPocketQuran?.checked ?? true,
       lunarPhase: this.visibilityLunarPhase?.checked ?? true,
       fasting: this.visibilityFasting?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
@@ -2668,6 +2723,20 @@ class SettingsManager {
         typeof window.dashboard.applyHeadingSettings === "function"
       ) {
         window.dashboard.applyHeadingSettings();
+      }
+
+      // Sync compact header weather (if available)
+      if (
+        window.dashboard &&
+        window.dashboard.weather &&
+        typeof window.dashboard.weather.updateHeaderWeatherDisplay ===
+          "function"
+      ) {
+        try {
+          window.dashboard.weather.updateHeaderWeatherDisplay();
+        } catch (e) {
+          // ignore
+        }
       }
 
       // Apply pinned apps settings

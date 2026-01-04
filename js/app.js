@@ -67,6 +67,18 @@ class MuslimDashboard {
       } catch (e) {}
     };
 
+    // On startup: show FAB toggle with a cute bouncy animation before auto-hiding
+    const showStartupBounce = () => {
+      menu.classList.add("startup-bounce");
+      setHotVisible(true);
+      setTimeout(() => {
+        menu.classList.remove("startup-bounce");
+        setHotVisible(false);
+      }, 2200);
+    };
+    // Delay startup bounce slightly to allow page load
+    setTimeout(showStartupBounce, 600);
+
     const setOpen = (open) => {
       menu.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
@@ -810,6 +822,27 @@ class MuslimDashboard {
       );
     }
 
+    // Notes
+    const notesCard = document.getElementById("notesCard");
+    if (notesCard) {
+      notesCard.style.display = visibility.notes === false ? "none" : "";
+      notesCard.setAttribute(
+        "aria-hidden",
+        visibility.notes === false ? "true" : "false"
+      );
+    }
+
+    // Pocket Quran
+    const pocketQuranCard = document.getElementById("pocketQuranCard");
+    if (pocketQuranCard) {
+      pocketQuranCard.style.display =
+        visibility.pocketQuran === false ? "none" : "";
+      pocketQuranCard.setAttribute(
+        "aria-hidden",
+        visibility.pocketQuran === false ? "true" : "false"
+      );
+    }
+
     // Lunar Phase
     const lunarPhaseCard = document.getElementById("lunarPhaseCard");
     if (lunarPhaseCard) {
@@ -897,6 +930,18 @@ class MuslimDashboard {
     if (this.dateDisplay) {
       this.dateDisplay.style.display =
         headingSettings.showDate === false ? "none" : "";
+    }
+
+    // Compact header weather (beside clock)
+    if (
+      this.weather &&
+      typeof this.weather.updateHeaderWeatherDisplay === "function"
+    ) {
+      try {
+        this.weather.updateHeaderWeatherDisplay();
+      } catch (e) {
+        // ignore
+      }
     }
   }
 
