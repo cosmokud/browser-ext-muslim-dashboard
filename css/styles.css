@@ -2266,6 +2266,32 @@ body {
   overflow-y: auto;
 }
 
+/* Settings modal scrollbar (use theme primary) */
+#settingsModal .modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.08);
+}
+
+#settingsModal .modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+#settingsModal .modal-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+#settingsModal .modal-body::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  background-clip: padding-box;
+}
+
+#settingsModal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
+}
+
 .modal-footer {
   padding: var(--spacing-lg);
   border-top: 1px solid var(--glass-border);
@@ -2458,6 +2484,144 @@ body {
 .credits-cta:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Support (Ko-fi) */
+.support-kofi-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid var(--glass-border);
+  border-left: 4px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.support-kofi-card::before {
+  content: "";
+  position: absolute;
+  inset: -60% -40%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  transform: translateX(-40%) rotate(12deg);
+  animation: supportKofiSweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.support-kofi-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  color: var(--text-primary);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  animation: supportKofiFloat 2.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.support-kofi-body {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.support-kofi-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.support-kofi-desc {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.support-kofi-cta {
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  border: none;
+  color: var(--text-primary);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  animation: supportKofiPulse 2.8s ease-in-out infinite;
+}
+
+.support-kofi-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+
+.support-kofi-cta:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+@keyframes supportKofiSweep {
+  0% {
+    transform: translateX(-40%) rotate(12deg);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateX(10%) rotate(12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(60%) rotate(12deg);
+    opacity: 0.65;
+  }
+}
+
+@keyframes supportKofiFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes supportKofiPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-kofi-card::before,
+  .support-kofi-badge,
+  .support-kofi-cta {
+    animation: none !important;
+  }
 }
 
 .radio-option,
