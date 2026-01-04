@@ -2587,45 +2587,13 @@
               <p class="setting-hint">
                 Choose a compact display style for the quote section.
               </p>
-              <div class="quote-style-picker" id="quoteStylePicker">
-                <label class="quote-style-option">
-                  <input
-                    type="radio"
-                    name="quoteLayoutStyle"
-                    value="classic"
-                    checked
-                  />
-                  <div class="quote-style-preview quote-style-classic">
-                    <span class="preview-icon">❝</span>
-                    <span class="preview-text">Classic</span>
-                  </div>
-                </label>
-                <label class="quote-style-option">
-                  <input type="radio" name="quoteLayoutStyle" value="minimal" />
-                  <div class="quote-style-preview quote-style-minimal">
-                    <span class="preview-text">Minimal</span>
-                  </div>
-                </label>
-                <label class="quote-style-option">
-                  <input type="radio" name="quoteLayoutStyle" value="elegant" />
-                  <div class="quote-style-preview quote-style-elegant">
-                    <span class="preview-icon">✦</span>
-                    <span class="preview-text">Elegant</span>
-                  </div>
-                </label>
-                <label class="quote-style-option">
-                  <input type="radio" name="quoteLayoutStyle" value="card" />
-                  <div class="quote-style-preview quote-style-card">
-                    <span class="preview-text">Card</span>
-                  </div>
-                </label>
-                <label class="quote-style-option">
-                  <input type="radio" name="quoteLayoutStyle" value="banner" />
-                  <div class="quote-style-preview quote-style-banner">
-                    <span class="preview-text">Banner</span>
-                  </div>
-                </label>
-              </div>
+              <select class="setting-select" id="quoteLayoutStyleSelect">
+                <option value="classic">Classic</option>
+                <option value="minimal">Minimal</option>
+                <option value="elegant">Elegant</option>
+                <option value="card">Card</option>
+                <option value="banner">Banner</option>
+              </select>
             </div>
 
             <div class="setting-group">
@@ -3292,7 +3260,30 @@
                     href="https://ko-fi.com/hikmahdputra"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >Open Ko-fi</a
+                    >Open Ko-fi</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Feedback / Bug Reports</label>
+              <p class="setting-hint">
+                Found a bug or have an idea? Send feedback through the form.
+              </p>
+
+              <div class="support-feedback-card">
+                <div class="support-feedback-badge" aria-hidden="true">📝</div>
+                <div class="support-feedback-body">
+                  <h3 class="support-feedback-title">Send Feedback</h3>
+                  <p class="support-feedback-desc">
+                    Report issues, request features, or share suggestions.
+                  </p>
+                  <a
+                    class="setting-btn support-feedback-cta"
+                    href="https://forms.gle/8n9NLLXSmwBp3MXz9"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Open Feedback Form</a>
                 </div>
               </div>
             </div>

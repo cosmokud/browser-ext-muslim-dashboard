@@ -275,9 +275,9 @@ class SettingsManager {
       'input[name="weatherUnit"]'
     );
 
-    // Quote layout style elements
-    this.quoteLayoutStyleRadios = document.querySelectorAll(
-      'input[name="quoteLayoutStyle"]'
+    // Quote layout style element
+    this.quoteLayoutStyleSelect = document.getElementById(
+      "quoteLayoutStyleSelect"
     );
 
     // Compact weather elements
@@ -507,10 +507,12 @@ class SettingsManager {
 
     // Quote layout style
     const quoteLayoutStyle = settings.quoteLayoutStyle || "classic";
-    const quoteLayoutStyleRadio = document.querySelector(
-      `input[name="quoteLayoutStyle"][value="${quoteLayoutStyle}"]`
-    );
-    if (quoteLayoutStyleRadio) quoteLayoutStyleRadio.checked = true;
+    if (this.quoteLayoutStyleSelect) {
+      const hasOption = this.quoteLayoutStyleSelect.querySelector(
+        `option[value="${quoteLayoutStyle}"]`
+      );
+      this.quoteLayoutStyleSelect.value = hasOption ? quoteLayoutStyle : "classic";
+    }
 
     // Background settings
     if (settings.bgIntervalCustom && settings.bgInterval === "custom") {
@@ -2642,10 +2644,8 @@ class SettingsManager {
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
 
     // Quote layout style
-    const quoteLayoutStyleRadio = document.querySelector(
-      'input[name="quoteLayoutStyle"]:checked'
-    );
-    settings.quoteLayoutStyle = quoteLayoutStyleRadio?.value || "classic";
+    const selectedStyle = this.quoteLayoutStyleSelect?.value;
+    settings.quoteLayoutStyle = selectedStyle || "classic";
 
     // Compact weather settings
     settings.compactWeatherEnabled =
