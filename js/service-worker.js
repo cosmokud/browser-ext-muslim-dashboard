@@ -372,16 +372,45 @@ function showPrayerNotification(prayerKey, kind) {
 
   const notificationId = `${PRAYER_ALARM_PREFIX}${prayerKey}_${kind}_${Date.now()}`;
 
+  const iconUrl =
+    typeof chrome !== "undefined" && chrome.runtime?.getURL
+      ? chrome.runtime.getURL("icons/icon128.png")
+      : "icons/icon128.png";
+
   try {
-    chrome.notifications.create(notificationId, {
-      type: "basic",
-      iconUrl: "icons/icon128.png",
-      title: titleBase,
-      message,
-      priority: 1,
-    });
+    chrome.notifications.create(
+      notificationId,
+      {
+        type: "basic",
+        iconUrl,
+        title: titleBase,
+        message,
+        priority: 1,
+      },
+      () => {
+        const err = chrome.runtime?.lastError;
+        if (err) {
+          // Best-effort debugging aid.
+          storageSet({
+            md_prayerNotifications_lastError: {
+              at: Date.now(),
+              message: err.message || String(err),
+              prayerKey,
+              kind,
+            },
+          });
+        }
+      }
+    );
   } catch (e) {
-    // ignore
+    storageSet({
+      md_prayerNotifications_lastError: {
+        at: Date.now(),
+        message: e?.message || String(e),
+        prayerKey,
+        kind,
+      },
+    });
   }
 }
 
