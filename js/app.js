@@ -335,7 +335,7 @@ class MuslimDashboard {
 
   /**
    * Initialize the dashboard
-   * Non-blocking startup: All UI components render immediately, 
+   * Non-blocking startup: All UI components render immediately,
    * API-dependent data loads in background without blocking interaction
    */
   async init() {
@@ -470,38 +470,41 @@ class MuslimDashboard {
 
     // Prayer times initialization (includes geolocation + reverse geocoding)
     backgroundTasks.push(
-      this.prayerTimes.init().then(() => {
-        // Initialize qibla after location is available
-        const location = this.prayerTimes.getCurrentLocation();
-        if (location) {
-          this.qibla.init(location.latitude, location.longitude);
-        }
-        // Refresh lunar phase with new location
-        if (this.lunarPhase) {
-          this.lunarPhase.refresh();
-        }
-      }).catch(err => {
-        console.warn("Prayer times init background error:", err);
-      })
+      this.prayerTimes
+        .init()
+        .then(() => {
+          // Initialize qibla after location is available
+          const location = this.prayerTimes.getCurrentLocation();
+          if (location) {
+            this.qibla.init(location.latitude, location.longitude);
+          }
+          // Refresh lunar phase with new location
+          if (this.lunarPhase) {
+            this.lunarPhase.refresh();
+          }
+        })
+        .catch((err) => {
+          console.warn("Prayer times init background error:", err);
+        })
     );
 
     // Quotes initialization (loads default quotes JSON)
     backgroundTasks.push(
-      this.quotes.init().catch(err => {
+      this.quotes.init().catch((err) => {
         console.warn("Quotes init background error:", err);
       })
     );
 
     // Weather initialization (includes geolocation + weather API)
     backgroundTasks.push(
-      this.weather.init().catch(err => {
+      this.weather.init().catch((err) => {
         console.warn("Weather init background error:", err);
       })
     );
 
     // Flashcards initialization (loads CSV data)
     backgroundTasks.push(
-      this.flashcards.init().catch(err => {
+      this.flashcards.init().catch((err) => {
         console.warn("Flashcards init background error:", err);
       })
     );

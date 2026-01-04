@@ -102,10 +102,10 @@ class WeatherManager {
    */
   async init() {
     this.setupEventListeners();
-    
+
     // Show loading state immediately (non-blocking)
     this.showLoadingState();
-    
+
     // Initialize compact weather (will show loading state)
     this.initCompactWeather();
 
@@ -986,7 +986,8 @@ class WeatherManager {
       this.weatherWind.textContent = "Wind --";
     }
     if (this.weatherForecast) {
-      this.weatherForecast.innerHTML = '<div class="weather-loading-placeholder">Loading forecast...</div>';
+      this.weatherForecast.innerHTML =
+        '<div class="weather-loading-placeholder">Loading forecast...</div>';
     }
   }
 
