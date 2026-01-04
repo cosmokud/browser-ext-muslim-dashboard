@@ -2307,6 +2307,17 @@ body {
   transition: all var(--transition-fast);
 }
 
+.setting-btn-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.setting-btn-icon {
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-width: 44px;
+}
+
 .setting-btn:hover {
   background: var(--glass-bg-hover);
   border-color: var(--accent-gold);
@@ -8142,7 +8153,7 @@ body.sticky-note-resizing {
   bottom: var(--spacing-sm);
   right: var(--spacing-sm);
   height: 28px;
-  width: auto;
+  width: 28px;
   padding: 0 var(--spacing-sm);
   border-radius: var(--radius-full);
   background: var(--glass-bg);

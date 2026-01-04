@@ -1297,9 +1297,20 @@
                   />
                 </div>
               </div>
-              <button class="setting-btn" id="searchCityBtn">
-                🔍 Search City
-              </button>
+              <div class="setting-btn-row">
+                <button class="setting-btn" id="searchCityBtn" type="button">
+                  🔍 Search City
+                </button>
+                <button
+                  class="setting-btn setting-btn-icon"
+                  id="pasteCoordsBtn"
+                  type="button"
+                  title="Paste coordinates from clipboard"
+                  aria-label="Paste coordinates from clipboard"
+                >
+                  📋
+                </button>
+              </div>
               <div
                 class="city-search-results"
                 id="citySearchResults"
@@ -2412,9 +2423,24 @@
                   />
                 </div>
               </div>
-              <button class="setting-btn" id="weatherSearchCityBtn">
-                🔍 Search City
-              </button>
+              <div class="setting-btn-row">
+                <button
+                  class="setting-btn"
+                  id="weatherSearchCityBtn"
+                  type="button"
+                >
+                  🔍 Search City
+                </button>
+                <button
+                  class="setting-btn setting-btn-icon"
+                  id="weatherPasteCoordsBtn"
+                  type="button"
+                  title="Paste coordinates from clipboard"
+                  aria-label="Paste coordinates from clipboard"
+                >
+                  📋
+                </button>
+              </div>
               <div
                 class="city-search-results"
                 id="weatherCitySearchResults"
@@ -3063,9 +3089,26 @@
                 class="theme-palette-color"
               />
             </div>
+            <div class="theme-palette-field">
+              <label class="setting-label" for="themePaletteGlassTint"
+                >Glass Tint</label
+              >
+              <input
+                type="color"
+                id="themePaletteGlassTint"
+                class="theme-palette-color"
+              />
+            </div>
           </div>
         </div>
         <div class="modal-footer">
+          <button
+            class="modal-btn cancel-btn"
+            id="themePaletteResetDefaults"
+            type="button"
+          >
+            Reset Defaults
+          </button>
           <button
             class="modal-btn save-btn"
             id="themePaletteDone"

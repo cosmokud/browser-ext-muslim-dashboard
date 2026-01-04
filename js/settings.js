@@ -41,6 +41,7 @@ class SettingsManager {
     this.latitudeInput = document.getElementById("latitudeInput");
     this.longitudeInput = document.getElementById("longitudeInput");
     this.searchCityBtn = document.getElementById("searchCityBtn");
+    this.pasteCoordsBtn = document.getElementById("pasteCoordsBtn");
     this.citySearchResults = document.getElementById("citySearchResults");
     this.requestLocationBtn = document.getElementById("requestLocationBtn");
 
@@ -251,6 +252,9 @@ class SettingsManager {
       "weatherLongitudeInput"
     );
     this.weatherSearchCityBtn = document.getElementById("weatherSearchCityBtn");
+    this.weatherPasteCoordsBtn = document.getElementById(
+      "weatherPasteCoordsBtn"
+    );
     this.weatherCitySearchResults = document.getElementById(
       "weatherCitySearchResults"
     );
@@ -925,6 +929,164 @@ class SettingsManager {
     }
   }
 
+  _safeDecodeURIComponent(value) {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
+  _normalizeLatLng(latStr, lngStr) {
+    const latNum = Number(latStr);
+    const lngNum = Number(lngStr);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return null;
+
+    let latitudeStr = String(latStr).trim();
+    let longitudeStr = String(lngStr).trim();
+    let latitude = latNum;
+    let longitude = lngNum;
+
+    // Heuristic swap if user pasted lng,lat
+    if (Math.abs(latitude) > 90 && Math.abs(longitude) <= 90) {
+      [latitude, longitude] = [longitude, latitude];
+      [latitudeStr, longitudeStr] = [longitudeStr, latitudeStr];
+    }
+
+    if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
+    return { latitude: latitudeStr, longitude: longitudeStr };
+  }
+
+  _parseLatLngFromText(text) {
+    if (!text) return null;
+    const raw = String(text).trim();
+    if (!raw) return null;
+
+    const candidates = [raw, this._safeDecodeURIComponent(raw)];
+
+    for (const candidate of candidates) {
+      // Google Maps URL often includes: @lat,lng,zoom
+      const atMatch = candidate.match(
+        /@\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/
+      );
+      if (atMatch) {
+        const normalized = this._normalizeLatLng(atMatch[1], atMatch[2]);
+        if (normalized) return normalized;
+      }
+
+      // Google Maps data format sometimes includes: !3dLAT!4dLNG
+      const dataMatch = candidate.match(
+        /!3d\s*(-?\d+(?:\.\d+)?)\s*!4d\s*(-?\d+(?:\.\d+)?)/
+      );
+      if (dataMatch) {
+        const normalized = this._normalizeLatLng(dataMatch[1], dataMatch[2]);
+        if (normalized) return normalized;
+      }
+
+      // Query params: q=lat,lng or ll=lat,lng or center=lat,lng
+      const paramMatch = candidate.match(
+        /[?&](?:q|query|ll|center)=\s*(-?\d+(?:\.\d+)?)(?:%2C|,|\s)+\s*(-?\d+(?:\.\d+)?)/i
+      );
+      if (paramMatch) {
+        const normalized = this._normalizeLatLng(paramMatch[1], paramMatch[2]);
+        if (normalized) return normalized;
+      }
+
+      // Generic: first in-range "lat, lng" pair
+      const pairRe = /(-?\d+(?:\.\d+)?)(?:\s*,\s*|\s+)(-?\d+(?:\.\d+)?)/g;
+      let m;
+      let best = null;
+      let bestScore = -1;
+      while ((m = pairRe.exec(candidate)) !== null) {
+        const normalized = this._normalizeLatLng(m[1], m[2]);
+        if (!normalized) continue;
+
+        const a = String(m[1]);
+        const b = String(m[2]);
+        const hasDecA = a.includes(".");
+        const hasDecB = b.includes(".");
+
+        // Prefer pairs that look like real coordinates (usually decimal).
+        // This helps avoid accidentally selecting integers like "15,17" from URLs.
+        let score = 0;
+        if (hasDecA) score += 2;
+        if (hasDecB) score += 2;
+        score += Math.min(6, a.replace(/[^0-9]/g, "").length);
+        score += Math.min(6, b.replace(/[^0-9]/g, "").length);
+
+        if (score > bestScore) {
+          bestScore = score;
+          best = normalized;
+        }
+      }
+      if (best) return best;
+    }
+
+    return null;
+  }
+
+  async _readClipboardTextWithFallback() {
+    try {
+      if (navigator.clipboard?.readText) {
+        return await navigator.clipboard.readText();
+      }
+    } catch {
+      // ignore; fallback below
+    }
+
+    // Fallback for environments that block clipboard reads
+    const manual = window.prompt(
+      "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)"
+    );
+    return manual || "";
+  }
+
+  _applyLatLngToInputs(latInput, lngInput, latLng) {
+    if (!latInput || !lngInput) return;
+    latInput.value = latLng.latitude;
+    lngInput.value = latLng.longitude;
+
+    // Trigger any listeners relying on change/input events
+    latInput.dispatchEvent(new Event("input", { bubbles: true }));
+    latInput.dispatchEvent(new Event("change", { bubbles: true }));
+    lngInput.dispatchEvent(new Event("input", { bubbles: true }));
+    lngInput.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  async pasteLocationCoordinatesFromClipboard() {
+    const text = await this._readClipboardTextWithFallback();
+    const latLng = this._parseLatLngFromText(text);
+    if (!latLng) {
+      this.showToast(
+        "Could not parse coordinates. Copy a Google Maps link or 'lat, lng' format.",
+        "error"
+      );
+      return;
+    }
+
+    this._applyLatLngToInputs(this.latitudeInput, this.longitudeInput, latLng);
+    this.showToast("Coordinates pasted into Location settings.", "success");
+  }
+
+  async pasteWeatherCoordinatesFromClipboard() {
+    const text = await this._readClipboardTextWithFallback();
+    const latLng = this._parseLatLngFromText(text);
+    if (!latLng) {
+      this.showToast(
+        "Could not parse coordinates. Copy a Google Maps link or 'lat, lng' format.",
+        "error"
+      );
+      return;
+    }
+
+    this._applyLatLngToInputs(
+      this.weatherLatitudeInput,
+      this.weatherLongitudeInput,
+      latLng
+    );
+    this.showToast("Coordinates pasted into Weather settings.", "success");
+  }
+
   /**
    * Toggle custom greeting input visibility
    */
@@ -1176,15 +1338,23 @@ class SettingsManager {
       const isActive = id === activeTheme;
       const isCustomizable = theme.customizable || false;
 
+      const isPureTheme = id === "pureWhite" || id === "pureBlack";
+
       // For customizable themes, preview using the saved/custom palette (per theme + mode)
       const palette = isCustomizable
         ? window.dashboard?.themes?.getCustomPalette?.(id, currentMode) ||
           settings.theme?.customPalettes?.[id]?.[currentMode] ||
           null
         : null;
-      const previewPrimary = palette?.primary || colors.primary;
-      const previewAccent = palette?.accent || colors.accent;
-      const previewBg = palette?.bodyBg || colors.bodyBg;
+
+      const defaultBase =
+        isCustomizable && isPureTheme
+          ? ThemeManager.THEMES?.emerald?.[currentMode] || colors
+          : colors;
+
+      const previewPrimary = palette?.primary || defaultBase.primary;
+      const previewAccent = palette?.accent || defaultBase.accent;
+      const previewBg = palette?.bodyBg || defaultBase.bodyBg;
 
       html += `
         <div class="theme-card${isActive ? " active" : ""}${
@@ -1202,7 +1372,7 @@ class SettingsManager {
           <div class="theme-card-desc">${theme.description}</div>
           ${
             isCustomizable
-              ? '<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">🎨</span><span>Customize</span></button>'
+              ? '<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">🎨</span></button>'
               : ""
           }
           <div class="theme-card-check">✓</div>
@@ -1229,6 +1399,12 @@ class SettingsManager {
     this._paletteModalTheme = themeName;
     this._paletteModalMode =
       window.dashboard?.themes?.getCurrentMode?.() || "dark";
+
+    const resetBtn = document.getElementById("themePaletteResetDefaults");
+    if (resetBtn) {
+      const show = themeName === "pureWhite" || themeName === "pureBlack";
+      resetBtn.style.display = show ? "inline-flex" : "none";
+    }
 
     const title = document.getElementById("themePaletteModalTitle");
     if (title) {
@@ -1264,17 +1440,50 @@ class SettingsManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
-    if (!primaryEl || !accentEl || !bgEl) return;
+    const glassTintEl = document.getElementById("themePaletteGlassTint");
+    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
 
-    const base = ThemeManager.THEMES[themeName]?.[mode];
+    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
+    const base = isPureTheme
+      ? ThemeManager.THEMES?.emerald?.[mode]
+      : ThemeManager.THEMES[themeName]?.[mode];
     if (!base) return;
 
     const palette =
       window.dashboard?.themes?.getCustomPalette?.(themeName, mode) || null;
 
+    const defaultGlassTint = themeName === "pureBlack" ? "#000000" : "#ffffff";
+
     primaryEl.value = palette?.primary || base.primary;
     accentEl.value = palette?.accent || base.accent;
     bgEl.value = palette?.bodyBg || base.bodyBg;
+    glassTintEl.value = palette?.glassTint || defaultGlassTint;
+  }
+
+  resetThemePaletteToDefaults(save = true) {
+    const themeName = this._paletteModalTheme;
+    const mode = this._paletteModalMode || "dark";
+    if (!themeName || !window.dashboard?.themes) return;
+
+    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
+    if (!isPureTheme) return;
+
+    const base = ThemeManager.THEMES?.emerald?.[mode];
+    if (!base) return;
+
+    const primaryEl = document.getElementById("themePalettePrimary");
+    const accentEl = document.getElementById("themePaletteAccent");
+    const bgEl = document.getElementById("themePaletteBackground");
+    const glassTintEl = document.getElementById("themePaletteGlassTint");
+    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
+
+    primaryEl.value = base.primary;
+    accentEl.value = base.accent;
+    bgEl.value = base.bodyBg;
+    glassTintEl.value = themeName === "pureBlack" ? "#000000" : "#ffffff";
+
+    this.applyThemePaletteFromModal(save);
+    this.renderThemePickerGrid();
   }
 
   applyThemePaletteFromModal(save = true) {
@@ -1285,7 +1494,8 @@ class SettingsManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
-    if (!primaryEl || !accentEl || !bgEl) return;
+    const glassTintEl = document.getElementById("themePaletteGlassTint");
+    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
 
     window.dashboard.themes.setCustomPalette(
       themeName,
@@ -1294,6 +1504,7 @@ class SettingsManager {
         primary: primaryEl.value,
         accent: accentEl.value,
         bodyBg: bgEl.value,
+        glassTint: glassTintEl.value,
       },
       save
     );
@@ -1389,11 +1600,13 @@ class SettingsManager {
     const paletteOverlay = document.getElementById("themePaletteModal");
     const paletteClose = document.getElementById("themePaletteClose");
     const paletteDone = document.getElementById("themePaletteDone");
+    const paletteReset = document.getElementById("themePaletteResetDefaults");
     const modeDark = document.getElementById("themePaletteModeDark");
     const modeLight = document.getElementById("themePaletteModeLight");
     const primaryEl = document.getElementById("themePalettePrimary");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
+    const glassTintEl = document.getElementById("themePaletteGlassTint");
 
     if (paletteOverlay) {
       paletteOverlay.addEventListener("click", (evt) => {
@@ -1408,6 +1621,11 @@ class SettingsManager {
     if (paletteDone) {
       paletteDone.addEventListener("click", () =>
         this.closeThemePaletteModal()
+      );
+    }
+    if (paletteReset) {
+      paletteReset.addEventListener("click", () =>
+        this.resetThemePaletteToDefaults(true)
       );
     }
     if (modeDark) {
@@ -1429,6 +1647,7 @@ class SettingsManager {
     if (primaryEl) primaryEl.addEventListener("input", onPaletteInput);
     if (accentEl) accentEl.addEventListener("input", onPaletteInput);
     if (bgEl) bgEl.addEventListener("input", onPaletteInput);
+    if (glassTintEl) glassTintEl.addEventListener("input", onPaletteInput);
 
     // Container width (in Themes panel)
     if (this.themeContainerWidth) {
@@ -2895,6 +3114,13 @@ class SettingsManager {
       this.searchCityBtn.addEventListener("click", () => this.searchCity());
     }
 
+    // Paste coords (location)
+    if (this.pasteCoordsBtn) {
+      this.pasteCoordsBtn.addEventListener("click", () =>
+        this.pasteLocationCoordinatesFromClipboard()
+      );
+    }
+
     if (this.cityInput) {
       this.cityInput.addEventListener("input", () => {
         this._clearCitySearchResults(this.citySearchResults);
@@ -2912,6 +3138,13 @@ class SettingsManager {
     if (this.weatherSearchCityBtn) {
       this.weatherSearchCityBtn.addEventListener("click", () =>
         this.searchWeatherCity()
+      );
+    }
+
+    // Paste coords (weather)
+    if (this.weatherPasteCoordsBtn) {
+      this.weatherPasteCoordsBtn.addEventListener("click", () =>
+        this.pasteWeatherCoordinatesFromClipboard()
       );
     }
 

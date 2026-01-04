@@ -614,6 +614,19 @@ class ThemeManager {
     this.applyTheme();
   }
 
+  _getDefaultPureThemePalette(themeName, mode) {
+    const colorMode = mode === "light" ? "light" : "dark";
+    const emerald = ThemeManager.THEMES?.emerald?.[colorMode];
+    if (!emerald) return null;
+
+    return {
+      primary: emerald.primary,
+      accent: emerald.accent,
+      bodyBg: emerald.bodyBg,
+      glassTint: themeName === "pureBlack" ? "#000000" : "#ffffff",
+    };
+  }
+
   /**
    * Load theme settings from storage
    */
@@ -636,8 +649,15 @@ class ThemeManager {
     if (this._customAccent && !themeSettings.customPalettes) {
       const theme = ThemeManager.THEMES[this._currentTheme];
       if (theme?.customizable) {
-        const baseDark = theme.dark;
-        const baseLight = theme.light;
+        const isPureTheme =
+          this._currentTheme === "pureWhite" ||
+          this._currentTheme === "pureBlack";
+        const baseDark = isPureTheme
+          ? ThemeManager.THEMES?.emerald?.dark || theme.dark
+          : theme.dark;
+        const baseLight = isPureTheme
+          ? ThemeManager.THEMES?.emerald?.light || theme.light
+          : theme.light;
         this._customPalettes[this._currentTheme] = {
           dark: {
             primary: baseDark.primary,
@@ -775,9 +795,14 @@ class ThemeManager {
     // Clone to avoid mutating original
     const colors = { ...theme[colorMode] };
 
-    // Apply 3-color palette overrides for customizable themes
+    // Apply palette overrides for customizable themes
     if (theme.customizable) {
-      const palette = this.getCustomPalette(name, colorMode);
+      const isPureTheme = name === "pureWhite" || name === "pureBlack";
+      let palette = this.getCustomPalette(name, colorMode);
+      if (!palette && isPureTheme) {
+        palette = this._getDefaultPureThemePalette(name, colorMode);
+      }
+
       if (palette) {
         if (palette.primary) {
           colors.primary = palette.primary;
@@ -810,27 +835,6 @@ class ThemeManager {
             ? "rgba(255, 255, 255, 0.6)"
             : "rgba(0, 0, 0, 0.55)";
         }
-
-        // Make glass surfaces follow the custom primary tint (preserve original alpha values)
-        if (palette.primary) {
-          const primaryRgb = this.hexToRgb(colors.primary);
-          if (primaryRgb) {
-            const base = theme[colorMode];
-            const aBg =
-              this._parseRgbaAlpha(base.glassBg) ??
-              (colorMode === "light" ? 0.2 : 0.35);
-            const aHover =
-              this._parseRgbaAlpha(base.glassBgHover) ??
-              (colorMode === "light" ? 0.28 : 0.45);
-            const aBorder =
-              this._parseRgbaAlpha(base.glassBorder) ??
-              (colorMode === "light" ? 0.25 : 0.4);
-
-            colors.glassBg = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBg})`;
-            colors.glassBgHover = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aHover})`;
-            colors.glassBorder = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBorder})`;
-          }
-        }
       } else if (this._customAccent) {
         // Backward compatible: accent-only override
         colors.accent = this._customAccent;
@@ -838,6 +842,38 @@ class ThemeManager {
         colors.accentBlue = this._lightenColor(this._customAccent, 10);
         colors.settingsColor = this._customAccent;
         colors.settingsLight = this._lightenColor(this._customAccent, 25);
+      }
+
+      // Pure White / Pure Black: glass tint is controlled separately.
+      // Use ONE color for all three variables with fixed alpha values.
+      if (isPureTheme) {
+        const defaultGlassTint = name === "pureBlack" ? "#000000" : "#ffffff";
+        const glassTintHex = palette?.glassTint || defaultGlassTint;
+        const tintRgb = this.hexToRgb(glassTintHex);
+        if (tintRgb) {
+          colors.glassBg = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.12)`;
+          colors.glassBgHover = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.18)`;
+          colors.glassBorder = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.2)`;
+        }
+      } else if (palette?.primary) {
+        // Other customizable themes (future-proof): tint glass by primary while preserving base alpha values.
+        const primaryRgb = this.hexToRgb(colors.primary);
+        if (primaryRgb) {
+          const base = theme[colorMode];
+          const aBg =
+            this._parseRgbaAlpha(base.glassBg) ??
+            (colorMode === "light" ? 0.2 : 0.35);
+          const aHover =
+            this._parseRgbaAlpha(base.glassBgHover) ??
+            (colorMode === "light" ? 0.28 : 0.45);
+          const aBorder =
+            this._parseRgbaAlpha(base.glassBorder) ??
+            (colorMode === "light" ? 0.25 : 0.4);
+
+          colors.glassBg = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBg})`;
+          colors.glassBgHover = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aHover})`;
+          colors.glassBorder = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBorder})`;
+        }
       }
     }
 
@@ -852,15 +888,27 @@ class ThemeManager {
 
     // Also reflect in palette for the current theme/mode (for compatibility)
     if (this.isCurrentThemeCustomizable()) {
+      const isPureTheme =
+        this._currentTheme === "pureWhite" ||
+        this._currentTheme === "pureBlack";
+      const fallback = isPureTheme
+        ? this._getDefaultPureThemePalette(
+            this._currentTheme,
+            this._currentMode
+          )
+        : null;
       const current = this.getCustomPalette(
         this._currentTheme,
         this._currentMode
       ) || {
         primary:
+          fallback?.primary ||
           ThemeManager.THEMES[this._currentTheme][this._currentMode].primary,
         accent: hexColor,
         bodyBg:
+          fallback?.bodyBg ||
           ThemeManager.THEMES[this._currentTheme][this._currentMode].bodyBg,
+        ...(fallback?.glassTint ? { glassTint: fallback.glassTint } : {}),
       };
       this.setCustomPalette(
         this._currentTheme,
@@ -910,13 +958,26 @@ class ThemeManager {
     if (!theme?.customizable) return;
 
     const colorMode = mode === "light" ? "light" : "dark";
+
+    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
+    const defaultBase = isPureTheme
+      ? ThemeManager.THEMES?.emerald?.[colorMode] || theme[colorMode]
+      : theme[colorMode];
+
     this._customPalettes ||= {};
     this._customPalettes[themeName] ||= { dark: {}, light: {} };
 
     this._customPalettes[themeName][colorMode] = {
-      primary: palette?.primary || theme[colorMode].primary,
-      accent: palette?.accent || theme[colorMode].accent,
-      bodyBg: palette?.bodyBg || theme[colorMode].bodyBg,
+      primary: palette?.primary || defaultBase.primary,
+      accent: palette?.accent || defaultBase.accent,
+      bodyBg: palette?.bodyBg || defaultBase.bodyBg,
+      glassTint:
+        palette?.glassTint ||
+        (themeName === "pureBlack"
+          ? "#000000"
+          : themeName === "pureWhite"
+          ? "#ffffff"
+          : undefined),
     };
 
     if (this._currentTheme === themeName && this._currentMode === colorMode) {
