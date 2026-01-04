@@ -28,7 +28,6 @@ class QuotesManager {
     this.quoteRefresh = document.getElementById("quoteRefresh");
 
     this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
-    this.quoteSection = document.getElementById("quoteSection");
 
     // Quotes settings elements
     this.quotesListContainer = document.getElementById("userQuotesList");
@@ -44,10 +43,6 @@ class QuotesManager {
   async init() {
     await this.loadDefaultQuotes();
     this.loadUserQuotes();
-
-    // Apply chosen layout before first render so height measurements are correct
-    this.applyLayoutFromSettings();
-
     this.displayRandomQuote();
     this.setupEventListeners();
     this.renderQuotesList();
@@ -120,44 +115,6 @@ class QuotesManager {
     return quotes;
   }
 
-  getQuoteLayout() {
-    const settings = this.storage.getSettings();
-    const layout = String(settings.quoteLayout || "classic").trim();
-    const allowed = new Set([
-      "classic",
-      "compact",
-      "tight",
-      "minimal",
-      "inline",
-    ]);
-    return allowed.has(layout) ? layout : "classic";
-  }
-
-  applyLayoutFromSettings() {
-    const container = this.quoteContainer;
-    if (!container) return;
-
-    const layout = this.getQuoteLayout();
-
-    [...container.classList]
-      .filter((c) => c.startsWith("quote-layout-"))
-      .forEach((c) => container.classList.remove(c));
-
-    container.classList.add(`quote-layout-${layout}`);
-  }
-
-  refreshQuote() {
-    // Re-apply layout and re-render current quote without changing it.
-    this.applyLayoutFromSettings();
-
-    if (this.currentQuote) {
-      this.animateQuote(this.currentQuote);
-      return;
-    }
-
-    this.displayRandomQuote();
-  }
-
   /**
    * Display random quote
    */
@@ -195,24 +152,14 @@ class QuotesManager {
   animateQuote(quote) {
     if (!this.quoteText || !this.quoteSource) return;
 
-    // Ensure layout class is applied before measuring/animating.
-    this.applyLayoutFromSettings();
-    const layout = this.getQuoteLayout();
-
     const prefersReducedMotion = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches;
     const container = this.quoteContainer || this.quoteText.parentElement;
 
     if (!container || prefersReducedMotion) {
-      if (layout === "inline") {
-        const tail = quote.source ? ` — ${quote.source}` : "";
-        this.quoteText.textContent = `${quote.text}${tail}`;
-        this.quoteSource.textContent = "";
-      } else {
-        this.quoteText.textContent = quote.text;
-        this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
-      }
+      this.quoteText.textContent = quote.text;
+      this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
       this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
       return;
     }
@@ -259,16 +206,8 @@ class QuotesManager {
         if (outText.playState === "idle") return;
 
         // Swap content while invisible
-        if (layout === "inline") {
-          const tail = quote.source ? ` — ${quote.source}` : "";
-          this.quoteText.textContent = `${quote.text}${tail}`;
-          this.quoteSource.textContent = "";
-        } else {
-          this.quoteText.textContent = quote.text;
-          this.quoteSource.textContent = quote.source
-            ? `— ${quote.source}`
-            : "";
-        }
+        this.quoteText.textContent = quote.text;
+        this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
         this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
 
         // Force layout recalc and measure new height

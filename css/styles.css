@@ -238,61 +238,6 @@ body {
   justify-content: flex-end;
 }
 
-.header-right {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
-.header-weather {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-
-.header-weather-main {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-}
-
-.header-weather-icon {
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.header-weather-temp {
-  font-size: 1.15rem;
-  font-weight: 650;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.header-weather-details {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-xs);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.header-weather-sep {
-  opacity: 0.65;
-}
-
 @keyframes slideInRight {
   0% {
     opacity: 0.01;
@@ -440,85 +385,6 @@ body {
 .quote-refresh svg {
   width: 18px;
   height: 18px;
-}
-
-/* Quote layout variants (controlled from Settings → Quotes) */
-.quote-container.quote-layout-compact {
-  padding: var(--spacing-lg);
-}
-
-.quote-container.quote-layout-compact .quote-icon {
-  font-size: 2.2rem;
-  margin-bottom: var(--spacing-xs);
-}
-
-.quote-container.quote-layout-compact .quote-text {
-  margin-bottom: var(--spacing-sm);
-  line-height: 1.6;
-}
-
-.quote-container.quote-layout-tight {
-  padding: var(--spacing-md);
-}
-
-.quote-container.quote-layout-tight .quote-icon {
-  font-size: 2rem;
-  margin-bottom: 2px;
-}
-
-.quote-container.quote-layout-tight .quote-text {
-  margin-bottom: var(--spacing-xs);
-  line-height: 1.45;
-}
-
-.quote-container.quote-layout-tight .quote-source {
-  font-size: 0.85rem;
-}
-
-.quote-container.quote-layout-tight .quote-refresh {
-  width: 34px;
-  height: 34px;
-  top: var(--spacing-sm);
-  right: var(--spacing-sm);
-}
-
-.quote-container.quote-layout-minimal {
-  padding: var(--spacing-md);
-  text-align: left;
-}
-
-.quote-container.quote-layout-minimal .quote-icon {
-  display: none;
-}
-
-.quote-container.quote-layout-minimal .quote-text {
-  font-style: normal;
-  margin-bottom: var(--spacing-xs);
-  max-width: none;
-}
-
-.quote-container.quote-layout-minimal .quote-source {
-  font-size: 0.85rem;
-}
-
-.quote-container.quote-layout-inline {
-  padding: var(--spacing-md);
-  text-align: left;
-}
-
-.quote-container.quote-layout-inline .quote-icon {
-  display: none;
-}
-
-.quote-container.quote-layout-inline .quote-text {
-  font-style: normal;
-  margin-bottom: 0;
-  line-height: 1.4;
-  max-width: none;
-}
-
-.quote-container.quote-layout-inline .quote-source {
-  display: none;
 }
 
 /* Content Grid */
@@ -1735,47 +1601,6 @@ body {
 
 .fab-menu.open .fab-hamburger-bar:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
-}
-
-/* FAB Menu startup bounce animation */
-@keyframes fabStartupBounce {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(0.8);
-  }
-  40% {
-    opacity: 1;
-    transform: translateY(-8px) scale(1.08);
-  }
-  60% {
-    transform: translateY(4px) scale(0.98);
-  }
-  80% {
-    transform: translateY(-2px) scale(1.02);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
-}
-
-.fab-menu.startup-bounce .fab-menu-toggle {
-  animation: fabStartupBounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-}
-
-/* Background attribution bounce animation */
-@keyframes bgAttrBounce {
-  0% {
-    transform: translateY(10px) scale(0.9);
-  }
-  50% {
-    transform: translateY(-4px) scale(1.02);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
 }
 
 /* When these buttons are inside the menu, they should behave like menu items (not fixed-position floaters) */
@@ -3906,17 +3731,6 @@ body {
   color: var(--text-muted);
   margin-top: var(--spacing-xs);
   font-style: italic;
-}
-
-/* Search URL hint with code styling */
-.setting-hint.search-url-hint code {
-  background: var(--glass-bg);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-family: "Courier New", monospace;
-  font-size: 0.85em;
-  color: var(--accent-gold);
-  font-style: normal;
 }
 
 /* Import/Export buttons */
@@ -6546,46 +6360,6 @@ body.sticky-note-resizing {
 .style-option span:last-child {
   font-size: 0.85rem;
   color: var(--text-secondary);
-}
-
-/* Quote layout preview styles (Settings → Quotes) */
-.quote-layout-preview {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: var(--spacing-sm) var(--spacing-md);
-  min-width: 150px;
-}
-
-.quote-layout-preview .preview-quote {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.quote-layout-preview .preview-source {
-  font-size: 0.78rem;
-  color: var(--accent-gold);
-  opacity: 0.9;
-  line-height: 1.1;
-}
-
-.quote-layout-preview-tight {
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-.quote-layout-preview-minimal .preview-quote {
-  font-weight: 500;
-}
-
-.quote-layout-preview-inline {
-  flex-direction: row;
-  align-items: baseline;
-}
-
-.quote-layout-preview-inline .preview-source {
-  display: none;
 }
 
 /* Clock preview styles */

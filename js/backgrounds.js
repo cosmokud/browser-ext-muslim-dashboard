@@ -437,8 +437,7 @@ class BackgroundManager {
       boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
       userSelect: "none",
       opacity: "0",
-      transition:
-        "opacity 0.32s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)",
+      transition: "opacity 0.22s ease, transform 0.22s ease",
       transform: "translateY(6px)",
       pointerEvents: "none",
       maxWidth: "calc(100% - 36px)",
@@ -485,92 +484,24 @@ class BackgroundManager {
 
     this.attributionEl = el;
     this.attributionAnchor = anchor;
-
-    // Setup hover detection for bottom-left corner to show attribution
-    this._setupAttributionHover();
   }
 
   /**
-   * Setup hover detection for the bottom-left corner to show/hide the attribution
-   */
-  _setupAttributionHover() {
-    if (!this.attributionEl) return;
-
-    const threshold = 120; // px from corner
-    let hideTimer = null;
-    let isStartupShown = false;
-
-    const showAttribution = () => {
-      if (!this.attributionEl) return;
-      if (hideTimer) {
-        clearTimeout(hideTimer);
-        hideTimer = null;
-      }
-      this.attributionEl.style.opacity = "1";
-      this.attributionEl.style.transform = "translateY(0)";
-      this.attributionEl.style.pointerEvents = "auto";
-    };
-
-    const hideAttribution = () => {
-      if (!this.attributionEl) return;
-      this.attributionEl.style.opacity = "0";
-      this.attributionEl.style.transform = "translateY(6px)";
-      this.attributionEl.style.pointerEvents = "none";
-    };
-
-    const scheduleHide = (delay = 1800) => {
-      if (hideTimer) clearTimeout(hideTimer);
-      hideTimer = setTimeout(hideAttribution, delay);
-    };
-
-    // Show on mouse near bottom-left corner
-    document.addEventListener("mousemove", (e) => {
-      const dx = e.clientX;
-      const dy = window.innerHeight - e.clientY;
-      if (dx < threshold && dy < threshold) {
-        showAttribution();
-      } else {
-        scheduleHide();
-      }
-    });
-
-    // Also show if hovering directly over the attribution element
-    this.attributionEl.addEventListener("mouseenter", () => {
-      showAttribution();
-    });
-
-    this.attributionEl.addEventListener("mouseleave", () => {
-      scheduleHide(1200);
-    });
-
-    // Show on startup briefly with a cute bounce animation
-    const showStartupAttribution = () => {
-      if (isStartupShown) return;
-      isStartupShown = true;
-      showAttribution();
-      // Add a small bounce effect
-      this.attributionEl.style.animation =
-        "bgAttrBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)";
-      scheduleHide(2500);
-    };
-
-    // Delay startup show slightly
-    setTimeout(showStartupAttribution, 800);
-  }
-
-  /**
-   * Update attribution box content (just updates data, visibility controlled by hover)
+   * Update attribution box content and visibility
    */
   updateAttribution(imageObj) {
     if (!this.attributionEl) this.createAttributionEl();
     if (!imageObj || !imageObj.credit) {
-      // No attribution data - hide permanently
-      this.attributionEl.dataset.hasAttribution = "false";
+      this.attributionEl.style.opacity = "0";
+      this.attributionEl.style.transform = "translateY(6px)";
+      this.attributionEl.style.pointerEvents = "none";
       return;
     }
     this.attributionAnchor.textContent = imageObj.credit;
     this.attributionAnchor.href = imageObj.href || "#";
-    this.attributionEl.dataset.hasAttribution = "true";
+    this.attributionEl.style.opacity = "1";
+    this.attributionEl.style.transform = "translateY(0)";
+    this.attributionEl.style.pointerEvents = "auto";
   }
 
   /**

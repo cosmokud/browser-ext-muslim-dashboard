@@ -32,46 +32,10 @@
             <h1 class="greeting" id="greeting">Assalamu Alaikum</h1>
             <p class="date-display" id="dateDisplay"></p>
           </div>
-          <div class="header-right">
-            <div class="time-section">
-              <div class="current-time" id="currentTime">00:00</div>
-              <div class="current-seconds" id="currentSeconds">:00</div>
-              <div
-                class="current-ampm"
-                id="currentAmPm"
-                aria-hidden="true"
-              ></div>
-            </div>
-
-            <!-- Compact weather beside the clock (optional, controlled in Settings → Header) -->
-            <div
-              class="header-weather"
-              id="headerWeather"
-              hidden
-              aria-hidden="true"
-            >
-              <div class="header-weather-main">
-                <span class="header-weather-icon" id="headerWeatherIcon"
-                  >🌡️</span
-                >
-                <span class="header-weather-temp" id="headerWeatherTemp"
-                  >--</span
-                >
-              </div>
-              <div class="header-weather-details" id="headerWeatherDetails">
-                <span class="header-weather-detail" id="headerWeatherFeelsLike"
-                  >--</span
-                >
-                <span class="header-weather-sep">•</span>
-                <span class="header-weather-detail" id="headerWeatherHumidity"
-                  >--%</span
-                >
-                <span class="header-weather-sep">•</span>
-                <span class="header-weather-detail" id="headerWeatherWind"
-                  >--</span
-                >
-              </div>
-            </div>
+          <div class="time-section">
+            <div class="current-time" id="currentTime">00:00</div>
+            <div class="current-seconds" id="currentSeconds">:00</div>
+            <div class="current-ampm" id="currentAmPm" aria-hidden="true"></div>
           </div>
         </header>
 
@@ -2173,39 +2137,6 @@
               </div>
             </div>
 
-            <!-- Header Weather Settings -->
-            <div class="setting-group">
-              <label class="setting-label">Weather Beside Clock</label>
-              <p class="setting-hint">
-                Show a compact weather summary next to the clock.
-              </p>
-              <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="headerWeatherEnabled" />
-                  <span>Enable compact weather in header</span>
-                </label>
-              </div>
-              <div class="setting-options">
-                <label class="radio-option">
-                  <input
-                    type="radio"
-                    name="headerWeatherMode"
-                    value="simple"
-                    checked
-                  />
-                  <span>Simple (icon + temperature)</span>
-                </label>
-                <label class="radio-option">
-                  <input
-                    type="radio"
-                    name="headerWeatherMode"
-                    value="detailed"
-                  />
-                  <span>Detailed (feels like, humidity, wind)</span>
-                </label>
-              </div>
-            </div>
-
             <!-- Date Settings -->
             <div class="setting-group">
               <label class="setting-label">Date Display</label>
@@ -2367,18 +2298,6 @@
                   <span class="visibility-icon">🌤️</span>
                   <span class="visibility-name">Weather</span>
                   <input type="checkbox" id="visibilityWeather" checked />
-                  <span class="toggle-switch"></span>
-                </label>
-                <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📝</span>
-                  <span class="visibility-name">Notes</span>
-                  <input type="checkbox" id="visibilityNotes" checked />
-                  <span class="toggle-switch"></span>
-                </label>
-                <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📖</span>
-                  <span class="visibility-name">Pocket Quran</span>
-                  <input type="checkbox" id="visibilityPocketQuran" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
@@ -2599,73 +2518,6 @@
                 <label class="checkbox-option">
                   <input type="checkbox" id="useUserQuotes" checked />
                   <span>Use My Custom Quotes</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Layout</label>
-              <p class="setting-hint">
-                Choose how compact the quote card is (vertical spacing).
-              </p>
-              <div class="clock-style-options quote-layout-options">
-                <label class="style-option quote-layout-option">
-                  <input
-                    type="radio"
-                    name="quoteLayout"
-                    value="classic"
-                    checked
-                  />
-                  <div
-                    class="style-preview quote-layout-preview quote-layout-preview-classic"
-                  >
-                    <span class="preview-quote">❝ Inspire ❞</span>
-                    <span class="preview-source">— Source</span>
-                  </div>
-                  <span>Classic</span>
-                </label>
-
-                <label class="style-option quote-layout-option">
-                  <input type="radio" name="quoteLayout" value="compact" />
-                  <div
-                    class="style-preview quote-layout-preview quote-layout-preview-compact"
-                  >
-                    <span class="preview-quote">❝ Inspire ❞</span>
-                    <span class="preview-source">— Source</span>
-                  </div>
-                  <span>Compact</span>
-                </label>
-
-                <label class="style-option quote-layout-option">
-                  <input type="radio" name="quoteLayout" value="tight" />
-                  <div
-                    class="style-preview quote-layout-preview quote-layout-preview-tight"
-                  >
-                    <span class="preview-quote">❝ Inspire ❞</span>
-                    <span class="preview-source">— Source</span>
-                  </div>
-                  <span>Tight</span>
-                </label>
-
-                <label class="style-option quote-layout-option">
-                  <input type="radio" name="quoteLayout" value="minimal" />
-                  <div
-                    class="style-preview quote-layout-preview quote-layout-preview-minimal"
-                  >
-                    <span class="preview-quote">Inspire</span>
-                    <span class="preview-source">— Source</span>
-                  </div>
-                  <span>Minimal</span>
-                </label>
-
-                <label class="style-option quote-layout-option">
-                  <input type="radio" name="quoteLayout" value="inline" />
-                  <div
-                    class="style-preview quote-layout-preview quote-layout-preview-inline"
-                  >
-                    <span class="preview-quote">Inspire — Source</span>
-                  </div>
-                  <span>Inline</span>
                 </label>
               </div>
             </div>
@@ -3536,9 +3388,6 @@
                 placeholder="e.g., https://www.youtube.com/results?search_query=%s"
                 required
               />
-              <p class="setting-hint search-url-hint">
-                URL with <code>%s</code> in place of query
-              </p>
             </div>
           </form>
         </div>
