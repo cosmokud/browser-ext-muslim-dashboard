@@ -492,9 +492,12 @@ class FlashcardManager {
         }
       }
       this.saveSets(created);
-      this.setActiveSetId(created[0]?.id || "default");
-      return;
-    }
+        // Prefer 99 Names (Arabic) as the initial active set if present
+        const preferredId = "default_99names_ar";
+        const preferred = created.find((s) => s.id === preferredId) || created[0];
+        this.setActiveSetId(preferred?.id || preferredId);
+        return;
+      }
 
     // Upgrade path: ensure each default set exists (do not overwrite existing user sets)
     let changed = false;
@@ -539,10 +542,12 @@ class FlashcardManager {
 
     if (changed) this.saveSets(existingSets);
 
-    // Ensure active set is valid
+    // Ensure active set is valid; prefer 99 Names (Arabic) when setting initial/invalid active set
     const activeId = this.getActiveSetId();
     if (!activeId || !existingSets.some((s) => s.id === activeId)) {
-      this.setActiveSetId(existingSets[0].id);
+      const preferredId = "default_99names_ar";
+      const preferredExists = existingSets.some((s) => s.id === preferredId);
+      this.setActiveSetId(preferredExists ? preferredId : existingSets[0]?.id);
     }
   }
 
