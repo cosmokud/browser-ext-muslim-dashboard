@@ -165,19 +165,13 @@ class SettingsManager {
     this.resetNukeConfirmModal = document.getElementById(
       "resetNukeConfirmModal"
     );
-    this.resetNukeConfirmIcon = document.getElementById(
-      "resetNukeConfirmIcon"
-    );
+    this.resetNukeConfirmIcon = document.getElementById("resetNukeConfirmIcon");
     this.resetNukeConfirmTitle = document.getElementById(
       "resetNukeConfirmTitle"
     );
-    this.resetNukeConfirmText = document.getElementById(
-      "resetNukeConfirmText"
-    );
+    this.resetNukeConfirmText = document.getElementById("resetNukeConfirmText");
     this.resetNukeCancelBtn = document.getElementById("resetNukeCancelBtn");
-    this.resetNukeConfirmBtn = document.getElementById(
-      "resetNukeConfirmBtn"
-    );
+    this.resetNukeConfirmBtn = document.getElementById("resetNukeConfirmBtn");
 
     this._resetNukeConfirmResolve = null;
 
@@ -2293,10 +2287,14 @@ class SettingsManager {
     }
 
     // Pocket Quran bookmarks (replace)
-    if (data.pocketQuranBookmarks && typeof data.pocketQuranBookmarks === "object") {
+    if (
+      data.pocketQuranBookmarks &&
+      typeof data.pocketQuranBookmarks === "object"
+    ) {
       const cats = data.pocketQuranBookmarks.categories;
       const bms = data.pocketQuranBookmarks.bookmarks;
-      if (Array.isArray(cats)) this.storage.set("pocketQuran_bookmarkCategories", cats);
+      if (Array.isArray(cats))
+        this.storage.set("pocketQuran_bookmarkCategories", cats);
       if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
     }
 
@@ -2485,10 +2483,14 @@ class SettingsManager {
       }
 
       // Import Pocket Quran bookmarks
-      if (data.pocketQuranBookmarks && typeof data.pocketQuranBookmarks === "object") {
+      if (
+        data.pocketQuranBookmarks &&
+        typeof data.pocketQuranBookmarks === "object"
+      ) {
         const cats = data.pocketQuranBookmarks.categories;
         const bms = data.pocketQuranBookmarks.bookmarks;
-        if (Array.isArray(cats)) this.storage.set("pocketQuran_bookmarkCategories", cats);
+        if (Array.isArray(cats))
+          this.storage.set("pocketQuran_bookmarkCategories", cats);
         if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
       }
 
@@ -3660,7 +3662,11 @@ class SettingsManager {
       const cancelLabel = String(opts.cancelLabel || "Cancel");
 
       // Fallback: native confirm if modal isn't available.
-      if (!this.resetNukeConfirmModal || !this.resetNukeConfirmBtn || !this.resetNukeCancelBtn) {
+      if (
+        !this.resetNukeConfirmModal ||
+        !this.resetNukeConfirmBtn ||
+        !this.resetNukeCancelBtn
+      ) {
         return Promise.resolve(window.confirm(`${title}\n\n${text}`));
       }
 
@@ -3672,9 +3678,12 @@ class SettingsManager {
         this._resetNukeConfirmResolve = null;
       }
 
-      if (this.resetNukeConfirmIcon) this.resetNukeConfirmIcon.textContent = icon;
-      if (this.resetNukeConfirmTitle) this.resetNukeConfirmTitle.textContent = title;
-      if (this.resetNukeConfirmText) this.resetNukeConfirmText.textContent = text;
+      if (this.resetNukeConfirmIcon)
+        this.resetNukeConfirmIcon.textContent = icon;
+      if (this.resetNukeConfirmTitle)
+        this.resetNukeConfirmTitle.textContent = title;
+      if (this.resetNukeConfirmText)
+        this.resetNukeConfirmText.textContent = text;
       this.resetNukeConfirmBtn.textContent = confirmLabel;
       this.resetNukeCancelBtn.textContent = cancelLabel;
 
@@ -3690,7 +3699,9 @@ class SettingsManager {
       const defaults = this.storage.getDefaultSettings();
 
       // Preserve user data that is stored inside settings.
-      const preservedCustomBackgrounds = Array.isArray(current.customBackgrounds)
+      const preservedCustomBackgrounds = Array.isArray(
+        current.customBackgrounds
+      )
         ? current.customBackgrounds
             .filter((x) => typeof x === "string" && x.startsWith("data:image"))
             .slice(0, 10)
@@ -3725,7 +3736,10 @@ class SettingsManager {
       // Reset MV3 mirrored keys so the service worker converges to defaults.
       try {
         if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
-          chrome.storage.local.set({ md_settings: defaults, md_lastLocation: null });
+          chrome.storage.local.set({
+            md_settings: defaults,
+            md_lastLocation: null,
+          });
         }
       } catch (e) {
         // ignore
