@@ -411,6 +411,21 @@ body {
   margin-bottom: 0; /* grid gap handles vertical spacing */
 }
 
+/* Lunar + Fasting row: use a dedicated sub-grid so each card can remain `grid-column: span 2`
+   while still consuming 50% of the row on wide layouts. */
+#lunarFastingRow {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-xl);
+}
+
+/* If only one of the two cards is visible, expand the remaining one to fill the row
+   (prevents empty space when the other card is hidden via component visibility settings). */
+#lunarFastingRow[data-visible-count="1"] > .card {
+  grid-column: 1 / -1;
+}
+
 /* Card spans (6-column content grid) */
 #pinnedAppsSection {
   grid-column: span 6;
@@ -483,12 +498,13 @@ body {
       grid-column: span 3;
     }
 
+    /* Lunar/Fasting are laid out by #lunarFastingRow sub-grid; keep their span stable */
     #lunarPhaseCard {
-      grid-column: span 3;
+      grid-column: span 2;
     }
 
     #fastingCard {
-      grid-column: span 3;
+      grid-column: span 2;
     }
   }
 
@@ -500,13 +516,16 @@ body {
     #calendarCard,
     #qiblaCard,
     #weatherCard,
-    #lunarPhaseCard,
-    #fastingCard,
+    /* Lunar/Fasting are laid out by #lunarFastingRow sub-grid */
     #flashcardCard,
     #todoCard,
     #notesCard,
     #pocketQuranCard {
       grid-column: span 6;
+    }
+
+    #lunarFastingRow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }
@@ -526,12 +545,13 @@ body {
       grid-column: span 3;
     }
 
+    /* Lunar/Fasting are laid out by #lunarFastingRow sub-grid; keep their span stable */
     #lunarPhaseCard {
-      grid-column: span 3;
+      grid-column: span 2;
     }
 
     #fastingCard {
-      grid-column: span 3;
+      grid-column: span 2;
     }
   }
 
@@ -543,13 +563,16 @@ body {
     #calendarCard,
     #qiblaCard,
     #weatherCard,
-    #lunarPhaseCard,
-    #fastingCard,
+    /* Lunar/Fasting are laid out by #lunarFastingRow sub-grid */
     #flashcardCard,
     #todoCard,
     #notesCard,
     #pocketQuranCard {
       grid-column: span 6;
+    }
+
+    #lunarFastingRow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }
