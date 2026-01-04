@@ -2,7 +2,7 @@
  * GridLayoutManager - Drag and Drop Grid Layout System
  * Enables repositioning of dashboard components via drag-and-drop
  * Uses flex-based rows with automatic component expansion
- * Includes responsive breakpoint system for dynamic span adjustment
+ * Includes viewport-based responsive system for dynamic span adjustment
  */
 
 class GridLayoutManager {
@@ -21,8 +21,8 @@ class GridLayoutManager {
     this.initialMouseX = 0;
     this.initialMouseY = 0;
     this.scrollInterval = null;
-    this.resizeObserver = null;
-    this.breakpointDebounceTimer = null;
+    this.viewportResizeTimer = null;
+    this.lastViewportWidth = 0;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -44,22 +44,26 @@ class GridLayoutManager {
     };
 
     /**
-     * Responsive breakpoint configuration for components
-     * When a component's width falls below the specified breakpointWidth,
-     * it will request expandedSpan instead of its default span.
-     * This enables automatic row reflow for better responsiveness.
+     * Minimum width configuration for components (in pixels)
+     * When a component's calculated width based on viewport falls below this,
+     * the layout system will try to give it more space (expand its span)
+     * or move it to a new row where it can have full width.
      *
-     * Format: componentId -> { breakpointWidth: number, expandedSpan: number }
+     * Format: componentId -> minWidth in pixels
      */
-    this.responsiveBreakpoints = {
-      prayerTimesCard: { breakpointWidth: 350, expandedSpan: 3 },
-      calendarCard: { breakpointWidth: 310, expandedSpan: 3 },
-      // Add more components here as needed:
-      // componentId: { breakpointWidth: 300, expandedSpan: 4 },
+    this.componentMinWidths = {
+      prayerTimesCard: 350,
+      calendarCard: 310,
+      qiblaCard: 280,
+      lunarPhaseCard: 250,
+      fastingCard: 250,
+      flashcardCard: 300,
+      todoCard: 300,
+      // Add more components here as needed
     };
 
-    // Track which components are currently in expanded state
-    this.expandedComponents = new Set();
+    // Track current effective spans (calculated based on viewport)
+    this.effectiveSpans = {};
 
     // Default row structure (component IDs in order)
     this.defaultLayout = [
@@ -83,7 +87,7 @@ class GridLayoutManager {
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleBreakpointCheck = this.handleBreakpointCheck.bind(this);
+    this.handleViewportResize = this.handleViewportResize.bind(this);
   }
 
   /**
@@ -103,14 +107,18 @@ class GridLayoutManager {
     const settings = this.storage.getSettings();
     this.isEditModeEnabled = settings.gridEditModeEnabled === true;
 
+    // Calculate initial responsive layout based on viewport
+    this.lastViewportWidth = window.innerWidth;
+    this.calculateResponsiveLayout();
+
     // Apply the layout to create flex rows
     this.applyLayout();
 
     // Setup event listeners for drag and drop (only active when edit mode is enabled)
     this.setupEventListeners();
 
-    // Setup responsive breakpoint monitoring
-    this.setupBreakpointObserver();
+    // Setup viewport-based responsive monitoring
+    this.setupViewportListener();
 
     // Setup edit mode toggle button
     this.setupEditModeToggle();
@@ -231,148 +239,93 @@ class GridLayoutManager {
   }
 
   /**
-   * Setup ResizeObserver for responsive breakpoint monitoring
+   * Setup viewport resize listener for responsive layout
+   * Uses viewport width (stable) instead of component width (unstable) to prevent feedback loops
    */
-  setupBreakpointObserver() {
-    // Check if ResizeObserver is supported
-    if (typeof ResizeObserver === "undefined") {
-      console.warn(
-        "GridLayoutManager: ResizeObserver not supported, breakpoints disabled"
-      );
-      return;
+  setupViewportListener() {
+    // Listen to window resize events with debouncing
+    window.addEventListener("resize", this.handleViewportResize);
+
+    // Also listen to orientation changes on mobile
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => this.handleViewportResize(), 100);
+    });
+  }
+
+  /**
+   * Handle viewport resize - recalculate responsive layout
+   */
+  handleViewportResize() {
+    // Debounce resize handling
+    if (this.viewportResizeTimer) {
+      clearTimeout(this.viewportResizeTimer);
     }
 
-    // Create observer for components with breakpoint configurations
-    this.resizeObserver = new ResizeObserver((entries) => {
-      // Debounce breakpoint checks to prevent excessive recalculations
-      if (this.breakpointDebounceTimer) {
-        clearTimeout(this.breakpointDebounceTimer);
+    this.viewportResizeTimer = setTimeout(() => {
+      const newWidth = window.innerWidth;
+
+      // Only recalculate if viewport width changed significantly (more than 10px)
+      if (Math.abs(newWidth - this.lastViewportWidth) > 10) {
+        this.lastViewportWidth = newWidth;
+        this.calculateResponsiveLayout();
+        this.recalculateLayout();
       }
+    }, 150);
+  }
 
-      this.breakpointDebounceTimer = setTimeout(() => {
-        this.handleBreakpointCheck(entries);
-      }, 100);
-    });
+  /**
+   * Calculate responsive layout based on viewport width
+   * This determines effective spans for all components to ensure they meet minimum width requirements
+   */
+  calculateResponsiveLayout() {
+    if (!this.grid) return;
 
-    // Observe all components that have breakpoint configurations
-    Object.keys(this.responsiveBreakpoints).forEach((componentId) => {
-      const element = document.getElementById(componentId);
-      if (element) {
-        this.resizeObserver.observe(element);
+    // Get container width (accounts for padding, max-width constraints)
+    const containerWidth = this.grid.offsetWidth || window.innerWidth;
+    const gap = 32; // var(--spacing-xl) in pixels, approximate
+
+    // Calculate width per span unit (6 spans = container width minus gaps)
+    // For n items in a row with 6 total spans, we have (n-1) gaps
+    // Simplified: assume 2-3 items average, so roughly 2 gaps
+    const avgGaps = 2;
+    const availableWidth = containerWidth - gap * avgGaps;
+    const widthPerSpan = availableWidth / 6;
+
+    // Reset effective spans to defaults
+    this.effectiveSpans = {};
+
+    // Calculate effective span for each component with min width requirements
+    Object.keys(this.componentMinWidths).forEach((componentId) => {
+      const minWidth = this.componentMinWidths[componentId];
+      const baseConfig = this.componentSpans[componentId];
+
+      if (!baseConfig) return;
+
+      // Calculate how many spans needed to meet minimum width
+      const spansNeeded = Math.ceil(minWidth / widthPerSpan);
+
+      // Clamp between base span and 6 (full width)
+      const effectiveSpan = Math.max(baseConfig.span, Math.min(6, spansNeeded));
+
+      // Only store if different from default
+      if (effectiveSpan !== baseConfig.span) {
+        this.effectiveSpans[componentId] = effectiveSpan;
       }
     });
   }
 
   /**
-   * Handle breakpoint checks when component sizes change
-   */
-  handleBreakpointCheck(entries) {
-    let needsReflow = false;
-
-    entries.forEach((entry) => {
-      const componentId = entry.target.id;
-      const breakpointConfig = this.responsiveBreakpoints[componentId];
-
-      if (!breakpointConfig) return;
-
-      const currentWidth = entry.contentRect.width;
-      const { breakpointWidth, expandedSpan } = breakpointConfig;
-      const wasExpanded = this.expandedComponents.has(componentId);
-
-      // Check if component crossed the breakpoint threshold
-      if (currentWidth > 0 && currentWidth < breakpointWidth && !wasExpanded) {
-        // Component is now below breakpoint - needs expansion
-        this.expandedComponents.add(componentId);
-        needsReflow = true;
-      } else if (currentWidth >= breakpointWidth && wasExpanded) {
-        // Component is now above breakpoint - can contract
-        this.expandedComponents.delete(componentId);
-        needsReflow = true;
-      }
-    });
-
-    // Trigger layout reflow if any components changed state
-    if (needsReflow) {
-      this.reflowLayoutForBreakpoints();
-    }
-  }
-
-  /**
-   * Get the effective span for a component (considering breakpoint state)
+   * Get the effective span for a component (considering responsive calculations)
    */
   getEffectiveSpan(componentId) {
+    // First check if we have a calculated effective span
+    if (this.effectiveSpans[componentId]) {
+      return this.effectiveSpans[componentId];
+    }
+
+    // Fall back to base configuration
     const baseConfig = this.componentSpans[componentId];
-    if (!baseConfig) return 2; // Default fallback
-
-    // Check if component is in expanded state due to breakpoint
-    if (this.expandedComponents.has(componentId)) {
-      const breakpointConfig = this.responsiveBreakpoints[componentId];
-      if (breakpointConfig) {
-        return breakpointConfig.expandedSpan;
-      }
-    }
-
-    return baseConfig.span;
-  }
-
-  /**
-   * Reflow layout when breakpoint states change
-   * This reorganizes rows to accommodate span changes
-   */
-  reflowLayoutForBreakpoints() {
-    if (!this.grid || this.isDragging) return;
-
-    // Rebuild rows based on current effective spans
-    const newRows = [];
-    let currentRow = [];
-    let currentRowSpan = 0;
-
-    // Flatten all component IDs in order
-    const allComponentIds = this.rows.flat();
-
-    allComponentIds.forEach((componentId) => {
-      const el = this.getElementByComponentId(componentId);
-      if (!el || this.isComponentHidden(el)) return;
-
-      const effectiveSpan = this.getEffectiveSpan(componentId);
-      const config = this.componentSpans[componentId];
-
-      // Full-width components always get their own row
-      if (config && config.span === 6 && config.minSpan === 6) {
-        if (currentRow.length > 0) {
-          newRows.push(currentRow);
-          currentRow = [];
-          currentRowSpan = 0;
-        }
-        newRows.push([componentId]);
-        return;
-      }
-
-      // Check if component fits in current row
-      if (currentRowSpan + effectiveSpan <= 6) {
-        currentRow.push(componentId);
-        currentRowSpan += effectiveSpan;
-      } else {
-        // Start a new row
-        if (currentRow.length > 0) {
-          newRows.push(currentRow);
-        }
-        currentRow = [componentId];
-        currentRowSpan = effectiveSpan;
-      }
-    });
-
-    // Don't forget the last row
-    if (currentRow.length > 0) {
-      newRows.push(currentRow);
-    }
-
-    // Only update if layout actually changed
-    if (JSON.stringify(newRows) !== JSON.stringify(this.rows)) {
-      this.rows = newRows;
-      this.applyLayout();
-      this.saveLayout();
-    }
+    return baseConfig ? baseConfig.span : 2;
   }
 
   /**
@@ -568,31 +521,111 @@ class GridLayoutManager {
   }
 
   /**
-   * Recalculate layout when visibility changes
+   * Recalculate layout when visibility or viewport changes
+   * Rebuilds rows based on current effective spans
    */
   recalculateLayout() {
-    if (!this.grid) return;
+    if (!this.grid || this.isDragging) return;
 
-    // Update flex basis for all items in each row
-    const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
-    rowWrappers.forEach((rowWrapper) => {
-      const rowItems = Array.from(rowWrapper.children);
-      const visibleItems = rowItems.filter((el) => !this.isComponentHidden(el));
+    // First, recalculate effective spans based on current viewport
+    this.calculateResponsiveLayout();
 
-      rowItems.forEach((el) => {
-        const id = el.dataset.gridId;
-        if (id) {
-          this.setItemFlexBasis(el, id, visibleItems.length);
+    // Get visible components in their current order
+    const allComponentIds = this.rows.flat();
+    const visibleComponentIds = allComponentIds.filter((id) => {
+      const el = this.getElementByComponentId(id);
+      return el && !this.isComponentHidden(el);
+    });
+
+    // Rebuild rows based on effective spans
+    const newRows = [];
+    let currentRow = [];
+    let currentRowSpan = 0;
+
+    visibleComponentIds.forEach((componentId) => {
+      const effectiveSpan = this.getEffectiveSpan(componentId);
+      const config = this.componentSpans[componentId];
+
+      // Full-width components always get their own row
+      if (config && config.span === 6 && config.minSpan === 6) {
+        if (currentRow.length > 0) {
+          newRows.push(currentRow);
+          currentRow = [];
+          currentRowSpan = 0;
         }
-      });
+        newRows.push([componentId]);
+        return;
+      }
 
-      // Hide row if all items are hidden
-      if (visibleItems.length === 0) {
-        rowWrapper.style.display = "none";
+      // Check if component fits in current row
+      if (currentRowSpan + effectiveSpan <= 6) {
+        currentRow.push(componentId);
+        currentRowSpan += effectiveSpan;
       } else {
-        rowWrapper.style.display = "";
+        // Start a new row
+        if (currentRow.length > 0) {
+          newRows.push(currentRow);
+        }
+        currentRow = [componentId];
+        currentRowSpan = effectiveSpan;
       }
     });
+
+    // Don't forget the last row
+    if (currentRow.length > 0) {
+      newRows.push(currentRow);
+    }
+
+    // Add back hidden components to maintain their positions
+    const hiddenComponentIds = allComponentIds.filter((id) => {
+      const el = this.getElementByComponentId(id);
+      return !el || this.isComponentHidden(el);
+    });
+
+    // Append hidden components to maintain order (they won't be visible anyway)
+    hiddenComponentIds.forEach((id) => {
+      // Find original row index and add to corresponding new row
+      const originalRowIdx = this.rows.findIndex((row) => row.includes(id));
+      if (originalRowIdx >= 0 && newRows[originalRowIdx]) {
+        newRows[originalRowIdx].push(id);
+      } else if (newRows.length > 0) {
+        newRows[newRows.length - 1].push(id);
+      } else {
+        newRows.push([id]);
+      }
+    });
+
+    // Only update DOM if layout actually changed
+    const layoutChanged = JSON.stringify(newRows) !== JSON.stringify(this.rows);
+
+    if (layoutChanged) {
+      this.rows = newRows;
+      this.applyLayout();
+      // Don't save layout on resize - only save on manual drag operations
+    } else {
+      // Just update flex basis for existing layout
+      const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
+      rowWrappers.forEach((rowWrapper) => {
+        const rowItems = Array.from(rowWrapper.children);
+        const visibleItems = rowItems.filter(
+          (el) => !this.isComponentHidden(el)
+        );
+
+        rowItems.forEach((el) => {
+          const id = el.dataset.gridId;
+          if (id) {
+            this.setItemFlexBasis(el, id, visibleItems.length);
+          }
+        });
+
+        // Hide row if all items are hidden
+        if (visibleItems.length === 0) {
+          rowWrapper.style.display = "none";
+        } else {
+          rowWrapper.style.display = "";
+        }
+      });
+    }
 
     this.updateGridItems();
   }
@@ -1240,55 +1273,50 @@ class GridLayoutManager {
   }
 
   /**
-   * Add a responsive breakpoint configuration for a component
+   * Set minimum width requirement for a component
+   * The layout system will ensure this component gets enough spans to meet its minimum width
    * @param {string} componentId - The ID of the component
-   * @param {number} breakpointWidth - Width threshold in pixels
-   * @param {number} expandedSpan - Span to use when below breakpoint
+   * @param {number} minWidth - Minimum width in pixels
    */
-  addResponsiveBreakpoint(componentId, breakpointWidth, expandedSpan) {
-    this.responsiveBreakpoints[componentId] = {
-      breakpointWidth,
-      expandedSpan,
-    };
-
-    // Start observing the element if not already
-    const element = document.getElementById(componentId);
-    if (element && this.resizeObserver) {
-      this.resizeObserver.observe(element);
-    }
+  setComponentMinWidth(componentId, minWidth) {
+    this.componentMinWidths[componentId] = minWidth;
+    // Recalculate layout to apply new minimum
+    this.calculateResponsiveLayout();
+    this.recalculateLayout();
   }
 
   /**
-   * Remove a responsive breakpoint configuration
+   * Remove minimum width requirement for a component
    * @param {string} componentId - The ID of the component
    */
-  removeResponsiveBreakpoint(componentId) {
-    delete this.responsiveBreakpoints[componentId];
-    this.expandedComponents.delete(componentId);
+  removeComponentMinWidth(componentId) {
+    delete this.componentMinWidths[componentId];
+    delete this.effectiveSpans[componentId];
+    // Recalculate layout
+    this.calculateResponsiveLayout();
+    this.recalculateLayout();
+  }
 
-    // Stop observing if no longer needed
-    const element = document.getElementById(componentId);
-    if (element && this.resizeObserver) {
-      this.resizeObserver.unobserve(element);
-    }
+  /**
+   * Get the current minimum width configuration
+   * @returns {Object} Map of componentId -> minWidth
+   */
+  getComponentMinWidths() {
+    return { ...this.componentMinWidths };
   }
 
   /**
    * Cleanup when component is destroyed
    */
   destroy() {
-    // Stop observing resize events
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
-    }
-
     // Clear any pending timers
-    if (this.breakpointDebounceTimer) {
-      clearTimeout(this.breakpointDebounceTimer);
+    if (this.viewportResizeTimer) {
+      clearTimeout(this.viewportResizeTimer);
     }
 
     // Remove event listeners
+    window.removeEventListener("resize", this.handleViewportResize);
+
     if (this.grid) {
       this.grid.removeEventListener("mousedown", this.handleMouseDown);
       this.grid.removeEventListener("touchstart", this.handleTouchStart);
