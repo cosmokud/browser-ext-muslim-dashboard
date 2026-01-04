@@ -8473,17 +8473,18 @@ body.sticky-note-resizing {
 
 /* Visual drag handle indicator */
 .grid-draggable::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
   width: 40px;
   height: 4px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.3) 20%, 
-    rgba(255, 255, 255, 0.3) 80%, 
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.3) 80%,
     transparent 100%
   );
   border-radius: 2px;
@@ -8510,8 +8511,9 @@ body.sticky-note-resizing {
 
 /* Placeholder for drop position */
 .grid-placeholder {
-  background: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.15) 0%, 
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.15) 0%,
     rgba(212, 175, 55, 0.08) 100%
   );
   border: 2px dashed var(--accent-gold);
@@ -8522,7 +8524,8 @@ body.sticky-note-resizing {
 }
 
 @keyframes placeholderPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     border-color: var(--accent-gold);
   }
@@ -8593,7 +8596,7 @@ body.sticky-note-resizing {
   .grid-flex-row {
     flex-wrap: wrap;
   }
-  
+
   .grid-flex-row > * {
     flex: 1 1 100% !important;
     max-width: 100% !important;
@@ -8609,7 +8612,7 @@ body.sticky-note-resizing {
     top: 6px;
     opacity: 0.5;
   }
-  
+
   .grid-draggable:hover::before {
     opacity: 0.7;
   }

@@ -200,10 +200,10 @@ class GridLayoutManager {
     });
 
     this.grid.appendChild(fragment);
-    
+
     // Add class for CSS fallback (browsers that don't support :has())
     this.grid.classList.add("grid-layout-active");
-    
+
     this.updateGridItems();
   }
 
@@ -248,7 +248,7 @@ class GridLayoutManager {
    */
   isComponentHidden(el) {
     return (
-      el.style.display === "none" || 
+      el.style.display === "none" ||
       el.getAttribute("aria-hidden") === "true" ||
       el.classList.contains("floating-card")
     );
@@ -260,7 +260,10 @@ class GridLayoutManager {
   updateGridItems() {
     this.gridItems = Array.from(
       this.grid.querySelectorAll(".grid-draggable")
-    ).filter((el) => !this.isComponentHidden(el) && !el.classList.contains("floating-card"));
+    ).filter(
+      (el) =>
+        !this.isComponentHidden(el) && !el.classList.contains("floating-card")
+    );
   }
 
   /**
@@ -273,9 +276,7 @@ class GridLayoutManager {
     const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
     rowWrappers.forEach((rowWrapper) => {
       const rowItems = Array.from(rowWrapper.children);
-      const visibleItems = rowItems.filter(
-        (el) => !this.isComponentHidden(el)
-      );
+      const visibleItems = rowItems.filter((el) => !this.isComponentHidden(el));
 
       rowItems.forEach((el) => {
         const id = el.dataset.gridId;
@@ -514,10 +515,7 @@ class GridLayoutManager {
       if (firstRow && clientY < firstRow.getBoundingClientRect().top) {
         targetRow = firstRow;
         targetRowIndex = 0;
-      } else if (
-        lastRow &&
-        clientY > lastRow.getBoundingClientRect().bottom
-      ) {
+      } else if (lastRow && clientY > lastRow.getBoundingClientRect().bottom) {
         targetRow = lastRow;
         targetRowIndex = rows.length - 1;
       }
