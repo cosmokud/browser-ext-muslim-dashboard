@@ -3166,6 +3166,30 @@
                 />
               </div>
             </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Reset</label>
+              <p class="setting-hint">
+                Reset your dashboard settings back to defaults. Your custom data
+                (custom flashcards, custom quotes, custom wallpapers, notes,
+                Pocket Quran bookmarks, etc.) will be kept.
+              </p>
+              <button class="setting-btn" id="resetWholeSettingsBtn">
+                🧹 Reset Whole Settings
+              </button>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Danger Zone</label>
+              <p class="setting-hint">
+                This will reset EVERYTHING to defaults, including all user data
+                like custom flashcards, custom quotes, notes, Pocket Quran
+                bookmarks, and custom wallpapers.
+              </p>
+              <button class="setting-btn" id="nukeAllDataBtn">
+                ☢️ Nuke Button
+              </button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -3301,6 +3325,23 @@
           </button>
           <button class="delete-confirm-btn confirm" id="confirmDeleteBtn">
             🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset / Nuke Confirmation Modal -->
+    <div class="modal-overlay delete-confirm-modal" id="resetNukeConfirmModal">
+      <div class="delete-confirm-content" role="dialog" aria-modal="true">
+        <div class="delete-confirm-icon" id="resetNukeConfirmIcon">⚠️</div>
+        <h3 id="resetNukeConfirmTitle">Confirm</h3>
+        <p id="resetNukeConfirmText"></p>
+        <div class="delete-confirm-buttons">
+          <button class="delete-confirm-btn cancel" id="resetNukeCancelBtn">
+            Cancel
+          </button>
+          <button class="delete-confirm-btn confirm" id="resetNukeConfirmBtn">
+            Confirm
           </button>
         </div>
       </div>

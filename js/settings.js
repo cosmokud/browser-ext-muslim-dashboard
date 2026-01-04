@@ -155,6 +155,32 @@ class SettingsManager {
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
 
+    // General: reset buttons
+    this.resetWholeSettingsBtn = document.getElementById(
+      "resetWholeSettingsBtn"
+    );
+    this.nukeAllDataBtn = document.getElementById("nukeAllDataBtn");
+
+    // Reset/Nuke confirmation modal
+    this.resetNukeConfirmModal = document.getElementById(
+      "resetNukeConfirmModal"
+    );
+    this.resetNukeConfirmIcon = document.getElementById(
+      "resetNukeConfirmIcon"
+    );
+    this.resetNukeConfirmTitle = document.getElementById(
+      "resetNukeConfirmTitle"
+    );
+    this.resetNukeConfirmText = document.getElementById(
+      "resetNukeConfirmText"
+    );
+    this.resetNukeCancelBtn = document.getElementById("resetNukeCancelBtn");
+    this.resetNukeConfirmBtn = document.getElementById(
+      "resetNukeConfirmBtn"
+    );
+
+    this._resetNukeConfirmResolve = null;
+
     // Themes panel elements
     this.themeModeButtons = document.querySelectorAll(".theme-mode-btn");
     this.themeGlassEnabled = document.getElementById("themeGlassEnabled");
@@ -1919,6 +1945,19 @@ class SettingsManager {
     const pinnedApps = this.storage.getPinnedApps();
     const lastLocation = this.storage.getLastLocation();
 
+    const notes = this.storage.getNotes
+      ? this.storage.getNotes()
+      : this.storage.get("notes", []);
+
+    const notesActiveId = this.storage.get("notes_active", null);
+    const notesPage = this.storage.get("notes_page", 1);
+
+    const pocketQuranBookmarkCategories = this.storage.get(
+      "pocketQuran_bookmarkCategories",
+      []
+    );
+    const pocketQuranBookmarks = this.storage.get("pocketQuran_bookmarks", []);
+
     const customSearches = this.storage.getCustomSearches
       ? this.storage.getCustomSearches()
       : this.storage.get("customSearches", []);
@@ -1928,7 +1967,7 @@ class SettingsManager {
       : this.storage.get("customSearchLastId", null);
 
     const exportData = {
-      version: 1,
+      version: 2,
       exportDate: new Date().toISOString(),
       settings: settings,
       todos: todos,
@@ -1937,6 +1976,21 @@ class SettingsManager {
       lastLocation: lastLocation,
       customSearches: Array.isArray(customSearches) ? customSearches : [],
       customSearchLastId: customSearchLastId ?? null,
+
+      // Notes
+      notes: Array.isArray(notes) ? notes : [],
+      notesActiveId: notesActiveId ?? null,
+      notesPage: Number.isFinite(Number(notesPage)) ? Number(notesPage) : 1,
+
+      // Pocket Quran bookmarks
+      pocketQuranBookmarks: {
+        categories: Array.isArray(pocketQuranBookmarkCategories)
+          ? pocketQuranBookmarkCategories
+          : [],
+        bookmarks: Array.isArray(pocketQuranBookmarks)
+          ? pocketQuranBookmarks
+          : [],
+      },
     };
 
     const json = JSON.stringify(exportData, null, 2);
@@ -2067,6 +2121,32 @@ class SettingsManager {
       ? this.storage.getLastCustomSearchId()
       : this.storage.get("customSearchLastId", null);
 
+    const notes = this.storage.getNotes
+      ? this.storage.getNotes()
+      : this.storage.get("notes", []);
+    const notesActiveId = this.storage.get("notes_active", null);
+    const notesPage = this.storage.get("notes_page", 1);
+
+    const pocketQuranBookmarkCategories = this.storage.get(
+      "pocketQuran_bookmarkCategories",
+      []
+    );
+    const pocketQuranBookmarks = this.storage.get("pocketQuran_bookmarks", []);
+
+    let stickyNotes = [];
+    let stickyNotesVisible = null;
+    try {
+      const rawSticky = localStorage.getItem("stickyNotes");
+      stickyNotes = rawSticky ? JSON.parse(rawSticky) : [];
+    } catch (e) {
+      stickyNotes = [];
+    }
+    try {
+      stickyNotesVisible = localStorage.getItem("stickyNotesVisible");
+    } catch (e) {
+      stickyNotesVisible = null;
+    }
+
     // Extra payload = custom content not covered by settings export (custom flashcard sets)
     const customBackgrounds = Array.isArray(settings.customBackgrounds)
       ? settings.customBackgrounds
@@ -2095,7 +2175,7 @@ class SettingsManager {
 
     const exportData = {
       exportType: "full",
-      version: 1,
+      version: 2,
       exportDate: new Date().toISOString(),
       settings,
       todos,
@@ -2106,6 +2186,21 @@ class SettingsManager {
       // Search Bar
       customSearches: Array.isArray(customSearches) ? customSearches : [],
       customSearchLastId: customSearchLastId ?? null,
+
+      // Notes
+      notes: Array.isArray(notes) ? notes : [],
+      notesActiveId: notesActiveId ?? null,
+      notesPage: Number.isFinite(Number(notesPage)) ? Number(notesPage) : 1,
+
+      // Pocket Quran bookmarks
+      pocketQuranBookmarks: {
+        categories: Array.isArray(pocketQuranBookmarkCategories)
+          ? pocketQuranBookmarkCategories
+          : [],
+        bookmarks: Array.isArray(pocketQuranBookmarks)
+          ? pocketQuranBookmarks
+          : [],
+      },
 
       // Additive / full-export-only fields
       flashcards: {
@@ -2118,6 +2213,13 @@ class SettingsManager {
 
       // Kept for clarity/backward-compat (also included within settings.customBackgrounds)
       customBackgrounds,
+
+      // Sticky Notes (not prefixed under StorageManager)
+      stickyNotes: {
+        notes: Array.isArray(stickyNotes) ? stickyNotes : [],
+        visible:
+          stickyNotesVisible === null ? null : stickyNotesVisible !== "false",
+      },
     };
 
     const json = JSON.stringify(exportData, null, 2);
@@ -2174,6 +2276,49 @@ class SettingsManager {
         this.storage.saveLastCustomSearchId(data.customSearchLastId ?? null);
       } else {
         this.storage.set("customSearchLastId", data.customSearchLastId ?? null);
+      }
+    }
+
+    // Notes (replace)
+    if (Array.isArray(data.notes)) {
+      if (this.storage.saveNotes) this.storage.saveNotes(data.notes);
+      else this.storage.set("notes", data.notes);
+    }
+    if ("notesActiveId" in (data || {})) {
+      this.storage.set("notes_active", data.notesActiveId ?? null);
+    }
+    if ("notesPage" in (data || {})) {
+      const n = parseInt(data.notesPage, 10);
+      this.storage.set("notes_page", Number.isFinite(n) && n > 0 ? n : 1);
+    }
+
+    // Pocket Quran bookmarks (replace)
+    if (data.pocketQuranBookmarks && typeof data.pocketQuranBookmarks === "object") {
+      const cats = data.pocketQuranBookmarks.categories;
+      const bms = data.pocketQuranBookmarks.bookmarks;
+      if (Array.isArray(cats)) this.storage.set("pocketQuran_bookmarkCategories", cats);
+      if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
+    }
+
+    // Sticky notes (replace)
+    if (data.stickyNotes && typeof data.stickyNotes === "object") {
+      try {
+        const incomingNotes = Array.isArray(data.stickyNotes.notes)
+          ? data.stickyNotes.notes
+          : [];
+        localStorage.setItem("stickyNotes", JSON.stringify(incomingNotes));
+      } catch (e) {
+        // ignore
+      }
+      try {
+        if (typeof data.stickyNotes.visible === "boolean") {
+          localStorage.setItem(
+            "stickyNotesVisible",
+            String(data.stickyNotes.visible)
+          );
+        }
+      } catch (e) {
+        // ignore
       }
     }
 
@@ -2324,6 +2469,27 @@ class SettingsManager {
             data.customSearchLastId ?? null
           );
         }
+      }
+
+      // Import notes
+      if (Array.isArray(data.notes)) {
+        if (this.storage.saveNotes) this.storage.saveNotes(data.notes);
+        else this.storage.set("notes", data.notes);
+      }
+      if ("notesActiveId" in (data || {})) {
+        this.storage.set("notes_active", data.notesActiveId ?? null);
+      }
+      if ("notesPage" in (data || {})) {
+        const n = parseInt(data.notesPage, 10);
+        this.storage.set("notes_page", Number.isFinite(n) && n > 0 ? n : 1);
+      }
+
+      // Import Pocket Quran bookmarks
+      if (data.pocketQuranBookmarks && typeof data.pocketQuranBookmarks === "object") {
+        const cats = data.pocketQuranBookmarks.categories;
+        const bms = data.pocketQuranBookmarks.bookmarks;
+        if (Array.isArray(cats)) this.storage.set("pocketQuran_bookmarkCategories", cats);
+        if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
       }
 
       this.showToast("Settings imported! Reloading...", "success");
@@ -3448,6 +3614,162 @@ class SettingsManager {
           window.dashboard.gridLayout.resetToDefault();
           this.showToast("Layout reset to default!", "success");
         }
+      });
+    }
+
+    // Reset / Nuke confirmation modal wiring
+    const resolveResetNukeConfirm = (confirmed) => {
+      if (!this._resetNukeConfirmResolve) return;
+      const resolve = this._resetNukeConfirmResolve;
+      this._resetNukeConfirmResolve = null;
+      try {
+        this.resetNukeConfirmModal?.classList.remove("active");
+      } catch (e) {}
+      resolve(confirmed === true);
+    };
+
+    if (this.resetNukeCancelBtn) {
+      this.resetNukeCancelBtn.addEventListener("click", () =>
+        resolveResetNukeConfirm(false)
+      );
+    }
+    if (this.resetNukeConfirmBtn) {
+      this.resetNukeConfirmBtn.addEventListener("click", () =>
+        resolveResetNukeConfirm(true)
+      );
+    }
+    if (this.resetNukeConfirmModal) {
+      this.resetNukeConfirmModal.addEventListener("click", (e) => {
+        if (e.target === this.resetNukeConfirmModal) {
+          resolveResetNukeConfirm(false);
+        }
+      });
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (this.resetNukeConfirmModal?.classList.contains("active")) {
+        resolveResetNukeConfirm(false);
+      }
+    });
+
+    const openResetNukeConfirmModal = (opts = {}) => {
+      const title = String(opts.title || "Confirm");
+      const text = String(opts.text || "");
+      const icon = String(opts.icon || "⚠️");
+      const confirmLabel = String(opts.confirmLabel || "Confirm");
+      const cancelLabel = String(opts.cancelLabel || "Cancel");
+
+      // Fallback: native confirm if modal isn't available.
+      if (!this.resetNukeConfirmModal || !this.resetNukeConfirmBtn || !this.resetNukeCancelBtn) {
+        return Promise.resolve(window.confirm(`${title}\n\n${text}`));
+      }
+
+      // Cancel any prior pending confirm.
+      if (this._resetNukeConfirmResolve) {
+        try {
+          this._resetNukeConfirmResolve(false);
+        } catch (e) {}
+        this._resetNukeConfirmResolve = null;
+      }
+
+      if (this.resetNukeConfirmIcon) this.resetNukeConfirmIcon.textContent = icon;
+      if (this.resetNukeConfirmTitle) this.resetNukeConfirmTitle.textContent = title;
+      if (this.resetNukeConfirmText) this.resetNukeConfirmText.textContent = text;
+      this.resetNukeConfirmBtn.textContent = confirmLabel;
+      this.resetNukeCancelBtn.textContent = cancelLabel;
+
+      this.resetNukeConfirmModal.classList.add("active");
+
+      return new Promise((resolve) => {
+        this._resetNukeConfirmResolve = resolve;
+      });
+    };
+
+    const resetWholeSettings = async () => {
+      const current = this.storage.getSettings();
+      const defaults = this.storage.getDefaultSettings();
+
+      // Preserve user data that is stored inside settings.
+      const preservedCustomBackgrounds = Array.isArray(current.customBackgrounds)
+        ? current.customBackgrounds
+            .filter((x) => typeof x === "string" && x.startsWith("data:image"))
+            .slice(0, 10)
+        : [];
+
+      defaults.customBackgrounds = preservedCustomBackgrounds;
+
+      this.storage.saveSettings(defaults);
+
+      this.showToast("Settings reset to defaults. Reloading…", "success");
+      setTimeout(() => window.location.reload(), 1200);
+    };
+
+    const nukeAllData = async () => {
+      const defaults = this.storage.getDefaultSettings();
+
+      // Clear all StorageManager data.
+      try {
+        this.storage.clear();
+      } catch (e) {
+        // ignore
+      }
+
+      // Also clear Sticky Notes (not using the StorageManager prefix).
+      try {
+        localStorage.removeItem("stickyNotes");
+        localStorage.removeItem("stickyNotesVisible");
+      } catch (e) {
+        // ignore
+      }
+
+      // Reset MV3 mirrored keys so the service worker converges to defaults.
+      try {
+        if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
+          chrome.storage.local.set({ md_settings: defaults, md_lastLocation: null });
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      this.showToast("Everything was reset. Reloading…", "success");
+      setTimeout(() => window.location.reload(), 1200);
+    };
+
+    if (this.resetWholeSettingsBtn) {
+      this.resetWholeSettingsBtn.addEventListener("click", async () => {
+        const ok = await openResetNukeConfirmModal({
+          icon: "🧹",
+          title: "Reset Whole Settings?",
+          text: "This resets all settings to defaults, but keeps your custom data (flashcards, quotes, wallpapers, notes, Pocket Quran bookmarks, etc.).",
+          confirmLabel: "Reset",
+          cancelLabel: "Cancel",
+        });
+        if (!ok) return;
+        await resetWholeSettings();
+      });
+    }
+
+    if (this.nukeAllDataBtn) {
+      this.nukeAllDataBtn.addEventListener("click", async () => {
+        const ok1 = await openResetNukeConfirmModal({
+          icon: "☢️",
+          title: "Nuke Everything?",
+          text: "This will permanently delete ALL settings and ALL user data on this device.",
+          confirmLabel: "Continue",
+          cancelLabel: "Cancel",
+        });
+        if (!ok1) return;
+
+        const ok2 = await openResetNukeConfirmModal({
+          icon: "☢️",
+          title: "Final Confirmation",
+          text: "Last chance: this cannot be undone. Proceed to reset EVERYTHING?",
+          confirmLabel: "Yes, nuke it",
+          cancelLabel: "Cancel",
+        });
+        if (!ok2) return;
+
+        await nukeAllData();
       });
     }
 
