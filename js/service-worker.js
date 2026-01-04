@@ -400,11 +400,11 @@ async function showPrayerNotification(prayerKey, kind) {
   const bothZero = BeforeMinutes === 0 && AfterMinutes === 0;
 
   if (bothZero) {
-    message = "Just now";
+    message = "Just now.";
   } else if (kind === "before") {
     message =
       BeforeMinutes === 0
-        ? "Just now"
+        ? "Just now."
         : `Upcoming in ${formatMinutes(BeforeMinutes)}.`;
   } else if (kind === "after") {
     if (AfterMinutes === 0) {
@@ -415,7 +415,7 @@ async function showPrayerNotification(prayerKey, kind) {
       message = `${AfterMinutes} minutes have passed since ${prayerName} time.`;
     }
   } else {
-    message = "It’s time to pray";
+    message = "";
   }
 
   const notificationId = `${PRAYER_ALARM_PREFIX}${prayerKey}_${kind}_${Date.now()}`;
