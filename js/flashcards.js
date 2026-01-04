@@ -492,12 +492,12 @@ class FlashcardManager {
         }
       }
       this.saveSets(created);
-        // Prefer 99 Names (Arabic) as the initial active set if present
-        const preferredId = "default_99names_ar";
-        const preferred = created.find((s) => s.id === preferredId) || created[0];
-        this.setActiveSetId(preferred?.id || preferredId);
-        return;
-      }
+      // Prefer 99 Names (Arabic) as the initial active set if present
+      const preferredId = "default_99names_ar";
+      const preferred = created.find((s) => s.id === preferredId) || created[0];
+      this.setActiveSetId(preferred?.id || preferredId);
+      return;
+    }
 
     // Upgrade path: ensure each default set exists (do not overwrite existing user sets)
     let changed = false;
