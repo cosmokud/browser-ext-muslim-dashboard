@@ -2677,6 +2677,23 @@ body {
   outline-offset: 3px;
 }
 
+/* Add spacing above CTAs to avoid cramped layout */
+.credits-cta,
+.support-kofi-cta,
+.support-feedback-cta {
+  display: inline-block;
+  margin-top: var(--spacing-md);
+}
+
+/* Slightly reduced spacing on narrow viewports to keep layout compact */
+@media (max-width: 520px) {
+  .credits-cta,
+  .support-kofi-cta,
+  .support-feedback-cta {
+    margin-top: var(--spacing-sm);
+  }
+}
+
 @keyframes supportKofiSweep {
   0% {
     transform: translateX(-70%) rotate(12deg);
