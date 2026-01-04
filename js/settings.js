@@ -235,8 +235,22 @@ class SettingsManager {
     this.visibilityFasting = document.getElementById("visibilityFasting");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
+    this.visibilityNotes = document.getElementById("visibilityNotes");
+    this.visibilityPocketQuran = document.getElementById("visibilityPocketQuran");
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]'
+    );
+
+    // Quote layout style elements
+    this.quoteLayoutStyleRadios = document.querySelectorAll(
+      'input[name="quoteLayoutStyle"]'
+    );
+
+    // Compact weather elements
+    this.compactWeatherEnabled = document.getElementById("compactWeatherEnabled");
+    this.compactWeatherOptions = document.getElementById("compactWeatherOptions");
+    this.compactWeatherModeRadios = document.querySelectorAll(
+      'input[name="compactWeatherMode"]'
     );
 
     // Weather tab elements
@@ -453,6 +467,13 @@ class SettingsManager {
       this.useDefaultQuotes.checked = settings.useDefaultQuotes;
     if (this.useUserQuotes) this.useUserQuotes.checked = settings.useUserQuotes;
 
+    // Quote layout style
+    const quoteLayoutStyle = settings.quoteLayoutStyle || "classic";
+    const quoteLayoutStyleRadio = document.querySelector(
+      `input[name="quoteLayoutStyle"][value="${quoteLayoutStyle}"]`
+    );
+    if (quoteLayoutStyleRadio) quoteLayoutStyleRadio.checked = true;
+
     // Background settings
     if (settings.bgIntervalCustom && settings.bgInterval === "custom") {
       if (this.bgInterval) this.bgInterval.value = "custom";
@@ -526,6 +547,17 @@ class SettingsManager {
         ? String(desired)
         : "85";
     }
+
+    // Compact weather settings
+    if (this.compactWeatherEnabled) {
+      this.compactWeatherEnabled.checked = settings.compactWeatherEnabled === true;
+      this.toggleCompactWeatherOptions(settings.compactWeatherEnabled === true);
+    }
+    const compactWeatherMode = settings.compactWeatherMode || "simple";
+    const compactWeatherModeRadio = document.querySelector(
+      `input[name="compactWeatherMode"][value="${compactWeatherMode}"]`
+    );
+    if (compactWeatherModeRadio) compactWeatherModeRadio.checked = true;
 
     // Load heading settings
     this.loadHeadingSettings(settings);
@@ -785,6 +817,10 @@ class SettingsManager {
       this.visibilityFlashcards.checked = visibility.flashcards !== false;
     if (this.visibilityTodoList)
       this.visibilityTodoList.checked = visibility.todoList !== false;
+    if (this.visibilityNotes)
+      this.visibilityNotes.checked = visibility.notes !== false;
+    if (this.visibilityPocketQuran)
+      this.visibilityPocketQuran.checked = visibility.pocketQuran !== false;
   }
 
   _clearCitySearchResults(container) {
@@ -1125,6 +1161,15 @@ class SettingsManager {
   toggleCustomInterval(show) {
     if (this.customIntervalGroup) {
       this.customIntervalGroup.style.display = show ? "block" : "none";
+    }
+  }
+
+  /**
+   * Toggle compact weather options visibility
+   */
+  toggleCompactWeatherOptions(show) {
+    if (this.compactWeatherOptions) {
+      this.compactWeatherOptions.style.display = show ? "block" : "none";
     }
   }
 
@@ -2385,6 +2430,19 @@ class SettingsManager {
     // Quote settings
     settings.useDefaultQuotes = this.useDefaultQuotes?.checked ?? true;
     settings.useUserQuotes = this.useUserQuotes?.checked ?? true;
+    
+    // Quote layout style
+    const quoteLayoutStyleRadio = document.querySelector(
+      'input[name="quoteLayoutStyle"]:checked'
+    );
+    settings.quoteLayoutStyle = quoteLayoutStyleRadio?.value || "classic";
+
+    // Compact weather settings
+    settings.compactWeatherEnabled = this.compactWeatherEnabled?.checked ?? false;
+    const compactWeatherModeRadio = document.querySelector(
+      'input[name="compactWeatherMode"]:checked'
+    );
+    settings.compactWeatherMode = compactWeatherModeRadio?.value || "simple";
 
     // Background settings
     const bgIntervalValue = this.bgInterval?.value;
@@ -2550,6 +2608,8 @@ class SettingsManager {
       fasting: this.visibilityFasting?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
+      notes: this.visibilityNotes?.checked ?? true,
+      pocketQuran: this.visibilityPocketQuran?.checked ?? true,
     };
   }
 
@@ -3269,6 +3329,13 @@ class SettingsManager {
     if (this.bgInterval) {
       this.bgInterval.addEventListener("change", (e) => {
         this.toggleCustomInterval(e.target.value === "custom");
+      });
+    }
+
+    // Compact weather toggle
+    if (this.compactWeatherEnabled) {
+      this.compactWeatherEnabled.addEventListener("change", (e) => {
+        this.toggleCompactWeatherOptions(e.target.checked);
       });
     }
 

@@ -43,12 +43,34 @@ class QuotesManager {
   async init() {
     await this.loadDefaultQuotes();
     this.loadUserQuotes();
+    this.applyLayoutStyle();
     this.displayRandomQuote();
     this.setupEventListeners();
     this.renderQuotesList();
 
     // Auto-rotate quotes using the same animation path as manual refresh
     this.startAutoRotate();
+  }
+
+  /**
+   * Apply quote layout style based on settings
+   */
+  applyLayoutStyle() {
+    if (!this.quoteContainer) return;
+    const settings = this.storage.getSettings();
+    const style = settings.quoteLayoutStyle || "classic";
+    
+    // Remove all style classes
+    this.quoteContainer.classList.remove(
+      "quote-style-classic",
+      "quote-style-minimal",
+      "quote-style-elegant",
+      "quote-style-card",
+      "quote-style-banner"
+    );
+    
+    // Add the selected style class
+    this.quoteContainer.classList.add(`quote-style-${style}`);
   }
 
   /**

@@ -108,6 +108,9 @@ class WeatherManager {
     this._startHourlyChartAnimation();
     this.renderHourlyChart();
 
+    // Initialize compact weather
+    this.initCompactWeather();
+
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
@@ -224,6 +227,140 @@ class WeatherManager {
       ctx.fillText(hourLabel, x, plotBottom + 6);
     }
     */
+  }
+
+  /**
+   * Initialize compact weather display in header
+   */
+  initCompactWeather() {
+    const settings = this.storage.getSettings();
+    
+    // Check if compact weather should be enabled
+    if (!settings.compactWeatherEnabled) {
+      this.hideCompactWeather();
+      return;
+    }
+
+    // Create compact weather element if it doesn't exist
+    this.ensureCompactWeatherElement();
+    this.updateCompactWeather();
+  }
+
+  /**
+   * Create compact weather element in header beside clock
+   */
+  ensureCompactWeatherElement() {
+    if (document.getElementById("compactWeather")) return;
+
+    const header = document.querySelector(".header");
+    const timeSection = document.querySelector(".time-section");
+    if (!header || !timeSection) return;
+
+    // Create a wrapper for time and weather if not exists
+    let rightSection = document.querySelector(".header-right-section");
+    if (!rightSection) {
+      rightSection = document.createElement("div");
+      rightSection.className = "header-right-section";
+      rightSection.style.display = "flex";
+      rightSection.style.alignItems = "center";
+      rightSection.style.gap = "var(--spacing-md)";
+      
+      // Move time section into the wrapper
+      timeSection.parentNode.insertBefore(rightSection, timeSection);
+      rightSection.appendChild(timeSection);
+    }
+
+    const compactWeather = document.createElement("div");
+    compactWeather.id = "compactWeather";
+    compactWeather.className = "compact-weather";
+
+    compactWeather.innerHTML = `
+      <span class="compact-weather-icon"></span>
+      <span class="compact-weather-temp"></span>
+      <div class="compact-weather-details">
+        <span class="compact-weather-feels"></span>
+        <span class="compact-weather-humidity"></span>
+        <span class="compact-weather-wind"></span>
+      </div>
+    `;
+
+    // Insert after time section within the wrapper
+    rightSection.appendChild(compactWeather);
+    this.compactWeatherEl = compactWeather;
+  }
+
+  /**
+   * Update compact weather display with current weather data
+   */
+  updateCompactWeather() {
+    const settings = this.storage.getSettings();
+    
+    if (!settings.compactWeatherEnabled) {
+      this.hideCompactWeather();
+      return;
+    }
+
+    this.ensureCompactWeatherElement();
+    
+    const compactEl = document.getElementById("compactWeather");
+    if (!compactEl) return;
+
+    const weather = this.currentWeather;
+    if (!weather) {
+      compactEl.classList.remove("active");
+      return;
+    }
+
+    const mode = settings.compactWeatherMode || "simple";
+    const weatherInfo = this.weatherCodes[weather.weatherCode] || { icon: "🌡️", desc: "Unknown" };
+    const unitSymbol = weather.unit === "fahrenheit" ? "°F" : "°C";
+    const windUnitLabel = weather.unit === "fahrenheit" ? "mph" : "km/h";
+
+    // Update compact weather content
+    const iconEl = compactEl.querySelector(".compact-weather-icon");
+    const tempEl = compactEl.querySelector(".compact-weather-temp");
+    const feelsEl = compactEl.querySelector(".compact-weather-feels");
+    const humidityEl = compactEl.querySelector(".compact-weather-humidity");
+    const windEl = compactEl.querySelector(".compact-weather-wind");
+
+    if (iconEl) iconEl.textContent = weatherInfo.icon;
+    if (tempEl) {
+      tempEl.textContent = weather.temperature === null
+        ? `--${unitSymbol}`
+        : `${weather.temperature}${unitSymbol}`;
+    }
+
+    // Detailed mode shows extra info
+    if (feelsEl) {
+      feelsEl.textContent = weather.feelsLike === null
+        ? `Feels --${unitSymbol}`
+        : `Feels ${weather.feelsLike}${unitSymbol}`;
+    }
+    if (humidityEl) {
+      humidityEl.textContent = weather.humidity === null
+        ? `Humidity --%`
+        : `Humidity ${weather.humidity}%`;
+    }
+    if (windEl) {
+      windEl.textContent = weather.windSpeed === null
+        ? `Wind -- ${windUnitLabel}`
+        : `Wind ${weather.windSpeed} ${windUnitLabel}`;
+    }
+
+    // Apply mode class
+    compactEl.classList.remove("compact-weather-simple", "compact-weather-detailed");
+    compactEl.classList.add(`compact-weather-${mode}`);
+    compactEl.classList.add("active");
+  }
+
+  /**
+   * Hide compact weather element
+   */
+  hideCompactWeather() {
+    const compactEl = document.getElementById("compactWeather");
+    if (compactEl) {
+      compactEl.classList.remove("active");
+    }
   }
 
   setupEventListeners() {
@@ -925,6 +1062,9 @@ window.WeatherManager = WeatherManager;
           : `${weather.windSpeed} ${windUnitLabel}`;
     }
 
+    // Update compact weather as well
+    this.updateCompactWeather();
+
     this.render7DayForecast();
     this.updateMetricTabs();
     this.renderHourlyChart();
@@ -986,15 +1126,20 @@ window.WeatherManager = WeatherManager;
 
     this.weatherForecast.innerHTML = items.join("");
 
-    // Click to select day (updates chart)
+    // Click to select day (updates chart with animation)
     this.weatherForecast
       .querySelectorAll(".weather-forecast-day")
       .forEach((el) => {
         el.addEventListener("click", () => {
           const idx = Number(el.getAttribute("data-day-index"));
           if (!Number.isFinite(idx)) return;
+          const wasSelected = this.selectedForecastIndex === idx;
           this.selectedForecastIndex = Math.max(0, Math.min(6, idx));
           this.render7DayForecast();
+          // Trigger bar animation when day changes
+          if (!wasSelected) {
+            this._startHourlyChartAnimation();
+          }
           this.renderHourlyChart();
         });
       });

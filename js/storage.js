@@ -151,6 +151,7 @@ class StorageManager {
       useDefaultQuotes: true,
       useUserQuotes: true,
       quotesPerPage: 10,
+      quoteLayoutStyle: "classic", // 'classic', 'minimal', 'elegant', 'card', 'banner'
 
       // Background settings
       bgInterval: 60, // minutes
@@ -199,6 +200,10 @@ class StorageManager {
       weatherLatitude: null,
       weatherLongitude: null,
 
+      // Compact weather settings (displays mini weather beside clock)
+      compactWeatherEnabled: false,
+      compactWeatherMode: "simple", // 'simple' or 'detailed'
+
       // Component visibility settings
       componentVisibility: {
         header: true,
@@ -212,6 +217,8 @@ class StorageManager {
         weather: true,
         lunarPhase: true,
         flashcards: true,
+        notes: true,
+        pocketQuran: true,
       },
 
       // Floating mode (detached + draggable + resizable) for select components
@@ -265,8 +272,8 @@ class StorageManager {
         mode: "study", // 'study' or 'test'
         studyAutoAdvanceSeconds: 10,
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
-        questionFontSize: 22,
-        answerFontSize: 18,
+        questionFontSize: 64,
+        answerFontSize: 32,
       },
 
       // Pocket Quran settings

@@ -2137,6 +2137,32 @@
               </div>
             </div>
 
+            <!-- Compact Weather in Header -->
+            <div class="setting-group">
+              <label class="setting-label">Compact Weather Display</label>
+              <p class="setting-hint">
+                Show a compact weather indicator beside the clock in the header.
+              </p>
+              <div class="setting-options">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="compactWeatherEnabled" />
+                  <span>Enable Compact Weather in Header</span>
+                </label>
+              </div>
+              <div class="compact-weather-options" id="compactWeatherOptions" style="display: none;">
+                <div class="setting-options">
+                  <label class="radio-option">
+                    <input type="radio" name="compactWeatherMode" value="simple" checked />
+                    <span>Simple (Icon + Temperature)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="compactWeatherMode" value="detailed" />
+                    <span>Detailed (+ Humidity, Feels Like, Wind)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <!-- Date Settings -->
             <div class="setting-group">
               <label class="setting-label">Date Display</label>
@@ -2350,6 +2376,18 @@
                     <span class="toggle-switch"></span>
                   </label>
                 </div>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📝</span>
+                  <span class="visibility-name">Notes</span>
+                  <input type="checkbox" id="visibilityNotes" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📖</span>
+                  <span class="visibility-name">Pocket Quran</span>
+                  <input type="checkbox" id="visibilityPocketQuran" checked />
+                  <span class="toggle-switch"></span>
+                </label>
               </div>
             </div>
           </div>
@@ -2518,6 +2556,47 @@
                 <label class="checkbox-option">
                   <input type="checkbox" id="useUserQuotes" checked />
                   <span>Use My Custom Quotes</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Quote Layout Style</label>
+              <p class="setting-hint">
+                Choose a compact display style for the quote section.
+              </p>
+              <div class="quote-style-picker" id="quoteStylePicker">
+                <label class="quote-style-option">
+                  <input type="radio" name="quoteLayoutStyle" value="classic" checked />
+                  <div class="quote-style-preview quote-style-classic">
+                    <span class="preview-icon">❝</span>
+                    <span class="preview-text">Classic</span>
+                  </div>
+                </label>
+                <label class="quote-style-option">
+                  <input type="radio" name="quoteLayoutStyle" value="minimal" />
+                  <div class="quote-style-preview quote-style-minimal">
+                    <span class="preview-text">Minimal</span>
+                  </div>
+                </label>
+                <label class="quote-style-option">
+                  <input type="radio" name="quoteLayoutStyle" value="elegant" />
+                  <div class="quote-style-preview quote-style-elegant">
+                    <span class="preview-icon">✦</span>
+                    <span class="preview-text">Elegant</span>
+                  </div>
+                </label>
+                <label class="quote-style-option">
+                  <input type="radio" name="quoteLayoutStyle" value="card" />
+                  <div class="quote-style-preview quote-style-card">
+                    <span class="preview-text">Card</span>
+                  </div>
+                </label>
+                <label class="quote-style-option">
+                  <input type="radio" name="quoteLayoutStyle" value="banner" />
+                  <div class="quote-style-preview quote-style-banner">
+                    <span class="preview-text">Banner</span>
+                  </div>
                 </label>
               </div>
             </div>
@@ -3388,6 +3467,7 @@
                 placeholder="e.g., https://www.youtube.com/results?search_query=%s"
                 required
               />
+              <p class="setting-hint search-url-hint">URL with <code>%s</code> in place of query</p>
             </div>
           </form>
         </div>

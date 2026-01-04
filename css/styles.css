@@ -280,6 +280,69 @@ body {
   text-align: left;
 }
 
+/* ========================================
+   Compact Weather (beside clock)
+   ======================================== */
+.compact-weather {
+  display: none; /* Hidden by default, shown via JS */
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(calc(15px * var(--ui-blur-multiplier)));
+  margin-left: var(--spacing-md);
+  animation: fadeInScale 0.4s ease-out;
+  flex-shrink: 0;
+}
+
+.compact-weather.active {
+  display: flex;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.compact-weather-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.compact-weather-temp {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.compact-weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-left: 1px solid var(--glass-border);
+  padding-left: var(--spacing-sm);
+  margin-left: var(--spacing-xs);
+}
+
+.compact-weather-details span {
+  white-space: nowrap;
+}
+
+/* Simple mode hides extra details */
+.compact-weather.compact-weather-simple .compact-weather-details {
+  display: none;
+}
+
 /* Quote Section */
 .quote-section {
   isolation: isolate;
@@ -385,6 +448,129 @@ body {
 .quote-refresh svg {
   width: 18px;
   height: 18px;
+}
+
+/* ========================================
+   Quote Layout Styles
+   ======================================== */
+
+/* Classic Style (default) - uses existing quote container styles unchanged */
+
+/* Minimal Style - reduced padding, no icon */
+.quote-container.quote-style-minimal {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+.quote-container.quote-style-minimal .quote-icon {
+  display: none;
+}
+.quote-container.quote-style-minimal .quote-text {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-sm);
+}
+.quote-container.quote-style-minimal .quote-source {
+  font-size: 0.85rem;
+}
+
+/* Elegant Style - larger text, centered with decorative lines */
+.quote-container.quote-style-elegant {
+  padding: var(--spacing-lg);
+  position: relative;
+}
+.quote-container.quote-style-elegant::before,
+.quote-container.quote-style-elegant::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+}
+.quote-container.quote-style-elegant::before {
+  top: var(--spacing-md);
+}
+.quote-container.quote-style-elegant::after {
+  bottom: var(--spacing-md);
+}
+.quote-container.quote-style-elegant .quote-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-xs);
+  opacity: 0.6;
+}
+.quote-container.quote-style-elegant .quote-text {
+  font-size: clamp(1.2rem, 2.8vw, 1.5rem);
+  line-height: 1.7;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* Card Style - compact card-like appearance */
+.quote-container.quote-style-card {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.quote-container.quote-style-card .quote-icon {
+  font-size: 1.8rem;
+  margin-bottom: var(--spacing-xs);
+}
+.quote-container.quote-style-card .quote-text {
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-sm);
+}
+.quote-container.quote-style-card .quote-source {
+  font-size: 0.8rem;
+}
+.quote-container.quote-style-card .quote-refresh {
+  width: 32px;
+  height: 32px;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+}
+.quote-container.quote-style-card .quote-refresh svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Banner Style - horizontal layout, very compact */
+.quote-container.quote-style-banner {
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  text-align: left;
+}
+.quote-container.quote-style-banner .quote-icon {
+  font-size: 1.5rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+.quote-container.quote-style-banner .quote-text {
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+.quote-container.quote-style-banner .quote-source {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.quote-container.quote-style-banner .quote-refresh {
+  position: static;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.quote-container.quote-style-banner .quote-refresh svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Content Grid */
@@ -1550,6 +1736,126 @@ body {
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+}
+
+/* Bouncy entrance animation for FAB */
+@keyframes fabBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0) translateY(20px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) translateY(-5px);
+  }
+  70% {
+    transform: scale(0.95) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.fab-menu.autohide.entrance-animate .fab-menu-toggle {
+  animation: fabBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* ========================================
+   Background Attribution Animation
+   ======================================== */
+#bg-attribution {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 10000;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.25));
+  padding: 6px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  user-select: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.95);
+  pointer-events: none;
+  max-width: calc(100% - 36px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+}
+
+/* Bouncy entrance animation for attribution */
+@keyframes attrBounceIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.05);
+  }
+  70% {
+    transform: translateY(2px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Show on entrance with bounce */
+#bg-attribution.entrance-animate {
+  animation: attrBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* After entrance, hide but show on hover */
+#bg-attribution.autohide {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+#bg-attribution.autohide:hover,
+#bg-attribution.autohide.hot-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Hover zone to trigger attribution visibility */
+.bg-attribution-hover-zone {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 200px;
+  height: 80px;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.bg-attribution-hover-zone:hover ~ #bg-attribution.autohide,
+#bg-attribution.autohide:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#bg-attribution a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 500;
 }
 
 /* Respect reduced motion preferences */

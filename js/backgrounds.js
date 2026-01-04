@@ -404,7 +404,7 @@ class BackgroundManager {
 
   /**
    * Create a small attribution box and append to the document.
-   * It's styled inline so it works without needing CSS changes.
+   * It's styled via CSS (#bg-attribution in styles.css).
    */
   createAttributionEl() {
     if (this.attributionEl) return;
@@ -418,33 +418,14 @@ class BackgroundManager {
       return;
     }
 
+    // Create hover zone for triggering attribution visibility
+    const hoverZone = document.createElement("div");
+    hoverZone.className = "bg-attribution-hover-zone";
+    document.body.appendChild(hoverZone);
+
     const el = document.createElement("div");
     el.id = "bg-attribution";
-    Object.assign(el.style, {
-      position: "fixed",
-      left: "12px",
-      bottom: "12px",
-      zIndex: "10000",
-      fontSize: "12px",
-      color: "rgba(255,255,255,0.95)",
-      background: "linear-gradient(135deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25))",
-      padding: "6px 10px",
-      borderRadius: "10px",
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "8px",
-      backdropFilter: "blur(6px)",
-      boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
-      userSelect: "none",
-      opacity: "0",
-      transition: "opacity 0.22s ease, transform 0.22s ease",
-      transform: "translateY(6px)",
-      pointerEvents: "none",
-      maxWidth: "calc(100% - 36px)",
-      overflow: "hidden",
-      whiteSpace: "nowrap",
-      textOverflow: "ellipsis",
-    });
+    // Styles are now defined in CSS
 
     const cam = document.createElement("span");
     cam.textContent = "📷";
@@ -470,11 +451,6 @@ class BackgroundManager {
     anchor.id = "bg-attribution-link";
     anchor.target = "_blank";
     anchor.rel = "noopener noreferrer";
-    Object.assign(anchor.style, {
-      color: "inherit",
-      textDecoration: "underline",
-      fontWeight: "500",
-    });
 
     el.appendChild(cam);
     el.appendChild(label);
@@ -484,6 +460,24 @@ class BackgroundManager {
 
     this.attributionEl = el;
     this.attributionAnchor = anchor;
+    this.hoverZone = hoverZone;
+
+    // Setup hover zone to show attribution
+    hoverZone.addEventListener("mouseenter", () => {
+      if (el.classList.contains("autohide")) {
+        el.classList.add("hot-visible");
+      }
+    });
+    hoverZone.addEventListener("mouseleave", () => {
+      setTimeout(() => {
+        if (!el.matches(":hover")) {
+          el.classList.remove("hot-visible");
+        }
+      }, 300);
+    });
+    el.addEventListener("mouseleave", () => {
+      el.classList.remove("hot-visible");
+    });
   }
 
   /**
@@ -492,16 +486,21 @@ class BackgroundManager {
   updateAttribution(imageObj) {
     if (!this.attributionEl) this.createAttributionEl();
     if (!imageObj || !imageObj.credit) {
-      this.attributionEl.style.opacity = "0";
-      this.attributionEl.style.transform = "translateY(6px)";
-      this.attributionEl.style.pointerEvents = "none";
+      this.attributionEl.classList.remove("entrance-animate", "autohide", "hot-visible");
       return;
     }
     this.attributionAnchor.textContent = imageObj.credit;
     this.attributionAnchor.href = imageObj.href || "#";
-    this.attributionEl.style.opacity = "1";
-    this.attributionEl.style.transform = "translateY(0)";
-    this.attributionEl.style.pointerEvents = "auto";
+    
+    // Show with bouncy entrance animation
+    this.attributionEl.classList.remove("autohide", "hot-visible");
+    this.attributionEl.classList.add("entrance-animate");
+    
+    // After animation, switch to autohide mode (show on hover)
+    setTimeout(() => {
+      this.attributionEl.classList.remove("entrance-animate");
+      this.attributionEl.classList.add("autohide");
+    }, 2600); // Animation duration (600ms) + visible time (2000ms)
   }
 
   /**

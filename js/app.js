@@ -182,6 +182,20 @@ class MuslimDashboard {
     // Ensure initial state
     setHotVisible(false);
     setOpen(false);
+
+    // Bouncy entrance animation after page load
+    setTimeout(() => {
+      menu.classList.add("entrance-animate");
+      // After animation, remove entrance class and let autohide take over
+      setTimeout(() => {
+        menu.classList.remove("entrance-animate");
+        // Keep visible briefly then hide
+        setHotVisible(true);
+        setTimeout(() => {
+          setHotVisible(false);
+        }, 2000);
+      }, 600);
+    }, 1200);
   }
 
   /**
@@ -850,6 +864,36 @@ class MuslimDashboard {
         "aria-hidden",
         visibility.todoList === false ? "true" : "false"
       );
+    }
+
+    // Notes
+    const notesCard = document.getElementById("notesCard");
+    if (notesCard) {
+      notesCard.style.display = visibility.notes === false ? "none" : "";
+      notesCard.setAttribute(
+        "aria-hidden",
+        visibility.notes === false ? "true" : "false"
+      );
+    }
+
+    // Pocket Quran
+    const pocketQuranCard = document.getElementById("pocketQuranCard");
+    if (pocketQuranCard) {
+      pocketQuranCard.style.display = visibility.pocketQuran === false ? "none" : "";
+      pocketQuranCard.setAttribute(
+        "aria-hidden",
+        visibility.pocketQuran === false ? "true" : "false"
+      );
+    }
+
+    // Apply quote layout style
+    if (this.quotes && typeof this.quotes.applyLayoutStyle === "function") {
+      this.quotes.applyLayoutStyle();
+    }
+
+    // Update compact weather display
+    if (this.weather && typeof this.weather.updateCompactWeather === "function") {
+      this.weather.updateCompactWeather();
     }
 
     // Notify grid layout manager to recalculate layout
