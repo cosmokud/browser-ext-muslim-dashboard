@@ -362,13 +362,61 @@ function getPrayerName(prayerKey) {
   return PRAYER_DEFS.find((p) => p.key === prayerKey)?.name || prayerKey;
 }
 
-function showPrayerNotification(prayerKey, kind) {
-  const titleBase = `${getPrayerName(prayerKey)}${kind === "at" ? "" : ""}`;
+function formatMinutes(n) {
+  return n === 1 ? "1 minute" : `${n} minutes`;
+}
+
+async function showPrayerNotification(prayerKey, kind) {
+  const prayerName = getPrayerName(prayerKey);
+  const titleBase = `${prayerName}`;
+
+  let BeforeMinutes = 0;
+  let AfterMinutes = 0;
+
+  try {
+    const { [STORAGE_KEYS.settings]: settingsRaw } = await storageGet([
+      STORAGE_KEYS.settings,
+    ]);
+
+    const settings =
+      settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
+
+    const pn = getPrayerNotificationsSettings(settings);
+    if (pn && pn.enabled) {
+      const cfg = getPrayerNotificationConfig(prayerKey, settings, pn);
+      if (cfg) {
+        BeforeMinutes = clampNumber(cfg.beforeMinutes, 0, 180, 0);
+        AfterMinutes = clampNumber(cfg.afterMinutes, 0, 180, 0);
+      } else {
+        BeforeMinutes = clampNumber(pn.defaultBeforeMinutes, 0, 180, 0);
+        AfterMinutes = clampNumber(pn.defaultAfterMinutes, 0, 180, 0);
+      }
+    }
+  } catch (e) {
+    // best effort; fall back to 0/0
+  }
 
   let message = "";
-  if (kind === "before") message = "Upcoming prayer time";
-  else if (kind === "after") message = "Prayer reminder";
-  else message = "It’s time to pray";
+  const bothZero = BeforeMinutes === 0 && AfterMinutes === 0;
+
+  if (bothZero) {
+    message = "Just now";
+  } else if (kind === "before") {
+    message =
+      BeforeMinutes === 0
+        ? "Just now"
+        : `Upcoming in ${formatMinutes(BeforeMinutes)}.`;
+  } else if (kind === "after") {
+    if (AfterMinutes === 0) {
+      message = "Just now";
+    } else if (AfterMinutes === 1) {
+      message = `1 minute has passed since ${prayerName} time.`;
+    } else {
+      message = `${AfterMinutes} minutes have passed since ${prayerName} time.`;
+    }
+  } else {
+    message = "It’s time to pray";
+  }
 
   const notificationId = `${PRAYER_ALARM_PREFIX}${prayerKey}_${kind}_${Date.now()}`;
 
@@ -397,6 +445,8 @@ function showPrayerNotification(prayerKey, kind) {
               message: err.message || String(err),
               prayerKey,
               kind,
+              BeforeMinutes,
+              AfterMinutes,
             },
           });
         }
@@ -409,6 +459,8 @@ function showPrayerNotification(prayerKey, kind) {
         message: e?.message || String(e),
         prayerKey,
         kind,
+        BeforeMinutes,
+        AfterMinutes,
       },
     });
   }
@@ -428,7 +480,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   const prayerKey = parts[0];
   const kind = parts[1] || "at";
 
-  showPrayerNotification(prayerKey, kind);
+  void showPrayerNotification(prayerKey, kind);
 });
 
 chrome.runtime.onInstalled.addListener(() => {
