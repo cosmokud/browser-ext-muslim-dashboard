@@ -1611,6 +1611,37 @@ body {
   z-index: 900;
 }
 
+/* Custom tooltip for FAB menu (positioned by JS) */
+.fab-menu-tooltip {
+  position: fixed;
+  z-index: 12000;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  box-shadow: var(--glass-shadow);
+  font-size: 0.85rem;
+  line-height: 1.2;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transition: opacity var(--transition-fast), transform var(--transition-fast),
+    visibility 0s linear 200ms;
+}
+
+.fab-menu-tooltip.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition: opacity var(--transition-fast), transform var(--transition-fast),
+    visibility 0s linear 0s;
+}
+
 /* Keyboard hotspot (visually hidden until focused) to reveal FAB for keyboard users */
 .fab-hotspot {
   position: fixed;
@@ -1729,8 +1760,8 @@ body {
   visibility: hidden;
   pointer-events: none;
   transform: translateY(8px) scale(0.98);
-  transition: opacity var(--transition-normal),
-    transform var(--transition-normal), visibility var(--transition-normal);
+  transition: opacity var(--transition-fast), transform var(--transition-fast),
+    visibility 0s linear 200ms;
 }
 
 .fab-menu.autohide.hot-visible .fab-menu-toggle,
@@ -1741,6 +1772,8 @@ body {
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+  transition: opacity var(--transition-fast), transform var(--transition-fast),
+    visibility 0s linear 0s;
 }
 
 /* Bouncy entrance animation for FAB */
@@ -1763,7 +1796,18 @@ body {
 }
 
 .fab-menu.autohide.entrance-animate .fab-menu-toggle {
-  animation: fabBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: fabBounceIn 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Hard-hide FAB during startup until JS intro begins */
+.fab-menu.startup-hidden .fab-menu-toggle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.95);
 }
 
 /* ========================================
@@ -1793,7 +1837,8 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+  transition: opacity 220ms ease, transform 220ms ease,
+    visibility 0s linear 220ms;
 }
 
 /* Bouncy entrance animation for attribution */
@@ -1817,9 +1862,10 @@ body {
 
 /* Show on entrance with bounce */
 #bg-attribution.entrance-animate {
-  animation: attrBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: attrBounceIn 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
   visibility: visible;
   pointer-events: auto;
+  transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
 }
 
 /* After entrance, hide but show on hover */
@@ -1836,6 +1882,7 @@ body {
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+  transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
 }
 
 /* Hover zone to trigger attribution visibility */
@@ -7596,7 +7643,7 @@ body.sticky-note-resizing {
   border-radius: var(--radius-lg);
   /* Custom scrollbar styling */
   scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+  scrollbar-color: var(--primary-light) transparent;
 }
 
 .pq-virtual-container::-webkit-scrollbar {
@@ -7608,14 +7655,14 @@ body.sticky-note-resizing {
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.4);
+  background: var(--primary-light);
   border-radius: var(--radius-full);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.6);
+  background: var(--primary-color);
   background-clip: padding-box;
 }
 

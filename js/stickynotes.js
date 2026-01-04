@@ -439,6 +439,9 @@ class StickyNotesManager {
 
     // Drag functionality
     const startDrag = (e) => {
+      // Don't block middle-click autoscroll.
+      if (e && e.type === "mousedown" && e.button !== 0) return;
+
       if (
         e.target.closest(".sticky-note-menu-btn") ||
         e.target.closest(".sticky-note-dropdown") ||
@@ -577,7 +580,8 @@ class StickyNotesManager {
     // Toolbar buttons
     toolbar.querySelectorAll(".toolbar-btn").forEach((btn) => {
       btn.addEventListener("mousedown", (e) => {
-        e.preventDefault(); // Prevent focus loss
+        // Prevent focus loss on left-click, but don't block middle-click autoscroll.
+        if (e.button === 0) e.preventDefault();
       });
       btn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -621,6 +625,9 @@ class StickyNotesManager {
     // Resize functionality
     resizeHandles.forEach((handle) => {
       const startResize = (e) => {
+        // Don't block middle-click autoscroll.
+        if (e && e.type === "mousedown" && e.button !== 0) return;
+
         e.preventDefault();
         e.stopPropagation();
 

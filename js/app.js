@@ -78,6 +78,105 @@ class MuslimDashboard {
 
     const isOpen = () => menu.classList.contains("open");
 
+    // ===== Custom tooltip for FAB buttons (left of cursor) =====
+    // We suppress native `title` tooltips for FAB buttons and replace them with
+    // a custom tooltip so we can control placement (left of cursor).
+    const ensureFabTooltip = () => {
+      let tip = document.getElementById("fabMenuTooltip");
+      if (tip) return tip;
+      tip = document.createElement("div");
+      tip.id = "fabMenuTooltip";
+      tip.className = "fab-menu-tooltip";
+      tip.setAttribute("role", "tooltip");
+      tip.setAttribute("aria-hidden", "true");
+      document.body.appendChild(tip);
+      return tip;
+    };
+
+    const getFabTooltipText = (btn) => {
+      if (!btn) return "";
+      return (
+        btn.getAttribute("data-tooltip") ||
+        btn.getAttribute("title") ||
+        btn.getAttribute("aria-label") ||
+        ""
+      ).trim();
+    };
+
+    const showFabTooltip = (text, x, y) => {
+      const tip = ensureFabTooltip();
+      if (!text) {
+        tip.classList.remove("active");
+        tip.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      tip.textContent = text;
+      tip.classList.add("active");
+      tip.setAttribute("aria-hidden", "false");
+
+      // Measure after text update
+      const rect = tip.getBoundingClientRect();
+      const margin = 10;
+      const offset = 14;
+
+      // Prefer left of cursor. Flip to right only if it would go off-screen.
+      let left = x - rect.width - offset;
+      if (left < margin) {
+        left = x + offset;
+      }
+      left = Math.max(margin, Math.min(left, window.innerWidth - rect.width - margin));
+
+      let top = y - rect.height / 2;
+      top = Math.max(margin, Math.min(top, window.innerHeight - rect.height - margin));
+
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    };
+
+    const hideFabTooltip = () => {
+      const tip = document.getElementById("fabMenuTooltip");
+      if (!tip) return;
+      tip.classList.remove("active");
+      tip.setAttribute("aria-hidden", "true");
+    };
+
+    // Migrate native titles to data-tooltip (prevents default browser tooltip)
+    try {
+      menu.querySelectorAll("button").forEach((btn) => {
+        const title = btn.getAttribute("title");
+        if (title && !btn.getAttribute("data-tooltip")) {
+          btn.setAttribute("data-tooltip", title);
+          btn.removeAttribute("title");
+        }
+      });
+    } catch (e) {}
+
+    let activeTooltipBtn = null;
+    menu.addEventListener("mouseover", (e) => {
+      const btn = e.target?.closest?.("button");
+      if (!btn || !menu.contains(btn)) return;
+      activeTooltipBtn = btn;
+      const text = getFabTooltipText(btn);
+      showFabTooltip(text, e.clientX, e.clientY);
+    });
+
+    menu.addEventListener("mousemove", (e) => {
+      if (!activeTooltipBtn) return;
+      const btn = e.target?.closest?.("button");
+      if (btn !== activeTooltipBtn) return;
+      const text = getFabTooltipText(activeTooltipBtn);
+      showFabTooltip(text, e.clientX, e.clientY);
+    });
+
+    menu.addEventListener("mouseout", (e) => {
+      if (!activeTooltipBtn) return;
+      const related = e.relatedTarget;
+      if (related && activeTooltipBtn.contains(related)) return;
+      activeTooltipBtn = null;
+      hideFabTooltip();
+    });
+
     toggle.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -111,8 +210,14 @@ class MuslimDashboard {
 
     // Autohide behaviour: show toggle when pointer is near bottom-right, or on touch
     const threshold = 120; // px from corner
-    const hideDelay = 1500; // ms
+    const hideDelay = 700; // ms (snappier)
     let hideTimer = null;
+
+    // Startup sequence: keep FAB fully hidden until the intro plays.
+    let startupActive = true;
+    try {
+      menu.classList.add("startup-hidden");
+    } catch (e) {}
 
     const showHot = () => {
       setHotVisible(true);
@@ -129,6 +234,7 @@ class MuslimDashboard {
 
     // Mouse move detection (desktop)
     document.addEventListener("mousemove", (e) => {
+      if (startupActive) return;
       const dx = window.innerWidth - e.clientX;
       const dy = window.innerHeight - e.clientY;
       if (dx < threshold && dy < threshold) {
@@ -143,6 +249,7 @@ class MuslimDashboard {
     document.addEventListener(
       "touchstart",
       (e) => {
+        if (startupActive) return;
         const t = e.touches[0];
         if (!t) return;
         const dx = window.innerWidth - t.clientX;
@@ -158,9 +265,11 @@ class MuslimDashboard {
 
     // Show on focus (keyboard)
     toggle.addEventListener("focus", () => {
+      if (startupActive) return;
       showHot();
     });
     toggle.addEventListener("blur", () => {
+      if (startupActive) return;
       if (hideTimer) clearTimeout(hideTimer);
       hideTimer = setTimeout(hideHot, hideDelay);
     });
@@ -169,11 +278,13 @@ class MuslimDashboard {
     const hotspot = document.getElementById("fabHotspot");
     if (hotspot) {
       hotspot.addEventListener("focus", () => {
+        if (startupActive) return;
         showHot();
         // Move focus to the toggle so keyboard users can open the menu
         setTimeout(() => toggle.focus(), 0);
       });
       hotspot.addEventListener("blur", () => {
+        if (startupActive) return;
         if (hideTimer) clearTimeout(hideTimer);
         hideTimer = setTimeout(hideHot, hideDelay);
       });
@@ -183,19 +294,37 @@ class MuslimDashboard {
     setHotVisible(false);
     setOpen(false);
 
-    // Bouncy entrance animation after page load
+    // Ensure tooltip doesn't linger if menu closes or user clicks.
+    document.addEventListener("click", () => hideFabTooltip());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideFabTooltip();
+    });
+
+    // Startup sequence: hidden → quick bounce in → stay visible a bit → fade out.
+    const startupDelay = 120; // ms
+    const bounceMs = 350; // ms
+    const visibleMs = 2200; // ms
+    const fadeMs = 220; // ms
+
     setTimeout(() => {
+      try {
+        menu.classList.remove("startup-hidden");
+      } catch (e) {}
+
+      setHotVisible(true);
       menu.classList.add("entrance-animate");
-      // After animation, remove entrance class and let autohide take over
+
       setTimeout(() => {
         menu.classList.remove("entrance-animate");
-        // Keep visible briefly then hide
-        setHotVisible(true);
         setTimeout(() => {
           setHotVisible(false);
-        }, 2000);
-      }, 600);
-    }, 1200);
+          // Allow autohide detection after fade completes.
+          setTimeout(() => {
+            startupActive = false;
+          }, fadeMs);
+        }, visibleMs);
+      }, bounceMs);
+    }, startupDelay);
   }
 
   /**
