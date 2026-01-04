@@ -504,11 +504,9 @@ class BackgroundManager {
     };
 
     hoverZone.addEventListener("mouseenter", showBgAttr, { passive: true });
-    hoverZone.addEventListener(
-      "mouseleave",
-      () => scheduleHideBgAttr(),
-      { passive: true }
-    );
+    hoverZone.addEventListener("mouseleave", () => scheduleHideBgAttr(), {
+      passive: true,
+    });
     el.addEventListener("mouseenter", showBgAttr, { passive: true });
     el.addEventListener("mouseleave", () => scheduleHideBgAttr());
     // Support keyboard focus as well
