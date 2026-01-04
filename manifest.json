@@ -3,7 +3,7 @@
   "name": "Muslim Dashboard - Islamic New Tab",
   "short_name": "Muslim Dashboard",
   "version": "1.0.0",
-  "description": "Beautiful Islamic dashboard with prayer times, Qibla direction, Hijri calendar, to-do list, and inspiring Quran & Hadith quotes.",
+  "description": "Transform your browser into customizable Islamic dashboard. Access a Pocket Quran, daily Quran and Hadith inspirations, and precise prayer times with Qibla direction. Stay organized with a Hijri calendar, fasting countdowns, and a built-in to-do list. Features include interactive flashcards, pinned apps, a custom search engine, and lunar phase tracking—all in one workspace.",
   "author": "Muslim Dashboard",
   "homepage_url": "https://github.com/browser-ext-muslim-dashboard",
   "chrome_url_overrides": {
