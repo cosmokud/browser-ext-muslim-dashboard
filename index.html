@@ -2836,7 +2836,17 @@
 
             <div class="setting-group">
               <label class="setting-label">Translation</label>
-              <p class="setting-hint">Select a translation (free and open).</p>
+              <p class="setting-hint">
+                Select a translation (provided by quran.com).
+              </p>
+              <input
+                type="text"
+                class="setting-input"
+                id="pocketQuranTranslationSearch"
+                placeholder="Search by language or translator…"
+                aria-label="Search Pocket Quran translations"
+                autocomplete="off"
+              />
               <select class="setting-select" id="pocketQuranTranslationSelect">
                 <optgroup label="Albanian">
                   <option value="88">Hasan Efendi Nahi</option>
@@ -3506,7 +3516,8 @@
                 <div class="credits-card-body">
                   <h3 class="credits-title">Default Flashcards</h3>
                   <p class="credits-desc">
-                    Curated default flashcards by <strong>Zmokhtar</strong>.
+                    Curated default "Top 300 Word Forms in Quran" flashcard by
+                    <strong>Zmokhtar</strong>.
                   </p>
                   <a
                     class="setting-btn credits-cta"

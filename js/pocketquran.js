@@ -2509,7 +2509,9 @@ class PocketQuranManager {
     const container = modal.querySelector(".pq-translation-list");
     if (!container) return;
 
-    const q = String(query || "").toLowerCase().trim();
+    const q = String(query || "")
+      .toLowerCase()
+      .trim();
 
     // Group translations by language
     const byLanguage = {};
@@ -2540,12 +2542,16 @@ class PocketQuranManager {
     let html = "";
     for (const group of filteredLanguages) {
       html += `<div class="pq-translation-group">
-        <div class="pq-translation-lang-header">${this.escapeHtml(group.language)}</div>
+        <div class="pq-translation-lang-header">${this.escapeHtml(
+          group.language
+        )}</div>
         <div class="pq-translation-items">`;
 
       for (const t of group.translations) {
         const isActive = t.id === this._activeTranslationId;
-        html += `<button type="button" class="pq-translation-item ${isActive ? "active" : ""}" data-translation-id="${t.id}">
+        html += `<button type="button" class="pq-translation-item ${
+          isActive ? "active" : ""
+        }" data-translation-id="${t.id}">
           <span class="pq-translation-name">${this.escapeHtml(t.label)}</span>
           ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
         </button>`;
@@ -2555,7 +2561,9 @@ class PocketQuranManager {
     }
 
     if (!html) {
-      html = `<div class="pq-translation-empty">No translations found for "${this.escapeHtml(query)}"</div>`;
+      html = `<div class="pq-translation-empty">No translations found for "${this.escapeHtml(
+        query
+      )}"</div>`;
     }
 
     container.innerHTML = html;

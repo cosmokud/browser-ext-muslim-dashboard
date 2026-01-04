@@ -336,6 +336,9 @@ class SettingsManager {
     this.pocketQuranTranslationSizeValue = document.getElementById(
       "pocketQuranTranslationSizeSettingValue"
     );
+    this.pocketQuranTranslationSearch = document.getElementById(
+      "pocketQuranTranslationSearch"
+    );
     this.pocketQuranTranslationSelect = document.getElementById(
       "pocketQuranTranslationSelect"
     );
@@ -3681,6 +3684,11 @@ class SettingsManager {
       this.setupTranslationSelectKeyboardSearch();
     }
 
+    // Pocket Quran translation search (filters dropdown)
+    if (this.pocketQuranTranslationSearch && this.pocketQuranTranslationSelect) {
+      this.setupTranslationSelectSearch();
+    }
+
     // Pocket Quran bookmark export/import
     if (this.pocketQuranExportBookmarksBtn) {
       this.pocketQuranExportBookmarksBtn.addEventListener("click", () => {
@@ -4185,6 +4193,69 @@ class SettingsManager {
 
       // If no language match, fall back to searching option text (default behavior)
       // Don't prevent default here to allow native type-ahead on options
+    });
+  }
+
+  /**
+   * Adds a search box that filters the translation <select> by language (optgroup)
+   * and by translation name (option text).
+   */
+  setupTranslationSelectSearch() {
+    const input = this.pocketQuranTranslationSearch;
+    const select = this.pocketQuranTranslationSelect;
+    if (!input || !select) return;
+
+    const apply = () => {
+      this.filterPocketQuranTranslationSelect(input.value);
+    };
+
+    input.addEventListener("input", apply);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        input.value = "";
+        apply();
+        return;
+      }
+
+      if (e.key === "Enter") {
+        // Convenient: after searching, jump into the select.
+        try {
+          select.focus();
+        } catch (err) {}
+      }
+    });
+
+    // Ensure initial state is unfiltered.
+    apply();
+  }
+
+  filterPocketQuranTranslationSelect(query) {
+    const select = this.pocketQuranTranslationSelect;
+    if (!select) return;
+
+    const q = String(query || "").trim().toLowerCase();
+    const hasQuery = Boolean(q);
+
+    const selectedValue = select.value;
+
+    const optgroups = select.querySelectorAll("optgroup");
+    optgroups.forEach((optgroup) => {
+      const label = String(optgroup.label || "").toLowerCase();
+      const groupMatches = hasQuery ? label.includes(q) : true;
+
+      let anyVisible = false;
+      const options = optgroup.querySelectorAll("option");
+      options.forEach((opt) => {
+        const text = String(opt.textContent || "").toLowerCase();
+        const optionMatches = groupMatches || (!hasQuery ? true : text.includes(q));
+        const keepSelected = hasQuery && String(opt.value) === String(selectedValue);
+
+        const visible = optionMatches || keepSelected;
+        opt.hidden = !visible;
+        if (visible) anyVisible = true;
+      });
+
+      optgroup.hidden = !anyVisible;
     });
   }
 }

@@ -8466,11 +8466,15 @@ body.sticky-note-resizing {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: rgba(255, 193, 7, 0.08);
+  /* Opaque background so underlying text doesn't show through while sticky */
+  background: rgba(30, 40, 50, 0.98);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   border-radius: var(--radius-sm);
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
 .pq-translation-items {
