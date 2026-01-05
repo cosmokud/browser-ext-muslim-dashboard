@@ -8684,9 +8684,9 @@ body.sticky-note-resizing {
 }
 
 .pq-recitation-close-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-md);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-primary);
@@ -8695,6 +8695,20 @@ body.sticky-note-resizing {
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.pq-recitation-close-btn::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--spacing-md) * -0.5);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 54%;
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
 }
 
 .pq-recitation-close-btn:hover {
@@ -8885,6 +8899,16 @@ body.sticky-note-resizing {
 
   .pq-recitation-reciter {
     max-width: none;
+  }
+
+  .pq-recitation-close-btn {
+    margin-left: 0;
+    align-self: center;
+    margin-top: var(--spacing-sm);
+  }
+
+  .pq-recitation-close-btn::before {
+    display: none;
   }
 }
 
