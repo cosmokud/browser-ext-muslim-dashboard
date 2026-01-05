@@ -100,30 +100,27 @@ class FloatingModeManager {
     const idx = row.indexOf(componentId);
     if (idx < 0) return { parent: rowWrapper, before: null };
 
-    // Insert before the first subsequent component in the same row that is currently present.
-    for (let i = idx + 1; i < row.length; i++) {
-      const nextId = row[i];
-      if (!nextId) continue;
-
-      // "header" uses .header; others are ids.
-      const nextEl =
-        nextId === "header"
-          ? contentGrid.querySelector(".header")
-          : document.getElementById(nextId);
-
-      if (!nextEl || !nextEl.isConnected) continue;
-
-      // Only use elements that are actually in this row wrapper right now.
-      if (nextEl.parentNode !== rowWrapper) continue;
-
-      // Skip any element currently floating.
-      if (nextEl.classList && nextEl.classList.contains("floating-card")) {
+    // Robust insertion: use the *current DOM children* in this row wrapper and
+    // pick the first one that should come after this component.
+    // This keeps the exact column/order even if some "next" ids are missing.
+    const children = Array.from(rowWrapper.children || []);
+    for (const child of children) {
+      if (!child || child === card) continue;
+      if (child.classList && child.classList.contains("floating-card"))
         continue;
-      }
 
-      return { parent: rowWrapper, before: nextEl };
+      const childId = child.classList?.contains("header")
+        ? "header"
+        : child.dataset?.gridId || child.id;
+      if (!childId) continue;
+
+      const childIdx = row.indexOf(childId);
+      if (childIdx >= 0 && childIdx > idx) {
+        return { parent: rowWrapper, before: child };
+      }
     }
 
+    // Nothing after us in this row (or no known children) → append.
     return { parent: rowWrapper, before: null };
   }
 
@@ -380,7 +377,6 @@ class FloatingModeManager {
           // Prevent label-based toggling when the button is clicked (defensive: button may be inside a label).
           e.preventDefault();
           e.stopPropagation();
-          if (this.isViewportSuspended) return;
           this.toggle(key);
         });
 
@@ -527,11 +523,19 @@ class FloatingModeManager {
     st.button.classList.toggle("active", active);
     st.button.setAttribute("aria-pressed", active ? "true" : "false");
 
-    st.button.disabled = this.isViewportSuspended;
+    // Keep the button clickable even when suspended so users can still
+    // toggle their preference (it will auto-apply when space/viewport allows).
+    try {
+      st.button.disabled = false;
+      st.button.removeAttribute("aria-disabled");
+    } catch (e) {}
+
     if (this.isViewportSuspended) {
       st.button.setAttribute(
         "title",
-        "Floating Mode is disabled on small screens"
+        desired
+          ? "Floating will activate when screen is wider"
+          : "Floating is unavailable on small screens"
       );
     } else if (desired && st.spaceSuspended) {
       st.button.setAttribute(

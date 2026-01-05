@@ -6952,6 +6952,10 @@ body.sticky-note-resizing {
   font-size: 0.95rem;
   position: relative;
   z-index: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .visibility-toggle-item input[type="checkbox"] {
