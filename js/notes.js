@@ -24,6 +24,8 @@ class NotesManager {
     this._normalizeTimer = null;
     this._hasSelectedNote = false;
 
+    this._previewRaf = null;
+
     // Markdown/raw toggle (raw = textarea editing, markdown = rendered preview)
     this.isMarkdownPreview = false;
 
@@ -229,9 +231,6 @@ class NotesManager {
         return;
       }
 
-      // Markdown preview is read-only.
-      if (this.isMarkdownPreview) return;
-
       // Ensure raw editor has focus
       try {
         this.rawEditor.focus();
@@ -245,12 +244,14 @@ class NotesManager {
         this.applyMarkdownCommand(cmd);
       }
 
+      // Keep preview responsive while typing/using tools.
+      if (this.isMarkdownPreview) this.queuePreviewRender();
       this.queueSave();
-
     });
 
     // Raw editor changes (markdown source)
     this.rawEditor.addEventListener("input", () => {
+      if (this.isMarkdownPreview) this.queuePreviewRender();
       this.queueSave();
     });
 
@@ -534,26 +535,24 @@ class NotesManager {
   }
 
   applyEditorMode() {
-    // Raw (textarea) vs Markdown preview (rendered)
+    // Raw (textarea) is always editable; Markdown preview is an optional live view.
     const isPreview = !!this.isMarkdownPreview;
 
-    this.rawEditor.classList.toggle("hidden", isPreview);
+    this.rawEditor.classList.toggle("hidden", false);
     this.editor.classList.toggle("hidden", !isPreview);
 
     this.editor.classList.toggle("notes-md-preview", isPreview);
     this.editor.setAttribute("contenteditable", "false");
 
-    // Enable/disable formatting tools (preview is read-only)
+    // Keep toolbar usable in markdown mode; just highlight the MD button.
     try {
       const buttons = this.toolbar.querySelectorAll("button.notes-tool-btn");
       buttons.forEach((b) => {
         const c = b.dataset.cmd;
         if (c === "toggleMarkdown") {
-          b.disabled = false;
           b.classList.toggle("active", isPreview);
           return;
         }
-        b.disabled = isPreview;
       });
     } catch (e) {
       // ignore
@@ -563,8 +562,18 @@ class NotesManager {
   renderActiveMarkdownPreview() {
     const note = this.getActiveNote();
     if (!note) return;
-    const html = this.renderMarkdown(String(note.md || this.rawEditor.value || ""));
+    // Use the textarea as source-of-truth for live preview.
+    const html = this.renderMarkdown(String(this.rawEditor.value || ""));
     this.editor.innerHTML = html;
+  }
+
+  queuePreviewRender() {
+    if (this._previewRaf) return;
+    this._previewRaf = requestAnimationFrame(() => {
+      this._previewRaf = null;
+      if (!this.isMarkdownPreview) return;
+      this.renderActiveMarkdownPreview();
+    });
   }
 
   renderMarkdown(markdown) {
@@ -611,25 +620,69 @@ class NotesManager {
     const selected = value.slice(start, end);
     const after = value.slice(end);
 
-    const wrap = (left, right = left) => {
-      const next = `${before}${left}${selected || ""}${right}${after}`;
+    const toggleWrap = (left, right = left) => {
+      const l = String(left);
+      const r = String(right);
+
+      // Selection: unwrap if already wrapped, else wrap.
+      if (start !== end) {
+        const hasLeft = value.slice(Math.max(0, start - l.length), start) === l;
+        const hasRight = value.slice(end, end + r.length) === r;
+
+        if (hasLeft && hasRight) {
+          const next = `${value.slice(
+            0,
+            start - l.length
+          )}${selected}${value.slice(end + r.length)}`;
+          t.value = next;
+          const nextStart = start - l.length;
+          const nextEnd = nextStart + selected.length;
+          t.setSelectionRange(nextStart, nextEnd);
+          return;
+        }
+
+        const next = `${before}${l}${selected}${r}${after}`;
+        t.value = next;
+        const nextStart = start + l.length;
+        const nextEnd = nextStart + selected.length;
+        t.setSelectionRange(nextStart, nextEnd);
+        return;
+      }
+
+      // No selection: remove surrounding wrap if cursor is inside, else insert.
+      const leftStart = start - l.length;
+      const rightEnd = end + r.length;
+      const hasLeft = leftStart >= 0 && value.slice(leftStart, start) === l;
+      const hasRight = value.slice(end, rightEnd) === r;
+
+      if (hasLeft && hasRight) {
+        const next = `${value.slice(0, leftStart)}${value.slice(
+          start,
+          end
+        )}${value.slice(rightEnd)}`;
+        t.value = next;
+        t.setSelectionRange(leftStart, leftStart);
+        return;
+      }
+
+      const next = `${before}${l}${r}${after}`;
       t.value = next;
-      const cursor = start + left.length + (selected || "").length;
+      const cursor = start + l.length;
       t.setSelectionRange(cursor, cursor);
     };
 
-    if (c === "bold") return wrap("**", "**");
-    if (c === "italic") return wrap("*", "*");
-    if (c === "underline") return wrap("<u>", "</u>");
-    if (c === "strikeThrough") return wrap("~~", "~~");
+    if (c === "bold") return toggleWrap("**", "**");
+    if (c === "italic") return toggleWrap("*", "*");
+    if (c === "underline") return toggleWrap("<u>", "</u>");
+    if (c === "strikeThrough") return toggleWrap("~~", "~~");
 
     // Lists
-    if (c === "insertUnorderedList") return this.applyLinePrefix("- ");
-    if (c === "insertOrderedList") return this.applyNumberedList();
+    if (c === "insertUnorderedList") return this.toggleLinePrefix("- ");
+    if (c === "insertOrderedList") return this.toggleNumberedList();
   }
 
   applyMarkdownChecklist() {
-    this.applyLinePrefix("- [ ] ");
+    this.toggleChecklistPrefix();
   }
 
   applyMarkdownBlock(blockTag) {
@@ -642,31 +695,72 @@ class NotesManager {
       const trimmed = line.replace(/^\s+/, "");
       const noHeading = trimmed.replace(/^#{1,6}\s+/, "");
       if (!prefix) return noHeading;
+
+      // Toggle: clicking the same heading again removes it.
+      if (trimmed.startsWith(prefix)) return noHeading;
       return `${prefix}${noHeading}`;
     });
   }
 
-  applyLinePrefix(prefix) {
+  toggleLinePrefix(prefix) {
     const p = String(prefix || "");
-    this.applyLineTransform((line) => {
-      if (!line.trim()) return line;
-      // Avoid double-prefix
-      if (line.trimStart().startsWith(p.trim())) return line;
-      return `${p}${line}`;
-    });
+    const pTrim = p.trimEnd();
+
+    this.applyLineTransform(
+      (line, ctx) => {
+        if (!line.trim()) return line;
+
+        const already = line.trimStart().startsWith(pTrim);
+        if (ctx && ctx.allPrefixed) {
+          // Remove the prefix only if every selected line has it.
+          if (!already) return line;
+          return line.replace(
+            new RegExp(`^\\s*${this.escapeRegExp(pTrim)}\\s*`),
+            ""
+          );
+        }
+
+        // Add prefix
+        if (already) return line;
+        return `${p}${line}`;
+      },
+      { detect: { type: "prefix", prefix: pTrim } }
+    );
   }
 
-  applyNumberedList() {
+  toggleChecklistPrefix() {
+    const detect = /^\s*-\s+\[( |x|X)\]\s+/;
+    this.applyLineTransform(
+      (line, ctx) => {
+        if (!line.trim()) return line;
+        if (ctx && ctx.allChecklist) {
+          return line.replace(detect, "");
+        }
+        if (detect.test(line)) return line;
+        return `- [ ] ${line}`;
+      },
+      { detect: { type: "checklist" } }
+    );
+  }
+
+  toggleNumberedList() {
+    const detect = /^\s*\d+\.\s+/;
     let i = 1;
-    this.applyLineTransform((line) => {
-      if (!line.trim()) return line;
-      const next = `${i}. ${line.replace(/^\s*\d+\.\s+/, "")}`;
-      i += 1;
-      return next;
-    });
+    this.applyLineTransform(
+      (line, ctx) => {
+        if (!line.trim()) return line;
+        if (ctx && ctx.allNumbered) {
+          return line.replace(detect, "");
+        }
+        const next = `${i}. ${line.replace(detect, "")}`;
+        i += 1;
+        return next;
+      },
+      { detect: { type: "numbered" } }
+    );
   }
 
-  applyLineTransform(transform) {
+  applyLineTransform(transform, options) {
     const t = this.rawEditor;
     const value = String(t.value || "");
     const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
@@ -681,12 +775,37 @@ class NotesManager {
     const after = value.slice(lineEnd);
 
     const lines = block.split("\n");
-    const nextBlock = lines.map((l) => transform(l)).join("\n");
+    const detect = options && options.detect ? options.detect : null;
+
+    const nonEmpty = lines.filter((l) => l.trim().length > 0);
+    const ctx = {};
+    if (detect && detect.type === "prefix") {
+      const pref = String(detect.prefix || "");
+      ctx.allPrefixed =
+        nonEmpty.length > 0 &&
+        nonEmpty.every((l) => l.trimStart().startsWith(pref));
+    } else if (detect && detect.type === "checklist") {
+      const re = /^\s*-\s+\[( |x|X)\]\s+/;
+      ctx.allChecklist =
+        nonEmpty.length > 0 && nonEmpty.every((l) => re.test(l));
+    } else if (detect && detect.type === "numbered") {
+      const re = /^\s*\d+\.\s+/;
+      ctx.allNumbered =
+        nonEmpty.length > 0 && nonEmpty.every((l) => re.test(l));
+    }
+
+    const nextBlock = lines.map((l) => transform(l, ctx)).join("\n");
 
     t.value = `${before}${nextBlock}${after}`;
 
-    const nextPos = lineStart + nextBlock.length;
-    t.setSelectionRange(nextPos, nextPos);
+    // Keep selection on the transformed block (better for toggle workflows).
+    const nextStart = lineStart;
+    const nextEnd = lineStart + nextBlock.length;
+    t.setSelectionRange(nextStart, nextEnd);
+  }
+
+  escapeRegExp(s) {
+    return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   htmlToMarkdown(html) {
@@ -725,7 +844,8 @@ class NotesManager {
 
     const toBlock = (node) => {
       if (!node) return "";
-      if (node.nodeType === Node.TEXT_NODE) return (node.nodeValue || "").trim();
+      if (node.nodeType === Node.TEXT_NODE)
+        return (node.nodeValue || "").trim();
       if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
       const el = node;
@@ -750,13 +870,18 @@ class NotesManager {
         const lines = [];
         el.querySelectorAll(":scope > li").forEach((li) => {
           const txt = Array.from(li.childNodes)
-            .filter((n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL")
-            .filter((n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL")
+            .filter(
+              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL"
+            )
+            .filter(
+              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL"
+            )
             .map(toInline)
             .join("")
             .trim();
 
-          const checked = String(li.getAttribute("data-checked") || "false") === "true";
+          const checked =
+            String(li.getAttribute("data-checked") || "false") === "true";
 
           const prefix = isChecklist
             ? `- [${checked ? "x" : " "}] `

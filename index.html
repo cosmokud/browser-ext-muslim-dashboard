@@ -567,6 +567,17 @@
             <div class="card-header-actions">
               <span class="todo-count" id="todoCount">0 tasks</span>
 
+              <button
+                class="clear-completed-btn"
+                id="clearCompletedBtn"
+                type="button"
+                title="Clear completed"
+                aria-label="Clear completed"
+                style="display: none"
+              >
+                🗑
+              </button>
+
               <div class="card-blur-menu" aria-label="Todo blur menu">
                 <button
                   class="card-blur-btn"
@@ -646,11 +657,6 @@
             aria-label="Todo pagination"
             hidden
           ></div>
-          <div class="todo-actions">
-            <button class="clear-completed-btn" id="clearCompletedBtn">
-              Clear Completed
-            </button>
-          </div>
         </section>
 
         <!-- Notes (Full Width) -->
@@ -669,7 +675,7 @@
                   aria-label="Create new note"
                   title="New note"
                 >
-                  +
+                  ✚
                 </button>
                 <button
                   class="notes-delete-btn"
@@ -4345,6 +4351,73 @@
             Cancel
           </button>
           <button class="modal-btn save-btn" id="editTodoSave">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (Todo) -->
+    <div class="modal-overlay delete-confirm-modal" id="todoDeleteConfirmModal">
+      <div class="delete-confirm-content" role="dialog" aria-modal="true">
+        <div class="delete-confirm-icon">⚠️</div>
+        <h3>Delete Task?</h3>
+        <p>
+          Are you sure you want to delete "<span
+            class="delete-app-name"
+            id="todoDeleteText"
+          ></span
+          >"?
+        </p>
+        <p
+          class="delete-confirm-hint"
+          style="font-size: 0.85rem; color: var(--text-muted)"
+        >
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button class="delete-confirm-btn cancel" id="cancelTodoDeleteBtn">
+            Cancel
+          </button>
+          <button class="delete-confirm-btn confirm" id="confirmTodoDeleteBtn">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear Completed Confirmation Modal (Todo) -->
+    <div
+      class="modal-overlay delete-confirm-modal"
+      id="todoClearCompletedConfirmModal"
+    >
+      <div class="delete-confirm-content" role="dialog" aria-modal="true">
+        <div class="delete-confirm-icon">🧹</div>
+        <h3>Clear Completed?</h3>
+        <p>
+          This will remove
+          <span class="delete-app-name" id="todoClearCompletedCount">0</span>
+          completed task(s).
+        </p>
+        <p
+          class="delete-confirm-hint"
+          style="font-size: 0.85rem; color: var(--text-muted)"
+        >
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button
+            class="delete-confirm-btn cancel"
+            id="cancelTodoClearCompletedBtn"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="delete-confirm-btn confirm"
+            id="confirmTodoClearCompletedBtn"
+            type="button"
+          >
+            🗑️ Clear
+          </button>
         </div>
       </div>
     </div>

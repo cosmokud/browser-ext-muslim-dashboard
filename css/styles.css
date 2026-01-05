@@ -897,6 +897,8 @@ body {
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
+  color: var(--text-primary);
+  caret-color: var(--text-primary);
   padding: var(--spacing-md);
   outline: none;
   min-height: 220px;
@@ -912,6 +914,7 @@ textarea.notes-editor {
   resize: vertical;
   overflow: auto;
   white-space: pre-wrap;
+  color: var(--text-primary);
 }
 
 .notes-editor.notes-md-preview {
@@ -1548,6 +1551,11 @@ textarea.notes-editor:focus {
   margin-bottom: var(--spacing-md);
 }
 
+.todo-card.todo-paginated .todo-list {
+  min-height: 280px;
+  max-height: 380px;
+}
+
 .todo-pagination {
   margin-top: calc(var(--spacing-sm) * -0.5);
   margin-bottom: var(--spacing-md);
@@ -1580,8 +1588,9 @@ textarea.notes-editor:focus {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast),
-    border-color var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast),
+    transform var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .todo-page-btn:hover {
@@ -1693,6 +1702,33 @@ textarea.notes-editor:focus {
   flex: 1;
   font-size: 0.95rem;
   word-break: break-word;
+  cursor: pointer;
+}
+
+/* Clear completed button (header icon) */
+.clear-completed-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clear-completed-btn:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #e04848 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.clear-completed-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
 }
 
 .todo-actions-btns {
@@ -4434,7 +4470,7 @@ textarea.notes-editor:focus {
   flex-direction: column;
   gap: var(--spacing-md);
   flex: 1 1 auto;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .calendar-header {
@@ -6527,14 +6563,10 @@ body.sticky-note-resizing {
 }
 
 .fasting-bars {
-  margin-top: 0;
+  margin-top: var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  flex: 1 1 auto;
-  justify-content: center;
-  padding-top: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
 }
 
 .fasting-bar {

@@ -15,6 +15,7 @@ class TodoManager {
     this.currentPage = 1;
 
     // Elements
+    this.todoCard = document.getElementById("todoCard");
     this.todoInput = document.getElementById("todoInput");
     this.todoAddBtn = document.getElementById("todoAddBtn");
     this.todoList = document.getElementById("todoList");
@@ -23,6 +24,27 @@ class TodoManager {
     this.filterBtns = document.querySelectorAll(".filter-btn");
 
     this.todoPagination = document.getElementById("todoPagination");
+
+    // Delete confirmation modal
+    this.deleteModal = document.getElementById("todoDeleteConfirmModal");
+    this.deleteTextEl = document.getElementById("todoDeleteText");
+    this.confirmDeleteBtn = document.getElementById("confirmTodoDeleteBtn");
+    this.cancelDeleteBtn = document.getElementById("cancelTodoDeleteBtn");
+    this.pendingDeleteId = null;
+
+    // Clear-completed confirmation modal
+    this.clearCompletedModal = document.getElementById(
+      "todoClearCompletedConfirmModal"
+    );
+    this.clearCompletedCountEl = document.getElementById(
+      "todoClearCompletedCount"
+    );
+    this.confirmClearCompletedBtn = document.getElementById(
+      "confirmTodoClearCompletedBtn"
+    );
+    this.cancelClearCompletedBtn = document.getElementById(
+      "cancelTodoClearCompletedBtn"
+    );
 
     // Edit modal elements
     this.editModal = document.getElementById("editTodoModal");
@@ -164,6 +186,10 @@ class TodoManager {
       ? filteredTodos.slice(start, start + this.itemsPerPage)
       : filteredTodos;
 
+    if (this.todoCard) {
+      this.todoCard.classList.toggle("todo-paginated", shouldPaginate);
+    }
+
     if (filteredTodos.length === 0) {
       this.todoList.innerHTML = `
         <li class="empty-state">
@@ -194,7 +220,11 @@ class TodoManager {
 
     // Show/hide clear button
     const hasCompleted = this.todos.some((t) => t.completed);
-    this.clearCompletedBtn.style.display = hasCompleted ? "block" : "none";
+    if (this.clearCompletedBtn) {
+      this.clearCompletedBtn.style.display = hasCompleted
+        ? "inline-flex"
+        : "none";
+    }
   }
 
   renderPagination({ totalPages, visible }) {
@@ -334,7 +364,9 @@ class TodoManager {
         <div class="todo-checkbox ${
           todo.completed ? "checked" : ""
         }" data-action="toggle"></div>
-        <span class="todo-text">${this.escapeHtml(todo.text)}</span>
+        <span class="todo-text" data-action="toggle">${this.escapeHtml(
+          todo.text
+        )}</span>
         <div class="todo-actions-btns">
           <button class="todo-action-btn edit" data-action="edit" title="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -351,6 +383,54 @@ class TodoManager {
         </div>
       </li>
     `;
+  }
+
+  showDeleteConfirmation(id) {
+    const todo = this.todos.find((t) => t.id === id);
+    if (!todo || !this.deleteModal) return;
+
+    this.pendingDeleteId = id;
+    if (this.deleteTextEl) {
+      this.deleteTextEl.textContent = String(todo.text || "").slice(0, 200);
+    }
+    this.deleteModal.classList.add("active");
+  }
+
+  hideDeleteConfirmation() {
+    if (this.deleteModal) this.deleteModal.classList.remove("active");
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete() {
+    if (!this.pendingDeleteId) return;
+    this.deleteTodo(this.pendingDeleteId);
+    this.hideDeleteConfirmation();
+  }
+
+  showClearCompletedConfirmation() {
+    if (!this.clearCompletedModal) return;
+    const completedCount = this.todos.filter((t) => t.completed).length;
+    if (completedCount <= 0) return;
+
+    if (this.clearCompletedCountEl) {
+      this.clearCompletedCountEl.textContent = String(completedCount);
+    }
+
+    this.clearCompletedModal.classList.add("active");
+    try {
+      if (this.confirmClearCompletedBtn) this.confirmClearCompletedBtn.focus();
+    } catch (e) {}
+  }
+
+  hideClearCompletedConfirmation() {
+    if (this.clearCompletedModal) {
+      this.clearCompletedModal.classList.remove("active");
+    }
+  }
+
+  confirmClearCompleted() {
+    this.clearCompleted();
+    this.hideClearCompletedConfirmation();
   }
 
   /**
@@ -421,7 +501,7 @@ class TodoManager {
           this.openEditModal(id);
           break;
         case "delete":
-          this.deleteTodo(id);
+          this.showDeleteConfirmation(id);
           break;
       }
     });
@@ -435,7 +515,48 @@ class TodoManager {
 
     // Clear completed
     this.clearCompletedBtn.addEventListener("click", () => {
-      this.clearCompleted();
+      this.showClearCompletedConfirmation();
+    });
+
+    // Delete confirmation modal
+    if (this.cancelDeleteBtn) {
+      this.cancelDeleteBtn.addEventListener("click", () =>
+        this.hideDeleteConfirmation()
+      );
+    }
+    if (this.confirmDeleteBtn) {
+      this.confirmDeleteBtn.addEventListener("click", () =>
+        this.confirmDelete()
+      );
+    }
+    if (this.deleteModal) {
+      this.deleteModal.addEventListener("click", (e) => {
+        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
+      });
+    }
+
+    // Clear-completed confirmation modal
+    if (this.cancelClearCompletedBtn) {
+      this.cancelClearCompletedBtn.addEventListener("click", () =>
+        this.hideClearCompletedConfirmation()
+      );
+    }
+    if (this.confirmClearCompletedBtn) {
+      this.confirmClearCompletedBtn.addEventListener("click", () =>
+        this.confirmClearCompleted()
+      );
+    }
+    if (this.clearCompletedModal) {
+      this.clearCompletedModal.addEventListener("click", (e) => {
+        if (e.target === this.clearCompletedModal)
+          this.hideClearCompletedConfirmation();
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      this.hideDeleteConfirmation();
+      this.hideClearCompletedConfirmation();
     });
 
     // Edit modal
