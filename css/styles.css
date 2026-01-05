@@ -7414,6 +7414,78 @@ body.sticky-note-resizing {
   z-index: 10001;
 }
 
+/* Combobox with inline navigation buttons */
+.pocket-quran-combobox-with-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  overflow: hidden;
+}
+
+.pocket-quran-combobox-with-nav:focus-within {
+  background: var(--glass-bg-hover);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+/* Inline nav buttons (prev/next inside combobox) */
+.pocket-quran-inline-nav-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  font-size: 0.75rem;
+  padding: 0;
+  outline: none;
+}
+
+.pocket-quran-inline-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.pocket-quran-inline-nav-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.pocket-quran-inline-nav-btn:focus-visible {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--text-primary);
+}
+
+.pocket-quran-inline-nav-prev {
+  border-right: 1px solid var(--glass-border);
+}
+
+.pocket-quran-inline-nav-next {
+  border-left: 1px solid var(--glass-border);
+}
+
+/* Input inside combobox with nav buttons */
+.pocket-quran-pill-input-with-nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.pocket-quran-pill-input-with-nav:focus {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
 .pocket-quran-surah-picker {
   display: flex;
   flex-direction: column;
@@ -7779,7 +7851,8 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-ayah-input {
-  width: 140px;
+  width: 80px;
+  text-align: center;
 }
 
 .pocket-quran-ayah-input:focus {

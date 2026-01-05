@@ -334,6 +334,8 @@ class PocketQuranManager {
     this.surahInput = document.getElementById("pocketQuranSurahInput");
     this.surahDropdown = document.getElementById("pocketQuranSurahDropdown");
     this.surahListEl = document.getElementById("pocketQuranSurahList");
+    this.surahPrevBtn = document.getElementById("pocketQuranSurahPrev");
+    this.surahNextBtn = document.getElementById("pocketQuranSurahNext");
     this.contentEl = document.getElementById("pocketQuranContent");
     this.ayahPrevBtn = document.getElementById("pocketQuranAyahPrev");
     this.ayahNextBtn = document.getElementById("pocketQuranAyahNext");
@@ -461,7 +463,7 @@ class PocketQuranManager {
     this.loadChaptersAndRenderSurahPicker().then(() => {
       this.setActiveSurah(this._activeSurah, {
         preserveAyah: true,
-        autoScroll: false,
+        autoScroll: true,
       });
     });
   }
@@ -503,6 +505,10 @@ class PocketQuranManager {
       if (!this.surahDropdown) return;
       this.renderSurahList();
       this.openDropdown(this.surahDropdown);
+      // Scroll to active surah after dropdown is visible
+      requestAnimationFrame(() => {
+        this.scrollSurahDropdownToActive();
+      });
     };
 
     if (this.surahInput) {
@@ -637,6 +643,51 @@ class PocketQuranManager {
         const next = this.clampNumber(current + 1, 1, max, max);
         if (this.ayahInput) this.ayahInput.value = String(next);
         this.scrollToAyah(next, { persist: true, smooth: false });
+
+        setTimeout(() => {
+          this._navProcessing = false;
+        }, 100);
+      });
+    }
+
+    // Surah navigation buttons
+    if (this.surahPrevBtn) {
+      this.surahPrevBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this._navProcessing) return;
+        this._navProcessing = true;
+
+        const current = this.clampNumber(this._activeSurah, 1, 114, 1);
+        const next = this.clampNumber(current - 1, 1, 114, 1);
+        
+        if (next !== current) {
+          this._surahQuery = "";
+          this.setActiveSurah(next, { preserveAyah: false });
+          this.updateSurahInputValue({ force: true });
+        }
+
+        setTimeout(() => {
+          this._navProcessing = false;
+        }, 100);
+      });
+    }
+
+    if (this.surahNextBtn) {
+      this.surahNextBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this._navProcessing) return;
+        this._navProcessing = true;
+
+        const current = this.clampNumber(this._activeSurah, 1, 114, 1);
+        const next = this.clampNumber(current + 1, 1, 114, 114);
+        
+        if (next !== current) {
+          this._surahQuery = "";
+          this.setActiveSurah(next, { preserveAyah: false });
+          this.updateSurahInputValue({ force: true });
+        }
 
         setTimeout(() => {
           this._navProcessing = false;
@@ -1887,6 +1938,31 @@ class PocketQuranManager {
     const btnOffsetTop = activeBtn.offsetTop;
 
     // Scroll so the active ayah is at the top of the visible area
+    // Use a small offset (e.g., 4px) for visual padding
+    const targetScrollTop = Math.max(0, btnOffsetTop - 4);
+
+    scrollContainer.scrollTop = targetScrollTop;
+  }
+
+  /**
+   * Scroll the surah dropdown list so the active surah is positioned at the top.
+   */
+  scrollSurahDropdownToActive() {
+    if (!this.surahListEl) return;
+
+    // Find the active surah button
+    const activeBtn = this.surahListEl.querySelector(
+      `.pocket-quran-surah-item[data-surah="${this._activeSurah}"]`
+    );
+    if (!activeBtn) return;
+
+    // Get the scroll container (the dropdown list itself)
+    const scrollContainer = this.surahListEl;
+
+    // Calculate the offset of the active button relative to the scroll container
+    const btnOffsetTop = activeBtn.offsetTop;
+
+    // Scroll so the active surah is at the top of the visible area
     // Use a small offset (e.g., 4px) for visual padding
     const targetScrollTop = Math.max(0, btnOffsetTop - 4);
 

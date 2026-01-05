@@ -985,17 +985,35 @@
                     >Surah</label
                   >
                   <div
-                    class="pocket-quran-combobox"
+                    class="pocket-quran-combobox pocket-quran-combobox-with-nav"
                     id="pocketQuranSurahCombobox"
                   >
+                    <button
+                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
+                      id="pocketQuranSurahPrev"
+                      type="button"
+                      aria-label="Previous surah"
+                      title="Previous surah"
+                    >
+                      ❮
+                    </button>
                     <input
-                      class="pocket-quran-pill-input"
+                      class="pocket-quran-pill-input pocket-quran-pill-input-with-nav"
                       id="pocketQuranSurahInput"
                       type="text"
                       autocomplete="off"
                       spellcheck="false"
                       aria-label="Search surah"
                     />
+                    <button
+                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
+                      id="pocketQuranSurahNext"
+                      type="button"
+                      aria-label="Next surah"
+                      title="Next surah"
+                    >
+                      ❯
+                    </button>
                     <div
                       class="pocket-quran-dropdown"
                       id="pocketQuranSurahDropdown"
@@ -1017,9 +1035,12 @@
                     for="pocketQuranAyahInput"
                     >Ayah</label
                   >
-                  <div class="pocket-quran-ayah-row">
+                  <div
+                    class="pocket-quran-combobox pocket-quran-combobox-with-nav"
+                    id="pocketQuranAyahCombobox"
+                  >
                     <button
-                      class="pocket-quran-nav-btn"
+                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
                       id="pocketQuranAyahPrev"
                       type="button"
                       aria-label="Previous ayah"
@@ -1027,36 +1048,17 @@
                     >
                       ❮
                     </button>
-
-                    <div
-                      class="pocket-quran-combobox"
-                      id="pocketQuranAyahCombobox"
-                    >
-                      <input
-                        class="pocket-quran-pill-input pocket-quran-ayah-input"
-                        id="pocketQuranAyahInput"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        spellcheck="false"
-                        aria-label="Jump to ayah"
-                      />
-                      <div
-                        class="pocket-quran-dropdown"
-                        id="pocketQuranAyahDropdown"
-                        role="listbox"
-                        aria-label="Ayah list"
-                        hidden
-                      >
-                        <div
-                          class="pocket-quran-dropdown-list"
-                          id="pocketQuranAyahList"
-                        ></div>
-                      </div>
-                    </div>
-
+                    <input
+                      class="pocket-quran-pill-input pocket-quran-pill-input-with-nav pocket-quran-ayah-input"
+                      id="pocketQuranAyahInput"
+                      type="text"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      spellcheck="false"
+                      aria-label="Jump to ayah"
+                    />
                     <button
-                      class="pocket-quran-nav-btn"
+                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
                       id="pocketQuranAyahNext"
                       type="button"
                       aria-label="Next ayah"
@@ -1064,6 +1066,18 @@
                     >
                       ❯
                     </button>
+                    <div
+                      class="pocket-quran-dropdown"
+                      id="pocketQuranAyahDropdown"
+                      role="listbox"
+                      aria-label="Ayah list"
+                      hidden
+                    >
+                      <div
+                        class="pocket-quran-dropdown-list"
+                        id="pocketQuranAyahList"
+                      ></div>
+                    </div>
                   </div>
                 </div>
 
