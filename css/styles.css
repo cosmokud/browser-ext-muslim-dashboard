@@ -8808,6 +8808,12 @@ body.sticky-note-resizing {
   color: #ff6b6b;
 }
 
+.pq-recitation-btn.pq-reciter-btn:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-light);
+  color: var(--text-primary);
+}
+
 .pq-recitation-options {
   display: flex;
   align-items: center;
