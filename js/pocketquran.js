@@ -414,6 +414,7 @@ class PocketQuranManager {
     this._audioElement = null;
     this._isPlaying = false;
     this._isAutoplay = false;
+    this._isAutoScroll = false;
     this._isLooping = false;
     this._volume = 1;
     this._playingAyah = null;
@@ -1912,6 +1913,7 @@ class PocketQuranManager {
     this._volume = this.clampNumber(pq.reciterVolume, 0, 1, 1);
     this._isLooping = pq.reciterLoop || false;
     this._isAutoplay = pq.reciterAutoplay || false;
+    this._isAutoScroll = pq.reciterAutoScroll || false;
 
     // Small caches to smooth autoplay transitions.
     // URL cache avoids repeating the /by_ayah metadata request.
@@ -2122,6 +2124,10 @@ class PocketQuranManager {
         this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
       }
 
+      if (this._isAutoScroll) {
+        this.scrollToAyah(ayah, { persist: false, smooth: true });
+      }
+
       return true;
     }
 
@@ -2145,6 +2151,10 @@ class PocketQuranManager {
 
       if (this._isAutoplay) {
         this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
+      }
+
+      if (this._isAutoScroll) {
+        this.scrollToAyah(ayah, { persist: false, smooth: true });
       }
 
       return true;
@@ -2299,8 +2309,11 @@ class PocketQuranManager {
       this.showHeaderControls();
       this.updatePlaybackUI();
 
-      // Scroll to the playing ayah if not visible
-      if (this._activeSurah === surah && this._activeAyah !== ayah) {
+      // Scroll to the playing ayah if auto-scroll is enabled or selection changed
+      if (
+        this._isAutoScroll ||
+        (this._activeSurah === surah && this._activeAyah !== ayah)
+      ) {
         this.scrollToAyah(ayah, { persist: false, smooth: true });
       }
     } catch (e) {
@@ -2471,6 +2484,23 @@ class PocketQuranManager {
   }
 
   /**
+   * Toggle auto-scroll mode.
+   */
+  toggleAutoScroll() {
+    this._isAutoScroll = !this._isAutoScroll;
+    this.persistPocketQuranSettings({ reciterAutoScroll: this._isAutoScroll });
+    this.updatePlaybackUI();
+
+    // If enabling auto-scroll while playing, scroll to the currently playing ayah
+    if (this._isAutoScroll && this._playingAyah) {
+      this.scrollToAyah(this._playingAyah.ayah, {
+        persist: false,
+        smooth: true,
+      });
+    }
+  }
+
+  /**
    * Select a reciter.
    */
   selectReciter(reciterId) {
@@ -2554,9 +2584,16 @@ class PocketQuranManager {
         }" title="Autoplay through surah">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
         </button>
+        <button type="button" class="pq-recitation-btn pq-autoscroll-btn ${
+          this._isAutoScroll ? "active" : ""
+        }" title="Auto-scroll to next ayah" aria-pressed="${
+      this._isAutoScroll ? "true" : "false"
+    }">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10l5 5 5-5H7zM7 4l5 5 5-5H7z"/></svg>
+        </button>
         <button type="button" class="pq-recitation-btn pq-reciter-btn" title="Change reciter">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-        </button>
+        </button> 
       </div>
       <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -2600,6 +2637,9 @@ class PocketQuranManager {
     controlsBox
       .querySelector(".pq-autoplay-btn")
       .addEventListener("click", () => this.toggleAutoplay());
+    controlsBox
+      .querySelector(".pq-autoscroll-btn")
+      .addEventListener("click", () => this.toggleAutoScroll());
     controlsBox
       .querySelector(".pq-reciter-btn")
       .addEventListener("click", () => this.openReciterModal());
@@ -2656,6 +2696,16 @@ class PocketQuranManager {
         this._headerControlsBox.querySelector(".pq-autoplay-btn");
       if (autoplayBtn) {
         autoplayBtn.classList.toggle("active", this._isAutoplay);
+      }
+
+      const autoscrollBtn =
+        this._headerControlsBox.querySelector(".pq-autoscroll-btn");
+      if (autoscrollBtn) {
+        autoscrollBtn.classList.toggle("active", this._isAutoScroll);
+        autoscrollBtn.setAttribute(
+          "aria-pressed",
+          this._isAutoScroll ? "true" : "false"
+        );
       }
 
       const ayahInfo = this._headerControlsBox.querySelector(
