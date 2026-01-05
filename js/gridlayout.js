@@ -431,6 +431,12 @@ class GridLayoutManager {
       rowItems.forEach((id) => {
         const el = items[id];
         if (el) {
+          // Skip floating cards - they are managed by FloatingModeManager
+          // and should not be moved back into the grid layout
+          if (el.classList.contains("floating-card")) {
+            return;
+          }
+
           // Set flex basis based on visible items count
           this.setItemFlexBasis(el, id, visibleItems.length);
 

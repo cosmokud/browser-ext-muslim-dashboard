@@ -100,28 +100,60 @@ class FloatingModeManager {
     const idx = row.indexOf(componentId);
     if (idx < 0) return { parent: rowWrapper, before: null };
 
-    // Robust insertion: use the *current DOM children* in this row wrapper and
-    // pick the first one that should come after this component.
-    // This keeps the exact column/order even if some "next" ids are missing.
+    // Build a map of componentId -> DOM element for children currently in this row
+    const childMap = new Map();
     const children = Array.from(rowWrapper.children || []);
     for (const child of children) {
-      if (!child || child === card) continue;
+      if (!child) continue;
+      // Skip placeholders (they have data-floating-placeholder but no gridId)
+      if (child.hasAttribute && child.hasAttribute("data-floating-placeholder"))
+        continue;
+      // Skip floating cards (shouldn't be in row, but defensive)
       if (child.classList && child.classList.contains("floating-card"))
         continue;
 
       const childId = child.classList?.contains("header")
         ? "header"
         : child.dataset?.gridId || child.id;
-      if (!childId) continue;
-
-      const childIdx = row.indexOf(childId);
-      if (childIdx >= 0 && childIdx > idx) {
-        return { parent: rowWrapper, before: child };
+      if (childId) {
+        childMap.set(childId, child);
       }
     }
 
-    // Nothing after us in this row (or no known children) → append.
-    return { parent: rowWrapper, before: null };
+    // Iterate through the row config starting from idx+1 to find the first
+    // sibling that exists in DOM - that's where we insert before.
+    for (let i = idx + 1; i < row.length; i++) {
+      const siblingId = row[i];
+      const siblingEl = childMap.get(siblingId);
+      if (siblingEl && siblingEl.isConnected) {
+        return { parent: rowWrapper, before: siblingEl };
+      }
+    }
+
+    // No later sibling found in DOM - we need to insert at the correct position.
+    // Check if there's an earlier sibling we should insert after.
+    // Find the last earlier sibling that exists in DOM, and insert after it.
+    for (let i = idx - 1; i >= 0; i--) {
+      const siblingId = row[i];
+      const siblingEl = childMap.get(siblingId);
+      if (siblingEl && siblingEl.isConnected) {
+        // Insert after this sibling (before its nextSibling)
+        return { parent: rowWrapper, before: siblingEl.nextSibling };
+      }
+    }
+
+    // No siblings found at all - either the row is empty or only has placeholders.
+    // Insert at the beginning of the row (before first child, if any).
+    const firstRealChild = children.find((child) => {
+      if (!child) return false;
+      if (child.hasAttribute && child.hasAttribute("data-floating-placeholder"))
+        return false;
+      if (child.classList && child.classList.contains("floating-card"))
+        return false;
+      return true;
+    });
+
+    return { parent: rowWrapper, before: firstRealChild || null };
   }
 
   removeCollapseProxy(key) {
@@ -906,28 +938,14 @@ class FloatingModeManager {
 
       const gridLayoutActive = this._isGridLayoutActive();
 
-      // If GridLayoutManager has rebuilt the grid, placeholders can get moved
-      // to the root of .content-grid, which would cause a restore-to-top.
-      const placeholderLooksValid = !!(
-        placeholder &&
-        placeholder.parentNode &&
-        (!gridLayoutActive ||
-          placeholder.parentNode.classList?.contains("grid-flex-row"))
-      );
+      // STRATEGY PRIORITY:
+      // When grid layout is active, ALWAYS use the grid configuration as the source
+      // of truth for positioning. The placeholder may have drifted or been repositioned
+      // when GridLayoutManager rebuilt the layout.
 
-      // Strategy 1: Use placeholder if it's still in the DOM
-      if (placeholderLooksValid) {
-        try {
-          placeholder.parentNode.insertBefore(card, placeholder);
-          placeholder.remove();
-          inserted = true;
-        } catch (e) {
-          // Fallback strategies below
-        }
-      }
-
-      // Strategy 1b: When grid layout is active, restore into the correct row wrapper
-      // based on the current GridLayoutManager rows.
+      // Strategy 1 (PRIMARY): When grid layout is active, restore into the correct
+      // row wrapper based on the current GridLayoutManager rows configuration.
+      // This is the most reliable method as it uses the authoritative layout data.
       if (!inserted && gridLayoutActive) {
         try {
           const point = this._resolveGridLayoutInsertionPoint(key, card);
@@ -944,7 +962,29 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 2: Use stored original position
+      // Strategy 2: Use placeholder position (only for non-grid-layout mode)
+      // When GridLayoutManager is NOT active, the placeholder position is reliable.
+      if (!inserted && !gridLayoutActive) {
+        const placeholderStillValid = !!(placeholder && placeholder.parentNode);
+
+        if (placeholderStillValid) {
+          try {
+            placeholder.parentNode.insertBefore(card, placeholder);
+            inserted = true;
+          } catch (e) {
+            // Fallback strategies below
+          }
+        }
+      }
+
+      // Clean up placeholder regardless of which strategy succeeded
+      if (placeholder && placeholder.parentNode) {
+        try {
+          placeholder.remove();
+        } catch (e) {}
+      }
+
+      // Strategy 3: Use stored original position
       if (!inserted && st.originalParent && st.originalParent.isConnected) {
         try {
           if (
@@ -973,7 +1013,7 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 3: Find content-grid and insert at correct position
+      // Strategy 4: Find content-grid and insert at correct position
       if (!inserted) {
         try {
           const contentGrid = document.querySelector(".content-grid");
