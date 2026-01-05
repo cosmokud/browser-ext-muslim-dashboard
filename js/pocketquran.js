@@ -1309,32 +1309,14 @@ class PocketQuranManager {
       this.togglePlayPause(surah, ayahNumber);
     });
 
-    // Autoplay button
-    const autoplayBtn = document.createElement("button");
-    autoplayBtn.type = "button";
-    autoplayBtn.className = `pq-ayah-autoplay-btn ${
-      this._isAutoplay &&
-      this._playingAyah?.surah === surah &&
-      this._playingAyah?.ayah === ayahNumber
-        ? "active"
-        : ""
-    }`;
-    autoplayBtn.title = "Autoplay from this ayah";
-    autoplayBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>';
-    autoplayBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Start autoplay from this ayah
-      this._isAutoplay = true;
-      this.persistPocketQuranSettings({ reciterAutoplay: true });
-      this.playAyah(surah, ayahNumber);
-    });
+    // Bottom-left stacked controls (top-to-bottom): star, play, badge
+    const controlsStack = document.createElement("div");
+    controlsStack.className = "pq-ayah-controls-stack";
+    controlsStack.appendChild(starBtn);
+    controlsStack.appendChild(playBtn);
+    controlsStack.appendChild(badge);
 
-    ayahEl.appendChild(starBtn);
-    ayahEl.appendChild(autoplayBtn);
-    ayahEl.appendChild(playBtn);
-    ayahEl.appendChild(badge);
+    ayahEl.appendChild(controlsStack);
     ayahEl.appendChild(ar);
     ayahEl.appendChild(tr);
 
@@ -2341,8 +2323,27 @@ class PocketQuranManager {
     ) {
       this._audioElement.pause();
     } else {
+      this.enableAutoplayOnFirstPlayIfNeeded();
       this.playAyah(surah, ayah);
     }
+  }
+
+  enableAutoplayOnFirstPlayIfNeeded() {
+    // If this extension is being used for the first time (no persisted autoplay
+    // preference yet), enable autoplay by default on the first play.
+    try {
+      const pq = this.storage.getSettings()?.pocketQuran || {};
+      const hasExplicitAutoplay = Object.prototype.hasOwnProperty.call(
+        pq,
+        "reciterAutoplay"
+      );
+      if (hasExplicitAutoplay) return;
+      if (this._isAutoplay) return;
+
+      this._isAutoplay = true;
+      this.persistPocketQuranSettings({ reciterAutoplay: true });
+      this.updatePlaybackUI();
+    } catch (e) {}
   }
 
   /**
@@ -2359,7 +2360,6 @@ class PocketQuranManager {
 
     this.resetRecitationCaches();
 
-    this.hideHeaderControls();
     this.updatePlaybackUI();
   }
 
@@ -2377,7 +2377,9 @@ class PocketQuranManager {
     if (this._isAutoplay && this._playingAyah) {
       // Autoplay: move to next ayah
       const { surah, ayah } = this._playingAyah;
-      const max = this.getActiveSurahAyahCount() || 286;
+      const chapter = this._chapters.find((c) => c.id === surah);
+      const max =
+        (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
 
       if (ayah < max) {
         const nextAyah = ayah + 1;
@@ -2399,7 +2401,6 @@ class PocketQuranManager {
     // Normal end
     this._isPlaying = false;
     this._playingAyah = null;
-    this.hideHeaderControls();
     this.updatePlaybackUI();
   }
 
@@ -2407,9 +2408,8 @@ class PocketQuranManager {
    * Go to previous ayah in playback.
    */
   playPreviousAyah() {
-    if (!this._playingAyah) return;
-
-    const { surah, ayah } = this._playingAyah;
+    const fallback = { surah: this._activeSurah, ayah: this._activeAyah };
+    const { surah, ayah } = this._playingAyah || fallback;
     if (ayah > 1) {
       this.playAyah(surah, ayah - 1);
     }
@@ -2419,10 +2419,11 @@ class PocketQuranManager {
    * Go to next ayah in playback.
    */
   playNextAyah() {
-    if (!this._playingAyah) return;
-
-    const { surah, ayah } = this._playingAyah;
-    const max = this.getActiveSurahAyahCount() || 286;
+    const fallback = { surah: this._activeSurah, ayah: this._activeAyah };
+    const { surah, ayah } = this._playingAyah || fallback;
+    const chapter = this._chapters.find((c) => c.id === surah);
+    const max =
+      (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
 
     if (ayah < max) {
       this.playAyah(surah, ayah + 1);
@@ -2557,6 +2558,9 @@ class PocketQuranManager {
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
         </button>
       </div>
+      <button type="button" class="pq-recitation-close-btn" title="Close" aria-label="Close recitation controls">
+        <span aria-hidden="true">✕</span>
+      </button>
     `;
 
     // Insert after the title
@@ -2581,9 +2585,11 @@ class PocketQuranManager {
     controlsBox
       .querySelector(".pq-play-pause-btn")
       .addEventListener("click", () => {
-        if (this._playingAyah) {
-          this.togglePlayPause(this._playingAyah.surah, this._playingAyah.ayah);
-        }
+        const target = this._playingAyah || {
+          surah: this._activeSurah,
+          ayah: this._activeAyah,
+        };
+        this.togglePlayPause(target.surah, target.ayah);
       });
     controlsBox
       .querySelector(".pq-stop-btn")
@@ -2597,6 +2603,10 @@ class PocketQuranManager {
     controlsBox
       .querySelector(".pq-reciter-btn")
       .addEventListener("click", () => this.openReciterModal());
+
+    controlsBox
+      .querySelector(".pq-recitation-close-btn")
+      .addEventListener("click", () => this.hideHeaderControls());
 
     const volumeSlider = controlsBox.querySelector(".pq-volume-slider");
     volumeSlider.addEventListener("input", (e) => {

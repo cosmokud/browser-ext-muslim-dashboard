@@ -7351,21 +7351,26 @@ body.sticky-note-resizing {
   gap: var(--spacing-md);
 }
 
-/* When recitation controls are visible, stack header actions under them */
+/* When recitation controls are visible, keep them on the same row as the title.
+   The controls should only grow with their content (compact header). */
 .pocket-quran-header.pq-has-recitation-controls {
+  justify-content: flex-start;
+  align-items: center;
   flex-wrap: wrap;
 }
 
 .pocket-quran-header.pq-has-recitation-controls .pq-recitation-controls {
-  flex: 0 0 100%;
-  width: 100%;
-  margin-left: 0;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  margin-left: var(--spacing-sm);
   margin-right: 0;
 }
 
 .pocket-quran-header.pq-has-recitation-controls .card-header-actions {
-  flex: 0 0 100%;
-  width: 100%;
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
   justify-content: flex-end;
 }
 
@@ -7889,15 +7894,23 @@ body.sticky-note-resizing {
     background var(--transition-fast);
 }
 
+.pq-ayah-controls-stack {
+  position: absolute;
+  left: var(--spacing-md);
+  bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  z-index: 2;
+}
+
 .pocket-quran-ayah:hover {
   background: rgba(255, 255, 255, 0.11);
   transform: translateY(-1px);
 }
 
 .pocket-quran-ayah-badge {
-  position: absolute;
-  top: calc(var(--spacing-md) + 42px);
-  left: var(--spacing-md);
+  position: static;
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -7909,13 +7922,10 @@ body.sticky-note-resizing {
   color: var(--text-primary);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  z-index: 1;
 }
 
 .pocket-quran-ayah-star {
-  position: absolute;
-  top: var(--spacing-md);
-  right: var(--spacing-md);
+  position: static;
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -7928,7 +7938,6 @@ body.sticky-note-resizing {
   font-size: 1rem;
   cursor: pointer;
   transition: all var(--transition-fast);
-  z-index: 1;
 }
 
 .pocket-quran-ayah-star:hover {
@@ -8613,9 +8622,7 @@ body.sticky-note-resizing {
 
 /* Ayah play/pause button */
 .pq-ayah-play-btn {
-  position: absolute;
-  top: var(--spacing-md);
-  left: var(--spacing-md);
+  position: static;
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -8627,7 +8634,6 @@ body.sticky-note-resizing {
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  z-index: 2;
 }
 
 .pq-ayah-play-btn:hover {
@@ -8653,37 +8659,7 @@ body.sticky-note-resizing {
   }
 }
 
-/* Ayah autoplay button */
-.pq-ayah-autoplay-btn {
-  position: absolute;
-  top: calc(var(--spacing-md) + 84px);
-  left: var(--spacing-md);
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  z-index: 2;
-}
-
-.pq-ayah-autoplay-btn:hover {
-  background: var(--glass-bg-hover);
-  transform: scale(1.1);
-}
-
-.pq-ayah-autoplay-btn.active {
-  background: rgba(212, 175, 55, 0.2);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-}
-
-/* Star button is now top-right; no layout padding needed */
+/* Ayah controls are stacked bottom-left via .pq-ayah-controls-stack */
 
 /* Header recitation controls */
 .pq-recitation-controls {
@@ -8698,8 +8674,28 @@ body.sticky-note-resizing {
   -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   flex-wrap: wrap;
   animation: pqSlideIn 0.3s ease-out;
-  margin-left: auto;
-  margin-right: var(--spacing-md);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.pq-recitation-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 107, 107, 0.65);
+  background: rgba(255, 107, 107, 0.14);
+  color: #ff6b6b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-recitation-close-btn:hover {
+  background: rgba(255, 107, 107, 0.22);
+  border-color: #ff6b6b;
+  transform: scale(1.05);
 }
 
 @keyframes pqSlideIn {
@@ -8871,11 +8867,6 @@ body.sticky-note-resizing {
   .pq-recitation-reciter {
     max-width: none;
   }
-}
-
-/* Adjust ayah padding for the new buttons */
-.pocket-quran-ayah .pocket-quran-ayah-tr {
-  padding-bottom: calc(var(--spacing-xl) + 76px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
