@@ -409,14 +409,14 @@ async function showPrayerNotification(prayerKey, kind) {
         : `Upcoming in ${formatMinutes(BeforeMinutes)}.`;
   } else if (kind === "after") {
     if (AfterMinutes === 0) {
-      message = "Just now";
+      message = "Just now.";
     } else if (AfterMinutes === 1) {
       message = `1 minute has passed since ${prayerName} time.`;
     } else {
       message = `${AfterMinutes} minutes have passed since ${prayerName} time.`;
     }
   } else {
-    message = "";
+    message = "Just now.";
   }
 
   const notificationId = `${PRAYER_ALARM_PREFIX}${prayerKey}_${kind}_${Date.now()}`;
