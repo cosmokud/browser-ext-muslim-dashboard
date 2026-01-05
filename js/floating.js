@@ -85,7 +85,8 @@ class FloatingModeManager {
     btn.className = "floating-collapse-btn";
     btn.setAttribute("title", "Return to layout");
     btn.setAttribute("aria-label", "Return to layout");
-    btn.textContent = "⤓";
+    // Use SVG minimize icon
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
 
     const onClick = (e) => {
       e.preventDefault();
@@ -824,32 +825,83 @@ class FloatingModeManager {
       // then clear floating styles so it participates in the tiling layout.
       const placeholder = st.placeholder;
       let inserted = false;
+
+      // Strategy 1: Use placeholder if it's still in the DOM
       if (placeholder && placeholder.parentNode) {
         try {
           placeholder.parentNode.insertBefore(card, placeholder);
           placeholder.remove();
           inserted = true;
         } catch (e) {
-          // Fallback: append to original parent
-          try {
-            (
-              st.originalParent ||
-              document.querySelector(".content-grid") ||
-              document.body
-            ).appendChild(card);
-            inserted = true;
-          } catch (e2) {}
+          // Fallback strategies below
         }
-      } else if (st.originalParent) {
+      }
+
+      // Strategy 2: Use stored original position
+      if (!inserted && st.originalParent && st.originalParent.isConnected) {
         try {
-          st.originalParent.insertBefore(card, st.originalNextSibling);
+          if (
+            st.originalNextSibling &&
+            st.originalNextSibling.isConnected &&
+            st.originalNextSibling.parentNode === st.originalParent
+          ) {
+            st.originalParent.insertBefore(card, st.originalNextSibling);
+          } else {
+            // Insert at original parent, but need to find correct position
+            // by looking for the card's expected grid position
+            const gridOrder = this._getGridPositionOrder(key);
+            const insertRef = this._findInsertReferenceByOrder(
+              st.originalParent,
+              gridOrder
+            );
+            if (insertRef) {
+              st.originalParent.insertBefore(card, insertRef);
+            } else {
+              st.originalParent.appendChild(card);
+            }
+          }
           inserted = true;
         } catch (e) {
-          try {
-            st.originalParent.appendChild(card);
-            inserted = true;
-          } catch (e2) {}
+          // Fallback below
         }
+      }
+
+      // Strategy 3: Find content-grid and insert at correct position
+      if (!inserted) {
+        try {
+          const contentGrid = document.querySelector(".content-grid");
+          if (contentGrid) {
+            const gridOrder = this._getGridPositionOrder(key);
+            const insertRef = this._findInsertReferenceByOrder(
+              contentGrid,
+              gridOrder
+            );
+            if (insertRef) {
+              contentGrid.insertBefore(card, insertRef);
+            } else {
+              contentGrid.appendChild(card);
+            }
+            inserted = true;
+          }
+        } catch (e) {
+          // Last resort
+        }
+      }
+
+      // Strategy 4: Last resort - append to body
+      if (!inserted) {
+        try {
+          (
+            document.querySelector(".content-grid") || document.body
+          ).appendChild(card);
+        } catch (e2) {}
+      }
+
+      // Clean up placeholder if still in DOM
+      if (placeholder && placeholder.parentNode) {
+        try {
+          placeholder.remove();
+        } catch (e) {}
       }
 
       // Remove floating styles
@@ -1263,6 +1315,49 @@ class FloatingModeManager {
   clamp(value, min, max) {
     if (!Number.isFinite(value)) return min;
     return Math.min(Math.max(value, min), max);
+  }
+
+  /**
+   * Get the expected grid position order for a component.
+   * Lower numbers appear first in the grid.
+   */
+  _getGridPositionOrder(key) {
+    const orderMap = {
+      prayerTimes: 100,
+      hijriCalendar: 200,
+      qiblaDirection: 300,
+      flashcards: 600,
+      todoList: 700,
+    };
+    return orderMap[key] ?? 500;
+  }
+
+  /**
+   * Find the reference node to insert before, based on grid order.
+   * Returns null if should append at end.
+   */
+  _findInsertReferenceByOrder(parent, targetOrder) {
+    if (!parent) return null;
+
+    const cardIdToKey = {
+      prayerTimesCard: "prayerTimes",
+      calendarCard: "hijriCalendar",
+      qiblaCard: "qiblaDirection",
+      flashcardCard: "flashcards",
+      todoCard: "todoList",
+    };
+
+    const children = Array.from(parent.children);
+    for (const child of children) {
+      const childKey = cardIdToKey[child.id];
+      if (childKey) {
+        const childOrder = this._getGridPositionOrder(childKey);
+        if (childOrder > targetOrder) {
+          return child;
+        }
+      }
+    }
+    return null;
   }
 }
 

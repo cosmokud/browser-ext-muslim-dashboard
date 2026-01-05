@@ -391,7 +391,7 @@
           <div class="card-header">
             <h2 class="card-title">
               <span class="card-icon">🥗</span>
-              Fasting
+              Fasting Times
             </h2>
             <div class="fasting-subtitle" id="fastingHijriNow">--</div>
           </div>
@@ -1238,6 +1238,9 @@
               🔎 Search Bar
             </button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
+            <button class="settings-tab" data-tab="fasting">
+              🥗 Fasting Times
+            </button>
             <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
             <button class="settings-tab" data-tab="flashcards">
               🎴 Flashcards
@@ -2358,7 +2361,7 @@
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">🥗</span>
-                  <span class="visibility-name">Fasting</span>
+                  <span class="visibility-name">Fasting Times</span>
                   <input type="checkbox" id="visibilityFasting" checked />
                   <span class="toggle-switch"></span>
                 </label>
@@ -2563,6 +2566,179 @@
                 <label class="radio-option">
                   <input type="radio" name="weatherUnit" value="fahrenheit" />
                   <span>Fahrenheit (°F)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fasting Times Settings -->
+          <div class="settings-panel" id="fastingPanel">
+            <div class="setting-group">
+              <label class="setting-label">Fasting Countdowns Visibility</label>
+              <p class="setting-hint">
+                Choose which fasting countdowns to display in the Fasting Times
+                card.
+              </p>
+              <div class="visibility-toggle-list">
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-name">Monday Fast</span>
+                  <input type="checkbox" id="fastingShowMonday" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-name">Thursday Fast</span>
+                  <input type="checkbox" id="fastingShowThursday" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
+                  <input type="checkbox" id="fastingShowAyyamAlBeed" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-name">Dhu al-Hijjah</span>
+                  <input type="checkbox" id="fastingShowDhuAlHijjah" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">⛰️</span>
+                  <span class="visibility-name">Day of Arafah</span>
+                  <input type="checkbox" id="fastingShowArafah" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌟</span>
+                  <span class="visibility-name">Ramadan</span>
+                  <input type="checkbox" id="fastingShowRamadan" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Display Window Settings</label>
+              <p class="setting-hint">
+                Set how many days before Dhu al-Hijjah and Day of Arafah to
+                start showing the countdown.
+              </p>
+              <div class="setting-row">
+                <label
+                  class="setting-sublabel"
+                  for="fastingDhuAlHijjahWithinDays"
+                  >Dhu al-Hijjah within</label
+                >
+                <input
+                  type="number"
+                  class="setting-input setting-input-narrow"
+                  id="fastingDhuAlHijjahWithinDays"
+                  min="7"
+                  max="365"
+                  value="30"
+                />
+                <span class="setting-suffix">days</span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-sublabel" for="fastingArafahWithinDays"
+                  >Day of Arafah within</label
+                >
+                <input
+                  type="number"
+                  class="setting-input setting-input-narrow"
+                  id="fastingArafahWithinDays"
+                  min="7"
+                  max="365"
+                  value="30"
+                />
+                <span class="setting-suffix">days</span>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Suhur Notifications</label>
+              <p class="setting-hint">
+                Get notified before Fajr time on fasting days to prepare for
+                Suhur. Notifications will only trigger on the actual fasting
+                day.
+              </p>
+              <label class="checkbox-option">
+                <input type="checkbox" id="fastingNotificationsEnabled" />
+                <span>Enable Suhur Notifications</span>
+              </label>
+              <div
+                class="setting-row"
+                id="fastingNotificationOffset"
+                style="margin-top: 12px"
+              >
+                <label
+                  class="setting-sublabel"
+                  for="fastingNotificationMinutesBefore"
+                  >Notify</label
+                >
+                <input
+                  type="number"
+                  class="setting-input setting-input-narrow"
+                  id="fastingNotificationMinutesBefore"
+                  min="5"
+                  max="180"
+                  value="60"
+                />
+                <span class="setting-suffix">minutes before Fajr</span>
+              </div>
+              <div
+                class="visibility-toggle-list"
+                id="fastingNotificationToggles"
+                style="margin-top: 16px"
+              >
+                <p class="setting-hint" style="margin-bottom: 8px">
+                  Select which fasting days to receive notifications:
+                </p>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-name">Monday Fast</span>
+                  <input type="checkbox" id="fastingNotifyMonday" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-name">Thursday Fast</span>
+                  <input type="checkbox" id="fastingNotifyThursday" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
+                  <input
+                    type="checkbox"
+                    id="fastingNotifyAyyamAlBeed"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-name">Dhu al-Hijjah (1st-9th)</span>
+                  <input
+                    type="checkbox"
+                    id="fastingNotifyDhuAlHijjah"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">⛰️</span>
+                  <span class="visibility-name">Day of Arafah</span>
+                  <input type="checkbox" id="fastingNotifyArafah" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌟</span>
+                  <span class="visibility-name">Ramadan</span>
+                  <input type="checkbox" id="fastingNotifyRamadan" checked />
+                  <span class="toggle-switch"></span>
                 </label>
               </div>
             </div>

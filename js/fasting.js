@@ -79,6 +79,22 @@ class FastingManager {
       : {};
     const adjustment = Number(settings.hijriAdjustment || 0);
 
+    // Get fasting settings with defaults
+    const fastingSettings = settings.fasting || {};
+    const visibility = fastingSettings.visibility || {};
+    const dhuAlHijjahWithinDays = this._clampInt(
+      fastingSettings.dhuAlHijjahWithinDays,
+      7,
+      365,
+      30
+    );
+    const arafahWithinDays = this._clampInt(
+      fastingSettings.arafahWithinDays,
+      7,
+      365,
+      30
+    );
+
     // Required: derive Hijri first (with adjustment)
     const hijriNow = this.hijri.toHijri(now, adjustment);
 
@@ -90,80 +106,91 @@ class FastingManager {
     const items = [];
 
     // Compute Ramadan separately so we can always place it at the bottom.
-    const ramadanItem = this._ramadanCountdown(nowStart, hijriNow, adjustment);
+    const ramadanItem =
+      visibility.ramadan !== false
+        ? this._ramadanCountdown(nowStart, hijriNow, adjustment)
+        : null;
 
     // Monday/Thursday fasts (weekday-based)
     // Max days in-between is 6, so width uses total=6 (full scale)
-    const monday = this._weekdayCountdown(nowStart, 1);
-    items.push({
-      key: "monday",
-      title: "Monday Fast",
-      subtitle: "Weekly Sunnah",
-      daysLeft: monday.daysLeft,
-      totalDays: 6,
-      meta: this._daysLeftText(monday.daysLeft),
-      aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
-    });
+    if (visibility.monday !== false) {
+      const monday = this._weekdayCountdown(nowStart, 1);
+      items.push({
+        key: "monday",
+        title: "Monday Fast",
+        subtitle: "Weekly Sunnah",
+        daysLeft: monday.daysLeft,
+        totalDays: 6,
+        meta: this._daysLeftText(monday.daysLeft),
+        aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
+      });
+    }
 
-    const thursday = this._weekdayCountdown(nowStart, 4);
-    items.push({
-      key: "thursday",
-      title: "Thursday Fast",
-      subtitle: "Weekly Sunnah",
-      daysLeft: thursday.daysLeft,
-      totalDays: 6,
-      meta: this._daysLeftText(thursday.daysLeft),
-      aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
-    });
+    if (visibility.thursday !== false) {
+      const thursday = this._weekdayCountdown(nowStart, 4);
+      items.push({
+        key: "thursday",
+        title: "Thursday Fast",
+        subtitle: "Weekly Sunnah",
+        daysLeft: thursday.daysLeft,
+        totalDays: 6,
+        meta: this._daysLeftText(thursday.daysLeft),
+        aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
+      });
+    }
 
     // 13th of Hijri months (Ayyam al-Beed) – exception: hide during Ramadan
-    if (hijriNow.month !== 9) {
+    if (visibility.ayyamAlBeed !== false && hijriNow.month !== 9) {
       const ayyam = this._thirteenthCountdown(nowStart, hijriNow, adjustment);
       // Must be the third item after Thursday
       if (ayyam) items.push(ayyam);
     }
 
-    // Dhu al-Hijjah countdowns (only when within 30 days)
-    const dhu1 = this._hijriCountdownWithin(
-      nowStart,
-      hijriNow,
-      adjustment,
-      12,
-      1,
-      30
-    );
-    if (dhu1) {
-      items.push({
-        key: "dhu1",
-        title: "Dhu al-Hijjah",
-        subtitle: "Approaching the sacred month",
-        daysLeft: dhu1.daysLeft,
-        totalDays: 30,
-        meta: this._daysLeftText(dhu1.daysLeft),
-        aria: `1 Dhu al-Hijjah: ${this._daysLeftText(dhu1.daysLeft)}`,
-        badge: "1 Dhu al-Hijjah",
-      });
+    // Dhu al-Hijjah countdowns (only when within configured days)
+    if (visibility.dhuAlHijjah !== false) {
+      const dhu1 = this._hijriCountdownWithin(
+        nowStart,
+        hijriNow,
+        adjustment,
+        12,
+        1,
+        dhuAlHijjahWithinDays
+      );
+      if (dhu1) {
+        items.push({
+          key: "dhu1",
+          title: "Dhu al-Hijjah",
+          subtitle: "Approaching the sacred month",
+          daysLeft: dhu1.daysLeft,
+          totalDays: dhuAlHijjahWithinDays,
+          meta: this._daysLeftText(dhu1.daysLeft),
+          aria: `1 Dhu al-Hijjah: ${this._daysLeftText(dhu1.daysLeft)}`,
+          badge: "1 Dhu al-Hijjah",
+        });
+      }
     }
 
-    const arafah = this._hijriCountdownWithin(
-      nowStart,
-      hijriNow,
-      adjustment,
-      12,
-      9,
-      30
-    );
-    if (arafah) {
-      items.push({
-        key: "arafah",
-        title: "Day of Arafah",
-        subtitle: "9 Dhu al-Hijjah",
-        daysLeft: arafah.daysLeft,
-        totalDays: 30,
-        meta: this._daysLeftText(arafah.daysLeft),
-        aria: `Day of Arafah: ${this._daysLeftText(arafah.daysLeft)}`,
-        badge: "9 Dhu al-Hijjah",
-      });
+    if (visibility.arafah !== false) {
+      const arafah = this._hijriCountdownWithin(
+        nowStart,
+        hijriNow,
+        adjustment,
+        12,
+        9,
+        arafahWithinDays
+      );
+      if (arafah) {
+        items.push({
+          key: "arafah",
+          title: "Day of Arafah",
+          subtitle: "9 Dhu al-Hijjah",
+          daysLeft: arafah.daysLeft,
+          totalDays: arafahWithinDays,
+          meta: this._daysLeftText(arafah.daysLeft),
+          aria: `Day of Arafah: ${this._daysLeftText(arafah.daysLeft)}`,
+          badge: "9 Dhu al-Hijjah",
+        });
+      }
     }
 
     // Ramadan must always be at the bottom.

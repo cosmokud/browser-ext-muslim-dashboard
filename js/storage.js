@@ -204,6 +204,36 @@ class StorageManager {
       compactWeatherEnabled: false,
       compactWeatherMode: "simple", // 'simple' or 'detailed'
 
+      // Fasting settings
+      fasting: {
+        // Visibility toggles for each fasting type
+        visibility: {
+          monday: true,
+          thursday: true,
+          ayyamAlBeed: true,
+          dhuAlHijjah: true,
+          arafah: true,
+          ramadan: true,
+        },
+        // Display window settings (how many days before to show countdown)
+        dhuAlHijjahWithinDays: 30,
+        arafahWithinDays: 30,
+        // Suhur notification settings
+        notifications: {
+          enabled: false,
+          minutesBefore: 60, // minutes before Fajr
+          // Per-fast notification toggles
+          notify: {
+            monday: true,
+            thursday: true,
+            ayyamAlBeed: true,
+            dhuAlHijjah: true,
+            arafah: true,
+            ramadan: true,
+          },
+        },
+      },
+
       // Component visibility settings
       componentVisibility: {
         header: true,

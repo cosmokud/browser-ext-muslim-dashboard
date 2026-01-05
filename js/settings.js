@@ -311,6 +311,45 @@ class SettingsManager {
       "weatherCitySearchResults"
     );
 
+    // Fasting Times tab elements
+    this.fastingShowMonday = document.getElementById("fastingShowMonday");
+    this.fastingShowThursday = document.getElementById("fastingShowThursday");
+    this.fastingShowAyyamAlBeed = document.getElementById(
+      "fastingShowAyyamAlBeed"
+    );
+    this.fastingShowDhuAlHijjah = document.getElementById(
+      "fastingShowDhuAlHijjah"
+    );
+    this.fastingShowArafah = document.getElementById("fastingShowArafah");
+    this.fastingShowRamadan = document.getElementById("fastingShowRamadan");
+    this.fastingDhuAlHijjahWithinDays = document.getElementById(
+      "fastingDhuAlHijjahWithinDays"
+    );
+    this.fastingArafahWithinDays = document.getElementById(
+      "fastingArafahWithinDays"
+    );
+    this.fastingNotificationsEnabled = document.getElementById(
+      "fastingNotificationsEnabled"
+    );
+    this.fastingNotificationMinutesBefore = document.getElementById(
+      "fastingNotificationMinutesBefore"
+    );
+    this.fastingNotifyMonday = document.getElementById("fastingNotifyMonday");
+    this.fastingNotifyThursday = document.getElementById(
+      "fastingNotifyThursday"
+    );
+    this.fastingNotifyAyyamAlBeed = document.getElementById(
+      "fastingNotifyAyyamAlBeed"
+    );
+    this.fastingNotifyDhuAlHijjah = document.getElementById(
+      "fastingNotifyDhuAlHijjah"
+    );
+    this.fastingNotifyArafah = document.getElementById("fastingNotifyArafah");
+    this.fastingNotifyRamadan = document.getElementById("fastingNotifyRamadan");
+    this.fastingNotificationToggles = document.getElementById(
+      "fastingNotificationToggles"
+    );
+
     // Pinned Apps tab elements
     this.pinnedAppsPerRow = document.getElementById("pinnedAppsPerRow");
     this.pinnedAppsPerRowValue = document.getElementById(
@@ -618,6 +657,9 @@ class SettingsManager {
 
     // Load weather settings
     this.loadWeatherSettings(settings);
+
+    // Load fasting settings
+    this.loadFastingSettings(settings);
 
     this.updateNotesCountHint();
   }
@@ -951,6 +993,95 @@ class SettingsManager {
       this.weatherLatitudeInput.value = settings.weatherLatitude || "";
     if (this.weatherLongitudeInput)
       this.weatherLongitudeInput.value = settings.weatherLongitude || "";
+  }
+
+  /**
+   * Load fasting settings
+   */
+  loadFastingSettings(settings) {
+    const fasting = settings.fasting || {};
+    const visibility = fasting.visibility || {};
+    const notifications = fasting.notifications || {};
+    const notify = notifications.notify || {};
+
+    // Visibility toggles
+    if (this.fastingShowMonday) {
+      this.fastingShowMonday.checked = visibility.monday !== false;
+    }
+    if (this.fastingShowThursday) {
+      this.fastingShowThursday.checked = visibility.thursday !== false;
+    }
+    if (this.fastingShowAyyamAlBeed) {
+      this.fastingShowAyyamAlBeed.checked = visibility.ayyamAlBeed !== false;
+    }
+    if (this.fastingShowDhuAlHijjah) {
+      this.fastingShowDhuAlHijjah.checked = visibility.dhuAlHijjah !== false;
+    }
+    if (this.fastingShowArafah) {
+      this.fastingShowArafah.checked = visibility.arafah !== false;
+    }
+    if (this.fastingShowRamadan) {
+      this.fastingShowRamadan.checked = visibility.ramadan !== false;
+    }
+
+    // Within days settings
+    if (this.fastingDhuAlHijjahWithinDays) {
+      const clamped = this.clampNumber(
+        fasting.dhuAlHijjahWithinDays,
+        7,
+        365,
+        30
+      );
+      this.fastingDhuAlHijjahWithinDays.value = String(clamped);
+    }
+    if (this.fastingArafahWithinDays) {
+      const clamped = this.clampNumber(fasting.arafahWithinDays, 7, 365, 30);
+      this.fastingArafahWithinDays.value = String(clamped);
+    }
+
+    // Notification settings
+    if (this.fastingNotificationsEnabled) {
+      this.fastingNotificationsEnabled.checked = notifications.enabled === true;
+      this.toggleFastingNotificationOptions(notifications.enabled === true);
+    }
+    if (this.fastingNotificationMinutesBefore) {
+      const clamped = this.clampNumber(notifications.minutesBefore, 5, 180, 60);
+      this.fastingNotificationMinutesBefore.value = String(clamped);
+    }
+
+    // Per-fast notification toggles
+    if (this.fastingNotifyMonday) {
+      this.fastingNotifyMonday.checked = notify.monday !== false;
+    }
+    if (this.fastingNotifyThursday) {
+      this.fastingNotifyThursday.checked = notify.thursday !== false;
+    }
+    if (this.fastingNotifyAyyamAlBeed) {
+      this.fastingNotifyAyyamAlBeed.checked = notify.ayyamAlBeed !== false;
+    }
+    if (this.fastingNotifyDhuAlHijjah) {
+      this.fastingNotifyDhuAlHijjah.checked = notify.dhuAlHijjah !== false;
+    }
+    if (this.fastingNotifyArafah) {
+      this.fastingNotifyArafah.checked = notify.arafah !== false;
+    }
+    if (this.fastingNotifyRamadan) {
+      this.fastingNotifyRamadan.checked = notify.ramadan !== false;
+    }
+  }
+
+  /**
+   * Toggle fasting notification options visibility
+   */
+  toggleFastingNotificationOptions(show) {
+    const offsetRow = document.getElementById("fastingNotificationOffset");
+    const toggles = this.fastingNotificationToggles;
+    if (offsetRow) {
+      offsetRow.style.display = show ? "flex" : "none";
+    }
+    if (toggles) {
+      toggles.style.display = show ? "block" : "none";
+    }
   }
 
   toggleWeatherManualLocation(show) {
@@ -2724,6 +2855,9 @@ class SettingsManager {
     // Save weather settings
     this.saveWeatherSettings(settings);
 
+    // Save fasting settings
+    this.saveFastingSettings(settings);
+
     // Save to storage
     this.storage.saveSettings(settings);
 
@@ -2855,6 +2989,69 @@ class SettingsManager {
     settings.weatherLongitude = this.weatherLongitudeInput?.value
       ? parseFloat(this.weatherLongitudeInput.value)
       : null;
+  }
+
+  /**
+   * Save fasting settings
+   */
+  saveFastingSettings(settings) {
+    settings.fasting = settings.fasting || {};
+
+    // Visibility toggles
+    settings.fasting.visibility = {
+      monday: this.fastingShowMonday?.checked ?? true,
+      thursday: this.fastingShowThursday?.checked ?? true,
+      ayyamAlBeed: this.fastingShowAyyamAlBeed?.checked ?? true,
+      dhuAlHijjah: this.fastingShowDhuAlHijjah?.checked ?? true,
+      arafah: this.fastingShowArafah?.checked ?? true,
+      ramadan: this.fastingShowRamadan?.checked ?? true,
+    };
+
+    // Within days settings
+    settings.fasting.dhuAlHijjahWithinDays = this.clampNumber(
+      parseInt(this.fastingDhuAlHijjahWithinDays?.value, 10),
+      7,
+      365,
+      30
+    );
+    settings.fasting.arafahWithinDays = this.clampNumber(
+      parseInt(this.fastingArafahWithinDays?.value, 10),
+      7,
+      365,
+      30
+    );
+
+    // Notification settings
+    settings.fasting.notifications = {
+      enabled: this.fastingNotificationsEnabled?.checked ?? false,
+      minutesBefore: this.clampNumber(
+        parseInt(this.fastingNotificationMinutesBefore?.value, 10),
+        5,
+        180,
+        60
+      ),
+      notify: {
+        monday: this.fastingNotifyMonday?.checked ?? true,
+        thursday: this.fastingNotifyThursday?.checked ?? true,
+        ayyamAlBeed: this.fastingNotifyAyyamAlBeed?.checked ?? true,
+        dhuAlHijjah: this.fastingNotifyDhuAlHijjah?.checked ?? true,
+        arafah: this.fastingNotifyArafah?.checked ?? true,
+        ramadan: this.fastingNotifyRamadan?.checked ?? true,
+      },
+    };
+
+    // Trigger reschedule of fasting notifications
+    try {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.runtime &&
+        chrome.runtime.sendMessage
+      ) {
+        chrome.runtime.sendMessage({ type: "md_reschedule_fasting" });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   /**
@@ -3602,6 +3799,13 @@ class SettingsManager {
     if (this.weatherCityInput) {
       this.weatherCityInput.addEventListener("input", () => {
         this._clearCitySearchResults(this.weatherCitySearchResults);
+      });
+    }
+
+    // Fasting notifications toggle
+    if (this.fastingNotificationsEnabled) {
+      this.fastingNotificationsEnabled.addEventListener("change", (e) => {
+        this.toggleFastingNotificationOptions(e.target.checked);
       });
     }
 

@@ -9,6 +9,7 @@ importScripts("praytimes.js");
 
 const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
+const FASTING_ALARM_NAME = "md_fasting_suhur";
 
 const STORAGE_KEYS = {
   settings: "md_settings",
@@ -466,10 +467,294 @@ async function showPrayerNotification(prayerKey, kind) {
   }
 }
 
+// ============================================================================
+// FASTING NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Simple Hijri date calculation for fasting notifications.
+ * Based on Umm al-Qura approximation.
+ */
+function gregorianToHijri(date) {
+  const jd =
+    Math.floor((date.getTime() - Date.UTC(1970, 0, 1)) / 86400000) + 2440588;
+  const l = jd - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  const l2 = l - 10631 * n + 354;
+  const j =
+    Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) +
+    Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
+  const l3 =
+    l2 -
+    Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+    Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
+    29;
+  const month = Math.floor((24 * l3) / 709);
+  const day = l3 - Math.floor((709 * month) / 24);
+  const year = 30 * n + j - 30;
+  return { year, month, day };
+}
+
+/**
+ * Check if today is a fasting day based on settings.
+ * Returns the type of fast or null if not a fasting day.
+ */
+function getTodayFastingType(settings, today) {
+  const fasting = settings.fasting || {};
+  const notify = fasting.notifications?.notify || {};
+  const adjustment = Number(settings.hijriAdjustment || 0);
+
+  // Adjust the date for Hijri calculation
+  const adjustedDate = new Date(today);
+  adjustedDate.setDate(adjustedDate.getDate() + adjustment);
+  const hijri = gregorianToHijri(adjustedDate);
+
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 4=Thu
+
+  // Check Ramadan (month 9)
+  if (notify.ramadan !== false && hijri.month === 9) {
+    return { type: "ramadan", label: "Ramadan" };
+  }
+
+  // Check Day of Arafah (9 Dhu al-Hijjah, month 12)
+  if (notify.arafah !== false && hijri.month === 12 && hijri.day === 9) {
+    return { type: "arafah", label: "Day of Arafah" };
+  }
+
+  // Check Dhu al-Hijjah first 9 days (month 12, days 1-9)
+  if (
+    notify.dhuAlHijjah !== false &&
+    hijri.month === 12 &&
+    hijri.day >= 1 &&
+    hijri.day <= 9
+  ) {
+    return { type: "dhuAlHijjah", label: "Dhu al-Hijjah" };
+  }
+
+  // Check Ayyam al-Beed (13th-15th of any Hijri month, except Ramadan)
+  if (
+    notify.ayyamAlBeed !== false &&
+    hijri.month !== 9 &&
+    hijri.day >= 13 &&
+    hijri.day <= 15
+  ) {
+    return { type: "ayyamAlBeed", label: "Ayyam al-Beed" };
+  }
+
+  // Check Monday fast
+  if (notify.monday !== false && dayOfWeek === 1) {
+    return { type: "monday", label: "Monday Fast" };
+  }
+
+  // Check Thursday fast
+  if (notify.thursday !== false && dayOfWeek === 4) {
+    return { type: "thursday", label: "Thursday Fast" };
+  }
+
+  return null;
+}
+
+/**
+ * Schedule fasting Suhur notification for today (if applicable).
+ */
+async function scheduleFastingNotifications() {
+  // Clear existing fasting alarm
+  await alarmsClear(FASTING_ALARM_NAME);
+
+  const {
+    [STORAGE_KEYS.settings]: settingsRaw,
+    [STORAGE_KEYS.lastLocation]: lastLocationRaw,
+  } = await storageGet([STORAGE_KEYS.settings, STORAGE_KEYS.lastLocation]);
+
+  const settings =
+    settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
+  const lastLocation =
+    lastLocationRaw && typeof lastLocationRaw === "object"
+      ? lastLocationRaw
+      : null;
+
+  const fasting = settings.fasting || {};
+  const notifications = fasting.notifications || {};
+
+  // Check if fasting notifications are enabled
+  if (!notifications.enabled) {
+    await storageSet({
+      md_fasting_status: { enabled: false, scheduledAt: Date.now() },
+    });
+    return;
+  }
+
+  const today = new Date();
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  // Check if today is a fasting day
+  const fastingType = getTodayFastingType(settings, todayStart);
+  if (!fastingType) {
+    await storageSet({
+      md_fasting_status: {
+        enabled: true,
+        fastingDay: false,
+        scheduledAt: Date.now(),
+        date: toISODateKey(todayStart),
+      },
+    });
+    return;
+  }
+
+  // Get Fajr time for today
+  const location = pickLocation(settings, lastLocation);
+  const prayTimes = new PrayTimes();
+  configurePrayTimes(prayTimes, settings);
+
+  const timeFormat = settings.timeFormat || "24h";
+  const times = prayTimes.getTimes(
+    todayStart,
+    [location.latitude, location.longitude],
+    "auto",
+    "auto",
+    timeFormat
+  );
+
+  const fajrTimeStr = times.fajr;
+  const fajrDate = parseTimeToDate(fajrTimeStr, todayStart);
+
+  if (!fajrDate) {
+    await storageSet({
+      md_fasting_status: {
+        enabled: true,
+        error: "Could not parse Fajr time",
+        fajrTimeStr,
+        scheduledAt: Date.now(),
+      },
+    });
+    return;
+  }
+
+  // Calculate Suhur notification time (minutesBefore before Fajr)
+  const minutesBefore = clampNumber(notifications.minutesBefore, 5, 180, 60);
+  const suhurTime = fajrDate.getTime() - minutesBefore * 60 * 1000;
+
+  // Only schedule if the time is in the future
+  if (suhurTime > Date.now() + 1000) {
+    alarmsCreate(FASTING_ALARM_NAME, { when: suhurTime });
+
+    await storageSet({
+      md_fasting_status: {
+        enabled: true,
+        fastingDay: true,
+        fastingType: fastingType.type,
+        fastingLabel: fastingType.label,
+        fajrTime: fajrTimeStr,
+        suhurNotificationTime: new Date(suhurTime).toISOString(),
+        minutesBefore,
+        scheduledAt: Date.now(),
+        date: toISODateKey(todayStart),
+      },
+    });
+  } else {
+    await storageSet({
+      md_fasting_status: {
+        enabled: true,
+        fastingDay: true,
+        fastingType: fastingType.type,
+        fastingLabel: fastingType.label,
+        missed: true,
+        reason: "Suhur time already passed",
+        fajrTime: fajrTimeStr,
+        scheduledAt: Date.now(),
+        date: toISODateKey(todayStart),
+      },
+    });
+  }
+}
+
+/**
+ * Show the fasting Suhur notification.
+ */
+async function showFastingNotification() {
+  const { [STORAGE_KEYS.settings]: settingsRaw } = await storageGet([
+    STORAGE_KEYS.settings,
+  ]);
+  const settings =
+    settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
+
+  const fasting = settings.fasting || {};
+  const minutesBefore = clampNumber(
+    fasting.notifications?.minutesBefore,
+    5,
+    180,
+    60
+  );
+
+  // Get today's fasting type for the notification message
+  const today = new Date();
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  const fastingType = getTodayFastingType(settings, todayStart);
+
+  const title = "🌙 Suhur Time";
+  let message = `Time to prepare for Suhur! Fajr is in ${minutesBefore} minutes.`;
+
+  if (fastingType) {
+    message = `${fastingType.label}: Time to prepare for Suhur! Fajr is in ${minutesBefore} minutes.`;
+  }
+
+  const notificationId = `${FASTING_ALARM_NAME}_${Date.now()}`;
+
+  const iconUrl =
+    typeof chrome !== "undefined" && chrome.runtime?.getURL
+      ? chrome.runtime.getURL("icons/icon128.png")
+      : "icons/icon128.png";
+
+  try {
+    chrome.notifications.create(
+      notificationId,
+      {
+        type: "basic",
+        iconUrl,
+        title,
+        message,
+        priority: 2,
+      },
+      () => {
+        const err = chrome.runtime?.lastError;
+        if (err) {
+          storageSet({
+            md_fastingNotifications_lastError: {
+              at: Date.now(),
+              message: err.message || String(err),
+            },
+          });
+        }
+      }
+    );
+  } catch (e) {
+    storageSet({
+      md_fastingNotifications_lastError: {
+        at: Date.now(),
+        message: e?.message || String(e),
+      },
+    });
+  }
+}
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   const name = alarm?.name;
   if (name === RESCHEDULE_ALARM_NAME) {
     schedulePrayerNotifications();
+    scheduleFastingNotifications();
+    return;
+  }
+
+  if (name === FASTING_ALARM_NAME) {
+    void showFastingNotification();
     return;
   }
 
@@ -485,10 +770,12 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   schedulePrayerNotifications();
+  scheduleFastingNotifications();
 });
 
 chrome.runtime.onStartup?.addListener?.(() => {
   schedulePrayerNotifications();
+  scheduleFastingNotifications();
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -496,5 +783,13 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
   if (changes[STORAGE_KEYS.settings] || changes[STORAGE_KEYS.lastLocation]) {
     schedulePrayerNotifications();
+    scheduleFastingNotifications();
+  }
+});
+
+// Listen for manual reschedule request from settings
+chrome.runtime.onMessage?.addListener?.((message) => {
+  if (message?.type === "md_reschedule_fasting") {
+    scheduleFastingNotifications();
   }
 });
