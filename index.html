@@ -640,6 +640,12 @@
             </button>
           </div>
           <ul class="todo-list" id="todoList"></ul>
+          <div
+            class="todo-pagination"
+            id="todoPagination"
+            aria-label="Todo pagination"
+            hidden
+          ></div>
           <div class="todo-actions">
             <button class="clear-completed-btn" id="clearCompletedBtn">
               Clear Completed
@@ -759,6 +765,17 @@
               />
 
               <div class="notes-toolbar" id="notesToolbar" role="toolbar">
+                <button
+                  class="notes-tool-btn"
+                  type="button"
+                  data-cmd="toggleMarkdown"
+                  aria-label="Toggle Markdown / Raw text"
+                  title="Toggle Markdown / Raw text"
+                  id="notesMarkdownToggleBtn"
+                >
+                  MD
+                </button>
+
                 <button
                   class="notes-tool-btn"
                   type="button"
@@ -895,6 +912,13 @@
                   >
                 </div>
               </div>
+
+              <textarea
+                class="notes-editor hidden"
+                id="notesRawEditor"
+                spellcheck="true"
+                aria-label="Note raw text"
+              ></textarea>
 
               <div
                 class="notes-editor"
@@ -4347,6 +4371,7 @@
     <script src="js/gridlayout.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/stickynotes.js"></script>
+    <script src="js/vendor/marked.min.js"></script>
     <script src="js/notes.js"></script>
     <script src="js/pocketquran.js"></script>
     <script src="js/app.js"></script>

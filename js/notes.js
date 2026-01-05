@@ -11,6 +11,8 @@ class NotesManager {
   static SCALE_MIN = 1;
   static SCALE_MAX = 5;
 
+  static MARKDOWN_PREVIEW_STORAGE_KEY = "notes_markdown_preview";
+
   constructor(storage) {
     this.storage = storage;
 
@@ -21,6 +23,9 @@ class NotesManager {
     this._saveTimer = null;
     this._normalizeTimer = null;
     this._hasSelectedNote = false;
+
+    // Markdown/raw toggle (raw = textarea editing, markdown = rendered preview)
+    this.isMarkdownPreview = false;
 
     // DOM
     this.card = document.getElementById("notesCard");
@@ -43,6 +48,9 @@ class NotesManager {
     this.toolbar = document.getElementById("notesToolbar");
     this.editor = document.getElementById("notesEditor");
 
+    this.rawEditor = document.getElementById("notesRawEditor");
+    this.markdownToggleBtn = document.getElementById("notesMarkdownToggleBtn");
+
     this.scaleRange = document.getElementById("notesScaleRange");
     this.scaleValueEl = document.getElementById("notesScaleValue");
 
@@ -53,7 +61,8 @@ class NotesManager {
       !this.listEl ||
       !this.titleInput ||
       !this.toolbar ||
-      !this.editor
+      !this.editor ||
+      !this.rawEditor
     ) {
       // Component is optional depending on markup.
       return;
@@ -64,6 +73,13 @@ class NotesManager {
 
   init() {
     this.load();
+
+    this.isMarkdownPreview = !!this.storage.get(
+      NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
+      false
+    );
+
+    this.configureMarkdownParser();
 
     if (!this.notes.length) {
       const note = this.createNote();
@@ -76,6 +92,21 @@ class NotesManager {
     }
 
     this.setupEventListeners();
+  }
+
+  configureMarkdownParser() {
+    try {
+      if (window.marked && typeof window.marked.setOptions === "function") {
+        window.marked.setOptions({
+          gfm: true,
+          breaks: true,
+          headerIds: false,
+          mangle: false,
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   setupEventListeners() {
@@ -193,35 +224,39 @@ class NotesManager {
 
       e.preventDefault();
 
-      // Ensure editor has focus
-      this.editor.focus();
-
-      if (block) {
-        this.execFormatBlock(block);
-      } else if (cmd === "checklist") {
-        this.toggleChecklist();
-      } else {
-        this.execCommand(cmd);
+      if (cmd === "toggleMarkdown") {
+        this.toggleMarkdownPreview();
+        return;
       }
 
-      this.normalizeAndSaveSoon();
-    });
+      // Markdown preview is read-only.
+      if (this.isMarkdownPreview) return;
 
-    // Editor changes
-    this.editor.addEventListener("input", () => {
+      // Ensure raw editor has focus
+      try {
+        this.rawEditor.focus();
+      } catch (e) {}
+
+      if (block) {
+        this.applyMarkdownBlock(block);
+      } else if (cmd === "checklist") {
+        this.applyMarkdownChecklist();
+      } else {
+        this.applyMarkdownCommand(cmd);
+      }
+
       this.queueSave();
-      this.queueNormalize();
+
     });
 
-    this.editor.addEventListener("blur", () => {
-      // IMPORTANT: Avoid rerendering the list synchronously on blur.
-      // If the user clicks a note in the list, a synchronous rerender here can
-      // replace the clicked DOM node before the click event fires, forcing
-      // a second click.
-      this.normalizeNow();
-      this.saveNow({ renderList: false });
+    // Raw editor changes (markdown source)
+    this.rawEditor.addEventListener("input", () => {
+      this.queueSave();
+    });
 
-      // If the blur wasn't caused by focusing into the notes list, update list shortly after.
+    this.rawEditor.addEventListener("blur", () => {
+      // Same blur-list-click protection as before.
+      this.saveNow({ renderList: false });
       setTimeout(() => {
         try {
           const ae = document.activeElement;
@@ -231,29 +266,11 @@ class NotesManager {
       }, 0);
     });
 
-    // Click checklist marker area to toggle checked
+    // Preview: Ctrl/Cmd-click links open in new tab; normal click doesn't navigate.
     this.editor.addEventListener("click", (e) => {
-      const li = e.target.closest("li");
-      if (!li) return;
-      const ul = li.closest("ul");
-      if (!ul || !ul.classList.contains("notes-checklist")) return;
-
-      const rect = li.getBoundingClientRect();
-      const markerWidth = 28;
-      if (e.clientX - rect.left > markerWidth) return;
-
-      const isChecked =
-        String(li.getAttribute("data-checked") || "false") === "true";
-      li.setAttribute("data-checked", isChecked ? "false" : "true");
-      this.normalizeAndSaveSoon();
-    });
-
-    // Make links open in a new tab
-    this.editor.addEventListener("click", (e) => {
+      if (!this.isMarkdownPreview) return;
       const a = e.target.closest("a");
       if (!a) return;
-      // In an editor, normal click should place the caret.
-      // Open links only on Ctrl/Cmd-click to avoid accidental navigation.
       try {
         const href = a.getAttribute("href");
         if (!href) return;
@@ -266,15 +283,6 @@ class NotesManager {
       } catch (err) {
         // ignore
       }
-    });
-
-    // Basic paste sanitization (keep text + basic formatting when possible)
-    this.editor.addEventListener("paste", (e) => {
-      // Allow paste, then normalize/sanitize on next tick.
-      setTimeout(() => {
-        this.normalizeNow();
-        this.saveNow();
-      }, 0);
     });
   }
 
@@ -306,6 +314,13 @@ class NotesManager {
         const id = String(n.id || "").trim() || this.generateId();
         const title = String(n.title || "Untitled").slice(0, 120);
         const html = typeof n.html === "string" ? n.html : "";
+        const mdRaw =
+          typeof n.md === "string"
+            ? n.md
+            : typeof n.markdown === "string"
+            ? n.markdown
+            : "";
+        const md = mdRaw || this.htmlToMarkdown(html);
         const rawScale =
           typeof n.scale === "number" || typeof n.scale === "string"
             ? parseFloat(n.scale)
@@ -320,7 +335,7 @@ class NotesManager {
           typeof n.createdAt === "number" ? n.createdAt : Date.now();
         const updatedAt =
           typeof n.updatedAt === "number" ? n.updatedAt : createdAt;
-        return { id, title, html, scale, createdAt, updatedAt };
+        return { id, title, md, html, scale, createdAt, updatedAt };
       })
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
@@ -350,8 +365,17 @@ class NotesManager {
 
     const note = this.getActiveNote();
     if (note) {
-      const nextHtml = this.getSanitizedHtmlFromEditor();
-      const changed = nextHtml !== note.html;
+      const nextTitle = String(this.titleInput.value || "").slice(0, 120);
+      const nextMd = String(this.rawEditor.value || "");
+      const nextHtml = this.renderMarkdown(nextMd);
+
+      const changed =
+        nextTitle !== String(note.title || "") ||
+        nextMd !== String(note.md || "") ||
+        nextHtml !== String(note.html || "");
+
+      note.title = nextTitle;
+      note.md = nextMd;
       note.html = nextHtml;
       if (changed) note.updatedAt = Date.now();
     }
@@ -364,6 +388,11 @@ class NotesManager {
 
     this.save();
     if (shouldRenderList) this.renderList();
+
+    // Keep preview in sync as you type.
+    if (this.isMarkdownPreview) {
+      this.renderActiveMarkdownPreview();
+    }
   }
 
   queueSave() {
@@ -388,6 +417,7 @@ class NotesManager {
     const note = {
       id,
       title: "Untitled",
+      md: "",
       html: "<p></p>",
       scale: NotesManager.SCALE_MIN,
       createdAt: now,
@@ -432,7 +462,9 @@ class NotesManager {
     this.storage.set("notes_active", id);
 
     this.titleInput.value = note.title || "";
-    this.editor.innerHTML = this.sanitizeHtml(note.html || "");
+    this.rawEditor.value = String(note.md || "");
+    this.renderActiveMarkdownPreview();
+    this.applyEditorMode();
 
     const scale = this.clampNumber(
       note.scale,
@@ -445,11 +477,9 @@ class NotesManager {
 
     if (this.deleteBtn) this.deleteBtn.disabled = false;
 
-    // Ensure links are present and safe
-    this.normalizeNow();
-
-    // Place caret at end
-    this.placeCaretAtEnd(this.editor);
+    if (!this.isMarkdownPreview) {
+      this.placeCaretAtEndTextArea(this.rawEditor);
+    }
 
     this.currentPage = this.getPageForNoteId(id);
     this.storage.set("notes_page", this.currentPage);
@@ -464,12 +494,16 @@ class NotesManager {
     if (!current) return false;
 
     const nextTitle = String(this.titleInput.value || "").slice(0, 120);
-    const nextHtml = this.getSanitizedHtmlFromEditor();
+    const nextMd = String(this.rawEditor.value || "");
+    const nextHtml = this.renderMarkdown(nextMd);
 
     const changed =
-      nextTitle !== String(current.title || "") || nextHtml !== current.html;
+      nextTitle !== String(current.title || "") ||
+      nextMd !== String(current.md || "") ||
+      nextHtml !== current.html;
 
     current.title = nextTitle;
+    current.md = nextMd;
     current.html = nextHtml;
     if (changed && updateTimestampIfChanged) current.updatedAt = Date.now();
     return changed;
@@ -483,9 +517,270 @@ class NotesManager {
     );
     try {
       this.editor.style.setProperty("--notes-scale", String(n));
+      this.rawEditor.style.setProperty("--notes-scale", String(n));
     } catch (e) {
       // ignore
     }
+  }
+
+  toggleMarkdownPreview() {
+    this.isMarkdownPreview = !this.isMarkdownPreview;
+    this.storage.set(
+      NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
+      this.isMarkdownPreview
+    );
+    this.applyEditorMode();
+    this.renderActiveMarkdownPreview();
+  }
+
+  applyEditorMode() {
+    // Raw (textarea) vs Markdown preview (rendered)
+    const isPreview = !!this.isMarkdownPreview;
+
+    this.rawEditor.classList.toggle("hidden", isPreview);
+    this.editor.classList.toggle("hidden", !isPreview);
+
+    this.editor.classList.toggle("notes-md-preview", isPreview);
+    this.editor.setAttribute("contenteditable", "false");
+
+    // Enable/disable formatting tools (preview is read-only)
+    try {
+      const buttons = this.toolbar.querySelectorAll("button.notes-tool-btn");
+      buttons.forEach((b) => {
+        const c = b.dataset.cmd;
+        if (c === "toggleMarkdown") {
+          b.disabled = false;
+          b.classList.toggle("active", isPreview);
+          return;
+        }
+        b.disabled = isPreview;
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  renderActiveMarkdownPreview() {
+    const note = this.getActiveNote();
+    if (!note) return;
+    const html = this.renderMarkdown(String(note.md || this.rawEditor.value || ""));
+    this.editor.innerHTML = html;
+  }
+
+  renderMarkdown(markdown) {
+    const md = String(markdown || "");
+
+    let html = "";
+    try {
+      if (window.marked && typeof window.marked.parse === "function") {
+        html = window.marked.parse(md);
+      } else {
+        html = this.escapeHtml(md).replace(/\n/g, "<br>");
+      }
+    } catch (e) {
+      html = this.escapeHtml(md).replace(/\n/g, "<br>");
+    }
+
+    return this.sanitizeHtml(html);
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = String(text || "");
+    return div.innerHTML;
+  }
+
+  placeCaretAtEndTextArea(el) {
+    try {
+      el.focus();
+      const v = String(el.value || "");
+      el.setSelectionRange(v.length, v.length);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  applyMarkdownCommand(cmd) {
+    const c = String(cmd || "");
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const before = value.slice(0, start);
+    const selected = value.slice(start, end);
+    const after = value.slice(end);
+
+    const wrap = (left, right = left) => {
+      const next = `${before}${left}${selected || ""}${right}${after}`;
+      t.value = next;
+      const cursor = start + left.length + (selected || "").length;
+      t.setSelectionRange(cursor, cursor);
+    };
+
+    if (c === "bold") return wrap("**", "**");
+    if (c === "italic") return wrap("*", "*");
+    if (c === "underline") return wrap("<u>", "</u>");
+    if (c === "strikeThrough") return wrap("~~", "~~");
+
+    // Lists
+    if (c === "insertUnorderedList") return this.applyLinePrefix("- ");
+    if (c === "insertOrderedList") return this.applyNumberedList();
+  }
+
+  applyMarkdownChecklist() {
+    this.applyLinePrefix("- [ ] ");
+  }
+
+  applyMarkdownBlock(blockTag) {
+    const t = String(blockTag || "").toUpperCase();
+    const map = { H1: "# ", H2: "## ", H3: "### ", H4: "#### ", P: "" };
+    if (!Object.prototype.hasOwnProperty.call(map, t)) return;
+
+    const prefix = map[t];
+    this.applyLineTransform((line) => {
+      const trimmed = line.replace(/^\s+/, "");
+      const noHeading = trimmed.replace(/^#{1,6}\s+/, "");
+      if (!prefix) return noHeading;
+      return `${prefix}${noHeading}`;
+    });
+  }
+
+  applyLinePrefix(prefix) {
+    const p = String(prefix || "");
+    this.applyLineTransform((line) => {
+      if (!line.trim()) return line;
+      // Avoid double-prefix
+      if (line.trimStart().startsWith(p.trim())) return line;
+      return `${p}${line}`;
+    });
+  }
+
+  applyNumberedList() {
+    let i = 1;
+    this.applyLineTransform((line) => {
+      if (!line.trim()) return line;
+      const next = `${i}. ${line.replace(/^\s*\d+\.\s+/, "")}`;
+      i += 1;
+      return next;
+    });
+  }
+
+  applyLineTransform(transform) {
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEndIdx = value.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const before = value.slice(0, lineStart);
+    const block = value.slice(lineStart, lineEnd);
+    const after = value.slice(lineEnd);
+
+    const lines = block.split("\n");
+    const nextBlock = lines.map((l) => transform(l)).join("\n");
+
+    t.value = `${before}${nextBlock}${after}`;
+
+    const nextPos = lineStart + nextBlock.length;
+    t.setSelectionRange(nextPos, nextPos);
+  }
+
+  htmlToMarkdown(html) {
+    const raw = typeof html === "string" ? html : "";
+    if (!raw.trim()) return "";
+
+    // Use our own sanitizer first to avoid weird nodes.
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = this.sanitizeHtml(raw);
+
+    const toInline = (node) => {
+      if (!node) return "";
+      if (node.nodeType === Node.TEXT_NODE) return node.nodeValue || "";
+      if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+      const el = node;
+      const tag = el.tagName;
+
+      if (tag === "BR") return "\n";
+      if (tag === "A") {
+        const href = (el.getAttribute("href") || "").trim();
+        const text = Array.from(el.childNodes).map(toInline).join("") || href;
+        return href ? `[${text}](${href})` : text;
+      }
+      if (tag === "B" || tag === "STRONG")
+        return `**${Array.from(el.childNodes).map(toInline).join("")}**`;
+      if (tag === "I" || tag === "EM")
+        return `*${Array.from(el.childNodes).map(toInline).join("")}*`;
+      if (tag === "U")
+        return `<u>${Array.from(el.childNodes).map(toInline).join("")}</u>`;
+      if (tag === "S" || tag === "STRIKE")
+        return `~~${Array.from(el.childNodes).map(toInline).join("")}~~`;
+
+      return Array.from(el.childNodes).map(toInline).join("");
+    };
+
+    const toBlock = (node) => {
+      if (!node) return "";
+      if (node.nodeType === Node.TEXT_NODE) return (node.nodeValue || "").trim();
+      if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+      const el = node;
+      const tag = el.tagName;
+
+      if (tag === "P" || tag === "DIV") {
+        const txt = Array.from(el.childNodes).map(toInline).join("").trim();
+        return txt ? `${txt}\n\n` : "";
+      }
+
+      if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4") {
+        const level = parseInt(tag.slice(1), 10);
+        const hashes = "#".repeat(level);
+        const txt = Array.from(el.childNodes).map(toInline).join("").trim();
+        return txt ? `${hashes} ${txt}\n\n` : "";
+      }
+
+      if (tag === "UL" || tag === "OL") {
+        const isChecklist = el.classList.contains("notes-checklist");
+        const isOrdered = tag === "OL";
+        let idx = 1;
+        const lines = [];
+        el.querySelectorAll(":scope > li").forEach((li) => {
+          const txt = Array.from(li.childNodes)
+            .filter((n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL")
+            .filter((n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL")
+            .map(toInline)
+            .join("")
+            .trim();
+
+          const checked = String(li.getAttribute("data-checked") || "false") === "true";
+
+          const prefix = isChecklist
+            ? `- [${checked ? "x" : " "}] `
+            : isOrdered
+            ? `${idx}. `
+            : "- ";
+
+          if (txt) lines.push(`${prefix}${txt}`);
+          idx += 1;
+        });
+
+        return lines.length ? `${lines.join("\n")}\n\n` : "";
+      }
+
+      // Fallback: just inline text
+      return `${Array.from(el.childNodes).map(toInline).join("").trim()}\n\n`;
+    };
+
+    let out = "";
+    Array.from(wrapper.childNodes).forEach((child) => {
+      out += toBlock(child);
+    });
+
+    return out.replace(/\n{3,}/g, "\n\n").trim();
   }
 
   updateScaleUi(scale) {
@@ -694,23 +989,11 @@ class NotesManager {
   }
 
   normalizeNow() {
+    // No-op in markdown mode; preview rendering is sanitized on render.
     if (this._normalizeTimer) {
       clearTimeout(this._normalizeTimer);
       this._normalizeTimer = null;
     }
-
-    const selectionOffsets = this.getSelectionOffsets(this.editor);
-
-    const sanitized = this.getSanitizedHtmlFromEditor();
-    if (this.editor.innerHTML !== sanitized) {
-      this.editor.innerHTML = sanitized;
-      this.restoreSelectionOffsets(this.editor, selectionOffsets);
-    }
-  }
-
-  getSanitizedHtmlFromEditor() {
-    const raw = this.editor.innerHTML || "";
-    return this.sanitizeHtml(this.linkifyHtml(raw));
   }
 
   linkifyHtml(html) {
@@ -789,6 +1072,7 @@ class NotesManager {
     wrapper.innerHTML = html || "";
 
     const allowedTags = new Set([
+      // Markdown basics
       "A",
       "B",
       "STRONG",
@@ -808,6 +1092,21 @@ class NotesManager {
       "UL",
       "OL",
       "LI",
+
+      // Markdown extensions
+      "PRE",
+      "CODE",
+      "BLOCKQUOTE",
+      "HR",
+      "IMG",
+      "TABLE",
+      "THEAD",
+      "TBODY",
+      "TR",
+      "TH",
+      "TD",
+      "DEL",
+      "INPUT",
     ]);
 
     const sanitizeNode = (node) => {
@@ -834,6 +1133,19 @@ class NotesManager {
         const name = attr.name.toLowerCase();
         if (tag === "A") {
           if (name === "href" || name === "target" || name === "rel") continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "IMG") {
+          if (name === "src" || name === "alt" || name === "title") continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "INPUT") {
+          if (name === "type" || name === "checked" || name === "disabled")
+            continue;
           el.removeAttribute(attr.name);
           continue;
         }
@@ -871,6 +1183,31 @@ class NotesManager {
         }
         el.setAttribute("target", "_blank");
         el.setAttribute("rel", "noopener noreferrer");
+      }
+
+      if (tag === "IMG") {
+        const src = (el.getAttribute("src") || "").trim();
+        if (!this.isSafeHref(src)) {
+          el.remove();
+          return;
+        }
+        el.setAttribute("loading", "lazy");
+        el.setAttribute("referrerpolicy", "no-referrer");
+      }
+
+      if (tag === "INPUT") {
+        // Only allow task-list checkboxes.
+        const type = String(el.getAttribute("type") || "").toLowerCase();
+        if (type !== "checkbox") {
+          el.remove();
+          return;
+        }
+
+        // Force disabled to avoid interactive inputs.
+        el.setAttribute("disabled", "");
+
+        // Strip all children.
+        while (el.firstChild) el.removeChild(el.firstChild);
       }
 
       // Normalize checklist LIs

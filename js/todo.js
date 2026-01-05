@@ -10,6 +10,10 @@ class TodoManager {
     this.filter = "all";
     this.editingId = null;
 
+    // Pagination
+    this.itemsPerPage = 10;
+    this.currentPage = 1;
+
     // Elements
     this.todoInput = document.getElementById("todoInput");
     this.todoAddBtn = document.getElementById("todoAddBtn");
@@ -17,6 +21,8 @@ class TodoManager {
     this.todoCount = document.getElementById("todoCount");
     this.clearCompletedBtn = document.getElementById("clearCompletedBtn");
     this.filterBtns = document.querySelectorAll(".filter-btn");
+
+    this.todoPagination = document.getElementById("todoPagination");
 
     // Edit modal elements
     this.editModal = document.getElementById("editTodoModal");
@@ -117,6 +123,7 @@ class TodoManager {
    */
   setFilter(filter) {
     this.filter = filter;
+    this.currentPage = 1;
     this.render();
 
     // Update filter buttons
@@ -145,6 +152,18 @@ class TodoManager {
   render() {
     const filteredTodos = this.getFilteredTodos();
 
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filteredTodos.length / this.itemsPerPage)
+    );
+    this.currentPage = Math.max(1, Math.min(totalPages, this.currentPage));
+
+    const shouldPaginate = filteredTodos.length > this.itemsPerPage;
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const pageTodos = shouldPaginate
+      ? filteredTodos.slice(start, start + this.itemsPerPage)
+      : filteredTodos;
+
     if (filteredTodos.length === 0) {
       this.todoList.innerHTML = `
         <li class="empty-state">
@@ -158,10 +177,14 @@ class TodoManager {
           }</p>
         </li>
       `;
+
+      this.renderPagination({ totalPages: 1, visible: false });
     } else {
-      this.todoList.innerHTML = filteredTodos
+      this.todoList.innerHTML = pageTodos
         .map((todo) => this.renderTodoItem(todo))
         .join("");
+
+      this.renderPagination({ totalPages, visible: shouldPaginate });
     }
 
     // Update count
@@ -172,6 +195,132 @@ class TodoManager {
     // Show/hide clear button
     const hasCompleted = this.todos.some((t) => t.completed);
     this.clearCompletedBtn.style.display = hasCompleted ? "block" : "none";
+  }
+
+  renderPagination({ totalPages, visible }) {
+    if (!this.todoPagination) return;
+
+    if (!visible) {
+      this.todoPagination.hidden = true;
+      this.todoPagination.innerHTML = "";
+      return;
+    }
+
+    this.todoPagination.hidden = false;
+
+    const page = this.currentPage;
+
+    const mkBtn = ({
+      label,
+      pageValue,
+      disabled = false,
+      ariaLabel,
+      active = false,
+    }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `todo-page-btn${active ? " active" : ""}`;
+      btn.textContent = label;
+      if (ariaLabel) btn.setAttribute("aria-label", ariaLabel);
+      btn.disabled = !!disabled;
+      btn.dataset.page = String(pageValue);
+      return btn;
+    };
+
+    const container = document.createElement("div");
+    container.className = "todo-pagination-inner";
+
+    container.appendChild(
+      mkBtn({
+        label: "❮",
+        pageValue: page - 1,
+        disabled: page <= 1,
+        ariaLabel: "Previous todo page",
+      })
+    );
+
+    const pagesWrap = document.createElement("div");
+    pagesWrap.className = "todo-page-numbers";
+
+    const maxButtons = 5;
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+    let start = clamp(page - 2, 1, Math.max(1, totalPages - (maxButtons - 1)));
+    let end = clamp(start + (maxButtons - 1), 1, totalPages);
+    start = clamp(end - (maxButtons - 1), 1, totalPages);
+
+    const appendEllipsis = () => {
+      const el = document.createElement("span");
+      el.className = "todo-page-ellipsis";
+      el.textContent = "…";
+      pagesWrap.appendChild(el);
+    };
+
+    if (start > 1) {
+      pagesWrap.appendChild(
+        mkBtn({
+          label: "1",
+          pageValue: 1,
+          active: page === 1,
+          ariaLabel: "Todo page 1",
+        })
+      );
+      if (start > 2) appendEllipsis();
+    }
+
+    for (let p = start; p <= end; p += 1) {
+      pagesWrap.appendChild(
+        mkBtn({
+          label: String(p),
+          pageValue: p,
+          active: p === page,
+          ariaLabel: `Todo page ${p}`,
+        })
+      );
+    }
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) appendEllipsis();
+      pagesWrap.appendChild(
+        mkBtn({
+          label: String(totalPages),
+          pageValue: totalPages,
+          active: page === totalPages,
+          ariaLabel: `Todo page ${totalPages}`,
+        })
+      );
+    }
+
+    container.appendChild(pagesWrap);
+
+    const info = document.createElement("div");
+    info.className = "todo-page-info";
+    info.textContent = `Page ${page} / ${totalPages}`;
+    container.appendChild(info);
+
+    container.appendChild(
+      mkBtn({
+        label: "❯",
+        pageValue: page + 1,
+        disabled: page >= totalPages,
+        ariaLabel: "Next todo page",
+      })
+    );
+
+    this.todoPagination.innerHTML = "";
+    this.todoPagination.appendChild(container);
+
+    if (!this._paginationBound) {
+      this._paginationBound = true;
+      this.todoPagination.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-page]");
+        if (!btn) return;
+        const target = parseInt(btn.dataset.page, 10);
+        if (!Number.isFinite(target)) return;
+        this.currentPage = target;
+        this.render();
+      });
+    }
   }
 
   /**

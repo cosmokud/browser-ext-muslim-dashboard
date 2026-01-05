@@ -880,6 +880,11 @@ body {
   border-color: var(--glass-border);
 }
 
+.notes-tool-btn.active {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.08);
+}
+
 .notes-tool-divider {
   width: 1px;
   background: var(--glass-border);
@@ -903,13 +908,55 @@ body {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
+textarea.notes-editor {
+  resize: vertical;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.notes-editor.notes-md-preview {
+  cursor: default;
+}
+
 .notes-editor:focus {
+  background: var(--glass-bg-hover);
+}
+
+textarea.notes-editor:focus {
   background: var(--glass-bg-hover);
 }
 
 .notes-editor a {
   color: var(--accent-gold-light);
   text-decoration: underline;
+}
+
+.notes-editor.notes-md-preview pre {
+  width: 100%;
+  margin: 0 0 var(--spacing-sm) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  overflow: auto;
+}
+
+.notes-editor.notes-md-preview code {
+  font-family: "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+.notes-editor.notes-md-preview blockquote {
+  margin: 0 0 var(--spacing-sm) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-left: 3px solid var(--accent-gold);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+
+.notes-editor.notes-md-preview input[type="checkbox"] {
+  margin-right: var(--spacing-xs);
 }
 
 .notes-editor p,
@@ -1172,6 +1219,23 @@ body {
 }
 
 /* Prayer Times Card */
+.card.prayer-times-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.prayer-times-card .card-header {
+  flex: 0 0 auto;
+}
+
+.card.prayer-times-card .next-prayer {
+  margin-top: auto;
+}
+
+.card.prayer-times-card .prayer-list {
+  margin-bottom: auto;
+}
+
 .location-display {
   display: flex;
   align-items: center;
@@ -1262,11 +1326,22 @@ body {
 }
 
 /* Qibla Card */
+.card.qibla-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.qibla-card .card-header {
+  flex: 0 0 auto;
+}
+
 .qibla-compass-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: var(--spacing-md);
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .compass-outer {
@@ -1471,6 +1546,72 @@ body {
   max-height: 300px;
   overflow-y: auto;
   margin-bottom: var(--spacing-md);
+}
+
+.todo-pagination {
+  margin-top: calc(var(--spacing-sm) * -0.5);
+  margin-bottom: var(--spacing-md);
+}
+
+.todo-pagination-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.todo-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.todo-page-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast),
+    border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.todo-page-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.todo-page-btn.active {
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.todo-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.todo-page-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.todo-page-ellipsis {
+  color: var(--text-muted);
+  padding: 0 4px;
+  user-select: none;
 }
 
 .todo-list::-webkit-scrollbar {
@@ -4253,6 +4394,12 @@ body {
 /* Calendar Card */
 .calendar-card {
   min-width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-card .card-header {
+  flex: 0 0 auto;
 }
 
 .calendar-toggle-btns {
@@ -4286,6 +4433,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .calendar-header {
@@ -4495,6 +4644,15 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.card.flashcard-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.flashcard-card .card-header {
+  flex: 0 0 auto;
 }
 
 .flashcard-viewer {
@@ -4817,9 +4975,19 @@ body {
   max-height: 100%;
   overflow: auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   word-break: break-word;
   overflow-wrap: anywhere;
   direction: auto;
+}
+
+.flashcard-flip-card.flashcard-mode-study .flashcard-face-content {
+  display: block;
+  height: auto;
 }
 
 .flashcard-face-content.flashcard-question,
@@ -4844,6 +5012,11 @@ body {
   padding: var(--spacing-sm) var(--spacing-md);
   margin-top: var(--spacing-sm);
   border-top: 1px solid var(--glass-border);
+  flex: 0 0 auto;
+}
+
+.card.flashcard-card .flashcard-jump {
+  margin-top: auto;
 }
 
 .floating-card.flashcard-card .flashcard-jump {
@@ -6334,6 +6507,15 @@ body.sticky-note-resizing {
    FASTING CARD
    ======================================== */
 
+.card.fasting-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.fasting-card .card-header {
+  flex: 0 0 auto;
+}
+
 .fasting-subtitle {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -6345,10 +6527,14 @@ body.sticky-note-resizing {
 }
 
 .fasting-bars {
-  margin-top: var(--spacing-md);
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  flex: 1 1 auto;
+  justify-content: center;
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
 }
 
 .fasting-bar {
