@@ -2023,6 +2023,28 @@ class PocketQuranManager {
     return `${PocketQuranManager.API_BASE}/recitations/${this._activeReciterId}/by_ayah/${surah}:${ayah}`;
   }
 
+  resolveRecitationAudioUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return null;
+
+    // Already absolute.
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    // Protocol-relative.
+    if (raw.startsWith("//")) return `https:${raw}`;
+
+    // Quran.com per-ayah endpoint returns relative paths hosted on verses.quran.com.
+    const path = raw.replace(/^\/+/, "");
+    return `https://verses.quran.com/${path}`;
+  }
+
+  async getChapterRecitationAudioUrl(surah) {
+    const url = `${PocketQuranManager.API_BASE}/chapter_recitations/${this._activeReciterId}/${surah}`;
+    const data = await this.fetchJson(url, { timeoutMs: 15000 });
+    const audioUrl = data?.audio_file?.audio_url || data?.audio_file?.url;
+    return this.resolveRecitationAudioUrl(audioUrl);
+  }
+
   /**
    * Play recitation for a specific ayah.
    */
@@ -2059,6 +2081,8 @@ class PocketQuranManager {
         audioUrl = data.audio_file.audio_url;
       }
 
+      audioUrl = this.resolveRecitationAudioUrl(audioUrl);
+
       if (!audioUrl) {
         console.error(
           "PocketQuran: No audio file found for ayah",
@@ -2074,7 +2098,18 @@ class PocketQuranManager {
       this._audioElement.src = audioUrl;
       this._audioElement.volume = this._volume;
 
-      await this._audioElement.play();
+      try {
+        await this._audioElement.play();
+      } catch (e) {
+        // Fallback: chapter recitation URL (usually download.quranicaudio.com)
+        const chapterUrl = await this.getChapterRecitationAudioUrl(surah);
+        if (chapterUrl) {
+          this._audioElement.src = chapterUrl;
+          await this._audioElement.play();
+        } else {
+          throw e;
+        }
+      }
 
       // Show header controls
       this.showHeaderControls();
