@@ -186,4 +186,4 @@ May Allah accept this work and make it beneficial for the Ummah. Ameen.
 
 **Made with ❤️ for the Muslim community worldwide**
 
-_Assalamu Alaikum wa Rahmatullahi wa Barakatuh_ 🌙
+_As-salamu alaykum wa Rahmatullahi wa Barakatuh_ 🌙

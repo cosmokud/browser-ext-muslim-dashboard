@@ -828,16 +828,16 @@ class SettingsManager {
     const timeRanges = heading.greetingTimeRanges || {};
     if (this.greetingMorning)
       this.greetingMorning.value =
-        timeRanges.morning?.text || "Assalamu Alaikum, Good Morning";
+        timeRanges.morning?.text || "As-salamu alaykum, Good Morning";
     if (this.greetingAfternoon)
       this.greetingAfternoon.value =
-        timeRanges.afternoon?.text || "Assalamu Alaikum, Good Afternoon";
+        timeRanges.afternoon?.text || "As-salamu alaykum, Good Afternoon";
     if (this.greetingEvening)
       this.greetingEvening.value =
-        timeRanges.evening?.text || "Assalamu Alaikum, Good Evening";
+        timeRanges.evening?.text || "As-salamu alaykum, Good Evening";
     if (this.greetingNight)
       this.greetingNight.value =
-        timeRanges.night?.text || "Assalamu Alaikum, Good Night";
+        timeRanges.night?.text || "As-salamu alaykum, Good Night";
 
     // Clock settings
     if (this.showClock) this.showClock.checked = heading.showClock !== false;
@@ -2901,23 +2901,23 @@ class SettingsManager {
       morning: {
         start: 3,
         end: 12,
-        text: this.greetingMorning?.value || "Assalamu Alaikum, Good Morning",
+        text: this.greetingMorning?.value || "As-salamu alaykum, Good Morning",
       },
       afternoon: {
         start: 12,
         end: 15,
         text:
-          this.greetingAfternoon?.value || "Assalamu Alaikum, Good Afternoon",
+          this.greetingAfternoon?.value || "As-salamu alaykum, Good Afternoon",
       },
       evening: {
         start: 15,
         end: 18,
-        text: this.greetingEvening?.value || "Assalamu Alaikum, Good Evening",
+        text: this.greetingEvening?.value || "As-salamu alaykum, Good Evening",
       },
       night: {
         start: 18,
         end: 3,
-        text: this.greetingNight?.value || "Assalamu Alaikum, Good Night",
+        text: this.greetingNight?.value || "As-salamu alaykum, Good Night",
       },
     };
 

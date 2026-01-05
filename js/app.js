@@ -910,14 +910,16 @@ class MuslimDashboard {
       const timeRanges = headingSettings.greetingTimeRanges || {};
 
       if (hour >= 3 && hour < 12) {
-        greeting = timeRanges.morning?.text || "Assalamu Alaikum, Good Morning";
+        greeting =
+          timeRanges.morning?.text || "As-salamu alaykum, Good Morning";
       } else if (hour >= 12 && hour < 15) {
         greeting =
-          timeRanges.afternoon?.text || "Assalamu Alaikum, Good Afternoon";
+          timeRanges.afternoon?.text || "As-salamu alaykum, Good Afternoon";
       } else if (hour >= 15 && hour < 18) {
-        greeting = timeRanges.evening?.text || "Assalamu Alaikum, Good Evening";
+        greeting =
+          timeRanges.evening?.text || "As-salamu alaykum, Good Evening";
       } else {
-        greeting = timeRanges.night?.text || "Assalamu Alaikum, Good Night";
+        greeting = timeRanges.night?.text || "As-salamu alaykum, Good Night";
       }
     }
 

@@ -1116,9 +1116,7 @@ class NotesManager {
           )
         );
 
-        const headerRow = grid.findIndex((r, i) =>
-          rows[i].querySelector("th")
-        );
+        const headerRow = grid.findIndex((r, i) => rows[i].querySelector("th"));
 
         const mkRow = (r) => `| ${r.map((c) => c || " ").join(" | ")} |`;
         const maxCols = Math.max(1, ...grid.map((r) => r.length));
