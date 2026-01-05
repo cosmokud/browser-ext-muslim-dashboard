@@ -660,7 +660,7 @@ class PocketQuranManager {
 
         const current = this.clampNumber(this._activeSurah, 1, 114, 1);
         const next = this.clampNumber(current - 1, 1, 114, 1);
-        
+
         if (next !== current) {
           this._surahQuery = "";
           this.setActiveSurah(next, { preserveAyah: false });
@@ -682,7 +682,7 @@ class PocketQuranManager {
 
         const current = this.clampNumber(this._activeSurah, 1, 114, 1);
         const next = this.clampNumber(current + 1, 1, 114, 114);
-        
+
         if (next !== current) {
           this._surahQuery = "";
           this.setActiveSurah(next, { preserveAyah: false });
@@ -1379,6 +1379,7 @@ class PocketQuranManager {
    * Clean up virtualization resources.
    */
   destroyVirtualization() {
+    this.snapshotVirtualLayout();
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
@@ -1392,6 +1393,29 @@ class PocketQuranManager {
     this._virtualContent = null;
     this._ayahHeights.clear();
     this._renderedRange = { start: 0, end: 0 };
+  }
+
+  snapshotVirtualLayout() {
+    try {
+      if (this._virtualContainer) {
+        const h = Math.round(
+          this._virtualContainer.getBoundingClientRect().height
+        );
+        if (Number.isFinite(h) && h > 0) this._lastVirtualContainerHeightPx = h;
+      }
+      if (this._virtualSpacer) {
+        const h = Math.round(
+          this._virtualSpacer.getBoundingClientRect().height
+        );
+        if (Number.isFinite(h) && h > 0) this._lastVirtualSpacerHeightPx = h;
+      }
+      if (this._virtualContent) {
+        const h = Math.round(
+          this._virtualContent.getBoundingClientRect().height
+        );
+        if (Number.isFinite(h) && h > 0) this._lastVirtualContentHeightPx = h;
+      }
+    } catch (e) {}
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1748,8 +1772,6 @@ class PocketQuranManager {
     const surahName = chapter?.name_simple || `Surah ${surah}`;
     const surahNameAr = chapter?.name_arabic || "";
 
-    // Clean up previous virtualization
-    this.destroyVirtualization();
     this.renderLoading(`Loading ${surahName}…`);
 
     // Some browsers' scroll anchoring + dynamic card height can cause
@@ -2992,19 +3014,83 @@ class PocketQuranManager {
     this.destroyVirtualization();
     this.contentEl.innerHTML = "";
 
-    const div = document.createElement("div");
-    div.className = "pocket-quran-loading";
+    const containerHeight =
+      this._lastVirtualContainerHeightPx &&
+      this._lastVirtualContainerHeightPx > 0
+        ? this._lastVirtualContainerHeightPx
+        : 1000;
+
+    const contentMinHeight =
+      this._lastVirtualContentHeightPx && this._lastVirtualContentHeightPx > 0
+        ? this._lastVirtualContentHeightPx
+        : Math.max(320, containerHeight - 120);
+
+    const spacerHeight =
+      this._lastVirtualSpacerHeightPx && this._lastVirtualSpacerHeightPx > 0
+        ? this._lastVirtualSpacerHeightPx
+        : Math.max(1400, containerHeight * 2);
+
+    const virtualContainer = document.createElement("div");
+    virtualContainer.className = "pq-virtual-container";
+    virtualContainer.style.height = `${containerHeight}px`;
+
+    const spacer = document.createElement("div");
+    spacer.className = "pq-virtual-spacer";
+    spacer.style.height = `${spacerHeight}px`;
+
+    const content = document.createElement("div");
+    content.className = "pq-virtual-content pq-virtual-content-loading";
+    content.style.transform = "translateY(0px)";
+    content.style.minHeight = `${contentMinHeight}px`;
+
+    const label = document.createElement("div");
+    label.className = "pq-loading-label";
 
     const spinner = document.createElement("div");
     spinner.className = "pocket-quran-spinner";
+    spinner.setAttribute("aria-hidden", "true");
 
     const text = document.createElement("div");
     text.className = "pocket-quran-loading-text";
     text.textContent = message || "Loading…";
 
-    div.appendChild(spinner);
-    div.appendChild(text);
-    this.contentEl.appendChild(div);
+    label.appendChild(spinner);
+    label.appendChild(text);
+    content.appendChild(label);
+
+    const stack = document.createElement("div");
+    stack.className = "pq-skeleton-stack";
+
+    const widths = [
+      { ar: "88%", tr: "66%" },
+      { ar: "92%", tr: "58%" },
+      { ar: "84%", tr: "72%" },
+      { ar: "90%", tr: "62%" },
+      { ar: "86%", tr: "70%" },
+      { ar: "94%", tr: "54%" },
+    ];
+
+    for (let i = 0; i < widths.length; i++) {
+      const card = document.createElement("div");
+      card.className = "pq-skeleton-ayah";
+
+      const ar = document.createElement("div");
+      ar.className = "pq-skeleton-line pq-skel-ar";
+      ar.style.width = widths[i].ar;
+
+      const tr = document.createElement("div");
+      tr.className = "pq-skeleton-line pq-skel-tr";
+      tr.style.width = widths[i].tr;
+
+      card.appendChild(ar);
+      card.appendChild(tr);
+      stack.appendChild(card);
+    }
+
+    content.appendChild(stack);
+    spacer.appendChild(content);
+    virtualContainer.appendChild(spacer);
+    this.contentEl.appendChild(virtualContainer);
   }
 
   renderError(message) {
