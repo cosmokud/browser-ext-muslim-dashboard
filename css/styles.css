@@ -7363,8 +7363,13 @@ body.sticky-note-resizing {
   flex: 0 0 auto;
   width: auto;
   max-width: 100%;
-  margin-left: var(--spacing-sm);
-  margin-right: 0;
+  /* Push controls to the right without absolute positioning; supports RTL */
+  margin-inline-start: auto;
+  margin-inline-end: var(--spacing-sm);
+  margin-left: auto; /* fallback for older browsers */
+  margin-right: var(--spacing-sm); /* fallback */
+  align-self: center;
+  transition: margin 150ms ease, transform 150ms ease;
 }
 
 .pocket-quran-header.pq-has-recitation-controls .card-header-actions {
@@ -8682,9 +8687,9 @@ body.sticky-note-resizing {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 107, 107, 0.65);
-  background: rgba(255, 107, 107, 0.14);
-  color: #ff6b6b;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8844,6 +8849,16 @@ body.sticky-note-resizing {
     flex-direction: column;
     align-items: stretch;
     gap: var(--spacing-sm);
+  }
+
+  /* Reset header-specific margin/width to prevent right alignment on small screens */
+  .pocket-quran-header.pq-has-recitation-controls .pq-recitation-controls {
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+    margin-left: 0; /* fallback */
+    margin-right: 0; /* fallback */
+    width: 100%;
+    align-self: stretch;
   }
 
   .pq-recitation-info {
