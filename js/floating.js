@@ -53,6 +53,80 @@ class FloatingModeManager {
     this.collapseInMs = 90;
   }
 
+  _isGridLayoutActive() {
+    try {
+      return !!document.querySelector(".content-grid .grid-flex-row");
+    } catch (e) {
+      return false;
+    }
+  }
+
+  _getGridLayoutRowsSnapshot() {
+    try {
+      const rows = window.dashboard?.gridLayout?.rows;
+      if (Array.isArray(rows)) return rows;
+    } catch (e) {}
+
+    try {
+      const settings = this.getSettings();
+      if (Array.isArray(settings?.gridLayout)) return settings.gridLayout;
+    } catch (e) {}
+
+    return null;
+  }
+
+  _resolveGridLayoutInsertionPoint(key, card) {
+    const contentGrid = document.querySelector(".content-grid");
+    if (!contentGrid) return null;
+
+    const rows = this._getGridLayoutRowsSnapshot();
+    if (!rows || !Array.isArray(rows)) return null;
+
+    const componentId =
+      card?.dataset?.gridId || this.targets?.[key]?.cardId || card?.id;
+    if (!componentId) return null;
+
+    const rowIndex = rows.findIndex(
+      (row) => Array.isArray(row) && row.includes(componentId)
+    );
+    if (rowIndex < 0) return null;
+
+    const rowWrapper = contentGrid.querySelector(
+      `.grid-flex-row[data-row-index="${rowIndex}"]`
+    );
+    if (!rowWrapper) return null;
+
+    const row = rows[rowIndex];
+    const idx = row.indexOf(componentId);
+    if (idx < 0) return { parent: rowWrapper, before: null };
+
+    // Insert before the first subsequent component in the same row that is currently present.
+    for (let i = idx + 1; i < row.length; i++) {
+      const nextId = row[i];
+      if (!nextId) continue;
+
+      // "header" uses .header; others are ids.
+      const nextEl =
+        nextId === "header"
+          ? contentGrid.querySelector(".header")
+          : document.getElementById(nextId);
+
+      if (!nextEl || !nextEl.isConnected) continue;
+
+      // Only use elements that are actually in this row wrapper right now.
+      if (nextEl.parentNode !== rowWrapper) continue;
+
+      // Skip any element currently floating.
+      if (nextEl.classList && nextEl.classList.contains("floating-card")) {
+        continue;
+      }
+
+      return { parent: rowWrapper, before: nextEl };
+    }
+
+    return { parent: rowWrapper, before: null };
+  }
+
   removeCollapseProxy(key) {
     const st = this.runtime.get(key);
     if (!st) return;
@@ -826,12 +900,41 @@ class FloatingModeManager {
       const placeholder = st.placeholder;
       let inserted = false;
 
+      const gridLayoutActive = this._isGridLayoutActive();
+
+      // If GridLayoutManager has rebuilt the grid, placeholders can get moved
+      // to the root of .content-grid, which would cause a restore-to-top.
+      const placeholderLooksValid = !!(
+        placeholder &&
+        placeholder.parentNode &&
+        (!gridLayoutActive ||
+          placeholder.parentNode.classList?.contains("grid-flex-row"))
+      );
+
       // Strategy 1: Use placeholder if it's still in the DOM
-      if (placeholder && placeholder.parentNode) {
+      if (placeholderLooksValid) {
         try {
           placeholder.parentNode.insertBefore(card, placeholder);
           placeholder.remove();
           inserted = true;
+        } catch (e) {
+          // Fallback strategies below
+        }
+      }
+
+      // Strategy 1b: When grid layout is active, restore into the correct row wrapper
+      // based on the current GridLayoutManager rows.
+      if (!inserted && gridLayoutActive) {
+        try {
+          const point = this._resolveGridLayoutInsertionPoint(key, card);
+          if (point && point.parent) {
+            if (point.before && point.before.isConnected) {
+              point.parent.insertBefore(card, point.before);
+            } else {
+              point.parent.appendChild(card);
+            }
+            inserted = true;
+          }
         } catch (e) {
           // Fallback strategies below
         }
@@ -947,6 +1050,21 @@ class FloatingModeManager {
 
       // return from floating.
       this.notifyLayoutChanged();
+
+      // Safety fallback: if grid layout is active and we couldn't get the card
+      // back into a row wrapper, a reload guarantees correct placement.
+      try {
+        if (gridLayoutActive) {
+          const inRow = !!card.closest?.(".grid-flex-row");
+          if (!inRow) {
+            window.setTimeout(() => {
+              try {
+                window.location.reload();
+              } catch (e) {}
+            }, 50);
+          }
+        }
+      } catch (e) {}
     };
 
     if (prefersReducedMotion) {
