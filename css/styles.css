@@ -7351,6 +7351,24 @@ body.sticky-note-resizing {
   gap: var(--spacing-md);
 }
 
+/* When recitation controls are visible, stack header actions under them */
+.pocket-quran-header.pq-has-recitation-controls {
+  flex-wrap: wrap;
+}
+
+.pocket-quran-header.pq-has-recitation-controls .pq-recitation-controls {
+  flex: 0 0 100%;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.pocket-quran-header.pq-has-recitation-controls .card-header-actions {
+  flex: 0 0 100%;
+  width: 100%;
+  justify-content: flex-end;
+}
+
 .pocket-quran-header-meta {
   margin-top: 2px;
   padding: 0.45rem 0.75rem;
@@ -7878,8 +7896,8 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah-badge {
   position: absolute;
-  bottom: var(--spacing-md);
-  right: var(--spacing-md);
+  top: calc(var(--spacing-md) + 42px);
+  left: var(--spacing-md);
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -7896,8 +7914,8 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah-star {
   position: absolute;
-  bottom: calc(var(--spacing-md) + 42px);
-  left: var(--spacing-md);
+  top: var(--spacing-md);
+  right: var(--spacing-md);
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -7942,7 +7960,7 @@ body.sticky-note-resizing {
   color: var(--text-secondary);
   padding-left: 56px;
   padding-right: 56px;
-  padding-bottom: calc(var(--spacing-xl) + 34px);
+  padding-bottom: var(--spacing-md);
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
@@ -8596,7 +8614,7 @@ body.sticky-note-resizing {
 /* Ayah play/pause button */
 .pq-ayah-play-btn {
   position: absolute;
-  bottom: var(--spacing-md);
+  top: var(--spacing-md);
   left: var(--spacing-md);
   width: 34px;
   height: 34px;
@@ -8638,7 +8656,7 @@ body.sticky-note-resizing {
 /* Ayah autoplay button */
 .pq-ayah-autoplay-btn {
   position: absolute;
-  bottom: calc(var(--spacing-md) + 42px);
+  top: calc(var(--spacing-md) + 84px);
   left: var(--spacing-md);
   width: 34px;
   height: 34px;
@@ -8665,10 +8683,7 @@ body.sticky-note-resizing {
   color: var(--accent-gold);
 }
 
-/* Adjust star button position to accommodate new buttons */
-.pocket-quran-ayah .pocket-quran-ayah-star {
-  bottom: calc(var(--spacing-md) + 84px);
-}
+/* Star button is now top-right; no layout padding needed */
 
 /* Header recitation controls */
 .pq-recitation-controls {
