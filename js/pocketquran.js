@@ -1241,7 +1241,7 @@ class PocketQuranManager {
 
     this._scrollHighlightTimer = setTimeout(() => {
       el.classList.remove("pq-highlight");
-    }, 1400);
+    }, 2100);
   }
 
   /**

@@ -7983,7 +7983,7 @@ body.sticky-note-resizing {
 
 .pocket-quran-ayah.pq-highlight {
   /* Border is animated within pqGlow so it fades in + out gracefully */
-  animation: pqGlow 1.4s ease-out;
+  animation: pqGlow 2.1s ease-out;
   will-change: transform, box-shadow, border-color;
 }
 
