@@ -7879,7 +7879,7 @@ body.sticky-note-resizing {
 .pocket-quran-ayah-badge {
   position: absolute;
   bottom: var(--spacing-md);
-  left: var(--spacing-md);
+  right: var(--spacing-md);
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
@@ -7929,7 +7929,11 @@ body.sticky-note-resizing {
   line-height: 1.95;
   text-align: right;
   padding-left: 56px;
+  padding-right: 56px;
   padding-bottom: var(--spacing-md);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 
 .pocket-quran-ayah-tr {
@@ -7937,7 +7941,11 @@ body.sticky-note-resizing {
   font-size: var(--pq-translation-size);
   color: var(--text-secondary);
   padding-left: 56px;
+  padding-right: 56px;
   padding-bottom: calc(var(--spacing-xl) + 34px);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 
 .pocket-quran-ayah.pq-highlight {
@@ -8579,6 +8587,280 @@ body.sticky-note-resizing {
   padding: var(--spacing-xl);
   color: var(--text-secondary);
   font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POCKET QURAN RECITATION SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Ayah play/pause button */
+.pq-ayah-play-btn {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: var(--spacing-md);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.pq-ayah-play-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.1);
+  border-color: var(--accent-gold);
+}
+
+.pq-ayah-play-btn.playing {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+  animation: pqPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pqPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+  }
+}
+
+/* Ayah autoplay button */
+.pq-ayah-autoplay-btn {
+  position: absolute;
+  bottom: calc(var(--spacing-md) + 42px);
+  left: var(--spacing-md);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.pq-ayah-autoplay-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.1);
+}
+
+.pq-ayah-autoplay-btn.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* Adjust star button position to accommodate new buttons */
+.pocket-quran-ayah .pocket-quran-ayah-star {
+  bottom: calc(var(--spacing-md) + 84px);
+}
+
+/* Header recitation controls */
+.pq-recitation-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  flex-wrap: wrap;
+  animation: pqSlideIn 0.3s ease-out;
+  margin-left: auto;
+  margin-right: var(--spacing-md);
+}
+
+@keyframes pqSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pq-recitation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100px;
+}
+
+.pq-recitation-ayah {
+  font-weight: 600;
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+}
+
+.pq-recitation-reciter {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.pq-recitation-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.pq-recitation-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pq-recitation-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.05);
+}
+
+.pq-recitation-btn.active {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.pq-recitation-btn.pq-play-pause-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}
+
+.pq-recitation-btn.pq-play-pause-btn:hover {
+  background: var(--accent-gold-light);
+}
+
+.pq-recitation-btn.pq-stop-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.pq-recitation-options {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-left: var(--spacing-sm);
+  border-left: 1px solid var(--glass-border);
+}
+
+.pq-volume-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--text-secondary);
+}
+
+.pq-volume-slider {
+  width: 80px;
+  height: 4px;
+  appearance: none;
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+}
+
+.pq-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gold);
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.pq-volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.pq-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gold);
+  border: none;
+  cursor: pointer;
+}
+
+/* Reciter list styling */
+.pq-reciter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+/* Responsive adjustments for recitation controls */
+@media (max-width: 768px) {
+  .pq-recitation-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .pq-recitation-info {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .pq-recitation-buttons {
+    justify-content: center;
+  }
+
+  .pq-recitation-options {
+    justify-content: center;
+    padding-left: 0;
+    padding-top: var(--spacing-sm);
+    border-left: none;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .pq-recitation-reciter {
+    max-width: none;
+  }
+}
+
+/* Adjust ayah padding for the new buttons */
+.pocket-quran-ayah .pocket-quran-ayah-tr {
+  padding-bottom: calc(var(--spacing-xl) + 76px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

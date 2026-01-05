@@ -408,6 +408,18 @@ class PocketQuranManager {
     // Navigation debounce flags
     this._navProcessing = false;
 
+    // Recitation system state
+    this._reciters = [];
+    this._activeReciterId = null;
+    this._audioElement = null;
+    this._isPlaying = false;
+    this._isAutoplay = false;
+    this._isLooping = false;
+    this._volume = 1;
+    this._playingAyah = null;
+    this._reciterModal = null;
+    this._headerControlsBox = null;
+
     this.init();
   }
 
@@ -438,6 +450,9 @@ class PocketQuranManager {
     this.createBookmarkButton();
     this.createBookmarkModals();
     this.createTranslationModal();
+
+    // Initialize recitation system
+    this.initRecitationSystem();
 
     this.setupEventListeners();
 
@@ -1109,6 +1124,8 @@ class PocketQuranManager {
 
   /**
    * Scroll to a specific ayah number (1-indexed).
+   * Uses a two-pass approach: first render the ayahs, measure them,
+   * then scroll to the accurately calculated position.
    */
   scrollToAyah(ayahNumber, opts = {}) {
     const { persist = true, smooth = true, skipScroll = false } = opts;
@@ -1123,20 +1140,6 @@ class PocketQuranManager {
 
     if (!skipScroll && this._virtualContainer && this._activeVerses?.length) {
       const index = n - 1; // Convert to 0-indexed
-      const offset = this.getAyahOffset(index);
-
-      // Prevent scroll handler from overwriting the active ayah mid smooth-scroll.
-      const now =
-        typeof performance !== "undefined" && performance.now
-          ? performance.now()
-          : Date.now();
-      this._programmaticScroll = {
-        targetOffset: offset,
-        targetAyah: n,
-        startedAt: now,
-      };
-
-      // Ensure the ayah is rendered first
       const buffer = PocketQuranManager.BUFFER_AYAHS;
       const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
       const total = this._activeVerses.length;
@@ -1144,21 +1147,70 @@ class PocketQuranManager {
       const start = Math.max(0, index - buffer);
       const end = Math.min(total - 1, index + visibleCount + buffer);
 
+      // First pass: render ayahs from the beginning up to and including the target
+      // This ensures we measure all previous ayahs for accurate offset calculation
+      const measureEnd = Math.min(total - 1, index + visibleCount + buffer);
+
+      // We need to render ayahs to get accurate measurements.
+      // Render a range that includes the target ayah.
       this.renderVisibleAyahs(start, end);
 
-      // Scroll to the ayah
-      this._virtualContainer.scrollTo({
-        top: offset,
-        behavior: smooth ? "smooth" : "auto",
-      });
+      // Use requestAnimationFrame to wait for layout/paint, then measure and scroll
+      requestAnimationFrame(() => {
+        // Measure the rendered ayahs
+        this.measureRenderedAyahs();
 
-      // Highlight the ayah after scroll
-      setTimeout(
-        () => {
-          this.highlightAyah(n);
-        },
-        smooth ? 300 : 50
-      );
+        // Now use DOM-based offset calculation for accuracy
+        // Find the target ayah element and get its actual position
+        const targetEl = this._virtualContent?.querySelector(
+          `[data-ayah="${n}"]`
+        );
+
+        let offset;
+        if (targetEl) {
+          // Get the transform offset of the virtual content
+          const transformMatch = this._virtualContent?.style.transform?.match(
+            /translateY\((\d+(?:\.\d+)?)px\)/
+          );
+          const contentOffset = transformMatch
+            ? parseFloat(transformMatch[1])
+            : 0;
+
+          // Calculate actual offset: content transform offset + element's position within content
+          offset = contentOffset + targetEl.offsetTop;
+        } else {
+          // Fallback to calculated offset
+          offset = this.getAyahOffset(index);
+        }
+
+        // Prevent scroll handler from overwriting the active ayah mid smooth-scroll.
+        const now =
+          typeof performance !== "undefined" && performance.now
+            ? performance.now()
+            : Date.now();
+        this._programmaticScroll = {
+          targetOffset: offset,
+          targetAyah: n,
+          startedAt: now,
+        };
+
+        // Update total height with new measurements
+        this.updateTotalHeight();
+
+        // Scroll to the ayah
+        this._virtualContainer.scrollTo({
+          top: offset,
+          behavior: smooth ? "smooth" : "auto",
+        });
+
+        // Highlight the ayah after scroll
+        setTimeout(
+          () => {
+            this.highlightAyah(n);
+          },
+          smooth ? 300 : 50
+        );
+      });
     }
 
     if (persist) {
@@ -1236,7 +1288,52 @@ class PocketQuranManager {
       : "";
     tr.textContent = this.stripHtmlToText(rawTranslation || "");
 
+    // Play button for recitation
+    const isThisAyahPlaying =
+      this._isPlaying &&
+      this._playingAyah?.surah === surah &&
+      this._playingAyah?.ayah === ayahNumber;
+
+    const playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = `pq-ayah-play-btn ${
+      isThisAyahPlaying ? "playing" : ""
+    }`;
+    playBtn.title = isThisAyahPlaying ? "Pause" : "Play recitation";
+    playBtn.innerHTML = isThisAyahPlaying
+      ? '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+    playBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.togglePlayPause(surah, ayahNumber);
+    });
+
+    // Autoplay button
+    const autoplayBtn = document.createElement("button");
+    autoplayBtn.type = "button";
+    autoplayBtn.className = `pq-ayah-autoplay-btn ${
+      this._isAutoplay &&
+      this._playingAyah?.surah === surah &&
+      this._playingAyah?.ayah === ayahNumber
+        ? "active"
+        : ""
+    }`;
+    autoplayBtn.title = "Autoplay from this ayah";
+    autoplayBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>';
+    autoplayBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Start autoplay from this ayah
+      this._isAutoplay = true;
+      this.persistPocketQuranSettings({ reciterAutoplay: true });
+      this.playAyah(surah, ayahNumber);
+    });
+
     ayahEl.appendChild(starBtn);
+    ayahEl.appendChild(autoplayBtn);
+    ayahEl.appendChild(playBtn);
     ayahEl.appendChild(badge);
     ayahEl.appendChild(ar);
     ayahEl.appendChild(tr);
@@ -1820,6 +1917,658 @@ class PocketQuranManager {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // RECITATION SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Initialize the recitation system.
+   */
+  initRecitationSystem() {
+    // Load saved settings
+    const pq = this.storage.getSettings()?.pocketQuran || {};
+    this._activeReciterId = pq.reciterId || 7; // Default: Mishary Rashid Alafasy
+    this._volume = this.clampNumber(pq.reciterVolume, 0, 1, 1);
+    this._isLooping = pq.reciterLoop || false;
+    this._isAutoplay = pq.reciterAutoplay || false;
+
+    // Create audio element
+    this._audioElement = new Audio();
+    this._audioElement.volume = this._volume;
+    this._audioElement.preload = "auto";
+
+    // Audio event listeners
+    this._audioElement.addEventListener("ended", () => {
+      this.handleAudioEnded();
+    });
+
+    this._audioElement.addEventListener("error", (e) => {
+      console.error("PocketQuran: Audio error", e);
+      this._isPlaying = false;
+      this.updatePlaybackUI();
+    });
+
+    this._audioElement.addEventListener("playing", () => {
+      this._isPlaying = true;
+      this.updatePlaybackUI();
+    });
+
+    this._audioElement.addEventListener("pause", () => {
+      this._isPlaying = false;
+      this.updatePlaybackUI();
+    });
+
+    // Load reciters list
+    this.loadReciters();
+
+    // Create reciter modal
+    this.createReciterModal();
+  }
+
+  /**
+   * Load all available reciters from the API.
+   */
+  async loadReciters() {
+    try {
+      const cached = this.storage.get("pocketQuran_reciters_cache", null);
+      const cachedAt = this.storage.get("pocketQuran_reciters_cache_at", 0);
+      const freshEnough =
+        Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+
+      if (cached && Array.isArray(cached) && freshEnough) {
+        this._reciters = cached;
+        return;
+      }
+
+      const url = `${PocketQuranManager.API_BASE}/resources/recitations`;
+      const data = await this.fetchJson(url, { timeoutMs: 15000 });
+      const recitations = Array.isArray(data?.recitations)
+        ? data.recitations
+        : [];
+
+      this._reciters = recitations
+        .map((r) => ({
+          id: r.id,
+          name: r.reciter_name || r.translated_name?.name || `Reciter ${r.id}`,
+          style: r.style || null,
+        }))
+        .filter((r) => Number.isFinite(r.id));
+
+      this.storage.set("pocketQuran_reciters_cache", this._reciters);
+      this.storage.set("pocketQuran_reciters_cache_at", Date.now());
+    } catch (e) {
+      console.error("PocketQuran: failed to load reciters", e);
+      // Provide a fallback list of common reciters
+      this._reciters = [
+        { id: 7, name: "Mishary Rashid Alafasy", style: null },
+        { id: 1, name: "Abdul Basit Abdul Samad", style: "Murattal" },
+        { id: 2, name: "Abdul Basit Abdul Samad", style: "Mujawwad" },
+        { id: 3, name: "Abdur-Rahman as-Sudais", style: null },
+        { id: 4, name: "Abu Bakr al-Shatri", style: null },
+        { id: 5, name: "Hani ar-Rifai", style: null },
+        { id: 6, name: "Mahmoud Khalil Al-Husary", style: null },
+      ];
+    }
+  }
+
+  /**
+   * Get the audio URL for a specific ayah.
+   */
+  getAudioUrl(surah, ayah) {
+    // Format: https://api.quran.com/api/v4/recitations/{reciter_id}/by_ayah/{surah}:{ayah}
+    // This returns audio_file info, but we can use verses.media CDN directly
+    // CDN pattern: https://verses.quran.com/{reciter_relative_path}
+    // Or use: https://api.quran.com/api/v4/chapter_recitations/{reciter_id}/{chapter_id}
+    // For per-ayah audio, we use: /recitations/{reciter_id}/by_ayah/{verse_key}
+
+    return `${PocketQuranManager.API_BASE}/recitations/${this._activeReciterId}/by_ayah/${surah}:${ayah}`;
+  }
+
+  /**
+   * Play recitation for a specific ayah.
+   */
+  async playAyah(surah, ayah) {
+    if (!this._audioElement) return;
+
+    // If same ayah is playing, just resume if paused
+    if (
+      this._playingAyah?.surah === surah &&
+      this._playingAyah?.ayah === ayah &&
+      this._audioElement.paused
+    ) {
+      this._audioElement.play();
+      return;
+    }
+
+    try {
+      // Fetch the audio file URL from the API
+      const url = this.getAudioUrl(surah, ayah);
+      const data = await this.fetchJson(url, { timeoutMs: 10000 });
+
+      // The API returns audio_files array with url property
+      const audioFiles = data?.audio_files;
+      let audioUrl = null;
+
+      if (Array.isArray(audioFiles) && audioFiles.length > 0) {
+        // Get the audio URL from the first audio file
+        audioUrl = audioFiles[0]?.url;
+      } else if (data?.audio_file?.url) {
+        // Fallback for different API response format
+        audioUrl = data.audio_file.url;
+      } else if (data?.audio_file?.audio_url) {
+        // Another possible format
+        audioUrl = data.audio_file.audio_url;
+      }
+
+      if (!audioUrl) {
+        console.error(
+          "PocketQuran: No audio file found for ayah",
+          surah,
+          ayah,
+          data
+        );
+        return;
+      }
+
+      // Set up playback
+      this._playingAyah = { surah, ayah };
+      this._audioElement.src = audioUrl;
+      this._audioElement.volume = this._volume;
+
+      await this._audioElement.play();
+
+      // Show header controls
+      this.showHeaderControls();
+      this.updatePlaybackUI();
+
+      // Scroll to the playing ayah if not visible
+      if (this._activeSurah === surah && this._activeAyah !== ayah) {
+        this.scrollToAyah(ayah, { persist: false, smooth: true });
+      }
+    } catch (e) {
+      console.error("PocketQuran: Failed to play ayah", e);
+      this._isPlaying = false;
+      this.updatePlaybackUI();
+    }
+  }
+
+  /**
+   * Toggle play/pause for the current or specified ayah.
+   */
+  togglePlayPause(surah, ayah) {
+    if (!this._audioElement) return;
+
+    if (
+      this._isPlaying &&
+      this._playingAyah?.surah === surah &&
+      this._playingAyah?.ayah === ayah
+    ) {
+      this._audioElement.pause();
+    } else {
+      this.playAyah(surah, ayah);
+    }
+  }
+
+  /**
+   * Stop playback completely.
+   */
+  stopPlayback() {
+    if (!this._audioElement) return;
+
+    this._audioElement.pause();
+    this._audioElement.currentTime = 0;
+    this._isPlaying = false;
+    this._playingAyah = null;
+    this._isAutoplay = false;
+
+    this.hideHeaderControls();
+    this.updatePlaybackUI();
+  }
+
+  /**
+   * Handle audio ended event.
+   */
+  handleAudioEnded() {
+    if (this._isLooping && this._playingAyah) {
+      // Loop: replay the same ayah
+      this._audioElement.currentTime = 0;
+      this._audioElement.play();
+      return;
+    }
+
+    if (this._isAutoplay && this._playingAyah) {
+      // Autoplay: move to next ayah
+      const { surah, ayah } = this._playingAyah;
+      const max = this.getActiveSurahAyahCount() || 286;
+
+      if (ayah < max) {
+        // Play next ayah
+        this.playAyah(surah, ayah + 1);
+      } else {
+        // End of surah
+        this.stopPlayback();
+      }
+      return;
+    }
+
+    // Normal end
+    this._isPlaying = false;
+    this._playingAyah = null;
+    this.hideHeaderControls();
+    this.updatePlaybackUI();
+  }
+
+  /**
+   * Go to previous ayah in playback.
+   */
+  playPreviousAyah() {
+    if (!this._playingAyah) return;
+
+    const { surah, ayah } = this._playingAyah;
+    if (ayah > 1) {
+      this.playAyah(surah, ayah - 1);
+    }
+  }
+
+  /**
+   * Go to next ayah in playback.
+   */
+  playNextAyah() {
+    if (!this._playingAyah) return;
+
+    const { surah, ayah } = this._playingAyah;
+    const max = this.getActiveSurahAyahCount() || 286;
+
+    if (ayah < max) {
+      this.playAyah(surah, ayah + 1);
+    }
+  }
+
+  /**
+   * Set volume for audio playback.
+   */
+  setVolume(value) {
+    this._volume = this.clampNumber(value, 0, 1, 1);
+    if (this._audioElement) {
+      this._audioElement.volume = this._volume;
+    }
+    this.persistPocketQuranSettings({ reciterVolume: this._volume });
+  }
+
+  /**
+   * Toggle loop mode.
+   */
+  toggleLoop() {
+    this._isLooping = !this._isLooping;
+    this.persistPocketQuranSettings({ reciterLoop: this._isLooping });
+    this.updatePlaybackUI();
+  }
+
+  /**
+   * Toggle autoplay mode.
+   */
+  toggleAutoplay() {
+    this._isAutoplay = !this._isAutoplay;
+    this.persistPocketQuranSettings({ reciterAutoplay: this._isAutoplay });
+    this.updatePlaybackUI();
+
+    // If turning on autoplay and not currently playing, start playback
+    if (this._isAutoplay && !this._isPlaying) {
+      this.playAyah(this._activeSurah, this._activeAyah);
+    }
+  }
+
+  /**
+   * Select a reciter.
+   */
+  selectReciter(reciterId) {
+    const id = parseInt(reciterId, 10);
+    if (!Number.isFinite(id)) return;
+
+    this._activeReciterId = id;
+    this.persistPocketQuranSettings({ reciterId: id });
+
+    // If currently playing, restart with new reciter
+    if (this._isPlaying && this._playingAyah) {
+      const { surah, ayah } = this._playingAyah;
+      this._audioElement.pause();
+      this.playAyah(surah, ayah);
+    }
+
+    this.closeReciterModal();
+    this.updatePlaybackUI();
+  }
+
+  /**
+   * Create the header controls box.
+   */
+  showHeaderControls() {
+    const header = this.card?.querySelector(".pocket-quran-header");
+    if (!header) return;
+
+    // Remove existing controls
+    this.hideHeaderControls();
+
+    const controlsBox = document.createElement("div");
+    controlsBox.className = "pq-recitation-controls";
+    controlsBox.innerHTML = `
+      <div class="pq-recitation-info">
+        <span class="pq-recitation-ayah">Ayah ${
+          this._playingAyah?.ayah || 1
+        }</span>
+        <span class="pq-recitation-reciter">${this.getActiveReciterName()}</span>
+      </div>
+      <div class="pq-recitation-buttons">
+        <button type="button" class="pq-recitation-btn pq-prev-btn" title="Previous ayah">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-play-pause-btn" title="Play/Pause">
+          ${
+            this._isPlaying
+              ? '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+              : '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>'
+          }
+        </button>
+        <button type="button" class="pq-recitation-btn pq-next-btn" title="Next ayah">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-stop-btn" title="Stop">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>
+        </button>
+      </div>
+      <div class="pq-recitation-options">
+        <div class="pq-volume-control">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <input type="range" class="pq-volume-slider" min="0" max="100" value="${Math.round(
+            this._volume * 100
+          )}" />
+        </div>
+        <button type="button" class="pq-recitation-btn pq-loop-btn ${
+          this._isLooping ? "active" : ""
+        }" title="Loop current ayah">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-autoplay-btn ${
+          this._isAutoplay ? "active" : ""
+        }" title="Autoplay through surah">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-reciter-btn" title="Change reciter">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+        </button>
+      </div>
+    `;
+
+    // Insert after the title
+    const title = header.querySelector(".card-title");
+    if (title) {
+      title.after(controlsBox);
+    } else {
+      header.appendChild(controlsBox);
+    }
+
+    this._headerControlsBox = controlsBox;
+
+    // Add event listeners
+    controlsBox
+      .querySelector(".pq-prev-btn")
+      .addEventListener("click", () => this.playPreviousAyah());
+    controlsBox
+      .querySelector(".pq-next-btn")
+      .addEventListener("click", () => this.playNextAyah());
+    controlsBox
+      .querySelector(".pq-play-pause-btn")
+      .addEventListener("click", () => {
+        if (this._playingAyah) {
+          this.togglePlayPause(this._playingAyah.surah, this._playingAyah.ayah);
+        }
+      });
+    controlsBox
+      .querySelector(".pq-stop-btn")
+      .addEventListener("click", () => this.stopPlayback());
+    controlsBox
+      .querySelector(".pq-loop-btn")
+      .addEventListener("click", () => this.toggleLoop());
+    controlsBox
+      .querySelector(".pq-autoplay-btn")
+      .addEventListener("click", () => this.toggleAutoplay());
+    controlsBox
+      .querySelector(".pq-reciter-btn")
+      .addEventListener("click", () => this.openReciterModal());
+
+    const volumeSlider = controlsBox.querySelector(".pq-volume-slider");
+    volumeSlider.addEventListener("input", (e) => {
+      this.setVolume(parseInt(e.target.value, 10) / 100);
+    });
+  }
+
+  /**
+   * Hide the header controls box.
+   */
+  hideHeaderControls() {
+    if (this._headerControlsBox) {
+      this._headerControlsBox.remove();
+      this._headerControlsBox = null;
+    }
+  }
+
+  /**
+   * Update the playback UI elements.
+   */
+  updatePlaybackUI() {
+    // Update header controls
+    if (this._headerControlsBox) {
+      const playPauseBtn =
+        this._headerControlsBox.querySelector(".pq-play-pause-btn");
+      if (playPauseBtn) {
+        playPauseBtn.innerHTML = this._isPlaying
+          ? '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+          : '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+      }
+
+      const loopBtn = this._headerControlsBox.querySelector(".pq-loop-btn");
+      if (loopBtn) {
+        loopBtn.classList.toggle("active", this._isLooping);
+      }
+
+      const autoplayBtn =
+        this._headerControlsBox.querySelector(".pq-autoplay-btn");
+      if (autoplayBtn) {
+        autoplayBtn.classList.toggle("active", this._isAutoplay);
+      }
+
+      const ayahInfo = this._headerControlsBox.querySelector(
+        ".pq-recitation-ayah"
+      );
+      if (ayahInfo && this._playingAyah) {
+        ayahInfo.textContent = `Ayah ${this._playingAyah.ayah}`;
+      }
+    }
+
+    // Update ayah play buttons
+    this.updateAyahPlayButtons();
+  }
+
+  /**
+   * Update play buttons on rendered ayahs.
+   */
+  updateAyahPlayButtons() {
+    if (!this._virtualContent) return;
+
+    const playButtons =
+      this._virtualContent.querySelectorAll(".pq-ayah-play-btn");
+    playButtons.forEach((btn) => {
+      const ayahEl = btn.closest(".pocket-quran-ayah");
+      if (!ayahEl) return;
+
+      const ayahNumber = parseInt(ayahEl.dataset.ayah, 10);
+      const isThisAyahPlaying =
+        this._isPlaying &&
+        this._playingAyah?.surah === this._activeSurah &&
+        this._playingAyah?.ayah === ayahNumber;
+
+      btn.classList.toggle("playing", isThisAyahPlaying);
+      btn.innerHTML = isThisAyahPlaying
+        ? '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+      btn.title = isThisAyahPlaying ? "Pause" : "Play recitation";
+    });
+  }
+
+  /**
+   * Get the active reciter's name.
+   */
+  getActiveReciterName() {
+    const reciter = this._reciters.find((r) => r.id === this._activeReciterId);
+    if (reciter) {
+      return reciter.style
+        ? `${reciter.name} (${reciter.style})`
+        : reciter.name;
+    }
+    return "Unknown Reciter";
+  }
+
+  /**
+   * Create the reciter selection modal.
+   */
+  createReciterModal() {
+    if (document.getElementById("pqReciterModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "pqReciterModal";
+    modal.className = "pq-bookmark-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-translation-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">🎙️ Select Reciter</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="pq-bookmark-search">
+            <input type="text" class="pq-bookmark-search-input pq-reciter-search" placeholder="Search reciters..." />
+          </div>
+          <div class="pq-reciter-list"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    this._reciterModal = modal;
+
+    // Close button
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => {
+        this.closeReciterModal();
+      });
+
+    // Click outside to close
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closeReciterModal();
+    });
+
+    // Search input
+    const searchInput = modal.querySelector(".pq-reciter-search");
+    searchInput.addEventListener("input", () => {
+      this.renderReciterList(searchInput.value);
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.closeReciterModal();
+      }
+    });
+  }
+
+  /**
+   * Open the reciter selection modal.
+   */
+  openReciterModal() {
+    const modal = document.getElementById("pqReciterModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".pq-reciter-search");
+    if (searchInput) searchInput.value = "";
+
+    this.renderReciterList("");
+    modal.classList.add("active");
+
+    // Focus search input
+    setTimeout(() => {
+      if (searchInput) searchInput.focus();
+    }, 100);
+  }
+
+  /**
+   * Close the reciter selection modal.
+   */
+  closeReciterModal() {
+    const modal = document.getElementById("pqReciterModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  /**
+   * Render the reciter list in the modal.
+   */
+  renderReciterList(query = "") {
+    const modal = document.getElementById("pqReciterModal");
+    if (!modal) return;
+
+    const container = modal.querySelector(".pq-reciter-list");
+    if (!container) return;
+
+    const q = String(query || "")
+      .toLowerCase()
+      .trim();
+
+    // Filter reciters by query
+    const filtered = this._reciters.filter((r) => {
+      if (!q) return true;
+      const name = String(r.name || "").toLowerCase();
+      const style = String(r.style || "").toLowerCase();
+      return name.includes(q) || style.includes(q);
+    });
+
+    // Build HTML
+    let html = "";
+    for (const r of filtered) {
+      const isActive = r.id === this._activeReciterId;
+      const displayName = r.style ? `${r.name} (${r.style})` : r.name;
+      html += `<button type="button" class="pq-translation-item ${
+        isActive ? "active" : ""
+      }" data-reciter-id="${r.id}">
+        <span class="pq-translation-name">${this.escapeHtml(displayName)}</span>
+        ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+      </button>`;
+    }
+
+    if (!html) {
+      html = `<div class="pq-translation-empty">No reciters found for "${this.escapeHtml(
+        query
+      )}"</div>`;
+    }
+
+    container.innerHTML = html;
+
+    // Add click handlers
+    container.querySelectorAll(".pq-translation-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = parseInt(btn.dataset.reciterId, 10);
+        if (Number.isFinite(id)) {
+          this.selectReciter(id);
+        }
+      });
+    });
+
+    // Scroll active reciter into view
+    const activeItem = container.querySelector(".pq-translation-item.active");
+    if (activeItem && !q) {
+      setTimeout(() => {
+        activeItem.scrollIntoView({ block: "center", behavior: "auto" });
+      }, 50);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // RENDERING UTILITIES
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1870,9 +2619,18 @@ class PocketQuranManager {
     try {
       const div = document.createElement("div");
       div.innerHTML = String(html || "");
+
+      // Remove footnote elements (usually <sup> tags with footnote markers)
+      // quran.com API uses <sup foot_note="..."> for footnotes
+      const footnotes = div.querySelectorAll(
+        "sup[foot_note], sup.foot_note, sup"
+      );
+      footnotes.forEach((fn) => fn.remove());
+
       return (div.textContent || "").replace(/\s+/g, " ").trim();
     } catch (e) {
       return String(html || "")
+        .replace(/<sup[^>]*>.*?<\/sup>/gi, "") // Remove sup tags and their content
         .replace(/<[^>]*>/g, " ")
         .replace(/\s+/g, " ")
         .trim();
