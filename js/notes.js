@@ -26,6 +26,8 @@ class NotesManager {
 
     this._previewRaf = null;
 
+    this._editorSyncTimer = null;
+
     // Markdown/raw toggle (raw = textarea editing, markdown = rendered preview)
     this.isMarkdownPreview = false;
 
@@ -78,7 +80,7 @@ class NotesManager {
 
     this.isMarkdownPreview = !!this.storage.get(
       NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
-      false
+      true
     );
 
     this.configureMarkdownParser();
@@ -231,27 +233,28 @@ class NotesManager {
         return;
       }
 
-      // Ensure raw editor has focus
+      // Markdown mode is now WYSIWYG (editable rendered view). Raw mode is view-only.
+      if (!this.isMarkdownPreview) return;
+
       try {
-        this.rawEditor.focus();
+        this.editor.focus();
       } catch (e) {}
 
       if (block) {
-        this.applyMarkdownBlock(block);
+        this.execFormatBlock(block);
       } else if (cmd === "checklist") {
-        this.applyMarkdownChecklist();
+        this.toggleChecklist();
       } else {
-        this.applyMarkdownCommand(cmd);
+        this.execCommand(cmd);
       }
 
-      // Keep preview responsive while typing/using tools.
-      if (this.isMarkdownPreview) this.queuePreviewRender();
+      // Persist post-command.
       this.queueSave();
     });
 
-    // Raw editor changes (markdown source)
+    // Raw editor is view-only (no editing).
     this.rawEditor.addEventListener("input", () => {
-      if (this.isMarkdownPreview) this.queuePreviewRender();
+      // If something programmatically changes it, still persist.
       this.queueSave();
     });
 
@@ -281,6 +284,49 @@ class NotesManager {
         } else {
           e.preventDefault();
         }
+      } catch (err) {
+        // ignore
+      }
+    });
+
+    // WYSIWYG editing in markdown mode.
+    this.editor.addEventListener("input", () => {
+      if (!this.isMarkdownPreview) return;
+      this.queueSave();
+    });
+
+    this.editor.addEventListener("blur", () => {
+      this.saveNow({ renderList: false });
+      // Sanitize in-place on blur to reduce risk from pasted HTML.
+      this.sanitizeEditorInPlace();
+    });
+
+    // Paste handling: sanitize HTML fragments.
+    this.editor.addEventListener("paste", (e) => {
+      if (!this.isMarkdownPreview) return;
+      try {
+        if (!e.clipboardData) return;
+        e.preventDefault();
+
+        const html = e.clipboardData.getData("text/html") || "";
+        const text = e.clipboardData.getData("text/plain") || "";
+
+        if (html.trim()) {
+          const clean = this.normalizeMarkdownHtmlForEditor(
+            this.sanitizeHtml(String(html))
+          );
+          try {
+            document.execCommand("insertHTML", false, clean);
+          } catch (err) {
+            const safeText = this.escapeHtml(text).replace(/\n/g, "<br>");
+            document.execCommand("insertHTML", false, safeText);
+          }
+        } else {
+          const safeText = this.escapeHtml(text).replace(/\n/g, "<br>");
+          document.execCommand("insertHTML", false, safeText);
+        }
+
+        this.queueSave();
       } catch (err) {
         // ignore
       }
@@ -367,8 +413,27 @@ class NotesManager {
     const note = this.getActiveNote();
     if (note) {
       const nextTitle = String(this.titleInput.value || "").slice(0, 120);
-      const nextMd = String(this.rawEditor.value || "");
-      const nextHtml = this.renderMarkdown(nextMd);
+      let nextMd = "";
+      let nextHtml = "";
+
+      if (this.isMarkdownPreview) {
+        // Markdown mode: editable rendered view is the source-of-truth.
+        const rawHtml = String(this.editor.innerHTML || "");
+        const sanitized = this.normalizeMarkdownHtmlForEditor(
+          this.sanitizeHtml(rawHtml)
+        );
+        nextHtml = sanitized;
+        nextMd = this.htmlToMarkdown(sanitized);
+
+        // Keep raw viewer in sync.
+        if (String(this.rawEditor.value || "") !== nextMd) {
+          this.rawEditor.value = nextMd;
+        }
+      } else {
+        // Raw mode is view-only; use whatever markdown we have.
+        nextMd = String(this.rawEditor.value || note.md || "");
+        nextHtml = this.renderMarkdown(nextMd);
+      }
 
       const changed =
         nextTitle !== String(note.title || "") ||
@@ -390,10 +455,7 @@ class NotesManager {
     this.save();
     if (shouldRenderList) this.renderList();
 
-    // Keep preview in sync as you type.
-    if (this.isMarkdownPreview) {
-      this.renderActiveMarkdownPreview();
-    }
+    // No live re-render: in markdown mode the editor itself is authoritative.
   }
 
   queueSave() {
@@ -478,8 +540,8 @@ class NotesManager {
 
     if (this.deleteBtn) this.deleteBtn.disabled = false;
 
-    if (!this.isMarkdownPreview) {
-      this.placeCaretAtEndTextArea(this.rawEditor);
+    if (this.isMarkdownPreview) {
+      this.placeCaretAtEnd(this.editor);
     }
 
     this.currentPage = this.getPageForNoteId(id);
@@ -495,8 +557,23 @@ class NotesManager {
     if (!current) return false;
 
     const nextTitle = String(this.titleInput.value || "").slice(0, 120);
-    const nextMd = String(this.rawEditor.value || "");
-    const nextHtml = this.renderMarkdown(nextMd);
+    let nextMd = "";
+    let nextHtml = "";
+
+    if (this.isMarkdownPreview) {
+      const rawHtml = String(this.editor.innerHTML || "");
+      const sanitized = this.normalizeMarkdownHtmlForEditor(
+        this.sanitizeHtml(rawHtml)
+      );
+      nextHtml = sanitized;
+      nextMd = this.htmlToMarkdown(sanitized);
+      if (String(this.rawEditor.value || "") !== nextMd) {
+        this.rawEditor.value = nextMd;
+      }
+    } else {
+      nextMd = String(this.rawEditor.value || "");
+      nextHtml = this.renderMarkdown(nextMd);
+    }
 
     const changed =
       nextTitle !== String(current.title || "") ||
@@ -525,6 +602,9 @@ class NotesManager {
   }
 
   toggleMarkdownPreview() {
+    // Persist before switching modes so we don't lose edits.
+    this.persistActiveNote({ updateTimestampIfChanged: true });
+
     this.isMarkdownPreview = !this.isMarkdownPreview;
     this.storage.set(
       NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
@@ -535,14 +615,21 @@ class NotesManager {
   }
 
   applyEditorMode() {
-    // Raw (textarea) is always editable; Markdown preview is an optional live view.
+    // Markdown mode = WYSIWYG editor; Raw mode = read-only markdown viewer.
     const isPreview = !!this.isMarkdownPreview;
 
-    this.rawEditor.classList.toggle("hidden", false);
+    this.rawEditor.classList.toggle("hidden", isPreview);
     this.editor.classList.toggle("hidden", !isPreview);
 
+    // Raw is view-only.
+    try {
+      this.rawEditor.readOnly = true;
+      this.rawEditor.setAttribute("aria-readonly", "true");
+    } catch (e) {}
+
+    // Markdown mode is editable.
     this.editor.classList.toggle("notes-md-preview", isPreview);
-    this.editor.setAttribute("contenteditable", "false");
+    this.editor.setAttribute("contenteditable", isPreview ? "true" : "false");
 
     // Keep toolbar usable in markdown mode; just highlight the MD button.
     try {
@@ -553,6 +640,9 @@ class NotesManager {
           b.classList.toggle("active", isPreview);
           return;
         }
+
+        // Only the markdown (WYSIWYG) mode is editable.
+        b.disabled = !isPreview;
       });
     } catch (e) {
       // ignore
@@ -562,9 +652,17 @@ class NotesManager {
   renderActiveMarkdownPreview() {
     const note = this.getActiveNote();
     if (!note) return;
-    // Use the textarea as source-of-truth for live preview.
-    const html = this.renderMarkdown(String(this.rawEditor.value || ""));
-    this.editor.innerHTML = html;
+
+    // Keep raw viewer synced from stored markdown.
+    this.rawEditor.value = String(note.md || this.rawEditor.value || "");
+
+    // Markdown mode shows rendered content (editable).
+    const html = this.normalizeMarkdownHtmlForEditor(
+      this.renderMarkdown(String(this.rawEditor.value || ""))
+    );
+    if (this.isMarkdownPreview) {
+      this.editor.innerHTML = html;
+    }
   }
 
   queuePreviewRender() {
@@ -574,6 +672,82 @@ class NotesManager {
       if (!this.isMarkdownPreview) return;
       this.renderActiveMarkdownPreview();
     });
+  }
+
+  sanitizeEditorInPlace() {
+    if (!this.isMarkdownPreview) return;
+    try {
+      const offsets = this.getSelectionOffsets(this.editor);
+      const cleaned = this.normalizeMarkdownHtmlForEditor(
+        this.sanitizeHtml(String(this.editor.innerHTML || ""))
+      );
+      if (String(this.editor.innerHTML || "") !== cleaned) {
+        this.editor.innerHTML = cleaned;
+        this.restoreSelectionOffsets(this.editor, offsets);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  normalizeMarkdownHtmlForEditor(html) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html || "";
+
+    // Convert markdown task lists (marked renders them as <input type=checkbox>)
+    // into our checklist representation (UL.notes-checklist + LI[data-checked])
+    // so htmlToMarkdown can round-trip accurately.
+    const lists = new Set();
+    wrapper.querySelectorAll('li > input[type="checkbox"]').forEach((input) => {
+      const li = input.closest("li");
+      if (!li) return;
+      const list = li.closest("ul,ol");
+      if (list) lists.add(list);
+
+      const checked =
+        input.hasAttribute("checked") ||
+        String(input.getAttribute("aria-checked") || "") === "true" ||
+        input.checked === true;
+
+      li.setAttribute("data-checked", checked ? "true" : "false");
+
+      try {
+        input.remove();
+      } catch (e) {
+        // ignore
+      }
+
+      // Trim any leading whitespace left behind.
+      if (li.firstChild && li.firstChild.nodeType === Node.TEXT_NODE) {
+        li.firstChild.nodeValue = (li.firstChild.nodeValue || "").replace(
+          /^\s+/,
+          ""
+        );
+      }
+    });
+
+    lists.forEach((list) => {
+      try {
+        list.classList.add("notes-checklist");
+        list.querySelectorAll("li").forEach((li) => {
+          if (!li.getAttribute("data-checked"))
+            li.setAttribute("data-checked", "false");
+        });
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    // Remove any remaining checkbox inputs so the editor stays non-interactive.
+    wrapper.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      try {
+        input.remove();
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    return wrapper.innerHTML;
   }
 
   renderMarkdown(markdown) {
@@ -825,6 +999,11 @@ class NotesManager {
       const tag = el.tagName;
 
       if (tag === "BR") return "\n";
+      if (tag === "CODE") {
+        const text = Array.from(el.childNodes).map(toInline).join("");
+        const safe = String(text || "").replace(/`/g, "\\`");
+        return safe ? `\`${safe}\`` : "";
+      }
       if (tag === "A") {
         const href = (el.getAttribute("href") || "").trim();
         const text = Array.from(el.childNodes).map(toInline).join("") || href;
@@ -836,8 +1015,15 @@ class NotesManager {
         return `*${Array.from(el.childNodes).map(toInline).join("")}*`;
       if (tag === "U")
         return `<u>${Array.from(el.childNodes).map(toInline).join("")}</u>`;
-      if (tag === "S" || tag === "STRIKE")
+      if (tag === "S" || tag === "STRIKE" || tag === "DEL")
         return `~~${Array.from(el.childNodes).map(toInline).join("")}~~`;
+
+      if (tag === "IMG") {
+        const src = (el.getAttribute("src") || "").trim();
+        const alt = (el.getAttribute("alt") || "").trim();
+        if (!src) return "";
+        return `![${alt}](${src})`;
+      }
 
       return Array.from(el.childNodes).map(toInline).join("");
     };
@@ -850,6 +1036,28 @@ class NotesManager {
 
       const el = node;
       const tag = el.tagName;
+
+      if (tag === "HR") return "---\n\n";
+
+      if (tag === "PRE") {
+        const code = el.querySelector(":scope > code") || el;
+        const txt = String(code.textContent || "").replace(/\s+$/g, "");
+        if (!txt) return "";
+        return `\`\`\`\n${txt}\n\`\`\`\n\n`;
+      }
+
+      if (tag === "BLOCKQUOTE") {
+        const inner = Array.from(el.childNodes)
+          .map((child) => toBlock(child))
+          .join("")
+          .trim();
+        if (!inner) return "";
+        const lines = inner.split("\n");
+        const quoted = lines
+          .map((line) => (line.trim().length ? `> ${line}` : ">"))
+          .join("\n");
+        return `${quoted}\n\n`;
+      }
 
       if (tag === "P" || tag === "DIV") {
         const txt = Array.from(el.childNodes).map(toInline).join("").trim();
@@ -894,6 +1102,48 @@ class NotesManager {
         });
 
         return lines.length ? `${lines.join("\n")}\n\n` : "";
+      }
+
+      if (tag === "TABLE") {
+        const rows = Array.from(el.querySelectorAll("tr"));
+        if (!rows.length) return "";
+
+        const grid = rows.map((tr) =>
+          Array.from(tr.querySelectorAll("th,td")).map((cell) =>
+            String(cell.textContent || "")
+              .replace(/\s+/g, " ")
+              .trim()
+          )
+        );
+
+        const headerRow = grid.findIndex((r, i) =>
+          rows[i].querySelector("th")
+        );
+
+        const mkRow = (r) => `| ${r.map((c) => c || " ").join(" | ")} |`;
+        const maxCols = Math.max(1, ...grid.map((r) => r.length));
+
+        const normalized = grid.map((r) => {
+          const next = r.slice(0);
+          while (next.length < maxCols) next.push(" ");
+          return next;
+        });
+
+        let out = "";
+        if (headerRow >= 0) {
+          out += `${mkRow(normalized[headerRow])}\n`;
+          out += `| ${new Array(maxCols).fill("---").join(" | ")} |\n`;
+          normalized.forEach((r, i) => {
+            if (i === headerRow) return;
+            out += `${mkRow(r)}\n`;
+          });
+        } else {
+          normalized.forEach((r) => {
+            out += `${mkRow(r)}\n`;
+          });
+        }
+
+        return `${out.trim()}\n\n`;
       }
 
       // Fallback: just inline text

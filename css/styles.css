@@ -917,8 +917,12 @@ textarea.notes-editor {
   color: var(--text-primary);
 }
 
-.notes-editor.notes-md-preview {
+.notes-editor.notes-md-preview[contenteditable="false"] {
   cursor: default;
+}
+
+.notes-editor.notes-md-preview[contenteditable="true"] {
+  cursor: text;
 }
 
 .notes-editor:focus {
