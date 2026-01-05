@@ -1095,18 +1095,18 @@ class FloatingModeManager {
       // return from floating.
       this.notifyLayoutChanged();
 
-      // Safety fallback: if grid layout is active and we couldn't get the card
-      // back into a row wrapper, a reload guarantees correct placement.
+      // When switching from Floating -> Grid layout, force a reload so the
+      // GridLayoutManager rehydrates the DOM deterministically.
+      // IMPORTANT: only do this when the user has disabled floating (desired=false).
+      // Auto-suspensions (viewport/space constraints) must not trigger reload loops.
       try {
-        if (gridLayoutActive) {
-          const inRow = !!card.closest?.(".grid-flex-row");
-          if (!inRow) {
-            window.setTimeout(() => {
-              try {
-                window.location.reload();
-              } catch (e) {}
-            }, 50);
-          }
+        const desiredStillFloating = this.isEnabledDesired(key);
+        if (gridLayoutActive && !desiredStillFloating) {
+          window.setTimeout(() => {
+            try {
+              window.location.reload();
+            } catch (e) {}
+          }, 50);
         }
       } catch (e) {}
     };
