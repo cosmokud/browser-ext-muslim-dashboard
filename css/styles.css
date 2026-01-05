@@ -8683,53 +8683,25 @@ body.sticky-note-resizing {
   max-width: 100%;
 }
 .pq-recitation-close-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.02),
-      rgba(255, 255, 255, 0.04)
-    ),
-    var(--glass-bg);
-  color: var(--text-primary);
+  /* inherit base button visuals from .pq-recitation-btn (and .pq-stop-btn when present) */
+  position: relative;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: transform var(--transition-fast),
-    box-shadow var(--transition-fast), background var(--transition-fast),
-    border-color var(--transition-fast);
-  position: relative;
-  box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background: inherit;
+  border: inherit;
+  color: inherit;
+  transition: inherit;
 }
 
-.pq-recitation-close-btn span,
-.pq-recitation-close-btn svg {
-  display: block;
-  width: 14px;
-  height: 14px;
-}
-
+.pq-recitation-close-btn svg,
 .pq-recitation-close-btn span {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--text-muted);
-  transition: color var(--transition-fast);
-}
-
-.pq-recitation-close-btn svg {
-  width: 14px;
-  height: 14px;
+  display: block;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
-  color: var(--text-muted);
-  transition: color var(--transition-fast), transform var(--transition-fast);
+  color: inherit;
 }
 
 .pq-recitation-close-btn::before {
@@ -8740,36 +8712,9 @@ body.sticky-note-resizing {
   transform: translateY(-50%);
   width: 1px;
   height: 58%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.06),
-    rgba(255, 255, 255, 0.02)
-  );
+  background: var(--glass-border);
   opacity: 0.9;
   border-radius: var(--radius-full);
-}
-
-.pq-recitation-close-btn:hover {
-  transform: translateY(-2px) scale(1.04);
-  background: linear-gradient(
-      180deg,
-      rgba(255, 107, 107, 0.1),
-      rgba(255, 107, 107, 0.06)
-    ),
-    var(--glass-bg);
-  border-color: rgba(255, 107, 107, 0.7);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
-}
-
-.pq-recitation-close-btn:hover span,
-.pq-recitation-close-btn:hover svg {
-  color: #ff6b6b;
-}
-
-.pq-recitation-close-btn:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .pq-recitation-close-btn:focus {
