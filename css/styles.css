@@ -7896,10 +7896,9 @@ body.sticky-note-resizing {
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   transition: transform var(--transition-fast),
-    background var(--transition-fast),
-    border-color 0.22s ease;
+    background var(--transition-fast), border-color 0.22s ease;
   will-change: transform, background, border-color;
-} 
+}
 
 .pq-ayah-controls-stack {
   position: absolute;
