@@ -7896,8 +7896,10 @@ body.sticky-note-resizing {
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   transition: transform var(--transition-fast),
-    background var(--transition-fast);
-}
+    background var(--transition-fast),
+    border-color 0.22s ease;
+  will-change: transform, background, border-color;
+} 
 
 .pq-ayah-controls-stack {
   position: absolute;
@@ -7981,28 +7983,44 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-ayah.pq-highlight {
-  border-color: rgba(212, 175, 55, 0.65);
+  /* Border is animated within pqGlow so it fades in + out gracefully */
   animation: pqGlow 1.4s ease-out;
+  will-change: transform, box-shadow, border-color;
 }
 
 @keyframes pqGlow {
-  /* Start at normal size, shrink first, then return to normal.
-     Avoid overshoot (>1) to prevent clipping inside scroll containers. */
+  /* Fade border color in quickly, hold a subtle glow, then fade out */
   0% {
     transform: translateY(0) scale(1);
     box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+    border-color: rgba(212, 175, 55, 0);
   }
-  22% {
-    transform: translateY(0) scale(0.985);
-    box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+  10% {
+    transform: translateY(0) scale(0.99);
+    box-shadow: 0 6px 24px rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.9);
   }
-  60% {
+  45% {
     transform: translateY(0) scale(1);
     box-shadow: 0 18px 60px rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.65);
+  }
+  85% {
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.08);
+    border-color: rgba(212, 175, 55, 0.35);
   }
   100% {
     transform: translateY(0) scale(1);
     box-shadow: none;
+    border-color: rgba(212, 175, 55, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pocket-quran-ayah.pq-highlight {
+    animation: none !important;
+    border-color: rgba(212, 175, 55, 0.65) !important;
+    box-shadow: none !important;
   }
 }
 
