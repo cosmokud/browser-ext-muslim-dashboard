@@ -8007,6 +8007,7 @@ body.sticky-note-resizing {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-sm);
   gap: var(--spacing-md);
   /* Ensure blur settings affect the full Pocket Quran area too.
      Use a near-transparent background so Chromium reliably composites backdrop-filter. */
