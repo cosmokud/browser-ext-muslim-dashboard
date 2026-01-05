@@ -2080,10 +2080,16 @@ class PocketQuranManager {
   async prefetchNextAyahs(surah, fromAyah, count) {
     const max = this.getActiveSurahAyahCount() || 286;
     const capped = Math.max(0, Math.min(5, parseInt(count, 10) || 0));
+
+    const tasks = [];
     for (let i = 1; i <= capped; i++) {
       const nextAyah = fromAyah + i;
       if (nextAyah > max) break;
-      await this.ensurePreloadedAyahAudio(surah, nextAyah);
+      tasks.push(this.ensurePreloadedAyahAudio(surah, nextAyah));
+    }
+
+    if (tasks.length) {
+      await Promise.allSettled(tasks);
     }
   }
 
@@ -2101,6 +2107,68 @@ class PocketQuranManager {
 
     this._audioUrlCache = new Map();
     this._preloadedAudios = new Map();
+  }
+
+  tryPlayAyahImmediateFromCache(surah, ayah) {
+    if (!this._audioElement) return false;
+
+    const cacheKey = this.buildRecitationCacheKey(surah, ayah);
+
+    // Prefer a preloaded audio element for the fastest possible start.
+    const preloaded = this._preloadedAudios?.get(cacheKey);
+    if (preloaded) {
+      this._preloadedAudios.delete(cacheKey);
+      this.setActiveAudioElement(preloaded);
+
+      this._playingAyah = { surah, ayah };
+      this._audioElement.volume = this._volume;
+
+      try {
+        this._audioElement.currentTime = 0;
+      } catch (e) {}
+
+      try {
+        this._audioElement.play();
+      } catch (e) {}
+
+      if (!this._headerControlsBox) {
+        this.showHeaderControls();
+      }
+      this.updatePlaybackUI();
+
+      if (this._isAutoplay) {
+        this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
+      }
+
+      return true;
+    }
+
+    // Next best: cached URL (avoids the metadata fetch on transition).
+    const cachedUrl = this._audioUrlCache?.get(cacheKey);
+    if (cachedUrl) {
+      this._playingAyah = { surah, ayah };
+      this._audioElement.volume = this._volume;
+      if (this._audioElement.src !== cachedUrl) {
+        this._audioElement.src = cachedUrl;
+      }
+
+      try {
+        this._audioElement.play();
+      } catch (e) {}
+
+      if (!this._headerControlsBox) {
+        this.showHeaderControls();
+      }
+      this.updatePlaybackUI();
+
+      if (this._isAutoplay) {
+        this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
+      }
+
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -2226,6 +2294,12 @@ class PocketQuranManager {
         this._audioElement.src = audioUrl;
       }
 
+      // Start warming the next ayahs immediately (don't await).
+      // This reduces the chance of a buffer gap at the transition.
+      if (this._isAutoplay) {
+        this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
+      }
+
       try {
         await this._audioElement.play();
       } catch (e) {
@@ -2242,11 +2316,6 @@ class PocketQuranManager {
       // Show header controls
       this.showHeaderControls();
       this.updatePlaybackUI();
-
-      // Preload upcoming ayahs so autoplay doesn't feel like it "stops".
-      if (this._isAutoplay) {
-        this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
-      }
 
       // Scroll to the playing ayah if not visible
       if (this._activeSurah === surah && this._activeAyah !== ayah) {
@@ -2311,8 +2380,15 @@ class PocketQuranManager {
       const max = this.getActiveSurahAyahCount() || 286;
 
       if (ayah < max) {
-        // Play next ayah
-        this.playAyah(surah, ayah + 1);
+        const nextAyah = ayah + 1;
+
+        // Fast path: start the next ayah immediately from preload/cache.
+        if (this.tryPlayAyahImmediateFromCache(surah, nextAyah)) {
+          return;
+        }
+
+        // Fallback: normal async path (fetches metadata if needed)
+        this.playAyah(surah, nextAyah);
       } else {
         // End of surah
         this.stopPlayback();
@@ -2422,6 +2498,13 @@ class PocketQuranManager {
   showHeaderControls() {
     const header = this.card?.querySelector(".pocket-quran-header");
     if (!header) return;
+
+    // Keep DOM stable: if controls already exist, just ensure layout + refresh text.
+    if (this._headerControlsBox && header.contains(this._headerControlsBox)) {
+      header.classList.add("pq-has-recitation-controls");
+      this.updatePlaybackUI();
+      return;
+    }
 
     // Remove existing controls
     this.hideHeaderControls();
@@ -2566,6 +2649,13 @@ class PocketQuranManager {
       );
       if (ayahInfo && this._playingAyah) {
         ayahInfo.textContent = `Ayah ${this._playingAyah.ayah}`;
+      }
+
+      const reciterInfo = this._headerControlsBox.querySelector(
+        ".pq-recitation-reciter"
+      );
+      if (reciterInfo) {
+        reciterInfo.textContent = this.getActiveReciterName();
       }
     }
 
