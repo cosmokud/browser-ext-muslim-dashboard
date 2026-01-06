@@ -1,7 +1,7 @@
 /**
  * Search Bar Manager (Custom Searches)
  * - Stores custom searches in localStorage
- * - Shows favicon tabs (Google favicon service)
+ * - Shows favicon tabs with caching support
  * - Scroll arrows appear when searches > 10
  * - Lets the user choose an accent color per engine (via right-click menu)
  */
@@ -43,6 +43,9 @@ class SearchBarManager {
     this.flipDurationMs = 160;
     this.flipEasing = "cubic-bezier(0.2, 0.8, 0.2, 1)";
 
+    // Track pending favicon during edit
+    this.pendingFaviconDataUrl = null;
+
     // Elements
     this.section = document.getElementById("searchBarSection");
     this.shell = document.getElementById("searchBarShell");
@@ -72,6 +75,23 @@ class SearchBarManager {
     this.editName = document.getElementById("editSearchBarName");
     this.editUrl = document.getElementById("editSearchBarUrl");
     this.editIdInput = document.getElementById("editSearchBarId");
+
+    // Favicon controls in edit modal
+    this.editFaviconPreview = document.getElementById(
+      "editSearchBarFaviconPreview"
+    );
+    this.editRefreshFaviconBtn = document.getElementById(
+      "editSearchBarRefreshFavicon"
+    );
+    this.editImportFaviconBtn = document.getElementById(
+      "editSearchBarImportFavicon"
+    );
+    this.editFaviconFileInput = document.getElementById(
+      "editSearchBarFaviconFile"
+    );
+    this.editFaviconStatus = document.getElementById(
+      "editSearchBarFaviconStatus"
+    );
 
     // Delete confirm modal
     this.deleteModal = document.getElementById("searchBarDeleteConfirmModal");
@@ -161,9 +181,11 @@ class SearchBarManager {
           .slice(0, 40);
         const url = String(s.url || "").trim();
         const favicon = typeof s.favicon === "string" ? s.favicon : null;
+        const cachedFavicon =
+          typeof s.cachedFavicon === "string" ? s.cachedFavicon : null;
         const accentRgb =
           typeof s.accentRgb === "string" ? String(s.accentRgb) : null;
-        return { id, name, url, favicon, accentRgb };
+        return { id, name, url, favicon, cachedFavicon, accentRgb };
       })
       .filter((s) => s.name && s.url);
 
@@ -264,6 +286,27 @@ class SearchBarManager {
       });
     }
 
+    // Favicon refresh button
+    if (this.editRefreshFaviconBtn) {
+      this.editRefreshFaviconBtn.addEventListener("click", () =>
+        this.handleRefreshFavicon()
+      );
+    }
+
+    // Favicon import button
+    if (this.editImportFaviconBtn) {
+      this.editImportFaviconBtn.addEventListener("click", () => {
+        this.editFaviconFileInput?.click();
+      });
+    }
+
+    // Favicon file input change
+    if (this.editFaviconFileInput) {
+      this.editFaviconFileInput.addEventListener("change", (e) =>
+        this.handleFaviconFileSelect(e)
+      );
+    }
+
     // Delete modal events
     if (this.cancelDeleteBtn) {
       this.cancelDeleteBtn.addEventListener("click", () =>
@@ -309,17 +352,174 @@ class SearchBarManager {
     const engine = this.searches.find((s) => String(s.id) === String(engineId));
     if (!engine || !this.editModal) return;
 
+    // Reset pending favicon
+    this.pendingFaviconDataUrl = null;
+
     if (this.editName) this.editName.value = engine.name;
     if (this.editUrl) this.editUrl.value = engine.url;
     if (this.editIdInput) this.editIdInput.value = String(engine.id);
+
+    // Update favicon preview
+    this.updateEditFaviconPreview(
+      engine.url,
+      engine.cachedFavicon || engine.favicon
+    );
+
+    // Clear status
+    if (this.editFaviconStatus) {
+      this.editFaviconStatus.textContent = "";
+      this.editFaviconStatus.className = "favicon-status";
+    }
+
+    // Reset file input
+    if (this.editFaviconFileInput) {
+      this.editFaviconFileInput.value = "";
+    }
 
     this.editModal.classList.add("active");
     this.editName?.focus();
   }
 
+  /**
+   * Update the favicon preview in the edit modal
+   */
+  async updateEditFaviconPreview(url, cachedFavicon) {
+    if (!this.editFaviconPreview) return;
+
+    // Try to get cached favicon
+    let faviconUrl = cachedFavicon;
+
+    if (!faviconUrl && window.faviconCache) {
+      faviconUrl = await window.faviconCache.getCached(url, "search");
+    }
+
+    if (!faviconUrl) {
+      // Fallback to Google API
+      faviconUrl = this.getFaviconUrlFromTemplate(url);
+    }
+
+    if (faviconUrl) {
+      this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="favicon-fallback" style="display:none;">?</span>`;
+    } else {
+      this.editFaviconPreview.innerHTML = `<span class="favicon-fallback">?</span>`;
+    }
+  }
+
+  /**
+   * Handle refresh favicon button click
+   */
+  async handleRefreshFavicon() {
+    const url = this.editUrl?.value.trim();
+    if (!url) {
+      this.showFaviconStatus("Please enter a URL first", "error");
+      return;
+    }
+
+    this.showFaviconStatus("Fetching favicon...", "loading");
+
+    try {
+      if (window.faviconCache) {
+        const dataUrl = await window.faviconCache.refreshFromGoogle(
+          url,
+          "search"
+        );
+        if (dataUrl) {
+          this.pendingFaviconDataUrl = dataUrl;
+          if (this.editFaviconPreview) {
+            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+          }
+          this.showFaviconStatus("Favicon refreshed!", "success");
+        } else {
+          this.showFaviconStatus("Could not fetch favicon", "error");
+        }
+      } else {
+        // Fallback without cache
+        const faviconUrl = this.getFaviconUrlFromTemplate(url);
+        if (this.editFaviconPreview) {
+          this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon">`;
+        }
+        this.showFaviconStatus("Favicon refreshed!", "success");
+      }
+    } catch (e) {
+      this.showFaviconStatus("Error refreshing favicon", "error");
+    }
+  }
+
+  /**
+   * Handle favicon file selection
+   */
+  async handleFaviconFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = this.editUrl?.value.trim();
+    if (!url) {
+      this.showFaviconStatus("Please enter a URL first", "error");
+      return;
+    }
+
+    this.showFaviconStatus("Processing image...", "loading");
+
+    try {
+      if (window.faviconCache) {
+        const dataUrl = await window.faviconCache.importFromFile(
+          file,
+          url,
+          "search"
+        );
+        this.pendingFaviconDataUrl = dataUrl;
+        if (this.editFaviconPreview) {
+          this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+        }
+        this.showFaviconStatus("Custom icon imported!", "success");
+      } else {
+        // Fallback: just show the image without caching
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target.result;
+          this.pendingFaviconDataUrl = dataUrl;
+          if (this.editFaviconPreview) {
+            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+          }
+          this.showFaviconStatus("Custom icon imported!", "success");
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      this.showFaviconStatus(err.message || "Error importing image", "error");
+    }
+
+    // Reset file input so same file can be selected again
+    if (this.editFaviconFileInput) {
+      this.editFaviconFileInput.value = "";
+    }
+  }
+
+  /**
+   * Show status message for favicon operations
+   */
+  showFaviconStatus(message, type = "info") {
+    if (!this.editFaviconStatus) return;
+
+    this.editFaviconStatus.textContent = message;
+    this.editFaviconStatus.className = `favicon-status favicon-status-${type}`;
+
+    // Auto-clear success messages
+    if (type === "success") {
+      setTimeout(() => {
+        if (this.editFaviconStatus?.textContent === message) {
+          this.editFaviconStatus.textContent = "";
+          this.editFaviconStatus.className = "favicon-status";
+        }
+      }, 3000);
+    }
+  }
+
   hideEditModal() {
     if (!this.editModal) return;
     this.editModal.classList.remove("active");
+    this.pendingFaviconDataUrl = null;
     try {
       this.editModalForm?.reset();
     } catch (e) {}
@@ -579,19 +779,35 @@ class SearchBarManager {
     return { name: cleanName, url: cleanUrl };
   }
 
-  addCustomSearchFromModal() {
+  async addCustomSearchFromModal() {
     const normalized = this._normalizeAndValidateTemplate(
       this.newName?.value,
       this.newUrl?.value
     );
     if (!normalized) return;
 
-    const favicon = this.getFaviconUrlFromTemplate(normalized.url);
+    // Get favicon - fetch fresh for new search engines
+    let favicon = this.getFaviconUrlFromTemplate(normalized.url);
+    let cachedFavicon = null;
+
+    if (window.faviconCache) {
+      // Fetch and cache for new search
+      cachedFavicon = await window.faviconCache.fetchAndCache(
+        normalized.url,
+        "search",
+        true
+      );
+      if (cachedFavicon) {
+        favicon = cachedFavicon;
+      }
+    }
+
     const entry = {
       id: Date.now(),
       name: normalized.name,
       url: normalized.url,
       favicon,
+      cachedFavicon,
       accentRgb: null,
     };
 
@@ -980,7 +1196,7 @@ class SearchBarManager {
     this.updateSelectionUi();
   }
 
-  updateCustomSearchFromModal() {
+  async updateCustomSearchFromModal() {
     const id = this.editIdInput?.value;
     if (!id) return;
 
@@ -993,13 +1209,43 @@ class SearchBarManager {
     const idx = this.searches.findIndex((s) => String(s.id) === String(id));
     if (idx < 0) return;
 
-    const favicon = this.getFaviconUrlFromTemplate(normalized.url);
+    const urlChanged = this.searches[idx].url !== normalized.url;
+
+    // Handle favicon update
+    let favicon = this.searches[idx].favicon;
+    let cachedFavicon = this.searches[idx].cachedFavicon;
+
+    if (this.pendingFaviconDataUrl) {
+      // User manually set a favicon
+      favicon = this.pendingFaviconDataUrl;
+      cachedFavicon = this.pendingFaviconDataUrl;
+    } else if (urlChanged) {
+      // URL changed, fetch new favicon
+      if (window.faviconCache) {
+        const newCached = await window.faviconCache.fetchAndCache(
+          normalized.url,
+          "search",
+          true
+        );
+        if (newCached) {
+          favicon = newCached;
+          cachedFavicon = newCached;
+        } else {
+          favicon = this.getFaviconUrlFromTemplate(normalized.url);
+          cachedFavicon = null;
+        }
+      } else {
+        favicon = this.getFaviconUrlFromTemplate(normalized.url);
+        cachedFavicon = null;
+      }
+    }
 
     this.searches[idx] = {
       ...this.searches[idx],
       name: normalized.name,
       url: normalized.url,
       favicon,
+      cachedFavicon,
     };
 
     // Keep selection stable
@@ -1489,8 +1735,11 @@ class SearchBarManager {
       const icon = document.createElement("span");
       icon.className = "search-bar-engine-icon";
 
+      // Use cached favicon first, then stored favicon, then fetch URL
       const faviconUrl =
-        engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
+        engine.cachedFavicon ||
+        engine.favicon ||
+        this.getFaviconUrlFromTemplate(engine.url);
       const fallback = document.createElement("span");
       fallback.className = "search-bar-engine-fallback";
       fallback.textContent = engine.name.charAt(0).toUpperCase();
@@ -1509,6 +1758,11 @@ class SearchBarManager {
 
       icon.appendChild(fallback);
       btn.appendChild(icon);
+
+      // Load cached favicon asynchronously if not already cached
+      if (!engine.cachedFavicon && window.faviconCache) {
+        this.loadCachedFaviconForEngine(engine, btn);
+      }
 
       btn.addEventListener("click", () => {
         this.selectEngine(engine.id);
@@ -1559,6 +1813,25 @@ class SearchBarManager {
 
     // Arrow visibility and transform.
     this.updateStripTransform();
+  }
+
+  /**
+   * Load cached favicon for an engine asynchronously
+   */
+  async loadCachedFaviconForEngine(engine, btnEl) {
+    try {
+      const cached = await window.faviconCache.getCached(engine.url, "search");
+      if (cached) {
+        const img = btnEl.querySelector(".search-bar-engine-icon img");
+        if (img) {
+          img.src = cached;
+        }
+        // Update engine object
+        engine.cachedFavicon = cached;
+      }
+    } catch (e) {
+      // Silently fail
+    }
   }
 }
 

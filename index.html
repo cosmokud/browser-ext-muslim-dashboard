@@ -4142,6 +4142,43 @@
                 required
               />
             </div>
+            <div class="setting-group favicon-control-group">
+              <label class="setting-label">Favicon</label>
+              <div class="favicon-control-row">
+                <div class="favicon-preview" id="editPinnedAppFaviconPreview">
+                  <span class="favicon-fallback">?</span>
+                </div>
+                <div class="favicon-buttons">
+                  <button
+                    type="button"
+                    class="favicon-btn favicon-refresh-btn"
+                    id="editPinnedAppRefreshFavicon"
+                    title="Refresh from website"
+                  >
+                    🔄 Refresh
+                  </button>
+                  <button
+                    type="button"
+                    class="favicon-btn favicon-import-btn"
+                    id="editPinnedAppImportFavicon"
+                    title="Import custom icon (PNG/ICO)"
+                  >
+                    📁 Import
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="editPinnedAppFaviconFile"
+                  accept=".png,.ico,.jpg,.jpeg,.gif,.webp,.svg,image/png,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/gif,image/webp,image/svg+xml"
+                  class="favicon-file-input"
+                  hidden
+                />
+              </div>
+              <p class="favicon-status" id="editPinnedAppFaviconStatus"></p>
+              <p class="setting-hint">
+                Images larger than 256×256 will be downscaled automatically.
+              </p>
+            </div>
             <input type="hidden" id="editPinnedAppId" />
           </form>
         </div>
@@ -4312,6 +4349,43 @@
                 required
               />
             </div>
+            <div class="setting-group favicon-control-group">
+              <label class="setting-label">Favicon</label>
+              <div class="favicon-control-row">
+                <div class="favicon-preview" id="editSearchBarFaviconPreview">
+                  <span class="favicon-fallback">?</span>
+                </div>
+                <div class="favicon-buttons">
+                  <button
+                    type="button"
+                    class="favicon-btn favicon-refresh-btn"
+                    id="editSearchBarRefreshFavicon"
+                    title="Refresh from website"
+                  >
+                    🔄 Refresh
+                  </button>
+                  <button
+                    type="button"
+                    class="favicon-btn favicon-import-btn"
+                    id="editSearchBarImportFavicon"
+                    title="Import custom icon (PNG/ICO)"
+                  >
+                    📁 Import
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="editSearchBarFaviconFile"
+                  accept=".png,.ico,.jpg,.jpeg,.gif,.webp,.svg,image/png,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/gif,image/webp,image/svg+xml"
+                  class="favicon-file-input"
+                  hidden
+                />
+              </div>
+              <p class="favicon-status" id="editSearchBarFaviconStatus"></p>
+              <p class="setting-hint">
+                Images larger than 256×256 will be downscaled automatically.
+              </p>
+            </div>
             <input type="hidden" id="editSearchBarId" />
           </form>
         </div>
@@ -4427,6 +4501,7 @@
     <script src="js/praytimes.js"></script>
     <script src="js/hijri.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/faviconcache.js"></script>
     <script src="js/themes.js"></script>
     <script src="js/backgrounds.js"></script>
     <script src="js/quotes.js"></script>

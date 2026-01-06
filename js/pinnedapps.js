@@ -1,7 +1,7 @@
 /**
  * Pinned Apps Manager
  * Handles pinned websites/apps with drag-and-drop functionality
- * Features: favicon fetching, reordering, editing, 10 items per row
+ * Features: favicon fetching with caching, reordering, editing, 10 items per row
  */
 
 class PinnedAppsManager {
@@ -40,6 +40,26 @@ class PinnedAppsManager {
     this.editNameInput = document.getElementById("editPinnedAppName");
     this.editUrlInput = document.getElementById("editPinnedAppUrl");
     this.editIdInput = document.getElementById("editPinnedAppId");
+
+    // Favicon controls in edit modal
+    this.editFaviconPreview = document.getElementById(
+      "editPinnedAppFaviconPreview"
+    );
+    this.editRefreshFaviconBtn = document.getElementById(
+      "editPinnedAppRefreshFavicon"
+    );
+    this.editImportFaviconBtn = document.getElementById(
+      "editPinnedAppImportFavicon"
+    );
+    this.editFaviconFileInput = document.getElementById(
+      "editPinnedAppFaviconFile"
+    );
+    this.editFaviconStatus = document.getElementById(
+      "editPinnedAppFaviconStatus"
+    );
+
+    // Track if favicon was changed during edit
+    this.pendingFaviconDataUrl = null;
 
     // Delete confirmation modal elements
     this.deleteModal = document.getElementById("deleteConfirmModal");
@@ -261,6 +281,27 @@ class PinnedAppsManager {
       );
     }
 
+    // Favicon refresh button
+    if (this.editRefreshFaviconBtn) {
+      this.editRefreshFaviconBtn.addEventListener("click", () =>
+        this.handleRefreshFavicon()
+      );
+    }
+
+    // Favicon import button
+    if (this.editImportFaviconBtn) {
+      this.editImportFaviconBtn.addEventListener("click", () => {
+        this.editFaviconFileInput?.click();
+      });
+    }
+
+    // Favicon file input change
+    if (this.editFaviconFileInput) {
+      this.editFaviconFileInput.addEventListener("change", (e) =>
+        this.handleFaviconFileSelect(e)
+      );
+    }
+
     // Close edit modal on outside click
     if (this.editModal) {
       this.editModal.addEventListener("click", (e) => {
@@ -329,12 +370,184 @@ class PinnedAppsManager {
     const app = this.apps.find((a) => a.id === appId);
     if (!app) return;
 
+    // Reset pending favicon
+    this.pendingFaviconDataUrl = null;
+
     if (this.editModal) {
       if (this.editNameInput) this.editNameInput.value = app.name;
       if (this.editUrlInput) this.editUrlInput.value = app.url;
       if (this.editIdInput) this.editIdInput.value = appId;
+
+      // Update favicon preview
+      this.updateEditFaviconPreview(app.url, app.cachedFavicon);
+
+      // Clear status
+      if (this.editFaviconStatus) {
+        this.editFaviconStatus.textContent = "";
+        this.editFaviconStatus.className = "favicon-status";
+      }
+
+      // Reset file input
+      if (this.editFaviconFileInput) {
+        this.editFaviconFileInput.value = "";
+      }
+
       this.editModal.classList.add("active");
       if (this.editNameInput) this.editNameInput.focus();
+    }
+  }
+
+  /**
+   * Update the favicon preview in the edit modal
+   */
+  async updateEditFaviconPreview(url, cachedFavicon) {
+    if (!this.editFaviconPreview) return;
+
+    // Try to get cached favicon
+    let faviconUrl = cachedFavicon;
+
+    if (!faviconUrl && window.faviconCache) {
+      faviconUrl = await window.faviconCache.getCached(url, "pinned");
+    }
+
+    if (!faviconUrl) {
+      // Fallback to Google API
+      faviconUrl = this.getFaviconUrl(url);
+    }
+
+    if (faviconUrl) {
+      this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <span class="favicon-fallback" style="display:none;">?</span>`;
+    } else {
+      this.editFaviconPreview.innerHTML = `<span class="favicon-fallback">?</span>`;
+    }
+  }
+
+  /**
+   * Handle refresh favicon button click
+   */
+  async handleRefreshFavicon() {
+    const url = this.editUrlInput?.value.trim();
+    if (!url) {
+      this.showFaviconStatus("Please enter a URL first", "error");
+      return;
+    }
+
+    // Ensure URL has protocol
+    let normalizedUrl = url;
+    if (
+      !normalizedUrl.startsWith("http://") &&
+      !normalizedUrl.startsWith("https://")
+    ) {
+      normalizedUrl = "https://" + normalizedUrl;
+    }
+
+    this.showFaviconStatus("Fetching favicon...", "loading");
+
+    try {
+      if (window.faviconCache) {
+        const dataUrl = await window.faviconCache.refreshFromGoogle(
+          normalizedUrl,
+          "pinned"
+        );
+        if (dataUrl) {
+          this.pendingFaviconDataUrl = dataUrl;
+          if (this.editFaviconPreview) {
+            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+          }
+          this.showFaviconStatus("Favicon refreshed!", "success");
+        } else {
+          this.showFaviconStatus("Could not fetch favicon", "error");
+        }
+      } else {
+        // Fallback without cache
+        const faviconUrl = this.getFaviconUrl(normalizedUrl);
+        if (this.editFaviconPreview) {
+          this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon">`;
+        }
+        this.showFaviconStatus("Favicon refreshed!", "success");
+      }
+    } catch (e) {
+      this.showFaviconStatus("Error refreshing favicon", "error");
+    }
+  }
+
+  /**
+   * Handle favicon file selection
+   */
+  async handleFaviconFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = this.editUrlInput?.value.trim();
+    if (!url) {
+      this.showFaviconStatus("Please enter a URL first", "error");
+      return;
+    }
+
+    // Ensure URL has protocol
+    let normalizedUrl = url;
+    if (
+      !normalizedUrl.startsWith("http://") &&
+      !normalizedUrl.startsWith("https://")
+    ) {
+      normalizedUrl = "https://" + normalizedUrl;
+    }
+
+    this.showFaviconStatus("Processing image...", "loading");
+
+    try {
+      if (window.faviconCache) {
+        const dataUrl = await window.faviconCache.importFromFile(
+          file,
+          normalizedUrl,
+          "pinned"
+        );
+        this.pendingFaviconDataUrl = dataUrl;
+        if (this.editFaviconPreview) {
+          this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+        }
+        this.showFaviconStatus("Custom icon imported!", "success");
+      } else {
+        // Fallback: just show the image without caching
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target.result;
+          this.pendingFaviconDataUrl = dataUrl;
+          if (this.editFaviconPreview) {
+            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+          }
+          this.showFaviconStatus("Custom icon imported!", "success");
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      this.showFaviconStatus(err.message || "Error importing image", "error");
+    }
+
+    // Reset file input so same file can be selected again
+    if (this.editFaviconFileInput) {
+      this.editFaviconFileInput.value = "";
+    }
+  }
+
+  /**
+   * Show status message for favicon operations
+   */
+  showFaviconStatus(message, type = "info") {
+    if (!this.editFaviconStatus) return;
+
+    this.editFaviconStatus.textContent = message;
+    this.editFaviconStatus.className = `favicon-status favicon-status-${type}`;
+
+    // Auto-clear success messages
+    if (type === "success") {
+      setTimeout(() => {
+        if (this.editFaviconStatus?.textContent === message) {
+          this.editFaviconStatus.textContent = "";
+          this.editFaviconStatus.className = "favicon-status";
+        }
+      }, 3000);
     }
   }
 
@@ -345,6 +558,7 @@ class PinnedAppsManager {
     if (this.editModal) {
       this.editModal.classList.remove("active");
       if (this.editForm) this.editForm.reset();
+      this.pendingFaviconDataUrl = null;
     }
   }
 
@@ -376,10 +590,34 @@ class PinnedAppsManager {
     // Find and update the app
     const app = this.apps.find((a) => a.id === appId);
     if (app) {
+      const urlChanged = app.url !== url;
       app.name = name;
       app.url = url;
-      // Refresh favicon with new URL
-      app.favicon = this.getFaviconUrl(url);
+
+      // Handle favicon update
+      if (this.pendingFaviconDataUrl) {
+        // User manually set a favicon
+        app.cachedFavicon = this.pendingFaviconDataUrl;
+        app.favicon = this.pendingFaviconDataUrl;
+      } else if (urlChanged) {
+        // URL changed, fetch new favicon
+        if (window.faviconCache) {
+          const cachedFavicon = await window.faviconCache.fetchAndCache(
+            url,
+            "pinned",
+            true
+          );
+          if (cachedFavicon) {
+            app.cachedFavicon = cachedFavicon;
+            app.favicon = cachedFavicon;
+          } else {
+            app.favicon = this.getFaviconUrl(url);
+            app.cachedFavicon = null;
+          }
+        } else {
+          app.favicon = this.getFaviconUrl(url);
+        }
+      }
 
       this.saveApps();
       this.render();
@@ -416,8 +654,21 @@ class PinnedAppsManager {
       return;
     }
 
-    // Get favicon
-    const favicon = this.getFaviconUrl(url);
+    // Get favicon - fetch fresh for new apps
+    let favicon = this.getFaviconUrl(url);
+    let cachedFavicon = null;
+
+    if (window.faviconCache) {
+      // Fetch and cache for new app
+      cachedFavicon = await window.faviconCache.fetchAndCache(
+        url,
+        "pinned",
+        true
+      );
+      if (cachedFavicon) {
+        favicon = cachedFavicon;
+      }
+    }
 
     // Add app
     const app = {
@@ -425,6 +676,7 @@ class PinnedAppsManager {
       name: name,
       url: url,
       favicon: favicon,
+      cachedFavicon: cachedFavicon,
       order: this.apps.length,
     };
 
@@ -508,7 +760,9 @@ class PinnedAppsManager {
     el.className = "pinned-app-item";
     el.dataset.appId = app.id;
 
-    const faviconUrl = app.favicon || this.getFaviconUrl(app.url);
+    // Use cached favicon first, then stored favicon, then fetch URL
+    const faviconUrl =
+      app.cachedFavicon || app.favicon || this.getFaviconUrl(app.url);
     const fallbackIcon = app.name.charAt(0).toUpperCase();
 
     el.innerHTML = `
@@ -528,6 +782,11 @@ class PinnedAppsManager {
         <span class="pinned-app-name">${this.escapeHtml(app.name)}</span>
       </a>
     `;
+
+    // Load cached favicon asynchronously if not already cached in app object
+    if (!app.cachedFavicon && window.faviconCache) {
+      this.loadCachedFaviconForElement(app, el);
+    }
 
     // Prevent link drag
     const link = el.querySelector(".pinned-app-link");
@@ -553,6 +812,25 @@ class PinnedAppsManager {
     });
 
     return el;
+  }
+
+  /**
+   * Load cached favicon for an element asynchronously
+   */
+  async loadCachedFaviconForElement(app, el) {
+    try {
+      const cached = await window.faviconCache.getCached(app.url, "pinned");
+      if (cached) {
+        const img = el.querySelector(".pinned-app-icon img");
+        if (img) {
+          img.src = cached;
+        }
+        // Update app object
+        app.cachedFavicon = cached;
+      }
+    } catch (e) {
+      // Silently fail
+    }
   }
 
   /**
