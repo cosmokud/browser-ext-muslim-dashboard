@@ -38,6 +38,7 @@ class GridLayoutManager {
       lunarPhaseCard: { id: "lunarPhaseCard", span: 2, minSpan: 2 },
       fastingCard: { id: "fastingCard", span: 2, minSpan: 2 },
       flashcardCard: { id: "flashcardCard", span: 3, minSpan: 2 },
+      adhkarCard: { id: "adhkarCard", span: 3, minSpan: 2 },
       todoCard: { id: "todoCard", span: 3, minSpan: 2 },
       notesCard: { id: "notesCard", span: 6, minSpan: 3 },
       pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
@@ -58,6 +59,7 @@ class GridLayoutManager {
       lunarPhaseCard: 250,
       fastingCard: 250,
       flashcardCard: 300,
+      adhkarCard: 300,
       todoCard: 300,
     };
 
@@ -74,6 +76,7 @@ class GridLayoutManager {
       ["weatherCard"],
       ["lunarPhaseCard", "fastingCard"],
       ["flashcardCard", "todoCard"],
+      ["adhkarCard"],
       ["notesCard"],
       ["pocketQuranCard"],
     ];

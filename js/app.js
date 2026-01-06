@@ -407,6 +407,9 @@ class MuslimDashboard {
     // Initialize flashcards manager (renders loading state synchronously)
     this.flashcards = new FlashcardManager(this.storage);
 
+    // Initialize adhkar manager (renders loading state synchronously)
+    this.adhkar = new AdhkarManager(this.storage);
+
     // Initialize settings manager (needs references to other managers)
     this.settings = new SettingsManager(
       this.storage,
@@ -415,7 +418,8 @@ class MuslimDashboard {
       this.quotes,
       this.backgrounds,
       this.weather,
-      this.flashcards
+      this.flashcards,
+      this.adhkar
     );
     this.settings.init();
 
@@ -520,6 +524,13 @@ class MuslimDashboard {
     backgroundTasks.push(
       this.flashcards.init().catch((err) => {
         console.warn("Flashcards init background error:", err);
+      })
+    );
+
+    // Adhkar initialization (loads default JSON sets)
+    backgroundTasks.push(
+      this.adhkar.init().catch((err) => {
+        console.warn("Adhkar init background error:", err);
       })
     );
 
@@ -683,6 +694,17 @@ class MuslimDashboard {
       popoverId: "flashcardBlurPopover",
       enabledKey: "flashcardBlurOverrideEnabled",
       powerKey: "flashcardBlurOverridePower",
+    });
+
+    setup({
+      cardId: "adhkarCard",
+      toggleId: "adhkarBlurOverrideToggle",
+      rangeId: "adhkarBlurOverrideRange",
+      valueId: "adhkarBlurOverrideValue",
+      menuBtnId: "adhkarBlurMenuBtn",
+      popoverId: "adhkarBlurPopover",
+      enabledKey: "adhkarBlurOverrideEnabled",
+      powerKey: "adhkarBlurOverridePower",
     });
 
     setup({
@@ -1047,6 +1069,16 @@ class MuslimDashboard {
       flashcardCard.setAttribute(
         "aria-hidden",
         visibility.flashcards === false ? "true" : "false"
+      );
+    }
+
+    // Adhkar
+    const adhkarCard = document.getElementById("adhkarCard");
+    if (adhkarCard) {
+      adhkarCard.style.display = visibility.adhkar === false ? "none" : "";
+      adhkarCard.setAttribute(
+        "aria-hidden",
+        visibility.adhkar === false ? "true" : "false"
       );
     }
 

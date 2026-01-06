@@ -659,6 +659,144 @@
           ></div>
         </section>
 
+        <!-- Adhkar Card -->
+        <section class="card adhkar-card" id="adhkarCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">📿</span>
+              Adhkar
+            </h2>
+            <div class="card-header-actions">
+              <button
+                class="flashcard-mode-toggle-btn"
+                id="adhkarScriptToggleBtn"
+                type="button"
+                aria-label="Toggle Arabic/Romanization"
+                title="Toggle Arabic/Romanization"
+              >
+                <span class="mode-icon">Aa</span>
+              </button>
+
+              <div class="card-blur-menu" aria-label="Adhkar blur menu">
+                <button
+                  class="card-blur-btn"
+                  id="adhkarBlurMenuBtn"
+                  type="button"
+                  aria-label="Open Adhkar blur settings"
+                  aria-expanded="false"
+                  aria-controls="adhkarBlurPopover"
+                >
+                  ✨
+                </button>
+                <div class="card-blur-popover" id="adhkarBlurPopover" hidden>
+                  <div class="card-blur-override">
+                    <label
+                      class="card-blur-toggle"
+                      for="adhkarBlurOverrideToggle"
+                    >
+                      <input
+                        id="adhkarBlurOverrideToggle"
+                        type="checkbox"
+                        aria-label="Use custom blur for Adhkar"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                      <span class="card-blur-toggle-label">Custom blur</span>
+                    </label>
+                    <div class="custom-width-slider card-blur-slider">
+                      <input
+                        type="range"
+                        id="adhkarBlurOverrideRange"
+                        min="0"
+                        max="200"
+                        value="100"
+                        aria-label="Adhkar blur power"
+                      />
+                      <span
+                        class="custom-width-value"
+                        id="adhkarBlurOverrideValue"
+                        >Dashboard</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flashcard-viewer adhkar-viewer">
+            <button
+              class="flashcard-nav flashcard-nav-prev"
+              id="adhkarPrevBtn"
+              type="button"
+              aria-label="Previous adhkar"
+              title="Previous"
+            >
+              ❮
+            </button>
+
+            <div class="adhkar-shell" id="adhkarCardShell">
+              <div class="adhkar-top" id="adhkarTopText">Loading...</div>
+              <div class="adhkar-divider" aria-hidden="true"></div>
+              <div class="adhkar-english" id="adhkarEnglishText"></div>
+            </div>
+
+            <button
+              class="flashcard-nav flashcard-nav-next"
+              id="adhkarNextBtn"
+              type="button"
+              aria-label="Next adhkar"
+              title="Next"
+            >
+              ❯
+            </button>
+          </div>
+
+          <div class="flashcard-jump" aria-label="Jump to adhkar">
+            <div class="flashcard-jump-label" id="adhkarJumpLabel">0 / 0</div>
+            <input
+              type="range"
+              class="flashcard-jump-slider"
+              id="adhkarJumpSlider"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              aria-label="Adhkar position slider"
+            />
+            <input
+              type="number"
+              class="flashcard-jump-input"
+              id="adhkarJumpInput"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              inputmode="numeric"
+              aria-label="Go to adhkar number"
+            />
+
+            <div
+              class="flashcard-auto-wrap"
+              id="adhkarAutoWrap"
+              aria-label="Auto-advance controls"
+            >
+              <button
+                class="flashcard-auto-toggle-btn"
+                id="adhkarAutoAdvanceToggleBtn"
+                type="button"
+                aria-pressed="false"
+                title="Pause auto-advance"
+                aria-label="Pause auto-advance"
+              >
+                <span class="auto-icon" aria-hidden="true">⏸</span>
+              </button>
+              <div class="flashcard-auto-status" id="adhkarAutoStatus">
+                Auto
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Notes (Full Width) -->
         <section class="card notes-card" id="notesCard">
           <div class="card-header">
@@ -1289,6 +1427,7 @@
             <button class="settings-tab" data-tab="flashcards">
               📇 Flashcards
             </button>
+            <button class="settings-tab" data-tab="adhkar">📿 Adhkar</button>
             <button class="settings-tab" data-tab="notes">📝 Notes</button>
             <button class="settings-tab" data-tab="pocketQuran">
               📖 Pocket Quran
@@ -2428,6 +2567,12 @@
                     <span class="toggle-switch"></span>
                   </label>
                 </div>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📿</span>
+                  <span class="visibility-name">Adhkar</span>
+                  <input type="checkbox" id="visibilityAdhkar" checked />
+                  <span class="toggle-switch"></span>
+                </label>
                 <div class="visibility-toggle-item">
                   <span class="visibility-icon">✅</span>
                   <label class="visibility-name" for="visibilityTodoList"
@@ -2985,6 +3130,125 @@
                   ➕ Add Card
                 </button>
                 <div class="quotes-pagination" id="flashcardsPagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Adhkar Settings -->
+          <div class="settings-panel" id="adhkarPanel">
+            <div class="setting-group">
+              <label class="setting-label">Adhkar Sets</label>
+              <p class="setting-hint">
+                Default sets are protected. Create your own sets and
+                import/export JSON.
+              </p>
+              <div class="flashcards-toolbar">
+                <select class="setting-select" id="adhkarSetSelect"></select>
+                <button class="setting-btn" id="adhkarNewSetBtn">
+                  ➕ New Set
+                </button>
+                <button class="setting-btn" id="adhkarDeleteSetBtn">
+                  🗑️ Delete Set
+                </button>
+              </div>
+              <div class="flashcards-meta" id="adhkarMeta"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Auto-Advance (seconds)</label>
+              <p class="setting-hint">
+                Automatically moves to the next adhkar after this many seconds.
+              </p>
+              <input
+                type="number"
+                class="setting-input"
+                id="adhkarAutoAdvanceSeconds"
+                min="1"
+                max="3600"
+                placeholder="15"
+              />
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Typography Settings</label>
+              <p class="setting-hint">
+                Adjust font sizes for Arabic, Romanization, and English.
+              </p>
+              <div class="flashcards-typography">
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Arabic</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="adhkarArabicFontSize"
+                    min="12"
+                    max="144"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="adhkarArabicFontSizeValue"
+                  ></span>
+                </div>
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Romanization</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="adhkarRomanizationFontSize"
+                    min="12"
+                    max="144"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="adhkarRomanizationFontSizeValue"
+                  ></span>
+                </div>
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">English</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="adhkarEnglishFontSize"
+                    min="12"
+                    max="144"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="adhkarEnglishFontSizeValue"
+                  ></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Import / Export</label>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="adhkarImportBtn">
+                  📥 Import JSON
+                </button>
+                <button class="setting-btn" id="adhkarExportBtn">
+                  📤 Export JSON
+                </button>
+                <input
+                  type="file"
+                  id="adhkarImportInput"
+                  accept=".json,application/json"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Manage Adhkar</label>
+              <div class="adhkar-editor" id="adhkarEditorList"></div>
+              <div class="flashcards-editor-footer">
+                <button class="setting-btn" id="adhkarAddItemBtn">
+                  ➕ Add Item
+                </button>
+                <div class="quotes-pagination" id="adhkarPagination"></div>
               </div>
             </div>
           </div>
@@ -4514,6 +4778,7 @@
     <script src="js/weather.js"></script>
     <script src="js/lunarphase.js"></script>
     <script src="js/flashcards.js"></script>
+    <script src="js/adhkar.js"></script>
     <script src="js/fasting.js"></script>
     <script src="js/floating.js"></script>
     <script src="js/gridlayout.js"></script>

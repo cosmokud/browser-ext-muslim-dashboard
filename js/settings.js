@@ -12,7 +12,8 @@ class SettingsManager {
     quotes,
     backgrounds,
     weather,
-    flashcards
+    flashcards,
+    adhkar
   ) {
     this.storage = storage;
     this.prayerTimes = prayerTimes;
@@ -21,6 +22,7 @@ class SettingsManager {
     this.backgrounds = backgrounds;
     this.weather = weather;
     this.flashcards = flashcards;
+    this.adhkar = adhkar;
 
     // Modal elements
     this.modal = document.getElementById("settingsModal");
@@ -266,6 +268,7 @@ class SettingsManager {
     this.visibilityLunarPhase = document.getElementById("visibilityLunarPhase");
     this.visibilityFasting = document.getElementById("visibilityFasting");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
+    this.visibilityAdhkar = document.getElementById("visibilityAdhkar");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.visibilityNotes = document.getElementById("visibilityNotes");
     this.visibilityPocketQuran = document.getElementById(
@@ -908,6 +911,8 @@ class SettingsManager {
       this.visibilityFasting.checked = visibility.fasting !== false;
     if (this.visibilityFlashcards)
       this.visibilityFlashcards.checked = visibility.flashcards !== false;
+    if (this.visibilityAdhkar)
+      this.visibilityAdhkar.checked = visibility.adhkar !== false;
     if (this.visibilityTodoList)
       this.visibilityTodoList.checked = visibility.todoList !== false;
     if (this.visibilityNotes)
@@ -2328,6 +2333,39 @@ class SettingsManager {
           : [],
       }));
 
+    // Adhkar custom sets (JSON)
+    const adhkarSets = this.adhkar?.getSets
+      ? this.adhkar.getSets()
+      : this.storage.get("adhkarSets", []);
+
+    const adhkarProtectedIds =
+      typeof AdhkarManager !== "undefined" &&
+      Array.isArray(AdhkarManager.PROTECTED_SET_IDS)
+        ? AdhkarManager.PROTECTED_SET_IDS
+        : [
+            "default_adhkar_morning",
+            "default_adhkar_evening",
+            "default_adhkar_general",
+          ];
+
+    const customAdhkarSets = (Array.isArray(adhkarSets) ? adhkarSets : [])
+      .filter((s) => s && s.id && !adhkarProtectedIds.includes(s.id))
+      .map((s) => ({
+        id: String(s.id),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || null,
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.arabic || c.romanization || c.english))
+              .map((c) => ({
+                arabic: String(c.arabic || ""),
+                romanization: String(c.romanization || ""),
+                english: String(c.english || ""),
+              }))
+          : [],
+      }));
+
     const exportData = {
       exportType: "full",
       version: 2,
@@ -2364,6 +2402,14 @@ class SettingsManager {
           settings.flashcards?.activeSetId ||
           null,
         sets: customSets,
+      },
+
+      adhkar: {
+        activeSetId:
+          this.adhkar?.getActiveSetId?.() ||
+          settings.adhkar?.activeSetId ||
+          null,
+        sets: customAdhkarSets,
       },
 
       // Kept for clarity/backward-compat (also included within settings.customBackgrounds)
@@ -2577,6 +2623,89 @@ class SettingsManager {
         activeSetId: protectedSetsOrdered[0]?.id || "default",
       };
     }
+
+    // Adhkar (replace custom sets; keep existing protected defaults if present;
+    // missing defaults will be restored by AdhkarManager.ensureDefaultSets on reload)
+    const maxAdhkarSets =
+      typeof AdhkarManager !== "undefined" &&
+      typeof AdhkarManager.MAX_SETS === "number"
+        ? AdhkarManager.MAX_SETS
+        : 100;
+
+    const existingAdhkarSets = this.storage.get("adhkarSets", []);
+
+    const adhkarProtectedIds =
+      typeof AdhkarManager !== "undefined" &&
+      Array.isArray(AdhkarManager.PROTECTED_SET_IDS)
+        ? AdhkarManager.PROTECTED_SET_IDS
+        : [
+            "default_adhkar_morning",
+            "default_adhkar_evening",
+            "default_adhkar_general",
+          ];
+
+    const adhkarDefaultDefs =
+      typeof AdhkarManager !== "undefined" &&
+      Array.isArray(AdhkarManager.DEFAULT_SETS)
+        ? AdhkarManager.DEFAULT_SETS
+        : [];
+
+    const keptProtectedAdhkarSets = adhkarDefaultDefs.length
+      ? adhkarDefaultDefs
+          .map((def) =>
+            (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).find(
+              (s) => s && s.id === def.id
+            )
+          )
+          .filter(Boolean)
+      : (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).filter(
+          (s) => s && s.id && adhkarProtectedIds.includes(s.id)
+        );
+
+    const incomingAdhkarSetsRaw =
+      data.adhkar?.sets ||
+      data.adhkarSets ||
+      (Array.isArray(data.adhkar) ? data.adhkar : []);
+    const incomingAdhkarSets = Array.isArray(incomingAdhkarSetsRaw)
+      ? incomingAdhkarSetsRaw
+      : [];
+
+    const cleanedCustomAdhkarSets = incomingAdhkarSets
+      .filter((s) => s && s.id && !adhkarProtectedIds.includes(s.id))
+      .map((s, i) => ({
+        id: String(s.id || `set_${Date.now()}_${i}`),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || new Date().toISOString(),
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.arabic || c.romanization || c.english))
+              .map((c) => ({
+                arabic: String(c.arabic || ""),
+                romanization: String(c.romanization || ""),
+                english: String(c.english || ""),
+              }))
+          : [],
+      }))
+      .slice(0, Math.max(0, maxAdhkarSets - keptProtectedAdhkarSets.length));
+
+    const mergedAdhkarSets = [
+      ...keptProtectedAdhkarSets,
+      ...cleanedCustomAdhkarSets,
+    ].slice(0, maxAdhkarSets);
+    this.storage.set("adhkarSets", mergedAdhkarSets);
+
+    const incomingAdhkarActiveSetId = data.adhkar?.activeSetId;
+    const validActiveAdhkarId =
+      typeof incomingAdhkarActiveSetId === "string" &&
+      mergedAdhkarSets.some((s) => s && s.id === incomingAdhkarActiveSetId)
+        ? incomingAdhkarActiveSetId
+        : mergedAdhkarSets[0]?.id || null;
+
+    settings.adhkar = {
+      ...(settings.adhkar || {}),
+      activeSetId: validActiveAdhkarId,
+    };
 
     this.storage.saveSettings(settings);
   }
@@ -2962,6 +3091,7 @@ class SettingsManager {
       lunarPhase: this.visibilityLunarPhase?.checked ?? true,
       fasting: this.visibilityFasting?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
+      adhkar: this.visibilityAdhkar?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
       notes: this.visibilityNotes?.checked ?? true,
       pocketQuran: this.visibilityPocketQuran?.checked ?? true,
@@ -3417,6 +3547,9 @@ class SettingsManager {
     if (this.flashcards) {
       this.flashcards.renderSettings();
     }
+    if (this.adhkar) {
+      this.adhkar.renderSettings();
+    }
     if (this.modal) {
       this.modal.classList.add("active");
     }
@@ -3460,6 +3593,10 @@ class SettingsManager {
 
     if (tabName === "flashcards" && this.flashcards) {
       this.flashcards.renderSettings();
+    }
+
+    if (tabName === "adhkar" && this.adhkar) {
+      this.adhkar.renderSettings();
     }
 
     if (tabName === "notes") {

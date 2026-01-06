@@ -183,6 +183,8 @@ class StorageManager {
       todoBlurOverridePower: 100,
       flashcardBlurOverrideEnabled: false,
       flashcardBlurOverridePower: 100,
+      adhkarBlurOverrideEnabled: false,
+      adhkarBlurOverridePower: 100,
       notesBlurOverrideEnabled: false,
       notesBlurOverridePower: 100,
 
@@ -247,6 +249,7 @@ class StorageManager {
         weather: true,
         lunarPhase: true,
         flashcards: true,
+        adhkar: true,
         notes: true,
         pocketQuran: true,
       },
@@ -304,6 +307,17 @@ class StorageManager {
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
         questionFontSize: 60,
         answerFontSize: 32,
+      },
+
+      // Adhkar settings
+      adhkar: {
+        activeSetId: null,
+        autoAdvanceSeconds: 15,
+        autoAdvancePaused: false,
+        showRomanization: false,
+        arabicFontSize: 28,
+        romanizationFontSize: 18,
+        englishFontSize: 18,
       },
 
       // Pocket Quran settings
