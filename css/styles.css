@@ -1221,6 +1221,24 @@ textarea.notes-editor:focus {
   gap: var(--spacing-sm);
 }
 
+/* Adhkar card: center the header title */
+.adhkar-card .card-header {
+  position: relative;
+}
+.adhkar-card .card-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  pointer-events: none;
+  background: transparent;
+}
+.adhkar-card .card-title .adhkar-header-text {
+  pointer-events: auto;
+}
+
 .card-icon {
   font-size: 1.4rem;
 }

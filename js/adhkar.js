@@ -738,6 +738,15 @@ class AdhkarManager {
 
     this.normalizeCurrentIndex();
 
+    // Update adhkar card header to show active set name centered in header
+    if (this.cardEl) {
+      const headerText = this.cardEl.querySelector("#adhkarHeaderText");
+      if (headerText) {
+        headerText.textContent =
+          activeSet && activeSet.name ? String(activeSet.name) : "Adhkar";
+      }
+    }
+
     if (!cards.length) {
       this.topTextEl.textContent = "No adhkar yet";
       this.englishEl.textContent = "Add or import a set in Settings → Adhkar";
