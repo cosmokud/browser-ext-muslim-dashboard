@@ -2242,7 +2242,8 @@ class PocketQuranManager {
         this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
       }
 
-      if (this._isAutoScroll) {
+      // Only auto-scroll if viewing the same surah that's playing
+      if (this._isAutoScroll && this._activeSurah === surah) {
         this.scrollToAyah(ayah, { persist: false, smooth: true });
       }
 
@@ -2271,7 +2272,8 @@ class PocketQuranManager {
         this.prefetchNextAyahs(surah, ayah, this._prefetchAheadCount);
       }
 
-      if (this._isAutoScroll) {
+      // Only auto-scroll if viewing the same surah that's playing
+      if (this._isAutoScroll && this._activeSurah === surah) {
         this.scrollToAyah(ayah, { persist: false, smooth: true });
       }
 
@@ -2427,12 +2429,12 @@ class PocketQuranManager {
       this.showHeaderControls();
       this.updatePlaybackUI();
 
-      // Scroll to the playing ayah if auto-scroll is enabled or selection changed
-      if (
-        this._isAutoScroll ||
-        (this._activeSurah === surah && this._activeAyah !== ayah)
-      ) {
-        this.scrollToAyah(ayah, { persist: false, smooth: true });
+      // Scroll to the playing ayah if auto-scroll is enabled and viewing the same surah
+      // Only scroll if the currently viewed surah matches the surah being played
+      if (this._activeSurah === surah) {
+        if (this._isAutoScroll || this._activeAyah !== ayah) {
+          this.scrollToAyah(ayah, { persist: false, smooth: true });
+        }
       }
     } catch (e) {
       console.error("PocketQuran: Failed to play ayah", e);
