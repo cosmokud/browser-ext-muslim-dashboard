@@ -584,6 +584,34 @@ class AdhkarManager {
           this.gotoNextCard();
         }
       });
+
+      // Allow clicking or pressing Enter/Space on the header text to open the set selector modal
+      const headerText = this.cardEl.querySelector("#adhkarHeaderText");
+      if (headerText) {
+        // Make header text keyboard-focusable and announce it as a button that opens a dialog
+        headerText.setAttribute("tabindex", "0");
+        headerText.setAttribute("role", "button");
+        headerText.setAttribute("aria-haspopup", "dialog");
+        headerText.setAttribute("aria-controls", "adhkarSetModal");
+        headerText.setAttribute("title", "Select adhkar set");
+
+        headerText.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.openSetSelectorModal();
+        });
+
+        headerText.addEventListener("keydown", (e) => {
+          if (
+            e.key === "Enter" ||
+            e.key === " " ||
+            e.key === "Spacebar" ||
+            e.key === "Space"
+          ) {
+            e.preventDefault();
+            this.openSetSelectorModal();
+          }
+        });
+      }
     }
   }
 
@@ -1734,7 +1762,21 @@ class AdhkarManager {
     const modal = document.getElementById("adhkarSetModal");
     if (modal) {
       modal.classList.add("active");
-      modal.querySelector(".adhkar-set-search-input").value = "";
+
+      const searchInput = modal.querySelector(".adhkar-set-search-input");
+      if (searchInput) {
+        searchInput.value = "";
+        // Focus the search input for convenience and accessibility
+        setTimeout(() => {
+          searchInput.focus();
+          if (typeof searchInput.select === "function") searchInput.select();
+        }, 0);
+      }
+
+      // Update the header to reflect the modal state for assistive tech
+      const headerText = this.cardEl?.querySelector("#adhkarHeaderText");
+      if (headerText) headerText.setAttribute("aria-expanded", "true");
+
       this.renderSetSelectorModal();
     }
   }
@@ -1743,6 +1785,9 @@ class AdhkarManager {
     const modal = document.getElementById("adhkarSetModal");
     if (modal) {
       modal.classList.remove("active");
+      // Update header state for assistive tech
+      const headerText = this.cardEl?.querySelector("#adhkarHeaderText");
+      if (headerText) headerText.setAttribute("aria-expanded", "false");
     }
   }
 

@@ -9703,11 +9703,51 @@ body.sticky-note-resizing {
 }
 
 .adhkar-meta-title {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--accent-gold-light);
   margin-bottom: -5px; /* Pull closer to the text below */
   line-height: 1.3;
+}
+
+/* Make the header text clickable to open the set selector modal */
+.adhkar-header-text {
+  cursor: pointer;
+  position: relative;
+  display: inline-block; /* needed for the animated underline */
+  text-decoration: none;
+}
+
+/* Animated underline that grows from left to right */
+.adhkar-header-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px; /* distance from text baseline */
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-gold),
+    rgba(255, 215, 0, 0.7)
+  );
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform var(--transition-fast) ease;
+  border-radius: 2px;
+  opacity: 0.95;
+}
+
+.adhkar-header-text:hover::after,
+.adhkar-header-text:focus::after,
+.adhkar-header-text:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.adhkar-header-text:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
+  border-radius: 4px;
 }
 
 .adhkar-top {
