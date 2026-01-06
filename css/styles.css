@@ -9738,6 +9738,12 @@ body.sticky-note-resizing {
   opacity: 0.9;
 }
 
+/* Make the reference divider shorter (about half width) and centered */
+#adhkarReferenceDivider {
+  width: min(260px, 47.5%);
+  margin: 0 auto;
+}
+
 .adhkar-english {
   font-size: var(--adhkar-english-font-size);
   color: var(--text-secondary);
