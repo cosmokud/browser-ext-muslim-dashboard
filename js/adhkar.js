@@ -1694,6 +1694,14 @@ class AdhkarManager {
     const headerActions = this.cardEl?.querySelector(".card-header-actions");
     if (!headerActions) return;
 
+    // Ensure the script toggle button appears first (left-most)
+    const scriptBtn =
+      this.scriptToggleBtn || headerActions.querySelector("#adhkarScriptToggleBtn");
+    if (scriptBtn && headerActions.contains(scriptBtn)) {
+      headerActions.insertBefore(scriptBtn, headerActions.firstChild);
+    }
+
+    // If selector button already exists, nothing more to do
     if (headerActions.querySelector(".adhkar-set-selector-btn")) return;
 
     const btn = document.createElement("button");
@@ -1708,8 +1716,12 @@ class AdhkarManager {
       this.openSetSelectorModal();
     });
 
-    // Insert first (left-most) so it matches Flashcards behavior
-    headerActions.insertBefore(btn, headerActions.firstChild);
+    // Insert after the script toggle if present, otherwise insert at the start
+    if (scriptBtn && headerActions.contains(scriptBtn)) {
+      headerActions.insertBefore(btn, scriptBtn.nextSibling);
+    } else {
+      headerActions.insertBefore(btn, headerActions.firstChild);
+    }
   }
 
   createSetSelectorModal() {
