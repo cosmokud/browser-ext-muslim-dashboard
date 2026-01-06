@@ -2802,6 +2802,9 @@ class PocketQuranManager {
     controlsBox
       .querySelector(".pq-reciter-btn")
       .addEventListener("click", () => this.openReciterModal());
+    controlsBox
+      .querySelector(".pq-recitation-reciter")
+      .addEventListener("click", () => this.openReciterModal());
 
     const ayahInfoEl = controlsBox.querySelector(".pq-recitation-ayah");
     if (ayahInfoEl) {

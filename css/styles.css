@@ -9269,6 +9269,7 @@ body.sticky-note-resizing {
 .pq-recitation-reciter {
   font-size: 0.75rem;
   color: var(--text-muted);
+  cursor: pointer;
   /* Allow full reciter names to display (no ellipsis/truncation) */
   white-space: normal;
   overflow: visible;
@@ -9277,6 +9278,12 @@ body.sticky-note-resizing {
   /* Break long words if necessary */
   overflow-wrap: anywhere;
   word-break: break-word;
+  transition: color var(--transition-fast);
+}
+
+.pq-recitation-reciter:hover {
+  text-decoration: underline;
+  color: var(--text-secondary);
 }
 
 .pq-recitation-buttons {
