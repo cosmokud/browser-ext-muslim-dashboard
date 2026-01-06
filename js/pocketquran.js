@@ -2629,12 +2629,28 @@ class PocketQuranManager {
     this.updatePlaybackUI();
 
     // If enabling auto-scroll while playing, scroll to the currently playing ayah
-    if (this._isAutoScroll && this._playingAyah) {
-      this.scrollToAyah(this._playingAyah.ayah, {
-        persist: false,
-        smooth: true,
-      });
+    if (
+      this._isAutoScroll &&
+      this._playingAyah &&
+      this._activeSurah === this._playingAyah.surah
+    ) {
+      this.scrollToAyah(this._playingAyah.ayah, { persist: false, smooth: true });
     }
+  }
+
+  getSurahNameSimple(surah) {
+    const id = parseInt(surah, 10);
+    const chapter = this._chapters?.find((c) => c.id === id);
+    return chapter?.name_simple || `Surah ${Number.isFinite(id) ? id : ""}`.trim();
+  }
+
+  formatRecitationAyahLabel(surah, ayah) {
+    const s = parseInt(surah, 10);
+    const a = parseInt(ayah, 10);
+    const surahName = this.getSurahNameSimple(s);
+    const surahPrefix = Number.isFinite(s) ? `${s}. ` : "";
+    const ayahPart = Number.isFinite(a) ? `Ayah ${a}` : "Ayah";
+    return `${surahPrefix}${surahName} · ${ayahPart}`;
   }
 
   /**
@@ -2681,9 +2697,10 @@ class PocketQuranManager {
     controlsBox.className = "pq-recitation-controls";
     controlsBox.innerHTML = `
       <div class="pq-recitation-info">
-        <span class="pq-recitation-ayah">Ayah ${
-          this._playingAyah?.ayah || 1
-        }</span>
+        <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
+          this._playingAyah?.surah ?? this._activeSurah,
+          this._playingAyah?.ayah ?? this._activeAyah ?? 1
+        )}</span>
         <span class="pq-recitation-reciter">${this.getActiveReciterName()}</span>
       </div>
       <div class="pq-recitation-buttons">
@@ -2781,6 +2798,28 @@ class PocketQuranManager {
       .querySelector(".pq-reciter-btn")
       .addEventListener("click", () => this.openReciterModal());
 
+    const ayahInfoEl = controlsBox.querySelector(".pq-recitation-ayah");
+    if (ayahInfoEl) {
+      ayahInfoEl.addEventListener("click", async () => {
+        const target = this._playingAyah;
+        if (!target) return;
+
+        try {
+          if (this._activeSurah !== target.surah) {
+            await this.setActiveSurah(target.surah, {
+              preserveAyah: false,
+              autoScroll: false,
+              preserveDashboardScroll: true,
+            });
+          }
+
+          this.scrollToAyah(target.ayah, { persist: true, smooth: true });
+        } catch (e) {
+          // no-op
+        }
+      });
+    }
+
     controlsBox
       .querySelector(".pq-recitation-close-btn")
       .addEventListener("click", () => {
@@ -2848,8 +2887,13 @@ class PocketQuranManager {
       const ayahInfo = this._headerControlsBox.querySelector(
         ".pq-recitation-ayah"
       );
-      if (ayahInfo && this._playingAyah) {
-        ayahInfo.textContent = `Ayah ${this._playingAyah.ayah}`;
+      if (ayahInfo) {
+        const fallback = { surah: this._activeSurah, ayah: this._activeAyah };
+        const target = this._playingAyah || fallback;
+        ayahInfo.textContent = this.formatRecitationAyahLabel(
+          target?.surah,
+          target?.ayah
+        );
       }
 
       const reciterInfo = this._headerControlsBox.querySelector(

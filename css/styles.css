@@ -9145,6 +9145,11 @@ body.sticky-note-resizing {
   font-weight: 600;
   color: var(--accent-gold);
   font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.pq-recitation-ayah:hover {
+  text-decoration: underline;
 }
 
 .pq-recitation-reciter {
