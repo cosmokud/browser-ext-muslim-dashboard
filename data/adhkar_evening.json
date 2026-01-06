@@ -5,7 +5,8 @@
         "romanization": "Amsaynaa wa amsal mulku lillaah, walhamdu lillaah, laa ilaaha illallaahu wahdahu laa shareeka lah, lahul mulku wa lahul hamdu wa huwa 'alaa kulli shay'in qadeer",
         "english": "We have entered the evening and the dominion belongs to Allah. All praise is for Allah. None has the right to be worshipped except Allah alone, having no partner. To Him belongs the dominion and praise, and He is over all things competent.",
         "reference": "Abu Dawud 4:317",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Entering the Evening"
     },
     {
         "id": 2,
@@ -13,7 +14,8 @@
         "romanization": "Allaahumma bika amsaynaa, wa bika asbahnaa, wa bika nahyaa, wa bika namootu, wa ilaykal-maseer",
         "english": "O Allah, by Your grace we have entered the evening, and by Your grace we enter the morning. By You we live, and by You we die, and to You is the final return.",
         "reference": "At-Tirmidhi 5:466",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua for Morning and Evening"
     },
     {
         "id": 3,
@@ -21,7 +23,8 @@
         "romanization": "Allaahumma anta rabbee laa ilaaha illaa ant, khalaqtanee wa ana 'abduk, wa ana 'alaa 'ahdika wa wa'dika mastata't, a'oodhu bika min sharri maa sana't, aboo'u laka bini'matika 'alayy, wa aboo'u bidhanbee faghfir lee fa innahu laa yaghfirudh-dhunooba illaa ant",
         "english": "O Allah, You are my Lord. There is no god but You. You created me and I am Your servant, and I am upon Your covenant and promise as best I can. I seek refuge in You from the evil of what I have done. I acknowledge Your favor upon me, and I acknowledge my sin, so forgive me, for none forgives sins except You.",
         "reference": "Sahih al-Bukhari 8:318 (Sayyid al-Istighfar)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Sayyid al-Istighfar"
     },
     {
         "id": 4,
@@ -29,7 +32,8 @@
         "romanization": "Allaahumma innee amsaytu ush-hiduk, wa ush-hidu hamalata 'arshik, wa malaa'ikatak, wa jamee'a khalqik, annaka antallahu laa ilaaha illaa anta wahdaka laa shareeka lak, wa anna Muhammadan 'abduka wa rasooluk",
         "english": "O Allah, I have entered the evening and I call upon You, and upon the bearers of Your Throne, and Your angels, and all of Your creation to witness that You are Allah, none has the right to be worshipped except You alone, without partner, and that Muhammad is Your servant and Messenger.",
         "reference": "Abu Dawud 4:317",
-        "repeat": 4
+        "repeat": 4,
+        "title": "Calling Upon Allah to Witness"
     },
     {
         "id": 5,
@@ -37,7 +41,8 @@
         "romanization": "Allaahumma maa amsaa bee min ni'matin aw bi'ahadin min khalqik, faminka wahdaka laa shareeka lak, falakal hamdu wa lakash-shukr",
         "english": "O Allah, whatever blessing I or any of Your creation have come upon this evening, is from You alone, without partner. So all praise and thanks are for You.",
         "reference": "Abu Dawud 4:318",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Acknowledging Blessings"
     },
     {
         "id": 6,
@@ -45,7 +50,8 @@
         "romanization": "Allaahumma 'aafinee fee badanee, Allaahumma 'aafinee fee sam'ee, Allaahumma 'aafinee fee basaree, laa ilaaha illaa ant",
         "english": "O Allah, grant my body health. O Allah, grant my hearing health. O Allah, grant my sight health. None has the right to be worshipped except You.",
         "reference": "Abu Dawud 4:324",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Dua Asking For Health"
     },
     {
         "id": 7,
@@ -53,7 +59,8 @@
         "romanization": "Allaahumma innee a'oodhu bika minal kufr, wal faqr, wa a'oodhu bika min 'adhaabil qabr, laa ilaaha illaa ant",
         "english": "O Allah, I seek refuge in You from disbelief and poverty, and I seek refuge in You from the punishment of the grave. None has the right to be worshipped except You.",
         "reference": "Abu Dawud 4:324",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Protection from Disbelief and Poverty"
     },
     {
         "id": 8,
@@ -61,7 +68,8 @@
         "romanization": "Hasbiyallaahu laa ilaaha illaa huwa, 'alayhi tawakkalt, wa huwa rabbul 'arshil 'adheem",
         "english": "Allah is sufficient for me. There is no god except Him. Upon Him I rely, and He is the Lord of the Great Throne.",
         "reference": "Quran 9:129, Abu Dawud",
-        "repeat": 7
+        "repeat": 7,
+        "title": "Reliance on Allah (HasbiyAllah)"
     },
     {
         "id": 9,
@@ -69,7 +77,8 @@
         "romanization": "Bismillaahil-ladhee laa yadurru ma'asmihi shay'un fil ardi wa laa fis-samaa'i wa huwas-samee'ul-'aleem",
         "english": "In the name of Allah with Whose name nothing on earth or in the heavens can cause harm, and He is the All-Hearing, the All-Knowing.",
         "reference": "Abu Dawud 4:323, At-Tirmidhi 5:133",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Protection from Harm"
     },
     {
         "id": 10,
@@ -77,7 +86,8 @@
         "romanization": "Allaahumma innee as'alukal 'afwa wal 'aafiyah fid-dunyaa wal aakhirah. Allaahumma innee as'alukal 'afwa wal 'aafiyah fee deenee wa dunyaaya wa ahlee wa maalee",
         "english": "O Allah, I ask You for pardon and well-being in this world and the Hereafter. O Allah, I ask You for pardon and well-being in my religion, my worldly affairs, my family and my wealth.",
         "reference": "Ibn Majah 2:332",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Asking for Well-being"
     },
     {
         "id": 11,
@@ -85,7 +95,8 @@
         "romanization": "Allaahum-mastur 'awraatee wa aamin raw'aatee",
         "english": "O Allah, conceal my weaknesses and calm my fears.",
         "reference": "Ibn Majah 2:332",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Concealing Weaknesses"
     },
     {
         "id": 12,
@@ -93,7 +104,8 @@
         "romanization": "Allaahum-mahfadhnee min bayni yadayy, wa min khalfee, wa 'an yameenee, wa 'an shimaalee, wa min fawqee, wa a'oodhu bi'adhamatika an ughtaala min tahtee",
         "english": "O Allah, protect me from in front of me and from behind me and on my right and on my left and from above me, and I seek refuge in Your greatness from being swallowed up by the earth beneath me.",
         "reference": "Ibn Majah 2:332, Abu Dawud",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Protection from All Directions"
     },
     {
         "id": 13,
@@ -101,7 +113,8 @@
         "romanization": "Radheetu billaahi rabban, wa bil-islaami deenan, wa bi-Muhammadin sallallaahu 'alayhi wa sallama nabiyyan",
         "english": "I am pleased with Allah as my Lord, and with Islam as my religion, and with Muhammad (peace be upon him) as my Prophet.",
         "reference": "Abu Dawud 4:318",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Satisfaction with Islam"
     },
     {
         "id": 14,
@@ -109,7 +122,8 @@
         "romanization": "Subhaanallaahi wa bihamdih",
         "english": "Glory be to Allah and praise be to Him.",
         "reference": "Muslim 4:2071",
-        "repeat": 100
+        "repeat": 100,
+        "title": "Tasbih (SubhanAllah)"
     },
     {
         "id": 15,
@@ -117,7 +131,8 @@
         "romanization": "Laa ilaaha illallaahu wahdahu laa shareeka lah, lahul mulku wa lahul hamd, wa huwa 'alaa kulli shay'in qadeer",
         "english": "None has the right to be worshipped except Allah alone, having no partner. To Him belongs the dominion and praise, and He is over all things competent.",
         "reference": "Sahih al-Bukhari 4:95, Muslim 4:2071",
-        "repeat": 10
+        "repeat": 10,
+        "title": "Tawheed (La ilaha illallah)"
     },
     {
         "id": 16,
@@ -125,7 +140,8 @@
         "romanization": "A'oodhu bikalimaatil-laahit-taammaati min sharri maa khalaq",
         "english": "I seek refuge in the perfect words of Allah from the evil of what He has created.",
         "reference": "Muslim 4:2080",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Protection from Evil of Creation"
     },
     {
         "id": 17,
@@ -133,7 +149,8 @@
         "romanization": "Allaahumma anta khalaqta nafsee wa anta tawaffaahaa, laka mamaatuhaa wa mahyaahaa, in ahyaytahaa fahfadhhaa, wa in amattahaa faghfir lahaa. Allaahumma innee as'alukal 'aafiyah",
         "english": "O Allah, You have created my soul and You take it back. To You belongs its death and its life. If You give it life, then protect it, and if You cause it to die, then forgive it. O Allah, I ask You for well-being.",
         "reference": "Muslim 4:2083",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Supplication for the Soul"
     },
     {
         "id": 18,
@@ -141,6 +158,7 @@
         "romanization": "Bismika Allaahumma amootu wa ahyaa",
         "english": "In Your name, O Allah, I die and I live.",
         "reference": "Sahih al-Bukhari 11:126, Muslim 4:2083",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Remembrance Before Sleep"
     }
 ]

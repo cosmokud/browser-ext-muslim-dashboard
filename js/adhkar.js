@@ -690,7 +690,25 @@ class AdhkarManager {
     const englishText = String(card.english || "(no translation)");
 
     this.topTextEl.textContent = topText;
-    this.englishEl.textContent = englishText;
+
+    // Clear previous content
+    this.englishEl.innerHTML = "";
+
+    // Add English text
+    const textNode = document.createTextNode(englishText);
+    this.englishEl.appendChild(textNode);
+
+    // Add Reference if available
+    if (card.reference) {
+      const divider = document.createElement("div");
+      divider.className = "adhkar-ref-divider";
+      this.englishEl.appendChild(divider);
+
+      const refEl = document.createElement("span");
+      refEl.className = "adhkar-reference";
+      refEl.textContent = card.reference;
+      this.englishEl.appendChild(refEl);
+    }
 
     if (!showRoman) {
       this.topTextEl.setAttribute("lang", "ar");

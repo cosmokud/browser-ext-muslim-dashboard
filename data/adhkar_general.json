@@ -5,7 +5,8 @@
         "romanization": "Rabbanaa aatinaa fid-dunyaa hasanatan wa fil aakhirati hasanatan wa qinaa 'adhaaban-naar",
         "english": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",
         "reference": "Quran 2:201",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Good in Both Worlds (Rabbana Atina)"
     },
     {
         "id": 2,
@@ -13,7 +14,8 @@
         "romanization": "Rabbanaa laa tuzigh quloobanaa ba'da idh hadaytanaa wa hab lanaa min ladunka rahmah, innaka antal-Wahhaab",
         "english": "Our Lord, do not let our hearts deviate after You have guided us, and grant us mercy from Yourself. Indeed, You are the Bestower.",
         "reference": "Quran 3:8",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Steadfastness in Faith"
     },
     {
         "id": 3,
@@ -21,7 +23,8 @@
         "romanization": "Rabbanaa dhalamnaa anfusanaa wa in lam taghfir lanaa wa tarhamnaa lanakoonanna minal khaasireen",
         "english": "Our Lord, we have wronged ourselves, and if You do not forgive us and have mercy upon us, we will surely be among the losers.",
         "reference": "Quran 7:23 (Dua of Adam)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Adam (Forgiveness)"
     },
     {
         "id": 4,
@@ -29,7 +32,8 @@
         "romanization": "Rabbighfir lee wa liwaalidayya wa liman dakhala baytiya mu'minan wa lil-mu'mineena wal-mu'minaat",
         "english": "My Lord, forgive me and my parents and whoever enters my house as a believer, and the believing men and believing women.",
         "reference": "Quran 71:28 (Dua of Nuh)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Nuh (Forgiveness for Believers)"
     },
     {
         "id": 5,
@@ -37,7 +41,8 @@
         "romanization": "Rabbi-j'alnee muqeemas-salaati wa min dhurriyyatee, rabbanaa wa taqabbal du'aa",
         "english": "My Lord, make me an establisher of prayer, and from my descendants. Our Lord, accept my supplication.",
         "reference": "Quran 14:40 (Dua of Ibrahim)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Ibrahim (Establish Prayer)"
     },
     {
         "id": 6,
@@ -45,7 +50,8 @@
         "romanization": "Rabbi awzi'nee an ashkura ni'matakal-latee an'amta 'alayya wa 'alaa waalidayya wa an a'mala saalihan tardaahu wa adkhilnee birahmatika fee 'ibaadikas-saaliheen",
         "english": "My Lord, enable me to be grateful for Your favor which You have bestowed upon me and upon my parents and to do righteousness of which You approve. And admit me by Your mercy into Your righteous servants.",
         "reference": "Quran 27:19 (Dua of Sulaiman)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Sulaiman (Gratitude)"
     },
     {
         "id": 7,
@@ -53,7 +59,8 @@
         "romanization": "Rabbish-rah lee sadree, wa yassir lee amree, wahlul 'uqdatan min lisaanee, yafqahoo qawlee",
         "english": "My Lord, expand for me my breast, and ease for me my task, and untie the knot from my tongue, that they may understand my speech.",
         "reference": "Quran 20:25-28 (Dua of Musa)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Musa (Ease of Task)"
     },
     {
         "id": 8,
@@ -61,7 +68,8 @@
         "romanization": "Rabbi innee massaniyadh-dhurru wa anta arhamur-raahimeen",
         "english": "My Lord, indeed adversity has touched me, and You are the Most Merciful of the merciful.",
         "reference": "Quran 21:83 (Dua of Ayyub)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Ayyub (Relief from Distress)"
     },
     {
         "id": 9,
@@ -69,7 +77,8 @@
         "romanization": "Laa ilaaha illaa anta subhaanaka innee kuntu minadh-dhaalimeen",
         "english": "There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers.",
         "reference": "Quran 21:87 (Dua of Yunus)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Dua of Yunus (Distress)"
     },
     {
         "id": 10,
@@ -77,7 +86,8 @@
         "romanization": "Rabbanaa hab lanaa min azwaajinaa wa dhurriyyaatinaa qurrata a'yunin waj'alnaa lil-muttaqeena imaamaa",
         "english": "Our Lord, grant us from among our wives and offspring comfort to our eyes and make us leaders for the righteous.",
         "reference": "Quran 25:74",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Prayer for Righteous Family"
     },
     {
         "id": 11,
@@ -85,7 +95,8 @@
         "romanization": "Allaahumma innee as'alukal-hudaa wat-tuqaa wal-'afaafa wal-ghinaa",
         "english": "O Allah, I ask You for guidance, piety, chastity, and sufficiency.",
         "reference": "Muslim 4:2089",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Asking for Guidance and Sufficiency"
     },
     {
         "id": 12,
@@ -93,7 +104,8 @@
         "romanization": "Allaahumma aslih lee deeniyal-ladhee huwa 'ismatu amree, wa aslih lee dunyaayal-latee feehaa ma'aashee, wa aslih lee aakhiratiyal-latee feehaa ma'aadee, waj'alil-hayaata ziyaadatan lee fee kulli khayr, waj'alil-mawta raahatan lee min kulli sharr",
         "english": "O Allah, set right for me my religion which is the safeguard of my affairs. And set right for me my worldly life wherein is my livelihood. And set right for me my Hereafter to which is my return. And make life an increase for me in every good, and make death a relief for me from every evil.",
         "reference": "Muslim 4:2088",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Comprehensive Welfare"
     },
     {
         "id": 13,
@@ -101,7 +113,8 @@
         "romanization": "Allaahumma innee a'oodhu bika minal-hammi wal-hazan, wa a'oodhu bika minal-'ajzi wal-kasal, wa a'oodhu bika minal-jubni wal-bukhl, wa a'oodhu bika min ghalabatid-dayni wa qahrir-rijaal",
         "english": "O Allah, I seek refuge in You from anxiety and sorrow, from weakness and laziness, from cowardice and miserliness, from the burden of debt and from being overpowered by men.",
         "reference": "Sahih al-Bukhari 7:158",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Protection from Anxiety and Debt"
     },
     {
         "id": 14,
@@ -109,7 +122,8 @@
         "romanization": "Allaahum-maghfir lee khateeatee wa jahlee wa israafee fee amree wa maa anta a'lamu bihi minnee",
         "english": "O Allah, forgive me my sins, my ignorance, my extravagance in my affairs, and what You know better than I.",
         "reference": "Sahih al-Bukhari 8:407, Muslim 4:2087",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Forgiveness for Errors and Excess"
     },
     {
         "id": 15,
@@ -117,7 +131,8 @@
         "romanization": "Allaahumma innee as'aluka 'ilman naafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbalan",
         "english": "O Allah, I ask You for beneficial knowledge, good provision, and accepted deeds.",
         "reference": "Ibn Majah 1:152",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Knowledge, Provision, and Deeds"
     },
     {
         "id": 16,
@@ -125,7 +140,8 @@
         "romanization": "Rabbi zidnee 'ilmaa",
         "english": "My Lord, increase me in knowledge.",
         "reference": "Quran 20:114",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Increase in Knowledge"
     },
     {
         "id": 17,
@@ -133,7 +149,8 @@
         "romanization": "Allaahumma-nfa'nee bimaa 'allamtanee, wa 'allimnee maa yanfa'unee, wa zidnee 'ilmaa",
         "english": "O Allah, benefit me with what You have taught me, teach me what will benefit me, and increase me in knowledge.",
         "reference": "Ibn Majah 1:251, At-Tirmidhi 5:578",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Beneficial Knowledge"
     },
     {
         "id": 18,
@@ -141,7 +158,8 @@
         "romanization": "Allaahumma innee as'alukal-jannah wa a'oodhu bika minan-naar",
         "english": "O Allah, I ask You for Paradise and I seek refuge in You from the Fire.",
         "reference": "Abu Dawud 4:323",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Asking for Paradise"
     },
     {
         "id": 19,
@@ -149,7 +167,8 @@
         "romanization": "Allaahumma a'innee 'alaa dhikrika wa shukrika wa husni 'ibaadatik",
         "english": "O Allah, help me to remember You, to give thanks to You, and to worship You in the best way.",
         "reference": "Abu Dawud 2:86",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Help in Worship"
     },
     {
         "id": 20,
@@ -157,7 +176,8 @@
         "romanization": "Allaahumma innee a'oodhu bika min 'ilmin laa yanfa', wa min qalbin laa yakhsha', wa min nafsin laa tashba', wa min da'watin laa yustajabu lahaa",
         "english": "O Allah, I seek refuge in You from knowledge that is not beneficial, from a heart that does not humble itself, from a soul that is never satisfied, and from a supplication that is not answered.",
         "reference": "Muslim 4:2088",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Protection from Useless Knowledge"
     },
     {
         "id": 21,
@@ -165,7 +185,8 @@
         "romanization": "Allaahumma-hdinee wa saddidnee",
         "english": "O Allah, guide me and make me steadfast.",
         "reference": "Muslim 4:2090",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Guidance and Steadfastness"
     },
     {
         "id": 22,
@@ -173,7 +194,8 @@
         "romanization": "Yaa muqallibal quloob, thabbit qalbee 'alaa deenika",
         "english": "O Turner of hearts, make my heart firm upon Your religion.",
         "reference": "At-Tirmidhi 4:447",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Firmness of Heart"
     },
     {
         "id": 23,
@@ -181,7 +203,8 @@
         "romanization": "Allaahumma innee as'aluka minal khayri kullihi 'aajilihi wa aajilihi, maa 'alimtu minhu wa maa lam a'lam. Wa a'oodhu bika minash-sharri kullihi 'aajilihi wa aajilihi, maa 'alimtu minhu wa maa lam a'lam",
         "english": "O Allah, I ask You for all good, immediate and deferred, that which I know and that which I do not know. And I seek refuge in You from all evil, immediate and deferred, that which I know and that which I do not know.",
         "reference": "Ibn Majah 2:328",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Comprehensive Good"
     },
     {
         "id": 24,
@@ -189,7 +212,8 @@
         "romanization": "Allaahumma innee as'alukal hudaa was-sadaad",
         "english": "O Allah, I ask You for guidance and steadfastness.",
         "reference": "Muslim 4:2090",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Guidance and Rectitude"
     },
     {
         "id": 25,
@@ -197,7 +221,8 @@
         "romanization": "Subhaanallaah, walhamdulillaah, wa laa ilaaha illallaah, wallaahu akbar",
         "english": "Glory be to Allah, praise be to Allah, there is no god but Allah, and Allah is the Greatest.",
         "reference": "Muslim 4:2072",
-        "repeat": 10
+        "repeat": 10,
+        "title": "The Four Beloved Words"
     },
     {
         "id": 26,
@@ -205,7 +230,8 @@
         "romanization": "Laa hawla wa laa quwwata illaa billaah",
         "english": "There is no might nor power except with Allah.",
         "reference": "Sahih al-Bukhari, Muslim",
-        "repeat": 10
+        "repeat": 10,
+        "title": "Hawqala (Strength from Allah)"
     },
     {
         "id": 27,
@@ -213,7 +239,8 @@
         "romanization": "Astaghfirullaahal-'adheemal-ladhee laa ilaaha illaa huwal-hayyul-qayyoom wa atoobu ilayh",
         "english": "I seek forgiveness from Allah, the Magnificent, whom there is no god but He, the Living, the Self-Sustaining, and I repent to Him.",
         "reference": "Abu Dawud, At-Tirmidhi",
-        "repeat": 3
+        "repeat": 3,
+        "title": "Istighfar"
     },
     {
         "id": 28,
@@ -221,7 +248,8 @@
         "romanization": "Allaahumma salli 'alaa Muhammadin wa 'alaa aali Muhammadin kamaa sallayta 'alaa Ibraaheema wa 'alaa aali Ibraaheema innaka hameedun majeed. Allaahumma baarik 'alaa Muhammadin wa 'alaa aali Muhammadin kamaa baarakta 'alaa Ibraaheema wa 'alaa aali Ibraaheema innaka hameedun majeed",
         "english": "O Allah, send prayers upon Muhammad and upon the family of Muhammad, as You sent prayers upon Ibrahim and upon the family of Ibrahim. Indeed, You are Praiseworthy and Glorious. O Allah, bless Muhammad and the family of Muhammad, as You blessed Ibrahim and the family of Ibrahim. Indeed, You are Praiseworthy and Glorious.",
         "reference": "Sahih al-Bukhari 4:589",
-        "repeat": 10
+        "repeat": 10,
+        "title": "Salawat (Durud Ibrahim)"
     },
     {
         "id": 29,
@@ -229,7 +257,8 @@
         "romanization": "Bismillaahi tawakkaltu 'alallaah, laa hawla wa laa quwwata illaa billaah",
         "english": "In the name of Allah, I place my trust in Allah. There is no might nor power except with Allah.",
         "reference": "Abu Dawud 4:325, At-Tirmidhi 5:490 (When leaving home)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Trust When Leaving Home"
     },
     {
         "id": 30,
@@ -237,6 +266,7 @@
         "romanization": "Bismillaah, Allaahumma innee a'oodhu bika minal khubuthi wal khabaa'ith",
         "english": "In the name of Allah. O Allah, I seek refuge in You from the evil male and female jinn.",
         "reference": "Sahih al-Bukhari 1:144, Muslim 1:283 (When entering bathroom)",
-        "repeat": 1
+        "repeat": 1,
+        "title": "Protection When Entering Bathroom"
     }
 ]

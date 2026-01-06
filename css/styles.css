@@ -9738,6 +9738,20 @@ body.sticky-note-resizing {
   overflow-wrap: anywhere;
 }
 
+.adhkar-ref-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: var(--spacing-sm) 0;
+  width: 100%;
+}
+
+.adhkar-reference {
+  display: block;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: var(--spacing-xs);
+}
+
 /* Animations (nav + script toggle) */
 @keyframes adhkarSwapNext {
   0% {
