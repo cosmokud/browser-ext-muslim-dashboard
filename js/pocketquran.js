@@ -372,8 +372,13 @@ class PocketQuranManager {
     this._activeTranslationId = 85;
     this._fetchController = null;
     this._scrollHighlightTimer = null;
+    this._scrollToAyahHighlightTimer = null;
     this._ayahJumpTimer = null;
     this._surahQuery = "";
+
+    // Incremented whenever the user switches surahs. Used to invalidate any
+    // pending scroll/highlight callbacks so they can't affect another surah.
+    this._surahViewNonce = 0;
 
     // Verse caching
     this._versesCache = new Map();
@@ -1737,6 +1742,32 @@ class PocketQuranManager {
     }
   }
 
+  invalidateAyahViewEffects() {
+    this._surahViewNonce = (this._surahViewNonce || 0) + 1;
+
+    if (this._scrollToAyahHighlightTimer) {
+      clearTimeout(this._scrollToAyahHighlightTimer);
+      this._scrollToAyahHighlightTimer = null;
+    }
+
+    if (this._scrollHighlightTimer) {
+      clearTimeout(this._scrollHighlightTimer);
+      this._scrollHighlightTimer = null;
+    }
+
+    // Remove any in-progress highlight/playing visuals from the current view.
+    try {
+      if (this._virtualContent) {
+        this._virtualContent
+          .querySelectorAll(".pq-highlight")
+          .forEach((el) => el.classList.remove("pq-highlight"));
+        this._virtualContent
+          .querySelectorAll(".pq-ayah-play-btn.playing")
+          .forEach((el) => el.classList.remove("playing"));
+      }
+    } catch (e) {}
+  }
+
   async setActiveSurah(surahNumber, opts = {}) {
     const {
       preserveAyah = false,
@@ -1758,6 +1789,10 @@ class PocketQuranManager {
       this.updateSurahInputValue({ force: true });
       return;
     }
+
+    // User is navigating to another surah: stop any pending scroll/highlight
+    // callbacks so autoplay recitation can't drive the new surah view.
+    this.invalidateAyahViewEffects();
 
     this._activeSurah = surah;
     if (!preserveAyah) this._activeAyah = 1;
