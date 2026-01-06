@@ -9678,12 +9678,15 @@ body.sticky-note-resizing {
 
 /* Dashboard card typography */
 .adhkar-card {
+  display: flex !important;
+  flex-direction: column;
   --adhkar-arabic-font-size: 28px;
   --adhkar-romanization-font-size: 18px;
   --adhkar-english-font-size: 18px;
 }
 
 .adhkar-viewer {
+  flex: 1;
   align-items: stretch;
 }
 
