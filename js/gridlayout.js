@@ -96,6 +96,39 @@ class GridLayoutManager {
   }
 
   /**
+   * Update flex basis for the current DOM rows without rebuilding/repacking rows.
+   * This is used after manual drag-and-drop so the user's row boundaries remain intact.
+   */
+  updateFlexBasisForCurrentDOM() {
+    if (!this.grid) return;
+
+    // Recompute responsive spans, but do not rebuild rows.
+    this.calculateResponsiveLayout();
+
+    const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
+    rowWrappers.forEach((rowWrapper) => {
+      const rowItems = Array.from(rowWrapper.children);
+      const visibleItems = rowItems.filter((el) => !this.isComponentHidden(el));
+
+      rowItems.forEach((el) => {
+        const id = el.dataset.gridId;
+        if (id) {
+          this.setItemFlexBasis(el, id, visibleItems.length);
+        }
+      });
+
+      // Hide row if all items are hidden
+      if (visibleItems.length === 0) {
+        rowWrapper.style.display = "none";
+      } else {
+        rowWrapper.style.display = "";
+      }
+    });
+
+    this.updateGridItems();
+  }
+
+  /**
    * Initialize the grid layout manager
    */
   init() {
@@ -874,6 +907,13 @@ class GridLayoutManager {
 
     if (!targetRow) return;
 
+    const targetRowRect = targetRow.getBoundingClientRect();
+    const targetLayoutRowIndex = Number.isFinite(
+      parseInt(targetRow.dataset.rowIndex, 10)
+    )
+      ? parseInt(targetRow.dataset.rowIndex, 10)
+      : targetRowIndex;
+
     // Check if we can drop in this row based on span constraints
     const rowItems = Array.from(targetRow.children).filter(
       (el) =>
@@ -895,17 +935,27 @@ class GridLayoutManager {
     // Determine if we need to create a new row
     const needsNewRow = totalSpan > 6 || draggedConfig.span === 6;
 
-    if (needsNewRow && rowItems.length > 0) {
-      // Create insertion point for new row (above or below current row)
-      const rowRect = targetRow.getBoundingClientRect();
-      const rowCenterY = rowRect.top + rowRect.height / 2;
+    // Allow any component to create a new row when hovering near the top/bottom edge of a row.
+    // This enables intentionally placing a component on its own row even if it would fit.
+    const NEW_ROW_EDGE_ZONE_PX = 28;
+    const nearTopEdge = clientY < targetRowRect.top + NEW_ROW_EDGE_ZONE_PX;
+    const nearBottomEdge =
+      clientY > targetRowRect.bottom - NEW_ROW_EDGE_ZONE_PX;
+    const wantsNewRow = rowItems.length > 0 && (nearTopEdge || nearBottomEdge);
 
-      if (clientY < rowCenterY) {
-        // Insert above - move placeholder to a new row above
-        this.movePlaceholderToNewRow(targetRowIndex, "before");
+    if ((needsNewRow || wantsNewRow) && rowItems.length > 0) {
+      // Create insertion point for new row (above or below current row)
+      if (wantsNewRow) {
+        this.movePlaceholderToNewRow(
+          targetLayoutRowIndex,
+          nearTopEdge ? "before" : "after"
+        );
       } else {
-        // Insert below - move placeholder to a new row below
-        this.movePlaceholderToNewRow(targetRowIndex, "after");
+        const rowCenterY = targetRowRect.top + targetRowRect.height / 2;
+        this.movePlaceholderToNewRow(
+          targetLayoutRowIndex,
+          clientY < rowCenterY ? "before" : "after"
+        );
       }
     } else {
       // Can drop within this row - find position
@@ -1104,8 +1154,8 @@ class GridLayoutManager {
     // Update rows array from DOM
     this.updateRowsFromDOM();
 
-    // Recalculate flex basis for all items
-    this.recalculateLayout();
+    // Update flex basis for all items without repacking rows
+    this.updateFlexBasisForCurrentDOM();
 
     // Remove dragging class from grid
     this.grid.classList.remove("grid-is-dragging");
