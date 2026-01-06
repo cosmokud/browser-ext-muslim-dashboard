@@ -320,6 +320,11 @@ class PocketQuranManager {
   // Increasing this makes the active-ayah detection less "tight".
   static ACTIVE_AYAH_VISIBILITY_PX = 48;
 
+  // Vertical offset applied while auto-scrolling during recitation playback (in px).
+  // A small negative offset (e.g., -10px) nudges the view so the playing ayah sits
+  // slightly lower for better readability during recitation.
+  static RECITATION_AUTOSCROLL_OFFSET_PX = 10;
+
   // Bookmark constants
   static BOOKMARKS_PER_PAGE = 10;
   static CATEGORIES_PER_PAGE = 10;
@@ -1233,6 +1238,18 @@ class PocketQuranManager {
         } else {
           // Fallback to calculated offset
           offset = this.getAyahOffset(index);
+        }
+
+        // Apply a small upward offset when auto-scrolling during recitation playback.
+        // This nudges the view by -RECITATION_AUTOSCROLL_OFFSET_PX so the playing ayah
+        // sits slightly lower for readability.
+        if (
+          this._isAutoScroll &&
+          this._playingAyah &&
+          this._playingAyah.surah === this._activeSurah &&
+          this._playingAyah.ayah === n
+        ) {
+          offset = Math.max(0, offset - PocketQuranManager.RECITATION_AUTOSCROLL_OFFSET_PX);
         }
 
         // Prevent scroll handler from overwriting the active ayah mid smooth-scroll.
