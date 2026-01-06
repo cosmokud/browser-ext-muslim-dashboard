@@ -2357,11 +2357,26 @@ class SettingsManager {
         updatedAt: s.updatedAt || null,
         cards: Array.isArray(s.cards)
           ? s.cards
-              .filter((c) => c && (c.arabic || c.romanization || c.english))
+              .filter(
+                (c) =>
+                  c &&
+                  (c.arabic ||
+                    c.romanization ||
+                    c.english ||
+                    c.title ||
+                    c.reference)
+              )
               .map((c) => ({
+                title: String(c.title || ""),
                 arabic: String(c.arabic || ""),
                 romanization: String(c.romanization || ""),
                 english: String(c.english || ""),
+                reference: String(c.reference || ""),
+                repeat:
+                  Number.isFinite(parseInt(c.repeat, 10)) &&
+                  parseInt(c.repeat, 10) > 0
+                    ? parseInt(c.repeat, 10)
+                    : 1,
               }))
           : [],
       }));
@@ -2679,11 +2694,25 @@ class SettingsManager {
         updatedAt: s.updatedAt || null,
         cards: Array.isArray(s.cards)
           ? s.cards
-              .filter((c) => c && (c.arabic || c.romanization || c.english))
+              .filter(
+                (c) =>
+                  c &&
+                  (c.arabic ||
+                    c.romanization ||
+                    c.english ||
+                    c.title ||
+                    c.reference)
+              )
               .map((c) => ({
+                title: String(c.title || ""),
                 arabic: String(c.arabic || ""),
                 romanization: String(c.romanization || ""),
                 english: String(c.english || ""),
+                reference: String(c.reference || ""),
+                repeat: (() => {
+                  const n = parseInt(c.repeat, 10);
+                  return Number.isFinite(n) && n > 0 ? Math.min(n, 9999) : 1;
+                })(),
               }))
           : [],
       }))

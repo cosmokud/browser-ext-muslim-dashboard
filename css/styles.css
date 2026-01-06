@@ -9700,6 +9700,7 @@ body.sticky-note-resizing {
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: center;
+  position: relative;
 }
 
 .adhkar-meta-title {
@@ -9806,6 +9807,25 @@ body.sticky-note-resizing {
   margin-top: var(--spacing-xs);
 }
 
+.adhkar-repeat-badge {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--accent-gold-light-, var(--accent-gold-light));
+  font-size: 0.75rem;
+  line-height: 1.1;
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
 /* Animations (nav + script toggle) */
 @keyframes adhkarSwapNext {
   0% {
@@ -9888,9 +9908,14 @@ body.sticky-note-resizing {
   overflow: hidden;
 }
 
+.adhkar-editor-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 .adhkar-editor-header {
   display: grid;
-  grid-template-columns: 42px 1fr 1fr 1fr 34px;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 34px;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   color: var(--text-muted);
@@ -9901,16 +9926,47 @@ body.sticky-note-resizing {
 
 .adhkar-editor-body {
   max-height: 320px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .adhkar-row {
   display: grid;
-  grid-template-columns: 42px 1fr 1fr 1fr 34px;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 34px;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   align-items: start;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adhkar-row-meta {
+  grid-column: 2 / 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-width: 0;
+}
+
+.adhkar-kv {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.adhkar-k {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.adhkar-meta-input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  min-width: 0;
+}
+
+.adhkar-meta-input[data-field="repeat"] {
+  width: 90px;
 }
 
 .adhkar-row:hover {
@@ -9926,6 +9982,8 @@ body.sticky-note-resizing {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  grid-row: 1 / span 2;
+  align-self: center;
 }
 
 .adhkar-textarea {
@@ -9934,6 +9992,7 @@ body.sticky-note-resizing {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.4;
+  min-width: 0;
 }
 
 .adhkar-row-delete {
@@ -9950,6 +10009,8 @@ body.sticky-note-resizing {
   align-items: center;
   justify-content: center;
   transition: background var(--transition-fast), color var(--transition-fast);
+  grid-row: 1 / span 2;
+  align-self: center;
 }
 
 .adhkar-row-delete:hover {
@@ -9959,7 +10020,7 @@ body.sticky-note-resizing {
 @media (max-width: 560px) {
   .adhkar-editor-header,
   .adhkar-row {
-    grid-template-columns: 34px 1fr 1fr 1fr 30px;
+    grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 30px;
   }
 }
 

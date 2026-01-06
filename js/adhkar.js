@@ -49,6 +49,7 @@ class AdhkarManager {
     this.englishEl = document.getElementById("adhkarEnglishText");
     this.referenceDividerEl = document.getElementById("adhkarReferenceDivider");
     this.referenceEl = document.getElementById("adhkarReferenceText");
+    this.repeatEl = document.getElementById("adhkarRepeatText");
     this.scriptToggleBtn = document.getElementById("adhkarScriptToggleBtn");
 
     // Dashboard jump controls
@@ -789,6 +790,11 @@ class AdhkarManager {
 
       this.updateAutoAdvanceToggleUi();
       this.updateJumpControls();
+
+      if (this.repeatEl) {
+        this.repeatEl.hidden = true;
+        this.repeatEl.textContent = "";
+      }
       return;
     }
 
@@ -801,6 +807,15 @@ class AdhkarManager {
     // --- Render Title ---
     if (this.titleEl) {
       this.titleEl.textContent = card.title || "";
+    }
+
+    // --- Render Repeat badge (bottom-right) ---
+    if (this.repeatEl) {
+      const parsedRepeat = parseInt(card.repeat, 10);
+      const repeat =
+        Number.isFinite(parsedRepeat) && parsedRepeat > 0 ? parsedRepeat : 1;
+      this.repeatEl.hidden = false;
+      this.repeatEl.textContent = `${repeat}x`;
     }
 
     const showRoman = this.getShowRomanization();
@@ -1066,17 +1081,19 @@ class AdhkarManager {
     // Editor updates (delegated)
     this.settingsList.addEventListener("input", (e) => {
       if (this.isDefaultActiveSet()) return;
-      const textarea = e.target.closest("textarea");
-      if (!textarea) return;
-      const row = textarea.closest(".adhkar-row");
+      const fieldEl = e.target.closest("textarea, input");
+      if (!fieldEl) return;
+      const row = fieldEl.closest(".adhkar-row");
       if (!row) return;
       const idx = Number(row.dataset.index);
-      const field = textarea.dataset.field;
+      const field = fieldEl.dataset.field;
       if (!Number.isFinite(idx)) return;
-      this.updateItemField(idx, field, textarea.value);
+      this.updateItemField(idx, field, fieldEl.value);
 
       // Auto-resize textareas for a polished editor UX
-      this.autoResizeTextarea(textarea);
+      if (fieldEl.tagName === "TEXTAREA") {
+        this.autoResizeTextarea(fieldEl);
+      }
     });
 
     this.settingsList.addEventListener("click", (e) => {
@@ -1186,10 +1203,72 @@ class AdhkarManager {
 
     const rows = [];
     for (let i = start; i < end; i += 1) {
-      const c = items[i] || { arabic: "", romanization: "", english: "" };
+      const c = items[i] || {
+        title: "",
+        repeat: 1,
+        reference: "",
+        arabic: "",
+        romanization: "",
+        english: "",
+      };
+      const parsedRepeat = parseInt(c.repeat, 10);
+      const repeatValue =
+        Number.isFinite(parsedRepeat) && parsedRepeat > 0
+          ? String(parsedRepeat)
+          : "1";
       rows.push(`
         <div class="adhkar-row" data-index="${i}">
           <div class="adhkar-row-index">${i + 1}</div>
+          <div class="adhkar-row-meta">
+            <label class="adhkar-kv">
+              <span class="adhkar-k">title</span>
+              <input
+                class="adhkar-meta-input setting-input"
+                type="text"
+                data-field="title"
+                placeholder="Title"
+                maxlength="200"
+                value="${this.escapeHtmlAttr(c.title || "")}"
+                ${readOnly ? "disabled" : ""}
+              />
+            </label>
+            <label class="adhkar-kv">
+              <span class="adhkar-k">repeat</span>
+              <input
+                class="adhkar-meta-input setting-input"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                max="9999"
+                step="1"
+                data-field="repeat"
+                value="${this.escapeHtmlAttr(repeatValue)}"
+                ${readOnly ? "disabled" : ""}
+              />
+            </label>
+            <label class="adhkar-kv">
+              <span class="adhkar-k">reference</span>
+              <input
+                class="adhkar-meta-input setting-input"
+                type="text"
+                data-field="reference"
+                placeholder="Reference"
+                maxlength="400"
+                value="${this.escapeHtmlAttr(c.reference || "")}"
+                ${readOnly ? "disabled" : ""}
+              />
+            </label>
+          </div>
+          <button
+            class="adhkar-row-delete"
+            type="button"
+            data-action="delete-item"
+            title="Delete"
+            aria-label="Delete item"
+            ${readOnly ? "disabled" : ""}
+          >
+            ×
+          </button>
           <textarea
             class="adhkar-cell adhkar-textarea setting-input"
             data-field="arabic"
@@ -1214,30 +1293,22 @@ class AdhkarManager {
             maxlength="4000"
             ${readOnly ? "disabled" : ""}
           >${this.escapeHtmlAttr(c.english || "")}</textarea>
-          <button
-            class="adhkar-row-delete"
-            type="button"
-            data-action="delete-item"
-            title="Delete"
-            aria-label="Delete item"
-            ${readOnly ? "disabled" : ""}
-          >
-            ×
-          </button>
         </div>
       `);
     }
 
     this.settingsList.innerHTML = `
-      <div class="adhkar-editor-header">
-        <div>#</div>
-        <div>Arabic</div>
-        <div>Romanization</div>
-        <div>English</div>
-        <div></div>
-      </div>
-      <div class="adhkar-editor-body">
-        ${rows.join("")}
+      <div class="adhkar-editor-scroll">
+        <div class="adhkar-editor-header">
+          <div>#</div>
+          <div>Arabic</div>
+          <div>Romanization</div>
+          <div>English</div>
+          <div></div>
+        </div>
+        <div class="adhkar-editor-body">
+          ${rows.join("")}
+        </div>
       </div>
     `;
 
@@ -1562,9 +1633,15 @@ class AdhkarManager {
       name: String(active.name || "Adhkar").slice(0, 60),
       cards: Array.isArray(active.cards)
         ? active.cards.map((c) => ({
+            title: String(c.title || ""),
             arabic: String(c.arabic || ""),
             romanization: String(c.romanization || ""),
             english: String(c.english || ""),
+            reference: String(c.reference || ""),
+            repeat:
+              typeof c.repeat === "number" && Number.isFinite(c.repeat)
+                ? c.repeat
+                : 1,
           }))
         : [],
     };
@@ -1626,7 +1703,14 @@ class AdhkarManager {
     }
 
     active.cards = Array.isArray(active.cards) ? active.cards : [];
-    active.cards.push({ arabic: "", romanization: "", english: "" });
+    active.cards.push({
+      title: "",
+      repeat: 1,
+      reference: "",
+      arabic: "",
+      romanization: "",
+      english: "",
+    });
     active.updatedAt = new Date().toISOString();
     this.saveSets(sets);
 
@@ -1646,10 +1730,23 @@ class AdhkarManager {
 
     if (this.isProtectedSetId(active.id)) return;
 
-    if (field !== "arabic" && field !== "romanization" && field !== "english")
-      return;
+    const allowed = new Set([
+      "title",
+      "repeat",
+      "reference",
+      "arabic",
+      "romanization",
+      "english",
+    ]);
+    if (!allowed.has(field)) return;
 
-    active.cards[globalIndex][field] = value;
+    if (field === "repeat") {
+      const n = parseInt(value, 10);
+      const normalized = Number.isFinite(n) && n > 0 ? Math.min(n, 9999) : 1;
+      active.cards[globalIndex][field] = normalized;
+    } else {
+      active.cards[globalIndex][field] = String(value ?? "");
+    }
     active.updatedAt = new Date().toISOString();
 
     if (this.saveTimer) clearTimeout(this.saveTimer);
@@ -1696,7 +1793,8 @@ class AdhkarManager {
 
     // Ensure the script toggle button appears first (left-most)
     const scriptBtn =
-      this.scriptToggleBtn || headerActions.querySelector("#adhkarScriptToggleBtn");
+      this.scriptToggleBtn ||
+      headerActions.querySelector("#adhkarScriptToggleBtn");
     if (scriptBtn && headerActions.contains(scriptBtn)) {
       headerActions.insertBefore(scriptBtn, headerActions.firstChild);
     }
