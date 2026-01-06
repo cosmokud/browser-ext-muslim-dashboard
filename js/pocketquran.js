@@ -1249,7 +1249,10 @@ class PocketQuranManager {
           this._playingAyah.surah === this._activeSurah &&
           this._playingAyah.ayah === n
         ) {
-          offset = Math.max(0, offset - PocketQuranManager.RECITATION_AUTOSCROLL_OFFSET_PX);
+          offset = Math.max(
+            0,
+            offset - PocketQuranManager.RECITATION_AUTOSCROLL_OFFSET_PX
+          );
         }
 
         // Prevent scroll handler from overwriting the active ayah mid smooth-scroll.
@@ -2492,6 +2495,23 @@ class PocketQuranManager {
   }
 
   /**
+   * Pause playback at the end of a surah but preserve the autoplay preference.
+   * This prevents the UI's autoplay toggle from being cleared when a surah finishes.
+   */
+  finishPlaybackAtSurahEnd() {
+    if (!this._audioElement) return;
+
+    this._audioElement.pause();
+    this._audioElement.currentTime = 0;
+    this._isPlaying = false;
+    this._playingAyah = null;
+    // Intentionally do NOT change this._isAutoplay: keep user's autoplay setting.
+    this.resetRecitationCaches();
+
+    this.updatePlaybackUI();
+  }
+
+  /**
    * Handle audio ended event.
    */
   handleAudioEnded() {
@@ -2520,8 +2540,8 @@ class PocketQuranManager {
         // Fallback: normal async path (fetches metadata if needed)
         this.playAyah(surah, nextAyah);
       } else {
-        // End of surah
-        this.stopPlayback();
+        // End of surah — stop audio but keep autoplay preference enabled.
+        this.finishPlaybackAtSurahEnd();
       }
       return;
     }
