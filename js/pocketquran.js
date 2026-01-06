@@ -2634,14 +2634,19 @@ class PocketQuranManager {
       this._playingAyah &&
       this._activeSurah === this._playingAyah.surah
     ) {
-      this.scrollToAyah(this._playingAyah.ayah, { persist: false, smooth: true });
+      this.scrollToAyah(this._playingAyah.ayah, {
+        persist: false,
+        smooth: true,
+      });
     }
   }
 
   getSurahNameSimple(surah) {
     const id = parseInt(surah, 10);
     const chapter = this._chapters?.find((c) => c.id === id);
-    return chapter?.name_simple || `Surah ${Number.isFinite(id) ? id : ""}`.trim();
+    return (
+      chapter?.name_simple || `Surah ${Number.isFinite(id) ? id : ""}`.trim()
+    );
   }
 
   formatRecitationAyahLabel(surah, ayah) {
