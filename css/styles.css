@@ -8300,23 +8300,20 @@ body.sticky-note-resizing {
 .pocket-quran-ayah.pq-highlight {
   /* Border is animated within pqGlow so it fades in + out gracefully */
   animation: pqGlow 2.1s ease-out;
-  will-change: transform, box-shadow, border-color;
+  will-change: box-shadow, border-color;
 }
 
 @keyframes pqGlow {
   /* Fade border color in quickly, hold a subtle glow, then fade out */
   0% {
-    transform: translateY(0) scale(1);
     box-shadow: 0 0 0 rgba(212, 175, 55, 0);
     border-color: rgba(212, 175, 55, 0);
   }
   10% {
-    transform: translateY(0) scale(0.99);
     box-shadow: 0 6px 24px rgba(212, 175, 55, 0.12);
     border-color: rgba(212, 175, 55, 0.9);
   }
   45% {
-    transform: translateY(0) scale(1);
     box-shadow: 0 18px 60px rgba(212, 175, 55, 0.12);
     border-color: rgba(212, 175, 55, 0.65);
   }
@@ -8325,7 +8322,6 @@ body.sticky-note-resizing {
     border-color: rgba(212, 175, 55, 0.35);
   }
   100% {
-    transform: translateY(0) scale(1);
     box-shadow: none;
     border-color: rgba(212, 175, 55, 0);
   }

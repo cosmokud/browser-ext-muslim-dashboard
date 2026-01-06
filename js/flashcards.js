@@ -23,13 +23,13 @@ class FlashcardManager {
     },
     {
       id: "default_99names_ar",
-      name: "99 Names of Allah (Arabic)",
+      name: "99 Names of Allah (al-Tirmidhi - Arabic)",
       file: "data/flashcard_99names_ar.csv",
       parser: "pipe",
     },
     {
       id: "default_99names_en",
-      name: "99 Names of Allah (English)",
+      name: "99 Names of Allah (al-Tirmidhi - English)",
       file: "data/flashcard_99names_en.csv",
       parser: "pipe",
     },
