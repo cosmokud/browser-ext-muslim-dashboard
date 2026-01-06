@@ -10265,6 +10265,384 @@ body.sticky-note-resizing {
   padding: var(--spacing-xl);
   color: var(--text-muted);
 }
+
+/* Adhkar Editor Table Styles */
+.adhkar-editor-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+}
+
+.adhkar-editor-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.adhkar-editor-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(30, 40, 50, 0.98);
+}
+
+.adhkar-editor-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+
+.adhkar-editor-table td {
+  padding: var(--spacing-sm);
+  vertical-align: top;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adhkar-editor-table tbody tr:hover {
+  background: var(--glass-bg-hover);
+}
+
+.adhkar-editor-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Editor columns width distribution */
+.adhkar-col-id {
+  width: 50px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.adhkar-col-title {
+  width: 150px;
+}
+
+.adhkar-col-arabic {
+  width: 200px;
+}
+
+.adhkar-col-romanization {
+  width: 200px;
+}
+
+.adhkar-col-translation {
+  width: 200px;
+}
+
+.adhkar-col-repeat {
+  width: 70px;
+}
+
+.adhkar-col-actions {
+  width: 40px;
+  text-align: center;
+}
+
+/* Editor inputs and textareas */
+.adhkar-editor-input {
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: border-color var(--transition-fast);
+}
+
+.adhkar-editor-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.adhkar-editor-textarea {
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  resize: none;
+  min-height: 48px;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  transition: border-color var(--transition-fast);
+}
+
+.adhkar-editor-textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.adhkar-editor-textarea[data-field="arabic"] {
+  direction: rtl;
+  font-family: var(--font-arabic);
+}
+
+.adhkar-repeat-input {
+  width: 60px;
+  text-align: center;
+}
+
+/* Default adhkar notice */
+.adhkar-default-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  text-align: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  min-height: 200px;
+}
+
+.adhkar-default-notice-icon {
+  font-size: 2.5rem;
+  opacity: 0.7;
+}
+
+.adhkar-default-notice-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.adhkar-default-notice-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.adhkar-default-notice-btn {
+  margin-top: var(--spacing-sm);
+}
+
+/* Language selector button */
+.adhkar-lang-selector-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-right: var(--spacing-sm);
+  min-width: 60px;
+}
+
+.adhkar-lang-selector-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.adhkar-lang-selector-btn .flag {
+  font-size: 1.1rem;
+}
+
+/* Language selector modal */
+.adhkar-lang-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal),
+    visibility var(--transition-normal);
+}
+
+.adhkar-lang-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.adhkar-lang-modal-content {
+  background: rgba(30, 40, 50, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--glass-shadow);
+  transform: scale(0.95) translateY(20px);
+  transition: transform var(--transition-normal);
+}
+
+.adhkar-lang-modal.active .adhkar-lang-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.adhkar-lang-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.adhkar-lang-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.adhkar-lang-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.adhkar-lang-modal-close:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.adhkar-lang-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.adhkar-lang-search {
+  margin-bottom: var(--spacing-md);
+}
+
+.adhkar-lang-search-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.adhkar-lang-search-input:focus {
+  border-color: var(--accent-gold);
+}
+
+.adhkar-lang-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.adhkar-lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.adhkar-lang-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.adhkar-lang-item:hover {
+  background: var(--glass-bg-hover);
+  transform: translateX(4px);
+}
+
+.adhkar-lang-item.active {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.adhkar-lang-item .flag {
+  font-size: 1.5rem;
+}
+
+.adhkar-lang-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adhkar-lang-item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.adhkar-lang-item-native {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.adhkar-lang-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+}
+
+/* Scrollbar for editor table */
+.adhkar-editor-table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.adhkar-editor-table-wrap::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.adhkar-editor-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+}
+
+.adhkar-editor-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.adhkar-editor-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
+}
+
 /* ========================================
    THEMES PANEL STYLES
    ======================================== */

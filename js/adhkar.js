@@ -112,6 +112,10 @@ class AdhkarManager {
     this._setModalPage = 1;
     this._setModalSearchQuery = "";
     this._setModal = null;
+
+    // Language selector state
+    this._langModal = null;
+    this._selectedLangCode = null;
   }
 
   async init() {
@@ -119,6 +123,8 @@ class AdhkarManager {
     this.applyTypography();
     this.createSetSelectorButton();
     this.createSetSelectorModal();
+    this.createLanguageSelectorButton();
+    this.createLanguageSelectorModal();
     this.bindDashboardEvents();
     this.restoreCurrentCardIndexForActiveSet();
     this.renderDashboard();
@@ -824,11 +830,12 @@ class AdhkarManager {
       ? String(card.romanization || "(no romanization)")
       : String(card.arabic || "(no arabic)");
 
-    const englishText = String(card.english || "(no translation)");
+    // Get the translation based on selected language
+    const translationText = this.getCardTranslation(card);
 
     this.topTextEl.textContent = topText;
 
-    this.englishEl.textContent = englishText;
+    this.englishEl.textContent = translationText;
 
     const hasReference = !!(card.reference && String(card.reference).trim());
     if (this.referenceDividerEl) this.referenceDividerEl.hidden = !hasReference;
@@ -866,6 +873,7 @@ class AdhkarManager {
 
     this.updateAutoAdvanceToggleUi();
     this.updateJumpControls();
+    this.updateLanguageSelectorButton();
   }
 
   // ---------- Typography ----------
@@ -915,6 +923,190 @@ class AdhkarManager {
       this.settingsRomanizationFontSizeValue.textContent = `${romanization}px`;
     if (this.settingsEnglishFontSizeValue)
       this.settingsEnglishFontSizeValue.textContent = `${english}px`;
+  }
+
+  // ---------- Language selection ----------
+
+  /**
+   * Gets the selected translation language code for the active set.
+   * Falls back to 'en' if not set.
+   */
+  getSelectedLanguageCode() {
+    const settings = this.getAdhkarSettings();
+    const activeSetId = this.getActiveSetId();
+    const langMap = settings.languageBySet || {};
+    return langMap[activeSetId] || "en";
+  }
+
+  /**
+   * Sets the selected translation language code for the active set.
+   */
+  setSelectedLanguageCode(langCode) {
+    const activeSetId = this.getActiveSetId();
+    if (!activeSetId) return;
+
+    const settings = this.getAdhkarSettings();
+    const langMap = settings.languageBySet || {};
+    langMap[activeSetId] = langCode;
+    this.setAdhkarSettings({ languageBySet: langMap });
+  }
+
+  /**
+   * Extracts available translation language codes from a card set.
+   * Looks for keys like 'translation_en', 'translation_id', etc.
+   * Also supports legacy 'english' key as 'en'.
+   */
+  getAvailableLanguages(set) {
+    if (!set || !Array.isArray(set.cards) || !set.cards.length) {
+      return [{ code: "en", name: "English" }];
+    }
+
+    const langCodes = new Set();
+    const firstCard = set.cards[0] || {};
+
+    // Check for translation_* keys
+    for (const key of Object.keys(firstCard)) {
+      if (key.startsWith("translation_")) {
+        const code = key.replace("translation_", "");
+        langCodes.add(code);
+      }
+    }
+
+    // Also check for legacy 'english' key
+    if (firstCard.english && !langCodes.has("en")) {
+      langCodes.add("en");
+    }
+
+    // Map codes to language names
+    const langNames = {
+      en: "English",
+      id: "Indonesian (Bahasa Indonesia)",
+      ar: "Arabic",
+      tr: "Turkish",
+      ur: "Urdu",
+      ms: "Malay",
+      fr: "French",
+      de: "German",
+      es: "Spanish",
+      bn: "Bengali",
+      fa: "Persian (Farsi)",
+      hi: "Hindi",
+      pt: "Portuguese",
+      ru: "Russian",
+      zh: "Chinese",
+      ja: "Japanese",
+      ko: "Korean",
+      nl: "Dutch",
+      it: "Italian",
+      th: "Thai",
+    };
+
+    const languages = [];
+    for (const code of langCodes) {
+      languages.push({
+        code,
+        name: langNames[code] || code.toUpperCase(),
+      });
+    }
+
+    // Sort with English first, then alphabetically
+    languages.sort((a, b) => {
+      if (a.code === "en") return -1;
+      if (b.code === "en") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return languages.length ? languages : [{ code: "en", name: "English" }];
+  }
+
+  /**
+   * Gets the translation text from a card based on selected language.
+   */
+  getCardTranslation(card) {
+    if (!card) return "(no translation)";
+
+    const langCode = this.getSelectedLanguageCode();
+
+    // Try translation_<langCode> first
+    const translationKey = `translation_${langCode}`;
+    if (card[translationKey]) {
+      return String(card[translationKey]);
+    }
+
+    // Fall back to legacy 'english' key for English
+    if (langCode === "en" && card.english) {
+      return String(card.english);
+    }
+
+    // Try translation_en as fallback
+    if (card.translation_en) {
+      return String(card.translation_en);
+    }
+
+    // Final fallback to english
+    if (card.english) {
+      return String(card.english);
+    }
+
+    return "(no translation)";
+  }
+
+  /**
+   * Update language selector button visibility and state.
+   */
+  updateLanguageSelectorButton() {
+    const btn = this.cardEl?.querySelector(".adhkar-lang-selector-btn");
+    if (!btn) return;
+
+    const activeSet = this.getActiveSet();
+    const isDefault = this.isProtectedSetId(activeSet?.id);
+    const languages = this.getAvailableLanguages(activeSet);
+
+    // Only show if default set and has multiple languages
+    if (isDefault && languages.length > 1) {
+      btn.style.display = "";
+      btn.disabled = false;
+
+      const currentLang = this.getSelectedLanguageCode();
+      const langInfo =
+        languages.find((l) => l.code === currentLang) || languages[0];
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
+        langInfo.code
+      )}</span>`;
+      btn.title = `Translation: ${langInfo.name}`;
+    } else {
+      btn.style.display = "none";
+      btn.disabled = true;
+    }
+  }
+
+  /**
+   * Get an emoji flag or icon for a language code.
+   */
+  getLanguageFlag(code) {
+    const flags = {
+      en: "🇬🇧",
+      id: "🇮🇩",
+      ar: "🇸🇦",
+      tr: "🇹🇷",
+      ur: "🇵🇰",
+      ms: "🇲🇾",
+      fr: "🇫🇷",
+      de: "🇩🇪",
+      es: "🇪🇸",
+      bn: "🇧🇩",
+      fa: "🇮🇷",
+      hi: "🇮🇳",
+      pt: "🇵🇹",
+      ru: "🇷🇺",
+      zh: "🇨🇳",
+      ja: "🇯🇵",
+      ko: "🇰🇷",
+      nl: "🇳🇱",
+      it: "🇮🇹",
+      th: "🇹🇭",
+    };
+    return flags[code] || "🌐";
   }
 
   // ---------- Settings tab ----------
@@ -1083,7 +1275,7 @@ class AdhkarManager {
       if (this.isDefaultActiveSet()) return;
       const fieldEl = e.target.closest("textarea, input");
       if (!fieldEl) return;
-      const row = fieldEl.closest(".adhkar-row");
+      const row = fieldEl.closest(".adhkar-editor-row");
       if (!row) return;
       const idx = Number(row.dataset.index);
       const field = fieldEl.dataset.field;
@@ -1102,7 +1294,7 @@ class AdhkarManager {
       if (!btn) return;
       const action = btn.dataset.action;
       if (action !== "delete-item") return;
-      const row = btn.closest(".adhkar-row");
+      const row = btn.closest(".adhkar-editor-row");
       if (!row) return;
       const idx = Number(row.dataset.index);
       if (!Number.isFinite(idx)) return;
@@ -1179,8 +1371,35 @@ class AdhkarManager {
   renderEditorList() {
     const active = this.getActiveSet();
     const items = active?.cards || [];
-    const readOnly =
-      this._settingsReadOnly || this.isProtectedSetId(active?.id);
+    const isDefault = this.isProtectedSetId(active?.id);
+
+    if (!this.settingsList) return;
+
+    // For default sets, show a message instead of the editor
+    if (isDefault) {
+      this.settingsList.innerHTML = `
+        <div class="adhkar-default-notice">
+          <div class="adhkar-default-notice-icon">🔒</div>
+          <div class="adhkar-default-notice-title">Default Adhkar Set</div>
+          <div class="adhkar-default-notice-text">
+            This is a protected default set and cannot be edited. 
+            You can still view and recite from it, or create a custom set to add your own adhkar.
+          </div>
+          <button class="setting-btn adhkar-default-notice-btn" type="button" id="adhkarCreateCustomBtn">
+            ➕ Create Custom Set
+          </button>
+        </div>
+      `;
+
+      // Bind the create custom set button
+      const createBtn = this.settingsList.querySelector(
+        "#adhkarCreateCustomBtn"
+      );
+      if (createBtn) {
+        createBtn.addEventListener("click", () => this.createNewSet());
+      }
+      return;
+    }
 
     const total = items.length;
     const pages = Math.max(1, Math.ceil(total / AdhkarManager.PAGE_SIZE));
@@ -1188,8 +1407,6 @@ class AdhkarManager {
 
     const start = (this.settingsPage - 1) * AdhkarManager.PAGE_SIZE;
     const end = Math.min(total, start + AdhkarManager.PAGE_SIZE);
-
-    if (!this.settingsList) return;
 
     if (!items.length) {
       this.settingsList.innerHTML = `
@@ -1204,6 +1421,7 @@ class AdhkarManager {
     const rows = [];
     for (let i = start; i < end; i += 1) {
       const c = items[i] || {
+        id: "",
         title: "",
         repeat: 1,
         reference: "",
@@ -1216,99 +1434,92 @@ class AdhkarManager {
         Number.isFinite(parsedRepeat) && parsedRepeat > 0
           ? String(parsedRepeat)
           : "1";
+
       rows.push(`
-        <div class="adhkar-row" data-index="${i}">
-          <div class="adhkar-row-index">${i + 1}</div>
-          <div class="adhkar-row-meta">
-            <label class="adhkar-kv">
-              <span class="adhkar-k">title</span>
-              <input
-                class="adhkar-meta-input setting-input"
-                type="text"
-                data-field="title"
-                placeholder="Title"
-                maxlength="200"
-                value="${this.escapeHtmlAttr(c.title || "")}"
-                ${readOnly ? "disabled" : ""}
-              />
-            </label>
-            <label class="adhkar-kv">
-              <span class="adhkar-k">repeat</span>
-              <input
-                class="adhkar-meta-input setting-input"
-                type="number"
-                inputmode="numeric"
-                min="1"
-                max="9999"
-                step="1"
-                data-field="repeat"
-                value="${this.escapeHtmlAttr(repeatValue)}"
-                ${readOnly ? "disabled" : ""}
-              />
-            </label>
-            <label class="adhkar-kv">
-              <span class="adhkar-k">reference</span>
-              <input
-                class="adhkar-meta-input setting-input"
-                type="text"
-                data-field="reference"
-                placeholder="Reference"
-                maxlength="400"
-                value="${this.escapeHtmlAttr(c.reference || "")}"
-                ${readOnly ? "disabled" : ""}
-              />
-            </label>
-          </div>
-          <button
-            class="adhkar-row-delete"
-            type="button"
-            data-action="delete-item"
-            title="Delete"
-            aria-label="Delete item"
-            ${readOnly ? "disabled" : ""}
-          >
-            ×
-          </button>
-          <textarea
-            class="adhkar-cell adhkar-textarea setting-input"
-            data-field="arabic"
-            rows="1"
-            placeholder="Arabic"
-            maxlength="2000"
-            ${readOnly ? "disabled" : ""}
-          >${this.escapeHtmlAttr(c.arabic || "")}</textarea>
-          <textarea
-            class="adhkar-cell adhkar-textarea setting-input"
-            data-field="romanization"
-            rows="1"
-            placeholder="Romanization"
-            maxlength="2000"
-            ${readOnly ? "disabled" : ""}
-          >${this.escapeHtmlAttr(c.romanization || "")}</textarea>
-          <textarea
-            class="adhkar-cell adhkar-textarea setting-input"
-            data-field="english"
-            rows="1"
-            placeholder="English"
-            maxlength="4000"
-            ${readOnly ? "disabled" : ""}
-          >${this.escapeHtmlAttr(c.english || "")}</textarea>
-        </div>
+        <tr class="adhkar-editor-row" data-index="${i}">
+          <td class="adhkar-col-id">${i + 1}</td>
+          <td class="adhkar-col-title">
+            <input
+              class="adhkar-editor-input setting-input"
+              type="text"
+              data-field="title"
+              placeholder="Title"
+              maxlength="200"
+              value="${this.escapeHtmlAttr(c.title || "")}"
+            />
+          </td>
+          <td class="adhkar-col-arabic">
+            <textarea
+              class="adhkar-editor-textarea setting-input"
+              data-field="arabic"
+              rows="2"
+              placeholder="Arabic text"
+              maxlength="2000"
+            >${this.escapeHtmlAttr(c.arabic || "")}</textarea>
+          </td>
+          <td class="adhkar-col-romanization">
+            <textarea
+              class="adhkar-editor-textarea setting-input"
+              data-field="romanization"
+              rows="2"
+              placeholder="Romanization"
+              maxlength="2000"
+            >${this.escapeHtmlAttr(c.romanization || "")}</textarea>
+          </td>
+          <td class="adhkar-col-translation">
+            <textarea
+              class="adhkar-editor-textarea setting-input"
+              data-field="english"
+              rows="2"
+              placeholder="Translation"
+              maxlength="4000"
+            >${this.escapeHtmlAttr(c.english || "")}</textarea>
+          </td>
+          <td class="adhkar-col-repeat">
+            <input
+              class="adhkar-editor-input adhkar-repeat-input setting-input"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="9999"
+              step="1"
+              data-field="repeat"
+              value="${this.escapeHtmlAttr(repeatValue)}"
+            />
+          </td>
+          <td class="adhkar-col-actions">
+            <button
+              class="adhkar-row-delete"
+              type="button"
+              data-action="delete-item"
+              title="Delete"
+              aria-label="Delete item"
+            >
+              ×
+            </button>
+          </td>
+        </tr>
       `);
     }
 
     this.settingsList.innerHTML = `
-      <div class="adhkar-editor-scroll">
-        <div class="adhkar-editor-header">
-          <div>#</div>
-          <div>Arabic</div>
-          <div>Romanization</div>
-          <div>English</div>
-          <div></div>
-        </div>
-        <div class="adhkar-editor-body">
-          ${rows.join("")}
-        </div>
+      <div class="adhkar-editor-table-wrap">
+        <table class="adhkar-editor-table">
+          <thead>
+            <tr>
+              <th class="adhkar-col-id">ID</th>
+              <th class="adhkar-col-title">Title</th>
+              <th class="adhkar-col-arabic">Arabic</th>
+              <th class="adhkar-col-romanization">Romanization</th>
+              <th class="adhkar-col-translation">Translation</th>
+              <th class="adhkar-col-repeat">Repeat</th>
+              <th class="adhkar-col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.join("")}
+          </tbody>
+        </table>
       </div>
     `;
 
@@ -1324,7 +1535,7 @@ class AdhkarManager {
   autoResizeAllTextareas() {
     if (!this.settingsList) return;
     const items = this.settingsList.querySelectorAll(
-      "textarea.adhkar-textarea"
+      "textarea.adhkar-editor-textarea"
     );
     items.forEach((t) => this.autoResizeTextarea(t));
   }
@@ -1820,6 +2031,167 @@ class AdhkarManager {
     } else {
       headerActions.insertBefore(btn, headerActions.firstChild);
     }
+  }
+
+  // ---------- Language selector button & modal ----------
+
+  createLanguageSelectorButton() {
+    const headerActions = this.cardEl?.querySelector(".card-header-actions");
+    if (!headerActions) return;
+
+    // If language selector button already exists, skip
+    if (headerActions.querySelector(".adhkar-lang-selector-btn")) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "adhkar-lang-selector-btn flashcard-mode-toggle-btn";
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.title = "Select translation language";
+    btn.setAttribute("aria-label", "Select translation language");
+    btn.style.display = "none"; // Hidden by default
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openLanguageSelectorModal();
+    });
+
+    // Insert at the very start (left of script toggle)
+    const scriptBtn = headerActions.querySelector("#adhkarScriptToggleBtn");
+    if (scriptBtn) {
+      headerActions.insertBefore(btn, scriptBtn);
+    } else {
+      headerActions.insertBefore(btn, headerActions.firstChild);
+    }
+  }
+
+  createLanguageSelectorModal() {
+    if (document.getElementById("adhkarLangModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "adhkarLangModal";
+    modal.className = "pq-bookmark-modal adhkar-lang-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content" style="max-width: 400px;">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">🌐 Select Translation</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="adhkar-lang-search">
+            <input type="text" class="adhkar-lang-search-input" placeholder="Search languages..." />
+          </div>
+          <div class="adhkar-lang-list"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    this._langModal = modal;
+
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => {
+        this.closeLanguageSelectorModal();
+      });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closeLanguageSelectorModal();
+    });
+
+    modal
+      .querySelector(".adhkar-lang-search-input")
+      .addEventListener("input", (e) => {
+        this.renderLanguageSelectorModal(e.target.value);
+      });
+  }
+
+  openLanguageSelectorModal() {
+    const modal = document.getElementById("adhkarLangModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".adhkar-lang-search-input");
+    if (searchInput) {
+      searchInput.value = "";
+    }
+
+    modal.classList.add("active");
+    this.renderLanguageSelectorModal();
+
+    // Focus search input
+    setTimeout(() => {
+      if (searchInput) searchInput.focus();
+    }, 50);
+  }
+
+  closeLanguageSelectorModal() {
+    const modal = document.getElementById("adhkarLangModal");
+    if (modal) {
+      modal.classList.remove("active");
+    }
+  }
+
+  renderLanguageSelectorModal(searchQuery = "") {
+    const modal = document.getElementById("adhkarLangModal");
+    if (!modal) return;
+
+    const listContainer = modal.querySelector(".adhkar-lang-list");
+    if (!listContainer) return;
+
+    const activeSet = this.getActiveSet();
+    let languages = this.getAvailableLanguages(activeSet);
+    const currentLangCode = this.getSelectedLanguageCode();
+
+    // Filter by search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      languages = languages.filter(
+        (l) =>
+          l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q)
+      );
+    }
+
+    if (!languages.length) {
+      listContainer.innerHTML = `
+        <div class="adhkar-lang-empty">
+          No languages found.
+        </div>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = languages
+      .map((lang) => {
+        const isActive = lang.code === currentLangCode;
+        return `
+          <div class="adhkar-lang-item ${
+            isActive ? "active" : ""
+          }" data-lang-code="${lang.code}">
+            <span class="adhkar-lang-flag">${this.getLanguageFlag(
+              lang.code
+            )}</span>
+            <span class="adhkar-lang-name">${this.escapeHtmlAttr(
+              lang.name
+            )}</span>
+            ${isActive ? '<span class="adhkar-lang-check">✓</span>' : ""}
+          </div>
+        `;
+      })
+      .join("");
+
+    // Bind click handlers
+    listContainer.querySelectorAll(".adhkar-lang-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        const langCode = el.dataset.langCode;
+        this.setSelectedLanguageCode(langCode);
+        this.closeLanguageSelectorModal();
+        this.updateLanguageSelectorButton();
+        this.renderDashboard();
+
+        const lang = languages.find((l) => l.code === langCode);
+        if (lang) {
+          this.showToast(`Translation: ${lang.name}`, "success");
+        }
+      });
+    });
   }
 
   createSetSelectorModal() {
