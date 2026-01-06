@@ -34,12 +34,12 @@ class GridLayoutManager {
       prayerTimesCard: { id: "prayerTimesCard", span: 2, minSpan: 2 },
       calendarCard: { id: "calendarCard", span: 2, minSpan: 2 },
       qiblaCard: { id: "qiblaCard", span: 2, minSpan: 2 },
-      weatherCard: { id: "weatherCard", span: 6, minSpan: 3 },
+      weatherCard: { id: "weatherCard", span: 6, minSpan: 6 },
       lunarPhaseCard: { id: "lunarPhaseCard", span: 2, minSpan: 2 },
       fastingCard: { id: "fastingCard", span: 2, minSpan: 2 },
-      flashcardCard: { id: "flashcardCard", span: 3, minSpan: 2 },
-      adhkarCard: { id: "adhkarCard", span: 3, minSpan: 3 },
-      todoCard: { id: "todoCard", span: 3, minSpan: 2 },
+      flashcardCard: { id: "flashcardCard", span: 2, minSpan: 2 },
+      adhkarCard: { id: "adhkarCard", span: 2, minSpan: 2 },
+      todoCard: { id: "todoCard", span: 2, minSpan: 2 },
       notesCard: { id: "notesCard", span: 6, minSpan: 6 },
       pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
     };
@@ -75,13 +75,13 @@ class GridLayoutManager {
       ["pinnedAppsSection"],
       ["searchBarSection"],
       ["quoteSection"],
-      ["prayerTimesCard", "calendarCard", "fastingCard"],
-      ["weatherCard"],
-      ["lunarPhaseCard", "qiblaCard"],
-      ["flashcardCard", "todoCard"],
-      ["adhkarCard"],
-      ["notesCard"],
+      ["prayerTimesCard", "fastingCard", "calendarCard"],
+      ["lunarPhaseCard", "qiblaCard", "todoCard"],
+      ["flashcardCard", "adhkarCard"],
       ["pocketQuranCard"],
+      ["notesCard"],
+
+      ["weatherCard"],
     ];
 
     // Bound event handlers

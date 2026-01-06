@@ -1254,6 +1254,56 @@ textarea.notes-editor:focus {
   border-radius: var(--radius-xl);
 }
 
+/* Location icon animation and accessibility */
+.location-display .location-icon {
+  display: inline-block;
+  font-size: 1.15rem;
+  transform-origin: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 120ms ease;
+  outline: none;
+}
+
+.location-display .location-icon:focus {
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+}
+
+.location-display .location-icon:hover,
+.location-display .location-icon:focus {
+  animation: location-bounce 0.7s ease-in-out infinite;
+}
+
+@keyframes location-bounce {
+  0% {
+    transform: translateX(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateX(-6px) rotate(0deg);
+  }
+  50% {
+    transform: translateX(0) rotate(3deg);
+  }
+  75% {
+    transform: translateX(6px) rotate(0deg);
+  }
+  100% {
+    transform: translateX(0) rotate(-3deg);
+  }
+}
+
+/* Honor reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .location-display .location-icon,
+  .location-display .location-icon:hover,
+  .location-display .location-icon:focus {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 .prayer-list {
   display: flex;
   flex-direction: column;

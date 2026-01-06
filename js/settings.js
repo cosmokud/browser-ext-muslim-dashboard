@@ -3886,6 +3886,47 @@ class SettingsManager {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
 
+    // Make the location pin open the Location settings (click + keyboard)
+    try {
+      const locationIcons = document.querySelectorAll(".location-icon");
+      locationIcons.forEach((icon) => {
+        // Avoid attaching multiple listeners if init() runs more than once
+        if (icon.dataset.settingsBound === "1") return;
+        icon.dataset.settingsBound = "1";
+
+        // Add ARIA/interaction defaults when missing
+        if (!icon.hasAttribute("role")) icon.setAttribute("role", "button");
+        if (!icon.hasAttribute("tabindex")) icon.setAttribute("tabindex", "0");
+        if (!icon.hasAttribute("title"))
+          icon.setAttribute("title", "Open Location settings");
+        if (!icon.hasAttribute("aria-label"))
+          icon.setAttribute("aria-label", "Open Location settings");
+
+        icon.addEventListener("click", () => {
+          try {
+            this.openModal();
+            this.switchTab("location");
+            const firstEl =
+              document.getElementById("requestLocationBtn") ||
+              document.getElementById("cityInput");
+            if (firstEl) firstEl.focus();
+          } catch (err) {
+            console.warn("Failed to open Location settings:", err);
+          }
+        });
+
+        icon.addEventListener("keydown", (e) => {
+          const key = e.key || e.keyCode;
+          if (key === "Enter" || key === " " || key === 13 || key === 32) {
+            e.preventDefault();
+            icon.click();
+          }
+        });
+      });
+    } catch (e) {
+      // Non-critical: if DOM not ready or icons absent, ignore
+    }
+
     if (this.testNotificationBtn) {
       this.testNotificationBtn.addEventListener("click", () =>
         this.testBrowserNotification()
@@ -3939,6 +3980,16 @@ class SettingsManager {
       this.cityInput.addEventListener("input", () => {
         this._clearCitySearchResults(this.citySearchResults);
       });
+
+      // Trigger search when user presses Enter in the city input
+      this.cityInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.keyCode === 13) {
+          e.preventDefault();
+          // Avoid duplicate search while a search is already running
+          if (this.searchCityBtn && this.searchCityBtn.disabled) return;
+          this.searchCity();
+        }
+      });
     }
 
     // Weather location mode toggle
@@ -3965,6 +4016,16 @@ class SettingsManager {
     if (this.weatherCityInput) {
       this.weatherCityInput.addEventListener("input", () => {
         this._clearCitySearchResults(this.weatherCitySearchResults);
+      });
+
+      // Trigger weather search when user presses Enter in the weather city input
+      this.weatherCityInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.keyCode === 13) {
+          e.preventDefault();
+          if (this.weatherSearchCityBtn && this.weatherSearchCityBtn.disabled)
+            return;
+          this.searchWeatherCity();
+        }
       });
     }
 
