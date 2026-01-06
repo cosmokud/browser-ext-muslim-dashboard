@@ -44,8 +44,11 @@ class AdhkarManager {
     this.shellEl = document.getElementById("adhkarCardShell");
     this.prevBtn = document.getElementById("adhkarPrevBtn");
     this.nextBtn = document.getElementById("adhkarNextBtn");
+    this.titleEl = document.getElementById("adhkarTitleText");
     this.topTextEl = document.getElementById("adhkarTopText");
     this.englishEl = document.getElementById("adhkarEnglishText");
+    this.referenceDividerEl = document.getElementById("adhkarReferenceDivider");
+    this.referenceEl = document.getElementById("adhkarReferenceText");
     this.scriptToggleBtn = document.getElementById("adhkarScriptToggleBtn");
 
     // Dashboard jump controls
@@ -422,6 +425,45 @@ class AdhkarManager {
       }
     }
 
+    // Schema upgrade: older versions imported defaults without title/reference/repeat.
+    // Only refresh protected default sets when they appear to be in the legacy shape.
+    try {
+      let upgraded = false;
+      for (const def of defs) {
+        const idx = existingSets.findIndex((s) => s && s.id === def.id);
+        if (idx === -1) continue;
+
+        const set = existingSets[idx];
+        if (!this.isProtectedSetId(set.id)) continue;
+        const cards = Array.isArray(set.cards) ? set.cards : [];
+        if (!cards.length) continue;
+
+        const looksLegacy = cards.every((c) => {
+          if (!c || typeof c !== "object") return true;
+          const hasTitle = typeof c.title === "string" && c.title.trim();
+          const hasRef = typeof c.reference === "string" && c.reference.trim();
+          const hasRepeat =
+            typeof c.repeat === "number" && Number.isFinite(c.repeat);
+          return !hasTitle && !hasRef && !hasRepeat;
+        });
+
+        if (!looksLegacy) continue;
+
+        const fresh = await this.loadDefaultSet(def);
+        if (fresh && Array.isArray(fresh.cards) && fresh.cards.length) {
+          existingSets[idx].cards = fresh.cards;
+          existingSets[idx].name = fresh.name;
+          upgraded = true;
+        }
+      }
+
+      if (upgraded) {
+        this.saveSets(existingSets);
+      }
+    } catch (e) {
+      console.warn("Adhkar: default set upgrade skipped:", e);
+    }
+
     // Ensure active set id exists
     const activeId = this.getActiveSetId();
     if (activeId && !existingSets.some((s) => s.id === activeId)) {
@@ -452,6 +494,44 @@ class AdhkarManager {
         createdAt: now,
         cards: [],
       };
+    }
+  }
+
+  /**
+   * Refreshes the content of default Adhkar sets from JSON files
+   */
+  async refreshDefaultData() {
+    const sets = this.getSets();
+    const defs = AdhkarManager.DEFAULT_SETS;
+    let changed = false;
+
+    // Load all default sets in parallel
+    const freshSets = await Promise.all(
+      defs.map((def) => this.loadDefaultSet(def))
+    );
+
+    for (const newSet of freshSets) {
+      if (!newSet || !newSet.cards || !newSet.cards.length) continue;
+
+      const idx = sets.findIndex((s) => s.id === newSet.id);
+      if (idx !== -1) {
+        sets[idx].cards = newSet.cards;
+        sets[idx].name = newSet.name;
+        changed = true;
+      } else {
+        sets.push(newSet);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.saveSets(sets);
+
+      // If active set was one of them, we need to refresh the current view
+      const activeId = this.getActiveSetId();
+      if (defs.some((d) => d.id === activeId)) {
+        this.renderDashboard();
+      }
     }
   }
 
@@ -681,6 +761,11 @@ class AdhkarManager {
     const idx = Math.min(this.currentCardIndex, cards.length - 1);
     const card = cards[idx] || {};
 
+    // --- Render Title ---
+    if (this.titleEl) {
+      this.titleEl.textContent = card.title || "";
+    }
+
     const showRoman = this.getShowRomanization();
 
     const topText = showRoman
@@ -691,23 +776,13 @@ class AdhkarManager {
 
     this.topTextEl.textContent = topText;
 
-    // Clear previous content
-    this.englishEl.innerHTML = "";
+    this.englishEl.textContent = englishText;
 
-    // Add English text
-    const textNode = document.createTextNode(englishText);
-    this.englishEl.appendChild(textNode);
-
-    // Add Reference if available
-    if (card.reference) {
-      const divider = document.createElement("div");
-      divider.className = "adhkar-ref-divider";
-      this.englishEl.appendChild(divider);
-
-      const refEl = document.createElement("span");
-      refEl.className = "adhkar-reference";
-      refEl.textContent = card.reference;
-      this.englishEl.appendChild(refEl);
+    const hasReference = !!(card.reference && String(card.reference).trim());
+    if (this.referenceDividerEl) this.referenceDividerEl.hidden = !hasReference;
+    if (this.referenceEl) {
+      this.referenceEl.hidden = !hasReference;
+      this.referenceEl.textContent = hasReference ? String(card.reference) : "";
     }
 
     if (!showRoman) {
@@ -1318,12 +1393,41 @@ class AdhkarManager {
     if (Array.isArray(data)) {
       return data
         .filter((x) => x && typeof x === "object")
-        .map((x) => ({
-          arabic: String(x.arabic || ""),
-          romanization: String(x.romanization || x.roman || ""),
-          english: String(x.english || x.translation || ""),
-        }))
-        .filter((c) => c.arabic || c.romanization || c.english);
+        .map((x) => {
+          const rawId = x.id;
+          const parsedId =
+            typeof rawId === "number" || typeof rawId === "string"
+              ? String(rawId)
+              : "";
+
+          const rawRepeat = x.repeat ?? x.repeats ?? x.count;
+          const parsedRepeat = parseInt(rawRepeat, 10);
+          const repeat =
+            Number.isFinite(parsedRepeat) && parsedRepeat > 0
+              ? parsedRepeat
+              : 1;
+
+          const title = String(x.title || x.name || "").trim();
+          const reference = String(x.reference || x.source || "").trim();
+
+          const arabic = String(x.arabic || "").trim();
+          const romanization = String(x.romanization || x.roman || "").trim();
+          const english = String(x.english || x.translation || "").trim();
+
+          return {
+            id: parsedId,
+            title,
+            arabic,
+            romanization,
+            english,
+            reference,
+            repeat,
+          };
+        })
+        .filter(
+          (c) =>
+            c.arabic || c.romanization || c.english || c.title || c.reference
+        );
     }
 
     if (data && typeof data === "object") {

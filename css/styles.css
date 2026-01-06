@@ -9702,6 +9702,14 @@ body.sticky-note-resizing {
   text-align: center;
 }
 
+.adhkar-meta-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  margin-bottom: -5px; /* Pull closer to the text below */
+  line-height: 1.3;
+}
+
 .adhkar-top {
   font-size: var(--adhkar-romanization-font-size);
   color: var(--text-primary);

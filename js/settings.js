@@ -4131,8 +4131,15 @@ class SettingsManager {
             tasks.push(this.quotes.loadDefaultQuotes());
           }
 
+          if (this.adhkar?.refreshDefaultData) {
+            tasks.push(this.adhkar.refreshDefaultData());
+          }
+
           await Promise.all(tasks);
-          this.showToast("Default flashcards and quotes refreshed!", "success");
+          this.showToast(
+            "Default adhkar, flashcards and quotes refreshed!",
+            "success"
+          );
         } catch (e) {
           console.error("Failed to refresh default data:", e);
           this.showToast("Failed to refresh default data.", "error");
