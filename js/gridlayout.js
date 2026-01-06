@@ -38,9 +38,9 @@ class GridLayoutManager {
       lunarPhaseCard: { id: "lunarPhaseCard", span: 2, minSpan: 2 },
       fastingCard: { id: "fastingCard", span: 2, minSpan: 2 },
       flashcardCard: { id: "flashcardCard", span: 3, minSpan: 2 },
-      adhkarCard: { id: "adhkarCard", span: 3, minSpan: 2 },
+      adhkarCard: { id: "adhkarCard", span: 3, minSpan: 3 },
       todoCard: { id: "todoCard", span: 3, minSpan: 2 },
-      notesCard: { id: "notesCard", span: 6, minSpan: 3 },
+      notesCard: { id: "notesCard", span: 6, minSpan: 6 },
       pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
     };
 
@@ -66,15 +66,18 @@ class GridLayoutManager {
     // Track current effective spans (calculated based on viewport)
     this.effectiveSpans = {};
 
+    // Track components expanded for responsive breakpoints
+    this.expandedComponents = new Set();
+
     // Default row structure (component IDs in order)
     this.defaultLayout = [
       ["header"],
       ["pinnedAppsSection"],
       ["searchBarSection"],
       ["quoteSection"],
-      ["prayerTimesCard", "calendarCard", "qiblaCard"],
+      ["prayerTimesCard", "calendarCard", "fastingCard"],
       ["weatherCard"],
-      ["lunarPhaseCard", "fastingCard"],
+      ["lunarPhaseCard", "qiblaCard"],
       ["flashcardCard", "todoCard"],
       ["adhkarCard"],
       ["notesCard"],
