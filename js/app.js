@@ -621,6 +621,69 @@ class MuslimDashboard {
 
       if (!btn || !popup) return null;
 
+      const clearCardGlassVars = () => {
+        card.style.removeProperty("--glass-bg");
+        card.style.removeProperty("--glass-bg-hover");
+        card.style.removeProperty("--glass-border");
+        card.style.removeProperty("--glass-shadow");
+      };
+
+      const applyCardGlassVars = (glassEnabled) => {
+        const colors = this.themes?.getThemeColors?.();
+        if (!colors) return;
+
+        if (glassEnabled) {
+          card.style.setProperty("--glass-bg", colors.glassBg);
+          card.style.setProperty("--glass-bg-hover", colors.glassBgHover);
+          card.style.setProperty("--glass-border", colors.glassBorder);
+          card.style.setProperty(
+            "--glass-shadow",
+            "0 8px 32px rgba(0, 0, 0, 0.3)"
+          );
+          return;
+        }
+
+        // Solid mode - NO transparency in the base surfaces.
+        // We mix theme colors into the body background to get fully-opaque panel colors.
+        const isLight = this.themes.getCurrentMode?.() === "light";
+
+        const bgMix = isLight ? 0.12 : 0.38;
+        const bgHoverMix = isLight ? 0.18 : 0.48;
+        const borderMix = isLight ? 0.25 : 0.58;
+
+        const mixHexToRgb = (baseHex, mixHex, mixWeight) => {
+          const base = this.themes.hexToRgb?.(baseHex);
+          const mix = this.themes.hexToRgb?.(mixHex);
+          if (!base || !mix) return null;
+
+          const w = Math.max(0, Math.min(1, Number(mixWeight)));
+          const blend = (a, b) => Math.round(a * (1 - w) + b * w);
+
+          return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
+            base.b,
+            mix.b
+          )})`;
+        };
+
+        const solidBg =
+          mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
+          (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
+        const solidHover =
+          mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
+          (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
+        const solidBorder =
+          mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
+          (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
+
+        card.style.setProperty("--glass-bg", solidBg);
+        card.style.setProperty("--glass-bg-hover", solidHover);
+        card.style.setProperty("--glass-border", solidBorder);
+        card.style.setProperty(
+          "--glass-shadow",
+          "0 4px 20px rgba(0, 0, 0, 0.2)"
+        );
+      };
+
       // Apply glass state to the card
       const applyGlassState = (state, customBlurEnabled, customBlurPower) => {
         // Determine effective glass state based on the triple toggle
@@ -643,10 +706,13 @@ class MuslimDashboard {
         // - DASH => remove attribute so it follows dashboard/root setting
         if (state === "dashboard") {
           delete card.dataset.glassEnabled;
+          clearCardGlassVars();
         } else if (state === "on") {
           card.dataset.glassEnabled = "true";
+          applyCardGlassVars(true);
         } else if (state === "off") {
           card.dataset.glassEnabled = "false";
+          applyCardGlassVars(false);
         }
 
         // Determine effective blur power
@@ -874,6 +940,15 @@ class MuslimDashboard {
             currentCustomPower
           );
         }
+      });
+
+      // Recompute per-card glass/solid colors on theme changes.
+      document.addEventListener("md:theme-change", () => {
+        applyGlassState(
+          currentGlassState,
+          currentCustomEnabled,
+          currentCustomPower
+        );
       });
 
       // Listen for dashboard blur power changes
