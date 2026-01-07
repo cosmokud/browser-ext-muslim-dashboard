@@ -415,7 +415,6 @@ class PocketQuranManager {
     this.tajweedToggleBtn = document.getElementById("pocketQuranTajweedToggle");
 
     this.fontToggleBtn = document.getElementById("pocketQuranFontToggle");
-    this.fontToggleLabel = document.getElementById("pocketQuranFontLabel");
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
@@ -437,6 +436,9 @@ class PocketQuranManager {
 
     // Arabic font state
     this._arabicFontFamily = "Noto Naskh Arabic";
+
+    // Font picker modal
+    this._fontModal = null;
 
     // Verse caching
     this._versesCache = new Map();
@@ -529,11 +531,15 @@ class PocketQuranManager {
     this._isTajweedMode = Boolean(pq.tajweedMode);
     this.updateTajweedToggleUI();
 
+    // Ensure Tajweed availability matches the selected font
+    this.syncTajweedAvailabilityForFont();
+
     // Initialize bookmark system
     this.ensureDefaultBookmarkCategory();
     this.createBookmarkButton();
     this.createBookmarkModals();
     this.createTranslationModal();
+    this.createFontPickerModal();
 
     // Initialize recitation system
     this.initRecitationSystem();
@@ -849,7 +855,7 @@ class PocketQuranManager {
     // Arabic font toggle button
     if (this.fontToggleBtn) {
       this.fontToggleBtn.addEventListener("click", () => {
-        this.cycleArabicFontFamily();
+        this.openFontPickerModal();
       });
     }
 
@@ -2034,6 +2040,13 @@ class PocketQuranManager {
    * When enabled, fetches color-coded Tajweed text from the API.
    */
   async toggleTajweedMode() {
+    if (!this.isTajweedAllowedForFont(this._arabicFontFamily)) {
+      // Enforce off when not allowed
+      this.disableTajweedMode();
+      this.syncTajweedAvailabilityForFont();
+      return;
+    }
+
     this._isTajweedMode = !this._isTajweedMode;
     this.persistPocketQuranSettings({ tajweedMode: this._isTajweedMode });
     this.updateTajweedToggleUI();
@@ -2084,6 +2097,64 @@ class PocketQuranManager {
       "aria-pressed",
       this._isTajweedMode ? "true" : "false"
     );
+  }
+
+  isTajweedAllowedForFont(fontFamily) {
+    const f = this.normalizeArabicFontFamily(fontFamily);
+    return !(f === "Noto Naskh Arabic" || f === "Amiri");
+  }
+
+  syncTajweedAvailabilityForFont() {
+    const allowed = this.isTajweedAllowedForFont(this._arabicFontFamily);
+
+    if (this.tajweedToggleBtn) {
+      this.tajweedToggleBtn.disabled = !allowed;
+      this.tajweedToggleBtn.setAttribute(
+        "aria-disabled",
+        allowed ? "false" : "true"
+      );
+      this.tajweedToggleBtn.title = allowed
+        ? "Toggle Tajweed color-coded Arabic text"
+        : "Tajweed disabled for this font";
+    }
+
+    if (!allowed) {
+      this.disableTajweedMode();
+    }
+  }
+
+  disableTajweedMode() {
+    if (!this._isTajweedMode) {
+      this.persistPocketQuranSettings({ tajweedMode: false });
+      this.updateTajweedToggleUI();
+      return;
+    }
+
+    this._isTajweedMode = false;
+    this.persistPocketQuranSettings({ tajweedMode: false });
+    this.updateTajweedToggleUI();
+
+    const scrollTop = this._virtualContainer?.scrollTop || 0;
+
+    this._ayahHeights.clear();
+    if (this._activeVerses?.length) {
+      this.recalculateVirtualization();
+      requestAnimationFrame(() => {
+        if (this._virtualContainer) {
+          this._virtualContainer.scrollTop = scrollTop;
+        }
+      });
+    }
+
+    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    if (chapter) {
+      this.renderSurahHeader({
+        surah: this._activeSurah,
+        surahName: chapter.name_simple || `Surah ${this._activeSurah}`,
+        surahNameAr: chapter.name_arabic || "",
+        versesCount: this._activeVerses?.length || 0,
+      });
+    }
   }
 
   /**
@@ -3540,12 +3611,11 @@ class PocketQuranManager {
       this.card.style.setProperty("--pq-arabic-font-family", cssValue);
     }
 
-    if (this.fontToggleLabel) {
-      this.fontToggleLabel.textContent = normalized;
-    }
     if (this.fontToggleBtn) {
       this.fontToggleBtn.title = `Change Arabic font (current: ${normalized})`;
     }
+
+    this.syncTajweedAvailabilityForFont();
 
     if (recalculate) {
       this._ayahHeights.clear();
@@ -3557,12 +3627,113 @@ class PocketQuranManager {
     }
   }
 
-  cycleArabicFontFamily() {
-    const list = PocketQuranManager.ARABIC_FONT_FAMILIES;
+  createFontPickerModal() {
+    if (document.getElementById("pqFontModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "pqFontModal";
+    modal.className = "pq-bookmark-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-translation-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">Aa Arabic Font</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="pq-bookmark-search">
+            <input type="text" class="pq-bookmark-search-input pq-font-search" placeholder="Search fonts..." />
+          </div>
+          <div class="pq-translation-list">
+            <div class="pq-translation-items pq-font-items"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this._fontModal = modal;
+
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => this.closeFontPickerModal());
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closeFontPickerModal();
+    });
+
+    const searchInput = modal.querySelector(".pq-font-search");
+    searchInput.addEventListener("input", () => {
+      this.renderFontList(searchInput.value);
+    });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") this.closeFontPickerModal();
+    });
+  }
+
+  openFontPickerModal() {
+    const modal = document.getElementById("pqFontModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".pq-font-search");
+    if (searchInput) searchInput.value = "";
+
+    this.renderFontList("");
+    modal.classList.add("active");
+
+    setTimeout(() => {
+      try {
+        searchInput?.focus();
+      } catch (e) {}
+    }, 100);
+  }
+
+  closeFontPickerModal() {
+    const modal = document.getElementById("pqFontModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  renderFontList(query = "") {
+    const modal = document.getElementById("pqFontModal");
+    if (!modal) return;
+
+    const container = modal.querySelector(".pq-font-items");
+    if (!container) return;
+
+    const q = String(query || "")
+      .toLowerCase()
+      .trim();
+    const fonts = PocketQuranManager.ARABIC_FONT_FAMILIES.filter((f) =>
+      f.toLowerCase().includes(q)
+    );
+
     const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
-    const idx = Math.max(0, list.indexOf(current));
-    const next = list[(idx + 1) % list.length];
-    this.applyArabicFontFamily(next, { persist: true, recalculate: true });
+    let html = "";
+    for (const f of fonts) {
+      const isActive = f === current;
+      html += `<button type="button" class="pq-translation-item ${
+        isActive ? "active" : ""
+      }" data-font-family="${this.escapeHtml(f)}">
+        <span class="pq-translation-name">${this.escapeHtml(f)}</span>
+        ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+      </button>`;
+    }
+
+    if (!html) {
+      html = `<div class="pq-translation-empty">No fonts found for "${this.escapeHtml(
+        query
+      )}"</div>`;
+      container.innerHTML = html;
+      return;
+    }
+
+    container.innerHTML = html;
+    container.querySelectorAll(".pq-translation-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const font = btn.getAttribute("data-font-family");
+        this.applyArabicFontFamily(font, { persist: true, recalculate: true });
+        this.closeFontPickerModal();
+      });
+    });
   }
 
   applyTajweedColors(colors, opts = {}) {

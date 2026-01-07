@@ -8550,6 +8550,16 @@ body.sticky-note-resizing {
   color: var(--text-primary);
 }
 
+.pq-tajweed-toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pq-tajweed-toggle:disabled:hover {
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+}
+
 .pq-tajweed-toggle.active {
   background: linear-gradient(
     135deg,
@@ -8713,11 +8723,35 @@ body.sticky-note-resizing {
 }
 
 .pq-tajweed-color-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+  width: 34px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  overflow: hidden;
+}
+
+.pq-tajweed-color-input:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.pq-tajweed-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.pq-tajweed-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 7px;
+}
+
+.pq-tajweed-color-input::-moz-color-swatch {
+  border: none;
+  border-radius: 7px;
 }
 
 .pocket-quran-ayah.pq-highlight {

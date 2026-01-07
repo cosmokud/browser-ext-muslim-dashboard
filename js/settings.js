@@ -430,6 +430,10 @@ class SettingsManager {
       "pocketQuranTajweedColors"
     );
 
+    this.pocketQuranResetAllTajweedColorsBtn = document.getElementById(
+      "pocketQuranResetAllTajweedColorsBtn"
+    );
+
     // Pocket Quran bookmark elements
     this.pocketQuranExportBookmarksBtn = document.getElementById(
       "pocketQuranExportBookmarksBtn"
@@ -753,6 +757,21 @@ class SettingsManager {
     this.storage.saveSettings(settings);
   }
 
+  resetAllPocketQuranTajweedColors() {
+    const defaults = SettingsManager.POCKET_QURAN_DEFAULT_TAJWEED_COLORS;
+    const settings = this.storage.getSettings();
+    const pq = settings.pocketQuran || {};
+
+    settings.pocketQuran = {
+      ...pq,
+      tajweedColors: { ...defaults },
+    };
+
+    this.storage.saveSettings(settings);
+    this.applyPocketQuranTajweedColors(defaults);
+    this.renderPocketQuranTajweedColorPickers(defaults);
+  }
+
   renderPocketQuranTajweedColorPickers(colors) {
     if (!this.pocketQuranTajweedColors) return;
 
@@ -773,17 +792,11 @@ class SettingsManager {
       const actions = document.createElement("div");
       actions.className = "pq-tajweed-color-actions";
 
-      const swatch = document.createElement("button");
-      swatch.type = "button";
-      swatch.className = "pq-tajweed-color-swatch";
-      swatch.style.background = merged[key];
-      swatch.setAttribute("aria-label", `Pick color for ${label.textContent}`);
-
       const input = document.createElement("input");
       input.type = "color";
       input.className = "pq-tajweed-color-input";
-      input.tabIndex = -1;
       input.value = merged[key];
+      input.setAttribute("aria-label", `Pick color for ${label.textContent}`);
 
       const reset = document.createElement("button");
       reset.type = "button";
@@ -794,15 +807,10 @@ class SettingsManager {
 
       const applyAndPersist = (nextColor) => {
         const normalized = this.normalizeCssHexColor(nextColor, defaults[key]);
-        swatch.style.background = normalized;
         input.value = normalized;
         this.applyPocketQuranTajweedColors({ [key]: normalized });
         this.persistPocketQuranTajweedColorPatch({ [key]: normalized });
       };
-
-      swatch.addEventListener("click", () => {
-        input.click();
-      });
 
       input.addEventListener("input", (e) => {
         applyAndPersist(e.target.value);
@@ -812,9 +820,8 @@ class SettingsManager {
         applyAndPersist(defaults[key]);
       });
 
-      actions.appendChild(swatch);
-      actions.appendChild(reset);
       actions.appendChild(input);
+      actions.appendChild(reset);
 
       row.appendChild(label);
       row.appendChild(actions);
@@ -4281,6 +4288,12 @@ class SettingsManager {
         } catch (e) {
           // ignore
         }
+      });
+    }
+
+    if (this.pocketQuranResetAllTajweedColorsBtn) {
+      this.pocketQuranResetAllTajweedColorsBtn.addEventListener("click", () => {
+        this.resetAllPocketQuranTajweedColors();
       });
     }
 
