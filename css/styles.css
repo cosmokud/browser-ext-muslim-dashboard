@@ -8516,6 +8516,7 @@ body.sticky-note-resizing {
 /* Hamzat ul Wasl, Silent, Lam Shamsiyyah */
 .ham_wasl,
 .slnt,
+.silent,
 .laam_shamsiyah {
   color: #aaaaaa;
 }
@@ -8542,8 +8543,9 @@ body.sticky-note-resizing {
 }
 
 /* Qalaqah */
-.qlq {
-  color: #dd0008;
+.qlq,
+.qalaqah {
+  color: #db393f;
 }
 
 /* Obligatory Prolongation: 4-5 Vowels */
@@ -8552,42 +8554,51 @@ body.sticky-note-resizing {
 }
 
 /* Ikhafa' Shafawi - With Meem */
-.ikhf_shfw {
-  color: #d500b7;
+.ikhf_shfw,
+.ikhafa_shafawi {
+  color: #cf43bd;
 }
 
 /* Ikhafa' */
-.ikhf {
-  color: #9400a8;
+.ikhf,
+.ikhafa {
+  color: #993ca5;
 }
 
 /* Idgham Shafawi - With Meem */
-.idghm_shfw {
+.idghm_shfw,
+.idgham_shafawi {
   color: #58b800;
 }
 
 /* Iqlab */
-.iqlb {
+.iqlb,
+.iqlab {
   color: #26bffd;
 }
 
 /* Idgham - With Ghunnah */
-.idgh_ghn {
+.idgh_ghn,
+.idgham_ghunnah {
   color: #169777;
 }
 
 /* Idgham - Without Ghunnah */
-.idgh_w_ghn {
+.idgh_w_ghn,
+.idgham_wo_ghunnah {
   color: #169200;
 }
 
 /* Idgham - Mutajanisayn & Mutaqaribayn */
-.idgh_mus {
+.idgh_mus,
+.idgham_mutajanisayn,
+.idgham_mutaqaribayn {
   color: #a1a1a1;
 }
 
 /* Ghunnah: 2 Vowels */
-.ghn {
+.ghn,
+.ghunnah {
   color: #ff7e1e;
 }
 
