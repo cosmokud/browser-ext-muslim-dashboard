@@ -8885,6 +8885,9 @@ body.sticky-note-resizing {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  /* Allow content area to grow and let internal virtual container control scrolling */
+  flex: 1 1 auto;
+  min-height: 0;
   /* Prevent Chrome/Edge scroll anchoring from "helpfully" shifting the page
      when this region rapidly changes height (e.g., switching surahs). */
   overflow-anchor: none;
@@ -9328,7 +9331,11 @@ body.sticky-note-resizing {
 
 .pq-virtual-container {
   position: relative;
-  height: 600px;
+  /* Fill available parent height instead of fixed pixels so it follows pocket-quran-main */
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
@@ -9458,14 +9465,15 @@ body.sticky-note-resizing {
     min-width: 0;
   }
 
+  /* Allow virtual container to size by parent height on small screens; provide a reasonable minimum. */
   .pq-virtual-container {
-    height: 500px;
+    min-height: 260px;
   }
 }
 
 @media (max-width: 599px) {
   .pq-virtual-container {
-    height: 400px;
+    min-height: 200px;
   }
 }
 
@@ -12090,6 +12098,27 @@ body.sticky-note-resizing {
 .grid-flex-row > #pocketQuranCard {
   flex: 1 1 100% !important;
   max-width: 100% !important;
+}
+
+/* Default Pocket Quran sizing: make it 95% of the viewport height by default */
+#pocketQuranCard {
+  height: 95vh;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Ensure Pocket Quran internal elements fill the card height */
+#pocketQuranCard .pocket-quran-shell,
+#pocketQuranCard .pocket-quran-main {
+  height: 100%;
+}
+
+#pocketQuranCard .pocket-quran-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Responsive adjustments for flex rows */
