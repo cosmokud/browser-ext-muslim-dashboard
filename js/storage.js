@@ -323,10 +323,30 @@ class StorageManager {
       // Pocket Quran settings
       pocketQuran: {
         arabicFontSize: 32,
+        arabicFontFamily: "Noto Naskh Arabic",
         translationFontSize: 18,
         translationResourceId: 85, // M.A.S. Abdel Haleem
         lastSurahNumber: 1,
         lastAyahNumber: 1,
+        tajweedMode: false,
+        tajweedColors: {
+          ham_wasl: "#aaaaaa",
+          slnt: "#aaaaaa",
+          laam_shamsiyah: "#aaaaaa",
+          madda_normal: "#537fff",
+          madda_permissible: "#4050ff",
+          madda_necessary: "#000ebc",
+          qlq: "#db393f",
+          madda_obligatory: "#2144c1",
+          ikhf_shfw: "#cf43bd",
+          ikhf: "#993ca5",
+          idghm_shfw: "#58b800",
+          iqlb: "#26bffd",
+          idgh_ghn: "#169777",
+          idgh_w_ghn: "#169200",
+          idgh_mus: "#a1a1a1",
+          ghn: "#ff7e1e",
+        },
       },
 
       // Heading customization settings

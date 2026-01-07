@@ -34,6 +34,36 @@ class PocketQuranManager {
     ghn: "ghn",
   };
 
+  static ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
+
+  static DEFAULT_TAJWEED_COLORS = {
+    ham_wasl: "#aaaaaa",
+    slnt: "#aaaaaa",
+    laam_shamsiyah: "#aaaaaa",
+    madda_normal: "#537fff",
+    madda_permissible: "#4050ff",
+    madda_necessary: "#000ebc",
+    qlq: "#db393f",
+    madda_obligatory: "#2144c1",
+    ikhf_shfw: "#cf43bd",
+    ikhf: "#993ca5",
+    idghm_shfw: "#58b800",
+    iqlb: "#26bffd",
+    idgh_ghn: "#169777",
+    idgh_w_ghn: "#169200",
+    idgh_mus: "#a1a1a1",
+    ghn: "#ff7e1e",
+  };
+
   // All translations available from the Quran.com API, organized by language.
   // Source: https://api.quran.com/api/v4/resources/translations
   static TRANSLATIONS = {
@@ -384,6 +414,9 @@ class PocketQuranManager {
     );
     this.tajweedToggleBtn = document.getElementById("pocketQuranTajweedToggle");
 
+    this.fontToggleBtn = document.getElementById("pocketQuranFontToggle");
+    this.fontToggleLabel = document.getElementById("pocketQuranFontLabel");
+
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
     }
@@ -401,6 +434,9 @@ class PocketQuranManager {
     // Tajweed mode state
     this._isTajweedMode = false;
     this._tajweedVersesCache = new Map();
+
+    // Arabic font state
+    this._arabicFontFamily = "Noto Naskh Arabic";
 
     // Verse caching
     this._versesCache = new Map();
@@ -479,6 +515,15 @@ class PocketQuranManager {
       syncInputs: true,
       persist: false,
     });
+
+    // Initialize Arabic font family from settings
+    this.applyArabicFontFamily(pq.arabicFontFamily, {
+      persist: false,
+      recalculate: false,
+    });
+
+    // Initialize Tajweed colors from settings
+    this.applyTajweedColors(pq.tajweedColors, { persist: false });
 
     // Initialize Tajweed mode from settings
     this._isTajweedMode = Boolean(pq.tajweedMode);
@@ -798,6 +843,13 @@ class PocketQuranManager {
     if (this.tajweedToggleBtn) {
       this.tajweedToggleBtn.addEventListener("click", () => {
         this.toggleTajweedMode();
+      });
+    }
+
+    // Arabic font toggle button
+    if (this.fontToggleBtn) {
+      this.fontToggleBtn.addEventListener("click", () => {
+        this.cycleArabicFontFamily();
       });
     }
 
@@ -3462,6 +3514,73 @@ class PocketQuranManager {
       ...(patch || {}),
     };
     this.storage.saveSettings(settings);
+  }
+
+  normalizeCssHexColor(value, fallback) {
+    const v = String(value || "").trim();
+    if (/^#[0-9a-f]{6}$/i.test(v)) return v;
+    if (/^#[0-9a-f]{3}$/i.test(v)) return v;
+    return fallback;
+  }
+
+  normalizeArabicFontFamily(value) {
+    const v = String(value || "").trim();
+    if (PocketQuranManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
+    return "Noto Naskh Arabic";
+  }
+
+  applyArabicFontFamily(fontFamily, opts = {}) {
+    const { persist = false, recalculate = true } = opts;
+
+    const normalized = this.normalizeArabicFontFamily(fontFamily);
+    this._arabicFontFamily = normalized;
+
+    if (this.card) {
+      const cssValue = `"${normalized}", var(--font-arabic)`;
+      this.card.style.setProperty("--pq-arabic-font-family", cssValue);
+    }
+
+    if (this.fontToggleLabel) {
+      this.fontToggleLabel.textContent = normalized;
+    }
+    if (this.fontToggleBtn) {
+      this.fontToggleBtn.title = `Change Arabic font (current: ${normalized})`;
+    }
+
+    if (recalculate) {
+      this._ayahHeights.clear();
+      this.recalculateVirtualization();
+    }
+
+    if (persist) {
+      this.persistPocketQuranSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  cycleArabicFontFamily() {
+    const list = PocketQuranManager.ARABIC_FONT_FAMILIES;
+    const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    const idx = Math.max(0, list.indexOf(current));
+    const next = list[(idx + 1) % list.length];
+    this.applyArabicFontFamily(next, { persist: true, recalculate: true });
+  }
+
+  applyTajweedColors(colors, opts = {}) {
+    const { persist = false } = opts;
+    if (!this.card) return;
+
+    const defaults = PocketQuranManager.DEFAULT_TAJWEED_COLORS;
+    const input = colors && typeof colors === "object" ? colors : {};
+    const merged = { ...defaults, ...input };
+
+    for (const key of Object.keys(defaults)) {
+      const normalized = this.normalizeCssHexColor(merged[key], defaults[key]);
+      this.card.style.setProperty(`--pq-tajweed-${key}`, normalized);
+    }
+
+    if (persist) {
+      this.persistPocketQuranSettings({ tajweedColors: merged });
+    }
   }
 
   applyFontSizes(arabicPx, translationPx, opts = {}) {

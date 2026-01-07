@@ -5,6 +5,44 @@
  */
 
 class SettingsManager {
+  static POCKET_QURAN_DEFAULT_TAJWEED_COLORS = {
+    ham_wasl: "#aaaaaa",
+    slnt: "#aaaaaa",
+    laam_shamsiyah: "#aaaaaa",
+    madda_normal: "#537fff",
+    madda_permissible: "#4050ff",
+    madda_necessary: "#000ebc",
+    qlq: "#db393f",
+    madda_obligatory: "#2144c1",
+    ikhf_shfw: "#cf43bd",
+    ikhf: "#993ca5",
+    idghm_shfw: "#58b800",
+    iqlb: "#26bffd",
+    idgh_ghn: "#169777",
+    idgh_w_ghn: "#169200",
+    idgh_mus: "#a1a1a1",
+    ghn: "#ff7e1e",
+  };
+
+  static POCKET_QURAN_TAJWEED_COLOR_LABELS = {
+    ham_wasl: "Hamzat ul Wasl",
+    slnt: "Silent",
+    laam_shamsiyah: "Lam Shamsiyyah",
+    madda_normal: "Madda Normal",
+    madda_permissible: "Madda Permissible",
+    madda_necessary: "Madda Necessary",
+    qlq: "Qalaqah",
+    madda_obligatory: "Madda Obligatory",
+    ikhf_shfw: "Ikhafa' Shafawi",
+    ikhf: "Ikhafa'",
+    idghm_shfw: "Idgham Shafawi",
+    iqlb: "Iqlab",
+    idgh_ghn: "Idgham (with Ghunnah)",
+    idgh_w_ghn: "Idgham (without Ghunnah)",
+    idgh_mus: "Idgham (Mutajanisayn/Mutaqaribayn)",
+    ghn: "Ghunnah",
+  };
+
   constructor(
     storage,
     prayerTimes,
@@ -388,6 +426,10 @@ class SettingsManager {
       "pocketQuranTranslationSelect"
     );
 
+    this.pocketQuranTajweedColors = document.getElementById(
+      "pocketQuranTajweedColors"
+    );
+
     // Pocket Quran bookmark elements
     this.pocketQuranExportBookmarksBtn = document.getElementById(
       "pocketQuranExportBookmarksBtn"
@@ -640,6 +682,10 @@ class SettingsManager {
 
     this.updatePocketQuranTranslationPickerLabel();
 
+    // Pocket Quran Tajweed colors
+    this.renderPocketQuranTajweedColorPickers(pq.tajweedColors);
+    this.applyPocketQuranTajweedColors(pq.tajweedColors);
+
     // Compact weather settings
     if (this.compactWeatherEnabled) {
       this.compactWeatherEnabled.checked =
@@ -665,6 +711,115 @@ class SettingsManager {
     this.loadFastingSettings(settings);
 
     this.updateNotesCountHint();
+  }
+
+  normalizeCssHexColor(value, fallback) {
+    const v = String(value || "").trim();
+    if (/^#[0-9a-f]{6}$/i.test(v)) return v;
+    if (/^#[0-9a-f]{3}$/i.test(v)) return v;
+    return fallback;
+  }
+
+  getMergedPocketQuranTajweedColors(colors) {
+    const defaults = SettingsManager.POCKET_QURAN_DEFAULT_TAJWEED_COLORS;
+    const input = colors && typeof colors === "object" ? colors : {};
+    return { ...defaults, ...input };
+  }
+
+  applyPocketQuranTajweedColors(colors) {
+    const card = document.getElementById("pocketQuranCard");
+    if (!card) return;
+
+    const defaults = SettingsManager.POCKET_QURAN_DEFAULT_TAJWEED_COLORS;
+    const merged = this.getMergedPocketQuranTajweedColors(colors);
+
+    for (const key of Object.keys(defaults)) {
+      const normalized = this.normalizeCssHexColor(merged[key], defaults[key]);
+      card.style.setProperty(`--pq-tajweed-${key}`, normalized);
+    }
+  }
+
+  persistPocketQuranTajweedColorPatch(patch) {
+    const settings = this.storage.getSettings();
+    const pq = settings.pocketQuran || {};
+    const merged = this.getMergedPocketQuranTajweedColors(pq.tajweedColors);
+    const next = { ...merged, ...(patch || {}) };
+
+    settings.pocketQuran = {
+      ...pq,
+      tajweedColors: next,
+    };
+
+    this.storage.saveSettings(settings);
+  }
+
+  renderPocketQuranTajweedColorPickers(colors) {
+    if (!this.pocketQuranTajweedColors) return;
+
+    const defaults = SettingsManager.POCKET_QURAN_DEFAULT_TAJWEED_COLORS;
+    const labels = SettingsManager.POCKET_QURAN_TAJWEED_COLOR_LABELS;
+    const merged = this.getMergedPocketQuranTajweedColors(colors);
+
+    this.pocketQuranTajweedColors.innerHTML = "";
+
+    for (const key of Object.keys(defaults)) {
+      const row = document.createElement("div");
+      row.className = "pq-tajweed-color-row";
+
+      const label = document.createElement("div");
+      label.className = "pq-tajweed-color-label";
+      label.textContent = labels[key] || key;
+
+      const actions = document.createElement("div");
+      actions.className = "pq-tajweed-color-actions";
+
+      const swatch = document.createElement("button");
+      swatch.type = "button";
+      swatch.className = "pq-tajweed-color-swatch";
+      swatch.style.background = merged[key];
+      swatch.setAttribute("aria-label", `Pick color for ${label.textContent}`);
+
+      const input = document.createElement("input");
+      input.type = "color";
+      input.className = "pq-tajweed-color-input";
+      input.tabIndex = -1;
+      input.value = merged[key];
+
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.className = "setting-btn";
+      reset.textContent = "Reset";
+      reset.title = "Reset to default";
+      reset.setAttribute("aria-label", `Reset ${label.textContent} to default`);
+
+      const applyAndPersist = (nextColor) => {
+        const normalized = this.normalizeCssHexColor(nextColor, defaults[key]);
+        swatch.style.background = normalized;
+        input.value = normalized;
+        this.applyPocketQuranTajweedColors({ [key]: normalized });
+        this.persistPocketQuranTajweedColorPatch({ [key]: normalized });
+      };
+
+      swatch.addEventListener("click", () => {
+        input.click();
+      });
+
+      input.addEventListener("input", (e) => {
+        applyAndPersist(e.target.value);
+      });
+
+      reset.addEventListener("click", () => {
+        applyAndPersist(defaults[key]);
+      });
+
+      actions.appendChild(swatch);
+      actions.appendChild(reset);
+      actions.appendChild(input);
+
+      row.appendChild(label);
+      row.appendChild(actions);
+      this.pocketQuranTajweedColors.appendChild(row);
+    }
   }
 
   updatePocketQuranArabicSizeLabel() {

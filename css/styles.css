@@ -3,10 +3,58 @@
    Beautiful Islamic Dashboard Extension
    ======================================== */
 
-/* Tajweed Font */
+/* Pocket Quran Arabic Fonts */
 @font-face {
   font-family: "Uthmani Tajweed";
   src: url("../fonts/UthmanTN_v2-0.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC Uthman Taha Naskh";
+  src: url("../fonts/UthmanTN_v2-0.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC KSA Regular";
+  src: url("../fonts/KSARegular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC Kufi Stylistic Regular";
+  src: url("../fonts/KFGQPC-KufiStyV14.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC AN Regular";
+  src: url("../fonts/KFGQPCAnRegular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC AlJalil Dot";
+  src: url("../fonts/AlJalilDot_v01.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "KFGQPC Sindhi Naskh Regular";
+  src: url("../fonts/UthmanTSVer1.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -8446,7 +8494,7 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-ayah-ar {
-  font-family: var(--font-arabic);
+  font-family: var(--pq-arabic-font-family, var(--font-arabic));
   font-size: var(--pq-arabic-size);
   line-height: 1.95;
   text-align: right;
@@ -8472,7 +8520,11 @@ body.sticky-note-resizing {
 
 /* Tajweed Mode Styles */
 .pocket-quran-ayah-ar.tajweed-mode {
-  font-family: "Uthmani Tajweed", var(--font-arabic);
+  font-family: var(
+    --pq-arabic-font-family,
+    "Uthmani Tajweed",
+    var(--font-arabic)
+  );
   line-height: 2.2;
 }
 
@@ -8514,11 +8566,17 @@ body.sticky-note-resizing {
 
 /* Tajweed Color Classes - Based on Quran.com Tajweed Rules */
 /* Hamzat ul Wasl, Silent, Lam Shamsiyyah */
-.ham_wasl,
+.ham_wasl {
+  color: var(--pq-tajweed-ham_wasl, #aaaaaa);
+}
+
 .slnt,
-.silent,
+.silent {
+  color: var(--pq-tajweed-slnt, #aaaaaa);
+}
+
 .laam_shamsiyah {
-  color: #aaaaaa;
+  color: var(--pq-tajweed-laam_shamsiyah, #aaaaaa);
 }
 
 /* End of ayah marker */
@@ -8529,77 +8587,137 @@ body.sticky-note-resizing {
 
 /* Normal Prolongation: 2 Vowels */
 .madda_normal {
-  color: #537fff;
+  color: var(--pq-tajweed-madda_normal, #537fff);
 }
 
 /* Permissible Prolongation: 2, 4, 6 Vowels */
 .madda_permissible {
-  color: #4050ff;
+  color: var(--pq-tajweed-madda_permissible, #4050ff);
 }
 
 /* Necessary Prolongation: 6 Vowels */
 .madda_necessary {
-  color: #000ebc;
+  color: var(--pq-tajweed-madda_necessary, #000ebc);
 }
 
 /* Qalaqah */
 .qlq,
 .qalaqah {
-  color: #db393f;
+  color: var(--pq-tajweed-qlq, #db393f);
 }
 
 /* Obligatory Prolongation: 4-5 Vowels */
 .madda_obligatory {
-  color: #2144c1;
+  color: var(--pq-tajweed-madda_obligatory, #2144c1);
 }
 
 /* Ikhafa' Shafawi - With Meem */
 .ikhf_shfw,
 .ikhafa_shafawi {
-  color: #cf43bd;
+  color: var(--pq-tajweed-ikhf_shfw, #cf43bd);
 }
 
 /* Ikhafa' */
 .ikhf,
 .ikhafa {
-  color: #993ca5;
+  color: var(--pq-tajweed-ikhf, #993ca5);
 }
 
 /* Idgham Shafawi - With Meem */
 .idghm_shfw,
 .idgham_shafawi {
-  color: #58b800;
+  color: var(--pq-tajweed-idghm_shfw, #58b800);
 }
 
 /* Iqlab */
 .iqlb,
 .iqlab {
-  color: #26bffd;
+  color: var(--pq-tajweed-iqlb, #26bffd);
 }
 
 /* Idgham - With Ghunnah */
 .idgh_ghn,
 .idgham_ghunnah {
-  color: #169777;
+  color: var(--pq-tajweed-idgh_ghn, #169777);
 }
 
 /* Idgham - Without Ghunnah */
 .idgh_w_ghn,
 .idgham_wo_ghunnah {
-  color: #169200;
+  color: var(--pq-tajweed-idgh_w_ghn, #169200);
 }
 
 /* Idgham - Mutajanisayn & Mutaqaribayn */
 .idgh_mus,
 .idgham_mutajanisayn,
 .idgham_mutaqaribayn {
-  color: #a1a1a1;
+  color: var(--pq-tajweed-idgh_mus, #a1a1a1);
 }
 
 /* Ghunnah: 2 Vowels */
 .ghn,
 .ghunnah {
-  color: #ff7e1e;
+  color: var(--pq-tajweed-ghn, #ff7e1e);
+}
+
+/* Pocket Quran settings: Tajweed colors */
+.pq-tajweed-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.pq-tajweed-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.pq-tajweed-color-label {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.pq-tajweed-color-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pq-tajweed-color-swatch {
+  width: 34px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--transition-fast),
+    border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pq-tajweed-color-swatch:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+.pq-tajweed-color-swatch:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.pq-tajweed-color-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .pocket-quran-ayah.pq-highlight {
