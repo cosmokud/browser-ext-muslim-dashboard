@@ -435,7 +435,7 @@ class PocketQuranManager {
     this._tajweedVersesCache = new Map();
 
     // Arabic font state
-    this._arabicFontFamily = "Noto Naskh Arabic";
+    this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
 
     // Font picker modal
     this._fontModal = null;
@@ -3591,7 +3591,7 @@ class PocketQuranManager {
   normalizeArabicFontFamily(value) {
     const v = String(value || "").trim();
     if (PocketQuranManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
-    return "Noto Naskh Arabic";
+    return "KFGQPC Uthman Taha Naskh";
   }
 
   applyArabicFontFamily(fontFamily, opts = {}) {

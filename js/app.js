@@ -355,6 +355,18 @@ class MuslimDashboard {
   async init() {
     console.log("🕌 Muslim Dashboard initializing...");
 
+    // Ensure Pocket Quran has a default Arabic font family before the component
+    // initializes (so existing users missing this field get a stable default).
+    try {
+      const s = this.storage.getSettings();
+      if (!s.pocketQuran) s.pocketQuran = {};
+      const current = String(s.pocketQuran.arabicFontFamily || "").trim();
+      if (!current) {
+        s.pocketQuran.arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+        this.storage.saveSettings(s);
+      }
+    } catch (e) {}
+
     // Initialize themes first (applies CSS variables before any UI renders)
     this.themes.init();
 
@@ -1099,9 +1111,58 @@ class MuslimDashboard {
     };
 
     const exitFocusMode = () => {
-      // Refresh the page to restore all components to their proper state
-      // This ensures the grid layout, visibility settings, and all styles are reset correctly
-      window.location.reload();
+      this._quranFocusModeActive = false;
+      focusBtn.setAttribute("aria-pressed", "false");
+      focusBtn.classList.remove("active");
+
+      // Remove focus mode class so normal styling returns.
+      document.body.classList.remove("quran-focus-mode");
+
+      // Undo the temporary, forced focus-mode hiding without reloading the page.
+      // This keeps Pocket Quran recitation (audio) running.
+      const elements = getHideableElements();
+      elements.forEach((el) => {
+        try {
+          el.style.removeProperty("display");
+        } catch (e) {}
+        try {
+          delete el.dataset.focusModeHidden;
+        } catch (e) {}
+      });
+
+      // Restore grid rows that were hidden in focus mode.
+      const gridRows = document.querySelectorAll(".grid-flex-row");
+      gridRows.forEach((row) => {
+        try {
+          row.style.removeProperty("display");
+        } catch (e) {}
+        try {
+          delete row.dataset.focusModeHidden;
+        } catch (e) {}
+      });
+
+      // Re-apply visibility + layout (this triggers grid recalculation).
+      try {
+        this.applyComponentVisibility();
+      } catch (e) {}
+
+      // Re-apply container width and nudge layout recalculation.
+      try {
+        const s = this.storage.getSettings();
+        if (
+          this.settings &&
+          typeof this.settings.applyContainerWidth === "function"
+        ) {
+          this.settings.applyContainerWidth(
+            s.containerWidth || "narrow",
+            s.containerWidthCustom || 70
+          );
+        }
+      } catch (e) {}
+
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch (e) {}
     };
 
     const toggleFocusMode = () => {

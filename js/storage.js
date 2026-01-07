@@ -323,7 +323,7 @@ class StorageManager {
       // Pocket Quran settings
       pocketQuran: {
         arabicFontSize: 32,
-        arabicFontFamily: "Noto Naskh Arabic",
+        arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
         translationResourceId: 85, // M.A.S. Abdel Haleem
         lastSurahNumber: 1,

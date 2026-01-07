@@ -58,8 +58,8 @@ class GridLayoutManager {
       qiblaCard: 280,
       lunarPhaseCard: 250,
       fastingCard: 250,
-      flashcardCard: 300,
-      adhkarCard: 300,
+      flashcardCard: 360,
+      adhkarCard: 360,
       todoCard: 300,
     };
 
