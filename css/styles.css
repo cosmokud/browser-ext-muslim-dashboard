@@ -8310,7 +8310,7 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-ayah-input {
-  width: 80px;
+  width: 60px;
   text-align: center;
 }
 
@@ -8354,6 +8354,12 @@ body.sticky-note-resizing {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.pocket-quran-toggle-group {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
 .pocket-quran-size-control {
   display: inline-flex;
   align-items: center;
@@ -8361,7 +8367,7 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-size-range {
-  width: 180px;
+  width: 96px;
   height: 32px;
   appearance: none;
   background: transparent;
