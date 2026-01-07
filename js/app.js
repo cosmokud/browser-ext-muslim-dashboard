@@ -637,6 +637,18 @@ class MuslimDashboard {
           effectiveGlass = isDashboardGlassEnabled();
         }
 
+        // Apply per-card glass override attribute:
+        // - OFF  => data-glass-enabled="false" on this card only
+        // - ON   => data-glass-enabled="true" on this card only
+        // - DASH => remove attribute so it follows dashboard/root setting
+        if (state === "dashboard") {
+          delete card.dataset.glassEnabled;
+        } else if (state === "on") {
+          card.dataset.glassEnabled = "true";
+        } else if (state === "off") {
+          card.dataset.glassEnabled = "false";
+        }
+
         // Determine effective blur power
         let effectiveBlurPower;
         if (!effectiveGlass) {
