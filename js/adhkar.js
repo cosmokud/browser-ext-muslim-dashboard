@@ -2096,7 +2096,7 @@ class AdhkarManager {
 
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "adhkar-lang-selector-btn flashcard-mode-toggle-btn";
+    btn.className = "adhkar-lang-selector-btn";
     btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
     btn.title = "Select translation language";
     btn.setAttribute("aria-label", "Select translation language");
