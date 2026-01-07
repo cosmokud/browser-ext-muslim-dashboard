@@ -2499,6 +2499,15 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
   overflow-x: hidden;
   max-height: none;
   height: 100%;
+  min-height: 0;
+}
+
+/* In focus mode, virtual container should fill available height */
+body.quran-focus-mode #pocketQuranCard .pq-virtual-container {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 /* Hide scrollbar for cleaner focus mode while keeping functionality */
@@ -7966,9 +7975,6 @@ body.sticky-note-resizing {
   grid-column: 1 / -1;
   --pq-arabic-size: 32px;
   --pq-translation-size: 18px;
-  /* Enable flex layout for proper height distribution */
-  display: flex;
-  flex-direction: column;
 }
 
 .pocket-quran-header {
@@ -8026,12 +8032,9 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-shell {
-  display: flex;
-  flex-direction: column;
+  display: block;
   margin-top: var(--spacing-md);
   width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 .pocket-quran-combobox {
@@ -8275,7 +8278,7 @@ body.sticky-note-resizing {
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: transparent;
+  background: rgba(30, 40, 50, 0.95);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
   opacity: 0;
@@ -8283,17 +8286,6 @@ body.sticky-note-resizing {
   transform: translateY(-8px) scale(0.96);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
   pointer-events: none;
-}
-
-.blur-settings-popup::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-lg);
-  background: var(--glass-bg-hover);
-  backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
-  z-index: -1;
 }
 
 .card-blur-menu.blur-menu-open .blur-settings-popup {
@@ -8311,13 +8303,11 @@ body.sticky-note-resizing {
   right: 14px;
   width: 12px;
   height: 12px;
-  background: var(--glass-bg-hover);
+  background: rgba(30, 40, 50, 0.95);
   border: 1px solid var(--glass-border);
   border-bottom: none;
   border-right: none;
   transform: rotate(45deg);
-  backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
 }
 
 .blur-popup-header {
@@ -8507,6 +8497,16 @@ body.sticky-note-resizing {
   color: var(--text-muted);
 }
 
+/* Disabled state for blur power toggle when glass is OFF */
+.blur-power-toggle.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.blur-power-toggle.disabled .blur-power-switch {
+  cursor: not-allowed;
+}
+
 /* Blur Power Slider */
 .blur-power-slider-wrap {
   display: flex;
@@ -8690,7 +8690,6 @@ body.sticky-note-resizing {
 .pocket-quran-main {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-sm);
@@ -8886,9 +8885,6 @@ body.sticky-note-resizing {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  /* Make content fill available space so virtual container can expand */
-  flex: 1 1 auto;
-  min-height: 0;
   /* Prevent Chrome/Edge scroll anchoring from "helpfully" shifting the page
      when this region rapidly changes height (e.g., switching surahs). */
   overflow-anchor: none;
@@ -9332,9 +9328,7 @@ body.sticky-note-resizing {
 
 .pq-virtual-container {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 400px;
-  max-height: 100%;
+  height: 600px;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
@@ -9465,13 +9459,13 @@ body.sticky-note-resizing {
   }
 
   .pq-virtual-container {
-    min-height: 400px;
+    height: 500px;
   }
 }
 
 @media (max-width: 599px) {
   .pq-virtual-container {
-    min-height: 350px;
+    height: 400px;
   }
 }
 
