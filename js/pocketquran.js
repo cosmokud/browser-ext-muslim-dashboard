@@ -11,6 +11,28 @@
 
 class PocketQuranManager {
   static API_BASE = "https://api.quran.com/api/v4";
+  static TAJWEED_API_BASE =
+    "https://api.quran.com/api/v4/quran/verses/uthmani_tajweed";
+
+  // Tajweed CSS class mapping from API class names to our CSS classes
+  static TAJWEED_CLASS_MAP = {
+    ham_wasl: "ham_wasl",
+    slnt: "slnt",
+    laam_shamsiyah: "laam_shamsiyah",
+    madda_normal: "madda_normal",
+    madda_permissible: "madda_permissible",
+    madda_necessary: "madda_necessary",
+    qlq: "qlq",
+    madda_obligatory: "madda_obligatory",
+    ikhf_shfw: "ikhf_shfw",
+    ikhf: "ikhf",
+    idghm_shfw: "idghm_shfw",
+    iqlb: "iqlb",
+    idgh_ghn: "idgh_ghn",
+    idgh_w_ghn: "idgh_w_ghn",
+    idgh_mus: "idgh_mus",
+    ghn: "ghn",
+  };
 
   // All translations available from the Quran.com API, organized by language.
   // Source: https://api.quran.com/api/v4/resources/translations
@@ -360,6 +382,7 @@ class PocketQuranManager {
     this.translationSizeValue = document.getElementById(
       "pocketQuranTranslationSizeValue"
     );
+    this.tajweedToggleBtn = document.getElementById("pocketQuranTajweedToggle");
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
@@ -374,6 +397,10 @@ class PocketQuranManager {
     this._scrollHighlightTimer = null;
     this._ayahJumpTimer = null;
     this._surahQuery = "";
+
+    // Tajweed mode state
+    this._isTajweedMode = false;
+    this._tajweedVersesCache = new Map();
 
     // Verse caching
     this._versesCache = new Map();
@@ -452,6 +479,10 @@ class PocketQuranManager {
       syncInputs: true,
       persist: false,
     });
+
+    // Initialize Tajweed mode from settings
+    this._isTajweedMode = Boolean(pq.tajweedMode);
+    this.updateTajweedToggleUI();
 
     // Initialize bookmark system
     this.ensureDefaultBookmarkCategory();
@@ -760,6 +791,13 @@ class PocketQuranManager {
             18
           ),
         });
+      });
+    }
+
+    // Tajweed toggle button
+    if (this.tajweedToggleBtn) {
+      this.tajweedToggleBtn.addEventListener("click", () => {
+        this.toggleTajweedMode();
       });
     }
 
@@ -1351,7 +1389,20 @@ class PocketQuranManager {
     const ar = document.createElement("div");
     ar.className = "pocket-quran-ayah-ar";
     ar.setAttribute("dir", "rtl");
-    ar.textContent = verse?.text_uthmani || "";
+
+    // Check if Tajweed mode is enabled and we have Tajweed text
+    if (this._isTajweedMode) {
+      const tajweedText = this.getTajweedTextForVerse(ayahNumber);
+      if (tajweedText) {
+        ar.classList.add("tajweed-mode");
+        ar.innerHTML = tajweedText;
+      } else {
+        // Fallback to plain text if Tajweed not available
+        ar.textContent = verse?.text_uthmani || "";
+      }
+    } else {
+      ar.textContent = verse?.text_uthmani || "";
+    }
 
     const tr = document.createElement("div");
     tr.className = "pocket-quran-ayah-tr";
@@ -1842,6 +1893,11 @@ class PocketQuranManager {
 
       this._activeVerses = verses;
 
+      // Preload Tajweed verses if Tajweed mode is enabled
+      if (this._isTajweedMode) {
+        await this.preloadTajweedVerses(surah);
+      }
+
       this.renderSurahHeader({
         surah,
         surahName,
@@ -1895,7 +1951,8 @@ class PocketQuranManager {
     const translation =
       PocketQuranManager.TRANSLATIONS[this._activeTranslationId]?.label ||
       "Translation";
-    this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}`;
+    const tajweedIndicator = this._isTajweedMode ? " · Tajweed" : "";
+    this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}${tajweedIndicator}`;
   }
 
   /**
@@ -1914,6 +1971,159 @@ class PocketQuranManager {
 
     // Reload the current surah
     this.loadSurah(this._activeSurah, { autoScroll: false });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TAJWEED MODE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Toggle Tajweed mode on/off.
+   * When enabled, fetches color-coded Tajweed text from the API.
+   */
+  async toggleTajweedMode() {
+    this._isTajweedMode = !this._isTajweedMode;
+    this.persistPocketQuranSettings({ tajweedMode: this._isTajweedMode });
+    this.updateTajweedToggleUI();
+
+    // Re-render the current surah with or without Tajweed
+    const scrollTop = this._virtualContainer?.scrollTop || 0;
+    const currentAyah = this._activeAyah;
+
+    // Preload Tajweed verses if enabling Tajweed mode
+    if (this._isTajweedMode && this._activeSurah) {
+      await this.preloadTajweedVerses(this._activeSurah);
+    }
+
+    // Invalidate height cache since Tajweed font may have different sizing
+    this._ayahHeights.clear();
+
+    // Re-render visible ayahs
+    if (this._activeVerses?.length) {
+      this.recalculateVirtualization();
+
+      // Restore scroll position
+      requestAnimationFrame(() => {
+        if (this._virtualContainer) {
+          this._virtualContainer.scrollTop = scrollTop;
+        }
+      });
+    }
+
+    // Update header to show Tajweed indicator
+    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    if (chapter) {
+      this.renderSurahHeader({
+        surah: this._activeSurah,
+        surahName: chapter.name_simple || `Surah ${this._activeSurah}`,
+        surahNameAr: chapter.name_arabic || "",
+        versesCount: this._activeVerses?.length || 0,
+      });
+    }
+  }
+
+  /**
+   * Update the Tajweed toggle button UI to reflect current state.
+   */
+  updateTajweedToggleUI() {
+    if (!this.tajweedToggleBtn) return;
+    this.tajweedToggleBtn.classList.toggle("active", this._isTajweedMode);
+    this.tajweedToggleBtn.setAttribute(
+      "aria-pressed",
+      this._isTajweedMode ? "true" : "false"
+    );
+  }
+
+  /**
+   * Get cache key for Tajweed verses.
+   */
+  getTajweedCacheKey(surah) {
+    return `tajweed|${surah}`;
+  }
+
+  /**
+   * Fetch Tajweed verses for a surah from the Quran.com API.
+   * Returns an array of verses with text_uthmani_tajweed field.
+   */
+  async fetchTajweedVerses(surah) {
+    const cacheKey = this.getTajweedCacheKey(surah);
+    const cached = this._tajweedVersesCache.get(cacheKey);
+
+    if (cached && Array.isArray(cached.verses) && cached.verses.length) {
+      return cached.verses;
+    }
+
+    try {
+      const url = `${PocketQuranManager.TAJWEED_API_BASE}?chapter_number=${surah}`;
+      const data = await this.fetchJson(url, { timeoutMs: 20000 });
+      const verses = Array.isArray(data?.verses) ? data.verses : [];
+
+      if (verses.length) {
+        this._tajweedVersesCache.set(cacheKey, {
+          verses,
+          fetchedAt: Date.now(),
+        });
+      }
+
+      return verses;
+    } catch (e) {
+      console.error("PocketQuran: failed to fetch Tajweed verses", e);
+      return [];
+    }
+  }
+
+  /**
+   * Convert Tajweed API response to valid HTML.
+   * The API returns <tajweed class=xxx> tags which need to be converted to <span class="xxx">.
+   */
+  parseTajweedHtml(tajweedText) {
+    if (!tajweedText) return null;
+
+    // Convert <tajweed class=xxx> to <span class="xxx">
+    // The API returns class names without quotes, e.g., <tajweed class=ham_wasl>
+    let html = tajweedText
+      .replace(/<tajweed\s+class=([^>]+)>/gi, (match, className) => {
+        // Clean the class name and add quotes
+        const cleanClass = className.trim();
+        return `<span class="${cleanClass}">`;
+      })
+      .replace(/<\/tajweed>/gi, "</span>");
+
+    return html;
+  }
+
+  /**
+   * Get Tajweed HTML for a specific verse.
+   * The API returns HTML with class attributes for Tajweed rules.
+   * We parse and convert them to proper HTML with CSS classes.
+   */
+  getTajweedTextForVerse(verseNumber) {
+    const cacheKey = this.getTajweedCacheKey(this._activeSurah);
+    const cached = this._tajweedVersesCache.get(cacheKey);
+
+    if (!cached?.verses?.length) return null;
+
+    // The API returns verse_key like "1:1", "1:2", etc.
+    // We need to find the verse matching our surah:ayah pattern
+    const verseKey = `${this._activeSurah}:${verseNumber}`;
+    const verse = cached.verses.find((v) => v.verse_key === verseKey);
+    if (!verse?.text_uthmani_tajweed) return null;
+
+    // Parse and convert the Tajweed HTML
+    return this.parseTajweedHtml(verse.text_uthmani_tajweed);
+  }
+
+  /**
+   * Preload Tajweed verses for the active surah.
+   * Called when Tajweed mode is enabled or when switching surahs.
+   */
+  async preloadTajweedVerses(surah) {
+    if (!this._isTajweedMode) return;
+
+    const cacheKey = this.getTajweedCacheKey(surah);
+    if (this._tajweedVersesCache.has(cacheKey)) return;
+
+    await this.fetchTajweedVerses(surah);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

@@ -3,6 +3,15 @@
    Beautiful Islamic Dashboard Extension
    ======================================== */
 
+/* Tajweed Font */
+@font-face {
+  font-family: "Uthmani Tajweed";
+  src: url("../fonts/UthmanTN_v2-0.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* CSS Variables */
 :root {
   /* Colors */
@@ -8459,6 +8468,127 @@ body.sticky-note-resizing {
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
+}
+
+/* Tajweed Mode Styles */
+.pocket-quran-ayah-ar.tajweed-mode {
+  font-family: "Uthmani Tajweed", var(--font-arabic);
+  line-height: 2.2;
+}
+
+/* Tajweed Toggle Button */
+.pq-tajweed-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pq-tajweed-toggle:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.pq-tajweed-toggle.active {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.25),
+    rgba(212, 175, 55, 0.15)
+  );
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.pq-tajweed-toggle-icon {
+  font-size: 1rem;
+}
+
+/* Tajweed Color Classes - Based on Quran.com Tajweed Rules */
+/* Hamzat ul Wasl, Silent, Lam Shamsiyyah */
+.ham_wasl,
+.slnt,
+.laam_shamsiyah {
+  color: #aaaaaa;
+}
+
+/* End of ayah marker */
+.pocket-quran-ayah-ar .end {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+/* Normal Prolongation: 2 Vowels */
+.madda_normal {
+  color: #537fff;
+}
+
+/* Permissible Prolongation: 2, 4, 6 Vowels */
+.madda_permissible {
+  color: #4050ff;
+}
+
+/* Necessary Prolongation: 6 Vowels */
+.madda_necessary {
+  color: #000ebc;
+}
+
+/* Qalaqah */
+.qlq {
+  color: #dd0008;
+}
+
+/* Obligatory Prolongation: 4-5 Vowels */
+.madda_obligatory {
+  color: #2144c1;
+}
+
+/* Ikhafa' Shafawi - With Meem */
+.ikhf_shfw {
+  color: #d500b7;
+}
+
+/* Ikhafa' */
+.ikhf {
+  color: #9400a8;
+}
+
+/* Idgham Shafawi - With Meem */
+.idghm_shfw {
+  color: #58b800;
+}
+
+/* Iqlab */
+.iqlb {
+  color: #26bffd;
+}
+
+/* Idgham - With Ghunnah */
+.idgh_ghn {
+  color: #169777;
+}
+
+/* Idgham - Without Ghunnah */
+.idgh_w_ghn {
+  color: #169200;
+}
+
+/* Idgham - Mutajanisayn & Mutaqaribayn */
+.idgh_mus {
+  color: #a1a1a1;
+}
+
+/* Ghunnah: 2 Vowels */
+.ghn {
+  color: #ff7e1e;
 }
 
 .pocket-quran-ayah.pq-highlight {
