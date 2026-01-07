@@ -457,6 +457,9 @@ class MuslimDashboard {
     // Apply per-card blur overrides (readability-first components)
     this.initReadabilityBlurOverrides();
 
+    // Initialize Quran Focus Mode
+    this.initQuranFocusMode();
+
     // Add global Refresh Background button handler (bottom-right UI)
     const refreshBtn = document.getElementById("refreshBgBtn");
     if (refreshBtn) {
@@ -541,33 +544,53 @@ class MuslimDashboard {
   }
 
   initReadabilityBlurOverrides() {
-    const clampNumber = (value, min, max, fallback) => {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return fallback;
-      return Math.min(max, Math.max(min, n));
+    /**
+     * Triple-state blur toggle for individual cards.
+     * States: "dashboard" (follow global setting), "on" (force glass enabled), "off" (force glass disabled)
+     */
+    const BLUR_STATES = ["dashboard", "on", "off"];
+
+    const getNextState = (current) => {
+      const idx = BLUR_STATES.indexOf(current);
+      return BLUR_STATES[(idx + 1) % BLUR_STATES.length];
     };
 
-    const popoverPairs = [];
+    const getStateLabel = (state) => {
+      switch (state) {
+        case "on":
+          return "Glass effect: Enabled";
+        case "off":
+          return "Glass effect: Disabled";
+        default:
+          return "Glass effect: Follow Dashboard";
+      }
+    };
 
-    const setup = ({
-      cardId,
-      toggleId,
-      rangeId,
-      valueId,
-      menuBtnId,
-      popoverId,
-      enabledKey,
-      powerKey,
-    }) => {
+    const getStateIcon = (state) => {
+      switch (state) {
+        case "on":
+          return "✨";
+        case "off":
+          return "⬜";
+        default:
+          return "🔗";
+      }
+    };
+
+    const isDashboardGlassEnabled = () => {
+      try {
+        const settings = this.storage.getSettings();
+        return settings?.themeGlassEnabled !== false;
+      } catch (e) {
+        return true;
+      }
+    };
+
+    const setupTripleToggle = ({ cardId, btnId, stateKey }) => {
       const card = document.getElementById(cardId);
-      const toggle = document.getElementById(toggleId);
-      const range = document.getElementById(rangeId);
-      const valueEl = document.getElementById(valueId);
+      const btn = document.getElementById(btnId);
 
-      const menuBtn = menuBtnId ? document.getElementById(menuBtnId) : null;
-      const popover = popoverId ? document.getElementById(popoverId) : null;
-
-      if (!card || !toggle || !range || !valueEl) return;
+      if (!card || !btn) return;
 
       const readSettings = () => this.storage.getSettings();
       const writeSettings = (patch) => {
@@ -575,170 +598,219 @@ class MuslimDashboard {
         this.storage.set("settings", { ...current, ...patch });
       };
 
-      const apply = (enabled, powerPercent) => {
-        const clampedPower = clampNumber(powerPercent, 0, 200, 100);
+      const applyState = (state) => {
+        btn.setAttribute("data-blur-state", state);
+        btn.setAttribute("aria-label", getStateLabel(state));
+        btn.setAttribute("title", getStateLabel(state));
+        btn.textContent = getStateIcon(state);
 
-        toggle.checked = Boolean(enabled);
-        range.disabled = !toggle.checked;
-
-        if (toggle.checked) {
-          range.value = String(clampedPower);
-          valueEl.textContent = `${clampedPower}%`;
-
-          // Apply the blur multiplier as an inline CSS custom property.
-          // Use both setProperty and setAttribute to ensure maximum compatibility.
-          const multiplierValue = String(clampedPower / 100);
-          card.style.setProperty("--ui-blur-multiplier", multiplierValue);
-
-          // Also add a data attribute for debugging/CSS fallback.
-          card.dataset.blurOverride = multiplierValue;
+        // Determine effective glass state
+        let effectiveGlass;
+        if (state === "on") {
+          effectiveGlass = true;
+        } else if (state === "off") {
+          effectiveGlass = false;
         } else {
-          valueEl.textContent = "Dashboard";
-          card.style.removeProperty("--ui-blur-multiplier");
-          delete card.dataset.blurOverride;
+          effectiveGlass = isDashboardGlassEnabled();
         }
 
-        // Notify components that portal UI may need syncing.
+        // Apply via CSS custom property: 1 = glass enabled, 0 = glass disabled
+        if (effectiveGlass) {
+          card.style.removeProperty("--ui-blur-multiplier");
+          delete card.dataset.blurOverride;
+        } else {
+          card.style.setProperty("--ui-blur-multiplier", "0");
+          card.dataset.blurOverride = "0";
+        }
+
+        // Notify components
         try {
           document.dispatchEvent(
-            new CustomEvent("md:card-blur-update", {
-              detail: { cardId },
-            })
+            new CustomEvent("md:card-blur-update", { detail: { cardId } })
           );
         } catch (e) {}
       };
 
+      // Load initial state
       const settings = readSettings();
-      const initialEnabled = Boolean(settings?.[enabledKey]);
-      const initialPower = clampNumber(settings?.[powerKey], 0, 200, 100);
-      apply(initialEnabled, initialPower);
+      const initialState = settings?.[stateKey] || "dashboard";
+      applyState(initialState);
 
-      toggle.addEventListener("change", () => {
-        const enabled = toggle.checked;
-        const power = clampNumber(range.value, 0, 200, 100);
-        apply(enabled, power);
-        writeSettings({ [enabledKey]: enabled, [powerKey]: power });
+      // Handle click: cycle through states
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentState = btn.getAttribute("data-blur-state") || "dashboard";
+        const nextState = getNextState(currentState);
+        applyState(nextState);
+        writeSettings({ [stateKey]: nextState });
       });
 
-      range.addEventListener("input", () => {
-        const power = clampNumber(range.value, 0, 200, 100);
-        if (toggle.checked) {
-          const multiplierValue = String(power / 100);
-          valueEl.textContent = `${power}%`;
-          card.style.setProperty("--ui-blur-multiplier", multiplierValue);
-          card.dataset.blurOverride = multiplierValue;
+      // Listen for dashboard glass setting changes
+      document.addEventListener("md:glass-setting-changed", () => {
+        const currentState = btn.getAttribute("data-blur-state") || "dashboard";
+        if (currentState === "dashboard") {
+          applyState("dashboard");
         }
-        writeSettings({ [enabledKey]: toggle.checked, [powerKey]: power });
-
-        try {
-          document.dispatchEvent(
-            new CustomEvent("md:card-blur-update", {
-              detail: { cardId },
-            })
-          );
-        } catch (e) {}
       });
 
-      if (menuBtn && popover) {
-        popoverPairs.push({ menuBtn, popover });
+      return { card, btn, applyState };
+    };
 
-        const setOpen = (open) => {
-          popover.hidden = !open;
-          menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
-        };
+    // Setup all cards with triple toggle
+    const blurConfigs = [
+      {
+        cardId: "pocketQuranCard",
+        btnId: "pocketQuranBlurMenuBtn",
+        stateKey: "pocketQuranBlurState",
+      },
+      {
+        cardId: "todoCard",
+        btnId: "todoBlurMenuBtn",
+        stateKey: "todoBlurState",
+      },
+      {
+        cardId: "flashcardCard",
+        btnId: "flashcardBlurMenuBtn",
+        stateKey: "flashcardBlurState",
+      },
+      {
+        cardId: "adhkarCard",
+        btnId: "adhkarBlurMenuBtn",
+        stateKey: "adhkarBlurState",
+      },
+      {
+        cardId: "notesCard",
+        btnId: "notesBlurMenuBtn",
+        stateKey: "notesBlurState",
+      },
+    ];
 
-        menuBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(popover.hidden);
-        });
+    this._blurToggles = blurConfigs
+      .map((cfg) => setupTripleToggle(cfg))
+      .filter(Boolean);
+  }
 
-        popover.addEventListener("click", (e) => {
-          // allow interacting with controls without closing
-          e.stopPropagation();
-        });
+  /**
+   * Initialize Quran Focus Mode
+   * Hides all components except Pocket Quran, making it full viewport
+   */
+  initQuranFocusMode() {
+    const focusBtn = document.getElementById("quranFocusBtn");
+    if (!focusBtn) return;
 
-        // start closed
-        setOpen(false);
+    this._quranFocusModeActive = false;
+    this._quranFocusPreviousVisibility = null;
+
+    const getHideableElements = () => {
+      return [
+        document.querySelector(".header"),
+        document.getElementById("pinnedAppsSection"),
+        document.getElementById("searchBarSection"),
+        document.getElementById("quoteSection"),
+        document.getElementById("prayerTimesCard"),
+        document.getElementById("calendarCard"),
+        document.getElementById("qiblaCard"),
+        document.getElementById("weatherCard"),
+        document.getElementById("lunarPhaseCard"),
+        document.getElementById("fastingCard"),
+        document.getElementById("flashcardCard"),
+        document.getElementById("adhkarCard"),
+        document.getElementById("todoCard"),
+        document.getElementById("notesCard"),
+      ].filter(Boolean);
+    };
+
+    const enterFocusMode = () => {
+      this._quranFocusModeActive = true;
+      focusBtn.setAttribute("aria-pressed", "true");
+      focusBtn.classList.add("active");
+
+      // Store current visibility state of Pocket Quran
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      const wasHidden =
+        pocketQuranCard && pocketQuranCard.style.display === "none";
+      this._quranFocusPreviousVisibility = wasHidden;
+
+      // Force show Pocket Quran if it was hidden
+      if (pocketQuranCard && wasHidden) {
+        pocketQuranCard.style.display = "";
+        pocketQuranCard.setAttribute("aria-hidden", "false");
+      }
+
+      // Hide all other elements
+      const elements = getHideableElements();
+      elements.forEach((el) => {
+        el.dataset.focusModeHidden =
+          el.style.display === "none" ? "was-hidden" : "visible";
+        el.style.display = "none";
+        el.setAttribute("aria-hidden", "true");
+      });
+
+      // Add focus mode class to body for full viewport styling
+      document.body.classList.add("quran-focus-mode");
+
+      // Trigger layout recalculation
+      try {
+        document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+      } catch (e) {}
+    };
+
+    const exitFocusMode = () => {
+      this._quranFocusModeActive = false;
+      focusBtn.setAttribute("aria-pressed", "false");
+      focusBtn.classList.remove("active");
+
+      // Remove focus mode class
+      document.body.classList.remove("quran-focus-mode");
+
+      // Restore Pocket Quran visibility if it was previously hidden
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      if (pocketQuranCard && this._quranFocusPreviousVisibility) {
+        pocketQuranCard.style.display = "none";
+        pocketQuranCard.setAttribute("aria-hidden", "true");
+      }
+
+      // Restore all other elements
+      const elements = getHideableElements();
+      elements.forEach((el) => {
+        const wasHidden = el.dataset.focusModeHidden === "was-hidden";
+        if (!wasHidden) {
+          el.style.display = "";
+          el.setAttribute("aria-hidden", "false");
+        }
+        delete el.dataset.focusModeHidden;
+      });
+
+      // Re-apply component visibility from settings
+      this.applyComponentVisibility();
+
+      // Trigger layout recalculation
+      try {
+        document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+      } catch (e) {}
+    };
+
+    const toggleFocusMode = () => {
+      if (this._quranFocusModeActive) {
+        exitFocusMode();
+      } else {
+        enterFocusMode();
       }
     };
 
-    setup({
-      cardId: "pocketQuranCard",
-      toggleId: "pocketQuranBlurOverrideToggle",
-      rangeId: "pocketQuranBlurOverrideRange",
-      valueId: "pocketQuranBlurOverrideValue",
-      menuBtnId: "pocketQuranBlurMenuBtn",
-      popoverId: "pocketQuranBlurPopover",
-      enabledKey: "pocketQuranBlurOverrideEnabled",
-      powerKey: "pocketQuranBlurOverridePower",
+    focusBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFocusMode();
     });
 
-    setup({
-      cardId: "todoCard",
-      toggleId: "todoBlurOverrideToggle",
-      rangeId: "todoBlurOverrideRange",
-      valueId: "todoBlurOverrideValue",
-      menuBtnId: "todoBlurMenuBtn",
-      popoverId: "todoBlurPopover",
-      enabledKey: "todoBlurOverrideEnabled",
-      powerKey: "todoBlurOverridePower",
+    // Handle Escape key to exit focus mode
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this._quranFocusModeActive) {
+        exitFocusMode();
+      }
     });
-
-    setup({
-      cardId: "flashcardCard",
-      toggleId: "flashcardBlurOverrideToggle",
-      rangeId: "flashcardBlurOverrideRange",
-      valueId: "flashcardBlurOverrideValue",
-      menuBtnId: "flashcardBlurMenuBtn",
-      popoverId: "flashcardBlurPopover",
-      enabledKey: "flashcardBlurOverrideEnabled",
-      powerKey: "flashcardBlurOverridePower",
-    });
-
-    setup({
-      cardId: "adhkarCard",
-      toggleId: "adhkarBlurOverrideToggle",
-      rangeId: "adhkarBlurOverrideRange",
-      valueId: "adhkarBlurOverrideValue",
-      menuBtnId: "adhkarBlurMenuBtn",
-      popoverId: "adhkarBlurPopover",
-      enabledKey: "adhkarBlurOverrideEnabled",
-      powerKey: "adhkarBlurOverridePower",
-    });
-
-    setup({
-      cardId: "notesCard",
-      toggleId: "notesBlurOverrideToggle",
-      rangeId: "notesBlurOverrideRange",
-      valueId: "notesBlurOverrideValue",
-      menuBtnId: "notesBlurMenuBtn",
-      popoverId: "notesBlurPopover",
-      enabledKey: "notesBlurOverrideEnabled",
-      powerKey: "notesBlurOverridePower",
-    });
-
-    // Close popovers on outside click / Escape.
-    if (popoverPairs.length) {
-      document.addEventListener("click", (e) => {
-        const t = e.target;
-        for (const { menuBtn, popover } of popoverPairs) {
-          if (popover.hidden) continue;
-          if (menuBtn.contains(t) || popover.contains(t)) continue;
-          popover.hidden = true;
-          menuBtn.setAttribute("aria-expanded", "false");
-        }
-      });
-
-      document.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape") return;
-        for (const { menuBtn, popover } of popoverPairs) {
-          if (popover.hidden) continue;
-          popover.hidden = true;
-          menuBtn.setAttribute("aria-expanded", "false");
-        }
-      });
-    }
   }
 
   applyPinnedAppsSettings() {

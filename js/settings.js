@@ -1949,6 +1949,11 @@ class SettingsManager {
         if (window.dashboard?.themes) {
           window.dashboard.themes.setGlassEnabled(enabled, false);
         }
+
+        // Notify cards with "dashboard" blur state to update
+        try {
+          document.dispatchEvent(new CustomEvent("md:glass-setting-changed"));
+        } catch (e) {}
       });
     }
 

@@ -2355,6 +2355,143 @@ textarea.notes-editor:focus {
   outline-offset: 3px;
 }
 
+/* Quran Focus Mode Button in FAB Menu */
+.quran-focus-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #2e7d32, #4caf50);
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.quran-focus-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.quran-focus-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.5);
+}
+
+.quran-focus-btn.active {
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold),
+    var(--accent-gold-light)
+  );
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  animation: quranFocusPulse 2s ease-in-out infinite;
+}
+
+@keyframes quranFocusPulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7),
+      0 0 0 4px rgba(212, 175, 55, 0.2);
+  }
+}
+
+.quran-focus-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+/* ========================================
+   Quran Focus Mode
+   Full-viewport Pocket Quran reading mode
+   ======================================== */
+
+body.quran-focus-mode {
+  overflow: hidden;
+}
+
+body.quran-focus-mode .main-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.quran-focus-mode .content-grid {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+body.quran-focus-mode #pocketQuranCard {
+  flex: 1 1 100%;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.quran-focus-mode #pocketQuranCard .pocket-quran-shell {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body.quran-focus-mode #pocketQuranCard .pocket-quran-main {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: none;
+}
+
+/* Hide scrollbar for cleaner focus mode while keeping functionality */
+body.quran-focus-mode
+  #pocketQuranCard
+  .pocket-quran-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+body.quran-focus-mode
+  #pocketQuranCard
+  .pocket-quran-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.quran-focus-mode
+  #pocketQuranCard
+  .pocket-quran-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+body.quran-focus-mode
+  #pocketQuranCard
+  .pocket-quran-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Ensure grid layout wrapper doesn't interfere */
+body.quran-focus-mode .grid-flex-row {
+  display: contents;
+}
+
 /* Grid Toast Notifications (fallback when settings manager not available) */
 .grid-toast {
   position: fixed;
@@ -8019,17 +8156,6 @@ body.sticky-note-resizing {
   gap: var(--spacing-sm);
 }
 
-.card-blur-override {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: 0.35rem 0.55rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-}
-
 .card-blur-menu {
   position: relative;
   display: inline-flex;
@@ -8049,15 +8175,17 @@ body.sticky-note-resizing {
   justify-content: center;
   transition: all var(--transition-normal);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .card-blur-btn:hover {
   background: var(--glass-bg-hover);
-  transform: rotate(180deg);
+  transform: scale(1.1);
 }
 
 .card-blur-btn:active {
-  transform: rotate(0);
+  transform: scale(0.95);
 }
 
 .card-blur-btn:focus-visible {
@@ -8070,92 +8198,25 @@ body.sticky-note-resizing {
   height: 16px;
 }
 
-.card-blur-btn.rotating {
-  animation: rotateOnce 0.5s ease-in-out;
+/* Triple toggle states for card blur button */
+.card-blur-btn[data-blur-state="dashboard"] {
+  border-color: var(--glass-border);
 }
 
-.card-blur-popover {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  z-index: 10000;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
-  box-shadow: var(--glass-shadow);
-  padding: var(--spacing-sm);
-  min-width: 260px;
+.card-blur-btn[data-blur-state="on"] {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.3),
+    rgba(212, 175, 55, 0.1)
+  );
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
 }
 
-.card-blur-popover .card-blur-override {
-  width: 100%;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 0;
-  border: none;
-  background: transparent;
-  backdrop-filter: none;
-}
-
-.card-blur-popover .custom-width-slider {
-  width: 100%;
-  gap: var(--spacing-sm);
-}
-
-.card-blur-popover .card-blur-slider input[type="range"] {
-  width: 160px;
-}
-
-.card-blur-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  cursor: pointer;
-  user-select: none;
-}
-
-.card-blur-toggle input[type="checkbox"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.card-blur-toggle .toggle-switch {
-  transform: scale(0.75);
-}
-
-/* Checked-state visuals for card blur toggles */
-.card-blur-toggle input[type="checkbox"]:checked + .toggle-switch {
-  background: var(--primary-color);
-}
-
-.card-blur-toggle input[type="checkbox"]:checked + .toggle-switch::after {
-  left: 25px;
-}
-
-.card-blur-toggle input[type="checkbox"]:focus-visible + .toggle-switch {
-  outline: 2px solid var(--accent-gold);
-  outline-offset: 3px;
-}
-
-.card-blur-toggle-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.card-blur-slider {
-  min-width: 170px;
-}
-
-.card-blur-slider input[type="range"] {
-  flex: 0 0 120px;
-  width: 120px;
+.card-blur-btn[data-blur-state="off"] {
+  background: rgba(100, 100, 100, 0.3);
+  border-color: rgba(150, 150, 150, 0.4);
+  color: var(--text-muted);
 }
 
 .pocket-quran-dropdown-empty {
