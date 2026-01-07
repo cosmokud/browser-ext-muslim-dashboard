@@ -10495,6 +10495,7 @@ body.sticky-note-resizing {
 .adhkar-card {
   display: flex !important;
   flex-direction: column;
+  min-height: 700px;
   --adhkar-arabic-font-size: 28px;
   --adhkar-romanization-font-size: 18px;
   --adhkar-english-font-size: 18px;
