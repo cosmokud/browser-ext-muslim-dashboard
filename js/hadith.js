@@ -412,6 +412,45 @@ class HadithManager {
     }
   }
 
+  /**
+   * Refreshes the content of default Hadith sets from JSON files
+   */
+  async refreshDefaultData() {
+    const sets = this.getSets();
+    const defs = HadithManager.DEFAULT_SETS;
+    let changed = false;
+
+    // Load all default sets in parallel
+    const freshSets = await Promise.all(
+      defs.map((def) => this.loadDefaultSet(def))
+    );
+
+    for (const newSet of freshSets) {
+      if (!newSet || !Array.isArray(newSet.cards) || newSet.cards.length === 0)
+        continue;
+
+      const idx = sets.findIndex((s) => s.id === newSet.id);
+      if (idx !== -1) {
+        sets[idx].cards = newSet.cards;
+        sets[idx].name = newSet.name;
+        changed = true;
+      } else {
+        sets.push(newSet);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.saveSets(sets);
+
+      // If active set was one of them, refresh the current view
+      const activeId = this.getActiveSetId();
+      if (defs.some((d) => d.id === activeId)) {
+        this.renderDashboard();
+      }
+    }
+  }
+
   normalizeImportedCards(json) {
     const items = Array.isArray(json) ? json : [];
 

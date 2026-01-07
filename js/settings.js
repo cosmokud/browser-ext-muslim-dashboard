@@ -4411,9 +4411,13 @@ class SettingsManager {
             tasks.push(this.adhkar.refreshDefaultData());
           }
 
+          if (this.hadith?.refreshDefaultData) {
+            tasks.push(this.hadith.refreshDefaultData());
+          }
+
           await Promise.all(tasks);
           this.showToast(
-            "Default adhkar, flashcards and quotes refreshed!",
+            "Default hadith, adhkar, flashcards and quotes refreshed!",
             "success"
           );
         } catch (e) {
