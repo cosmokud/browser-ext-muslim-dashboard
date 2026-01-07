@@ -919,7 +919,7 @@ class PocketQuranManager {
   /**
    * Initialize the virtualized scroll container.
    * Creates a structure with:
-   * - A fixed-height scroll container
+   * - A flex-based scroll container that fills available height
    * - A spacer div that sets total scrollable height
    * - An absolutely positioned content div for rendered ayahs
    */
@@ -931,16 +931,10 @@ class PocketQuranManager {
     this._ayahHeights.clear();
     this._renderedRange = { start: 0, end: 0 };
 
-    // Create virtual scroll container
+    // Create virtual scroll container (uses CSS flex for dynamic height)
     this._virtualContainer = document.createElement("div");
     this._virtualContainer.className = "pq-virtual-container";
-    this._virtualContainer.style.cssText = `
-      position: relative;
-      height: 1000px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      border-radius: var(--radius-lg);
-    `;
+    // Let CSS handle the height via flex: 1 1 auto
 
     // Create spacer that determines total scroll height
     this._virtualSpacer = document.createElement("div");

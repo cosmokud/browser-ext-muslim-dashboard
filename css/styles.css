@@ -2419,6 +2419,7 @@ body.quran-focus-mode {
 body.quran-focus-mode .main-container {
   height: 100vh;
   overflow: hidden;
+  padding: 0;
 }
 
 body.quran-focus-mode .content-grid {
@@ -2427,17 +2428,53 @@ body.quran-focus-mode .content-grid {
   display: flex;
   flex-direction: column;
   gap: 0;
+  padding: var(--spacing-lg);
 }
 
+/* Hide ALL elements except pocketQuranCard in focus mode */
+body.quran-focus-mode .header,
+body.quran-focus-mode #pinnedAppsSection,
+body.quran-focus-mode #searchBarSection,
+body.quran-focus-mode #quoteSection,
+body.quran-focus-mode #prayerTimesCard,
+body.quran-focus-mode #calendarCard,
+body.quran-focus-mode #qiblaCard,
+body.quran-focus-mode #weatherCard,
+body.quran-focus-mode #lunarPhaseCard,
+body.quran-focus-mode #fastingCard,
+body.quran-focus-mode #flashcardCard,
+body.quran-focus-mode #adhkarCard,
+body.quran-focus-mode #todoCard,
+body.quran-focus-mode #notesCard {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Hide grid-flex-row containers that don't contain pocketQuranCard */
+body.quran-focus-mode .grid-flex-row[data-focus-mode-hidden="row"] {
+  display: none !important;
+}
+
+/* Pocket Quran Card - Full viewport with padding and border-radius */
 body.quran-focus-mode #pocketQuranCard {
   flex: 1 1 100%;
-  height: 100vh;
-  max-height: 100vh;
+  height: calc(100vh - var(--spacing-lg) * 2);
+  max-height: calc(100vh - var(--spacing-lg) * 2);
   margin: 0;
-  border-radius: 0;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-xl);
   display: flex !important;
   flex-direction: column;
   overflow: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(var(--ui-blur) * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(
+    calc(var(--ui-blur) * var(--ui-blur-multiplier, 1))
+  );
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-shell {
@@ -2445,6 +2482,7 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-shell {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-main {
@@ -2452,6 +2490,7 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-main {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
@@ -2459,6 +2498,7 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
   overflow-y: auto;
   overflow-x: hidden;
   max-height: none;
+  height: 100%;
 }
 
 /* Hide scrollbar for cleaner focus mode while keeping functionality */
@@ -2487,7 +2527,14 @@ body.quran-focus-mode
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Ensure grid layout wrapper doesn't interfere */
+/* Ensure grid layout wrapper containing pocketQuranCard fills viewport */
+body.quran-focus-mode .grid-flex-row:has(#pocketQuranCard) {
+  display: flex !important;
+  flex: 1 1 100%;
+  height: 100%;
+}
+
+/* Fallback for browsers without :has() support */
 body.quran-focus-mode .grid-flex-row {
   display: contents;
 }
@@ -7919,6 +7966,9 @@ body.sticky-note-resizing {
   grid-column: 1 / -1;
   --pq-arabic-size: 32px;
   --pq-translation-size: 18px;
+  /* Enable flex layout for proper height distribution */
+  display: flex;
+  flex-direction: column;
 }
 
 .pocket-quran-header {
@@ -7976,9 +8026,12 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-shell {
-  display: block;
+  display: flex;
+  flex-direction: column;
   margin-top: var(--spacing-md);
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .pocket-quran-combobox {
@@ -8181,7 +8234,7 @@ body.sticky-note-resizing {
 
 .card-blur-btn:hover {
   background: var(--glass-bg-hover);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .card-blur-btn:active {
@@ -8198,25 +8251,369 @@ body.sticky-note-resizing {
   height: 16px;
 }
 
-/* Triple toggle states for card blur button */
-.card-blur-btn[data-blur-state="dashboard"] {
-  border-color: var(--glass-border);
-}
-
-.card-blur-btn[data-blur-state="on"] {
+/* Blur menu active state when popup is open */
+.card-blur-menu.blur-menu-open .card-blur-btn {
   background: linear-gradient(
     135deg,
-    rgba(212, 175, 55, 0.3),
+    rgba(212, 175, 55, 0.25),
     rgba(212, 175, 55, 0.1)
   );
   border-color: rgba(212, 175, 55, 0.5);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
 }
 
-.card-blur-btn[data-blur-state="off"] {
-  background: rgba(100, 100, 100, 0.3);
-  border-color: rgba(150, 150, 150, 0.4);
+/* ═══════════════════════════════════════════════════════════════════════════
+   BLUR SETTINGS POPUP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.blur-settings-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 10002;
+  width: 280px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35),
+    0 0 1px rgba(255, 255, 255, 0.1) inset;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  pointer-events: none;
+}
+
+.blur-settings-popup::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg-hover);
+  backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
+  z-index: -1;
+}
+
+.card-blur-menu.blur-menu-open .blur-settings-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Popup arrow */
+.blur-settings-popup::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  background: var(--glass-bg-hover);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-right: none;
+  transform: rotate(45deg);
+  backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(24px * var(--ui-blur-multiplier, 1)));
+}
+
+.blur-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.blur-popup-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.blur-popup-title-icon {
+  font-size: 1rem;
+}
+
+.blur-popup-close {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+}
+
+.blur-popup-close:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+/* Blur Settings Sections */
+.blur-setting-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.blur-setting-section:last-child {
+  margin-bottom: 0;
+}
+
+.blur-setting-label {
+  display: block;
+  font-size: 0.8rem;
   color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Glass Effect Triple Toggle */
+.blur-glass-toggle {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+}
+
+.blur-glass-option {
+  flex: 1;
+  padding: 0.55rem 0.4rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  position: relative;
+}
+
+.blur-glass-option:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: var(--glass-border);
+}
+
+.blur-glass-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.blur-glass-option.active {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.25),
+    rgba(212, 175, 55, 0.1)
+  );
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.blur-glass-option.active::after {
+  display: none;
+}
+
+.blur-glass-option-icon {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.blur-glass-option-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Blur Power Custom Toggle */
+.blur-power-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+.blur-power-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.blur-power-checkbox {
+  display: none;
+}
+
+.blur-power-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.blur-power-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.blur-power-checkbox:checked + .blur-power-switch {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.35),
+    rgba(212, 175, 55, 0.2)
+  );
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.blur-power-checkbox:checked + .blur-power-switch::before {
+  transform: translateX(16px);
+  background: var(--accent-gold);
+}
+
+.blur-power-toggle-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Blur Power Slider */
+.blur-power-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  transition: opacity var(--transition-fast);
+}
+
+.blur-power-slider-wrap.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.blur-power-slider {
+  flex: 1;
+  height: 28px;
+  appearance: none;
+  background: transparent;
+  outline: none;
+}
+
+.blur-power-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(212, 175, 55, 0.25) 100%
+  );
+}
+
+.blur-power-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold-light),
+    var(--accent-gold)
+  );
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.blur-power-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.blur-power-slider::-moz-range-track {
+  height: 8px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(212, 175, 55, 0.25) 100%
+  );
+}
+
+.blur-power-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold-light),
+    var(--accent-gold)
+  );
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.blur-power-value {
+  min-width: 42px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Responsive styles for blur popup */
+@media (max-width: 599px) {
+  .blur-settings-popup {
+    width: 260px;
+    right: -10px;
+  }
+
+  .blur-settings-popup::after {
+    right: 24px;
+  }
+
+  .blur-glass-option-label {
+    font-size: 0.65rem;
+  }
 }
 
 .pocket-quran-dropdown-empty {
@@ -8293,6 +8690,7 @@ body.sticky-note-resizing {
 .pocket-quran-main {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-sm);
@@ -8488,6 +8886,9 @@ body.sticky-note-resizing {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  /* Make content fill available space so virtual container can expand */
+  flex: 1 1 auto;
+  min-height: 0;
   /* Prevent Chrome/Edge scroll anchoring from "helpfully" shifting the page
      when this region rapidly changes height (e.g., switching surahs). */
   overflow-anchor: none;
@@ -8931,7 +9332,9 @@ body.sticky-note-resizing {
 
 .pq-virtual-container {
   position: relative;
-  height: 600px;
+  flex: 1 1 auto;
+  min-height: 400px;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
@@ -9062,13 +9465,13 @@ body.sticky-note-resizing {
   }
 
   .pq-virtual-container {
-    height: 500px;
+    min-height: 400px;
   }
 }
 
 @media (max-width: 599px) {
   .pq-virtual-container {
-    height: 400px;
+    min-height: 350px;
   }
 }
 
