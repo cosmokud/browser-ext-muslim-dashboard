@@ -8346,22 +8346,26 @@ body.sticky-note-resizing {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm); /* compact spacing */
   margin-left: auto;
-  padding: 0.45rem 0.6rem;
+  padding: 0.25rem 0.4rem; /* reduced padding */
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.06);
+  flex: 0 0 auto; /* keep compact width */
 }
 
 .pocket-quran-size-control {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs); /* tighter control spacing */
+  flex: 0 0 auto;
 }
 
 .pocket-quran-size-range {
-  width: 180px;
+  width: clamp(100px, 12vw, 160px); /* responsive compact width */
+  max-width: 160px;
+  min-width: 90px;
   height: 32px;
   appearance: none;
   background: transparent;
@@ -8405,10 +8409,32 @@ body.sticky-note-resizing {
 }
 
 .pocket-quran-size-value {
-  min-width: 5ch;
+  min-width: 3ch; /* smaller value badge */
   text-align: right;
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+/* Compact layout tweaks for narrow viewports */
+@media (max-width: 420px) {
+  .pocket-quran-size-controls {
+    gap: var(--spacing-xs);
+    padding: 0.15rem 0.3rem;
+  }
+
+  .pocket-quran-size-range {
+    width: 84px;
+  }
+
+  /* Inputs have aria-labels; hide textual labels to conserve space */
+  .pocket-quran-size-controls .pocket-quran-control-label {
+    display: none;
+  }
+
+  .pocket-quran-size-value {
+    min-width: 2.2ch;
+    font-size: 0.8rem;
+  }
 }
 
 .pocket-quran-content {
