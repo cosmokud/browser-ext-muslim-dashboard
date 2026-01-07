@@ -1,296 +1,380 @@
 [
   {
     "id": 1,
-    "title": "Actions are by Intentions",
+    "title_en": "Actions are by Intentions",
     "narrator": "Umar bin Al-Khattab (RA)",
     "reference": "Sahih Bukhari 1, Sahih Muslim 1907",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'Actions are (judged) by motives (niyyah), so each man will have what he intended. Thus, he whose migration (hijrah) was to Allah and His Messenger, his migration is to Allah and His Messenger; but he whose migration was for some worldly thing he might gain, or for a wife he might marry, his migration is to that for which he migrated.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'Actions are (judged) by motives (niyyah), so each man will have what he intended. Thus, he whose migration (hijrah) was to Allah and His Messenger, his migration is to Allah and His Messenger; but he whose migration was for some worldly thing he might gain, or for a wife he might marry, his migration is to that for which he migrated.'",
+    "title_id": "Amal Tergantung Niat",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Sesungguhnya setiap amalan tergantung pada niatnya. Dan setiap orang akan mendapatkan apa yang ia niatkan. Maka barangsiapa yang hijrahnya karena Allah dan Rasul-Nya, maka hijrahnya untuk Allah dan Rasul-Nya. Dan barangsiapa yang hijrahnya karena mencari dunia atau karena wanita yang dinikahinya, maka hijrahnya kepada yang ia tuju.'"
   },
   {
     "id": 2,
-    "title": "Islam, Iman, Ihsan",
+    "title_en": "Islam, Iman, Ihsan",
     "narrator": "Umar bin Al-Khattab (RA)",
     "reference": "Sahih Muslim 8",
-    "text": "One day while we were sitting with the Messenger of Allah (ﷺ) there appeared before us a man whose clothes were exceedingly white and whose hair was exceedingly black; no signs of journeying were to be seen on him and none of us knew him. He walked up and sat down by the Prophet (ﷺ). Resting his knees against his and placing the palms of his hands on his thighs, he said: 'O Muhammad, tell me about Islam'. The Messenger of Allah (ﷺ) said: 'Islam is to testify that there is no god but Allah and Muhammad is the messenger of Allah, to perform the prayers, to pay the zakat, to fast in Ramadhan, and to make the pilgrimage to the House if you are able to do so.' He said: 'You have spoken rightly', and we were amazed at him asking him and saying that he had spoken rightly. He said: 'Then tell me about Iman.' He said: 'It is to believe in Allah, His angels, His books, His messengers, and the Last Day, and to believe in divine destiny, both the good and the evil thereof.' He said: 'You have spoken rightly'. He said: 'Then tell me about Ihsan.' He said: 'It is to worship Allah as though you are seeing Him, and while you see Him not yet truly He sees you'. He said: 'Then tell me about the Hour'. He said: 'The one questioned about it knows no better than the questioner.' He said: 'Then tell me about its signs.' He said: 'That the slave-girl will give birth to her mistress and that you will see the barefooted, naked, destitute herdsman competing in constructing lofty buildings.' Then he took himself off and I stayed for a time. Then he said: 'O Umar, do you know who the questioner was?' I said: 'Allah and His messenger know best'. He said: 'He was Jibreel (Gabriel), who came to you to teach you your religion.'"
+    "text_en": "One day while we were sitting with the Messenger of Allah (ﷺ) there appeared before us a man whose clothes were exceedingly white and whose hair was exceedingly black; no signs of journeying were to be seen on him and none of us knew him. He walked up and sat down by the Prophet (ﷺ). Resting his knees against his and placing the palms of his hands on his thighs, he said: 'O Muhammad, tell me about Islam'. The Messenger of Allah (ﷺ) said: 'Islam is to testify that there is no god but Allah and Muhammad is the messenger of Allah, to perform the prayers, to pay the zakat, to fast in Ramadhan, and to make the pilgrimage to the House if you are able to do so.' He said: 'You have spoken rightly', and we were amazed at him asking him and saying that he had spoken rightly. He said: 'Then tell me about Iman.' He said: 'It is to believe in Allah, His angels, His books, His messengers, and the Last Day, and to believe in divine destiny, both the good and the evil thereof.' He said: 'You have spoken rightly'. He said: 'Then tell me about Ihsan.' He said: 'It is to worship Allah as though you are seeing Him, and while you see Him not yet truly He sees you'. He said: 'Then tell me about the Hour'. He said: 'The one questioned about it knows no better than the questioner.' He said: 'Then tell me about its signs.' He said: 'That the slave-girl will give birth to her mistress and that you will see the barefooted, naked, destitute herdsman competing in constructing lofty buildings.' Then he took himself off and I stayed for a time. Then he said: 'O Umar, do you know who the questioner was?' I said: 'Allah and His messenger know best'. He said: 'He was Jibreel (Gabriel), who came to you to teach you your religion.'",
+    "title_id": "Islam, Iman, dan Ihsan",
+    "text_id": "Suatu hari kami duduk-duduk bersama Rasulullah (ﷺ), tiba-tiba muncul di hadapan kami seorang laki-laki yang berpakaian sangat putih dan rambutnya sangat hitam. Tidak terlihat padanya tanda-tanda bekas perjalanan, dan tidak ada seorang pun di antara kami yang mengenalnya. Ia segera duduk di hadapan Nabi (ﷺ), lalu menyandarkan lututnya pada lutut Nabi dan meletakkan kedua telapak tangannya di atas kedua paha Nabi, kemudian ia berkata: 'Wahai Muhammad, beritahukan kepadaku tentang Islam.' Rasulullah (ﷺ) menjawab: 'Islam adalah engkau bersaksi bahwa tidak ada Ilah (Tuhan yang berhak disembah) selain Allah, dan bahwa Nabi Muhammad adalah utusan Allah, engkau mendirikan shalat, menunaikan zakat, puasa Ramadhan, dan pergi haji jika mampu.' Orang itu berkata: 'Engkau benar.' Kami semua heran, ia yang bertanya ia pula yang membenarkan. Kemudian ia bertanya lagi: 'Beritahukan kepadaku tentang Iman.' Nabi menjawab: 'Iman adalah engkau beriman kepada Allah, malaikat-Nya, kitab-kitab-Nya, para rasul-Nya, hari akhir, dan beriman kepada takdir Allah yang baik dan yang buruk.' Ia berkata: 'Engkau benar.' Dia bertanya lagi: 'Beritahukan kepadaku tentang Ihsan.' Nabi menjawab: 'Hendaklah engkau beribadah kepada Allah seakan-akan engkau melihat-Nya. Kalaupun engkau tidak melihat-Nya, sesungguhnya Dia melihatmu.' Ia bertanya lagi: 'Beritahukan kepadaku kapan terjadi Kiamat?' Nabi menjawab: 'Yang ditanya tidak lebih tahu daripada yang bertanya.' Dia bertanya lagi: 'Beritahukan kepadaku tanda-tandanya.' Nabi menjawab: 'Jika seorang budak wanita telah melahirkan tuannya, dan jika engkau melihat orang yang bertelanjang kaki, tanpa memakai baju (miskin) serta pengembala kambing telah berlomba-lomba mendirikan bangunan megah.' Kemudian orang tersebut pergi dan aku diam beberapa lama. Kemudian Nabi berkata: 'Wahai Umar, tahukah engkau siapa yang bertanya tadi?' Aku berkata: 'Allah dan Rasul-Nya lebih mengetahui.' Beliau bersabda: 'Dia adalah Jibril yang datang kepada kalian untuk mengajarkan agama kalian.'"
   },
   {
     "id": 3,
-    "title": "Islam is Built Upon Five",
+    "title_en": "Islam is Built Upon Five",
     "narrator": "Abdullah bin Umar (RA)",
     "reference": "Sahih Bukhari 8, Sahih Muslim 16",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'Islam has been built on five [pillars]: testifying that there is no god but Allah and that Muhammad is the messenger of Allah, performing the prayers, paying the zakat, making the pilgrimage to the House, and fasting in Ramadan.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'Islam has been built on five [pillars]: testifying that there is no god but Allah and that Muhammad is the messenger of Allah, performing the prayers, paying the zakat, making the pilgrimage to the House, and fasting in Ramadan.'",
+    "title_id": "Rukun Islam",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Islam dibangun di atas lima perkara: bersaksi bahwa tidak ada Ilah (Tuhan yang berhak disembah) selain Allah dan bahwa Muhammad adalah utusan Allah, mendirikan shalat, menunaikan zakat, menunaikan haji ke Baitullah, dan berpuasa Ramadhan.'"
   },
   {
     "id": 4,
-    "title": "Deeds are by Their Final Actions",
+    "title_en": "Deeds are by Their Final Actions",
     "narrator": "Abdullah bin Masud (RA)",
     "reference": "Sahih Bukhari 3208, Sahih Muslim 2643",
-    "text": "The Messenger of Allah (ﷺ), and he is the truthful, the believed, narrated to us: 'Verily the creation of each one of you is brought together in his mother's belly for forty days in the form of seed, then he is a clot of blood for a like period, then a morsel of flesh for a like period, then there is sent to him the angel who blows the breath of life into him and who is commanded about four matters: to write down his means of livelihood, his life span, his actions, and whether happy or unhappy. By Allah, other than Whom there is no god, verily one of you behaves like the people of Paradise until there is but an arm's length between him and it, and that which has been written over takes him and so he behaves like the people of Hell-fire and thus he enters it; and one of you behaves like the people of Hell-fire until there is but an arm's length between him and it, and that which has been written over takes him and so he behaves like the people of Paradise and thus he enters it.'"
+    "text_en": "The Messenger of Allah (ﷺ), and he is the truthful, the believed, narrated to us: 'Verily the creation of each one of you is brought together in his mother's belly for forty days in the form of seed, then he is a clot of blood for a like period, then a morsel of flesh for a like period, then there is sent to him the angel who blows the breath of life into him and who is commanded about four matters: to write down his means of livelihood, his life span, his actions, and whether happy or unhappy. By Allah, other than Whom there is no god, verily one of you behaves like the people of Paradise until there is but an arm's length between him and it, and that which has been written over takes him and so he behaves like the people of Hell-fire and thus he enters it; and one of you behaves like the people of Hell-fire until there is but an arm's length between him and it, and that which has been written over takes him and so he behaves like the people of Paradise and thus he enters it.'",
+    "title_id": "Takdir Manusia Telah Ditetapkan",
+    "text_id": "Rasulullah (ﷺ), orang yang jujur dan terpercaya, menceritakan kepada kami: 'Sesungguhnya setiap kalian dikumpulkan penciptaannya di perut ibunya sebagai setetes mani selama empat puluh hari, kemudian berubah menjadi setetes darah selama empat puluh hari, kemudian menjadi segumpal daging selama empat puluh hari. Kemudian diutuslah kepadanya malaikat, lalu ia meniupkan ruh padanya dan diperintahkan untuk menetapkan empat perkara: menetapkan rezekinya, ajalnya, amalnya, dan kecelakaan atau kebahagiaannya. Demi Allah yang tidak ada Ilah selain-Nya, sesungguhnya di antara kalian ada yang melakukan perbuatan ahli surga hingga jarak antara dirinya dan surga tinggal sehasta, akan tetapi telah ditetapkan baginya ketentuan, dia melakukan perbuatan ahli neraka, maka masuklah dia ke dalam neraka. Dan sesungguhnya di antara kalian ada yang melakukan perbuatan ahli neraka hingga jarak antara dirinya dan neraka tinggal sehasta, akan tetapi telah ditetapkan baginya ketentuan, dia melakukan perbuatan ahli surga, maka masuklah dia ke dalam surga.'"
   },
   {
     "id": 5,
-    "title": "Rejection of Evil Deeds and Innovations",
+    "title_en": "Rejection of Evil Deeds and Innovations",
     "narrator": "Aishah (RA)",
     "reference": "Sahih Bukhari 2697, Sahih Muslim 1718",
-    "text": "The Messenger of Allah (ﷺ) said: 'He who innovates something in this matter of ours that is not of it will have it rejected.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'He who innovates something in this matter of ours that is not of it will have it rejected.'",
+    "title_id": "Larangan Melakukan Bid'ah",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Barangsiapa yang mengada-adakan sesuatu hal yang baru dalam urusan (agama) kami ini yang tidak ada (perintah/contoh) darinya, maka tertolak.'"
   },
   {
     "id": 6,
-    "title": "Protecting the Heart",
+    "title_en": "Protecting the Heart",
     "narrator": "Al-Numan bin Basheer (RA)",
     "reference": "Sahih Bukhari 52, Sahih Muslim 1599",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'That which is lawful is plain and that which is unlawful is plain and between the two of them are doubtful matters about which not many people know. Thus he who avoids doubtful matters clears himself in regard to his religion and his honor, but he who falls into doubtful matters falls into that which is unlawful, like the shepherd who pastures around a sanctuary, all but grazing therein. Truly every king has a sanctuary, and truly Allah's sanctuary is His prohibitions. Truly in the body there is a morsel of flesh which, if it be whole, all the body is whole and which, if it be diseased, all of it is diseased. Truly it is the heart.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'That which is lawful is plain and that which is unlawful is plain and between the two of them are doubtful matters about which not many people know. Thus he who avoids doubtful matters clears himself in regard to his religion and his honor, but he who falls into doubtful matters falls into that which is unlawful, like the shepherd who pastures around a sanctuary, all but grazing therein. Truly every king has a sanctuary, and truly Allah's sanctuary is His prohibitions. Truly in the body there is a morsel of flesh which, if it be whole, all the body is whole and which, if it be diseased, all of it is diseased. Truly it is the heart.'",
+    "title_id": "Halal dan Haram itu Jelas",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Sesungguhnya yang halal itu jelas dan yang haram itu jelas. Di antara keduanya terdapat perkara-perkara yang syubhat (samar-samar) yang tidak diketahui oleh orang banyak. Maka barangsiapa yang menjauhi syubhat berarti dia telah menyelamatkan agama dan kehormatannya. Dan barangsiapa yang terjerumus dalam perkara syubhat, maka akan terjerumus dalam perkara yang diharamkan. Sebagaimana penggembala yang menggembalakan hewan gembalaannya di sekitar (ladang) larangan yang hampir menjerumuskannya ke dalamnya. Ketahuilah, setiap raja memiliki larangan dan larangan Allah adalah apa yang Dia haramkan. Ketahuilah bahwa dalam diri ini terdapat segumpal daging, jika dia baik maka baiklah seluruh tubuh ini dan jika dia buruk, maka buruklah seluruh tubuh; ketahuilah bahwa dia adalah hati.'"
   },
   {
     "id": 7,
-    "title": "The Religion is Naseehah (Sincere Advice)",
+    "title_en": "The Religion is Naseehah (Sincere Advice)",
     "narrator": "Tamim Al-Dari (RA)",
     "reference": "Sahih Muslim 55",
-    "text": "The Prophet (ﷺ) said: 'Religion is sincerity'. We said: 'To whom?' He said: 'To Allah and His Book, and His messenger, and to the leaders of the Muslims and their common folk'."
+    "text_en": "The Prophet (ﷺ) said: 'Religion is sincerity'. We said: 'To whom?' He said: 'To Allah and His Book, and His messenger, and to the leaders of the Muslims and their common folk'.",
+    "title_id": "Agama Adalah Nasihat",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Agama itu adalah nasihat.' Kami bertanya: 'Untuk siapa?' Beliau menjawab: 'Untuk Allah, Kitab-Nya, Rasul-Nya, para pemimpin kaum muslimin, dan orang-orang pada umumnya.'"
   },
   {
     "id": 8,
-    "title": "The Sanctity of a Muslim",
+    "title_en": "The Sanctity of a Muslim",
     "narrator": "Abdullah bin Umar (RA)",
     "reference": "Sahih Bukhari 25, Sahih Muslim 22",
-    "text": "The Messenger of Allah (ﷺ) said: 'I have been ordered to fight against people until they testify that there is no god but Allah and that Muhammad is the messenger of Allah and until they perform the prayers and pay the zakat, and if they do so they will have gained protection from me for their lives and property, unless [they do acts that are punishable] in accordance with Islam, and their reckoning will be with Allah the Almighty.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'I have been ordered to fight against people until they testify that there is no god but Allah and that Muhammad is the messenger of Allah and until they perform the prayers and pay the zakat, and if they do so they will have gained protection from me for their lives and property, unless [they do acts that are punishable] in accordance with Islam, and their reckoning will be with Allah the Almighty.'",
+    "title_id": "Haramnya Darah dan Harta Seorang Muslim",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Aku diperintahkan untuk memerangi manusia hingga mereka bersaksi bahwa tidak ada Ilah selain Allah dan bahwa Muhammad adalah Rasulullah, menegakkan shalat, menunaikan zakat. Jika mereka melakukan hal itu, maka darah dan harta mereka akan dilindungi dariku kecuali dengan hak Islam dan perhitungan mereka ada pada Allah Ta'ala.'"
   },
   {
     "id": 9,
-    "title": "Obligations are According to Ability",
+    "title_en": "Obligations are According to Ability",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Bukhari 7288, Sahih Muslim 1337",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'What I have forbidden to you, avoid; what I have ordered you [to do], do as much of it as you can. It was only their excessive questioning and their disagreeing with their prophets that destroyed those who were before you.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'What I have forbidden to you, avoid; what I have ordered you [to do], do as much of it as you can. It was only their excessive questioning and their disagreeing with their prophets that destroyed those who were before you.'",
+    "title_id": "Mengerjakan Perintah Sesuai Kemampuan",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Apa yang aku larang hendaklah kalian jauhi, dan apa yang aku perintahkan maka hendaklah kalian kerjakan semampu kalian. Sesungguhnya kehancuran orang-orang sebelum kalian adalah karena banyaknya pertanyaan mereka (yang tidak berguna) dan penentangan mereka terhadap nabi-nabi mereka.'"
   },
   {
     "id": 10,
-    "title": "Restricting Oneself to the Permissible",
+    "title_en": "Restricting Oneself to the Permissible",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Muslim 1015",
-    "text": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty is good and accepts only that which is good. Allah has commanded the faithful to do that which he commanded the messengers, and the Almighty has said: \"O ye messengers! Eat of the good things and do right\". And Allah the Almighty has said: \"O ye who believe! Eat of the good things wherewith We have provided you\". Then he mentioned [the case of] a man who, having journeyed far, is dishevelled and dusty and who spreads out his hands to the sky [saying]: \"O Lord! O Lord!\" - while his food is unlawful, his drink unlawful, his clothing unlawful, and he is nourished unlawfully, so how can he be answered!'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty is good and accepts only that which is good. Allah has commanded the faithful to do that which he commanded the messengers, and the Almighty has said: \"O ye messengers! Eat of the good things and do right\". And Allah the Almighty has said: \"O ye who believe! Eat of the good things wherewith We have provided you\". Then he mentioned [the case of] a man who, having journeyed far, is dishevelled and dusty and who spreads out his hands to the sky [saying]: \"O Lord! O Lord!\" - while his food is unlawful, his drink unlawful, his clothing unlawful, and he is nourished unlawfully, so how can he be answered!'",
+    "title_id": "Makanlah dari yang Halal",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya Allah Ta'ala itu Baik, tidak menerima kecuali yang baik. Dan sesungguhnya Allah memerintahkan orang beriman sebagaimana dia memerintahkan para rasul-Nya dengan firman-Nya: \"Wahai Para Rasul! Makanlah yang baik-baik dan beramal shalihlah.\" Dan Dia berfirman: \"Wahai orang-orang yang beriman! Makanlah yang baik-baik dari apa yang Kami rezekikan kepada kalian.\" Kemudian beliau menyebutkan ada seseorang melakukan perjalanan jauh dalam keadaan kusut dan berdebu. Dia mengangkatkan kedua tangannya ke langit seraya berkata: \"Ya Tuhanku, Ya Tuhanku,\" padahal makanannya haram, minumannya haram, pakaiannya haram dan kebutuhannya dipenuhi dari sesuatu yang haram, maka (jika begitu) bagaimana doanya akan dikabulkan?'"
   },
   {
     "id": 11,
-    "title": "Being Cautious of the Doubtful",
+    "title_en": "Being Cautious of the Doubtful",
     "narrator": "Al-Hasan bin Ali (RA)",
     "reference": "Jami At-Tirmidhi 2518",
-    "text": "I memorized from the Messenger of Allah (ﷺ) his saying: 'Leave that which makes you doubt for that which does not make you doubt.'"
+    "text_en": "I memorized from the Messenger of Allah (ﷺ) his saying: 'Leave that which makes you doubt for that which does not make you doubt.'",
+    "title_id": "Tinggalkan yang Meragukan",
+    "text_id": "Aku menghafal dari Rasulullah (ﷺ) sabdanya: 'Tinggalkanlah apa yang meragukanmu kepada apa yang tidak meragukanmu.'"
   },
   {
     "id": 12,
-    "title": "Leaving that Which Does Not Concern You",
+    "title_en": "Leaving that Which Does Not Concern You",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Jami At-Tirmidhi 2317",
-    "text": "The Messenger of Allah (ﷺ) said: 'Part of someone's being a good Muslim is his leaving alone that which does not concern him.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Part of someone's being a good Muslim is his leaving alone that which does not concern him.'",
+    "title_id": "Meninggalkan yang Tidak Bermanfaat",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Di antara tanda kebaikan Islam seseorang adalah meninggalkan hal yang tidak bermanfaat baginya.'"
   },
   {
     "id": 13,
-    "title": "Love for Your Brother What You Love for Yourself",
+    "title_en": "Love for Your Brother What You Love for Yourself",
     "narrator": "Anas bin Malik (RA)",
     "reference": "Sahih Bukhari 13, Sahih Muslim 45",
-    "text": "The Prophet (ﷺ) said: 'None of you [truly] believes until he wishes for his brother what he wishes for himself.'"
+    "text_en": "The Prophet (ﷺ) said: 'None of you [truly] believes until he wishes for his brother what he wishes for himself.'",
+    "title_id": "Mencintai Saudara Seperti Mencintai Diri Sendiri",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Tidak beriman (dengan sempurna) salah seorang di antara kalian hingga ia mencintai untuk saudaranya apa yang ia cintai untuk dirinya sendiri.'"
   },
   {
     "id": 14,
-    "title": "Prohibition of Blood of a Muslim",
+    "title_en": "Prohibition of Blood of a Muslim",
     "narrator": "Abdullah bin Masud (RA)",
     "reference": "Sahih Bukhari 6878, Sahih Muslim 1676",
-    "text": "The Messenger of Allah (ﷺ) said: 'The blood of a Muslim may not be legally spilt other than in one of three [instances]: the married person who commits adultery; a life for a life; and one who forsakes his religion and abandons the community.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'The blood of a Muslim may not be legally spilt other than in one of three [instances]: the married person who commits adultery; a life for a life; and one who forsakes his religion and abandons the community.'",
+    "title_id": "Kapan Darah Seorang Muslim Halal?",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Tidak halal darah seorang muslim (untuk ditumpahkan) kecuali karena salah satu dari tiga perkara: orang yang telah menikah yang berzina, jiwa dengan jiwa (qishash), dan orang yang meninggalkan agamanya (murtad) serta memisahkan diri dari jama'ah.'"
   },
   {
     "id": 15,
-    "title": "Islamic Manners",
+    "title_en": "Islamic Manners",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Bukhari 6018, Sahih Muslim 47",
-    "text": "The Messenger of Allah (ﷺ) said: 'Let him who believes in Allah and the Last Day either speak good or keep silent, and let him who believes in Allah and the Last Day be generous to his neighbour, and let him who believes in Allah and the Last Day be generous to his guest.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Let him who believes in Allah and the Last Day either speak good or keep silent, and let him who believes in Allah and the Last Day be generous to his neighbour, and let him who believes in Allah and the Last Day be generous to his guest.'",
+    "title_id": "Berkata Baik atau Diam",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Barangsiapa yang beriman kepada Allah dan hari akhir maka hendaknya ia berkata yang baik atau diam. Barangsiapa yang beriman kepada Allah dan hari akhir maka janganlah ia menyakiti tetangganya. Dan barangsiapa yang beriman kepada Allah dan hari akhir maka hendaknya ia memuliakan tamunya.'"
   },
   {
     "id": 16,
-    "title": "The Forbiddance of Anger",
+    "title_en": "The Forbiddance of Anger",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Bukhari 6116",
-    "text": "A man said to the Prophet (ﷺ): 'Counsel me'. He said: 'Do not become angry'. The man repeated [his request] several times, and he said: 'Do not become angry'."
+    "text_en": "A man said to the Prophet (ﷺ): 'Counsel me'. He said: 'Do not become angry'. The man repeated [his request] several times, and he said: 'Do not become angry'.",
+    "title_id": "Jangan Marah",
+    "text_id": "Seorang laki-laki berkata kepada Nabi (ﷺ): 'Berilah aku nasihat.' Beliau menjawab: 'Janganlah engkau marah.' Orang itu mengulangi permintaannya beberapa kali, dan beliau bersabda: 'Janganlah engkau marah.'"
   },
   {
     "id": 17,
-    "title": "Prescription of Ihsan (Perfection)",
+    "title_en": "Prescription of Ihsan (Perfection)",
     "narrator": "Shaddad bin Aws (RA)",
     "reference": "Sahih Muslim 1955",
-    "text": "The Messenger of Allah (ﷺ) said: 'Verily Allah has prescribed proficiency in all things. Thus, if you kill, kill well; and if you slaughter, slaughter well. Let each one of you sharpen his blade and let him spare suffering to the animal he slaughters.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Verily Allah has prescribed proficiency in all things. Thus, if you kill, kill well; and if you slaughter, slaughter well. Let each one of you sharpen his blade and let him spare suffering to the animal he slaughters.'",
+    "title_id": "Berbuat Ihsan dalam Segala Hal",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya Allah mewajibkan berbuat baik (ihsan) atas segala sesuatu. Jika kalian membunuh, maka membunuhlah dengan cara yang baik, dan jika kalian menyembelih, maka menyembelihlah dengan cara yang baik. Hendaklah kalian menajamkan pisaunya dan menyenangkan hewan yang disembelihnya.'"
   },
   {
     "id": 18,
-    "title": "Follow Up a Bad Deed with a Good Deed",
+    "title_en": "Follow Up a Bad Deed with a Good Deed",
     "narrator": "Abu Dharr & Muadh bin Jabal (RA)",
     "reference": "Jami At-Tirmidhi 1987",
-    "text": "The Messenger of Allah (ﷺ) said: 'Fear Allah wherever you are, and follow up a bad deed with a good one and it will wipe it out, and behave well towards people.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Fear Allah wherever you are, and follow up a bad deed with a good one and it will wipe it out, and behave well towards people.'",
+    "title_id": "Bertakwalah Dimanapun Berada",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Bertakwalah kepada Allah di mana saja engkau berada. Ikutilah perbuatan buruk dengan perbuatan baik, niscaya ia akan menghapusnya. Dan bergaullah dengan manusia dengan akhlak yang baik.'"
   },
   {
     "id": 19,
-    "title": "Be Mindful of Allah and Allah will Protect You",
+    "title_en": "Be Mindful of Allah and Allah will Protect You",
     "narrator": "Abdullah bin Abbas (RA)",
     "reference": "Jami At-Tirmidhi 2516",
-    "text": "One day I was behind the Prophet (ﷺ) and he said to me: 'Young man, I shall teach you some words [of advice]: Be mindful of Allah, and Allah will protect you. Be mindful of Allah, and you will find Him in front of you. If you ask, ask of Allah; if you seek help, seek help of Allah. Know that if the Nation were to gather together to benefit you with anything, it would benefit you only with something that Allah had already prescribed for you, and that if they gather together to harm you with anything, they would harm you only with something Allah had already prescribed for you. The pens have been lifted and the pages have dried.'"
+    "text_en": "One day I was behind the Prophet (ﷺ) and he said to me: 'Young man, I shall teach you some words [of advice]: Be mindful of Allah, and Allah will protect you. Be mindful of Allah, and you will find Him in front of you. If you ask, ask of Allah; if you seek help, seek help of Allah. Know that if the Nation were to gather together to benefit you with anything, it would benefit you only with something that Allah had already prescribed for you, and that if they gather together to harm you with anything, they would harm you only with something Allah had already prescribed for you. The pens have been lifted and the pages have dried.'",
+    "title_id": "Jagalah Allah Niscaya Dia Menjagamu",
+    "text_id": "Suatu hari aku berada di belakang Nabi (ﷺ), lalu beliau bersabda: 'Nak, aku akan ajarkan kepadamu beberapa kalimat: Jagalah Allah, niscaya Dia akan menjagamu. Jagalah Allah, niscaya kamu akan mendapati-Nya di hadapanmu. Jika kamu meminta, mintalah kepada Allah. Jika kamu memohon pertolongan, mohonlah pertolongan kepada Allah. Ketahuilah, jika seluruh umat berkumpul untuk memberimu manfaat, mereka tidak akan bisa memberimu manfaat kecuali dengan sesuatu yang telah Allah tetapkan untukmu. Dan jika mereka berkumpul untuk mencelakakanmu, mereka tidak akan bisa mencelakakanmu kecuali dengan sesuatu yang telah Allah tetapkan atasmu. Pena-pena telah diangkat dan lembaran-lembaran telah kering.'"
   },
   {
     "id": 20,
-    "title": "Modesty is from Faith",
+    "title_en": "Modesty is from Faith",
     "narrator": "Uqbah bin Amr (RA)",
     "reference": "Sahih Bukhari 3483",
-    "text": "The Messenger of Allah (ﷺ) said: 'Among the words people obtained from the First Prophecy are: If you feel no shame, then do as you wish.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Among the words people obtained from the First Prophecy are: If you feel no shame, then do as you wish.'",
+    "title_id": "Malu Sebagian dari Iman",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya sebagian dari apa yang telah dikenal orang dari perkataan kenabian yang pertama adalah: Jika engkau tidak malu, berbuatlah sesukamu.'"
   },
   {
     "id": 21,
-    "title": "Say 'I believe in Allah' and then be Steadfast",
+    "title_en": "Say 'I believe in Allah' and then be Steadfast",
     "narrator": "Sufyan bin Abdullah (RA)",
     "reference": "Sahih Muslim 38",
-    "text": "I said: 'O Messenger of Allah, tell me something about Islam which I can ask of no one but you'. He said: 'Say: I believe in Allah, and thereafter be upright.'"
+    "text_en": "I said: 'O Messenger of Allah, tell me something about Islam which I can ask of no one but you'. He said: 'Say: I believe in Allah, and thereafter be upright.'",
+    "title_id": "Istiqomah dalam Iman",
+    "text_id": "Aku berkata: 'Wahai Rasulullah, katakanlah kepadaku dalam Islam satu perkataan yang aku tidak akan menanyakannya kepada seorangpun selain kepadamu.' Beliau menjawab: 'Katakanlah: Aku beriman kepada Allah, kemudian istiqamahlah.'"
   },
   {
     "id": 22,
-    "title": "Entering Paradise",
+    "title_en": "Entering Paradise",
     "narrator": "Jabir bin Abdullah (RA)",
     "reference": "Sahih Muslim 15",
-    "text": "A man asked the Messenger of Allah (ﷺ): 'Do you think that if I perform the obligatory prayers, fast in Ramadan, treat as lawful that which is lawful and treat as forbidden that which is forbidden, and do nothing further, I shall enter Paradise?' He said: 'Yes.'"
+    "text_en": "A man asked the Messenger of Allah (ﷺ): 'Do you think that if I perform the obligatory prayers, fast in Ramadan, treat as lawful that which is lawful and treat as forbidden that which is forbidden, and do nothing further, I shall enter Paradise?' He said: 'Yes.'",
+    "title_id": "Jalan Menuju Surga",
+    "text_id": "Seorang laki-laki bertanya kepada Rasulullah (ﷺ): 'Apa pendapatmu jika aku mengerjakan shalat-shalat wajib, puasa Ramadhan, menghalalkan yang halal dan mengharamkan yang haram, dan aku tidak menambahnya dengan sesuatupun, apakah aku akan masuk surga?' Beliau menjawab: 'Ya.'"
   },
   {
     "id": 23,
-    "title": "Hastening to Do Good",
+    "title_en": "Hastening to Do Good",
     "narrator": "Abu Malik Al-Ashari (RA)",
     "reference": "Sahih Muslim 223",
-    "text": "The Messenger of Allah (ﷺ) said: 'Purity is half of faith. Alhamdu-lillah [Praise be to Allah] fills the scales, and Subhana-Allah [How far is Allah from every imperfection] and Alhamdu-lillah [Praise be to Allah] fill that which is between heaven and earth. Prayer is light; charity is a proof; patience is illumination; and the Quran is an argument for or against you. Everyone starts his day and is a vendor of his soul, either freeing it or bringing about its ruin.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Purity is half of faith. Alhamdu-lillah [Praise be to Allah] fills the scales, and Subhana-Allah [How far is Allah from every imperfection] and Alhamdu-lillah [Praise be to Allah] fill that which is between heaven and earth. Prayer is light; charity is a proof; patience is illumination; and the Quran is an argument for or against you. Everyone starts his day and is a vendor of his soul, either freeing it or bringing about its ruin.'",
+    "title_id": "Suci Sebagian dari Iman",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Bersuci itu separuh dari iman. Ucapan Alhamdulillah memenuhi timbangan. Ucapan Subhanallah dan Alhamdulillah memenuhi antara langit dan bumi. Shalat adalah cahaya. Sedekah adalah bukti. Sabar adalah sinar. Al-Qur'an adalah hujjah (pembela) bagimu atau hujjah atasmu (yang menuntutmu). Setiap manusia berbuat, maka ia menjual dirinya, ada yang membebaskannya atau membinasakannya.'"
   },
   {
     "id": 24,
-    "title": "The Forbiddance of Oppression",
+    "title_en": "The Forbiddance of Oppression",
     "narrator": "Abu Dharr Al-Ghafari (RA)",
     "reference": "Sahih Muslim 2577",
-    "text": "The Messenger of Allah (ﷺ) said that Allah the Almighty said: 'O My servants, I have forbidden oppression for Myself and have made it forbidden amongst you, so do not oppress one another. O My servants, all of you are astray except for those I have guided, so seek guidance of Me and I shall guide you. O My servants, all of you are hungry except for those I have fed, so seek food of Me and I shall feed you. O My servants, all of you are naked except for those I have clothed, so seek clothing of Me and I shall clothe you. O My servants, you sin by night and by day, and I forgive all sins, so seek forgiveness of Me and I shall forgive you. O My servants, you will not be able to harm Me so as to bring any harm to Me, and you will not be able to benefit Me so as to bring any benefit to Me. O My servants, were the first of you and the last of you, the human of you and the jinn of you to be as pious as the most pious heart of any one man of you, that would not increase My kingdom in anything. O My servants, were the first of you and the last of you, the human of you and the jinn of you to be as wicked as the most wicked heart of any one man of you, that would not decrease My kingdom in anything. O My servants, were the first of you and the last of you, the human of you and the jinn of you to rise up in one place and make a request of Me, and were I to give everyone what he requested, that would not decrease what I have, any more that a needle decreases the sea if put into it. O My servants, it is but your deeds that I reckon up for you and then recompense you for, so let him who finds good praise Allah and let him who finds other than that blame no one but himself.'"
+    "text_en": "The Messenger of Allah (ﷺ) said that Allah the Almighty said: 'O My servants, I have forbidden oppression for Myself and have made it forbidden amongst you, so do not oppress one another. O My servants, all of you are astray except for those I have guided, so seek guidance of Me and I shall guide you. O My servants, all of you are hungry except for those I have fed, so seek food of Me and I shall feed you. O My servants, all of you are naked except for those I have clothed, so seek clothing of Me and I shall clothe you. O My servants, you sin by night and by day, and I forgive all sins, so seek forgiveness of Me and I shall forgive you. O My servants, you will not be able to harm Me so as to bring any harm to Me, and you will not be able to benefit Me so as to bring any benefit to Me. O My servants, were the first of you and the last of you, the human of you and the jinn of you to be as pious as the most pious heart of any one man of you, that would not increase My kingdom in anything. O My servants, were the first of you and the last of you, the human of you and the jinn of you to be as wicked as the most wicked heart of any one man of you, that would not decrease My kingdom in anything. O My servants, were the first of you and the last of you, the human of you and the jinn of you to rise up in one place and make a request of Me, and were I to give everyone what he requested, that would not decrease what I have, any more that a needle decreases the sea if put into it. O My servants, it is but your deeds that I reckon up for you and then recompense you for, so let him who finds good praise Allah and let him who finds other than that blame no one but himself.'",
+    "title_id": "Haramnya Kezaliman",
+    "text_id": "Rasulullah (ﷺ) meriwayatkan dari Allah Ta'ala bahwa Dia berfirman: 'Wahai hamba-Ku, sesungguhnya Aku mengharamkan kezaliman atas diri-Ku dan Aku menjadikannya haram di antara kalian, maka janganlah kalian saling menzalimi. Wahai hamba-Ku, kalian semua sesat kecuali orang yang Aku beri petunjuk, maka mintalah petunjuk kepada-Ku niscaya Aku akan memberi petunjuk kepada kalian. Wahai hamba-Ku, kalian semua lapar kecuali orang yang Aku beri makan, maka mintalah makan kepada-Ku niscaya Aku beri makan kepada kalian. Wahai hamba-Ku, kalian semua telanjang kecuali orang yang Aku beri pakaian, maka mintalah pakaian kepada-Ku niscaya Aku beri pakaian kepada kalian. Wahai hamba-Ku, sesungguhnya kalian berbuat dosa di malam dan siang hari, sedangkan Aku mengampuni semua dosa, maka mintalah ampun kepada-Ku niscaya Aku ampuni kalian. Wahai hamba-Ku, sesungguhnya kalian tidak akan mampu menimpakan bahaya kepada-Ku sehingga kalian bisa membahayakan-Ku dan tidak akan mampu memberi manfaat kepada-Ku sehingga kalian bisa memberi manfaat kepada-Ku. Wahai hamba-Ku, seandainya orang-orang yang terdahulu dan orang-orang yang belakangan dari kalian, manusia dan jin kalian, mereka semua berada pada tingkat ketakwaan yang paling tinggi dari hati salah seorang di antara kalian, hal itu tidak akan menambah kerajaan-Ku sedikitpun. Wahai hamba-Ku, seandainya orang-orang yang terdahulu dan orang-orang yang belakangan dari kalian, manusia dan jin kalian, mereka semua berada pada tingkat kedurhakaan yang paling buruk dari hati salah seorang di antara kalian, hal itu tidak akan mengurangi kerajaan-Ku sedikitpun. Wahai hamba-Ku, seandainya orang-orang yang terdahulu dan orang-orang yang belakangan dari kalian, manusia dan jin kalian, berdiri di satu tempat lalu mereka meminta kepada-Ku, kemudian Aku kabulkan permintaan setiap orang dari mereka, hal itu tidak akan mengurangi apa yang ada di sisi-Ku, kecuali sebagaimana jarum mengurangi (air) jika dimasukkan ke laut. Wahai hamba-Ku, sesungguhnya itu adalah amal-amal kalian yang Aku catat untuk kalian kemudian Aku sempurnakan balasannya untuk kalian. Barangsiapa yang mendapatkan kebaikan maka hendaklah ia memuji Allah, dan barangsiapa yang mendapatkan selain itu maka janganlah ia mencela kecuali dirinya sendiri.'"
   },
   {
     "id": 25,
-    "title": "The Value of Charity",
+    "title_en": "The Value of Charity",
     "narrator": "Abu Dharr Al-Ghafari (RA)",
     "reference": "Sahih Muslim 1006",
-    "text": "Some people from amongst the Companions of the Messenger of Allah (ﷺ) said to the Prophet (ﷺ): 'O Messenger of Allah, the affluent have made off with the rewards; they pray as we pray, they fast as we fast, and they give [much] in charity by virtue of their wealth.' He (ﷺ) said: 'Has not Allah made things for you to give in charity? Truly every tasbeehah [saying subhan-Allah] is a charity, and every takbeerah [saying Allahu akbar] is a charity, and every tahmeedah [saying alhamdulillah] is a charity, and every tahleelah [saying la ilaha illAllah] is a charity. And commanding the good is a charity, and forbidding an evil is a charity, and in the sexual act of each one of you there is a charity.' They said: 'O Messenger of Allah, when one of us fulfils his carnal desire will he have some reward for that?' He (ﷺ) said: 'Do you not see that if he were to act upon it in an unlawful manner then he would be deserving of punishment? Likewise, if he were to act upon it in a lawful manner then he will be deserving of a reward.'"
+    "text_en": "Some people from amongst the Companions of the Messenger of Allah (ﷺ) said to the Prophet (ﷺ): 'O Messenger of Allah, the affluent have made off with the rewards; they pray as we pray, they fast as we fast, and they give [much] in charity by virtue of their wealth.' He (ﷺ) said: 'Has not Allah made things for you to give in charity? Truly every tasbeehah [saying subhan-Allah] is a charity, and every takbeerah [saying Allahu akbar] is a charity, and every tahmeedah [saying alhamdulillah] is a charity, and every tahleelah [saying la ilaha illAllah] is a charity. And commanding the good is a charity, and forbidding an evil is a charity, and in the sexual act of each one of you there is a charity.' They said: 'O Messenger of Allah, when one of us fulfils his carnal desire will he have some reward for that?' He (ﷺ) said: 'Do you not see that if he were to act upon it in an unlawful manner then he would be deserving of punishment? Likewise, if he were to act upon it in a lawful manner then he will be deserving of a reward.'",
+    "title_id": "Luasnya Jalan Sedekah",
+    "text_id": "Sejumlah sahabat Rasulullah (ﷺ) berkata kepada Nabi (ﷺ): 'Wahai Rasulullah, orang-orang kaya telah memborong pahala. Mereka shalat sebagaimana kami shalat, mereka puasa sebagaimana kami puasa, dan mereka bersedekah dengan kelebihan harta mereka.' Beliau bersabda: 'Bukankah Allah telah menjadikan bagi kalian sesuatu yang dapat kalian sedekahkan? Sesungguhnya setiap tasbih adalah sedekah, setiap takbir adalah sedekah, setiap tahmid adalah sedekah, setiap tahlil adalah sedekah, menyuruh kepada kebaikan adalah sedekah, melarang dari kemungkaran adalah sedekah, dan pada kemaluan (hubungan suami istri) salah seorang dari kalian adalah sedekah.' Mereka bertanya: 'Wahai Rasulullah, apakah jika salah seorang dari kami melampiaskan syahwatnya ia akan mendapatkan pahala?' Beliau menjawab: 'Bagaimana pendapat kalian jika ia melampiaskannya pada yang haram, bukankah ia akan mendapatkan dosa? Demikian pula jika ia melampiaskannya pada yang halal, maka ia akan mendapatkan pahala.'"
   },
   {
     "id": 26,
-    "title": "What is Sadaqa?",
+    "title_en": "What is Sadaqa?",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Bukhari 2989, Sahih Muslim 1009",
-    "text": "The Messenger of Allah (ﷺ) said: 'On every person's joints or small bones (i.e. fingers and toes), there is sadaqah (charity) every day the sun rises. Doing justice between two people is sadaqah; assisting a man to mount his animal, or lifting up his belongings onto it is sadaqah; a good word is sadaqah; every step you take towards prayer is sadaqah; and removing harmful things from pathways is sadaqah.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'On every person's joints or small bones (i.e. fingers and toes), there is sadaqah (charity) every day the sun rises. Doing justice between two people is sadaqah; assisting a man to mount his animal, or lifting up his belongings onto it is sadaqah; a good word is sadaqah; every step you take towards prayer is sadaqah; and removing harmful things from pathways is sadaqah.'",
+    "title_id": "Setiap Persendian Ada Sedekahnya",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Setiap persendian manusia wajib disedekahi setiap hari yang matahari terbit di dalamnya. Engkau berlaku adil di antara dua orang adalah sedekah. Engkau membantu seseorang menaiki kendaraannya atau mengangkatkan barang-barangnya ke atas kendaraannya adalah sedekah. Perkataan yang baik adalah sedekah. Setiap langkah yang engkau ayunkan menuju shalat adalah sedekah. Dan menyingkirkan gangguan dari jalan adalah sedekah.'"
   },
   {
     "id": 27,
-    "title": "Righteousness is in Good Character",
+    "title_en": "Righteousness is in Good Character",
     "narrator": "Al-Nawwas bin Sam'an (RA)",
     "reference": "Sahih Muslim 2553",
-    "text": "The Prophet (ﷺ) said: 'Righteousness is good character, and wrongdoing is that which wavers in your soul, and which you dislike people finding out about.'"
+    "text_en": "The Prophet (ﷺ) said: 'Righteousness is good character, and wrongdoing is that which wavers in your soul, and which you dislike people finding out about.'",
+    "title_id": "Kebaikan Adalah Akhlak Mulia",
+    "text_id": "Nabi (ﷺ) bersabda: 'Kebaikan (Al-Birr) adalah akhlak yang baik. Sedangkan dosa (Al-Itsm) adalah apa yang meresahkan jiwamu dan engkau benci jika hal itu diketahui oleh orang lain.'"
   },
   {
     "id": 28,
-    "title": "The Obligation of Following the Sunnah",
+    "title_en": "The Obligation of Following the Sunnah",
     "narrator": "Irbad bin Sariyah (RA)",
     "reference": "Sunan Abu Dawood 4607, Jami At-Tirmidhi 2676",
-    "text": "The Messenger of Allah (ﷺ) delivered an admonition that made our hearts fearful and our eyes tearful. We said: 'O Messenger of Allah, it is as if this were a farewell sermon, so advise us.' He said: 'I enjoin you to have Taqwa of Allah and that you listen and obey, even if a slave is made a ruler over you. He among you who lives long enough will see many differences. So for you is to observe my Sunnah and the Sunnah of the rightly-principled and rightly-guided successors, holding on to them with your molar teeth. Beware of newly-introduced matters, for every innovation (bid'ah) is an error.'"
+    "text_en": "The Messenger of Allah (ﷺ) delivered an admonition that made our hearts fearful and our eyes tearful. We said: 'O Messenger of Allah, it is as if this were a farewell sermon, so advise us.' He said: 'I enjoin you to have Taqwa of Allah and that you listen and obey, even if a slave is made a ruler over you. He among you who lives long enough will see many differences. So for you is to observe my Sunnah and the Sunnah of the rightly-principled and rightly-guided successors, holding on to them with your molar teeth. Beware of newly-introduced matters, for every innovation (bid'ah) is an error.'",
+    "title_id": "Wasiat Perpisahan Nabi",
+    "text_id": "Rasulullah (ﷺ) memberikan nasihat kepada kami dengan nasihat yang membuat hati bergetar dan air mata bercucuran. Kami bertanya: 'Wahai Rasulullah, seakan-akan ini adalah nasihat perpisahan, maka berilah wasiat kepada kami.' Beliau bersabda: 'Aku wasiatkan kepada kalian untuk bertakwa kepada Allah, mendengar dan taat (kepada pemimpin), walaupun yang memimpin kalian adalah seorang budak. Karena barangsiapa di antara kalian yang hidup sepeninggalku nanti, dia akan melihat perselisihan yang banyak. Maka wajib bagi kalian untuk berpegang teguh kepada sunnahku dan sunnah para Khulafaur Rasyidin yang mendapat petunjuk. Gigitlah sunnah itu dengan gigi geraham kalian. Dan hati-hatilah kalian terhadap perkara-perkara baru (dalam agama), karena setiap perkara baru (bid'ah) adalah kesesatan.'"
   },
   {
     "id": 29,
-    "title": "Means of Goodness",
+    "title_en": "Means of Goodness",
     "narrator": "Muadh bin Jabal (RA)",
     "reference": "Jami At-Tirmidhi 2616",
-    "text": "I said: 'O Messenger of Allah, tell me of an act which will take me into Paradise and will keep me away from the Hellfire.' He (ﷺ) said: 'You have asked me about a great matter, yet it is easy for him for whom Allah makes it easy. Worship Allah without associating any partners with Him; establish the prayer; pay the Zakah; fast in Ramadan; and make the pilgrimage to the House.' Then he (ﷺ) said: 'Shall I not guide you towards the means of goodness? Fasting is a shield, charity wipes away sin as water extinguishes fire, and the praying of a man in the depths of the night.' Then he (ﷺ) recited: '[Those] who forsake their beds, to invoke their Lord in fear and hope...' [as-Sajdah, 16-17]. Then he (ﷺ) said: 'Shall I not inform you of the head of the matter, its pillar and its peak?' I said: 'Yes, O Messenger of Allah.' He (ﷺ) said: 'The head of the matter is Islam, its pillar is the prayer and its peak is jihad.' Then he (ﷺ) said: 'Shall I not tell you of the foundation of all of that?' I said: 'Yes, O Messenger of Allah.' So he took hold of his tongue and said: 'Restrain this.' I said: 'O Prophet of Allah, will we be taken to account for what we say?' He (ﷺ) said: 'May your mother be bereaved of you, O Muadh! Is there anything that throws people into the Hellfire upon their faces except the harvests of their tongues?'"
+    "text_en": "I said: 'O Messenger of Allah, tell me of an act which will take me into Paradise and will keep me away from the Hellfire.' He (ﷺ) said: 'You have asked me about a great matter, yet it is easy for him for whom Allah makes it easy. Worship Allah without associating any partners with Him; establish the prayer; pay the Zakah; fast in Ramadan; and make the pilgrimage to the House.' Then he (ﷺ) said: 'Shall I not guide you towards the means of goodness? Fasting is a shield, charity wipes away sin as water extinguishes fire, and the praying of a man in the depths of the night.' Then he (ﷺ) recited: '[Those] who forsake their beds, to invoke their Lord in fear and hope...' [as-Sajdah, 16-17]. Then he (ﷺ) said: 'Shall I not inform you of the head of the matter, its pillar and its peak?' I said: 'Yes, O Messenger of Allah.' He (ﷺ) said: 'The head of the matter is Islam, its pillar is the prayer and its peak is jihad.' Then he (ﷺ) said: 'Shall I not tell you of the foundation of all of that?' I said: 'Yes, O Messenger of Allah.' So he took hold of his tongue and said: 'Restrain this.' I said: 'O Prophet of Allah, will we be taken to account for what we say?' He (ﷺ) said: 'May your mother be bereaved of you, O Muadh! Is there anything that throws people into the Hellfire upon their faces except the harvests of their tongues?'",
+    "title_id": "Pintu-Pintu Kebaikan",
+    "text_id": "Aku berkata: 'Wahai Rasulullah, beritahukanlah kepadaku suatu amalan yang dapat memasukkanku ke surga dan menjauhkanku dari neraka.' Beliau menjawab: 'Engkau telah bertanya tentang perkara yang besar, namun sesungguhnya itu adalah mudah bagi orang yang dimudahkan oleh Allah. Engkau menyembah Allah dan tidak menyekutukan-Nya dengan sesuatupun, mendirikan shalat, menunaikan zakat, berpuasa Ramadhan, dan pergi haji ke Baitullah.' Kemudian beliau bersabda: 'Maukah aku tunjukkan kepadamu pintu-pintu kebaikan? Puasa adalah perisai, sedekah memadamkan dosa sebagaimana air memadamkan api, dan shalatnya seseorang di tengah malam.' Kemudian beliau membaca ayat: 'Lambung mereka jauh dari tempat tidurnya...' hingga '...yang mereka kerjakan.' (As-Sajdah: 16-17). Kemudian beliau bersabda: 'Maukah aku beritahukan kepadamu tentang pokok urusan, tiangnya, dan puncaknya?' Aku menjawab: 'Tentu, wahai Rasulullah.' Beliau bersabda: 'Pokok urusan adalah Islam, tiangnya adalah shalat, dan puncaknya adalah jihad.' Kemudian beliau bersabda: 'Maukah aku beritahukan kepadamu tentang kunci dari semua itu?' Aku menjawab: 'Tentu, wahai Rasulullah.' Maka beliau memegang lidahnya dan bersabda: 'Jagalah ini.' Aku bertanya: 'Wahai Nabi Allah, apakah kita akan dihukum karena apa yang kita ucapkan?' Beliau menjawab: 'Celaka engkau wahai Mu'adz! Bukankah tidak ada yang menjerumuskan manusia ke dalam neraka di atas wajah mereka atau di atas hidung mereka kecuali karena buah lisan mereka?'"
   },
   {
     "id": 30,
-    "title": "Do Not Neglect the Religious Obligations",
+    "title_en": "Do Not Neglect the Religious Obligations",
     "narrator": "Abu Thalabah Al-Khushani (RA)",
     "reference": "Sunan Al-Daraqutni 4/184",
-    "text": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty has laid down religious duties, so do not neglect them. He has set boundaries, so do not overstep them. He has prohibited some things, so do not violate them; about some things He was silent - out of compassion for you, not forgetfulness - so seek not after them.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty has laid down religious duties, so do not neglect them. He has set boundaries, so do not overstep them. He has prohibited some things, so do not violate them; about some things He was silent - out of compassion for you, not forgetfulness - so seek not after them.'",
+    "title_id": "Batasan-Batasan Allah",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya Allah Ta'ala telah menetapkan kewajiban-kewajiban, maka janganlah kalian menyia-nyiakannya. Dia telah menetapkan batasan-batasan, maka janganlah kalian melampauinya. Dia telah mengharamkan beberapa hal, maka janganlah kalian melanggarnya. Dan Dia mendiamkan beberapa hal sebagai bentuk kasih sayang kepada kalian, bukan karena lupa, maka janganlah kalian membahasnya.'"
   },
   {
     "id": 31,
-    "title": "The Reality of Zuhd (Asceticism)",
+    "title_en": "The Reality of Zuhd (Asceticism)",
     "narrator": "Sahl bin Saad (RA)",
     "reference": "Sunan Ibn Majah 4102",
-    "text": "A man came to the Prophet (ﷺ) and said: 'O Messenger of Allah, direct me to an act which, if I do it, [will cause] Allah to love me and people to love me.' He said: 'Renounce the world and Allah will love you, and renounce what people possess and people will love you.'"
+    "text_en": "A man came to the Prophet (ﷺ) and said: 'O Messenger of Allah, direct me to an act which, if I do it, [will cause] Allah to love me and people to love me.' He said: 'Renounce the world and Allah will love you, and renounce what people possess and people will love you.'",
+    "title_id": "Zuhud Terhadap Dunia",
+    "text_id": "Seseorang datang kepada Nabi (ﷺ) dan berkata: 'Wahai Rasulullah, tunjukkanlah kepadaku suatu amalan yang jika aku kerjakan, Allah akan mencintaiku dan manusia juga akan mencintaiku.' Beliau bersabda: 'Zuhudlah pada dunia, niscaya Allah mencintaimu. Dan zuhudlah terhadap apa yang ada di tangan manusia, niscaya manusia mencintaimu.'"
   },
   {
     "id": 32,
-    "title": "No Harming nor Reciprocating Harm",
+    "title_en": "No Harming nor Reciprocating Harm",
     "narrator": "Saad bin Malik (RA)",
     "reference": "Sunan Ibn Majah 2340, Sunan Al-Daraqutni 4/228",
-    "text": "The Messenger of Allah (ﷺ) said: 'There should be neither harming nor reciprocating harm.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'There should be neither harming nor reciprocating harm.'",
+    "title_id": "Larangan Membahayakan Diri dan Orang Lain",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Tidak boleh membahayakan diri sendiri dan tidak boleh membahayakan orang lain (dharar wa laa dhiraar).'"
   },
   {
     "id": 33,
-    "title": "The Onus of Proof is on the Claimant and The Taking of an Oath is on the Denier",
+    "title_en": "The Onus of Proof is on the Claimant and The Taking of an Oath is on the Denier",
     "narrator": "Abdullah bin Abbas (RA)",
     "reference": "Al-Sunan Al-Kubra (Baihaqi) 10/252",
-    "text": "The Messenger of Allah (ﷺ) said: 'Were people to be given in accordance with their claim, men would claim the fortunes and lives of [other] people, but the onus of proof is on the claimant, and the taking of an oath is incumbent upon him who denies.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Were people to be given in accordance with their claim, men would claim the fortunes and lives of [other] people, but the onus of proof is on the claimant, and the taking of an oath is incumbent upon him who denies.'",
+    "title_id": "Bukti Bagi Penuduh dan Sumpah Bagi Terdakwa",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Seandainya setiap orang diberi hak sesuai dengan dakwaannya, niscaya orang-orang akan mendakwa (mengklaim) harta dan darah suatu kaum. Akan tetapi, bukti (saksi) wajib bagi penuduh (penggugat), dan sumpah wajib bagi yang mengingkari (terdakwa).'"
   },
   {
     "id": 34,
-    "title": "Forbidding Evil with the Hands, Speech, and Heart",
+    "title_en": "Forbidding Evil with the Hands, Speech, and Heart",
     "narrator": "Abu Saeed Al-Khudri (RA)",
     "reference": "Sahih Muslim 49",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'Whosoever of you sees an evil action, let him change it with his hand; and if he is not able to do so, then with his tongue; and if he is not able to do so, then with his heart; and that is the weakest of faith.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'Whosoever of you sees an evil action, let him change it with his hand; and if he is not able to do so, then with his tongue; and if he is not able to do so, then with his heart; and that is the weakest of faith.'",
+    "title_id": "Mengubah Kemungkaran",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Barangsiapa di antara kalian melihat kemungkaran, hendaklah ia mengubahnya dengan tangannya. Jika tidak mampu, maka dengan lisannya. Dan jika tidak mampu, maka dengan hatinya, dan itu adalah selemah-lemahnya iman.'"
   },
   {
     "id": 35,
-    "title": "Brotherhood in Islam",
+    "title_en": "Brotherhood in Islam",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Muslim 2564",
-    "text": "The Messenger of Allah (ﷺ) said: 'Do not envy one another; do not inflate prices one to another; do not hate one another; do not turn away from one another; and do not undercut one another, but be you, O servants of Allah, brothers. A Muslim is the brother of a Muslim: he neither oppresses him nor does he fail him, he neither lies to him nor does he hold him in contempt. Piety is right here - and he pointed to his breast three times. It is evil enough for a man to hold his brother Muslim in contempt. The whole of a Muslim for another Muslim is inviolable: his blood, his property, and his honor.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Do not envy one another; do not inflate prices one to another; do not hate one another; do not turn away from one another; and do not undercut one another, but be you, O servants of Allah, brothers. A Muslim is the brother of a Muslim: he neither oppresses him nor does he fail him, he neither lies to him nor does he hold him in contempt. Piety is right here - and he pointed to his breast three times. It is evil enough for a man to hold his brother Muslim in contempt. The whole of a Muslim for another Muslim is inviolable: his blood, his property, and his honor.'",
+    "title_id": "Persaudaraan Sesama Muslim",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Janganlah kalian saling mendengki, janganlah saling menipu (menaikkan harga), janganlah saling membenci, janganlah saling membelakangi, dan janganlah sebagian kalian menjual di atas penjualan sebagian yang lain. Jadilah kalian hamba-hamba Allah yang bersaudara. Seorang muslim adalah saudara bagi muslim lainnya; ia tidak menzaliminya, tidak membiarkannya (tidak menolongnya), tidak membohonginya, dan tidak menghinanya. Takwa itu di sini - beliau menunjuk ke dadanya tiga kali. Cukuplah seseorang dikatakan buruk jika ia menghina saudaranya sesama muslim. Setiap muslim atas muslim lainnya haram darahnya, hartanya, dan kehormatannya.'"
   },
   {
     "id": 36,
-    "title": "The Virtue of Gathering for the Remembrance of Allah",
+    "title_en": "The Virtue of Gathering for the Remembrance of Allah",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Muslim 2699",
-    "text": "The Prophet (ﷺ) said: 'Whosoever removes a worldly grief from a believer, Allah will remove from him one of the griefs of the Day of Judgment. Whosoever alleviates [the lot of] a needy person, Allah will alleviate [his lot] in this world and the next. Whosoever shields a Muslim, Allah will shield him in this world and the next. Allah will aid a servant [of His] so long as the servant aids his brother. Whosoever follows a path to seek knowledge therein, Allah will make easy for him a path to Paradise. No people gather together in one of the houses of Allah, reciting the Book of Allah and studying it among themselves, without tranquility descending upon them, mercy enveloping them, the angels surrounding them, and Allah making mention of them amongst those who are with Him.'"
+    "text_en": "The Prophet (ﷺ) said: 'Whosoever removes a worldly grief from a believer, Allah will remove from him one of the griefs of the Day of Judgment. Whosoever alleviates [the lot of] a needy person, Allah will alleviate [his lot] in this world and the next. Whosoever shields a Muslim, Allah will shield him in this world and the next. Allah will aid a servant [of His] so long as the servant aids his brother. Whosoever follows a path to seek knowledge therein, Allah will make easy for him a path to Paradise. No people gather together in one of the houses of Allah, reciting the Book of Allah and studying it among themselves, without tranquility descending upon them, mercy enveloping them, the angels surrounding them, and Allah making mention of them amongst those who are with Him.'",
+    "title_id": "Balasan Sesuai Perbuatan",
+    "text_id": "Nabi (ﷺ) bersabda: 'Barangsiapa yang melapangkan satu kesusahan dunia dari seorang mukmin, Allah akan melapangkan darinya satu kesusahan di hari kiamat. Barangsiapa yang mudahkan orang yang kesulitan, Allah akan mudahkan urusannya di dunia dan akhirat. Barangsiapa yang menutupi aib seorang muslim, Allah akan menutupi aibnya di dunia dan akhirat. Allah senantiasa menolong hamba selama hamba tersebut menolong saudaranya. Barangsiapa menempuh jalan untuk menuntut ilmu, Allah akan mudahkan baginya jalan menuju surga. Tidaklah suatu kaum berkumpul di salah satu rumah Allah, membaca Kitabullah dan saling mempelajarinya di antara mereka, melainkan akan turun kepada mereka ketenangan, mereka akan dinaungi rahmat, dikelilingi malaikat, dan Allah menyebut-nyebut mereka di hadapan makhluk yang ada di sisi-Nya.'"
   },
   {
     "id": 37,
-    "title": "The Grace of Allah and His Mercy",
+    "title_en": "The Grace of Allah and His Mercy",
     "narrator": "Abdullah bin Abbas (RA)",
     "reference": "Sahih Bukhari 6491, Sahih Muslim 131",
-    "text": "The Messenger of Allah (ﷺ) related from his Lord (glorified and exalted be He): 'Verily Allah has recorded the good deeds and the evil deeds.' Then he clarified that: 'Whosoever intends to do a good deed but does not do it, Allah records it with Himself as a complete good deed; but if he intends it and does it, Allah records it with Himself as ten good deeds, up to seven hundred times, or more than that. But if he intends to do an evil deed and does not do it, Allah records it with Himself as a complete good deed; but if he intends it and does it, Allah records it down as one single evil deed.'"
+    "text_en": "The Messenger of Allah (ﷺ) related from his Lord (glorified and exalted be He): 'Verily Allah has recorded the good deeds and the evil deeds.' Then he clarified that: 'Whosoever intends to do a good deed but does not do it, Allah records it with Himself as a complete good deed; but if he intends it and does it, Allah records it with Himself as ten good deeds, up to seven hundred times, or more than that. But if he intends to do an evil deed and does not do it, Allah records it with Himself as a complete good deed; but if he intends it and does it, Allah records it down as one single evil deed.'",
+    "title_id": "Keadilan dan Karunia Allah",
+    "text_id": "Rasulullah (ﷺ) meriwayatkan dari Tuhannya, Dia berfirman: 'Sesungguhnya Allah mencatat kebaikan dan keburukan.' Kemudian Beliau menjelaskan: 'Barangsiapa berniat melakukan kebaikan namun tidak mengerjakannya, maka Allah mencatat di sisi-Nya sebagai satu kebaikan yang sempurna. Dan jika ia berniat lalu mengerjakannya, maka Allah mencatat di sisi-Nya sepuluh kebaikan hingga tujuh ratus kali lipat sampai kelipatan yang banyak. Dan jika ia berniat melakukan keburukan namun tidak mengerjakannya, maka Allah mencatat di sisi-Nya sebagai satu kebaikan yang sempurna. Dan jika ia berniat lalu mengerjakannya, maka Allah mencatatnya sebagai satu keburukan.'"
   },
   {
     "id": 38,
-    "title": "Attaining Nearness to Allah and His Love",
+    "title_en": "Attaining Nearness to Allah and His Love",
     "narrator": "Abu Hurairah (RA)",
     "reference": "Sahih Bukhari 6502",
-    "text": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty has said: Whosoever shows enmity to a friend of Mine, I shall be at war with him. My servant does not draw near to Me with anything more loved by Me than the religious duties I have imposed upon him, and My servant continues to draw near to Me with supererogatory works so that I shall love him. When I love him I am his hearing with which he hears, his seeing with which he sees, his hand with which he strikes, and his foot with which he walks. Were he to ask [something] of Me, I would surely give it to him and were he to ask Me for refuge, I would surely grant him it.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Allah the Almighty has said: Whosoever shows enmity to a friend of Mine, I shall be at war with him. My servant does not draw near to Me with anything more loved by Me than the religious duties I have imposed upon him, and My servant continues to draw near to Me with supererogatory works so that I shall love him. When I love him I am his hearing with which he hears, his seeing with which he sees, his hand with which he strikes, and his foot with which he walks. Were he to ask [something] of Me, I would surely give it to him and were he to ask Me for refuge, I would surely grant him it.'",
+    "title_id": "Wali Allah",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya Allah Ta'ala berfirman: Barangsiapa memusuhi wali-Ku, maka Aku menyatakan perang terhadapnya. Tidaklah hamba-Ku mendekatkan diri kepada-Ku dengan sesuatu yang lebih Aku cintai daripada apa yang telah Aku wajibkan atasnya. Dan hamba-Ku senantiasa mendekatkan diri kepada-Ku dengan amalan-amalan sunnah hingga Aku mencintainya. Jika Aku telah mencintainya, maka Aku menjadi pendengarannya yang ia gunakan untuk mendengar, penglihatannya yang ia gunakan untuk melihat, tangannya yang ia gunakan untuk memukul, dan kakinya yang ia gunakan untuk berjalan. Jika ia meminta kepada-Ku, niscaya Aku beri, dan jika ia meminta perlindungan kepada-Ku, niscaya Aku lindungi.'"
   },
   {
     "id": 39,
-    "title": "Leniency for the One who Errs, the One who Forgets, and the One who is Forced",
+    "title_en": "Leniency for the One who Errs, the One who Forgets, and the One who is Forced",
     "narrator": "Abdullah bin Abbas (RA)",
     "reference": "Sunan Ibn Majah 2045",
-    "text": "The Messenger of Allah (ﷺ) said: 'Allah has pardoned for me my people for [their] mistakes and [their] forgetfulness and for what they have done under duress.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'Allah has pardoned for me my people for [their] mistakes and [their] forgetfulness and for what they have done under duress.'",
+    "title_id": "Dimaafkan Kesalahan Karena Lupa",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Sesungguhnya Allah memaafkan dari umatku (dosa) karena tersalah (tidak sengaja), lupa, dan sesuatu yang dipaksakan kepadanya.'"
   },
   {
     "id": 40,
-    "title": "Be in This World As a Traveler",
+    "title_en": "Be in This World As a Traveler",
     "narrator": "Abdullah bin Umar (RA)",
     "reference": "Sahih Bukhari 6416",
-    "text": "The Messenger of Allah (ﷺ) took me by the shoulder and said: 'Be in the world as though you were a stranger or a wayfarer.' The son of Umar used to say: 'At evening do not expect [to live till] morning, and at morning do not expect [to live till] evening. Take from your health for your illness and from your life for your death.'"
+    "text_en": "The Messenger of Allah (ﷺ) took me by the shoulder and said: 'Be in the world as though you were a stranger or a wayfarer.' The son of Umar used to say: 'At evening do not expect [to live till] morning, and at morning do not expect [to live till] evening. Take from your health for your illness and from your life for your death.'",
+    "title_id": "Hiduplah Seperti Orang Asing",
+    "text_id": "Rasulullah (ﷺ) memegang kedua pundakku seraya bersabda: 'Jadilah engkau di dunia ini seakan-akan orang asing atau pengembara.' Ibnu Umar berkata: 'Jika engkau berada di sore hari janganlah menunggu pagi hari, dan jika engkau berada di pagi hari janganlah menunggu sore hari. Manfaatkanlah masa sehatmu sebelum datang sakitmu dan masa hidupmu sebelum datang matimu.'"
   },
   {
     "id": 41,
-    "title": "The World is the Means for Attaining the Hereafter",
+    "title_en": "The World is the Means for Attaining the Hereafter",
     "narrator": "Abdullah bin Amr (RA)",
     "reference": "Al-Hujjah (Authenticated by Al-Nawawi)",
-    "text": "The Messenger of Allah (ﷺ) said: 'None of you [truly] believes until his inclination is accordance with what I have brought.'"
+    "text_en": "The Messenger of Allah (ﷺ) said: 'None of you [truly] believes until his inclination is accordance with what I have brought.'",
+    "title_id": "Menundukkan Hawa Nafsu",
+    "text_id": "Rasulullah (ﷺ) bersabda: 'Tidak beriman (dengan sempurna) salah seorang di antara kalian hingga hawa nafsunya mengikuti apa yang aku bawa.'"
   },
   {
     "id": 42,
-    "title": "The Expanse of the Forgiveness of Allah",
+    "title_en": "The Expanse of the Forgiveness of Allah",
     "narrator": "Anas bin Malik (RA)",
     "reference": "Jami At-Tirmidhi 3540",
-    "text": "I heard the Messenger of Allah (ﷺ) say: 'Allah the Almighty has said: O son of Adam, so long as you call upon Me and ask of Me, I shall forgive you for what you have done, and I shall not mind. O son of Adam, were your sins to reach the clouds of the sky and were you then to ask forgiveness of Me, I would forgive you. O son of Adam, were you to come to Me with sins nearly as great as the earth and were you then to face Me, ascribing no partner to Me, I would bring you forgiveness nearly as great as its.'"
+    "text_en": "I heard the Messenger of Allah (ﷺ) say: 'Allah the Almighty has said: O son of Adam, so long as you call upon Me and ask of Me, I shall forgive you for what you have done, and I shall not mind. O son of Adam, were your sins to reach the clouds of the sky and were you then to ask forgiveness of Me, I would forgive you. O son of Adam, were you to come to Me with sins nearly as great as the earth and were you then to face Me, ascribing no partner to Me, I would bring you forgiveness nearly as great as its.'",
+    "title_id": "Luasnya Ampunan Allah",
+    "text_id": "Aku mendengar Rasulullah (ﷺ) bersabda: 'Allah Ta'ala berfirman: Wahai anak Adam, sesungguhnya selama engkau berdoa kepada-Ku dan berharap kepada-Ku, Aku akan mengampuni dosa-dosa yang ada padamu dan Aku tidak peduli. Wahai anak Adam, seandainya dosa-dosamu setinggi langit, kemudian engkau memohon ampun kepada-Ku, niscaya Aku akan mengampunimu. Wahai anak Adam, seandainya engkau datang kepada-Ku dengan membawa dosa sepenuh bumi, kemudian engkau bertemu dengan-Ku dalam keadaan tidak menyekutukan-Ku dengan sesuatupun, niscaya Aku akan datang kepadamu dengan ampunan sepenuh bumi pula.'"
   }
 ]
