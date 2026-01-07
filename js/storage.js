@@ -250,6 +250,7 @@ class StorageManager {
         lunarPhase: true,
         flashcards: true,
         adhkar: true,
+        hadith: true,
         notes: true,
         pocketQuran: true,
       },
@@ -318,6 +319,17 @@ class StorageManager {
         arabicFontSize: 28,
         romanizationFontSize: 18,
         englishFontSize: 18,
+      },
+
+      // Hadith settings
+      hadith: {
+        activeSetId: null,
+        autoAdvanceSeconds: 20,
+        autoAdvancePaused: false,
+        titleFontSize: 22,
+        textFontSize: 18,
+        metaFontSize: 14,
+        languageBySet: {},
       },
 
       // Pocket Quran settings

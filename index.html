@@ -934,6 +934,181 @@
           </div>
         </section>
 
+        <!-- Hadith Card (Full Width) -->
+        <section class="card hadith-card" id="hadithCard">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="card-icon">📜</span>
+              <span
+                id="hadithHeaderText"
+                class="adhkar-header-text"
+                aria-live="polite"
+                >Hadith</span
+              >
+            </h2>
+            <div class="card-header-actions">
+              <div
+                class="card-blur-menu"
+                aria-label="Hadith blur menu"
+                data-card-id="hadithCard"
+              >
+                <button
+                  class="card-blur-btn"
+                  id="hadithBlurMenuBtn"
+                  type="button"
+                  aria-label="Open blur settings"
+                  title="Blur & Glass Settings"
+                >
+                  ✨
+                </button>
+                <div class="blur-settings-popup">
+                  <div class="blur-popup-header">
+                    <span class="blur-popup-title">
+                      <span class="blur-popup-title-icon">✨</span>
+                      Glass Settings
+                    </span>
+                    <button
+                      class="blur-popup-close"
+                      type="button"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div class="blur-setting-section">
+                    <span class="blur-setting-label">Glass Effect</span>
+                    <div class="blur-glass-toggle">
+                      <button
+                        class="blur-glass-option"
+                        data-glass-value="off"
+                        type="button"
+                      >
+                        <span class="blur-glass-option-icon">⬜</span>
+                        <span class="blur-glass-option-label">Off</span>
+                      </button>
+                      <button
+                        class="blur-glass-option active"
+                        data-glass-value="dashboard"
+                        type="button"
+                      >
+                        <span class="blur-glass-option-icon">🔗</span>
+                        <span class="blur-glass-option-label">Dash</span>
+                      </button>
+                      <button
+                        class="blur-glass-option"
+                        data-glass-value="on"
+                        type="button"
+                      >
+                        <span class="blur-glass-option-icon">✨</span>
+                        <span class="blur-glass-option-label">On</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="blur-setting-section">
+                    <div class="blur-power-header">
+                      <span class="blur-setting-label">Blur Power</span>
+                      <label class="blur-power-toggle">
+                        <input type="checkbox" class="blur-power-checkbox" />
+                        <span class="blur-power-switch"></span>
+                        <span class="blur-power-toggle-label">Custom</span>
+                      </label>
+                    </div>
+                    <div class="blur-power-slider-wrap disabled">
+                      <input
+                        type="range"
+                        class="blur-power-slider"
+                        min="0"
+                        max="200"
+                        value="100"
+                      />
+                      <span class="blur-power-value">100%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flashcard-viewer hadith-viewer">
+            <button
+              class="flashcard-nav flashcard-nav-prev"
+              id="hadithPrevBtn"
+              type="button"
+              aria-label="Previous hadith"
+              title="Previous"
+            >
+              ❮
+            </button>
+
+            <div class="hadith-shell" id="hadithCardShell">
+              <div class="hadith-title" id="hadithTitleText">Loading...</div>
+              <div class="hadith-text" id="hadithBodyText"></div>
+              <div
+                class="adhkar-divider"
+                id="hadithMetaDivider"
+                aria-hidden="true"
+                hidden
+              ></div>
+              <div class="hadith-meta" id="hadithMetaText" hidden></div>
+            </div>
+
+            <button
+              class="flashcard-nav flashcard-nav-next"
+              id="hadithNextBtn"
+              type="button"
+              aria-label="Next hadith"
+              title="Next"
+            >
+              ❯
+            </button>
+          </div>
+
+          <div class="flashcard-jump" aria-label="Jump to hadith">
+            <div class="flashcard-jump-label" id="hadithJumpLabel">0 / 0</div>
+            <input
+              type="range"
+              class="flashcard-jump-slider"
+              id="hadithJumpSlider"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              aria-label="Hadith position slider"
+            />
+            <input
+              type="number"
+              class="flashcard-jump-input"
+              id="hadithJumpInput"
+              min="1"
+              max="1"
+              value="1"
+              step="1"
+              inputmode="numeric"
+              aria-label="Go to hadith number"
+            />
+
+            <div
+              class="flashcard-auto-wrap"
+              id="hadithAutoWrap"
+              aria-label="Auto-advance controls"
+            >
+              <button
+                class="flashcard-auto-toggle-btn"
+                id="hadithAutoAdvanceToggleBtn"
+                type="button"
+                aria-pressed="false"
+                title="Pause auto-advance"
+                aria-label="Pause auto-advance"
+              >
+                <span class="auto-icon" aria-hidden="true">⏸</span>
+              </button>
+              <div class="flashcard-auto-status" id="hadithAutoStatus">
+                Auto
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Notes (Full Width) -->
         <section class="card notes-card" id="notesCard">
           <div class="card-header">
@@ -1680,6 +1855,7 @@
             <button class="settings-tab" data-tab="flashcards">
               📇 Flashcards
             </button>
+            <button class="settings-tab" data-tab="hadith">📜 Hadith</button>
             <button class="settings-tab" data-tab="adhkar">📿 Adhkar</button>
             <button class="settings-tab" data-tab="notes">📝 Notes</button>
             <button class="settings-tab" data-tab="pocketQuran">
@@ -2826,6 +3002,12 @@
                   <input type="checkbox" id="visibilityAdhkar" checked />
                   <span class="toggle-switch"></span>
                 </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📜</span>
+                  <span class="visibility-name">Hadith</span>
+                  <input type="checkbox" id="visibilityHadith" checked />
+                  <span class="toggle-switch"></span>
+                </label>
                 <div class="visibility-toggle-item">
                   <span class="visibility-icon">✅</span>
                   <label class="visibility-name" for="visibilityTodoList"
@@ -3383,6 +3565,128 @@
                   ➕ Add Card
                 </button>
                 <div class="quotes-pagination" id="flashcardsPagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hadith Settings -->
+          <div class="settings-panel" id="hadithPanel">
+            <div class="setting-group">
+              <label class="setting-label">Hadith Sets</label>
+              <p class="setting-hint">
+                Default sets are protected. Create your own sets and
+                import/export JSON.
+              </p>
+              <div class="flashcards-toolbar">
+                <select class="setting-select" id="hadithSetSelect"></select>
+                <button class="setting-btn" id="hadithNewSetBtn">
+                  ➕ New Set
+                </button>
+                <button class="setting-btn" id="hadithRenameSetBtn">
+                  ✏️ Rename
+                </button>
+                <button class="setting-btn" id="hadithDeleteSetBtn">
+                  🗑️ Delete Set
+                </button>
+              </div>
+              <div class="flashcards-meta" id="hadithMeta"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Auto-Advance (seconds)</label>
+              <p class="setting-hint">
+                Automatically moves to the next hadith after this many seconds.
+              </p>
+              <input
+                type="number"
+                class="setting-input"
+                id="hadithAutoAdvanceSeconds"
+                min="1"
+                max="3600"
+                placeholder="20"
+              />
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Typography Settings</label>
+              <p class="setting-hint">
+                Adjust font sizes for the title, text, and narrator/reference.
+              </p>
+              <div class="flashcards-typography">
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Title</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="hadithTitleFontSize"
+                    min="12"
+                    max="144"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="hadithTitleFontSizeValue"
+                  ></span>
+                </div>
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Text</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="hadithTextFontSize"
+                    min="12"
+                    max="144"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="hadithTextFontSizeValue"
+                  ></span>
+                </div>
+                <div class="flashcards-typography-row">
+                  <span class="flashcards-typography-label">Narrator</span>
+                  <input
+                    class="flashcards-typography-range"
+                    type="range"
+                    id="hadithMetaFontSize"
+                    min="10"
+                    max="96"
+                    step="1"
+                  />
+                  <span
+                    class="flashcards-typography-value"
+                    id="hadithMetaFontSizeValue"
+                  ></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Import / Export</label>
+              <div class="import-export-btns">
+                <button class="setting-btn" id="hadithImportBtn">
+                  📥 Import JSON
+                </button>
+                <button class="setting-btn" id="hadithExportBtn">
+                  📤 Export JSON
+                </button>
+                <input
+                  type="file"
+                  id="hadithImportInput"
+                  accept=".json,application/json"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Manage Hadith</label>
+              <div class="flashcards-editor" id="hadithEditorList"></div>
+              <div class="flashcards-editor-footer">
+                <button class="setting-btn" id="hadithAddItemBtn">
+                  ➕ Add Item
+                </button>
+                <div class="quotes-pagination" id="hadithPagination"></div>
               </div>
             </div>
           </div>
@@ -5054,6 +5358,7 @@
     <script src="js/weather.js"></script>
     <script src="js/lunarphase.js"></script>
     <script src="js/flashcards.js"></script>
+    <script src="js/hadith.js"></script>
     <script src="js/adhkar.js"></script>
     <script src="js/fasting.js"></script>
     <script src="js/floating.js"></script>

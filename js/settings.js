@@ -51,6 +51,7 @@ class SettingsManager {
     backgrounds,
     weather,
     flashcards,
+    hadith,
     adhkar
   ) {
     this.storage = storage;
@@ -60,6 +61,7 @@ class SettingsManager {
     this.backgrounds = backgrounds;
     this.weather = weather;
     this.flashcards = flashcards;
+    this.hadith = hadith;
     this.adhkar = adhkar;
 
     // Modal elements
@@ -307,6 +309,7 @@ class SettingsManager {
     this.visibilityFasting = document.getElementById("visibilityFasting");
     this.visibilityFlashcards = document.getElementById("visibilityFlashcards");
     this.visibilityAdhkar = document.getElementById("visibilityAdhkar");
+    this.visibilityHadith = document.getElementById("visibilityHadith");
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.visibilityNotes = document.getElementById("visibilityNotes");
     this.visibilityPocketQuran = document.getElementById(
@@ -1075,6 +1078,8 @@ class SettingsManager {
       this.visibilityFlashcards.checked = visibility.flashcards !== false;
     if (this.visibilityAdhkar)
       this.visibilityAdhkar.checked = visibility.adhkar !== false;
+    if (this.visibilityHadith)
+      this.visibilityHadith.checked = visibility.hadith !== false;
     if (this.visibilityTodoList)
       this.visibilityTodoList.checked = visibility.todoList !== false;
     if (this.visibilityNotes)
@@ -3288,6 +3293,7 @@ class SettingsManager {
       fasting: this.visibilityFasting?.checked ?? true,
       flashcards: this.visibilityFlashcards?.checked ?? true,
       adhkar: this.visibilityAdhkar?.checked ?? true,
+      hadith: this.visibilityHadith?.checked ?? true,
       todoList: this.visibilityTodoList?.checked ?? true,
       notes: this.visibilityNotes?.checked ?? true,
       pocketQuran: this.visibilityPocketQuran?.checked ?? true,
@@ -3743,6 +3749,9 @@ class SettingsManager {
     if (this.flashcards) {
       this.flashcards.renderSettings();
     }
+    if (this.hadith) {
+      this.hadith.renderSettings();
+    }
     if (this.adhkar) {
       this.adhkar.renderSettings();
     }
@@ -3789,6 +3798,10 @@ class SettingsManager {
 
     if (tabName === "flashcards" && this.flashcards) {
       this.flashcards.renderSettings();
+    }
+
+    if (tabName === "hadith" && this.hadith) {
+      this.hadith.renderSettings();
     }
 
     if (tabName === "adhkar" && this.adhkar) {

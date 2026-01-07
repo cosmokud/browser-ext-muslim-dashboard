@@ -28,6 +28,7 @@ class MuslimDashboard {
     this.weather = null; // Will be initialized after DOM
     this.lunarPhase = null; // Will be initialized after DOM
     this.flashcards = null; // Will be initialized after DOM
+    this.hadith = null; // Will be initialized after DOM
     this.fasting = null; // Will be initialized after DOM
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
@@ -419,6 +420,9 @@ class MuslimDashboard {
     // Initialize flashcards manager (renders loading state synchronously)
     this.flashcards = new FlashcardManager(this.storage);
 
+    // Initialize hadith manager (renders loading state synchronously)
+    this.hadith = new HadithManager(this.storage);
+
     // Initialize adhkar manager (renders loading state synchronously)
     this.adhkar = new AdhkarManager(this.storage);
 
@@ -431,6 +435,7 @@ class MuslimDashboard {
       this.backgrounds,
       this.weather,
       this.flashcards,
+      this.hadith,
       this.adhkar
     );
     this.settings.init();
@@ -539,6 +544,13 @@ class MuslimDashboard {
     backgroundTasks.push(
       this.flashcards.init().catch((err) => {
         console.warn("Flashcards init background error:", err);
+      })
+    );
+
+    // Hadith initialization (loads default JSON sets)
+    backgroundTasks.push(
+      this.hadith.init().catch((err) => {
+        console.warn("Hadith init background error:", err);
       })
     );
 
@@ -1010,6 +1022,11 @@ class MuslimDashboard {
         blurPowerKey: "adhkarBlurPower",
       },
       {
+        cardId: "hadithCard",
+        stateKey: "hadithBlurState",
+        blurPowerKey: "hadithBlurPower",
+      },
+      {
         cardId: "notesCard",
         stateKey: "notesBlurState",
         blurPowerKey: "notesBlurPower",
@@ -1046,6 +1063,7 @@ class MuslimDashboard {
         document.getElementById("fastingCard"),
         document.getElementById("flashcardCard"),
         document.getElementById("adhkarCard"),
+        document.getElementById("hadithCard"),
         document.getElementById("todoCard"),
         document.getElementById("notesCard"),
       ].filter(Boolean);
@@ -1536,6 +1554,16 @@ class MuslimDashboard {
       adhkarCard.setAttribute(
         "aria-hidden",
         visibility.adhkar === false ? "true" : "false"
+      );
+    }
+
+    // Hadith
+    const hadithCard = document.getElementById("hadithCard");
+    if (hadithCard) {
+      hadithCard.style.display = visibility.hadith === false ? "none" : "";
+      hadithCard.setAttribute(
+        "aria-hidden",
+        visibility.hadith === false ? "true" : "false"
       );
     }
 

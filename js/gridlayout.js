@@ -39,6 +39,7 @@ class GridLayoutManager {
       fastingCard: { id: "fastingCard", span: 2, minSpan: 2 },
       flashcardCard: { id: "flashcardCard", span: 2, minSpan: 2 },
       adhkarCard: { id: "adhkarCard", span: 2, minSpan: 2 },
+      hadithCard: { id: "hadithCard", span: 6, minSpan: 6 },
       todoCard: { id: "todoCard", span: 2, minSpan: 2 },
       notesCard: { id: "notesCard", span: 6, minSpan: 6 },
       pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
@@ -78,6 +79,7 @@ class GridLayoutManager {
       ["prayerTimesCard", "fastingCard", "calendarCard"],
       ["lunarPhaseCard", "qiblaCard", "todoCard"],
       ["flashcardCard", "adhkarCard"],
+      ["hadithCard"],
       ["pocketQuranCard"],
       ["notesCard"],
 

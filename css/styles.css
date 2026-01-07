@@ -2444,6 +2444,7 @@ body.quran-focus-mode #lunarPhaseCard,
 body.quran-focus-mode #fastingCard,
 body.quran-focus-mode #flashcardCard,
 body.quran-focus-mode #adhkarCard,
+body.quran-focus-mode #hadithCard,
 body.quran-focus-mode #todoCard,
 body.quran-focus-mode #notesCard {
   display: none !important;
@@ -10491,6 +10492,66 @@ body.sticky-note-resizing {
    ADHKAR (Dashboard card + Settings + Set selector modal)
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   HADITH (Dashboard card + Settings + Set selector modal)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hadith-card {
+  grid-column: 1 / -1; /* 6-span */
+  display: flex !important;
+  flex-direction: column;
+  min-height: 700px;
+  --hadith-title-font-size: 22px;
+  --hadith-text-font-size: 18px;
+  --hadith-meta-font-size: 14px;
+}
+
+.hadith-viewer {
+  flex: 1;
+  align-items: stretch;
+}
+
+.hadith-shell {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: center;
+}
+
+.hadith-title {
+  align-self: start;
+  font-size: var(--hadith-title-font-size);
+  font-weight: 700;
+  color: var(--accent-gold-light);
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.hadith-text {
+  align-self: center;
+  font-size: var(--hadith-text-font-size);
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.hadith-meta {
+  align-self: end;
+  font-size: var(--hadith-meta-font-size);
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Dashboard card typography */
 .adhkar-card {
   display: flex !important;
@@ -10696,6 +10757,36 @@ body.sticky-note-resizing {
   }
 }
 
+@keyframes hadithSwapNext {
+  0% {
+    opacity: 0.15;
+    transform: translateX(-14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes hadithSwapPrev {
+  0% {
+    opacity: 0.15;
+    transform: translateX(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hadith-shell.hadith-anim-next {
+  animation: hadithSwapNext 320ms ease-in-out;
+}
+
+.hadith-shell.hadith-anim-prev {
+  animation: hadithSwapPrev 320ms ease-in-out;
+}
+
 .adhkar-shell.adhkar-anim-next {
   animation: adhkarSwapNext 320ms ease-in-out;
 }
@@ -10714,6 +10805,97 @@ body.sticky-note-resizing {
   .adhkar-shell.adhkar-anim-script {
     animation: none !important;
   }
+
+  .hadith-shell.hadith-anim-next,
+  .hadith-shell.hadith-anim-prev {
+    animation: none !important;
+  }
+}
+
+/* Hadith settings editor (table) */
+.hadith-editor-table-wrap {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.hadith-editor-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 980px;
+}
+
+.hadith-editor-table thead th {
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hadith-editor-table tbody td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.hadith-editor-table tbody tr:hover {
+  background: var(--glass-bg-hover);
+}
+
+.hadith-editor-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.hadith-col-id {
+  width: 56px;
+  text-align: center;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.hadith-col-actions {
+  width: 40px;
+  text-align: center;
+}
+
+.hadith-editor-input.setting-input,
+.hadith-editor-textarea.setting-input {
+  margin: 0;
+}
+
+.hadith-editor-textarea {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.hadith-row-delete {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.hadith-row-delete:hover {
+  background: rgba(255, 107, 107, 0.2);
 }
 
 /* Settings editor (3 columns: Arabic/Romanization/English) */
