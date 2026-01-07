@@ -10515,25 +10515,30 @@ body.sticky-note-resizing {
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  /* Use auto rows and center the grid content as a whole so the title, text, and meta are vertically centered */
+  grid-template-rows: auto auto auto auto;
   align-items: center;
   justify-items: center;
-  gap: var(--spacing-md);
+  align-content: center;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: center;
 }
 
 .hadith-title {
-  align-self: start;
+  /* Center the title so it aligns with the rest of the content */
+  align-self: center;
   font-size: var(--hadith-title-font-size);
   font-weight: 700;
   color: var(--accent-gold-light);
   line-height: 1.35;
+  margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .hadith-text {
+  /* Keep the body centered under the title */
   align-self: center;
   font-size: var(--hadith-text-font-size);
   color: var(--text-primary);
@@ -10543,7 +10548,8 @@ body.sticky-note-resizing {
 }
 
 .hadith-meta {
-  align-self: end;
+  /* Include meta as part of the centered block */
+  align-self: center;
   font-size: var(--hadith-meta-font-size);
   color: var(--text-muted);
   font-style: italic;

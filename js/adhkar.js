@@ -283,10 +283,6 @@ class AdhkarManager {
   toggleAutoAdvancePaused() {
     const next = !this.getAutoAdvancePaused();
     this.setAutoAdvancePaused(next);
-    this.showToast(
-      next ? "Auto-advance paused" : "Auto-advance resumed",
-      "info"
-    );
   }
 
   updateAutoAdvanceToggleUi() {

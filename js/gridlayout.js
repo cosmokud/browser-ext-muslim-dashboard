@@ -82,7 +82,6 @@ class GridLayoutManager {
       ["hadithCard"],
       ["pocketQuranCard"],
       ["notesCard"],
-
       ["weatherCard"],
     ];
 
