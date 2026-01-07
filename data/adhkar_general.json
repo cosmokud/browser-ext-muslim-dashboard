@@ -7,7 +7,8 @@
     "translation_id": "Ya Tuhan kami, berilah kami kebaikan di dunia dan kebaikan di akhirat, dan lindungilah kami dari siksa api neraka.",
     "reference": "Quran 2:201",
     "repeat": 1,
-    "title": "Good in Both Worlds (Rabbana Atina)"
+    "title_en": "Good in Both Worlds (Rabbana Atina)",
+    "title_id": "Kebaikan di Dunia dan Akhirat (Rabbana Atina)"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "translation_id": "Ya Tuhan kami, janganlah Engkau jadikan hati kami menyimpang setelah Engkau beri kami petunjuk, dan karuniakanlah kepada kami rahmat dari sisi-Mu. Sesungguhnya Engkau Maha Pemberi.",
     "reference": "Quran 3:8",
     "repeat": 1,
-    "title": "Steadfastness in Faith"
+    "title_en": "Steadfastness in Faith",
+    "title_id": "Keteguhan dalam Iman"
   },
   {
     "id": 3,
@@ -27,7 +29,8 @@
     "translation_id": "Ya Tuhan kami, kami telah menganiaya diri kami sendiri, dan jika Engkau tidak mengampuni kami dan merahmati kami, niscaya kami termasuk orang-orang yang merugi.",
     "reference": "Quran 7:23 (Dua of Adam)",
     "repeat": 1,
-    "title": "Dua of Adam (Forgiveness)"
+    "title_en": "Dua of Adam (Forgiveness)",
+    "title_id": "Doa Nabi Adam (Ampunan)"
   },
   {
     "id": 4,
@@ -37,7 +40,8 @@
     "translation_id": "Ya Tuhanku, ampunilah aku dan kedua orang tuaku dan siapa saja yang memasuki rumahku dengan beriman, serta orang-orang mukmin laki-laki dan perempuan.",
     "reference": "Quran 71:28 (Dua of Nuh)",
     "repeat": 1,
-    "title": "Dua of Nuh (Forgiveness for Believers)"
+    "title_en": "Dua of Nuh (Forgiveness for Believers)",
+    "title_id": "Doa Nabi Nuh (Ampunan untuk Orang Beriman)"
   },
   {
     "id": 5,
@@ -47,7 +51,8 @@
     "translation_id": "Ya Tuhanku, jadikanlah aku dan keturunanku orang yang tetap mendirikan shalat. Ya Tuhan kami, kabulkanlah doaku.",
     "reference": "Quran 14:40 (Dua of Ibrahim)",
     "repeat": 1,
-    "title": "Dua of Ibrahim (Establish Prayer)"
+    "title_en": "Dua of Ibrahim (Establish Prayer)",
+    "title_id": "Doa Nabi Ibrahim (Menegakkan Shalat)"
   },
   {
     "id": 6,
@@ -57,7 +62,8 @@
     "translation_id": "Ya Tuhanku, berilah aku ilham untuk tetap mensyukuri nikmat-Mu yang telah Engkau anugerahkan kepadaku dan kepada kedua orang tuaku, dan agar aku mengerjakan kebajikan yang Engkau ridhai. Dan masukkanlah aku dengan rahmat-Mu ke dalam golongan hamba-hamba-Mu yang saleh.",
     "reference": "Quran 27:19 (Dua of Sulaiman)",
     "repeat": 1,
-    "title": "Dua of Sulaiman (Gratitude)"
+    "title_en": "Dua of Sulaiman (Gratitude)",
+    "title_id": "Doa Nabi Sulaiman (Syukur)"
   },
   {
     "id": 7,
@@ -67,7 +73,8 @@
     "translation_id": "Ya Tuhanku, lapangkanlah dadaku, dan mudahkanlah urusanku, dan lepaskanlah kekakuan dari lidahku, agar mereka mengerti perkataanku.",
     "reference": "Quran 20:25-28 (Dua of Musa)",
     "repeat": 1,
-    "title": "Dua of Musa (Ease of Task)"
+    "title_en": "Dua of Musa (Ease of Task)",
+    "title_id": "Doa Nabi Musa (Kemudahan Urusan)"
   },
   {
     "id": 8,
@@ -77,7 +84,8 @@
     "translation_id": "Ya Tuhanku, sesungguhnya aku telah ditimpa kesengsaraan dan Engkau adalah Yang Maha Penyayang di antara semua yang penyayang.",
     "reference": "Quran 21:83 (Dua of Ayyub)",
     "repeat": 1,
-    "title": "Dua of Ayyub (Relief from Distress)"
+    "title_en": "Dua of Ayyub (Relief from Distress)",
+    "title_id": "Doa Nabi Ayyub (Lepas dari Kesusahan)"
   },
   {
     "id": 9,
@@ -87,7 +95,8 @@
     "translation_id": "Tidak ada tuhan selain Engkau. Maha Suci Engkau. Sesungguhnya aku termasuk orang-orang yang zalim.",
     "reference": "Quran 21:87 (Dua of Yunus)",
     "repeat": 1,
-    "title": "Dua of Yunus (Distress)"
+    "title_en": "Dua of Yunus (Distress)",
+    "title_id": "Doa Nabi Yunus (Saat Kesusahan)"
   },
   {
     "id": 10,
@@ -97,7 +106,8 @@
     "translation_id": "Ya Tuhan kami, anugerahkanlah kepada kami pasangan dan keturunan yang menyenangkan hati kami, dan jadikanlah kami pemimpin bagi orang-orang yang bertakwa.",
     "reference": "Quran 25:74",
     "repeat": 1,
-    "title": "Prayer for Righteous Family"
+    "title_en": "Prayer for Righteous Family",
+    "title_id": "Doa untuk Keluarga yang Saleh"
   },
   {
     "id": 11,
@@ -107,7 +117,8 @@
     "translation_id": "Ya Allah, aku memohon kepada-Mu petunjuk, ketakwaan, kesucian diri, dan kecukupan.",
     "reference": "Muslim 4:2089",
     "repeat": 1,
-    "title": "Asking for Guidance and Sufficiency"
+    "title_en": "Asking for Guidance and Sufficiency",
+    "title_id": "Memohon Petunjuk dan Kecukupan"
   },
   {
     "id": 12,
@@ -117,7 +128,8 @@
     "translation_id": "Ya Allah, perbaikilah agamaku yang merupakan pelindung urusanku. Perbaikilah duniaku yang di dalamnya ada kehidupanku. Perbaikilah akhiratku yang menjadi tempat kembaliku. Jadikanlah hidup sebagai tambahan bagiku dalam setiap kebaikan, dan jadikanlah kematian sebagai istirahat bagiku dari setiap keburukan.",
     "reference": "Muslim 4:2088",
     "repeat": 1,
-    "title": "Comprehensive Welfare"
+    "title_en": "Comprehensive Welfare",
+    "title_id": "Kesejahteraan Menyeluruh"
   },
   {
     "id": 13,
@@ -127,7 +139,8 @@
     "translation_id": "Ya Allah, aku berlindung kepada-Mu dari kecemasan dan kesedihan, dari kelemahan dan kemalasan, dari pengecut dan kikir, dari beban hutang dan penindasan orang.",
     "reference": "Sahih al-Bukhari 7:158",
     "repeat": 1,
-    "title": "Protection from Anxiety and Debt"
+    "title_en": "Protection from Anxiety and Debt",
+    "title_id": "Perlindungan dari Kecemasan dan Hutang"
   },
   {
     "id": 14,
@@ -137,7 +150,8 @@
     "translation_id": "Ya Allah, ampunilah dosaku, kebodohanku, keteledoranku dalam urusanku, dan apa yang Engkau lebih mengetahuinya dariku.",
     "reference": "Sahih al-Bukhari 8:407, Muslim 4:2087",
     "repeat": 1,
-    "title": "Forgiveness for Errors and Excess"
+    "title_en": "Forgiveness for Errors and Excess",
+    "title_id": "Ampunan atas Kesalahan dan Kelebihan"
   },
   {
     "id": 15,
@@ -147,7 +161,8 @@
     "translation_id": "Ya Allah, aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima.",
     "reference": "Ibn Majah 1:152",
     "repeat": 1,
-    "title": "Knowledge, Provision, and Deeds"
+    "title_en": "Knowledge, Provision, and Deeds",
+    "title_id": "Ilmu, Rezeki, dan Amal"
   },
   {
     "id": 16,
@@ -157,7 +172,8 @@
     "translation_id": "Ya Tuhanku, tambahkanlah ilmu kepadaku.",
     "reference": "Quran 20:114",
     "repeat": 1,
-    "title": "Increase in Knowledge"
+    "title_en": "Increase in Knowledge",
+    "title_id": "Tambahan Ilmu"
   },
   {
     "id": 17,
@@ -167,7 +183,8 @@
     "translation_id": "Ya Allah, berikanlah manfaat kepadaku dengan apa yang telah Engkau ajarkan kepadaku, ajarkanlah kepadaku apa yang bermanfaat bagiku, dan tambahkanlah ilmu kepadaku.",
     "reference": "Ibn Majah 1:251, At-Tirmidhi 5:578",
     "repeat": 1,
-    "title": "Beneficial Knowledge"
+    "title_en": "Beneficial Knowledge",
+    "title_id": "Ilmu yang Bermanfaat"
   },
   {
     "id": 18,
@@ -177,7 +194,8 @@
     "translation_id": "Ya Allah, aku memohon kepada-Mu surga dan aku berlindung kepada-Mu dari neraka.",
     "reference": "Abu Dawud 4:323",
     "repeat": 3,
-    "title": "Asking for Paradise"
+    "title_en": "Asking for Paradise",
+    "title_id": "Memohon Surga"
   },
   {
     "id": 19,
@@ -187,7 +205,8 @@
     "translation_id": "Ya Allah, bantulah aku untuk mengingat-Mu, bersyukur kepada-Mu, dan beribadah kepada-Mu dengan sebaik-baiknya.",
     "reference": "Abu Dawud 2:86",
     "repeat": 1,
-    "title": "Help in Worship"
+    "title_en": "Help in Worship",
+    "title_id": "Pertolongan dalam Ibadah"
   },
   {
     "id": 20,
@@ -197,7 +216,8 @@
     "translation_id": "Ya Allah, aku berlindung kepada-Mu dari ilmu yang tidak bermanfaat, dari hati yang tidak khusyuk, dari jiwa yang tidak pernah puas, dan dari doa yang tidak dikabulkan.",
     "reference": "Muslim 4:2088",
     "repeat": 1,
-    "title": "Protection from Useless Knowledge"
+    "title_en": "Protection from Useless Knowledge",
+    "title_id": "Perlindungan dari Ilmu yang Tidak Bermanfaat"
   },
   {
     "id": 21,
@@ -207,7 +227,8 @@
     "translation_id": "Ya Allah, tunjukilah aku dan teguhkanlah aku.",
     "reference": "Muslim 4:2090",
     "repeat": 1,
-    "title": "Guidance and Steadfastness"
+    "title_en": "Guidance and Steadfastness",
+    "title_id": "Petunjuk dan Keteguhan"
   },
   {
     "id": 22,
@@ -217,7 +238,8 @@
     "translation_id": "Wahai Dzat yang membolak-balikkan hati, teguhkanlah hatiku di atas agama-Mu.",
     "reference": "At-Tirmidhi 4:447",
     "repeat": 1,
-    "title": "Firmness of Heart"
+    "title_en": "Firmness of Heart",
+    "title_id": "Keteguhan Hati"
   },
   {
     "id": 23,
@@ -227,7 +249,8 @@
     "translation_id": "Ya Allah, aku memohon kepada-Mu segala kebaikan, yang segera dan yang tertunda, yang aku ketahui dan yang tidak aku ketahui. Dan aku berlindung kepada-Mu dari segala keburukan, yang segera dan yang tertunda, yang aku ketahui dan yang tidak aku ketahui.",
     "reference": "Ibn Majah 2:328",
     "repeat": 1,
-    "title": "Comprehensive Good"
+    "title_en": "Comprehensive Good",
+    "title_id": "Kebaikan Menyeluruh"
   },
   {
     "id": 24,
@@ -237,7 +260,8 @@
     "translation_id": "Ya Allah, aku memohon kepada-Mu petunjuk dan keteguhan.",
     "reference": "Muslim 4:2090",
     "repeat": 1,
-    "title": "Guidance and Rectitude"
+    "title_en": "Guidance and Rectitude",
+    "title_id": "Petunjuk dan Kelurusan"
   },
   {
     "id": 25,
@@ -247,7 +271,8 @@
     "translation_id": "Maha Suci Allah, segala puji bagi Allah, tidak ada tuhan selain Allah, dan Allah Maha Besar.",
     "reference": "Muslim 4:2072",
     "repeat": 10,
-    "title": "The Four Beloved Words"
+    "title_en": "The Four Beloved Words",
+    "title_id": "Empat Kalimat yang Dicintai"
   },
   {
     "id": 26,
@@ -257,7 +282,8 @@
     "translation_id": "Tidak ada daya dan kekuatan kecuali dengan pertolongan Allah.",
     "reference": "Sahih al-Bukhari, Muslim",
     "repeat": 10,
-    "title": "Hawqala (Strength from Allah)"
+    "title_en": "Hawqala (Strength from Allah)",
+    "title_id": "Hawqalah (Kekuatan dari Allah)"
   },
   {
     "id": 27,
@@ -267,7 +293,8 @@
     "translation_id": "Aku memohon ampun kepada Allah Yang Maha Agung, yang tidak ada tuhan selain Dia, Yang Maha Hidup lagi Maha Berdiri Sendiri, dan aku bertaubat kepada-Nya.",
     "reference": "Abu Dawud, At-Tirmidhi",
     "repeat": 3,
-    "title": "Istighfar"
+    "title_en": "Istighfar",
+    "title_id": "Istighfar"
   },
   {
     "id": 28,
@@ -277,7 +304,8 @@
     "translation_id": "Ya Allah, limpahkanlah shalawat kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau limpahkan shalawat kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Maha Mulia. Ya Allah, limpahkanlah berkah kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau limpahkan berkah kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Maha Mulia.",
     "reference": "Sahih al-Bukhari 4:589",
     "repeat": 10,
-    "title": "Salawat (Durud Ibrahim)"
+    "title_en": "Salawat (Durud Ibrahim)",
+    "title_id": "Shalawat (Durud Ibrahim)"
   },
   {
     "id": 29,
@@ -287,7 +315,8 @@
     "translation_id": "Dengan nama Allah, aku bertawakal kepada Allah. Tidak ada daya dan kekuatan kecuali dengan pertolongan Allah.",
     "reference": "Abu Dawud 4:325, At-Tirmidhi 5:490 (When leaving home)",
     "repeat": 1,
-    "title": "Trust When Leaving Home"
+    "title_en": "Trust When Leaving Home",
+    "title_id": "Tawakal Saat Keluar Rumah"
   },
   {
     "id": 30,
@@ -297,6 +326,7 @@
     "translation_id": "Dengan nama Allah. Ya Allah, aku berlindung kepada-Mu dari setan laki-laki dan perempuan.",
     "reference": "Sahih al-Bukhari 1:144, Muslim 1:283 (When entering bathroom)",
     "repeat": 1,
-    "title": "Protection When Entering Bathroom"
+    "title_en": "Protection When Entering Bathroom",
+    "title_id": "Perlindungan Saat Masuk Kamar Mandi"
   }
 ]

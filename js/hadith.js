@@ -17,9 +17,17 @@ class HadithManager {
       name: "Imam Nawawi 40 Hadith",
       file: "data/hadith_nawawi40.json",
     },
+    {
+      id: "default_hadith_random200",
+      name: "Random 200 Hadith",
+      file: "data/hadith_random200.json",
+    },
   ];
 
-  static PROTECTED_SET_IDS = ["default_hadith_nawawi40"];
+  static PROTECTED_SET_IDS = [
+    "default_hadith_nawawi40",
+    "default_hadith_random200",
+  ];
 
   constructor(storage) {
     this.storage = storage;

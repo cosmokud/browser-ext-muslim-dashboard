@@ -28,12 +28,18 @@ class AdhkarManager {
       name: "General Adhkar",
       file: "data/adhkar_general.json",
     },
+    {
+      id: "default_adhkar_hisn",
+      name: "Hisn al-Muslim",
+      file: "data/adhkar_hisn.json",
+    },
   ];
 
   static PROTECTED_SET_IDS = [
     "default_adhkar_morning",
     "default_adhkar_evening",
     "default_adhkar_general",
+    "default_adhkar_hisn",
   ];
 
   constructor(storage) {
@@ -940,7 +946,12 @@ class AdhkarManager {
     const settings = this.getAdhkarSettings();
     const activeSetId = this.getActiveSetId();
     const langMap = settings.languageBySet || {};
-    return langMap[activeSetId] || "en";
+    const raw = langMap[activeSetId];
+    const normalized =
+      typeof raw === "string" || typeof raw === "number"
+        ? String(raw).trim().toLowerCase()
+        : "";
+    return normalized || "en";
   }
 
   /**
@@ -950,9 +961,15 @@ class AdhkarManager {
     const activeSetId = this.getActiveSetId();
     if (!activeSetId) return;
 
+    const normalized =
+      typeof langCode === "string" || typeof langCode === "number"
+        ? String(langCode).trim().toLowerCase()
+        : "";
+    if (!normalized) return;
+
     const settings = this.getAdhkarSettings();
     const langMap = settings.languageBySet || {};
-    langMap[activeSetId] = langCode;
+    langMap[activeSetId] = normalized;
     this.setAdhkarSettings({ languageBySet: langMap });
   }
 
@@ -973,7 +990,10 @@ class AdhkarManager {
     for (const key of Object.keys(firstCard)) {
       if (key.startsWith("translation_")) {
         const code = key.replace("translation_", "");
-        langCodes.add(code);
+        const normalized = String(code || "")
+          .trim()
+          .toLowerCase();
+        if (normalized) langCodes.add(normalized);
       }
     }
 
