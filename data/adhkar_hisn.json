@@ -7,7 +7,8 @@
     "translation_id": "Segala puji bagi Allah, yang telah menghidupkan kami setelah mematikan kami, dan kepada-Nya lah tempat kembali.",
     "reference": "Al-Bukhari 11:113, Muslim 4:2083",
     "repeat": 1,
-    "title": "When waking up"
+    "title_en": "When waking up",
+    "title_id": "Ketika bangun tidur"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu. Mahasuci Allah, segala puji bagi Allah, tiada Tuhan selain Allah, Allah Mahabesar, tiada daya dan kekuatan kecuali dengan pertolongan Allah Yang Mahatinggi lagi Mahaagung. Wahai Tuhanku, ampunilah aku.",
     "reference": "Ibn Majah 2:335",
     "repeat": 1,
-    "title": "When waking up"
+    "title_en": "When waking up",
+    "title_id": "Ketika bangun tidur"
   },
   {
     "id": 3,
@@ -27,7 +29,8 @@
     "translation_id": "Segala puji bagi Allah yang telah memberikan kesehatan pada jasadku, mengembalikan ruhku kepadaku, dan mengizinkanku untuk mengingat-Nya.",
     "reference": "At-Tirmidhi 5:473",
     "repeat": 1,
-    "title": "When waking up"
+    "title_en": "When waking up",
+    "title_id": "Ketika bangun tidur"
   },
   {
     "id": 4,
@@ -37,7 +40,8 @@
     "translation_id": "Sesungguhnya dalam penciptaan langit dan bumi, dan silih bergantinya malam dan siang terdapat tanda-tanda bagi orang-orang yang berakal... (Membaca ayat 190-200 dari Surah Ali Imran)",
     "reference": "Al-Imran 3:190-200, Al-Bukhari 8:441, Muslim 1:530",
     "repeat": 1,
-    "title": "When waking up"
+    "title_en": "When waking up",
+    "title_id": "Ketika bangun tidur"
   },
   {
     "id": 5,
@@ -47,7 +51,8 @@
     "translation_id": "Segala puji bagi Allah yang telah memakaikan pakaian ini kepadaku dan memberikannya sebagai rezeki tanpa daya dan kekuatan dariku.",
     "reference": "Abu Dawud 4:41",
     "repeat": 1,
-    "title": "When wearing a garment"
+    "title_en": "When wearing a garment",
+    "title_id": "Ketika memakai pakaian"
   },
   {
     "id": 6,
@@ -57,7 +62,8 @@
     "translation_id": "Ya Allah, bagi-Mu segala puji, Engkau yang telah memakaikan pakaian ini kepadaku. Aku memohon kepada-Mu kebaikannya dan kebaikan tujuan dibuatnya, dan aku berlindung kepada-Mu dari keburukannya dan keburukan tujuan dibuatnya.",
     "reference": "Abu Dawud 4:41, At-Tirmidhi 4:356",
     "repeat": 1,
-    "title": "When wearing a new garment"
+    "title_en": "When wearing a new garment",
+    "title_id": "Ketika memakai pakaian baru"
   },
   {
     "id": 7,
@@ -67,7 +73,8 @@
     "translation_id": "Semoga engkau memakainya sampai usang dan semoga Allah Ta'ala menggantinya.",
     "reference": "Abu Dawud 4:41",
     "repeat": 1,
-    "title": "To someone wearing a new garment"
+    "title_en": "To someone wearing a new garment",
+    "title_id": "Untuk orang yang memakai pakaian baru"
   },
   {
     "id": 8,
@@ -77,7 +84,8 @@
     "translation_id": "Pakailah yang baru, hiduplah dengan terpuji, dan matilah dalam keadaan syahid.",
     "reference": "Ibn Majah 2:1178",
     "repeat": 1,
-    "title": "To someone wearing a new garment"
+    "title_en": "To someone wearing a new garment",
+    "title_id": "Untuk orang yang memakai pakaian baru"
   },
   {
     "id": 9,
@@ -87,7 +95,8 @@
     "translation_id": "Dengan nama Allah.",
     "reference": "At-Tirmidhi 2:505",
     "repeat": 1,
-    "title": "Before undressing"
+    "title_en": "Before undressing",
+    "title_id": "Sebelum melepas pakaian"
   },
   {
     "id": 10,
@@ -97,7 +106,8 @@
     "translation_id": "(Dengan nama Allah). Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kejahatan dan setan (laki-laki dan perempuan).",
     "reference": "Al-Bukhari 1:45, Muslim 1:283",
     "repeat": 1,
-    "title": "Before entering the bathroom"
+    "title_en": "Before entering the bathroom",
+    "title_id": "Sebelum masuk kamar mandi"
   },
   {
     "id": 11,
@@ -107,7 +117,8 @@
     "translation_id": "Aku memohon ampunan-Mu.",
     "reference": "Abu Dawud, Ibn Majah, At-Tirmidhi",
     "repeat": 1,
-    "title": "After leaving the bathroom"
+    "title_en": "After leaving the bathroom",
+    "title_id": "Setelah keluar dari kamar mandi"
   },
   {
     "id": 12,
@@ -117,7 +128,8 @@
     "translation_id": "Dengan nama Allah.",
     "reference": "Abu Dawud, Ibn Majah, Ahmad",
     "repeat": 1,
-    "title": "Before ablution"
+    "title_en": "Before ablution",
+    "title_id": "Sebelum berwudhu"
   },
   {
     "id": 13,
@@ -127,7 +139,8 @@
     "translation_id": "Aku bersaksi bahwa tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya, dan aku bersaksi bahwa Muhammad adalah hamba dan utusan-Nya.",
     "reference": "Muslim 1:209",
     "repeat": 1,
-    "title": "Upon completing the ablution"
+    "title_en": "Upon completing the ablution",
+    "title_id": "Setelah selesai berwudhu"
   },
   {
     "id": 14,
@@ -137,7 +150,8 @@
     "translation_id": "Ya Allah, jadikanlah aku termasuk orang-orang yang bertaubat dan jadikanlah aku termasuk orang-orang yang mensucikan diri.",
     "reference": "At-Tirmidhi 1:78",
     "repeat": 1,
-    "title": "Upon completing the ablution"
+    "title_en": "Upon completing the ablution",
+    "title_id": "Setelah selesai berwudhu"
   },
   {
     "id": 15,
@@ -147,7 +161,8 @@
     "translation_id": "Mahasuci Engkau, ya Allah, dan dengan memuji-Mu. Aku bersaksi bahwa tiada Tuhan selain Engkau. Aku memohon ampunan-Mu dan bertaubat kepada-Mu.",
     "reference": "An-Nasa'i, Amalul-Yawm wal-Laylah p.173",
     "repeat": 1,
-    "title": "Upon completing the ablution"
+    "title_en": "Upon completing the ablution",
+    "title_id": "Setelah selesai berwudhu"
   },
   {
     "id": 16,
@@ -157,7 +172,8 @@
     "translation_id": "Dengan nama Allah, aku bertawakkal kepada Allah. Tiada daya dan kekuatan kecuali dengan pertolongan Allah.",
     "reference": "Abu Dawud 4:325, At-Tirmidhi 5:490",
     "repeat": 1,
-    "title": "Remembrance when leaving the home"
+    "title_en": "Remembrance when leaving the home",
+    "title_id": "Dzikir ketika keluar rumah"
   },
   {
     "id": 17,
@@ -167,7 +183,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari menyesatkan atau disesatkan, dari menggelincirkan atau digelincirkan, dari berbuat zalim atau dizalimi, dan dari berbuat bodoh atau dibodohi.",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi",
     "repeat": 1,
-    "title": "Remembrance when leaving the home"
+    "title_en": "Remembrance when leaving the home",
+    "title_id": "Dzikir ketika keluar rumah"
   },
   {
     "id": 18,
@@ -177,7 +194,8 @@
     "translation_id": "Dengan nama Allah kami masuk, dan dengan nama Allah kami keluar, dan kepada Tuhan kami, kami bertawakkal.",
     "reference": "Abu Dawud 4:325",
     "repeat": 1,
-    "title": "Remembrance upon entering the home"
+    "title_en": "Remembrance upon entering the home",
+    "title_id": "Dzikir ketika masuk rumah"
   },
   {
     "id": 19,
@@ -187,7 +205,8 @@
     "translation_id": "Ya Allah, jadikanlah cahaya di dalam hatiku, cahaya di lisanku, cahaya di pendengaranku, cahaya di penglihatanku, cahaya dari atasku, cahaya dari bawahku, cahaya dari kananku, cahaya dari kiriku, cahaya dari depanku, dan cahaya dari belakangku. Jadikanlah cahaya dalam jiwaku, perbesarlah cahaya untukku, agungkanlah cahaya untukku, berilah aku cahaya, dan jadikanlah aku sebagai cahaya. Ya Allah, berilah aku cahaya, jadikanlah cahaya pada urat sarafku, cahaya pada dagingku, cahaya pada darahku, cahaya pada rambutku, dan cahaya pada kulitku.",
     "reference": "Al-Bukhari 11:116, Muslim 1:526",
     "repeat": 1,
-    "title": "When going to the mosque"
+    "title_en": "When going to the mosque",
+    "title_id": "Ketika pergi ke masjid"
   },
   {
     "id": 20,
@@ -197,7 +216,8 @@
     "translation_id": "Aku berlindung kepada Allah Yang Mahaagung, dengan wajah-Nya Yang Mulia, dan kekuasaan-Nya yang abadi, dari setan yang terkutuk. Dengan nama Allah, semoga shalawat dan salam tercurah kepada Rasulullah. Ya Allah, bukalah untukku pintu-pintu rahmat-Mu.",
     "reference": "Abu Dawud, Ibn Majah, Muslim 1:494",
     "repeat": 1,
-    "title": "Upon entering the mosque"
+    "title_en": "Upon entering the mosque",
+    "title_id": "Ketika masuk masjid"
   },
   {
     "id": 21,
@@ -207,7 +227,8 @@
     "translation_id": "Dengan nama Allah, semoga shalawat dan salam tercurah kepada Rasulullah. Ya Allah, sesungguhnya aku memohon karunia-Mu. Ya Allah, lindungilah aku dari setan yang terkutuk.",
     "reference": "Abu Dawud 1:126, Muslim 1:494",
     "repeat": 1,
-    "title": "Upon leaving the mosque"
+    "title_en": "Upon leaving the mosque",
+    "title_id": "Ketika keluar masjid"
   },
   {
     "id": 22,
@@ -217,7 +238,8 @@
     "translation_id": "Mengucapkan seperti apa yang diucapkan muadzin, kecuali pada kalimat 'Hayya 'alas-salah' dan 'Hayya 'alal-falah', maka mengucapkan 'La hawla wa la quwwata illa billah' (Tiada daya dan kekuatan kecuali dengan pertolongan Allah).",
     "reference": "Al-Bukhari 1:152, Muslim 1:288",
     "repeat": 1,
-    "title": "Concerning the athan"
+    "title_en": "Concerning the athan",
+    "title_id": "Tentang adzan"
   },
   {
     "id": 23,
@@ -227,7 +249,8 @@
     "translation_id": "Dan aku bersaksi bahwa tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya, dan bahwa Muhammad adalah hamba dan utusan-Nya. Aku ridha Allah sebagai Tuhanku, Muhammad sebagai Rasul, dan Islam sebagai agamaku.",
     "reference": "Muslim 1:290",
     "repeat": 1,
-    "title": "Concerning the athan"
+    "title_en": "Concerning the athan",
+    "title_id": "Tentang adzan"
   },
   {
     "id": 24,
@@ -237,7 +260,8 @@
     "translation_id": "Membaca shalawat kepada Nabi shallallahu 'alaihi wa sallam setelah selesai menjawab muadzin.",
     "reference": "Muslim 1:288",
     "repeat": 1,
-    "title": "Concerning the athan"
+    "title_en": "Concerning the athan",
+    "title_id": "Tentang adzan"
   },
   {
     "id": 25,
@@ -247,7 +271,8 @@
     "translation_id": "Ya Allah, Tuhan pemilik panggilan yang sempurna ini dan shalat yang didirikan. Berilah Muhammad 'wasilah' (derajat di surga) dan keutamaan, dan bangkitkanlah beliau di tempat yang terpuji yang telah Engkau janjikan kepadanya, [sesungguhnya Engkau tidak menyalahi janji].",
     "reference": "Al-Bukhari 1:152",
     "repeat": 1,
-    "title": "Concerning the athan"
+    "title_en": "Concerning the athan",
+    "title_id": "Tentang adzan"
   },
   {
     "id": 26,
@@ -257,7 +282,8 @@
     "translation_id": "Berdoalah untuk diri sendiri antara adzan dan iqamah, karena doa pada saat itu tidak akan ditolak.",
     "reference": "At-Tirmidhi, Abu Dawud, Ahmad",
     "repeat": 1,
-    "title": "Concerning the athan"
+    "title_en": "Concerning the athan",
+    "title_id": "Tentang adzan"
   },
   {
     "id": 27,
@@ -267,7 +293,8 @@
     "translation_id": "Ya Allah, jauhkanlah antara aku dan kesalahan-kesalahanku sebagaimana Engkau menjauhkan antara timur dan barat. Ya Allah, bersihkanlah aku dari kesalahan-kesalahanku sebagaimana baju putih dibersihkan dari kotoran. Ya Allah, cucilah aku dari kesalahan-kesalahanku dengan salju, air, dan es.",
     "reference": "Al-Bukhari 1:181, Muslim 1:419",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 28,
@@ -277,7 +304,8 @@
     "translation_id": "Mahasuci Engkau Ya Allah dan dengan memuji-Mu. Mahasuci Nama-Mu dan Mahatinggi Kebesaran-Mu. Tiada Tuhan selain Engkau.",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 29,
@@ -287,7 +315,8 @@
     "translation_id": "Aku hadapkan wajahku kepada (Allah) yang menciptakan langit dan bumi dengan lurus (berserah diri) dan aku bukanlah termasuk orang-orang yang menyekutukan Allah. Sesungguhnya shalatku, ibadahku, hidupku, dan matiku hanyalah untuk Allah, Tuhan semesta alam, tiada sekutu bagi-Nya. Dengan itulah aku diperintahkan dan aku termasuk orang-orang Muslim. Ya Allah, Engkaulah Raja, tiada Tuhan selain Engkau. Engkau Tuhanku dan aku hamba-Mu. Aku telah menzalimi diriku sendiri dan aku mengakui dosaku, maka ampunilah seluruh dosaku, sesungguhnya tiada yang mengampuni dosa-dosa kecuali Engkau. Tunjukilah aku kepada akhlak yang terbaik, tiada yang dapat menunjuki kepada yang terbaik kecuali Engkau. Dan palingkanlah aku dari akhlak yang buruk, tiada yang dapat memalingkan darinya kecuali Engkau. Aku penuhi panggilan-Mu dan kebahagiaan ada pada-Mu. Segala kebaikan berada di tangan-Mu, dan keburukan tidak disandarkan kepada-Mu. Aku (hidup) dengan pertolongan-Mu dan akan kembali kepada-Mu. Mahasuci Engkau dan Mahatinggi Engkau. Aku memohon ampunan-Mu dan bertaubat kepada-Mu.",
     "reference": "Muslim 1:534",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 30,
@@ -297,7 +326,8 @@
     "translation_id": "Ya Allah, Tuhan Jibril, Mikail, dan Israfil. Pencipta langit dan bumi, Yang Maha Mengetahui yang ghaib dan yang nyata. Engkaulah yang memutuskan di antara hamba-hamba-Mu tentang apa yang mereka perselisihkan. Tunjukilah aku kepada kebenaran dari apa yang diperselisihkan dengan izin-Mu, sesungguhnya Engkau menunjuki siapa yang Engkau kehendaki ke jalan yang lurus.",
     "reference": "Muslim 1:534",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 31,
@@ -307,7 +337,8 @@
     "translation_id": "Allah Mahabesar, Mahabesar. Allah Mahabesar, Mahabesar. Allah Mahabesar, Mahabesar. Segala puji bagi Allah, sebanyak-banyaknya. Segala puji bagi Allah, sebanyak-banyaknya. Segala puji bagi Allah, sebanyak-banyaknya. Dan Mahasuci Allah, pada waktu pagi dan petang. (Dibaca 3 kali). Aku berlindung kepada Allah dari setan: dari tiupannya, dari sihirnya, dan dari godaannya.",
     "reference": "Abu Dawud 1:203, Ibn Majah 1:265, Ahmad 4:85",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 32,
@@ -317,7 +348,8 @@
     "translation_id": "Ya Allah, bagi-Mu segala puji, Engkau cahaya langit dan bumi serta isinya. Bagi-Mu segala puji, Engkau pengurus langit dan bumi serta isinya... [Ya Allah, kepada-Mu aku berserah diri, kepada-Mu aku bertawakkal, kepada-Mu aku beriman, kepada-Mu aku kembali (bertaubat), dengan pertolongan-Mu aku berdebat, dan kepada-Mu aku berhukum. Maka ampunilah dosaku yang telah lalu dan yang akan datang, yang aku sembunyikan dan yang aku nampakkan.] Engkaulah Yang Mendahulukan dan Engkaulah Yang Mengakhirkan, tiada Tuhan selain Engkau.",
     "reference": "Al-Bukhari 11:116, Muslim 1:532",
     "repeat": 1,
-    "title": "At the start of the prayer (after takbeer)"
+    "title_en": "At the start of the prayer (after takbeer)",
+    "title_id": "Pada awal shalat (setelah takbir)"
   },
   {
     "id": 33,
@@ -327,7 +359,8 @@
     "translation_id": "Mahasuci Tuhanku Yang Mahaagung. (Tiga kali)",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi, Ahmad",
     "repeat": 1,
-    "title": "While bowing in prayer"
+    "title_en": "While bowing in prayer",
+    "title_id": "Saat rukuk"
   },
   {
     "id": 34,
@@ -337,7 +370,8 @@
     "translation_id": "Mahasuci Engkau Ya Allah, Tuhan kami, dan dengan memuji-Mu. Ya Allah, ampunilah aku.",
     "reference": "Al-Bukhari 1:99, Muslim 1:350",
     "repeat": 1,
-    "title": "While bowing in prayer"
+    "title_en": "While bowing in prayer",
+    "title_id": "Saat rukuk"
   },
   {
     "id": 35,
@@ -347,7 +381,8 @@
     "translation_id": "Mahasuci, Mahaqudus, Tuhan para malaikat dan ruh (Jibril).",
     "reference": "Muslim 1:353, Abu Dawud 1:230",
     "repeat": 1,
-    "title": "While bowing in prayer"
+    "title_en": "While bowing in prayer",
+    "title_id": "Saat rukuk"
   },
   {
     "id": 36,
@@ -357,7 +392,8 @@
     "translation_id": "Ya Allah, kepada-Mu aku ruku', kepada-Mu aku beriman, dan kepada-Mu aku berserah diri. Khusyu' kepada-Mu pendengaranku, penglihatanku, pikiranku, tulangku, urat sarafku, dan apa yang dipikul oleh kakiku.",
     "reference": "Muslim 1:534, Abu Dawud, An-Nasa'i, At-Tirmidhi",
     "repeat": 1,
-    "title": "While bowing in prayer"
+    "title_en": "While bowing in prayer",
+    "title_id": "Saat rukuk"
   },
   {
     "id": 37,
@@ -367,7 +403,8 @@
     "translation_id": "Mahasuci (Allah) Yang memiliki Keperkasaan, Kerajaan, Kebesaran, dan Keagungan.",
     "reference": "Abu Dawud 1:230, An-Nasa'i, Ahmad",
     "repeat": 1,
-    "title": "While bowing in prayer"
+    "title_en": "While bowing in prayer",
+    "title_id": "Saat rukuk"
   },
   {
     "id": 38,
@@ -377,7 +414,8 @@
     "translation_id": "Allah Maha Mendengar orang yang memuji-Nya.",
     "reference": "Al-Bukhari, Muslim",
     "repeat": 1,
-    "title": "Upon rising from the bowing position"
+    "title_en": "Upon rising from the bowing position",
+    "title_id": "Ketika bangkit dari rukuk"
   },
   {
     "id": 39,
@@ -387,7 +425,8 @@
     "translation_id": "Ya Tuhan kami, bagi-Mu segala puji, pujian yang banyak, baik, dan diberkahi di dalamnya.",
     "reference": "Al-Bukhari 1:284",
     "repeat": 1,
-    "title": "Upon rising from the bowing position"
+    "title_en": "Upon rising from the bowing position",
+    "title_id": "Ketika bangkit dari rukuk"
   },
   {
     "id": 40,
@@ -397,7 +436,8 @@
     "translation_id": "(Pujian) sepenuh langit dan sepenuh bumi, dan apa yang ada di antara keduanya, serta sepenuh apa yang Engkau kehendaki setelah itu. Wahai Tuhan yang layak dipuji dan diagungkan, itulah ucapan yang paling berhak diucapkan oleh seorang hamba, dan kami semua adalah hamba-Mu. Ya Allah, tidak ada yang dapat menghalangi apa yang Engkau berikan, dan tidak ada yang dapat memberi apa yang Engkau halangi. Dan kekayaan/kekuasaan tidak berguna bagi pemiliknya (untuk menyelamatkan diri) dari (siksa)-Mu.",
     "reference": "Muslim 1:346",
     "repeat": 1,
-    "title": "Upon rising from the bowing position"
+    "title_en": "Upon rising from the bowing position",
+    "title_id": "Ketika bangkit dari rukuk"
   },
   {
     "id": 41,
@@ -407,7 +447,8 @@
     "translation_id": "Mahasuci Tuhanku Yang Mahatinggi. (Tiga kali)",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi, Ahmad",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 42,
@@ -417,7 +458,8 @@
     "translation_id": "Mahasuci Engkau Ya Allah, Tuhan kami, dan dengan memuji-Mu. Ya Allah, ampunilah aku.",
     "reference": "Al-Bukhari 1:99, Muslim 1:350",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 43,
@@ -427,7 +469,8 @@
     "translation_id": "Mahasuci, Mahaqudus, Tuhan para malaikat dan ruh (Jibril).",
     "reference": "Muslim 1:353, Abu Dawud 1:230",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 44,
@@ -437,7 +480,8 @@
     "translation_id": "Ya Allah, kepada-Mu aku bersujud, kepada-Mu aku beriman, dan kepada-Mu aku berserah diri. Wajahku bersujud kepada Dzat yang menciptakannya, membentuknya, dan membukakan pendengaran serta penglihatannya. Mahasuci Allah, Sebaik-baik Pencipta.",
     "reference": "Muslim 1:534",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 45,
@@ -447,7 +491,8 @@
     "translation_id": "Mahasuci (Allah) Yang memiliki Keperkasaan, Kerajaan, Kebesaran, dan Keagungan.",
     "reference": "Abu Dawud 1:230, An-Nasa'i, Ahmad",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 46,
@@ -457,7 +502,8 @@
     "translation_id": "Ya Allah, ampunilah dosaku semuanya, yang kecil maupun yang besar, yang awal maupun yang akhir, yang nampak maupun yang tersembunyi.",
     "reference": "Muslim 1:350",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 47,
@@ -467,7 +513,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung dengan keridhaan-Mu dari kemurkaan-Mu, dengan maaf-Mu dari hukuman-Mu. Dan aku berlindung kepada-Mu dari (siksa)-Mu. Aku tidak mampu menghitung pujian kepada-Mu, Engkau adalah sebagaimana Engkau memuji Diri-Mu sendiri.",
     "reference": "Muslim 1:352",
     "repeat": 1,
-    "title": "While prostrating"
+    "title_en": "While prostrating",
+    "title_id": "Saat sujud"
   },
   {
     "id": 48,
@@ -477,7 +524,8 @@
     "translation_id": "Ya Tuhanku, ampunilah aku. Ya Tuhanku, ampunilah aku.",
     "reference": "Abu Dawud 1:231",
     "repeat": 1,
-    "title": "Between the two prostrations"
+    "title_en": "Between the two prostrations",
+    "title_id": "Di antara dua sujud"
   },
   {
     "id": 49,
@@ -487,7 +535,8 @@
     "translation_id": "Ya Allah, ampunilah aku, rahmatilah aku, berilah aku petunjuk, cukupkanlah kekuranganku, berilah aku kesehatan, berilah aku rezeki, dan angkatlah derajatku.",
     "reference": "Abu Dawud, Ibn Majah, At-Tirmidhi",
     "repeat": 1,
-    "title": "Between the two prostrations"
+    "title_en": "Between the two prostrations",
+    "title_id": "Di antara dua sujud"
   },
   {
     "id": 50,
@@ -497,7 +546,8 @@
     "translation_id": "Wajahku bersujud kepada Dzat yang menciptakannya, dan membukakan pendengaran serta penglihatannya dengan daya dan kekuatan-Nya. Mahasuci Allah, Sebaik-baik Pencipta.",
     "reference": "At-Tirmidhi 2:474, Ahmad 6:30",
     "repeat": 1,
-    "title": "When prostrating due to recitation of the Quran"
+    "title_en": "When prostrating due to recitation of the Quran",
+    "title_id": "Ketika sujud tilawah (karena membaca Al-Qur'an)"
   },
   {
     "id": 51,
@@ -507,7 +557,8 @@
     "translation_id": "Ya Allah, tulislah untukku dengan sujud ini pahala di sisi-Mu, dan hapuskanlah dosaku dengannya, dan jadikanlah ia simpanan untukku di sisi-Mu, dan terimalah sujud ini dariku sebagaimana Engkau menerimanya dari hamba-Mu Daud.",
     "reference": "At-Tirmidhi 2:473",
     "repeat": 1,
-    "title": "When prostrating due to recitation of the Quran"
+    "title_en": "When prostrating due to recitation of the Quran",
+    "title_id": "Ketika sujud tilawah (karena membaca Al-Qur'an)"
   },
   {
     "id": 52,
@@ -517,7 +568,8 @@
     "translation_id": "Segala penghormatan, shalawat, dan kebaikan hanyalah kepunyaan Allah. Semoga salam sejahtera terlimpahkan kepadamu wahai Nabi, beserta rahmat Allah dan berkah-Nya. Semoga salam sejahtera terlimpahkan kepada kami dan kepada hamba-hamba Allah yang saleh. Aku bersaksi bahwa tiada Tuhan selain Allah, dan aku bersaksi bahwa Muhammad adalah hamba dan utusan-Nya.",
     "reference": "Al-Bukhari 1:166, Muslim 1:300",
     "repeat": 1,
-    "title": "The Tashahhud"
+    "title_en": "The Tashahhud",
+    "title_id": "Tasyahud"
   },
   {
     "id": 53,
@@ -527,7 +579,8 @@
     "translation_id": "Ya Allah, berilah rahmat kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau telah memberikan rahmat kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Mahaagung. Ya Allah, berilah berkah kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau telah memberi berkah kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Mahaagung.",
     "reference": "Al-Bukhari 6:408, Muslim 1:305",
     "repeat": 1,
-    "title": "Prayers upon the Prophet after the tashahhud"
+    "title_en": "Prayers upon the Prophet after the tashahhud",
+    "title_id": "Shalawat atas Nabi setelah tasyahud"
   },
   {
     "id": 54,
@@ -537,7 +590,8 @@
     "translation_id": "Ya Allah, berilah rahmat kepada Muhammad, istri-istri, dan keturunannya, sebagaimana Engkau telah memberikan rahmat kepada keluarga Ibrahim. Dan berilah berkah kepada Muhammad, istri-istri, dan keturunannya, sebagaimana Engkau telah memberi berkah kepada keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Mahaagung.",
     "reference": "Al-Bukhari 6:407, Muslim 1:306",
     "repeat": 1,
-    "title": "Prayers upon the Prophet after the tashahhud"
+    "title_en": "Prayers upon the Prophet after the tashahhud",
+    "title_id": "Shalawat atas Nabi setelah tasyahud"
   },
   {
     "id": 55,
@@ -547,7 +601,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari siksa kubur, dari siksa neraka Jahanam, dari fitnah kehidupan dan kematian, dan dari kejahatan fitnah Al-Masih Ad-Dajjal.",
     "reference": "Al-Bukhari 2:102, Muslim 1:412",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 56,
@@ -557,7 +612,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari siksa kubur, aku berlindung kepada-Mu dari fitnah Al-Masih Ad-Dajjal, dan aku berlindung kepada-Mu dari fitnah kehidupan dan kematian. Ya Allah, sesungguhnya aku berlindung kepada-Mu dari dosa dan utang.",
     "reference": "Al-Bukhari 1:202, Muslim 1:412",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 57,
@@ -567,7 +623,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku telah menzalimi diriku sendiri dengan kezaliman yang banyak, dan tidak ada yang dapat mengampuni dosa-dosa kecuali Engkau. Maka ampunilah aku dengan ampunan dari sisi-Mu dan rahmatilah aku. Sesungguhnya Engkau Maha Pengampun lagi Maha Penyayang.",
     "reference": "Al-Bukhari 8:168, Muslim 4:2078",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 58,
@@ -577,7 +634,8 @@
     "translation_id": "Ya Allah, ampunilah dosaku yang telah lalu dan yang akan datang, yang aku sembunyikan dan yang aku nampakkan, yang aku lakukan secara berlebihan, dan dosa yang Engkau lebih mengetahuinya daripada aku. Engkaulah Yang Mendahulukan dan Engkaulah Yang Mengakhirkan, tiada Tuhan selain Engkau.",
     "reference": "Muslim 1:534",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 59,
@@ -587,7 +645,8 @@
     "translation_id": "Ya Allah, tolonglah aku untuk berzikir kepada-Mu, bersyukur kepada-Mu, dan beribadah kepada-Mu dengan baik.",
     "reference": "Abu Dawud 2:86, An-Nasa'i 3:53",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 60,
@@ -597,7 +656,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari sifat kikir, aku berlindung kepada-Mu dari sifat pengecut, aku berlindung kepada-Mu dari dikembalikan kepada umur yang paling hina (pikun), dan aku berlindung kepada-Mu dari fitnah dunia dan siksa kubur.",
     "reference": "Al-Bukhari 6:35",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 61,
@@ -607,7 +667,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon surga kepada-Mu dan aku berlindung kepada-Mu dari neraka.",
     "reference": "Abu Dawud, Ibn Majah 2:328",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 62,
@@ -617,7 +678,8 @@
     "translation_id": "Ya Allah, dengan ilmu-Mu terhadap yang ghaib dan kekuasaan-Mu atas makhluk, hidupkanlah aku jika Engkau mengetahui kehidupan itu lebih baik bagiku, dan matikanlah aku jika Engkau mengetahui kematian itu lebih baik bagiku. Ya Allah, sesungguhnya aku memohon rasa takut kepada-Mu dalam keadaan sembunyi maupun terang-terangan, aku memohon perkataan yang benar dalam keadaan ridha maupun marah, aku memohon kesederhanaan dalam kekayaan maupun kemiskinan, aku memohon nikmat yang tidak habis-habisnya, aku memohon penyejuk mata yang tidak terputus, aku memohon keridhaan setelah qadha (takdir), aku memohon kehidupan yang sejuk setelah kematian, aku memohon kenikmatan memandang wajah-Mu dan kerinduan untuk bertemu dengan-Mu, tanpa kesusahan yang membahayakan dan fitnah yang menyesatkan. Ya Allah, hiasilah kami dengan hiasan iman dan jadikanlah kami pemberi petunjuk yang mendapat petunjuk.",
     "reference": "An-Nasa'i 3:54, Ahmad 4:364",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 63,
@@ -627,7 +689,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon kepada-Mu, Ya Allah, karena Engkau adalah Yang Maha Esa, Yang Bergantung kepada-Nya segala sesuatu, Yang tidak beranak dan tidak pula diperanakkan, dan tidak ada seorangpun yang setara dengan Dia, agar Engkau mengampuni dosa-dosaku. Sesungguhnya Engkau Maha Pengampun lagi Maha Penyayang.",
     "reference": "An-Nasa'i 3:52, Ahmad 4:338",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 64,
@@ -637,7 +700,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon kepada-Mu dengan segala puji bagi-Mu, tiada Tuhan selain Engkau, Engkau Maha Esa, tiada sekutu bagi-Mu, Maha Pemberi nikmat, wahai Pencipta langit dan bumi, wahai Pemilik keagungan dan kemuliaan, wahai Yang Maha Hidup lagi Maha Berdiri Sendiri, sesungguhnya aku memohon surga kepada-Mu dan aku berlindung kepada-Mu dari neraka.",
     "reference": "Abu Dawud, An-Nasa'i, Ibn Majah",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 65,
@@ -647,7 +711,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon kepada-Mu dengan aku bersaksi bahwa Engkau adalah Allah, tiada Tuhan selain Engkau, Yang Maha Esa, Yang Bergantung kepada-Nya segala sesuatu, Yang tidak beranak dan tidak pula diperanakkan, dan tidak ada seorangpun yang setara dengan Dia.",
     "reference": "Abu Dawud 2:62, At-Tirmidhi 5:515",
     "repeat": 1,
-    "title": "After the last tashahhud and before salam"
+    "title_en": "After the last tashahhud and before salam",
+    "title_id": "Setelah tasyahud akhir dan sebelum salam"
   },
   {
     "id": 66,
@@ -657,7 +722,8 @@
     "translation_id": "Aku memohon ampun kepada Allah (3 kali). Ya Allah, Engkau adalah Maha Sejahtera (Selamat), dan dari-Mu kesejahteraan. Mahasuci Engkau wahai Pemilik keagungan dan kemuliaan.",
     "reference": "Muslim 1:414",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 67,
@@ -667,7 +733,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu. Ya Allah, tidak ada yang dapat menghalangi apa yang Engkau berikan, dan tidak ada yang dapat memberi apa yang Engkau halangi. Dan kekayaan/kekuasaan tidak berguna bagi pemiliknya (untuk menyelamatkan diri) dari (siksa)-Mu.",
     "reference": "Al-Bukhari 1:255, Muslim 1:414",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 68,
@@ -677,7 +744,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu. Tiada daya dan kekuatan kecuali dengan pertolongan Allah. Tiada Tuhan selain Allah, dan kami tidak menyembah kecuali kepada-Nya. Bagi-Nya kenikmatan, bagi-Nya keutamaan, dan bagi-Nya pujian yang baik. Tiada Tuhan selain Allah, kami mengikhlaskan agama untuk-Nya walaupun orang-orang kafir membencinya.",
     "reference": "Muslim 1:415",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 69,
@@ -687,7 +755,8 @@
     "translation_id": "Mahasuci Allah, segala puji bagi Allah, dan Allah Mahabesar (33 kali). Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu.",
     "reference": "Muslim 1:418",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 70,
@@ -697,7 +766,8 @@
     "translation_id": "Membaca Surah Al-Ikhlas, Al-Falaq, dan An-Nas. (Dibaca sekali setiap selesai shalat. Khusus setelah shalat Subuh dan Maghrib dibaca tiga kali).",
     "reference": "Abu Dawud 2:86, An-Nasa'i 3:68",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 71,
@@ -707,7 +777,8 @@
     "translation_id": "Allah, tidak ada Tuhan selain Dia. Yang Mahahidup, Yang terus menerus mengurus (makhluk-Nya), tidak mengantuk dan tidak tidur. Milik-Nya apa yang ada di langit dan apa yang ada di bumi. Tidak ada yang dapat memberi syafaat di sisi-Nya tanpa izin-Nya. Dia mengetahui apa yang di hadapan mereka dan apa yang di belakang mereka, dan mereka tidak mengetahui sesuatu apa pun tentang ilmu-Nya melainkan apa yang Dia kehendaki. Kursi-Nya meliputi langit dan bumi. Dan Dia tidak merasa berat memelihara keduanya, dan Dia Mahatinggi, Mahabesar. (Dibaca setiap selesai shalat).",
     "reference": "An-Nasa'i, Amalul-Yawm wal-Laylah No. 100",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 72,
@@ -717,7 +788,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia menghidupkan dan mematikan, dan Dia Mahakuasa atas segala sesuatu. (Dibaca 10 kali setelah shalat Maghrib dan Subuh).",
     "reference": "At-Tirmidhi 5:515, Ahmad 4:227",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 73,
@@ -727,7 +799,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima. (Dibaca setelah shalat Subuh).",
     "reference": "Ibn Majah 1:152",
     "repeat": 1,
-    "title": "After salam"
+    "title_en": "After salam",
+    "title_id": "Setelah salam"
   },
   {
     "id": 74,
@@ -737,7 +810,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon petunjuk pilihan kepada-Mu dengan ilmu-Mu, dan aku memohon kemampuan kepada-Mu dengan kekuasaan-Mu, dan aku memohon kepada-Mu karunia-Mu yang agung. Sesungguhnya Engkau Mahakuasa sedang aku tidak kuasa, Engkau Maha Mengetahui sedang aku tidak mengetahui, dan Engkau Maha Mengetahui perkara yang ghaib... (Doa Istikharah lengkap).",
     "reference": "Al-Bukhari 7:162",
     "repeat": 1,
-    "title": "Istikharah"
+    "title_en": "Istikharah",
+    "title_id": "Istikharah"
   },
   {
     "id": 75,
@@ -747,7 +821,8 @@
     "translation_id": "Aku berlindung kepada Allah dari godaan setan yang terkutuk. Allah, tidak ada Tuhan selain Dia. Yang Mahahidup, Yang terus menerus mengurus (makhluk-Nya)... (Ayat Kursi).",
     "reference": "Al-Hakim 1:562",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 76,
@@ -757,7 +832,8 @@
     "translation_id": "Membaca Surah Al-Ikhlas, Al-Falaq, dan An-Nas. (Masing-masing dibaca tiga kali pada waktu pagi dan petang).",
     "reference": "Abu Dawud 4:322, At-Tirmidhi 5:567",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 77,
@@ -767,7 +843,8 @@
     "translation_id": "Kami telah memasuki waktu pagi dan kerajaan milik Allah, segala puji bagi Allah. Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu. Ya Tuhanku, aku memohon kepada-Mu kebaikan hari ini dan kebaikan setelahnya. Aku berlindung kepada-Mu dari keburukan hari ini dan keburukan setelahnya. Ya Tuhanku, aku berlindung kepada-Mu dari kemalasan dan kejelekan di hari tua. Ya Tuhanku, aku berlindung kepada-Mu dari siksa di neraka dan siksa di kubur.",
     "reference": "Muslim 4:2088",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 78,
@@ -777,7 +854,8 @@
     "translation_id": "Ya Allah, dengan rahmat-Mu kami memasuki waktu pagi, dan dengan rahmat-Mu kami memasuki waktu sore. Dengan rahmat-Mu kami hidup dan dengan kehendak-Mu kami mati. Dan kepada-Mu tempat kembali.",
     "reference": "At-Tirmidhi 3:424",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 79,
@@ -787,7 +865,8 @@
     "translation_id": "Ya Allah, Engkau adalah Tuhanku, tiada Tuhan selain Engkau. Engkau telah menciptakanku dan aku adalah hamba-Mu. Aku berada dalam perjanjian dengan-Mu dan ikrar kepada-Mu semampuku. Aku berlindung kepada-Mu dari kejahatan yang aku perbuat. Aku mengakui nikmat-Mu kepadaku dan aku mengakui dosaku. Maka ampunilah aku, sesungguhnya tiada yang dapat mengampuni dosa kecuali Engkau.",
     "reference": "Al-Bukhari 7:150",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 80,
@@ -797,7 +876,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memasuki waktu pagi ini dengan mempersaksikan Engkau, para pembawa Arsy-Mu, para malaikat-Mu, dan seluruh makhluk-Mu, bahwa sesungguhnya Engkau adalah Allah, tiada Tuhan selain Engkau, Yang Maha Esa, tiada sekutu bagi-Mu, dan sesungguhnya Muhammad adalah hamba dan utusan-Mu. (Dibaca 4 kali).",
     "reference": "Abu Dawud 4:317, Al-Bukhari (Adab Al-Mufrad)",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 81,
@@ -807,7 +887,8 @@
     "translation_id": "Ya Allah, nikmat apa saja yang ada padaku di waktu pagi ini atau yang ada pada salah seorang dari makhluk-Mu, adalah dari-Mu semata, tiada sekutu bagi-Mu. Bagi-Mu segala puji dan bagi-Mu segala syukur.",
     "reference": "Abu Dawud 4:318, An-Nasa'i, Ibn As-Sunni",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 82,
@@ -817,7 +898,8 @@
     "translation_id": "Ya Allah, sehatkanlah badanku. Ya Allah, sehatkanlah pendengaranku. Ya Allah, sehatkanlah penglihatanku. Tiada Tuhan selain Engkau. Ya Allah, aku berlindung kepada-Mu dari kekafiran dan kefakiran, dan aku berlindung kepada-Mu dari siksa kubur. Tiada Tuhan selain Engkau. (Dibaca 3 kali).",
     "reference": "Abu Dawud 4:324, Ahmad 5:42",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 83,
@@ -827,7 +909,8 @@
     "translation_id": "Cukuplah Allah bagiku, tiada Tuhan selain Dia. Kepada-Nya aku bertawakkal dan Dia adalah Tuhan Arsy yang Agung. (Dibaca 7 kali).",
     "reference": "Ibn As-Sunni No. 71, Abu Dawud 4:321",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 84,
@@ -837,7 +920,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon ampunan dan keselamatan di dunia dan akhirat. Ya Allah, sesungguhnya aku memohon ampunan dan keselamatan dalam agamaku, duniaku, keluargaku, dan hartaku. Ya Allah, tutuplah auratku (aibku) dan berilah ketenteraman di hatiku. Ya Allah, peliharalah aku dari arah depan, belakang, kanan, kiri, dan atasku. Aku berlindung dengan kebesaran-Mu agar aku tidak disambar dari bawahku (longsor/gempa).",
     "reference": "Abu Dawud, Ibn Majah",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 85,
@@ -847,7 +931,8 @@
     "translation_id": "Ya Allah, Yang Maha Mengetahui yang ghaib dan yang nyata, Pencipta langit dan bumi, Tuhan segala sesuatu dan Yang Merajainya. Aku bersaksi bahwa tiada Tuhan selain Engkau. Aku berlindung kepada-Mu dari kejahatan diriku, dan dari kejahatan setan serta ajakannya menyekutukan Allah, dan agar aku tidak berbuat kejelekan terhadap diriku atau menyeretnya kepada seorang muslim.",
     "reference": "At-Tirmidhi 3:142, Abu Dawud 4:317",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 86,
@@ -857,7 +942,8 @@
     "translation_id": "Dengan nama Allah yang dengan nama-Nya tidak ada sesuatu pun yang membahayakan di bumi maupun di langit, dan Dia Maha Mendengar lagi Maha Mengetahui. (Dibaca 3 kali).",
     "reference": "Abu Dawud 4:323, At-Tirmidhi 5:465",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 87,
@@ -867,7 +953,8 @@
     "translation_id": "Aku ridha Allah sebagai Tuhanku, Islam sebagai agamaku, dan Muhammad shallallahu 'alaihi wa sallam sebagai Nabiku. (Dibaca 3 kali).",
     "reference": "Abu Dawud 4:318, At-Tirmidhi 5:465",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 88,
@@ -877,7 +964,8 @@
     "translation_id": "Wahai Yang Maha Hidup, Wahai Yang Maha Berdiri Sendiri, dengan rahmat-Mu aku memohon pertolongan, perbaikilah segala urusanku, dan janganlah Engkau serahkan aku kepada diriku sendiri sekejap mata pun.",
     "reference": "Al-Hakim 1:545, Sahihut-Targhib wat-Tarhib 1:273",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 89,
@@ -887,7 +975,8 @@
     "translation_id": "Kami memasuki pagi hari di atas fitrah Islam, di atas kalimat ikhlas, di atas agama Nabi kami Muhammad shallallahu 'alaihi wa sallam, dan di atas millah (ajaran) bapak kami Ibrahim yang lurus dan berserah diri, dan dia bukanlah termasuk orang-orang yang musyrik.",
     "reference": "Ahmad 3:406, 407; 5:123",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 90,
@@ -897,7 +986,8 @@
     "translation_id": "Mahasuci Allah dan dengan memuji-Nya. (Dibaca 100 kali).",
     "reference": "Muslim 4:2071",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 91,
@@ -907,7 +997,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya pujian. Dia-lah Yang Mahakuasa atas segala sesuatu. (Dibaca 10 kali atau 100 kali).",
     "reference": "An-Nasa'i, Al-Bukhari 4:95, Muslim 4:2071",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 92,
@@ -917,7 +1008,8 @@
     "translation_id": "Mahasuci Allah dan dengan memuji-Nya: sebanyak jumlah makhluk-Nya, sejauh keridhaan Diri-Nya, seberat Arsy-Nya, dan sebanyak tinta kalimat-kalimat-Nya. (Dibaca 3 kali).",
     "reference": "Muslim 4:2090",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 93,
@@ -927,7 +1019,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima. (Dibaca di pagi hari).",
     "reference": "Ibn Majah No. 925",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 94,
@@ -937,7 +1030,8 @@
     "translation_id": "Aku memohon ampun kepada Allah dan bertaubat kepada-Nya. (Dibaca 100 kali sehari).",
     "reference": "Al-Bukhari, Muslim 4:2075",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 95,
@@ -947,7 +1041,8 @@
     "translation_id": "Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari kejahatan apa yang diciptakan-Nya. (Dibaca 3 kali di sore hari).",
     "reference": "Ahmad 2:290, An-Nasa'i, At-Tirmidhi",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 96,
@@ -957,7 +1052,8 @@
     "translation_id": "Ya Allah, limpahkanlah shalawat dan salam kepada Nabi kami Muhammad. (Dibaca 10 kali).",
     "reference": "At-Tabarani, Sahihut-Targhib wat-Tarhib 1:273",
     "repeat": 1,
-    "title": "In the morning and evening"
+    "title_en": "In the morning and evening",
+    "title_id": "Pada pagi dan petang"
   },
   {
     "id": 97,
@@ -967,7 +1063,8 @@
     "translation_id": "Menggabungkan kedua telapak tangan lalu meniupnya (dengan sedikit air ludah) dan membaca di dalamnya: Surah Al-Ikhlas, Al-Falaq, dan An-Nas. Kemudian mengusapkan keduanya ke bagian tubuh yang dapat dijangkau, dimulai dari kepala, wajah, dan bagian depan tubuh. (Dilakukan tiga kali).",
     "reference": "Al-Bukhari 6:123, Muslim 4:1723",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 98,
@@ -977,7 +1074,8 @@
     "translation_id": "Membaca Ayat Kursi. Barangsiapa membacanya ketika berbaring di tempat tidurnya, maka ia akan senantiasa dijaga oleh Allah, dan setan tidak akan dapat mendekatinya hingga pagi.",
     "reference": "Al-Bukhari 4:487",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 99,
@@ -987,7 +1085,8 @@
     "translation_id": "Membaca dua ayat terakhir dari Surah Al-Baqarah. Barangsiapa membacanya pada malam hari, maka kedua ayat itu akan mencukupinya.",
     "reference": "Al-Bukhari 4:487, Muslim 1:554",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 100,
@@ -997,7 +1096,8 @@
     "translation_id": "Dengan nama-Mu wahai Tuhanku, aku letakkan lambungku, dan dengan nama-Mu aku mengangkatnya. Jika Engkau menahan nyawaku, maka rahmatilah ia, dan jika Engkau melepaskannya, maka jagalah ia sebagaimana Engkau menjaga hamba-hamba-Mu yang saleh.",
     "reference": "Al-Bukhari 11:126, Muslim 4:2084",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 101,
@@ -1007,7 +1107,8 @@
     "translation_id": "Rasul telah beriman kepada Al-Qur'an yang diturunkan kepadanya dari Tuhannya, demikian pula orang-orang yang beriman. Semuanya beriman kepada Allah, malaikat-malaikat-Nya, kitab-kitab-Nya, dan rasul-rasul-Nya. (Mereka mengatakan): 'Kami tidak membeda-bedakan antara seseorang pun (dengan yang lain) dari rasul-rasul-Nya', dan mereka mengatakan: 'Kami dengar dan kami taat'. (Mereka berdoa): 'Ampunilah kami ya Tuhan kami dan kepada Engkaulah tempat kembali'. Allah tidak membebani seseorang melainkan sesuai dengan kesanggupannya. Ia mendapat pahala (dari kebajikan) yang diusahakannya dan ia mendapat siksa (dari kejahatan) yang dikerjakannya. (Mereka berdoa): 'Ya Tuhan kami, janganlah Engkau hukum kami jika kami lupa atau kami tersalah. Ya Tuhan kami, janganlah Engkau bebankan kepada kami beban yang berat sebagaimana Engkau bebankan kepada orang-orang sebelum kami. Ya Tuhan kami, janganlah Engkau pikulkan kepada kami apa yang tak sanggup kami memikulnya. Beri maaflah kami; ampunilah kami; dan rahmatilah kami. Engkaulah Penolong kami, maka tolonglah kami terhadap kaum yang kafir'.",
     "reference": "Al-Bukhari 9:94, Muslim 1:554",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 102,
@@ -1017,7 +1118,8 @@
     "translation_id": "Dengan nama-Mu wahai Tuhanku, aku letakkan lambungku, dan dengan nama-Mu aku mengangkatnya. Jika Engkau menahan nyawaku, maka rahmatilah ia, dan jika Engkau melepaskannya, maka jagalah ia sebagaimana Engkau menjaga hamba-hamba-Mu yang saleh.",
     "reference": "Al-Bukhari 11:126, Muslim 4:2084",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 103,
@@ -1027,7 +1129,8 @@
     "translation_id": "Ya Allah, sesungguhnya Engkau telah menciptakan jiwaku dan Engkaulah yang mewafatkannya. Bagi-Mu kematiannya dan kehidupannya. Jika Engkau menghidupkannya, maka jagalah ia, dan jika Engkau mematikannya, maka ampunilah ia. Ya Allah, sesungguhnya aku memohon kesehatan/keselamatan kepada-Mu.",
     "reference": "Muslim 4:2083, Ahmad 2:79",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 104,
@@ -1037,7 +1140,8 @@
     "translation_id": "Ya Allah, peliharalah aku dari azab-Mu pada hari Engkau membangkitkan hamba-hamba-Mu.",
     "reference": "Abu Dawud 4:311, At-Tirmidhi 3:143",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 105,
@@ -1047,7 +1151,8 @@
     "translation_id": "Dengan nama-Mu, ya Allah, aku mati dan aku hidup.",
     "reference": "Al-Bukhari 11:113, Muslim 4:2083",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 106,
@@ -1057,7 +1162,8 @@
     "translation_id": "Mahasuci Allah (33 kali), Segala puji bagi Allah (33 kali), Allah Mahabesar (34 kali).",
     "reference": "Al-Bukhari 7:71, Muslim 4:2091",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 107,
@@ -1067,7 +1173,8 @@
     "translation_id": "Ya Allah, Tuhan langit yang tujuh dan Tuhan Arsy yang Agung. Tuhan kami dan Tuhan segala sesuatu. Pembelah biji-bijian dan biji kurma. Yang menurunkan Taurat, Injil, dan Al-Furqan (Al-Qur'an). Aku berlindung kepada-Mu dari kejahatan segala sesuatu yang Engkau pegang ubun-ubunnya. Ya Allah, Engkaulah Yang Pertama, maka tidak ada sesuatu pun sebelum-Mu. Dan Engkaulah Yang Terakhir, maka tidak ada sesuatu pun setelah-Mu. Dan Engkaulah Yang Zhahir, maka tidak ada sesuatu pun di atas-Mu. Dan Engkaulah Yang Batin, maka tidak ada sesuatu pun di bawah-Mu. Lunasilah utang kami dan cukupilah kami dari kefakiran.",
     "reference": "Muslim 4:2084",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 108,
@@ -1077,7 +1184,8 @@
     "translation_id": "Segala puji bagi Allah yang telah memberi kami makan dan minum, mencukupkan kami dan memberi kami tempat berteduh. Betapa banyak orang yang tidak ada yang mencukupinya dan tidak ada yang memberinya tempat berteduh.",
     "reference": "Muslim 4:2085",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 109,
@@ -1087,7 +1195,8 @@
     "translation_id": "Ya Allah, Yang Maha Mengetahui yang ghaib dan yang nyata, Pencipta langit dan bumi, Tuhan segala sesuatu dan Yang Merajainya. Aku bersaksi bahwa tiada Tuhan selain Engkau. Aku berlindung kepada-Mu dari kejahatan diriku, dan dari kejahatan setan serta sekutunya, dan agar aku tidak berbuat kejelekan terhadap diriku atau menyeretnya kepada seorang muslim.",
     "reference": "Abu Dawud 4:317, At-Tirmidhi 3:142",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 110,
@@ -1097,7 +1206,8 @@
     "translation_id": "Membaca Surah As-Sajdah dan Surah Al-Mulk.",
     "reference": "At-Tirmidhi, An-Nasa'i",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 111,
@@ -1107,7 +1217,8 @@
     "translation_id": "Ya Allah, aku menyerahkan diriku kepada-Mu, aku menyerahkan urusanku kepada-Mu, aku menghadapkan wajahku kepada-Mu, dan aku menyandarkan punggungku kepada-Mu, karena harap dan cemas kepada-Mu. Tidak ada tempat berlindung dan tidak ada tempat selamat dari (azab)-Mu kecuali kepada-Mu. Aku beriman kepada Kitab-Mu yang telah Engkau turunkan dan kepada Nabi-Mu yang telah Engkau utus.",
     "reference": "Al-Bukhari 11:113, Muslim 4:2081",
     "repeat": 1,
-    "title": "Before sleeping"
+    "title_en": "Before sleeping",
+    "title_id": "Sebelum tidur"
   },
   {
     "id": 112,
@@ -1117,7 +1228,8 @@
     "translation_id": "Tiada Tuhan selain Allah, Yang Maha Esa, Yang Maha Perkasa, Tuhan langit dan bumi dan apa yang ada di antara keduanya, Yang Maha Perkasa lagi Maha Pengampun.",
     "reference": "Al-Hakim 1:540, An-Nasa'i",
     "repeat": 1,
-    "title": "When tossing and turning during the night"
+    "title_en": "When tossing and turning during the night",
+    "title_id": "Ketika bolak-balik (gelisah) di malam hari"
   },
   {
     "id": 113,
@@ -1127,7 +1239,8 @@
     "translation_id": "Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari kemurkaan-Nya, siksaan-Nya, kejahatan hamba-hamba-Nya, dan dari godaan setan-setan serta dari kedatangan mereka.",
     "reference": "Abu Dawud 4:12, At-Tirmidhi 3:171",
     "repeat": 1,
-    "title": "Upon experiencing unrest, fear, apprehensiveness during sleep"
+    "title_en": "Upon experiencing unrest, fear, apprehensiveness during sleep",
+    "title_id": "Ketika gelisah, takut, atau cemas saat tidur"
   },
   {
     "id": 114,
@@ -1137,7 +1250,8 @@
     "translation_id": "Meludah ke kiri (3 kali). Meminta perlindungan kepada Allah dari setan dan dari kejahatan apa yang dilihatnya (3 kali). Jangan menceritakannya kepada siapa pun. Dan berpindah posisi tidur dari sisi yang sebelumnya.",
     "reference": "Muslim 4:1772, 1773",
     "repeat": 1,
-    "title": "Upon seeing a good dream or a bad dream"
+    "title_en": "Upon seeing a good dream or a bad dream",
+    "title_id": "Ketika melihat mimpi baik atau mimpi buruk"
   },
   {
     "id": 115,
@@ -1147,7 +1261,8 @@
     "translation_id": "Bangun dan shalatlah jika mau.",
     "reference": "Muslim 4:1773",
     "repeat": 1,
-    "title": "Upon seeing a good dream or a bad dream"
+    "title_en": "Upon seeing a good dream or a bad dream",
+    "title_id": "Ketika melihat mimpi baik atau mimpi buruk"
   },
   {
     "id": 116,
@@ -1157,7 +1272,8 @@
     "translation_id": "Ya Allah, berilah aku petunjuk sebagaimana orang-orang yang telah Engkau beri petunjuk. Berilah aku kesehatan sebagaimana orang-orang yang telah Engkau beri kesehatan. Peliharalah aku sebagaimana orang-orang yang telah Engkau pelihara. Berilah keberkahan kepadaku pada apa-apa yang telah Engkau karuniakan. Dan lindungilah aku dari bahaya kejahatan yang Engkau telah tetapkan. Sesungguhnya Engkaulah yang menetapkan hukum dan tidak ada yang menetapkan hukum atas-Mu. Sesungguhnya tidak akan hina orang yang Engkau tolong, [dan tidak akan mulia orang yang Engkau musuhi]. Mahasuci Engkau wahai Tuhan kami, dan Mahatinggi Engkau.",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi, Ahmad",
     "repeat": 1,
-    "title": "Qunoot Al-Witr"
+    "title_en": "Qunoot Al-Witr",
+    "title_id": "Qunut Witir"
   },
   {
     "id": 117,
@@ -1167,7 +1283,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung dengan keridhaan-Mu dari kemurkaan-Mu, dengan maaf-Mu dari hukuman-Mu. Dan aku berlindung kepada-Mu dari (siksa)-Mu. Aku tidak mampu menghitung pujian kepada-Mu, Engkau adalah sebagaimana Engkau memuji Diri-Mu sendiri.",
     "reference": "Abu Dawud, Ibn Majah, An-Nasa'i, At-Tirmidhi, Ahmad",
     "repeat": 1,
-    "title": "Qunoot Al-Witr"
+    "title_en": "Qunoot Al-Witr",
+    "title_id": "Qunut Witir"
   },
   {
     "id": 118,
@@ -1177,7 +1294,8 @@
     "translation_id": "Ya Allah, hanya kepada Engkaulah kami menyembah, untuk-Mulah kami shalat dan bersujud, kepada Engkaulah kami bersegera dan bergegas. Kami mengharapkan rahmat-Mu dan kami takut akan azab-Mu. Sesungguhnya azab-Mu menimpa orang-orang kafir. Ya Allah, sesungguhnya kami memohon pertolongan kepada-Mu, memohon ampun kepada-Mu, kami memuji-Mu dengan kebaikan, kami tidak mengingkari-Mu, kami beriman kepada-Mu, kami tunduk kepada-Mu, dan kami berlepas diri dari siapa saja yang mengingkari-Mu.",
     "reference": "Al-Bayhaqi (As-Sunan Al-Kubra)",
     "repeat": 1,
-    "title": "Qunoot Al-Witr"
+    "title_en": "Qunoot Al-Witr",
+    "title_id": "Qunut Witir"
   },
   {
     "id": 119,
@@ -1187,7 +1305,8 @@
     "translation_id": "Mahasuci Raja Yang Mahaqudus, Tuhan para malaikat dan Jibril. (Dibaca 3 kali).",
     "reference": "An-Nasa'i 3:244, Ad-Daraqutni 2:31",
     "repeat": 1,
-    "title": "Immediately after salam of the witr prayer"
+    "title_en": "Immediately after salam of the witr prayer",
+    "title_id": "Sesaat setelah salam shalat witir"
   },
   {
     "id": 120,
@@ -1197,7 +1316,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku adalah hamba-Mu, anak hamba laki-laki-Mu, dan anak hamba perempuan-Mu. Ubun-ubunku berada di tangan-Mu. Hukum-Mu berlaku pada diriku. Ketetapan-Mu adil bagiku. Aku memohon kepada-Mu dengan segala nama yang menjadi milik-Mu, yang Engkau namakan diri-Mu dengannya, atau Engkau turunkan dalam Kitab-Mu, atau Engkau ajarkan kepada seorang dari makhluk-Mu, atau Engkau simpan dalam ilmu ghaib di sisi-Mu, agar Engkau jadikan Al-Qur'an sebagai penyejuk hatiku, cahaya dadaku, pelenyap kesedihanku, dan penghilang kegelisahanku.",
     "reference": "Ahmad 1:391",
     "repeat": 1,
-    "title": "For anxiety and sorrow"
+    "title_en": "For anxiety and sorrow",
+    "title_id": "Untuk kegelisahan dan kesedihan"
   },
   {
     "id": 121,
@@ -1207,7 +1327,8 @@
     "translation_id": "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari keluh kesah dan kesedihan, dari kelemahan dan kemalasan, dari kekikiran dan sifat pengecut, dari cengkraman utang dan penindasan orang.",
     "reference": "Al-Bukhari 7:158",
     "repeat": 1,
-    "title": "For anxiety and sorrow"
+    "title_en": "For anxiety and sorrow",
+    "title_id": "Untuk kegelisahan dan kesedihan"
   },
   {
     "id": 122,
@@ -1217,7 +1338,8 @@
     "translation_id": "Tiada Tuhan selain Allah Yang Mahaagung lagi Maha Penyantun. Tiada Tuhan selain Allah, Tuhan Arsy yang Agung. Tiada Tuhan selain Allah, Tuhan langit dan Tuhan bumi, serta Tuhan Arsy yang Mulia.",
     "reference": "Al-Bukhari 8:154, Muslim 4:2092",
     "repeat": 1,
-    "title": "For one in distress"
+    "title_en": "For one in distress",
+    "title_id": "Untuk orang yang dalam kesusahan"
   },
   {
     "id": 123,
@@ -1227,7 +1349,8 @@
     "translation_id": "Ya Allah, rahmat-Mu yang aku harapkan, maka janganlah Engkau serahkan aku kepada diriku sendiri sekejap mata pun, dan perbaikilah segala urusanku. Tiada Tuhan selain Engkau.",
     "reference": "Abu Dawud 4:324, Ahmad 5:42",
     "repeat": 1,
-    "title": "For one in distress"
+    "title_en": "For one in distress",
+    "title_id": "Untuk orang yang dalam kesusahan"
   },
   {
     "id": 124,
@@ -1237,7 +1360,8 @@
     "translation_id": "Tiada Tuhan selain Engkau, Mahasuci Engkau, sesungguhnya aku termasuk orang-orang yang zalim.",
     "reference": "At-Tirmidhi 5:529",
     "repeat": 1,
-    "title": "For one in distress"
+    "title_en": "For one in distress",
+    "title_id": "Untuk orang yang dalam kesusahan"
   },
   {
     "id": 125,
@@ -1247,7 +1371,8 @@
     "translation_id": "Allah, Allah adalah Tuhanku. Aku tidak menyekutukan-Nya dengan sesuatu apa pun.",
     "reference": "Abu Dawud 2:87",
     "repeat": 1,
-    "title": "For one in distress"
+    "title_en": "For one in distress",
+    "title_id": "Untuk orang yang dalam kesusahan"
   },
   {
     "id": 126,
@@ -1257,7 +1382,8 @@
     "translation_id": "Ya Allah, sesungguhnya kami menjadikan Engkau di leher mereka (agar Engkau menolak kejahatan mereka), dan kami berlindung kepada-Mu dari kejahatan mereka.",
     "reference": "Abu Dawud 2:89",
     "repeat": 1,
-    "title": "Upon encountering an enemy or those of authority"
+    "title_en": "Upon encountering an enemy or those of authority",
+    "title_id": "Saat bertemu musuh atau orang yang berkuasa"
   },
   {
     "id": 127,
@@ -1267,7 +1393,8 @@
     "translation_id": "Ya Allah, Engkau adalah lenganku (kekuatanku) dan Engkau adalah penolongku. Dengan pertolongan-Mu aku bergerak, dengan pertolongan-Mu aku menyergap, dan dengan pertolongan-Mu aku berperang.",
     "reference": "Abu Dawud 3:42, At-Tirmidhi 5:572",
     "repeat": 1,
-    "title": "Upon encountering an enemy or those of authority"
+    "title_en": "Upon encountering an enemy or those of authority",
+    "title_id": "Saat bertemu musuh atau orang yang berkuasa"
   },
   {
     "id": 128,
@@ -1277,7 +1404,8 @@
     "translation_id": "Cukuplah Allah bagi kami dan Dia adalah sebaik-baik tempat berserah diri.",
     "reference": "Al-Bukhari 5:172",
     "repeat": 1,
-    "title": "Upon encountering an enemy or those of authority"
+    "title_en": "Upon encountering an enemy or those of authority",
+    "title_id": "Saat bertemu musuh atau orang yang berkuasa"
   },
   {
     "id": 129,
@@ -1287,7 +1415,8 @@
     "translation_id": "Ya Allah, Tuhan langit yang tujuh, dan Tuhan Arsy yang Agung, jadilah Engkau pelindung bagiku dari [si Fulan bin Fulan] dan para pembantunya dari makhluk-makhluk-Mu, agar tidak ada seorang pun di antara mereka yang menyakitiku atau melampaui batas terhadapku. Sungguh kuat perlindungan-Mu, dan sungguh agung pujian-Mu, dan tiada Tuhan selain Engkau.",
     "reference": "Al-Bukhari (Adab Al-Mufrad No. 707)",
     "repeat": 1,
-    "title": "For one afraid of the ruler's injustice"
+    "title_en": "For one afraid of the ruler's injustice",
+    "title_id": "Untuk orang yang takut terhadap kezhaliman penguasa"
   },
   {
     "id": 130,
@@ -1297,7 +1426,8 @@
     "translation_id": "Allah Mahabesar, Allah lebih perkasa daripada seluruh makhluk-Nya, Allah lebih perkasa daripada apa yang aku takuti dan aku khawatirkan. Aku berlindung kepada Allah yang tiada Tuhan selain Dia, yang menahan tujuh langit agar tidak jatuh ke bumi kecuali dengan izin-Nya, dari kejahatan hamba-Mu [si Fulan], dan pasukannya, pengikutnya, dan pendukungnya, dari golongan jin dan manusia. Ya Allah, jadilah Engkau pelindung bagiku dari kejahatan mereka. Sungguh agung pujian-Mu, sungguh kuat perlindungan-Mu, Mahasuci nama-Mu, dan tiada Tuhan selain Engkau. (Dibaca 3 kali).",
     "reference": "Al-Bukhari 5:172",
     "repeat": 1,
-    "title": "For one afraid of the ruler's injustice"
+    "title_en": "For one afraid of the ruler's injustice",
+    "title_id": "Untuk orang yang takut terhadap kezhaliman penguasa"
   },
   {
     "id": 131,
@@ -1307,7 +1437,8 @@
     "translation_id": "Ya Allah, Yang Menurunkan Al-Kitab, Yang Cepat Perhitungan-Nya, hancurkanlah golongan-golongan (musuh). Ya Allah, hancurkanlah mereka dan guncangkanlah mereka.",
     "reference": "Muslim 3:1362",
     "repeat": 1,
-    "title": "Against enemies"
+    "title_en": "Against enemies",
+    "title_id": "Untuk menghadapi musuh"
   },
   {
     "id": 132,
@@ -1317,6 +1448,7 @@
     "translation_id": "Ya Allah, cukupkanlah aku dari (kejahatan) mereka dengan cara apa pun yang Engkau kehendaki.",
     "reference": "Muslim 4:2300",
     "repeat": 1,
-    "title": "When being afraid of a group of people"
+    "title_en": "When being afraid of a group of people",
+    "title_id": "Ketika takut kepada sekelompok orang"
   }
 ]

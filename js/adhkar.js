@@ -817,7 +817,7 @@ class AdhkarManager {
 
     // --- Render Title ---
     if (this.titleEl) {
-      this.titleEl.textContent = card.title || "";
+      this.titleEl.textContent = this.getCardTitle(card);
     }
 
     // --- Render Repeat badge (bottom-right) ---
@@ -1059,6 +1059,33 @@ class AdhkarManager {
     }
 
     return "(no translation)";
+  }
+
+  /**
+   * Gets the title text from a card based on selected language.
+   * Supports both legacy `title` and localized `title_<lang>` fields.
+   */
+  getCardTitle(card) {
+    if (!card) return "";
+
+    const langCode = this.getSelectedLanguageCode();
+
+    const localizedKey = `title_${langCode}`;
+    if (card[localizedKey]) {
+      return String(card[localizedKey]);
+    }
+
+    // Legacy single-field title
+    if (card.title) {
+      return String(card.title);
+    }
+
+    // New English title field
+    if (card.title_en) {
+      return String(card.title_en);
+    }
+
+    return "";
   }
 
   /**
@@ -1737,7 +1764,7 @@ class AdhkarManager {
               ? parsedRepeat
               : 1;
 
-          const title = String(x.title || x.name || "").trim();
+          const title = String(x.title || x.title_en || x.name || "").trim();
           const reference = String(x.reference || x.source || "").trim();
 
           const arabic = String(x.arabic || "").trim();
@@ -1755,6 +1782,14 @@ class AdhkarManager {
             }
           });
 
+          // Preserve all title_* fields (title_en, title_id, etc.)
+          const titleFields = {};
+          Object.keys(x || {}).forEach((key) => {
+            if (key.startsWith("title_") && x[key] != null) {
+              titleFields[key] = String(x[key]).trim();
+            }
+          });
+
           return {
             id: parsedId,
             title,
@@ -1763,6 +1798,7 @@ class AdhkarManager {
             translation,
             reference,
             repeat,
+            ...titleFields,
             ...translationFields,
           };
         })
