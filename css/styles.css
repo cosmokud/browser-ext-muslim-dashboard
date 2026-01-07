@@ -10532,7 +10532,7 @@ body.sticky-note-resizing {
   font-weight: 700;
   color: var(--accent-gold-light);
   line-height: 1.35;
-  margin: 0;
+  margin: 0 0 5px 0; /* Increase gap below title */
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -10587,7 +10587,7 @@ body.sticky-note-resizing {
 }
 
 .adhkar-meta-title {
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--accent-gold-light);
   margin-bottom: -5px; /* Pull closer to the text below */
