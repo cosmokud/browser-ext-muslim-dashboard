@@ -1103,11 +1103,6 @@ class MuslimDashboard {
 
       // Add focus mode class to body for full viewport styling
       document.body.classList.add("quran-focus-mode");
-
-      // Trigger layout recalculation
-      try {
-        document.dispatchEvent(new CustomEvent("md:visibility-changed"));
-      } catch (e) {}
     };
 
     const exitFocusMode = () => {
@@ -1126,6 +1121,9 @@ class MuslimDashboard {
           el.style.removeProperty("display");
         } catch (e) {}
         try {
+          el.removeAttribute("aria-hidden");
+        } catch (e) {}
+        try {
           delete el.dataset.focusModeHidden;
         } catch (e) {}
       });
@@ -1140,6 +1138,19 @@ class MuslimDashboard {
           delete row.dataset.focusModeHidden;
         } catch (e) {}
       });
+
+      // Restore the user's saved grid layout (focus mode may temporarily hide
+      // most cards which can confuse the responsive repacking logic).
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.loadLayout === "function" &&
+          typeof this.gridLayout.applyLayout === "function"
+        ) {
+          this.gridLayout.loadLayout();
+          this.gridLayout.applyLayout();
+        }
+      } catch (e) {}
 
       // Re-apply visibility + layout (this triggers grid recalculation).
       try {

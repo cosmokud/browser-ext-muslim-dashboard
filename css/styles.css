@@ -2468,13 +2468,6 @@ body.quran-focus-mode #pocketQuranCard {
   display: flex !important;
   flex-direction: column;
   overflow: hidden;
-  background: var(--glass-bg);
-  backdrop-filter: blur(calc(var(--ui-blur) * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(
-    calc(var(--ui-blur) * var(--ui-blur-multiplier, 1))
-  );
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--card-shadow);
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-shell {
