@@ -548,7 +548,7 @@ body {
 .quote-lang-selector-btn {
   position: absolute;
   top: var(--spacing-md);
-  right: var(--spacing-md);
+  right: calc(var(--spacing-md) + 44px);
   min-width: 44px;
   max-height: 40px;
   padding: 0 var(--spacing-sm);
@@ -559,7 +559,25 @@ body {
   transition: opacity var(--transition-normal);
 }
 
+/* Quotes: content search button (top-right of quoteSection) */
+.quote-search-btn {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  z-index: 2;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
 .quote-section:hover .quote-lang-selector-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.quote-section:hover .quote-search-btn {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2828,6 +2846,67 @@ body.quran-focus-mode .grid-flex-row {
   padding: var(--spacing-lg);
   max-height: 60vh;
   overflow-y: auto;
+}
+
+/* Content Search Modal */
+.content-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.content-search-result {
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.content-search-result:hover {
+  background: var(--glass-bg-hover);
+  transform: translateX(4px);
+}
+
+.content-search-result-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.content-search-result-snippet {
+  margin-top: var(--spacing-xs);
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.content-search-result-meta {
+  margin-top: var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.content-search-result-meta-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.content-search-empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Settings modal scrollbar (use theme primary) */

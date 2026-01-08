@@ -5367,6 +5367,51 @@
       </div>
     </div>
 
+    <!-- Content Search Modal (Quotes / Adhkar / Hadith) -->
+    <div class="modal-overlay" id="contentSearchModal" aria-hidden="true">
+      <div
+        class="modal modal-wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contentSearchTitle"
+      >
+        <div class="modal-header">
+          <h2 class="modal-title" id="contentSearchTitle">🔎 Search</h2>
+          <button
+            class="modal-close"
+            id="closeContentSearchModal"
+            aria-label="Close"
+            type="button"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <input
+              type="text"
+              class="setting-input"
+              id="contentSearchInput"
+              placeholder="Search title, text, or source..."
+              autocomplete="off"
+              inputmode="search"
+            />
+          </div>
+          <div
+            id="contentSearchResults"
+            class="content-search-results"
+            aria-label="Search results"
+          ></div>
+          <div
+            class="adhkar-set-pagination"
+            id="contentSearchPagination"
+            aria-label="Search pagination"
+            hidden
+          ></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/praytimes.js"></script>
@@ -5395,6 +5440,7 @@
     <script src="js/vendor/marked.min.js"></script>
     <script src="js/notes.js"></script>
     <script src="js/pocketquran.js"></script>
+    <script src="js/contentsearch.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

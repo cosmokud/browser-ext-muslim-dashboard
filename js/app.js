@@ -33,6 +33,9 @@ class MuslimDashboard {
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
 
+    // Unified content search modal (Quotes / Adhkar / Hadith)
+    this.contentSearch = null;
+
     // Grid layout manager for drag-and-drop
     this.gridLayout = null; // Will be initialized after DOM
 
@@ -425,6 +428,21 @@ class MuslimDashboard {
 
     // Initialize adhkar manager (renders loading state synchronously)
     this.adhkar = new AdhkarManager(this.storage);
+
+    // Initialize unified content search (adds search buttons + modal wiring)
+    try {
+      if (window.ContentSearchManager) {
+        this.contentSearch = new window.ContentSearchManager({
+          storage: this.storage,
+          quotes: this.quotes,
+          adhkar: this.adhkar,
+          hadith: this.hadith,
+        });
+        this.contentSearch.init();
+      }
+    } catch (e) {
+      console.warn("ContentSearchManager init failed:", e);
+    }
 
     // Initialize settings manager (needs references to other managers)
     this.settings = new SettingsManager(
