@@ -55,6 +55,19 @@ class MuslimDashboard {
     this.currentAmPm = document.getElementById("currentAmPm");
   }
 
+  showToast(message, type = "info") {
+    try {
+      if (this.settings && typeof this.settings.showToast === "function") {
+        this.settings.showToast(message, type);
+        return;
+      }
+    } catch (e) {}
+
+    try {
+      this.gridLayout?.showToast?.(message, type);
+    } catch (e) {}
+  }
+
   setupFabMenu() {
     const menu = document.getElementById("fabMenu");
     const toggle = document.getElementById("fabMenuToggle");
@@ -357,8 +370,34 @@ class MuslimDashboard {
     const btn = document.getElementById("sidebarModeBtn");
     if (!btn) return;
 
+    const MIN_SIDEBAR_MODE_WIDTH = 1920;
+    const isSidebarWidthSupported = () => {
+      try {
+        return window.innerWidth >= MIN_SIDEBAR_MODE_WIDTH;
+      } catch (e) {
+        return false;
+      }
+    };
+
     const setEnabled = (enabled) => {
       const next = enabled === true;
+
+      // Guard: sidebar mode requires enough viewport width.
+      if (next && !isSidebarWidthSupported()) {
+        this.showToast(
+          "Your screen width doesn't support sidebar mode",
+          "info"
+        );
+
+        try {
+          const s = this.storage.getSettings();
+          s.sidebarModeEnabled = false;
+          if (s.lastDashboardMode === "sidebar") s.lastDashboardMode = "normal";
+          this.storage.saveSettings(s);
+        } catch (e) {}
+
+        return;
+      }
 
       // Enable: toggle CSS first (so sidebars are visible), then swap layout state.
       // Disable: swap layout state first (so components return), then remove CSS.
@@ -406,13 +445,37 @@ class MuslimDashboard {
       const s = this.storage.getSettings();
       const initial =
         s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar";
-      setEnabled(initial);
+
+      if (initial && !isSidebarWidthSupported()) {
+        this.showToast(
+          "Your screen width doesn't support sidebar mode",
+          "info"
+        );
+        setEnabled(false);
+      } else {
+        setEnabled(initial);
+      }
     } catch (e) {
       setEnabled(false);
     }
 
     btn.addEventListener("click", () => {
       setEnabled(!this.sidebarModeEnabled);
+    });
+
+    // Auto-exit sidebar mode on resize if it becomes unsupported.
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (this.sidebarModeEnabled && !isSidebarWidthSupported()) {
+          setEnabled(false);
+          this.showToast(
+            "It's no longer possible to stay in sidebars mode with your current screen width.",
+            "info"
+          );
+        }
+      }, 120);
     });
   }
 

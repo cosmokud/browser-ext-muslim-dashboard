@@ -221,7 +221,12 @@ body {
 
 body.sidebar-mode .sidebar-layout {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr; /* 25% / 50% / 25% */
+  --sidebar-min-width: 480px;
+  --sidebar-middle-min-width: 960px;
+  grid-template-columns:
+    minmax(var(--sidebar-min-width), 1fr)
+    minmax(var(--sidebar-middle-min-width), 2fr)
+    minmax(var(--sidebar-min-width), 1fr);
   grid-template-rows: 1fr;
   align-items: start;
   width: 100%;
@@ -234,11 +239,16 @@ body.sidebar-mode .sidebar-column {
   height: calc(100vh - 2 * var(--spacing-xl));
   max-height: calc(100vh - 2 * var(--spacing-xl));
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden; /* scrollbar only on hover */
   padding: var(--spacing-xl) var(--spacing-lg);
   display: flex;
   flex-direction: column;
   scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+body.sidebar-mode .sidebar-column:hover {
+  overflow-y: auto;
   scrollbar-color: var(--primary-color) transparent;
 }
 
@@ -251,10 +261,14 @@ body.sidebar-mode .sidebar-column::-webkit-scrollbar-track {
 }
 
 body.sidebar-mode .sidebar-column::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
+  background-color: transparent;
   border-radius: var(--radius-full);
   border: 3px solid transparent;
   background-clip: content-box;
+}
+
+body.sidebar-mode .sidebar-column:hover::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
 }
 
 body.sidebar-mode .sidebar-column::-webkit-scrollbar-thumb:hover {
