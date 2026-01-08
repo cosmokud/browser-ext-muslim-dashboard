@@ -369,6 +369,13 @@ class MuslimDashboard {
         btn.setAttribute("aria-pressed", "true");
 
         try {
+          const s = this.storage.getSettings();
+          s.sidebarModeEnabled = true;
+          s.lastDashboardMode = "sidebar";
+          this.storage.saveSettings(s);
+        } catch (e) {}
+
+        try {
           this.gridLayout?.setSidebarModeEnabled?.(true);
         } catch (e) {
           console.warn("Sidebar mode enable failed:", e);
@@ -384,11 +391,25 @@ class MuslimDashboard {
         document.body.classList.remove("sidebar-mode");
         btn.classList.remove("active");
         btn.setAttribute("aria-pressed", "false");
+
+        try {
+          const s = this.storage.getSettings();
+          s.sidebarModeEnabled = false;
+          if (s.lastDashboardMode === "sidebar") s.lastDashboardMode = "normal";
+          this.storage.saveSettings(s);
+        } catch (e) {}
       }
     };
 
-    // Ensure initial state is OFF
-    setEnabled(false);
+    // Restore last state from settings
+    try {
+      const s = this.storage.getSettings();
+      const initial =
+        s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar";
+      setEnabled(initial);
+    } catch (e) {
+      setEnabled(false);
+    }
 
     btn.addEventListener("click", () => {
       setEnabled(!this.sidebarModeEnabled);
@@ -1139,6 +1160,13 @@ class MuslimDashboard {
       focusBtn.setAttribute("aria-pressed", "true");
       focusBtn.classList.add("active");
 
+      try {
+        const s = this.storage.getSettings();
+        s.quranFocusModeEnabled = true;
+        s.lastDashboardMode = "quranFocus";
+        this.storage.saveSettings(s);
+      } catch (e) {}
+
       // Close the FAB menu if it's open
       const fabMenu = document.getElementById("fabMenu");
       const fabToggle = document.getElementById("fabMenuToggle");
@@ -1193,6 +1221,16 @@ class MuslimDashboard {
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
 
+      try {
+        const s = this.storage.getSettings();
+        s.quranFocusModeEnabled = false;
+
+        // Fall back to sidebar/normal depending on current state
+        const sidebarOn = s.sidebarModeEnabled === true;
+        s.lastDashboardMode = sidebarOn ? "sidebar" : "normal";
+        this.storage.saveSettings(s);
+      } catch (e) {}
+
       // Remove focus mode class so normal styling returns.
       document.body.classList.remove("quran-focus-mode");
 
@@ -1227,10 +1265,12 @@ class MuslimDashboard {
       try {
         if (
           this.gridLayout &&
-          typeof this.gridLayout.loadLayout === "function" &&
+          typeof this.gridLayout.loadLayoutForMode === "function" &&
           typeof this.gridLayout.applyLayout === "function"
         ) {
-          this.gridLayout.loadLayout();
+          this.gridLayout.loadLayoutForMode(
+            this.gridLayout.isSidebarModeEnabled ? "sidebar" : "normal"
+          );
           this.gridLayout.applyLayout();
         }
       } catch (e) {}
@@ -1279,6 +1319,25 @@ class MuslimDashboard {
         exitFocusMode();
       }
     });
+
+    // Restore last state from settings
+    try {
+      const s = this.storage.getSettings();
+      const initial =
+        s.quranFocusModeEnabled === true ||
+        s.lastDashboardMode === "quranFocus";
+      if (initial) {
+        // Ensure sidebar layout is applied first if the user also had it enabled.
+        try {
+          if (s.sidebarModeEnabled === true) {
+            this.gridLayout?.setSidebarModeEnabled?.(true);
+            document.body.classList.add("sidebar-mode");
+          }
+        } catch (e) {}
+
+        enterFocusMode();
+      }
+    } catch (e) {}
   }
 
   applyPinnedAppsSettings() {

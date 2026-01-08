@@ -238,6 +238,27 @@ body.sidebar-mode .sidebar-column {
   padding: var(--spacing-xl) var(--spacing-lg);
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+body.sidebar-mode .sidebar-column::-webkit-scrollbar {
+  width: 10px;
+}
+
+body.sidebar-mode .sidebar-column::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.sidebar-mode .sidebar-column::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+body.sidebar-mode .sidebar-column::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-light);
 }
 
 /* Middle column should keep the normal page scroll behavior */
@@ -247,35 +268,19 @@ body.sidebar-mode .main-container {
   width: 100%;
 }
 
-/* Sidebar zones: max 3 items, distributed vertically */
+/* Sidebar zones: 1-column grid with infinite rows */
 .sidebar-zone {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: var(--spacing-lg);
 }
 
-.sidebar-zone.count-0 {
-  grid-template-rows: 1fr;
-}
-
-.sidebar-zone.count-1 {
-  grid-template-rows: 1fr;
-}
-
-.sidebar-zone.count-2 {
-  grid-template-rows: 1fr 1fr;
-}
-
-.sidebar-zone.count-3 {
-  grid-template-rows: 1fr 1fr 1fr;
-}
-
 .sidebar-slot {
-  display: flex;
-  align-items: center; /* vertically center the component within its slot */
-  justify-content: center;
-  min-height: 0;
+  width: 100%;
 }
 
 .sidebar-slot > * {

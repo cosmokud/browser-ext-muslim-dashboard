@@ -20,6 +20,7 @@ class GridLayoutManager {
     // Sidebar mode (3-column layout) drag-drop support
     this.isSidebarModeEnabled = false;
     this.sidebarDropTarget = null; // 'left' | 'right' | null
+    this.sidebarDropIndex = null;
     this.sidebarMarkers = new Map(); // componentId -> marker element
     this.sidebarDragOrigin = null; // { side: 'left'|'right', index: number } | null
     this.dragOffsetX = 0;
@@ -250,7 +251,7 @@ class GridLayoutManager {
     this.undockAllSidebarItemsToGrid();
 
     const dockList = (side, ids) => {
-      ids.slice(0, 3).forEach((id) => {
+      (Array.isArray(ids) ? ids : []).forEach((id) => {
         const el = this.getElementByComponentId(id);
         if (!el) return;
         this.dockElementToSidebar(el, side);
@@ -293,9 +294,6 @@ class GridLayoutManager {
   dockElementToSidebar(el, side, index = null) {
     const zone = this.getSidebarZone(side);
     if (!zone || !el) return false;
-
-    // Enforce max 3
-    if (this.getSidebarZoneItemCount(zone) >= 3) return false;
 
     // Ensure element is not counted in grid
     el.classList.add("sidebar-detached");
@@ -359,24 +357,32 @@ class GridLayoutManager {
   }
 
   updateSidebarZoneCounts() {
-    const zones = [
-      document.getElementById("sidebarLeftZone"),
-      document.getElementById("sidebarRightZone"),
-    ].filter(Boolean);
-
-    zones.forEach((zone) => {
-      const count = Math.min(3, this.getSidebarZoneItemCount(zone));
-      zone.classList.remove("count-0", "count-1", "count-2", "count-3");
-      zone.classList.add(`count-${count}`);
-    });
+    // Legacy no-op: old implementation toggled count-* classes.
+    // Sidebar now supports infinite rows.
+    return;
   }
 
   clearSidebarDropTarget() {
     this.sidebarDropTarget = null;
+    this.sidebarDropIndex = null;
     ["sidebarLeftZone", "sidebarRightZone"].forEach((id) => {
       const zone = document.getElementById(id);
       if (zone) zone.classList.remove("sidebar-drop-target");
     });
+  }
+
+  getSidebarInsertionIndex(zoneEl, clientY) {
+    if (!zoneEl) return 0;
+    const slots = Array.from(zoneEl.querySelectorAll(":scope > .sidebar-slot"));
+    if (slots.length === 0) return 0;
+
+    for (let i = 0; i < slots.length; i++) {
+      const rect = slots[i].getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (clientY < mid) return i;
+    }
+
+    return slots.length;
   }
 
   updateSidebarDropTarget(clientX, clientY) {
@@ -400,11 +406,19 @@ class GridLayoutManager {
       ) {
         if (zoneAtPoint === leftZone) {
           this.sidebarDropTarget = "left";
+          this.sidebarDropIndex = this.getSidebarInsertionIndex(
+            leftZone,
+            clientY
+          );
           leftZone.classList.add("sidebar-drop-target");
           return;
         }
         if (zoneAtPoint === rightZone) {
           this.sidebarDropTarget = "right";
+          this.sidebarDropIndex = this.getSidebarInsertionIndex(
+            rightZone,
+            clientY
+          );
           rightZone.classList.add("sidebar-drop-target");
           return;
         }
@@ -430,9 +444,11 @@ class GridLayoutManager {
 
     if (inLeft) {
       this.sidebarDropTarget = "left";
+      this.sidebarDropIndex = this.getSidebarInsertionIndex(leftZone, clientY);
       leftZone.classList.add("sidebar-drop-target");
     } else if (inRight) {
       this.sidebarDropTarget = "right";
+      this.sidebarDropIndex = this.getSidebarInsertionIndex(rightZone, clientY);
       rightZone.classList.add("sidebar-drop-target");
     }
   }
@@ -1626,15 +1642,8 @@ class GridLayoutManager {
       return;
     }
 
-    const currentCount = this.getSidebarZoneItemCount(zone);
-    if (currentCount >= 3) {
-      this.showToast("Sidebar is full (max 3 components)", "info");
-      this.clearSidebarDropTarget();
-      this.cancelDrag();
-      return;
-    }
-
-    const componentId = this.draggedItem.dataset.gridId;
+    const insertIndex =
+      typeof this.sidebarDropIndex === "number" ? this.sidebarDropIndex : null;
 
     // Remove placeholder (we don't keep hidden markers anymore)
     try {
@@ -1659,7 +1668,7 @@ class GridLayoutManager {
     this.draggedItem.style.minWidth = "";
 
     // Move into sidebar slot
-    this.dockElementToSidebar(this.draggedItem, side);
+    this.dockElementToSidebar(this.draggedItem, side, insertIndex);
 
     // Cleanup grid drag styling
     this.grid.classList.remove("grid-is-dragging");
