@@ -504,16 +504,50 @@ class ContentSearchManager {
       })
     );
 
-    // Windowed page numbers
-    const maxButtons = 5;
-    let start = Math.max(1, p - Math.floor(maxButtons / 2));
-    let end = Math.min(totalPages, start + maxButtons - 1);
-    start = Math.max(1, end - maxButtons + 1);
+    const makeEllipsis = () => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "adhkar-set-page-btn";
+      b.disabled = true;
+      b.textContent = "…";
+      return b;
+    };
 
-    for (let i = start; i <= end; i++) {
+    // Always show first + last page for easier navigation
+    const addPageBtn = (i) => {
       this.paginationEl.appendChild(
-        makeBtn({ label: String(i), page: i, disabled: false, active: i === p })
+        makeBtn({
+          label: String(i),
+          page: i,
+          disabled: false,
+          active: i === p,
+        })
       );
+    };
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) addPageBtn(i);
+    } else {
+      addPageBtn(1);
+
+      // 3-page window around current (bounded away from ends)
+      let start = Math.max(2, p - 1);
+      let end = Math.min(totalPages - 1, p + 1);
+
+      // Expand window to 3 pages when near the edges
+      while (end - start + 1 < 3) {
+        if (start > 2) start -= 1;
+        else if (end < totalPages - 1) end += 1;
+        else break;
+      }
+
+      if (start > 2) this.paginationEl.appendChild(makeEllipsis());
+
+      for (let i = start; i <= end; i++) addPageBtn(i);
+
+      if (end < totalPages - 1) this.paginationEl.appendChild(makeEllipsis());
+
+      addPageBtn(totalPages);
     }
 
     this.paginationEl.appendChild(
