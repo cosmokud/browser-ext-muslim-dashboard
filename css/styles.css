@@ -497,6 +497,17 @@ body {
   transition: all var(--transition-normal);
 }
 
+/* Quotes: default quotes language selector (top-right of quoteSection) */
+.quote-lang-selector-btn {
+  position: absolute;
+  top: var(--spacing-md);
+  right: calc(var(--spacing-md) + 48px);
+  min-width: 44px;
+  max-height: 40px;
+  padding: 0 var(--spacing-sm);
+  z-index: 2;
+}
+
 .quote-refresh:hover {
   background: var(--glass-bg-hover);
   transform: rotate(180deg);

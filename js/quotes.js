@@ -12,6 +12,9 @@ class QuotesManager {
     this.currentPage = 1;
     this.quotesPerPage = 10;
 
+    // Default quotes language selector (applies to bundled default quotes only)
+    this._langModal = null;
+
     // Editing state for settings UI
     this.editingQuoteId = null;
 
@@ -44,6 +47,12 @@ class QuotesManager {
     await this.loadDefaultQuotes();
     this.loadUserQuotes();
     this.applyLayoutStyle();
+
+    // Default quotes language selector UI (top-right of quoteSection)
+    this.createLanguageSelectorButton();
+    this.createLanguageSelectorModal();
+    this.updateLanguageSelectorButton();
+
     this.displayRandomQuote();
     this.setupEventListeners();
     this.renderQuotesList();
@@ -82,29 +91,42 @@ class QuotesManager {
         cache: "no-store",
       });
       if (response.ok) {
-        this.defaultQuotes = await response.json();
+        const raw = await response.json();
+        this.defaultQuotes = (Array.isArray(raw) ? raw : []).map((q) => ({
+          ...(q && typeof q === "object" && !Array.isArray(q) ? q : {}),
+          _isDefault: true,
+        }));
       }
     } catch (e) {
       console.error("Failed to load default quotes:", e);
       // Fallback quotes
       this.defaultQuotes = [
         {
-          text: "Indeed, with hardship comes ease.",
+          text_en: "Indeed, with hardship comes ease.",
+          text_id: "Sesungguhnya bersama kesulitan ada kemudahan.",
           source: "Quran 94:6",
           type: "quran",
+          _isDefault: true,
         },
         {
-          text: "And He found you lost and guided you.",
+          text_en: "And He found you lost and guided you.",
+          text_id:
+            "Dan Dia mendapatimu dalam keadaan bingung, lalu Dia memberi petunjuk.",
           source: "Quran 93:7",
           type: "quran",
+          _isDefault: true,
         },
         {
-          text: "So remember Me; I will remember you.",
+          text_en: "So remember Me; I will remember you.",
+          text_id: "Maka ingatlah Aku, niscaya Aku mengingatmu.",
           source: "Quran 2:152",
           type: "quran",
+          _isDefault: true,
         },
       ];
     }
+
+    this.updateLanguageSelectorButton();
   }
 
   /**
@@ -191,10 +213,14 @@ class QuotesManager {
     )?.matches;
     const container = this.quoteContainer || this.quoteText.parentElement;
 
+    const quoteText = this.getQuoteText(quote);
+    const quoteSource = quote?.source ? `— ${quote.source}` : "";
+    const isArabic = !!quote?.isArabic;
+
     if (!container || prefersReducedMotion) {
-      this.quoteText.textContent = quote.text;
-      this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
-      this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
+      this.quoteText.textContent = quoteText;
+      this.quoteSource.textContent = quoteSource;
+      this.quoteText.classList.toggle("arabic-text", isArabic);
       return;
     }
 
@@ -240,9 +266,9 @@ class QuotesManager {
         if (outText.playState === "idle") return;
 
         // Swap content while invisible
-        this.quoteText.textContent = quote.text;
-        this.quoteSource.textContent = quote.source ? `— ${quote.source}` : "";
-        this.quoteText.classList.toggle("arabic-text", !!quote.isArabic);
+        this.quoteText.textContent = quoteText;
+        this.quoteSource.textContent = quoteSource;
+        this.quoteText.classList.toggle("arabic-text", isArabic);
 
         // Force layout recalc and measure new height
         // Temporarily remove height lock to get natural height
@@ -831,6 +857,352 @@ class QuotesManager {
 
         // Reset input
         this.importInput.value = "";
+      });
+    }
+
+    // React to settings changes (e.g., disabling default quotes)
+    if (document && typeof document.addEventListener === "function") {
+      document.addEventListener("md:settings-applied", () => {
+        this.updateLanguageSelectorButton();
+      });
+    }
+  }
+
+  // ---------- Default quotes language selection ----------
+
+  getSelectedDefaultLanguageCode() {
+    const settings = this.storage.getSettings();
+    const raw = settings?.quotesDefaultLang;
+    const normalized =
+      typeof raw === "string" || typeof raw === "number"
+        ? String(raw).trim().toLowerCase()
+        : "";
+    return normalized || "en";
+  }
+
+  setSelectedDefaultLanguageCode(langCode) {
+    const normalized =
+      typeof langCode === "string" || typeof langCode === "number"
+        ? String(langCode).trim().toLowerCase()
+        : "";
+    if (!normalized) return;
+
+    const settings = this.storage.getSettings();
+    settings.quotesDefaultLang = normalized;
+    this.storage.saveSettings(settings);
+  }
+
+  getAvailableDefaultLanguages() {
+    if (!Array.isArray(this.defaultQuotes) || !this.defaultQuotes.length) {
+      return [{ code: "en", name: "English" }];
+    }
+
+    const first = this.defaultQuotes[0] || {};
+    const langCodes = new Set();
+
+    for (const key of Object.keys(first)) {
+      if (key.startsWith("text_")) {
+        const code = String(key.replace("text_", "") || "")
+          .trim()
+          .toLowerCase();
+        if (code) langCodes.add(code);
+      }
+    }
+
+    if (!langCodes.size) {
+      // legacy fallback
+      langCodes.add("en");
+    }
+
+    const langNames = {
+      en: "English",
+      id: "Indonesian (Bahasa Indonesia)",
+      ar: "Arabic",
+      tr: "Turkish",
+      ur: "Urdu",
+      ms: "Malay",
+      fr: "French",
+      de: "German",
+      es: "Spanish",
+      bn: "Bengali",
+      fa: "Persian (Farsi)",
+      hi: "Hindi",
+      pt: "Portuguese",
+      ru: "Russian",
+      zh: "Chinese",
+      ja: "Japanese",
+      ko: "Korean",
+      nl: "Dutch",
+      it: "Italian",
+      th: "Thai",
+    };
+
+    const languages = [...langCodes].map((code) => ({
+      code,
+      name: langNames[code] || code.toUpperCase(),
+    }));
+
+    languages.sort((a, b) => {
+      if (a.code === "en") return -1;
+      if (b.code === "en") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return languages.length ? languages : [{ code: "en", name: "English" }];
+  }
+
+  getLanguageFlag(code) {
+    const flags = {
+      en: "🇬🇧",
+      id: "🇮🇩",
+      ar: "🇸🇦",
+      tr: "🇹🇷",
+      ur: "🇵🇰",
+      ms: "🇲🇾",
+      fr: "🇫🇷",
+      de: "🇩🇪",
+      es: "🇪🇸",
+      bn: "🇧🇩",
+      fa: "🇮🇷",
+      hi: "🇮🇳",
+      pt: "🇵🇹",
+      ru: "🇷🇺",
+      zh: "🇨🇳",
+      ja: "🇯🇵",
+      ko: "🇰🇷",
+      nl: "🇳🇱",
+      it: "🇮🇹",
+      th: "🇹🇭",
+    };
+    return flags[code] || "🌐";
+  }
+
+  isDefaultQuotesInUse() {
+    const settings = this.storage.getSettings();
+    const canDefault =
+      settings?.useDefaultQuotes !== false &&
+      Array.isArray(this.defaultQuotes) &&
+      this.defaultQuotes.length > 0;
+    const canUser =
+      settings?.useUserQuotes !== false &&
+      Array.isArray(this.userQuotes) &&
+      this.userQuotes.length > 0;
+
+    if (canDefault) return true;
+
+    // Matches getAvailableQuotes() fallback behavior.
+    return (
+      !canUser &&
+      Array.isArray(this.defaultQuotes) &&
+      this.defaultQuotes.length > 0
+    );
+  }
+
+  getQuoteText(quote) {
+    if (!quote) return "";
+
+    // Language switching is ONLY for bundled default quotes.
+    if (quote._isDefault) {
+      const lang = this.getSelectedDefaultLanguageCode();
+      const k = `text_${lang}`;
+      if (quote[k]) return String(quote[k]);
+      if (quote.text_en) return String(quote.text_en);
+      if (quote.text) return String(quote.text);
+      return "";
+    }
+
+    // User quotes keep legacy shape.
+    if (typeof quote.text === "string") return quote.text;
+    if (typeof quote.text_en === "string") return quote.text_en;
+    return "";
+  }
+
+  createLanguageSelectorButton() {
+    const container = this.quoteContainer;
+    if (!container) return;
+
+    if (container.querySelector(".quote-lang-selector-btn")) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.title = "Select quote language";
+    btn.setAttribute("aria-label", "Select quote language");
+    btn.style.display = "none";
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openLanguageSelectorModal();
+    });
+
+    // Insert near refresh button so it appears in the same corner cluster.
+    if (this.quoteRefresh && container.contains(this.quoteRefresh)) {
+      container.insertBefore(btn, this.quoteRefresh);
+    } else {
+      container.appendChild(btn);
+    }
+  }
+
+  updateLanguageSelectorButton() {
+    const btn = this.quoteContainer?.querySelector(".quote-lang-selector-btn");
+    if (!btn) return;
+
+    const languages = this.getAvailableDefaultLanguages();
+    const defaultsEnabled = this.isDefaultQuotesInUse();
+
+    if (defaultsEnabled && languages.length > 1) {
+      btn.style.display = "";
+      btn.disabled = false;
+
+      const current = this.getSelectedDefaultLanguageCode();
+      const langInfo =
+        languages.find((l) => l.code === current) || languages[0];
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
+        langInfo.code
+      )}</span>`;
+      btn.title = `Language: ${langInfo.name}`;
+    } else {
+      btn.style.display = "none";
+      btn.disabled = true;
+    }
+  }
+
+  createLanguageSelectorModal() {
+    if (document.getElementById("quotesLangModal")) {
+      this._langModal = document.getElementById("quotesLangModal");
+      return;
+    }
+
+    const modal = document.createElement("div");
+    modal.id = "quotesLangModal";
+    modal.className = "pq-bookmark-modal adhkar-lang-modal";
+    modal.innerHTML = `
+      <div class="adhkar-lang-modal-content">
+        <div class="adhkar-lang-modal-header">
+          <div class="adhkar-lang-modal-title">
+            <span aria-hidden="true">🌐</span>
+            Select Quote Language
+          </div>
+          <button class="adhkar-lang-modal-close" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="adhkar-lang-modal-body">
+          <div class="adhkar-lang-search">
+            <input type="text" class="adhkar-lang-search-input" placeholder="Search languages..." />
+          </div>
+          <div class="adhkar-lang-list"></div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this._langModal = modal;
+
+    const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
+    closeBtn?.addEventListener("click", () =>
+      this.closeLanguageSelectorModal()
+    );
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closeLanguageSelectorModal();
+    });
+
+    const searchInput = modal.querySelector(".adhkar-lang-search-input");
+    searchInput?.addEventListener("input", (e) => {
+      this.renderLanguageSelectorModal(String(e.target.value || ""));
+    });
+
+    this.renderLanguageSelectorModal("");
+  }
+
+  openLanguageSelectorModal() {
+    if (!this._langModal) this.createLanguageSelectorModal();
+    if (!this._langModal) return;
+
+    this._langModal.classList.add("active");
+
+    const searchInput = this._langModal.querySelector(
+      ".adhkar-lang-search-input"
+    );
+    if (searchInput) searchInput.value = "";
+
+    this.renderLanguageSelectorModal("");
+
+    setTimeout(() => {
+      try {
+        searchInput?.focus();
+      } catch (e) {}
+    }, 50);
+  }
+
+  closeLanguageSelectorModal() {
+    if (!this._langModal) return;
+    this._langModal.classList.remove("active");
+  }
+
+  renderLanguageSelectorModal(searchQuery) {
+    if (!this._langModal) return;
+
+    const languages = this.getAvailableDefaultLanguages();
+    const current = this.getSelectedDefaultLanguageCode();
+
+    const q = String(searchQuery || "")
+      .trim()
+      .toLowerCase();
+    const filtered = q
+      ? languages.filter(
+          (l) =>
+            l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q)
+        )
+      : languages;
+
+    const listEl = this._langModal.querySelector(".adhkar-lang-list");
+    if (!listEl) return;
+
+    if (!filtered.length) {
+      listEl.innerHTML = `<div class="adhkar-lang-empty">No languages found.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered
+      .map((lang) => {
+        const isActive = lang.code === current;
+        return `
+          <div class="adhkar-lang-item ${
+            isActive ? "active" : ""
+          }" data-lang="${this.escapeHtml(lang.code)}">
+            <span class="flag" aria-hidden="true">${this.getLanguageFlag(
+              lang.code
+            )}</span>
+            <div class="adhkar-lang-item-info">
+              <div class="adhkar-lang-item-name">${this.escapeHtml(
+                lang.name
+              )}</div>
+              <div class="adhkar-lang-item-code">${this.escapeHtml(
+                lang.code
+              )}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    if (listEl.dataset.bound !== "true") {
+      listEl.dataset.bound = "true";
+      listEl.addEventListener("click", (e) => {
+        const item = e.target.closest(".adhkar-lang-item");
+        if (!item) return;
+        const code = item.dataset.lang;
+        if (!code) return;
+
+        this.setSelectedDefaultLanguageCode(code);
+        this.updateLanguageSelectorButton();
+
+        if (this.currentQuote && this.currentQuote._isDefault) {
+          this.animateQuote(this.currentQuote);
+        }
+
+        this.closeLanguageSelectorModal();
       });
     }
   }
