@@ -9,6 +9,11 @@ class QuotesManager {
     this.defaultQuotes = [];
     this.userQuotes = [];
     this.currentQuote = null;
+
+    // Quote navigation history (for prev/next)
+    this._quoteHistory = [];
+    this._quoteHistoryIndex = -1;
+    this._maxQuoteHistory = 200;
     this.currentPage = 1;
     this.quotesPerPage = 10;
 
@@ -28,7 +33,8 @@ class QuotesManager {
     // Quote display elements
     this.quoteText = document.getElementById("quoteText");
     this.quoteSource = document.getElementById("quoteSource");
-    this.quoteRefresh = document.getElementById("quoteRefresh");
+    this.quotePrev = document.getElementById("quotePrev");
+    this.quoteNext = document.getElementById("quoteNext");
 
     this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
 
@@ -183,6 +189,10 @@ class QuotesManager {
       if (this.quoteSource) {
         this.quoteSource.textContent = "";
       }
+
+      this.currentQuote = null;
+      this._quoteHistory = [];
+      this._quoteHistoryIndex = -1;
       return;
     }
 
@@ -197,8 +207,65 @@ class QuotesManager {
       } while (newQuote === this.currentQuote && quotes.length > 1);
     }
 
-    this.currentQuote = newQuote;
-    this.animateQuote(newQuote);
+    this.setCurrentQuote(newQuote, { pushToHistory: true });
+  }
+
+  setCurrentQuote(quote, { pushToHistory = false } = {}) {
+    if (!quote) return;
+
+    if (pushToHistory) {
+      this.pushQuoteToHistory(quote);
+    }
+
+    this.currentQuote = quote;
+    this.animateQuote(quote);
+  }
+
+  pushQuoteToHistory(quote) {
+    if (!quote) return;
+
+    // If the user previously navigated back, truncate the forward history.
+    if (this._quoteHistoryIndex < this._quoteHistory.length - 1) {
+      this._quoteHistory = this._quoteHistory.slice(
+        0,
+        this._quoteHistoryIndex + 1
+      );
+    }
+
+    this._quoteHistory.push(quote);
+    this._quoteHistoryIndex = this._quoteHistory.length - 1;
+
+    // Cap history size.
+    if (this._quoteHistory.length > this._maxQuoteHistory) {
+      const overflow = this._quoteHistory.length - this._maxQuoteHistory;
+      this._quoteHistory.splice(0, overflow);
+      this._quoteHistoryIndex = Math.max(0, this._quoteHistoryIndex - overflow);
+    }
+  }
+
+  showPreviousQuote() {
+    if (this._quoteHistoryIndex > 0) {
+      this._quoteHistoryIndex -= 1;
+      const q = this._quoteHistory[this._quoteHistoryIndex];
+      this.setCurrentQuote(q, { pushToHistory: false });
+    }
+  }
+
+  showNextQuote() {
+    // If we have forward history (user went back), use it.
+    if (this._quoteHistoryIndex >= 0) {
+      const canForward =
+        this._quoteHistoryIndex < this._quoteHistory.length - 1;
+      if (canForward) {
+        this._quoteHistoryIndex += 1;
+        const q = this._quoteHistory[this._quoteHistoryIndex];
+        this.setCurrentQuote(q, { pushToHistory: false });
+        return;
+      }
+    }
+
+    // Otherwise, pick a new random quote and extend history.
+    this.displayRandomQuote();
   }
 
   /**
@@ -811,14 +878,16 @@ class QuotesManager {
    * Setup event listeners
    */
   setupEventListeners() {
-    // Quote refresh button
-    if (this.quoteRefresh) {
-      this.quoteRefresh.addEventListener("click", () => {
-        this.quoteRefresh.style.transform = "rotate(360deg)";
-        setTimeout(() => {
-          this.quoteRefresh.style.transform = "";
-        }, 300);
-        this.displayRandomQuote();
+    // Quote navigation buttons
+    if (this.quotePrev) {
+      this.quotePrev.addEventListener("click", () => {
+        this.showPreviousQuote();
+      });
+    }
+
+    if (this.quoteNext) {
+      this.quoteNext.addEventListener("click", () => {
+        this.showNextQuote();
       });
     }
 
@@ -1036,12 +1105,7 @@ class QuotesManager {
       this.openLanguageSelectorModal();
     });
 
-    // Insert near refresh button so it appears in the same corner cluster.
-    if (this.quoteRefresh && container.contains(this.quoteRefresh)) {
-      container.insertBefore(btn, this.quoteRefresh);
-    } else {
-      container.appendChild(btn);
-    }
+    container.appendChild(btn);
   }
 
   updateLanguageSelectorButton() {

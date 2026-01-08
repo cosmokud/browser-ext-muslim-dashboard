@@ -480,6 +480,53 @@ body {
   font-weight: 500;
 }
 
+/* Quotes: prev/next navigation (hover-only) */
+.quote-nav-btn {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-normal),
+    background var(--transition-normal), transform var(--transition-normal);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.quote-nav-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.quote-nav-prev {
+  left: var(--spacing-md);
+  transform: translateY(-50%);
+}
+
+.quote-nav-next {
+  right: var(--spacing-md);
+  transform: translateY(-50%);
+}
+
+.quote-section:hover .quote-nav-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.quote-nav-btn:hover {
+  background: var(--glass-bg-hover);
+}
+
 .quote-refresh {
   position: absolute;
   top: var(--spacing-md);
@@ -501,11 +548,21 @@ body {
 .quote-lang-selector-btn {
   position: absolute;
   top: var(--spacing-md);
-  right: calc(var(--spacing-md) + 48px);
+  right: var(--spacing-md);
   min-width: 44px;
   max-height: 40px;
   padding: 0 var(--spacing-sm);
   z-index: 2;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.quote-section:hover .quote-lang-selector-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .quote-refresh:hover {

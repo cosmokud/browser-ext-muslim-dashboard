@@ -132,16 +132,43 @@
             <div class="quote-icon">❝</div>
             <p class="quote-text" id="quoteText">Loading inspiration...</p>
             <p class="quote-source" id="quoteSource"></p>
-            <button class="quote-refresh" id="quoteRefresh" title="New Quote">
+            <button
+              class="quote-nav-btn quote-nav-prev"
+              id="quotePrev"
+              type="button"
+              aria-label="Previous quote"
+              title="Previous quote"
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path
-                  d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-                />
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+
+            <button
+              class="quote-nav-btn quote-nav-next"
+              id="quoteNext"
+              type="button"
+              aria-label="Next quote"
+              title="Next quote"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
           </div>
