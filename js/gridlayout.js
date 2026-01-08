@@ -21,6 +21,7 @@ class GridLayoutManager {
     this.isSidebarModeEnabled = false;
     this.sidebarDropTarget = null; // 'left' | 'right' | null
     this.sidebarMarkers = new Map(); // componentId -> marker element
+    this.sidebarDragOrigin = null; // { side: 'left'|'right', index: number } | null
     this.dragOffsetX = 0;
     this.dragOffsetY = 0;
     this.initialMouseX = 0;
@@ -106,41 +107,244 @@ class GridLayoutManager {
    * Actual layout CSS is toggled elsewhere (body.sidebar-mode).
    */
   setSidebarModeEnabled(enabled) {
-    this.isSidebarModeEnabled = enabled === true;
+    const next = enabled === true;
+    if (this.isSidebarModeEnabled === next) {
+      this.clearSidebarDropTarget();
+      return;
+    }
+
+    // Persist current mode layout before switching.
+    try {
+      this.saveLayout();
+      if (this.isSidebarModeEnabled) {
+        // Leaving sidebar mode: save sidebars too
+        this.saveSidebarStateFromDOM();
+      }
+    } catch (e) {}
+
+    this.isSidebarModeEnabled = next;
     this.clearSidebarDropTarget();
+
+    // Switching modes swaps layout + (for sidebar mode) restores docked components.
+    if (!this.grid) return;
+
+    if (this.isSidebarModeEnabled) {
+      // Enter sidebar mode
+      this.undockAllSidebarItemsToGrid();
+      this.loadLayoutForMode("sidebar");
+      this.applyLayout();
+      this.applySidebarStateFromStorage();
+    } else {
+      // Exit sidebar mode
+      this.undockAllSidebarItemsToGrid();
+      this.loadLayoutForMode("normal");
+      this.applyLayout();
+    }
+
+    this.updateFlexBasisForCurrentDOM();
   }
 
   /**
    * Restore all components currently placed in sidebars back into the grid.
    */
   restoreSidebarItems() {
-    // Move each component back before its marker
-    for (const [componentId, marker] of this.sidebarMarkers.entries()) {
-      if (!marker || !marker.parentNode) continue;
-      const el = this.getElementByComponentId(componentId);
-      if (!el) continue;
+    // Back-compat: undock everything into the grid.
+    this.undockAllSidebarItemsToGrid();
+    this.updateSidebarZoneCounts();
+    this.updateFlexBasisForCurrentDOM();
+  }
 
-      el.classList.remove("sidebar-detached");
+  getSidebarStateStorageKey() {
+    return "sidebarModeSidebars";
+  }
 
-      // If the element is wrapped in a sidebar slot, remove the slot after moving.
-      const slot = el.closest?.(".sidebar-slot");
-      marker.parentNode.insertBefore(el, marker);
-      if (slot && slot.parentNode) {
-        try {
-          slot.remove();
-        } catch (e) {}
-      }
+  loadLayoutForMode(mode) {
+    const settings = this.storage.getSettings();
 
-      try {
-        marker.remove();
-      } catch (e) {}
+    const layoutKey =
+      mode === "sidebar" ? "gridLayoutSidebar" : "gridLayoutNormal";
+    let savedLayout = settings[layoutKey];
 
-      this.sidebarMarkers.delete(componentId);
+    // Back-compat: old single layout key is treated as the normal layout.
+    if (mode !== "sidebar" && (!savedLayout || !Array.isArray(savedLayout))) {
+      savedLayout = settings.gridLayout;
     }
 
+    // Normalize/validate
+    const normalized = this.normalizeLayout(savedLayout);
+    this.rows = normalized;
+  }
+
+  normalizeLayout(layout) {
+    const base = Array.isArray(layout) ? layout : null;
+    const rows =
+      base && Array.isArray(base) && base.length > 0
+        ? JSON.parse(JSON.stringify(base))
+        : JSON.parse(JSON.stringify(this.defaultLayout));
+
+    // Validate saved layout has all components
+    const allIds = new Set(Object.keys(this.componentSpans));
+    const savedIds = new Set(rows.flat());
+    const missingIds = [...allIds].filter((id) => !savedIds.has(id));
+
+    if (missingIds.length > 0) {
+      missingIds.forEach((id) => {
+        const defaultRow = this.defaultLayout.find((row) => row.includes(id));
+        if (defaultRow) {
+          const defaultIndex = this.defaultLayout.indexOf(defaultRow);
+          if (rows[defaultIndex]) {
+            rows[defaultIndex].push(id);
+          } else {
+            rows.push([id]);
+          }
+        } else {
+          rows.push([id]);
+        }
+      });
+    }
+
+    return rows;
+  }
+
+  getSidebarStateFromDOM() {
+    const leftZone = this.getSidebarZone("left");
+    const rightZone = this.getSidebarZone("right");
+    const getIds = (zone) => {
+      if (!zone) return [];
+      return Array.from(
+        zone.querySelectorAll(":scope > .sidebar-slot > .grid-draggable")
+      )
+        .map((el) => el.dataset.gridId)
+        .filter(Boolean);
+    };
+
+    return {
+      left: getIds(leftZone),
+      right: getIds(rightZone),
+    };
+  }
+
+  saveSidebarStateFromDOM() {
+    const state = this.getSidebarStateFromDOM();
+    const settings = this.storage.getSettings();
+    settings[this.getSidebarStateStorageKey()] = state;
+    this.storage.saveSettings(settings);
+  }
+
+  applySidebarStateFromStorage() {
+    const settings = this.storage.getSettings();
+    const stored = settings[this.getSidebarStateStorageKey()];
+    const state =
+      stored && typeof stored === "object"
+        ? {
+            left: Array.isArray(stored.left) ? stored.left : [],
+            right: Array.isArray(stored.right) ? stored.right : [],
+          }
+        : { left: [], right: [] };
+
+    this.applySidebarState(state);
+  }
+
+  applySidebarState(state) {
+    // Ensure clean slate
+    this.undockAllSidebarItemsToGrid();
+
+    const dockList = (side, ids) => {
+      ids.slice(0, 3).forEach((id) => {
+        const el = this.getElementByComponentId(id);
+        if (!el) return;
+        this.dockElementToSidebar(el, side);
+      });
+    };
+
+    dockList("left", state.left || []);
+    dockList("right", state.right || []);
+
     this.updateSidebarZoneCounts();
-    // Re-apply flex sizing now that items are back in the grid
-    this.updateFlexBasisForCurrentDOM();
+    this.cleanupEmptyRows();
+    this.updateRowsFromDOM();
+  }
+
+  undockAllSidebarItemsToGrid() {
+    if (!this.grid) return;
+    const zones = [
+      this.getSidebarZone("left"),
+      this.getSidebarZone("right"),
+    ].filter(Boolean);
+
+    zones.forEach((zone) => {
+      Array.from(zone.querySelectorAll(":scope > .sidebar-slot")).forEach(
+        (slot) => {
+          const child = slot.querySelector(":scope > .grid-draggable");
+          if (child) {
+            child.classList.remove("sidebar-detached");
+            this.grid.appendChild(child);
+          }
+          try {
+            slot.remove();
+          } catch (e) {}
+        }
+      );
+    });
+
+    this.updateSidebarZoneCounts();
+  }
+
+  dockElementToSidebar(el, side, index = null) {
+    const zone = this.getSidebarZone(side);
+    if (!zone || !el) return false;
+
+    // Enforce max 3
+    if (this.getSidebarZoneItemCount(zone) >= 3) return false;
+
+    // Ensure element is not counted in grid
+    el.classList.add("sidebar-detached");
+
+    // Remove flex constraints so it can fit sidebar width
+    el.style.flex = "";
+    el.style.maxWidth = "";
+    el.style.minWidth = "";
+
+    const slot = document.createElement("div");
+    slot.className = "sidebar-slot";
+    slot.appendChild(el);
+
+    if (typeof index === "number" && index >= 0) {
+      const existing = Array.from(zone.children);
+      if (existing[index]) zone.insertBefore(slot, existing[index]);
+      else zone.appendChild(slot);
+    } else {
+      zone.appendChild(slot);
+    }
+
+    return true;
+  }
+
+  cleanupEmptyRows() {
+    if (!this.grid) return;
+
+    this.grid.querySelectorAll(".grid-flex-row").forEach((row) => {
+      row.classList.remove("grid-row-target");
+      const visibleChildren = Array.from(row.children).filter(
+        (el) =>
+          el.classList &&
+          el.classList.contains("grid-draggable") &&
+          !this.isComponentHidden(el)
+      );
+      if (visibleChildren.length === 0) {
+        // If it's an empty row (or only contains placeholders/markers), remove it.
+        const hasReal = Array.from(row.children).some(
+          (el) => el.classList && el.classList.contains("grid-draggable")
+        );
+        if (!hasReal) {
+          row.remove();
+        }
+      }
+    });
+
+    this.grid.querySelectorAll(".grid-flex-row-new").forEach((row) => {
+      if (row.children.length === 0) row.remove();
+    });
   }
 
   getSidebarZone(side) {
@@ -183,6 +387,31 @@ class GridLayoutManager {
 
     // If zones aren't present/visible, skip
     if (!leftZone || !rightZone) return;
+
+    // Prefer DOM hit-testing (more reliable than rect math when zones contain content)
+    try {
+      const elAtPoint = document.elementFromPoint(clientX, clientY);
+      const zoneAtPoint = elAtPoint?.closest?.(
+        "#sidebarLeftZone, #sidebarRightZone"
+      );
+      if (
+        zoneAtPoint &&
+        (zoneAtPoint === leftZone || zoneAtPoint === rightZone)
+      ) {
+        if (zoneAtPoint === leftZone) {
+          this.sidebarDropTarget = "left";
+          leftZone.classList.add("sidebar-drop-target");
+          return;
+        }
+        if (zoneAtPoint === rightZone) {
+          this.sidebarDropTarget = "right";
+          rightZone.classList.add("sidebar-drop-target");
+          return;
+        }
+      }
+    } catch (e) {
+      // Fall back to rect-based hit testing
+    }
 
     const leftRect = leftZone.getBoundingClientRect();
     const rightRect = rightZone.getBoundingClientRect();
@@ -493,37 +722,7 @@ class GridLayoutManager {
    * Load layout from storage or use default
    */
   loadLayout() {
-    const settings = this.storage.getSettings();
-    const savedLayout = settings.gridLayout;
-
-    if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
-      // Validate saved layout has all components
-      const allIds = new Set(Object.keys(this.componentSpans));
-      const savedIds = new Set(savedLayout.flat());
-
-      // Check for missing components and add them
-      const missingIds = [...allIds].filter((id) => !savedIds.has(id));
-      if (missingIds.length > 0) {
-        // Add missing components to appropriate rows based on default layout
-        missingIds.forEach((id) => {
-          const defaultRow = this.defaultLayout.find((row) => row.includes(id));
-          if (defaultRow) {
-            const defaultIndex = this.defaultLayout.indexOf(defaultRow);
-            if (savedLayout[defaultIndex]) {
-              savedLayout[defaultIndex].push(id);
-            } else {
-              savedLayout.push([id]);
-            }
-          } else {
-            savedLayout.push([id]);
-          }
-        });
-      }
-
-      this.rows = savedLayout;
-    } else {
-      this.rows = JSON.parse(JSON.stringify(this.defaultLayout));
-    }
+    this.loadLayoutForMode("normal");
   }
 
   /**
@@ -531,7 +730,21 @@ class GridLayoutManager {
    */
   saveLayout() {
     const settings = this.storage.getSettings();
-    settings.gridLayout = this.rows;
+    const layoutKey = this.isSidebarModeEnabled
+      ? "gridLayoutSidebar"
+      : "gridLayoutNormal";
+    settings[layoutKey] = this.rows;
+
+    // Back-compat: keep old key updated for normal mode
+    if (!this.isSidebarModeEnabled) {
+      settings.gridLayout = this.rows;
+    }
+
+    // Sidebar mode also persists which components are docked
+    if (this.isSidebarModeEnabled) {
+      settings[this.getSidebarStateStorageKey()] =
+        this.getSidebarStateFromDOM();
+    }
     this.storage.saveSettings(settings);
   }
 
@@ -690,12 +903,6 @@ class GridLayoutManager {
   recalculateLayout() {
     if (!this.grid || this.isDragging) return;
 
-    // While sidebar mode is active and components are detached into sidebars,
-    // freeze layout recalculation to avoid pulling them back into the grid.
-    if (this.isSidebarModeEnabled && this.sidebarMarkers.size > 0) {
-      return;
-    }
-
     // First, recalculate effective spans based on current viewport
     this.calculateResponsiveLayout();
 
@@ -808,10 +1015,25 @@ class GridLayoutManager {
     document.addEventListener("mousemove", this.handleMouseMove);
     document.addEventListener("mouseup", this.handleMouseUp);
 
+    // Allow drag start from sidebars too (still gated by edit mode)
+    const leftZone = document.getElementById("sidebarLeftZone");
+    const rightZone = document.getElementById("sidebarRightZone");
+    if (leftZone) leftZone.addEventListener("mousedown", this.handleMouseDown);
+    if (rightZone)
+      rightZone.addEventListener("mousedown", this.handleMouseDown);
+
     // Touch events
     this.grid.addEventListener("touchstart", this.handleTouchStart, {
       passive: false,
     });
+    if (leftZone)
+      leftZone.addEventListener("touchstart", this.handleTouchStart, {
+        passive: false,
+      });
+    if (rightZone)
+      rightZone.addEventListener("touchstart", this.handleTouchStart, {
+        passive: false,
+      });
     document.addEventListener("touchmove", this.handleTouchMove, {
       passive: false,
     });
@@ -836,7 +1058,16 @@ class GridLayoutManager {
 
     // Find the draggable parent
     const draggable = target.closest(".grid-draggable");
-    if (!draggable || this.isComponentHidden(draggable)) {
+    if (!draggable) {
+      return null;
+    }
+
+    // Allow dragging items currently docked in sidebars (edit mode only)
+    const isSidebarItem = draggable.classList.contains("sidebar-detached");
+    if (
+      this.isComponentHidden(draggable) &&
+      !(this.isEditModeEnabled && isSidebarItem)
+    ) {
       return null;
     }
 
@@ -855,8 +1086,8 @@ class GridLayoutManager {
     // Only left mouse button
     if (e.button !== 0) return;
 
-    // Check if edit mode OR sidebar mode is enabled
-    if (!this.isEditModeEnabled && !this.isSidebarModeEnabled) return;
+    // Only allow dragging when layout edit mode is enabled
+    if (!this.isEditModeEnabled) return;
 
     const draggable = this.getDraggableFromTarget(e.target);
     if (!draggable) return;
@@ -871,8 +1102,8 @@ class GridLayoutManager {
   handleTouchStart(e) {
     if (e.touches.length !== 1) return;
 
-    // Check if edit mode OR sidebar mode is enabled
-    if (!this.isEditModeEnabled && !this.isSidebarModeEnabled) return;
+    // Only allow dragging when layout edit mode is enabled
+    if (!this.isEditModeEnabled) return;
 
     const touch = e.touches[0];
     const draggable = this.getDraggableFromTarget(touch.target);
@@ -892,6 +1123,42 @@ class GridLayoutManager {
   startDrag(element, clientX, clientY) {
     this.isDragging = true;
     this.draggedItem = element;
+
+    // If dragging from a sidebar, undock it into the grid so placeholder logic works.
+    this.sidebarDragOrigin = null;
+    const sidebarSlot = element.closest?.(".sidebar-slot");
+    if (sidebarSlot && this.grid) {
+      const leftZone = document.getElementById("sidebarLeftZone");
+      const rightZone = document.getElementById("sidebarRightZone");
+      const zone = sidebarSlot.closest?.("#sidebarLeftZone, #sidebarRightZone");
+      const side =
+        zone === leftZone ? "left" : zone === rightZone ? "right" : null;
+      if (side) {
+        const index = Array.from(zone.children).indexOf(sidebarSlot);
+        this.sidebarDragOrigin = { side, index };
+      }
+
+      // Remove from sidebar slot
+      try {
+        element.classList.remove("sidebar-detached");
+      } catch (e) {}
+
+      try {
+        sidebarSlot.remove();
+      } catch (e) {}
+
+      this.updateSidebarZoneCounts();
+
+      // Create a temporary row at the end so the element has a grid context
+      const tempRow = document.createElement("div");
+      tempRow.className = "grid-flex-row grid-flex-row-new";
+      tempRow.dataset.rowIndex = String(
+        this.grid.querySelectorAll(".grid-flex-row").length
+      );
+      this.grid.appendChild(tempRow);
+      tempRow.appendChild(element);
+    }
+
     this.draggedItemRect = element.getBoundingClientRect();
     this.initialMouseX = clientX;
     this.initialMouseY = clientY;
@@ -901,10 +1168,22 @@ class GridLayoutManager {
     this.dragOffsetY = clientY - this.draggedItemRect.top;
 
     // Store original position info
-    const row = element.closest(".grid-flex-row");
+    let row = element.closest(".grid-flex-row");
+    if (!row && this.grid) {
+      // Fallback: put the element in a new row if it's not currently in the grid.
+      row = document.createElement("div");
+      row.className = "grid-flex-row grid-flex-row-new";
+      row.dataset.rowIndex = String(
+        this.grid.querySelectorAll(".grid-flex-row").length
+      );
+      this.grid.appendChild(row);
+      row.appendChild(element);
+    }
     this.originalRow = row;
-    this.originalRowIndex = parseInt(row.dataset.rowIndex);
-    this.originalItemIndex = Array.from(row.children).indexOf(element);
+    this.originalRowIndex = row ? parseInt(row.dataset.rowIndex) : 0;
+    this.originalItemIndex = row
+      ? Array.from(row.children).indexOf(element)
+      : 0;
 
     // Create placeholder
     this.createPlaceholder();
@@ -1204,6 +1483,12 @@ class GridLayoutManager {
    */
   handleMouseUp(e) {
     if (!this.isDragging) return;
+
+    // Ensure sidebar target is up-to-date at release time
+    if (this.isSidebarModeEnabled) {
+      this.updateSidebarDropTarget(e.clientX, e.clientY);
+    }
+
     this.endDrag();
   }
 
@@ -1217,6 +1502,13 @@ class GridLayoutManager {
     }
 
     if (!this.isDragging) return;
+
+    // Ensure sidebar target is up-to-date at release time
+    if (this.isSidebarModeEnabled) {
+      const touch = (e.changedTouches && e.changedTouches[0]) || null;
+      if (touch) this.updateSidebarDropTarget(touch.clientX, touch.clientY);
+    }
+
     this.endDrag();
   }
 
@@ -1310,10 +1602,18 @@ class GridLayoutManager {
     // Save layout
     this.saveLayout();
 
+    // If we dragged out of a sidebar while in sidebar mode, persist sidebar contents.
+    if (this.isSidebarModeEnabled) {
+      try {
+        this.saveSidebarStateFromDOM();
+      } catch (e) {}
+    }
+
     // Reset state
     this.isDragging = false;
     this.draggedItem = null;
     this.originalRow = null;
+    this.sidebarDragOrigin = null;
   }
 
   finalizeSidebarDrop(side) {
@@ -1336,17 +1636,10 @@ class GridLayoutManager {
 
     const componentId = this.draggedItem.dataset.gridId;
 
-    // Mark as detached so grid layout doesn't try to re-home it.
-    this.draggedItem.classList.add("sidebar-detached");
-
-    // Turn the placeholder into a hidden marker so we can restore later.
-    const marker = this.placeholder;
-    marker.className = "sidebar-return-marker";
-    marker.dataset.sidebarMarkerFor = componentId;
-    marker.style.display = "none";
-
-    // Track marker for restoration
-    this.sidebarMarkers.set(componentId, marker);
+    // Remove placeholder (we don't keep hidden markers anymore)
+    try {
+      this.placeholder.remove();
+    } catch (e) {}
     this.placeholder = null;
 
     // Reset dragged item styles (similar to finalizeDrop)
@@ -1366,10 +1659,7 @@ class GridLayoutManager {
     this.draggedItem.style.minWidth = "";
 
     // Move into sidebar slot
-    const slot = document.createElement("div");
-    slot.className = "sidebar-slot";
-    slot.appendChild(this.draggedItem);
-    zone.appendChild(slot);
+    this.dockElementToSidebar(this.draggedItem, side);
 
     // Cleanup grid drag styling
     this.grid.classList.remove("grid-is-dragging");
@@ -1380,10 +1670,19 @@ class GridLayoutManager {
     this.clearSidebarDropTarget();
     this.updateSidebarZoneCounts();
 
+    // Clean up empty rows to avoid gaps
+    this.cleanupEmptyRows();
+
+    // Update rows layout (middle column) and persist sidebar mode state
+    this.updateRowsFromDOM();
+    this.updateFlexBasisForCurrentDOM();
+    this.saveLayout();
+
     // Reset state
     this.isDragging = false;
     this.draggedItem = null;
     this.originalRow = null;
+    this.sidebarDragOrigin = null;
   }
 
   /**
@@ -1481,6 +1780,15 @@ class GridLayoutManager {
       this.placeholder = null;
     }
 
+    // If this drag started from a sidebar, put it back.
+    if (this.sidebarDragOrigin && this.isSidebarModeEnabled) {
+      try {
+        const { side, index } = this.sidebarDragOrigin;
+        this.dockElementToSidebar(this.draggedItem, side, index);
+        this.updateSidebarZoneCounts();
+      } catch (e) {}
+    }
+
     this.grid.querySelectorAll(".grid-flex-row-new").forEach((row) => {
       if (row.children.length === 0) {
         row.remove();
@@ -1497,6 +1805,7 @@ class GridLayoutManager {
     this.isDragging = false;
     this.draggedItem = null;
     this.originalRow = null;
+    this.sidebarDragOrigin = null;
   }
 
   /**

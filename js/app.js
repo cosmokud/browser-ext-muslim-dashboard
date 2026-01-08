@@ -360,35 +360,30 @@ class MuslimDashboard {
     const setEnabled = (enabled) => {
       const next = enabled === true;
 
-      // Disabling: restore first (so markers are honored) then clear mode
-      if (!next) {
+      // Enable: toggle CSS first (so sidebars are visible), then swap layout state.
+      // Disable: swap layout state first (so components return), then remove CSS.
+      if (next) {
+        this.sidebarModeEnabled = true;
+        document.body.classList.add("sidebar-mode");
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+
         try {
-          if (
-            this.gridLayout &&
-            typeof this.gridLayout.restoreSidebarItems === "function"
-          ) {
-            this.gridLayout.restoreSidebarItems();
-          }
+          this.gridLayout?.setSidebarModeEnabled?.(true);
         } catch (e) {
-          console.warn("Sidebar restore failed:", e);
+          console.warn("Sidebar mode enable failed:", e);
         }
-      }
-
-      this.sidebarModeEnabled = next;
-      document.body.classList.toggle("sidebar-mode", next);
-
-      btn.classList.toggle("active", next);
-      btn.setAttribute("aria-pressed", next ? "true" : "false");
-
-      try {
-        if (
-          this.gridLayout &&
-          typeof this.gridLayout.setSidebarModeEnabled === "function"
-        ) {
-          this.gridLayout.setSidebarModeEnabled(next);
+      } else {
+        try {
+          this.gridLayout?.setSidebarModeEnabled?.(false);
+        } catch (e) {
+          console.warn("Sidebar mode disable failed:", e);
         }
-      } catch (e) {
-        console.warn("Sidebar mode flag set failed:", e);
+
+        this.sidebarModeEnabled = false;
+        document.body.classList.remove("sidebar-mode");
+        btn.classList.remove("active");
+        btn.setAttribute("aria-pressed", "false");
       }
     };
 

@@ -231,10 +231,13 @@ body.sidebar-mode .sidebar-column {
   display: block;
   position: sticky;
   top: var(--spacing-xl);
+  height: calc(100vh - 2 * var(--spacing-xl));
   max-height: calc(100vh - 2 * var(--spacing-xl));
   overflow-x: hidden;
   overflow-y: auto;
   padding: var(--spacing-xl) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Middle column should keep the normal page scroll behavior */
@@ -246,7 +249,8 @@ body.sidebar-mode .main-container {
 
 /* Sidebar zones: max 3 items, distributed vertically */
 .sidebar-zone {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   gap: var(--spacing-lg);
 }
