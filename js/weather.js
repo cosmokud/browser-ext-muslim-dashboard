@@ -96,6 +96,25 @@ class WeatherManager {
     };
   }
 
+  _getLocalDateKey(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  _getWeatherForecastCache() {
+    const cache = this.storage.get("weather_openmeteo_cache_v1", null);
+    return cache && typeof cache === "object" ? cache : null;
+  }
+
+  _setWeatherForecastCache(cache) {
+    try {
+      this.storage.set("weather_openmeteo_cache_v1", cache);
+    } catch (e) {}
+  }
+
   /**
    * Initialize weather manager
    * Shows loading state immediately, fetches data in background
@@ -129,7 +148,7 @@ class WeatherManager {
       clearInterval(this.refreshInterval);
     }
     this.refreshInterval = setInterval(() => {
-      this.fetchWeather();
+      this.fetchWeather({ force: false });
     }, 30 * 60 * 1000);
 
     return;
@@ -393,7 +412,7 @@ class WeatherManager {
 
     if (this.weatherRefreshBtn) {
       this.weatherRefreshBtn.addEventListener("click", () =>
-        this.fetchWeather()
+        this.fetchWeather({ force: false })
       );
     }
 
@@ -785,9 +804,11 @@ class WeatherManager {
     return await this._getBrowserLocation();
   }
 
-  async fetchWeather() {
+  async fetchWeather(opts = {}) {
     try {
       if (!this.weatherCard) return;
+
+      const { force = false } = opts;
 
       const settings = this.storage.getSettings();
       const unit = settings.weatherUnit || "celsius";
@@ -807,73 +828,110 @@ class WeatherManager {
 
       console.debug("Weather URL:", url);
 
-      // Fetch with retry logic for network errors (common in Chrome extensions)
-      let response;
-      let lastError;
-      const maxRetries = 3;
-      const retryDelay = 1000; // 1 second
-
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          response = await fetch(url);
-          break; // Success, exit retry loop
-        } catch (networkError) {
-          lastError = networkError;
-          console.warn(
-            `Weather fetch attempt ${attempt}/${maxRetries} failed:`,
-            networkError?.message || networkError
-          );
-          if (attempt < maxRetries) {
-            // Wait before retrying
-            await new Promise((resolve) =>
-              setTimeout(resolve, retryDelay * attempt)
-            );
-          }
-        }
-      }
-
-      // If all retries failed, throw a user-friendly error
-      if (!response) {
-        const errorMsg =
-          lastError?.message === "Failed to fetch"
-            ? "Network error - check your internet connection"
-            : lastError?.message || "Unable to connect to weather service";
-        throw new Error(errorMsg);
-      }
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        console.error(
-          "Weather API response not OK:",
-          response.status,
-          text.substr ? text.substr(0, 200) : text
-        );
-        throw new Error(
-          `Weather API request failed (status ${response.status})`
-        );
-      }
+      const todayKey = this._getLocalDateKey(Date.now());
+      const cached = this._getWeatherForecastCache();
+      const cacheHit =
+        !force &&
+        cached &&
+        cached.url === url &&
+        cached.dateKey === todayKey &&
+        cached.data;
 
       let data;
-      try {
-        data = await response.json();
-      } catch (e) {
-        const txt = await response.text().catch(() => "");
-        console.error(
-          "Weather API JSON parse error:",
-          e,
-          txt.substr ? txt.substr(0, 500) : txt
-        );
-        throw new Error("Weather API returned invalid JSON");
+      let usedCache = false;
+
+      if (cacheHit) {
+        data = cached.data;
+        usedCache = true;
+      } else {
+        // Fetch with retry logic for network errors (common in Chrome extensions)
+        let response;
+        let lastError;
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1 second
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            response = await fetch(url);
+            break; // Success, exit retry loop
+          } catch (networkError) {
+            lastError = networkError;
+            console.warn(
+              `Weather fetch attempt ${attempt}/${maxRetries} failed:`,
+              networkError?.message || networkError
+            );
+            if (attempt < maxRetries) {
+              // Wait before retrying
+              await new Promise((resolve) =>
+                setTimeout(resolve, retryDelay * attempt)
+              );
+            }
+          }
+        }
+
+        // If all retries failed, try to fall back to cached payload (even if stale).
+        if (!response) {
+          if (cached && cached.url === url && cached.data) {
+            data = cached.data;
+            usedCache = true;
+          } else {
+            const errorMsg =
+              lastError?.message === "Failed to fetch"
+                ? "Network error - check your internet connection"
+                : lastError?.message || "Unable to connect to weather service";
+            throw new Error(errorMsg);
+          }
+        }
+
+        if (!usedCache) {
+          if (!response.ok) {
+            const text = await response.text().catch(() => "");
+            console.error(
+              "Weather API response not OK:",
+              response.status,
+              text.substr ? text.substr(0, 200) : text
+            );
+            throw new Error(
+              `Weather API request failed (status ${response.status})`
+            );
+          }
+
+          try {
+            data = await response.json();
+          } catch (e) {
+            const txt = await response.text().catch(() => "");
+            console.error(
+              "Weather API JSON parse error:",
+              e,
+              txt.substr ? txt.substr(0, 500) : txt
+            );
+            throw new Error("Weather API returned invalid JSON");
+          }
+
+          // Persist only when we successfully fetched fresh data.
+          this._setWeatherForecastCache({
+            url,
+            dateKey: todayKey,
+            data,
+            savedAt: Date.now(),
+          });
+        }
       }
       const current = data.current || data.current_weather || {};
 
-      const locationName =
-        location.city ||
-        (await this._reverseGeocodeName(
-          location.latitude,
-          location.longitude
-        )) ||
-        `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
+      let locationName = null;
+      if (usedCache && cached && cached.url === url && cached.locationName) {
+        locationName = cached.locationName;
+      }
+      if (!locationName) {
+        locationName =
+          location.city ||
+          (await this._reverseGeocodeName(
+            location.latitude,
+            location.longitude
+          )) ||
+          `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
+      }
 
       // Try to derive reasonable current values when API uses different field names
       const hourly = data.hourly || {};
@@ -943,6 +1001,18 @@ class WeatherManager {
       this.dailyForecast = data.daily || null;
       this.hourlyForecast = data.hourly || null;
       this.lastFetch = Date.now();
+
+      // Update cached locationName lazily (so cache-only runs still get it).
+      if (
+        cached &&
+        cached.url === url &&
+        cached.locationName !== locationName
+      ) {
+        this._setWeatherForecastCache({
+          ...cached,
+          locationName,
+        });
+      }
 
       // keep selection in-range
       const dayCount = this.dailyForecast?.time?.length || 0;
@@ -1039,7 +1109,7 @@ class WeatherManager {
     const settings = this.storage.getSettings();
     settings.weatherUnit = unit;
     this.storage.saveSettings(settings);
-    this.fetchWeather();
+    this.fetchWeather({ force: true });
   }
 
   /**

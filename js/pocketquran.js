@@ -9,6 +9,166 @@
  * Bookmark system: Supports multiple bookmark categories with full CRUD operations.
  */
 
+class PocketQuranCacheManager {
+  static DB_NAME = "MuslimDashboardPocketQuranCache";
+  static DB_VERSION = 1;
+  static JSON_STORE = "json";
+  static AUDIO_STORE = "audio";
+
+  constructor() {
+    this.db = null;
+    this.dbReady = this._initDB();
+  }
+
+  async _initDB() {
+    if (!("indexedDB" in window)) {
+      throw new Error("IndexedDB not available");
+    }
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(
+        PocketQuranCacheManager.DB_NAME,
+        PocketQuranCacheManager.DB_VERSION
+      );
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve(this.db);
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains(PocketQuranCacheManager.JSON_STORE)) {
+          const store = db.createObjectStore(
+            PocketQuranCacheManager.JSON_STORE,
+            {
+              keyPath: "key",
+            }
+          );
+          store.createIndex("timestamp", "timestamp", { unique: false });
+          store.createIndex("type", "type", { unique: false });
+        }
+
+        if (
+          !db.objectStoreNames.contains(PocketQuranCacheManager.AUDIO_STORE)
+        ) {
+          const store = db.createObjectStore(
+            PocketQuranCacheManager.AUDIO_STORE,
+            { keyPath: "key" }
+          );
+          store.createIndex("timestamp", "timestamp", { unique: false });
+          store.createIndex("reciterId", "reciterId", { unique: false });
+          store.createIndex("surah", "surah", { unique: false });
+        }
+      };
+    });
+  }
+
+  async _ensureDB() {
+    if (!this.db) await this.dbReady;
+    return this.db;
+  }
+
+  isCacheableJsonUrl(url) {
+    const raw = String(url || "");
+    if (!/^https?:\/\//i.test(raw)) return false;
+    if (!raw.includes("api.quran.com/api/v4")) return false;
+
+    return (
+      raw.includes("/chapters") ||
+      raw.includes("/verses/by_chapter/") ||
+      raw.includes("/quran/verses/uthmani_tajweed") ||
+      raw.includes("/resources/recitations") ||
+      raw.includes("/recitations/") ||
+      raw.includes("/chapter_recitations/")
+    );
+  }
+
+  async getJson(url) {
+    try {
+      const db = await this._ensureDB();
+      const key = String(url || "");
+      return await new Promise((resolve) => {
+        const tx = db.transaction(
+          PocketQuranCacheManager.JSON_STORE,
+          "readonly"
+        );
+        const store = tx.objectStore(PocketQuranCacheManager.JSON_STORE);
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result?.data ?? null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async setJson(url, data, type = "json") {
+    try {
+      const db = await this._ensureDB();
+      const key = String(url || "");
+      const record = { key, url: key, type, data, timestamp: Date.now() };
+      return await new Promise((resolve) => {
+        const tx = db.transaction(
+          PocketQuranCacheManager.JSON_STORE,
+          "readwrite"
+        );
+        const store = tx.objectStore(PocketQuranCacheManager.JSON_STORE);
+        const req = store.put(record);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async getAudio(key) {
+    try {
+      const db = await this._ensureDB();
+      const k = String(key || "");
+      return await new Promise((resolve) => {
+        const tx = db.transaction(
+          PocketQuranCacheManager.AUDIO_STORE,
+          "readonly"
+        );
+        const store = tx.objectStore(PocketQuranCacheManager.AUDIO_STORE);
+        const req = store.get(k);
+        req.onsuccess = () => resolve(req.result ?? null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async setAudio(record) {
+    try {
+      const db = await this._ensureDB();
+      const rec = {
+        ...record,
+        key: String(record?.key || ""),
+        timestamp: Date.now(),
+      };
+
+      return await new Promise((resolve) => {
+        const tx = db.transaction(
+          PocketQuranCacheManager.AUDIO_STORE,
+          "readwrite"
+        );
+        const store = tx.objectStore(PocketQuranCacheManager.AUDIO_STORE);
+        const req = store.put(rec);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
 class PocketQuranManager {
   static API_BASE = "https://api.quran.com/api/v4";
   static TAJWEED_API_BASE =
@@ -418,6 +578,14 @@ class PocketQuranManager {
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
+    }
+
+    // Persistent caches (IndexedDB). Best-effort: continue without it.
+    this._pqCache = null;
+    try {
+      this._pqCache = new PocketQuranCacheManager();
+    } catch (e) {
+      this._pqCache = null;
     }
 
     // State
@@ -2361,9 +2529,10 @@ class PocketQuranManager {
     this._isAutoScroll = pq.reciterAutoScroll || false;
 
     // Small caches to smooth autoplay transitions.
-    // URL cache avoids repeating the /by_ayah metadata request.
+    // Src cache avoids repeating the /by_ayah metadata request + blob URL setup.
     // Preload cache warms media buffering for the next few ayahs.
-    this._audioUrlCache = new Map();
+    this._audioSrcCache = new Map();
+    this._audioBlobUrlCache = new Map();
     this._preloadedAudios = new Map();
     this._prefetchAheadCount = 3;
 
@@ -2432,6 +2601,29 @@ class PocketQuranManager {
     return `${this._activeReciterId}:${surah}:${ayah}`;
   }
 
+  _revokeAllRecitationBlobUrls() {
+    if (!this._audioBlobUrlCache) return;
+    for (const url of this._audioBlobUrlCache.values()) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+    }
+    this._audioBlobUrlCache.clear();
+  }
+
+  _getOrCreateRecitationBlobUrl(cacheKey, blob) {
+    if (!cacheKey || !blob) return null;
+    const existing = this._audioBlobUrlCache?.get(cacheKey);
+    if (existing) return existing;
+    try {
+      const url = URL.createObjectURL(blob);
+      this._audioBlobUrlCache?.set(cacheKey, url);
+      return url;
+    } catch (e) {
+      return null;
+    }
+  }
+
   extractAudioUrlFromRecitationResponse(data) {
     const audioFiles = data?.audio_files;
     let audioUrl = null;
@@ -2447,20 +2639,84 @@ class PocketQuranManager {
     return this.resolveRecitationAudioUrl(audioUrl);
   }
 
-  async getOrFetchAyahAudioUrl(surah, ayah, { timeoutMs = 10000 } = {}) {
+  async getOrFetchAyahAudioSrc(surah, ayah, { timeoutMs = 10000 } = {}) {
     const key = this.buildRecitationCacheKey(surah, ayah);
-    const cached = this._audioUrlCache?.get(key);
-    if (cached) return cached;
 
-    const url = this.getAudioUrl(surah, ayah);
-    const data = await this.fetchJson(url, { timeoutMs });
-    const audioUrl = this.extractAudioUrlFromRecitationResponse(data);
+    const cachedSrc = this._audioSrcCache?.get(key);
+    if (cachedSrc) return cachedSrc;
 
-    if (audioUrl) {
-      this._audioUrlCache.set(key, audioUrl);
+    // 1) If MP3 is cached, avoid both metadata and MP3 network requests.
+    if (this._pqCache) {
+      const rec = await this._pqCache.getAudio(key);
+      if (rec?.blob) {
+        const blobUrl = this._getOrCreateRecitationBlobUrl(key, rec.blob);
+        if (blobUrl) {
+          this._audioSrcCache?.set(key, blobUrl);
+          return blobUrl;
+        }
+      }
     }
 
-    return audioUrl;
+    // 2) Resolve the actual MP3 URL (fetchJson itself is JSON-cached).
+    const metaUrl = this.getAudioUrl(surah, ayah);
+    const data = await this.fetchJson(metaUrl, { timeoutMs });
+    const audioUrl = this.extractAudioUrlFromRecitationResponse(data);
+    if (!audioUrl) return null;
+
+    // 3) Fetch MP3 and cache it.
+    let blob = null;
+    let mimeType = "audio/mpeg";
+    try {
+      const controller = new AbortController();
+      let timer = null;
+      try {
+        timer = setTimeout(() => {
+          try {
+            controller.abort();
+          } catch (e) {}
+        }, Math.max(5000, timeoutMs));
+
+        const res = await fetch(audioUrl, {
+          method: "GET",
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          // Still allow playback via remote URL if caching fails.
+          this._audioSrcCache?.set(key, audioUrl);
+          return audioUrl;
+        }
+
+        mimeType = res.headers.get("content-type") || mimeType;
+        blob = await res.blob();
+      } finally {
+        if (timer) {
+          clearTimeout(timer);
+        }
+      }
+    } catch (e) {
+      this._audioSrcCache?.set(key, audioUrl);
+      return audioUrl;
+    }
+
+    const blobUrl = this._getOrCreateRecitationBlobUrl(key, blob);
+    const finalSrc = blobUrl || audioUrl;
+    this._audioSrcCache?.set(key, finalSrc);
+
+    if (this._pqCache && blob) {
+      await this._pqCache.setAudio({
+        key,
+        reciterId: this._activeReciterId,
+        surah,
+        ayah,
+        audioUrl,
+        mimeType,
+        size: Number.isFinite(blob.size) ? blob.size : null,
+        blob,
+      });
+    }
+
+    return finalSrc;
   }
 
   trimPreloadedAudios(max = 6) {
@@ -2482,21 +2738,21 @@ class PocketQuranManager {
     const key = this.buildRecitationCacheKey(surah, ayah);
     if (this._preloadedAudios?.has(key)) return this._preloadedAudios.get(key);
 
-    let audioUrl = null;
+    let audioSrc = null;
     try {
-      audioUrl = await this.getOrFetchAyahAudioUrl(surah, ayah, {
+      audioSrc = await this.getOrFetchAyahAudioSrc(surah, ayah, {
         timeoutMs: 10000,
       });
     } catch (e) {
       return null;
     }
 
-    if (!audioUrl) return null;
+    if (!audioSrc) return null;
 
     const audio = new Audio();
     audio.preload = "auto";
     audio.volume = this._volume;
-    audio.src = audioUrl;
+    audio.src = audioSrc;
     try {
       audio.load();
     } catch (e) {}
@@ -2534,7 +2790,8 @@ class PocketQuranManager {
       }
     } catch (e) {}
 
-    this._audioUrlCache = new Map();
+    this._revokeAllRecitationBlobUrls();
+    this._audioSrcCache = new Map();
     this._preloadedAudios = new Map();
   }
 
@@ -2577,13 +2834,13 @@ class PocketQuranManager {
       return true;
     }
 
-    // Next best: cached URL (avoids the metadata fetch on transition).
-    const cachedUrl = this._audioUrlCache?.get(cacheKey);
-    if (cachedUrl) {
+    // Next best: cached src (blob URL or remote URL).
+    const cachedSrc = this._audioSrcCache?.get(cacheKey);
+    if (cachedSrc) {
       this._playingAyah = { surah, ayah };
       this._audioElement.volume = this._volume;
-      if (this._audioElement.src !== cachedUrl) {
-        this._audioElement.src = cachedUrl;
+      if (this._audioElement.src !== cachedSrc) {
+        this._audioElement.src = cachedSrc;
       }
 
       try {
@@ -2717,7 +2974,7 @@ class PocketQuranManager {
         this.setActiveAudioElement(preloaded);
       }
 
-      const audioUrl = await this.getOrFetchAyahAudioUrl(surah, ayah, {
+      const audioUrl = await this.getOrFetchAyahAudioSrc(surah, ayah, {
         timeoutMs: 10000,
       });
 
@@ -3779,6 +4036,19 @@ class PocketQuranManager {
   async fetchJson(url, opts = {}) {
     const { signal, timeoutMs = 15000 } = opts;
 
+    const normalizedUrl = String(url || "").trim();
+    const cacheable = this._pqCache?.isCacheableJsonUrl(normalizedUrl) === true;
+
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    // If JSON is cached, avoid any API call.
+    if (cacheable && this._pqCache) {
+      const cached = await this._pqCache.getJson(normalizedUrl);
+      if (cached) return cached;
+    }
+
     const controller = !signal ? new AbortController() : null;
     const timer = setTimeout(() => {
       try {
@@ -3787,15 +4057,22 @@ class PocketQuranManager {
     }, timeoutMs);
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch(normalizedUrl, {
         method: "GET",
         headers: { Accept: "application/json" },
         signal: signal || controller.signal,
       });
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} for ${url}`);
+        throw new Error(`HTTP ${res.status} for ${normalizedUrl}`);
       }
-      return await res.json();
+
+      const data = await res.json();
+      if (cacheable && this._pqCache) {
+        // Best-effort: ignore quota/transaction failures.
+        await this._pqCache.setJson(normalizedUrl, data, "quran_api");
+      }
+
+      return data;
     } finally {
       clearTimeout(timer);
     }
