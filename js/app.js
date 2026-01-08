@@ -41,6 +41,11 @@ class MuslimDashboard {
     // Sidebar mode (3-column layout)
     this.sidebarModeEnabled = false;
 
+    // Dashboard mode coordination (ensures modes are mutually exclusive)
+    this._setSidebarModeEnabled = null;
+    this._setQuranFocusModeEnabled = null;
+    this._dashboardModeBeforeFocus = "normal";
+
     // Settings will be initialized after other managers
     this.settings = null;
 
@@ -370,7 +375,7 @@ class MuslimDashboard {
     const btn = document.getElementById("sidebarModeBtn");
     if (!btn) return;
 
-    const MIN_SIDEBAR_MODE_WIDTH = 1920;
+    const MIN_SIDEBAR_MODE_WIDTH = 2144; // px
     const isSidebarWidthSupported = () => {
       try {
         return window.innerWidth >= MIN_SIDEBAR_MODE_WIDTH;
@@ -381,6 +386,19 @@ class MuslimDashboard {
 
     const setEnabled = (enabled) => {
       const next = enabled === true;
+
+      // Enforce mutual exclusivity: sidebar mode cannot coexist with Quran focus mode.
+      // Exit focus mode first so visibility/layout restore happens cleanly.
+      if (next) {
+        try {
+          if (
+            this._quranFocusModeActive &&
+            typeof this._setQuranFocusModeEnabled === "function"
+          ) {
+            this._setQuranFocusModeEnabled(false);
+          }
+        } catch (e) {}
+      }
 
       // Guard: sidebar mode requires enough viewport width.
       if (next && !isSidebarWidthSupported()) {
@@ -410,6 +428,8 @@ class MuslimDashboard {
         try {
           const s = this.storage.getSettings();
           s.sidebarModeEnabled = true;
+          // Ensure other modes are off.
+          s.quranFocusModeEnabled = false;
           s.lastDashboardMode = "sidebar";
           this.storage.saveSettings(s);
         } catch (e) {}
@@ -440,11 +460,20 @@ class MuslimDashboard {
       }
     };
 
+    // Expose setter for other modes to call.
+    this._setSidebarModeEnabled = setEnabled;
+
     // Restore last state from settings
     try {
       const s = this.storage.getSettings();
+      // Enforce exclusivity on startup: if Quran focus is the active/last mode,
+      // do not also restore sidebar mode.
+      const focusInitial =
+        s.quranFocusModeEnabled === true ||
+        s.lastDashboardMode === "quranFocus";
       const initial =
-        s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar";
+        !focusInitial &&
+        (s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar");
 
       if (initial && !isSidebarWidthSupported()) {
         this.showToast(
@@ -1218,7 +1247,36 @@ class MuslimDashboard {
       ].filter(Boolean);
     };
 
-    const enterFocusMode = () => {
+    const enterFocusMode = (opts = {}) => {
+      // Enforce mutual exclusivity: focus mode cannot coexist with sidebar mode.
+      // Capture the previous mode so exiting focus can restore it.
+      if (!opts.preservePreviousMode) {
+        this._dashboardModeBeforeFocus = this.sidebarModeEnabled
+          ? "sidebar"
+          : "normal";
+      }
+
+      try {
+        if (
+          this.sidebarModeEnabled &&
+          typeof this._setSidebarModeEnabled === "function"
+        ) {
+          this._setSidebarModeEnabled(false);
+        } else {
+          // Defensive cleanup if sidebar mode is partially active.
+          document.body.classList.remove("sidebar-mode");
+          this.sidebarModeEnabled = false;
+          try {
+            this.gridLayout?.setSidebarModeEnabled?.(false);
+          } catch (e) {}
+          const sidebarBtn = document.getElementById("sidebarModeBtn");
+          if (sidebarBtn) {
+            sidebarBtn.classList.remove("active");
+            sidebarBtn.setAttribute("aria-pressed", "false");
+          }
+        }
+      } catch (e) {}
+
       this._quranFocusModeActive = true;
       focusBtn.setAttribute("aria-pressed", "true");
       focusBtn.classList.add("active");
@@ -1226,6 +1284,8 @@ class MuslimDashboard {
       try {
         const s = this.storage.getSettings();
         s.quranFocusModeEnabled = true;
+        // Ensure other modes are off.
+        s.sidebarModeEnabled = false;
         s.lastDashboardMode = "quranFocus";
         this.storage.saveSettings(s);
       } catch (e) {}
@@ -1284,13 +1344,15 @@ class MuslimDashboard {
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
 
+      const restoreMode =
+        this._dashboardModeBeforeFocus === "sidebar" ? "sidebar" : "normal";
+
       try {
         const s = this.storage.getSettings();
         s.quranFocusModeEnabled = false;
 
-        // Fall back to sidebar/normal depending on current state
-        const sidebarOn = s.sidebarModeEnabled === true;
-        s.lastDashboardMode = sidebarOn ? "sidebar" : "normal";
+        // Restore the last non-focus mode (captured on entry).
+        s.lastDashboardMode = restoreMode;
         this.storage.saveSettings(s);
       } catch (e) {}
 
@@ -1360,6 +1422,22 @@ class MuslimDashboard {
       try {
         window.dispatchEvent(new Event("resize"));
       } catch (e) {}
+
+      // If the user came from sidebar mode, restore it after focus cleanup.
+      if (restoreMode === "sidebar") {
+        try {
+          if (typeof this._setSidebarModeEnabled === "function") {
+            this._setSidebarModeEnabled(true);
+          }
+        } catch (e) {}
+      }
+    };
+
+    // Expose setter for other modes to call.
+    this._setQuranFocusModeEnabled = (enabled) => {
+      const next = enabled === true;
+      if (next) enterFocusMode();
+      else exitFocusMode();
     };
 
     const toggleFocusMode = () => {
@@ -1390,15 +1468,21 @@ class MuslimDashboard {
         s.quranFocusModeEnabled === true ||
         s.lastDashboardMode === "quranFocus";
       if (initial) {
-        // Ensure sidebar layout is applied first if the user also had it enabled.
+        // Capture what the user was using before focus (if we have a hint),
+        // but do not restore it simultaneously.
+        this._dashboardModeBeforeFocus =
+          s.sidebarModeEnabled === true ? "sidebar" : "normal";
         try {
-          if (s.sidebarModeEnabled === true) {
-            this.gridLayout?.setSidebarModeEnabled?.(true);
-            document.body.classList.add("sidebar-mode");
+          if (typeof this._setSidebarModeEnabled === "function") {
+            this._setSidebarModeEnabled(false);
+          } else {
+            document.body.classList.remove("sidebar-mode");
+            this.sidebarModeEnabled = false;
+            this.gridLayout?.setSidebarModeEnabled?.(false);
           }
         } catch (e) {}
 
-        enterFocusMode();
+        enterFocusMode({ preservePreviousMode: true });
       }
     } catch (e) {}
   }
