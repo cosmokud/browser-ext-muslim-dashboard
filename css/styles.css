@@ -2722,7 +2722,7 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-shell {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-main {
@@ -2730,7 +2730,7 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-main {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
@@ -2738,7 +2738,6 @@ body.quran-focus-mode #pocketQuranCard .pocket-quran-content {
   overflow-y: auto;
   overflow-x: hidden;
   max-height: none;
-  height: 100%;
   min-height: 0;
 }
 
@@ -12625,10 +12624,22 @@ body.sticky-note-resizing {
   overflow: hidden;
 }
 
-/* Ensure Pocket Quran internal elements fill the card height */
-#pocketQuranCard .pocket-quran-shell,
+/* Ensure Pocket Quran internal elements correctly fill remaining card height
+   (below the header) without clipping the bottom. */
+#pocketQuranCard > .card-header {
+  flex: 0 0 auto;
+}
+
+#pocketQuranCard .pocket-quran-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 #pocketQuranCard .pocket-quran-main {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 #pocketQuranCard .pocket-quran-content {
