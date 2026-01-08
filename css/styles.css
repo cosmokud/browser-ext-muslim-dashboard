@@ -2849,10 +2849,22 @@ body.quran-focus-mode .grid-flex-row {
 }
 
 /* Content Search Modal */
+#contentSearchModal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  height: 60vh;
+  max-height: 60vh;
+  overflow: hidden;
+}
+
 .content-search-results {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .content-search-result {
