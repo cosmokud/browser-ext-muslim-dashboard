@@ -20,1724 +20,1805 @@
       <div class="background-overlay"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-      <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
+    <!-- Sidebar Layout Wrapper (sidebar mode toggles this into 3-column grid) -->
+    <div class="sidebar-layout" id="sidebarLayout">
+      <aside
+        class="sidebar-column sidebar-left"
+        id="sidebarLeft"
+        aria-label="Left sidebar"
+      >
+        <div class="sidebar-zone count-0" id="sidebarLeftZone"></div>
+      </aside>
 
-      <!-- Main Content Grid -->
-      <main class="content-grid grid-layout-loading">
-        <!-- Header Section -->
-        <header class="header">
-          <div class="greeting-section">
-            <h1 class="greeting" id="greeting">As-salamu alaykum</h1>
-            <p class="date-display" id="dateDisplay"></p>
-          </div>
-          <div class="time-section">
-            <div class="current-time" id="currentTime">00:00</div>
-            <div class="current-seconds" id="currentSeconds">:00</div>
-            <div class="current-ampm" id="currentAmPm" aria-hidden="true"></div>
-          </div>
-        </header>
+      <div class="sidebar-middle" id="sidebarMiddle">
+        <!-- Main Container -->
+        <div class="main-container">
+          <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
 
-        <!-- Pinned Apps Section -->
-        <section class="pinned-apps-section" id="pinnedAppsSection">
-          <div class="pinned-apps-grid" id="pinnedAppsGrid">
-            <div
-              class="pinned-apps-spacer pinned-apps-spacer-left"
-              aria-hidden="true"
-            ></div>
-
-            <div class="pinned-apps-track" id="pinnedAppsTrack">
-              <!-- Apps will be dynamically added here -->
-              <div class="pinned-app-add" id="addPinnedAppBtn">
-                <div class="add-icon">+</div>
-                <span class="add-text">Add Site</span>
+          <!-- Main Content Grid -->
+          <main class="content-grid grid-layout-loading">
+            <!-- Header Section -->
+            <header class="header">
+              <div class="greeting-section">
+                <h1 class="greeting" id="greeting">As-salamu alaykum</h1>
+                <p class="date-display" id="dateDisplay"></p>
               </div>
-            </div>
-
-            <div
-              class="pinned-apps-spacer pinned-apps-spacer-right"
-              aria-hidden="true"
-            ></div>
-          </div>
-        </section>
-
-        <!-- Search Bar Section -->
-        <section class="search-bar-section" id="searchBarSection">
-          <div class="search-bar-shell" id="searchBarShell">
-            <div class="search-bar-engines" aria-label="Custom searches">
-              <button
-                class="search-bar-engine-arrow"
-                id="searchBarEnginesPrev"
-                type="button"
-                aria-label="Scroll searches left"
-              >
-                ❮
-              </button>
-              <div
-                class="search-bar-engine-viewport"
-                id="searchBarEngineViewport"
-              >
+              <div class="time-section">
+                <div class="current-time" id="currentTime">00:00</div>
+                <div class="current-seconds" id="currentSeconds">:00</div>
                 <div
-                  class="search-bar-engine-strip"
-                  id="searchBarEngineStrip"
-                  role="tablist"
-                  aria-label="Search engines"
+                  class="current-ampm"
+                  id="currentAmPm"
+                  aria-hidden="true"
                 ></div>
               </div>
-              <button
-                class="search-bar-engine-arrow"
-                id="searchBarEnginesNext"
-                type="button"
-                aria-label="Scroll searches right"
-              >
-                ❯
-              </button>
-            </div>
+            </header>
 
-            <form class="search-bar-form" id="searchBarForm" autocomplete="off">
-              <input
-                class="search-bar-input"
-                id="searchBarInput"
-                type="text"
-                inputmode="search"
-                placeholder="Searching..."
-                aria-label="Search query"
-              />
-              <button
-                class="search-bar-btn search-bar-submit"
-                id="searchBarSubmit"
-                type="submit"
-                aria-label="Search"
-                title="Search"
-              >
-                🔎︎
-              </button>
-              <button
-                class="search-bar-btn search-bar-add"
-                id="searchBarAddBtn"
-                type="button"
-                aria-label="Add custom search"
-                title="Add custom search"
-              >
-                ✚
-              </button>
-            </form>
-          </div>
-        </section>
+            <!-- Pinned Apps Section -->
+            <section class="pinned-apps-section" id="pinnedAppsSection">
+              <div class="pinned-apps-grid" id="pinnedAppsGrid">
+                <div
+                  class="pinned-apps-spacer pinned-apps-spacer-left"
+                  aria-hidden="true"
+                ></div>
 
-        <!-- Quote Section -->
-        <section class="quote-section" id="quoteSection">
-          <div class="quote-container">
-            <div class="quote-icon">❝</div>
-            <p class="quote-text" id="quoteText">Loading inspiration...</p>
-            <p class="quote-source" id="quoteSource"></p>
-            <button
-              class="quote-nav-btn quote-nav-prev"
-              id="quotePrev"
-              type="button"
-              aria-label="Previous quote"
-              title="Previous quote"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
+                <div class="pinned-apps-track" id="pinnedAppsTrack">
+                  <!-- Apps will be dynamically added here -->
+                  <div class="pinned-app-add" id="addPinnedAppBtn">
+                    <div class="add-icon">+</div>
+                    <span class="add-text">Add Site</span>
+                  </div>
+                </div>
 
-            <button
-              class="quote-nav-btn quote-nav-next"
-              id="quoteNext"
-              type="button"
-              aria-label="Next quote"
-              title="Next quote"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-        </section>
-
-        <!-- Top features (Prayer, Calendar, Qibla) -->
-        <!-- Prayer Times Card -->
-        <section class="card prayer-times-card" id="prayerTimesCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🕌</span>
-              Prayer Times
-            </h2>
-            <div class="location-display" id="locationDisplay">
-              <span
-                class="location-icon"
-                role="button"
-                tabindex="0"
-                title="Open Location settings"
-                aria-label="Open Location settings"
-                >📍</span
-              >
-              <span class="location-text" id="locationText">Detecting...</span>
-              <button
-                class="location-refresh-btn"
-                id="detectLocationBtn"
-                title="Refresh Location"
-              >
-                🔄
-              </button>
-            </div>
-          </div>
-          <div class="next-prayer" id="nextPrayer">
-            <span class="next-prayer-label">Next Prayer:</span>
-            <span class="next-prayer-name" id="nextPrayerName">--</span>
-            <span class="next-prayer-countdown" id="nextPrayerCountdown"
-              >--:--:--</span
-            >
-          </div>
-          <div class="prayer-list" id="prayerList">
-            <!-- Prayer items will be dynamically generated based on visibility settings -->
-          </div>
-        </section>
-
-        <!-- Calendar Card -->
-        <section class="card calendar-card" id="calendarCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📅</span>
-              Calendar
-            </h2>
-            <div class="calendar-toggle-btns">
-              <button class="calendar-type-btn active" data-type="hijri">
-                Hijri
-              </button>
-              <button class="calendar-type-btn" data-type="gregorian">
-                Gregorian
-              </button>
-            </div>
-          </div>
-          <div class="calendar-container" id="calendarContainer">
-            <div class="calendar-header">
-              <button class="calendar-nav-btn" id="prevMonth">❮</button>
-              <div class="calendar-month-year">
-                <span class="calendar-month" id="calendarMonth">--</span>
-                <span class="calendar-year" id="calendarYear">----</span>
+                <div
+                  class="pinned-apps-spacer pinned-apps-spacer-right"
+                  aria-hidden="true"
+                ></div>
               </div>
-              <button class="calendar-nav-btn" id="nextMonth">❯</button>
-            </div>
-            <div class="calendar-weekdays">
-              <span>Sun</span>
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-            </div>
-            <div class="calendar-days" id="calendarDays">
-              <!-- Calendar days will be dynamically generated -->
-            </div>
-            <div class="calendar-today-info" id="calendarTodayInfo">
-              <span class="hijri-date" id="hijriDateDisplay">--</span>
-              <span class="gregorian-date" id="gregorianDateDisplay">--</span>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        <!-- Qibla Direction Card -->
-        <section class="card qibla-card" id="qiblaCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🧭</span>
-              Qibla Direction
-            </h2>
-          </div>
-          <div class="qibla-compass-container">
-            <div class="compass-outer">
-              <div class="compass-ring">
-                <span class="compass-direction north">N</span>
-                <span class="compass-direction east">E</span>
-                <span class="compass-direction south">S</span>
-                <span class="compass-direction west">W</span>
+            <!-- Search Bar Section -->
+            <section class="search-bar-section" id="searchBarSection">
+              <div class="search-bar-shell" id="searchBarShell">
+                <div class="search-bar-engines" aria-label="Custom searches">
+                  <button
+                    class="search-bar-engine-arrow"
+                    id="searchBarEnginesPrev"
+                    type="button"
+                    aria-label="Scroll searches left"
+                  >
+                    ❮
+                  </button>
+                  <div
+                    class="search-bar-engine-viewport"
+                    id="searchBarEngineViewport"
+                  >
+                    <div
+                      class="search-bar-engine-strip"
+                      id="searchBarEngineStrip"
+                      role="tablist"
+                      aria-label="Search engines"
+                    ></div>
+                  </div>
+                  <button
+                    class="search-bar-engine-arrow"
+                    id="searchBarEnginesNext"
+                    type="button"
+                    aria-label="Scroll searches right"
+                  >
+                    ❯
+                  </button>
+                </div>
+
+                <form
+                  class="search-bar-form"
+                  id="searchBarForm"
+                  autocomplete="off"
+                >
+                  <input
+                    class="search-bar-input"
+                    id="searchBarInput"
+                    type="text"
+                    inputmode="search"
+                    placeholder="Searching..."
+                    aria-label="Search query"
+                  />
+                  <button
+                    class="search-bar-btn search-bar-submit"
+                    id="searchBarSubmit"
+                    type="submit"
+                    aria-label="Search"
+                    title="Search"
+                  >
+                    🔎︎
+                  </button>
+                  <button
+                    class="search-bar-btn search-bar-add"
+                    id="searchBarAddBtn"
+                    type="button"
+                    aria-label="Add custom search"
+                    title="Add custom search"
+                  >
+                    ✚
+                  </button>
+                </form>
               </div>
-              <div class="compass-inner" id="compassInner">
-                <div class="qibla-needle" id="qiblaNeedle">
-                  <div class="needle-point"></div>
-                  <div class="kaaba-icon">🕋</div>
+            </section>
+
+            <!-- Quote Section -->
+            <section class="quote-section" id="quoteSection">
+              <div class="quote-container">
+                <div class="quote-icon">❝</div>
+                <p class="quote-text" id="quoteText">Loading inspiration...</p>
+                <p class="quote-source" id="quoteSource"></p>
+                <button
+                  class="quote-nav-btn quote-nav-prev"
+                  id="quotePrev"
+                  type="button"
+                  aria-label="Previous quote"
+                  title="Previous quote"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+
+                <button
+                  class="quote-nav-btn quote-nav-next"
+                  id="quoteNext"
+                  type="button"
+                  aria-label="Next quote"
+                  title="Next quote"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </section>
+
+            <!-- Top features (Prayer, Calendar, Qibla) -->
+            <!-- Prayer Times Card -->
+            <section class="card prayer-times-card" id="prayerTimesCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">🕌</span>
+                  Prayer Times
+                </h2>
+                <div class="location-display" id="locationDisplay">
+                  <span
+                    class="location-icon"
+                    role="button"
+                    tabindex="0"
+                    title="Open Location settings"
+                    aria-label="Open Location settings"
+                    >📍</span
+                  >
+                  <span class="location-text" id="locationText"
+                    >Detecting...</span
+                  >
+                  <button
+                    class="location-refresh-btn"
+                    id="detectLocationBtn"
+                    title="Refresh Location"
+                  >
+                    🔄
+                  </button>
                 </div>
               </div>
-            </div>
-            <div class="qibla-degree" id="qiblaDegree">--°</div>
-            <p class="qibla-instruction">
-              Point your device north for accurate direction
-            </p>
-          </div>
-        </section>
-
-        <!-- Weather Card -->
-        <section class="card weather-card" id="weatherCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🌤️</span>
-              Weather
-            </h2>
-            <button
-              class="weather-refresh-btn"
-              id="weatherRefreshBtn"
-              title="Refresh Weather"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-                />
-              </svg>
-            </button>
-          </div>
-          <div class="weather-content">
-            <div class="weather-main">
-              <span class="weather-icon" id="weatherIcon">🌡️</span>
-              <div class="weather-temp-group">
-                <span class="weather-temp" id="weatherTemp">--</span>
-                <span class="weather-desc" id="weatherDesc">Loading...</span>
-              </div>
-            </div>
-            <div class="weather-location" id="weatherLocation">
-              Detecting location...
-            </div>
-            <div class="weather-details">
-              <div class="weather-detail-item">
-                <span class="weather-detail-icon">🌡️</span>
-                <span class="weather-detail-value" id="weatherFeelsLike"
-                  >--</span
+              <div class="next-prayer" id="nextPrayer">
+                <span class="next-prayer-label">Next Prayer:</span>
+                <span class="next-prayer-name" id="nextPrayerName">--</span>
+                <span class="next-prayer-countdown" id="nextPrayerCountdown"
+                  >--:--:--</span
                 >
               </div>
-              <div class="weather-detail-item">
-                <span class="weather-detail-icon">💧</span>
-                <span class="weather-detail-value" id="weatherHumidity"
-                  >--%</span
-                >
+              <div class="prayer-list" id="prayerList">
+                <!-- Prayer items will be dynamically generated based on visibility settings -->
               </div>
-              <div class="weather-detail-item">
-                <span class="weather-detail-icon">💨</span>
-                <span class="weather-detail-value" id="weatherWind"
-                  >-- km/h</span
-                >
+            </section>
+
+            <!-- Calendar Card -->
+            <section class="card calendar-card" id="calendarCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📅</span>
+                  Calendar
+                </h2>
+                <div class="calendar-toggle-btns">
+                  <button class="calendar-type-btn active" data-type="hijri">
+                    Hijri
+                  </button>
+                  <button class="calendar-type-btn" data-type="gregorian">
+                    Gregorian
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
+              <div class="calendar-container" id="calendarContainer">
+                <div class="calendar-header">
+                  <button class="calendar-nav-btn" id="prevMonth">❮</button>
+                  <div class="calendar-month-year">
+                    <span class="calendar-month" id="calendarMonth">--</span>
+                    <span class="calendar-year" id="calendarYear">----</span>
+                  </div>
+                  <button class="calendar-nav-btn" id="nextMonth">❯</button>
+                </div>
+                <div class="calendar-weekdays">
+                  <span>Sun</span>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                </div>
+                <div class="calendar-days" id="calendarDays">
+                  <!-- Calendar days will be dynamically generated -->
+                </div>
+                <div class="calendar-today-info" id="calendarTodayInfo">
+                  <span class="hijri-date" id="hijriDateDisplay">--</span>
+                  <span class="gregorian-date" id="gregorianDateDisplay"
+                    >--</span
+                  >
+                </div>
+              </div>
+            </section>
 
-          <div class="weather-forecast" id="weatherForecast"></div>
+            <!-- Qibla Direction Card -->
+            <section class="card qibla-card" id="qiblaCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">🧭</span>
+                  Qibla Direction
+                </h2>
+              </div>
+              <div class="qibla-compass-container">
+                <div class="compass-outer">
+                  <div class="compass-ring">
+                    <span class="compass-direction north">N</span>
+                    <span class="compass-direction east">E</span>
+                    <span class="compass-direction south">S</span>
+                    <span class="compass-direction west">W</span>
+                  </div>
+                  <div class="compass-inner" id="compassInner">
+                    <div class="qibla-needle" id="qiblaNeedle">
+                      <div class="needle-point"></div>
+                      <div class="kaaba-icon">🕋</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="qibla-degree" id="qiblaDegree">--°</div>
+                <p class="qibla-instruction">
+                  Point your device north for accurate direction
+                </p>
+              </div>
+            </section>
 
-          <div class="weather-chart-wrap">
-            <div class="weather-chart-header">
-              <div class="weather-chart-title">Next 24 hours</div>
-              <div
-                class="weather-chart-tabs"
-                role="tablist"
-                aria-label="Weather chart metric"
-              >
+            <!-- Weather Card -->
+            <section class="card weather-card" id="weatherCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">🌤️</span>
+                  Weather
+                </h2>
                 <button
-                  class="weather-chart-tab active"
-                  type="button"
-                  data-metric="temperature"
-                  role="tab"
-                  aria-selected="true"
+                  class="weather-refresh-btn"
+                  id="weatherRefreshBtn"
+                  title="Refresh Weather"
                 >
-                  Temperature
-                </button>
-                <button
-                  class="weather-chart-tab"
-                  type="button"
-                  data-metric="humidity"
-                  role="tab"
-                  aria-selected="false"
-                >
-                  Humidity
-                </button>
-                <button
-                  class="weather-chart-tab"
-                  type="button"
-                  data-metric="precipitation"
-                  role="tab"
-                  aria-selected="false"
-                >
-                  Precipitation
-                </button>
-                <button
-                  class="weather-chart-tab"
-                  type="button"
-                  data-metric="wind"
-                  role="tab"
-                  aria-selected="false"
-                >
-                  Wind
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                    />
+                  </svg>
                 </button>
               </div>
-              <div class="weather-chart-legend" id="weatherChartLegend"></div>
-            </div>
-            <canvas class="weather-chart" id="weatherChart"></canvas>
-          </div>
-        </section>
-
-        <!-- Lunar Phase Card -->
-        <section class="card lunar-phase-card" id="lunarPhaseCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🌙</span>
-              Lunar Phase
-            </h2>
-            <div class="lunar-phase-location" id="lunarPhaseLocation">--</div>
-          </div>
-
-          <div class="lunar-phase-content">
-            <div
-              class="lunar-phase-moon"
-              id="lunarPhaseMoon"
-              aria-hidden="true"
-            ></div>
-            <div class="lunar-phase-text">
-              <div class="lunar-phase-name" id="lunarPhaseName">--</div>
-              <div class="lunar-phase-meta" id="lunarPhaseMeta">--</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Fasting Card -->
-        <section class="card fasting-card" id="fastingCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">🥗</span>
-              Fasting Times
-            </h2>
-            <div class="fasting-subtitle" id="fastingHijriNow">--</div>
-          </div>
-          <div class="fasting-bars" id="fastingBars" aria-live="polite"></div>
-        </section>
-
-        <!-- Flashcards + Todo Row -->
-        <!-- Flashcards Card -->
-        <section class="card flashcard-card" id="flashcardCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📇</span>
-              Flashcards
-            </h2>
-            <div class="card-header-actions">
-              <button
-                class="flashcard-mode-toggle-btn"
-                id="flashcardModeToggleBtn"
-                type="button"
-                aria-label="Toggle flashcard mode"
-                title="Toggle flashcard mode"
-              >
-                <span class="mode-icon">📖</span>
-              </button>
-
-              <div
-                class="card-blur-menu"
-                aria-label="Flashcards blur menu"
-                data-card-id="flashcardCard"
-              >
-                <button
-                  class="card-blur-btn"
-                  id="flashcardBlurMenuBtn"
-                  type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
-                    <button
-                      class="blur-popup-close"
-                      type="button"
-                      aria-label="Close"
+              <div class="weather-content">
+                <div class="weather-main">
+                  <span class="weather-icon" id="weatherIcon">🌡️</span>
+                  <div class="weather-temp-group">
+                    <span class="weather-temp" id="weatherTemp">--</span>
+                    <span class="weather-desc" id="weatherDesc"
+                      >Loading...</span
                     >
-                      ×
+                  </div>
+                </div>
+                <div class="weather-location" id="weatherLocation">
+                  Detecting location...
+                </div>
+                <div class="weather-details">
+                  <div class="weather-detail-item">
+                    <span class="weather-detail-icon">🌡️</span>
+                    <span class="weather-detail-value" id="weatherFeelsLike"
+                      >--</span
+                    >
+                  </div>
+                  <div class="weather-detail-item">
+                    <span class="weather-detail-icon">💧</span>
+                    <span class="weather-detail-value" id="weatherHumidity"
+                      >--%</span
+                    >
+                  </div>
+                  <div class="weather-detail-item">
+                    <span class="weather-detail-icon">💨</span>
+                    <span class="weather-detail-value" id="weatherWind"
+                      >-- km/h</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="weather-forecast" id="weatherForecast"></div>
+
+              <div class="weather-chart-wrap">
+                <div class="weather-chart-header">
+                  <div class="weather-chart-title">Next 24 hours</div>
+                  <div
+                    class="weather-chart-tabs"
+                    role="tablist"
+                    aria-label="Weather chart metric"
+                  >
+                    <button
+                      class="weather-chart-tab active"
+                      type="button"
+                      data-metric="temperature"
+                      role="tab"
+                      aria-selected="true"
+                    >
+                      Temperature
+                    </button>
+                    <button
+                      class="weather-chart-tab"
+                      type="button"
+                      data-metric="humidity"
+                      role="tab"
+                      aria-selected="false"
+                    >
+                      Humidity
+                    </button>
+                    <button
+                      class="weather-chart-tab"
+                      type="button"
+                      data-metric="precipitation"
+                      role="tab"
+                      aria-selected="false"
+                    >
+                      Precipitation
+                    </button>
+                    <button
+                      class="weather-chart-tab"
+                      type="button"
+                      data-metric="wind"
+                      role="tab"
+                      aria-selected="false"
+                    >
+                      Wind
                     </button>
                   </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flashcard-viewer">
-            <button
-              class="flashcard-nav flashcard-nav-prev"
-              id="flashcardPrevBtn"
-              type="button"
-              aria-label="Previous card"
-              title="Previous"
-            >
-              ❮
-            </button>
-
-            <div class="flashcard-flip-scene" id="flashcardFlipScene">
-              <div
-                class="flashcard-flip-card"
-                id="flashcardFlipCard"
-                role="button"
-                tabindex="0"
-                aria-label="Flip flashcard"
-              >
-                <div class="flashcard-face flashcard-face-front">
                   <div
-                    class="flashcard-face-content flashcard-question"
-                    id="flashcardQuestion"
-                  >
-                    Loading...
-                  </div>
-                </div>
-                <div class="flashcard-face flashcard-face-back">
-                  <div
-                    class="flashcard-face-content flashcard-answer"
-                    id="flashcardAnswer"
+                    class="weather-chart-legend"
+                    id="weatherChartLegend"
                   ></div>
                 </div>
+                <canvas class="weather-chart" id="weatherChart"></canvas>
               </div>
-            </div>
+            </section>
 
-            <button
-              class="flashcard-nav flashcard-nav-next"
-              id="flashcardNextBtn"
-              type="button"
-              aria-label="Next card"
-              title="Next"
-            >
-              ❯
-            </button>
-          </div>
-
-          <div class="flashcard-jump" aria-label="Jump to flashcard">
-            <div class="flashcard-jump-label" id="flashcardJumpLabel">
-              0 / 0
-            </div>
-            <input
-              type="range"
-              class="flashcard-jump-slider"
-              id="flashcardJumpSlider"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              aria-label="Flashcard position slider"
-            />
-            <input
-              type="number"
-              class="flashcard-jump-input"
-              id="flashcardJumpInput"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              inputmode="numeric"
-              aria-label="Go to flashcard number"
-            />
-
-            <div
-              class="flashcard-auto-wrap"
-              id="flashcardAutoWrap"
-              aria-label="Auto-advance controls"
-            >
-              <button
-                class="flashcard-auto-toggle-btn"
-                id="flashcardAutoAdvanceToggleBtn"
-                type="button"
-                aria-pressed="false"
-                title="Pause auto-advance"
-                aria-label="Pause auto-advance"
-              >
-                <span class="auto-icon" aria-hidden="true">⏸</span>
-              </button>
-              <div class="flashcard-auto-status" id="flashcardAutoStatus">
-                Auto
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Todo List Card -->
-        <section class="card todo-card" id="todoCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">✅</span>
-              To-Do List
-            </h2>
-            <div class="card-header-actions">
-              <span class="todo-count" id="todoCount">0 tasks</span>
-
-              <button
-                class="clear-completed-btn"
-                id="clearCompletedBtn"
-                type="button"
-                title="Clear completed"
-                aria-label="Clear completed"
-                style="display: none"
-              >
-                🗑
-              </button>
-
-              <div
-                class="card-blur-menu"
-                aria-label="Todo blur menu"
-                data-card-id="todoCard"
-              >
-                <button
-                  class="card-blur-btn"
-                  id="todoBlurMenuBtn"
-                  type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
-                    <button
-                      class="blur-popup-close"
-                      type="button"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
-                    </div>
-                  </div>
+            <!-- Lunar Phase Card -->
+            <section class="card lunar-phase-card" id="lunarPhaseCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">🌙</span>
+                  Lunar Phase
+                </h2>
+                <div class="lunar-phase-location" id="lunarPhaseLocation">
+                  --
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="todo-input-container">
-            <input
-              type="text"
-              class="todo-input"
-              id="todoInput"
-              placeholder="Add a new task..."
-              maxlength="200"
-            />
-            <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="todo-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="active">Active</button>
-            <button class="filter-btn" data-filter="completed">
-              Completed
-            </button>
-          </div>
-          <ul class="todo-list" id="todoList"></ul>
-          <div
-            class="todo-pagination"
-            id="todoPagination"
-            aria-label="Todo pagination"
-            hidden
-          ></div>
-        </section>
 
-        <!-- Adhkar Card -->
-        <section class="card adhkar-card" id="adhkarCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📿</span>
-              <span
-                id="adhkarHeaderText"
-                class="adhkar-header-text"
+              <div class="lunar-phase-content">
+                <div
+                  class="lunar-phase-moon"
+                  id="lunarPhaseMoon"
+                  aria-hidden="true"
+                ></div>
+                <div class="lunar-phase-text">
+                  <div class="lunar-phase-name" id="lunarPhaseName">--</div>
+                  <div class="lunar-phase-meta" id="lunarPhaseMeta">--</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Fasting Card -->
+            <section class="card fasting-card" id="fastingCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">🥗</span>
+                  Fasting Times
+                </h2>
+                <div class="fasting-subtitle" id="fastingHijriNow">--</div>
+              </div>
+              <div
+                class="fasting-bars"
+                id="fastingBars"
                 aria-live="polite"
-                >Adhkar</span
-              >
-            </h2>
-            <div class="card-header-actions">
-              <button
-                class="flashcard-mode-toggle-btn"
-                id="adhkarScriptToggleBtn"
-                type="button"
-                aria-label="Toggle Arabic/Romanization"
-                title="Toggle Arabic/Romanization"
-              >
-                <span class="mode-icon">Aa</span>
-              </button>
+              ></div>
+            </section>
 
-              <div
-                class="card-blur-menu"
-                aria-label="Adhkar blur menu"
-                data-card-id="adhkarCard"
-              >
-                <button
-                  class="card-blur-btn"
-                  id="adhkarBlurMenuBtn"
-                  type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
+            <!-- Flashcards + Todo Row -->
+            <!-- Flashcards Card -->
+            <section class="card flashcard-card" id="flashcardCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📇</span>
+                  Flashcards
+                </h2>
+                <div class="card-header-actions">
+                  <button
+                    class="flashcard-mode-toggle-btn"
+                    id="flashcardModeToggleBtn"
+                    type="button"
+                    aria-label="Toggle flashcard mode"
+                    title="Toggle flashcard mode"
+                  >
+                    <span class="mode-icon">📖</span>
+                  </button>
+
+                  <div
+                    class="card-blur-menu"
+                    aria-label="Flashcards blur menu"
+                    data-card-id="flashcardCard"
+                  >
                     <button
-                      class="blur-popup-close"
+                      class="card-blur-btn"
+                      id="flashcardBlurMenuBtn"
                       type="button"
-                      aria-label="Close"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
                     >
-                      ×
+                      ✨
                     </button>
-                  </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="flashcard-viewer adhkar-viewer">
-            <button
-              class="flashcard-nav flashcard-nav-prev"
-              id="adhkarPrevBtn"
-              type="button"
-              aria-label="Previous adhkar"
-              title="Previous"
-            >
-              ❮
-            </button>
-
-            <div class="adhkar-shell" id="adhkarCardShell">
-              <div class="adhkar-meta-title" id="adhkarTitleText"></div>
-              <div class="adhkar-top" id="adhkarTopText">Loading...</div>
-              <div class="adhkar-divider" aria-hidden="true"></div>
-              <div class="adhkar-english" id="adhkarEnglishText"></div>
-              <div
-                class="adhkar-divider"
-                id="adhkarReferenceDivider"
-                aria-hidden="true"
-                hidden
-              ></div>
-              <div
-                class="adhkar-reference"
-                id="adhkarReferenceText"
-                hidden
-              ></div>
-              <div
-                class="adhkar-repeat-badge"
-                id="adhkarRepeatText"
-                hidden
-              ></div>
-            </div>
-
-            <button
-              class="flashcard-nav flashcard-nav-next"
-              id="adhkarNextBtn"
-              type="button"
-              aria-label="Next adhkar"
-              title="Next"
-            >
-              ❯
-            </button>
-          </div>
-
-          <div class="flashcard-jump" aria-label="Jump to adhkar">
-            <div class="flashcard-jump-label" id="adhkarJumpLabel">0 / 0</div>
-            <input
-              type="range"
-              class="flashcard-jump-slider"
-              id="adhkarJumpSlider"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              aria-label="Adhkar position slider"
-            />
-            <input
-              type="number"
-              class="flashcard-jump-input"
-              id="adhkarJumpInput"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              inputmode="numeric"
-              aria-label="Go to adhkar number"
-            />
-
-            <div
-              class="flashcard-auto-wrap"
-              id="adhkarAutoWrap"
-              aria-label="Auto-advance controls"
-            >
-              <button
-                class="flashcard-auto-toggle-btn"
-                id="adhkarAutoAdvanceToggleBtn"
-                type="button"
-                aria-pressed="false"
-                title="Pause auto-advance"
-                aria-label="Pause auto-advance"
-              >
-                <span class="auto-icon" aria-hidden="true">⏸</span>
-              </button>
-              <div class="flashcard-auto-status" id="adhkarAutoStatus">
-                Auto
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Hadith Card (Full Width) -->
-        <section class="card hadith-card" id="hadithCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📜</span>
-              <span
-                id="hadithHeaderText"
-                class="adhkar-header-text"
-                aria-live="polite"
-                >Hadith</span
-              >
-            </h2>
-            <div class="card-header-actions">
-              <div
-                class="card-blur-menu"
-                aria-label="Hadith blur menu"
-                data-card-id="hadithCard"
-              >
+              <div class="flashcard-viewer">
                 <button
-                  class="card-blur-btn"
-                  id="hadithBlurMenuBtn"
+                  class="flashcard-nav flashcard-nav-prev"
+                  id="flashcardPrevBtn"
                   type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
-                    <button
-                      class="blur-popup-close"
-                      type="button"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flashcard-viewer hadith-viewer">
-            <button
-              class="flashcard-nav flashcard-nav-prev"
-              id="hadithPrevBtn"
-              type="button"
-              aria-label="Previous hadith"
-              title="Previous"
-            >
-              ❮
-            </button>
-
-            <div class="hadith-shell" id="hadithCardShell">
-              <div class="hadith-title" id="hadithTitleText">Loading...</div>
-              <div class="hadith-text" id="hadithBodyText"></div>
-              <div
-                class="adhkar-divider"
-                id="hadithMetaDivider"
-                aria-hidden="true"
-                hidden
-              ></div>
-              <div class="hadith-meta" id="hadithMetaText" hidden></div>
-            </div>
-
-            <button
-              class="flashcard-nav flashcard-nav-next"
-              id="hadithNextBtn"
-              type="button"
-              aria-label="Next hadith"
-              title="Next"
-            >
-              ❯
-            </button>
-          </div>
-
-          <div class="flashcard-jump" aria-label="Jump to hadith">
-            <div class="flashcard-jump-label" id="hadithJumpLabel">0 / 0</div>
-            <input
-              type="range"
-              class="flashcard-jump-slider"
-              id="hadithJumpSlider"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              aria-label="Hadith position slider"
-            />
-            <input
-              type="number"
-              class="flashcard-jump-input"
-              id="hadithJumpInput"
-              min="1"
-              max="1"
-              value="1"
-              step="1"
-              inputmode="numeric"
-              aria-label="Go to hadith number"
-            />
-
-            <div
-              class="flashcard-auto-wrap"
-              id="hadithAutoWrap"
-              aria-label="Auto-advance controls"
-            >
-              <button
-                class="flashcard-auto-toggle-btn"
-                id="hadithAutoAdvanceToggleBtn"
-                type="button"
-                aria-pressed="false"
-                title="Pause auto-advance"
-                aria-label="Pause auto-advance"
-              >
-                <span class="auto-icon" aria-hidden="true">⏸</span>
-              </button>
-              <div class="flashcard-auto-status" id="hadithAutoStatus">
-                Auto
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Notes (Full Width) -->
-        <section class="card notes-card" id="notesCard">
-          <div class="card-header">
-            <h2 class="card-title">
-              <span class="card-icon">📝</span>
-              Notes
-            </h2>
-            <div class="card-header-actions">
-              <div class="notes-header-actions" aria-label="Notes actions">
-                <button
-                  class="notes-new-btn"
-                  id="notesNewBtn"
-                  type="button"
-                  aria-label="Create new note"
-                  title="New note"
-                >
-                  ✚
-                </button>
-                <button
-                  class="notes-delete-btn"
-                  id="notesDeleteBtn"
-                  type="button"
-                  aria-label="Delete current note"
-                  title="Delete note"
-                  disabled
-                >
-                  🗑
-                </button>
-              </div>
-
-              <div
-                class="card-blur-menu"
-                aria-label="Notes blur menu"
-                data-card-id="notesCard"
-              >
-                <button
-                  class="card-blur-btn"
-                  id="notesBlurMenuBtn"
-                  type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
-                    <button
-                      class="blur-popup-close"
-                      type="button"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="notes-layout">
-            <div class="notes-list-wrap" aria-label="Notes list">
-              <div class="notes-list" id="notesList" role="list"></div>
-
-              <div class="notes-pagination" aria-label="Notes pagination">
-                <button
-                  class="notes-page-btn"
-                  id="notesPrevPageBtn"
-                  type="button"
-                  aria-label="Previous notes page"
+                  aria-label="Previous card"
+                  title="Previous"
                 >
                   ❮
                 </button>
-                <div class="notes-page-info" id="notesPageInfo"></div>
+
+                <div class="flashcard-flip-scene" id="flashcardFlipScene">
+                  <div
+                    class="flashcard-flip-card"
+                    id="flashcardFlipCard"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Flip flashcard"
+                  >
+                    <div class="flashcard-face flashcard-face-front">
+                      <div
+                        class="flashcard-face-content flashcard-question"
+                        id="flashcardQuestion"
+                      >
+                        Loading...
+                      </div>
+                    </div>
+                    <div class="flashcard-face flashcard-face-back">
+                      <div
+                        class="flashcard-face-content flashcard-answer"
+                        id="flashcardAnswer"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
                 <button
-                  class="notes-page-btn"
-                  id="notesNextPageBtn"
+                  class="flashcard-nav flashcard-nav-next"
+                  id="flashcardNextBtn"
                   type="button"
-                  aria-label="Next notes page"
+                  aria-label="Next card"
+                  title="Next"
                 >
                   ❯
                 </button>
               </div>
-            </div>
 
-            <div class="notes-editor-wrap" aria-label="Notes editor">
-              <input
-                type="text"
-                class="notes-title-input"
-                id="notesTitleInput"
-                placeholder="Note title"
-                maxlength="120"
-                aria-label="Note title"
-              />
-
-              <div class="notes-toolbar" id="notesToolbar" role="toolbar">
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="toggleMarkdown"
-                  aria-label="Toggle Markdown / Raw text"
-                  title="Toggle Markdown / Raw text"
-                  id="notesMarkdownToggleBtn"
-                >
-                  MD
-                </button>
-
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="bold"
-                  aria-label="Bold"
-                  title="Bold"
-                >
-                  <b>B</b>
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="italic"
-                  aria-label="Italic"
-                  title="Italic"
-                >
-                  <i>I</i>
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="underline"
-                  aria-label="Underline"
-                  title="Underline"
-                >
-                  <u>U</u>
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="strikeThrough"
-                  aria-label="Strikethrough"
-                  title="Strikethrough"
-                >
-                  <s>S</s>
-                </button>
-
-                <span class="notes-tool-divider" aria-hidden="true"></span>
-
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="insertUnorderedList"
-                  aria-label="Bullet list"
-                  title="Bullet list"
-                >
-                  •
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="insertOrderedList"
-                  aria-label="Numbered list"
-                  title="Numbered list"
-                >
-                  1.
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-cmd="checklist"
-                  aria-label="Checkmark list"
-                  title="Checkmark list"
-                >
-                  ☑
-                </button>
-
-                <span class="notes-tool-divider" aria-hidden="true"></span>
-
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-block="H1"
-                  aria-label="Heading 1"
-                  title="H1"
-                >
-                  H1
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-block="H2"
-                  aria-label="Heading 2"
-                  title="H2"
-                >
-                  H2
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-block="H3"
-                  aria-label="Heading 3"
-                  title="H3"
-                >
-                  H3
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-block="H4"
-                  aria-label="Heading 4"
-                  title="H4"
-                >
-                  H4
-                </button>
-                <button
-                  class="notes-tool-btn"
-                  type="button"
-                  data-block="P"
-                  aria-label="Paragraph"
-                  title="Paragraph"
-                >
-                  P
-                </button>
-
-                <span class="notes-tool-divider" aria-hidden="true"></span>
-
-                <div class="notes-scale-control" aria-label="Text size">
-                  <label class="notes-scale-label" for="notesScaleRange">
-                    Size
-                  </label>
-                  <input
-                    class="notes-scale-range"
-                    id="notesScaleRange"
-                    type="range"
-                    min="1"
-                    max="5"
-                    step="0.05"
-                    value="1"
-                    aria-label="Text size"
-                  />
-                  <span class="notes-scale-value" id="notesScaleValue"
-                    >1.00x</span
-                  >
+              <div class="flashcard-jump" aria-label="Jump to flashcard">
+                <div class="flashcard-jump-label" id="flashcardJumpLabel">
+                  0 / 0
                 </div>
-              </div>
+                <input
+                  type="range"
+                  class="flashcard-jump-slider"
+                  id="flashcardJumpSlider"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  aria-label="Flashcard position slider"
+                />
+                <input
+                  type="number"
+                  class="flashcard-jump-input"
+                  id="flashcardJumpInput"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Go to flashcard number"
+                />
 
-              <textarea
-                class="notes-editor hidden"
-                id="notesRawEditor"
-                spellcheck="true"
-                aria-label="Note raw text"
-              ></textarea>
-
-              <div
-                class="notes-editor"
-                id="notesEditor"
-                contenteditable="true"
-                spellcheck="true"
-                aria-label="Note editor"
-              ></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Pocket Quran (Full Width) -->
-        <section class="card pocket-quran-card" id="pocketQuranCard">
-          <div class="card-header pocket-quran-header">
-            <h2 class="card-title">
-              <span class="card-icon">📖</span>
-              Pocket Quran
-            </h2>
-            <div class="card-header-actions">
-              <div class="pocket-quran-header-meta" id="pocketQuranHeaderMeta">
-                Loading…
-              </div>
-
-              <div
-                class="card-blur-menu"
-                aria-label="Pocket Quran blur menu"
-                data-card-id="pocketQuranCard"
-              >
-                <button
-                  class="card-blur-btn"
-                  id="pocketQuranBlurMenuBtn"
-                  type="button"
-                  aria-label="Open blur settings"
-                  title="Blur & Glass Settings"
-                >
-                  ✨
-                </button>
-                <div class="blur-settings-popup">
-                  <div class="blur-popup-header">
-                    <span class="blur-popup-title">
-                      <span class="blur-popup-title-icon">✨</span>
-                      Glass Settings
-                    </span>
-                    <button
-                      class="blur-popup-close"
-                      type="button"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div class="blur-setting-section">
-                    <span class="blur-setting-label">Glass Effect</span>
-                    <div class="blur-glass-toggle">
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="off"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">⬜</span>
-                        <span class="blur-glass-option-label">Off</span>
-                      </button>
-                      <button
-                        class="blur-glass-option active"
-                        data-glass-value="dashboard"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">🔗</span>
-                        <span class="blur-glass-option-label">Dash</span>
-                      </button>
-                      <button
-                        class="blur-glass-option"
-                        data-glass-value="on"
-                        type="button"
-                      >
-                        <span class="blur-glass-option-icon">✨</span>
-                        <span class="blur-glass-option-label">On</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="blur-setting-section">
-                    <div class="blur-power-header">
-                      <span class="blur-setting-label">Blur Power</span>
-                      <label class="blur-power-toggle">
-                        <input type="checkbox" class="blur-power-checkbox" />
-                        <span class="blur-power-switch"></span>
-                        <span class="blur-power-toggle-label">Custom</span>
-                      </label>
-                    </div>
-                    <div class="blur-power-slider-wrap disabled">
-                      <input
-                        type="range"
-                        class="blur-power-slider"
-                        min="0"
-                        max="200"
-                        value="100"
-                      />
-                      <span class="blur-power-value">100%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="pocket-quran-shell">
-            <div class="pocket-quran-main">
-              <div
-                class="pocket-quran-controls"
-                aria-label="Pocket Quran controls"
-              >
                 <div
-                  class="pocket-quran-surah-picker"
-                  aria-label="Surah selection"
+                  class="flashcard-auto-wrap"
+                  id="flashcardAutoWrap"
+                  aria-label="Auto-advance controls"
                 >
-                  <label
-                    class="pocket-quran-control-label"
-                    for="pocketQuranSurahInput"
-                    >Surah</label
+                  <button
+                    class="flashcard-auto-toggle-btn"
+                    id="flashcardAutoAdvanceToggleBtn"
+                    type="button"
+                    aria-pressed="false"
+                    title="Pause auto-advance"
+                    aria-label="Pause auto-advance"
                   >
+                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                  </button>
+                  <div class="flashcard-auto-status" id="flashcardAutoStatus">
+                    Auto
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Todo List Card -->
+            <section class="card todo-card" id="todoCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">✅</span>
+                  To-Do List
+                </h2>
+                <div class="card-header-actions">
+                  <span class="todo-count" id="todoCount">0 tasks</span>
+
+                  <button
+                    class="clear-completed-btn"
+                    id="clearCompletedBtn"
+                    type="button"
+                    title="Clear completed"
+                    aria-label="Clear completed"
+                    style="display: none"
+                  >
+                    🗑
+                  </button>
+
                   <div
-                    class="pocket-quran-combobox pocket-quran-combobox-with-nav"
-                    id="pocketQuranSurahCombobox"
+                    class="card-blur-menu"
+                    aria-label="Todo blur menu"
+                    data-card-id="todoCard"
                   >
                     <button
-                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
-                      id="pocketQuranSurahPrev"
+                      class="card-blur-btn"
+                      id="todoBlurMenuBtn"
                       type="button"
-                      aria-label="Previous surah"
-                      title="Previous surah"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
                     >
-                      ❮
+                      ✨
                     </button>
-                    <input
-                      class="pocket-quran-pill-input pocket-quran-pill-input-with-nav"
-                      id="pocketQuranSurahInput"
-                      type="text"
-                      autocomplete="off"
-                      spellcheck="false"
-                      aria-label="Search surah"
-                    />
-                    <button
-                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
-                      id="pocketQuranSurahNext"
-                      type="button"
-                      aria-label="Next surah"
-                      title="Next surah"
-                    >
-                      ❯
-                    </button>
-                    <div
-                      class="pocket-quran-dropdown"
-                      id="pocketQuranSurahDropdown"
-                      role="listbox"
-                      aria-label="Surah list"
-                      hidden
-                    >
-                      <div
-                        class="pocket-quran-dropdown-list"
-                        id="pocketQuranSurahList"
-                      ></div>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <div class="pocket-quran-ayah-nav" aria-label="Ayah navigation">
-                  <label
-                    class="pocket-quran-control-label"
-                    for="pocketQuranAyahInput"
-                    >Ayah</label
+              </div>
+              <div class="todo-input-container">
+                <input
+                  type="text"
+                  class="todo-input"
+                  id="todoInput"
+                  placeholder="Add a new task..."
+                  maxlength="200"
+                />
+                <button class="todo-add-btn" id="todoAddBtn" title="Add Task">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
                   >
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="todo-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">
+                  Completed
+                </button>
+              </div>
+              <ul class="todo-list" id="todoList"></ul>
+              <div
+                class="todo-pagination"
+                id="todoPagination"
+                aria-label="Todo pagination"
+                hidden
+              ></div>
+            </section>
+
+            <!-- Adhkar Card -->
+            <section class="card adhkar-card" id="adhkarCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📿</span>
+                  <span
+                    id="adhkarHeaderText"
+                    class="adhkar-header-text"
+                    aria-live="polite"
+                    >Adhkar</span
+                  >
+                </h2>
+                <div class="card-header-actions">
+                  <button
+                    class="flashcard-mode-toggle-btn"
+                    id="adhkarScriptToggleBtn"
+                    type="button"
+                    aria-label="Toggle Arabic/Romanization"
+                    title="Toggle Arabic/Romanization"
+                  >
+                    <span class="mode-icon">Aa</span>
+                  </button>
+
                   <div
-                    class="pocket-quran-combobox pocket-quran-combobox-with-nav"
-                    id="pocketQuranAyahCombobox"
+                    class="card-blur-menu"
+                    aria-label="Adhkar blur menu"
+                    data-card-id="adhkarCard"
                   >
                     <button
-                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
-                      id="pocketQuranAyahPrev"
+                      class="card-blur-btn"
+                      id="adhkarBlurMenuBtn"
                       type="button"
-                      aria-label="Previous ayah"
-                      title="Previous ayah"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
                     >
-                      ❮
+                      ✨
                     </button>
-                    <input
-                      class="pocket-quran-pill-input pocket-quran-pill-input-with-nav pocket-quran-ayah-input"
-                      id="pocketQuranAyahInput"
-                      type="text"
-                      inputmode="numeric"
-                      autocomplete="off"
-                      spellcheck="false"
-                      aria-label="Jump to ayah"
-                    />
-                    <button
-                      class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
-                      id="pocketQuranAyahNext"
-                      type="button"
-                      aria-label="Next ayah"
-                      title="Next ayah"
-                    >
-                      ❯
-                    </button>
-                    <div
-                      class="pocket-quran-dropdown"
-                      id="pocketQuranAyahDropdown"
-                      role="listbox"
-                      aria-label="Ayah list"
-                      hidden
-                    >
-                      <div
-                        class="pocket-quran-dropdown-list"
-                        id="pocketQuranAyahList"
-                      ></div>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div class="pocket-quran-size-controls" aria-label="Text size">
-                  <div class="pocket-quran-size-control">
-                    <label
-                      class="pocket-quran-control-label"
-                      for="pocketQuranArabicSizeRange"
-                      >Arabic</label
-                    >
-                    <input
-                      class="pocket-quran-size-range"
-                      id="pocketQuranArabicSizeRange"
-                      type="range"
-                      min="8"
-                      max="144"
-                      value="32"
-                      aria-label="Arabic text size"
-                    />
-                    <span
-                      class="pocket-quran-size-value"
-                      id="pocketQuranArabicSizeValue"
-                      >32px</span
-                    >
-                  </div>
-
-                  <div class="pocket-quran-size-control">
-                    <label
-                      class="pocket-quran-control-label"
-                      for="pocketQuranTranslationSizeRange"
-                      >Translation</label
-                    >
-                    <input
-                      class="pocket-quran-size-range"
-                      id="pocketQuranTranslationSizeRange"
-                      type="range"
-                      min="8"
-                      max="144"
-                      value="18"
-                      aria-label="Translation text size"
-                    />
-                    <span
-                      class="pocket-quran-size-value"
-                      id="pocketQuranTranslationSizeValue"
-                      >18px</span
-                    >
-                  </div>
-
-                  <div class="pocket-quran-toggle-group">
-                    <button
-                      type="button"
-                      class="pq-tajweed-toggle"
-                      id="pocketQuranTajweedToggle"
-                      aria-pressed="false"
-                      title="Toggle Tajweed color-coded Arabic text"
-                    >
-                      <span class="pq-tajweed-toggle-icon" aria-hidden="true"
-                        >🎨</span
-                      >
-                    </button>
-
-                    <button
-                      type="button"
-                      class="pq-tajweed-toggle pq-font-toggle"
-                      id="pocketQuranFontToggle"
-                      aria-label="Change Arabic font"
-                      title="Change Arabic font"
-                    >
-                      <span class="pq-tajweed-toggle-icon" aria-hidden="true"
-                        >Aa</span
-                      >
-                    </button>
                   </div>
                 </div>
               </div>
 
-              <div
-                class="pocket-quran-content"
-                id="pocketQuranContent"
-                aria-live="polite"
-              ></div>
-            </div>
-          </div>
-        </section>
-      </main>
+              <div class="flashcard-viewer adhkar-viewer">
+                <button
+                  class="flashcard-nav flashcard-nav-prev"
+                  id="adhkarPrevBtn"
+                  type="button"
+                  aria-label="Previous adhkar"
+                  title="Previous"
+                >
+                  ❮
+                </button>
+
+                <div class="adhkar-shell" id="adhkarCardShell">
+                  <div class="adhkar-meta-title" id="adhkarTitleText"></div>
+                  <div class="adhkar-top" id="adhkarTopText">Loading...</div>
+                  <div class="adhkar-divider" aria-hidden="true"></div>
+                  <div class="adhkar-english" id="adhkarEnglishText"></div>
+                  <div
+                    class="adhkar-divider"
+                    id="adhkarReferenceDivider"
+                    aria-hidden="true"
+                    hidden
+                  ></div>
+                  <div
+                    class="adhkar-reference"
+                    id="adhkarReferenceText"
+                    hidden
+                  ></div>
+                  <div
+                    class="adhkar-repeat-badge"
+                    id="adhkarRepeatText"
+                    hidden
+                  ></div>
+                </div>
+
+                <button
+                  class="flashcard-nav flashcard-nav-next"
+                  id="adhkarNextBtn"
+                  type="button"
+                  aria-label="Next adhkar"
+                  title="Next"
+                >
+                  ❯
+                </button>
+              </div>
+
+              <div class="flashcard-jump" aria-label="Jump to adhkar">
+                <div class="flashcard-jump-label" id="adhkarJumpLabel">
+                  0 / 0
+                </div>
+                <input
+                  type="range"
+                  class="flashcard-jump-slider"
+                  id="adhkarJumpSlider"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  aria-label="Adhkar position slider"
+                />
+                <input
+                  type="number"
+                  class="flashcard-jump-input"
+                  id="adhkarJumpInput"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Go to adhkar number"
+                />
+
+                <div
+                  class="flashcard-auto-wrap"
+                  id="adhkarAutoWrap"
+                  aria-label="Auto-advance controls"
+                >
+                  <button
+                    class="flashcard-auto-toggle-btn"
+                    id="adhkarAutoAdvanceToggleBtn"
+                    type="button"
+                    aria-pressed="false"
+                    title="Pause auto-advance"
+                    aria-label="Pause auto-advance"
+                  >
+                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                  </button>
+                  <div class="flashcard-auto-status" id="adhkarAutoStatus">
+                    Auto
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Hadith Card (Full Width) -->
+            <section class="card hadith-card" id="hadithCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📜</span>
+                  <span
+                    id="hadithHeaderText"
+                    class="adhkar-header-text"
+                    aria-live="polite"
+                    >Hadith</span
+                  >
+                </h2>
+                <div class="card-header-actions">
+                  <div
+                    class="card-blur-menu"
+                    aria-label="Hadith blur menu"
+                    data-card-id="hadithCard"
+                  >
+                    <button
+                      class="card-blur-btn"
+                      id="hadithBlurMenuBtn"
+                      type="button"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
+                    >
+                      ✨
+                    </button>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flashcard-viewer hadith-viewer">
+                <button
+                  class="flashcard-nav flashcard-nav-prev"
+                  id="hadithPrevBtn"
+                  type="button"
+                  aria-label="Previous hadith"
+                  title="Previous"
+                >
+                  ❮
+                </button>
+
+                <div class="hadith-shell" id="hadithCardShell">
+                  <div class="hadith-title" id="hadithTitleText">
+                    Loading...
+                  </div>
+                  <div class="hadith-text" id="hadithBodyText"></div>
+                  <div
+                    class="adhkar-divider"
+                    id="hadithMetaDivider"
+                    aria-hidden="true"
+                    hidden
+                  ></div>
+                  <div class="hadith-meta" id="hadithMetaText" hidden></div>
+                </div>
+
+                <button
+                  class="flashcard-nav flashcard-nav-next"
+                  id="hadithNextBtn"
+                  type="button"
+                  aria-label="Next hadith"
+                  title="Next"
+                >
+                  ❯
+                </button>
+              </div>
+
+              <div class="flashcard-jump" aria-label="Jump to hadith">
+                <div class="flashcard-jump-label" id="hadithJumpLabel">
+                  0 / 0
+                </div>
+                <input
+                  type="range"
+                  class="flashcard-jump-slider"
+                  id="hadithJumpSlider"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  aria-label="Hadith position slider"
+                />
+                <input
+                  type="number"
+                  class="flashcard-jump-input"
+                  id="hadithJumpInput"
+                  min="1"
+                  max="1"
+                  value="1"
+                  step="1"
+                  inputmode="numeric"
+                  aria-label="Go to hadith number"
+                />
+
+                <div
+                  class="flashcard-auto-wrap"
+                  id="hadithAutoWrap"
+                  aria-label="Auto-advance controls"
+                >
+                  <button
+                    class="flashcard-auto-toggle-btn"
+                    id="hadithAutoAdvanceToggleBtn"
+                    type="button"
+                    aria-pressed="false"
+                    title="Pause auto-advance"
+                    aria-label="Pause auto-advance"
+                  >
+                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                  </button>
+                  <div class="flashcard-auto-status" id="hadithAutoStatus">
+                    Auto
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Notes (Full Width) -->
+            <section class="card notes-card" id="notesCard">
+              <div class="card-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📝</span>
+                  Notes
+                </h2>
+                <div class="card-header-actions">
+                  <div class="notes-header-actions" aria-label="Notes actions">
+                    <button
+                      class="notes-new-btn"
+                      id="notesNewBtn"
+                      type="button"
+                      aria-label="Create new note"
+                      title="New note"
+                    >
+                      ✚
+                    </button>
+                    <button
+                      class="notes-delete-btn"
+                      id="notesDeleteBtn"
+                      type="button"
+                      aria-label="Delete current note"
+                      title="Delete note"
+                      disabled
+                    >
+                      🗑
+                    </button>
+                  </div>
+
+                  <div
+                    class="card-blur-menu"
+                    aria-label="Notes blur menu"
+                    data-card-id="notesCard"
+                  >
+                    <button
+                      class="card-blur-btn"
+                      id="notesBlurMenuBtn"
+                      type="button"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
+                    >
+                      ✨
+                    </button>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="notes-layout">
+                <div class="notes-list-wrap" aria-label="Notes list">
+                  <div class="notes-list" id="notesList" role="list"></div>
+
+                  <div class="notes-pagination" aria-label="Notes pagination">
+                    <button
+                      class="notes-page-btn"
+                      id="notesPrevPageBtn"
+                      type="button"
+                      aria-label="Previous notes page"
+                    >
+                      ❮
+                    </button>
+                    <div class="notes-page-info" id="notesPageInfo"></div>
+                    <button
+                      class="notes-page-btn"
+                      id="notesNextPageBtn"
+                      type="button"
+                      aria-label="Next notes page"
+                    >
+                      ❯
+                    </button>
+                  </div>
+                </div>
+
+                <div class="notes-editor-wrap" aria-label="Notes editor">
+                  <input
+                    type="text"
+                    class="notes-title-input"
+                    id="notesTitleInput"
+                    placeholder="Note title"
+                    maxlength="120"
+                    aria-label="Note title"
+                  />
+
+                  <div class="notes-toolbar" id="notesToolbar" role="toolbar">
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="toggleMarkdown"
+                      aria-label="Toggle Markdown / Raw text"
+                      title="Toggle Markdown / Raw text"
+                      id="notesMarkdownToggleBtn"
+                    >
+                      MD
+                    </button>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="bold"
+                      aria-label="Bold"
+                      title="Bold"
+                    >
+                      <b>B</b>
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="italic"
+                      aria-label="Italic"
+                      title="Italic"
+                    >
+                      <i>I</i>
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="underline"
+                      aria-label="Underline"
+                      title="Underline"
+                    >
+                      <u>U</u>
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="strikeThrough"
+                      aria-label="Strikethrough"
+                      title="Strikethrough"
+                    >
+                      <s>S</s>
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertUnorderedList"
+                      aria-label="Bullet list"
+                      title="Bullet list"
+                    >
+                      •
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertOrderedList"
+                      aria-label="Numbered list"
+                      title="Numbered list"
+                    >
+                      1.
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="checklist"
+                      aria-label="Checkmark list"
+                      title="Checkmark list"
+                    >
+                      ☑
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-block="H1"
+                      aria-label="Heading 1"
+                      title="H1"
+                    >
+                      H1
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-block="H2"
+                      aria-label="Heading 2"
+                      title="H2"
+                    >
+                      H2
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-block="H3"
+                      aria-label="Heading 3"
+                      title="H3"
+                    >
+                      H3
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-block="H4"
+                      aria-label="Heading 4"
+                      title="H4"
+                    >
+                      H4
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-block="P"
+                      aria-label="Paragraph"
+                      title="Paragraph"
+                    >
+                      P
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <div class="notes-scale-control" aria-label="Text size">
+                      <label class="notes-scale-label" for="notesScaleRange">
+                        Size
+                      </label>
+                      <input
+                        class="notes-scale-range"
+                        id="notesScaleRange"
+                        type="range"
+                        min="1"
+                        max="5"
+                        step="0.05"
+                        value="1"
+                        aria-label="Text size"
+                      />
+                      <span class="notes-scale-value" id="notesScaleValue"
+                        >1.00x</span
+                      >
+                    </div>
+                  </div>
+
+                  <textarea
+                    class="notes-editor hidden"
+                    id="notesRawEditor"
+                    spellcheck="true"
+                    aria-label="Note raw text"
+                  ></textarea>
+
+                  <div
+                    class="notes-editor"
+                    id="notesEditor"
+                    contenteditable="true"
+                    spellcheck="true"
+                    aria-label="Note editor"
+                  ></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Pocket Quran (Full Width) -->
+            <section class="card pocket-quran-card" id="pocketQuranCard">
+              <div class="card-header pocket-quran-header">
+                <h2 class="card-title">
+                  <span class="card-icon">📖</span>
+                  Pocket Quran
+                </h2>
+                <div class="card-header-actions">
+                  <div
+                    class="pocket-quran-header-meta"
+                    id="pocketQuranHeaderMeta"
+                  >
+                    Loading…
+                  </div>
+
+                  <div
+                    class="card-blur-menu"
+                    aria-label="Pocket Quran blur menu"
+                    data-card-id="pocketQuranCard"
+                  >
+                    <button
+                      class="card-blur-btn"
+                      id="pocketQuranBlurMenuBtn"
+                      type="button"
+                      aria-label="Open blur settings"
+                      title="Blur & Glass Settings"
+                    >
+                      ✨
+                    </button>
+                    <div class="blur-settings-popup">
+                      <div class="blur-popup-header">
+                        <span class="blur-popup-title">
+                          <span class="blur-popup-title-icon">✨</span>
+                          Glass Settings
+                        </span>
+                        <button
+                          class="blur-popup-close"
+                          type="button"
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div class="blur-setting-section">
+                        <span class="blur-setting-label">Glass Effect</span>
+                        <div class="blur-glass-toggle">
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="off"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-label">Off</span>
+                          </button>
+                          <button
+                            class="blur-glass-option active"
+                            data-glass-value="dashboard"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-label">Dash</span>
+                          </button>
+                          <button
+                            class="blur-glass-option"
+                            data-glass-value="on"
+                            type="button"
+                          >
+                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-label">On</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="blur-setting-section">
+                        <div class="blur-power-header">
+                          <span class="blur-setting-label">Blur Power</span>
+                          <label class="blur-power-toggle">
+                            <input
+                              type="checkbox"
+                              class="blur-power-checkbox"
+                            />
+                            <span class="blur-power-switch"></span>
+                            <span class="blur-power-toggle-label">Custom</span>
+                          </label>
+                        </div>
+                        <div class="blur-power-slider-wrap disabled">
+                          <input
+                            type="range"
+                            class="blur-power-slider"
+                            min="0"
+                            max="200"
+                            value="100"
+                          />
+                          <span class="blur-power-value">100%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pocket-quran-shell">
+                <div class="pocket-quran-main">
+                  <div
+                    class="pocket-quran-controls"
+                    aria-label="Pocket Quran controls"
+                  >
+                    <div
+                      class="pocket-quran-surah-picker"
+                      aria-label="Surah selection"
+                    >
+                      <label
+                        class="pocket-quran-control-label"
+                        for="pocketQuranSurahInput"
+                        >Surah</label
+                      >
+                      <div
+                        class="pocket-quran-combobox pocket-quran-combobox-with-nav"
+                        id="pocketQuranSurahCombobox"
+                      >
+                        <button
+                          class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
+                          id="pocketQuranSurahPrev"
+                          type="button"
+                          aria-label="Previous surah"
+                          title="Previous surah"
+                        >
+                          ❮
+                        </button>
+                        <input
+                          class="pocket-quran-pill-input pocket-quran-pill-input-with-nav"
+                          id="pocketQuranSurahInput"
+                          type="text"
+                          autocomplete="off"
+                          spellcheck="false"
+                          aria-label="Search surah"
+                        />
+                        <button
+                          class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
+                          id="pocketQuranSurahNext"
+                          type="button"
+                          aria-label="Next surah"
+                          title="Next surah"
+                        >
+                          ❯
+                        </button>
+                        <div
+                          class="pocket-quran-dropdown"
+                          id="pocketQuranSurahDropdown"
+                          role="listbox"
+                          aria-label="Surah list"
+                          hidden
+                        >
+                          <div
+                            class="pocket-quran-dropdown-list"
+                            id="pocketQuranSurahList"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="pocket-quran-ayah-nav"
+                      aria-label="Ayah navigation"
+                    >
+                      <label
+                        class="pocket-quran-control-label"
+                        for="pocketQuranAyahInput"
+                        >Ayah</label
+                      >
+                      <div
+                        class="pocket-quran-combobox pocket-quran-combobox-with-nav"
+                        id="pocketQuranAyahCombobox"
+                      >
+                        <button
+                          class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-prev"
+                          id="pocketQuranAyahPrev"
+                          type="button"
+                          aria-label="Previous ayah"
+                          title="Previous ayah"
+                        >
+                          ❮
+                        </button>
+                        <input
+                          class="pocket-quran-pill-input pocket-quran-pill-input-with-nav pocket-quran-ayah-input"
+                          id="pocketQuranAyahInput"
+                          type="text"
+                          inputmode="numeric"
+                          autocomplete="off"
+                          spellcheck="false"
+                          aria-label="Jump to ayah"
+                        />
+                        <button
+                          class="pocket-quran-inline-nav-btn pocket-quran-inline-nav-next"
+                          id="pocketQuranAyahNext"
+                          type="button"
+                          aria-label="Next ayah"
+                          title="Next ayah"
+                        >
+                          ❯
+                        </button>
+                        <div
+                          class="pocket-quran-dropdown"
+                          id="pocketQuranAyahDropdown"
+                          role="listbox"
+                          aria-label="Ayah list"
+                          hidden
+                        >
+                          <div
+                            class="pocket-quran-dropdown-list"
+                            id="pocketQuranAyahList"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="pocket-quran-size-controls"
+                      aria-label="Text size"
+                    >
+                      <div class="pocket-quran-size-control">
+                        <label
+                          class="pocket-quran-control-label"
+                          for="pocketQuranArabicSizeRange"
+                          >Arabic</label
+                        >
+                        <input
+                          class="pocket-quran-size-range"
+                          id="pocketQuranArabicSizeRange"
+                          type="range"
+                          min="8"
+                          max="144"
+                          value="32"
+                          aria-label="Arabic text size"
+                        />
+                        <span
+                          class="pocket-quran-size-value"
+                          id="pocketQuranArabicSizeValue"
+                          >32px</span
+                        >
+                      </div>
+
+                      <div class="pocket-quran-size-control">
+                        <label
+                          class="pocket-quran-control-label"
+                          for="pocketQuranTranslationSizeRange"
+                          >Translation</label
+                        >
+                        <input
+                          class="pocket-quran-size-range"
+                          id="pocketQuranTranslationSizeRange"
+                          type="range"
+                          min="8"
+                          max="144"
+                          value="18"
+                          aria-label="Translation text size"
+                        />
+                        <span
+                          class="pocket-quran-size-value"
+                          id="pocketQuranTranslationSizeValue"
+                          >18px</span
+                        >
+                      </div>
+
+                      <div class="pocket-quran-toggle-group">
+                        <button
+                          type="button"
+                          class="pq-tajweed-toggle"
+                          id="pocketQuranTajweedToggle"
+                          aria-pressed="false"
+                          title="Toggle Tajweed color-coded Arabic text"
+                        >
+                          <span
+                            class="pq-tajweed-toggle-icon"
+                            aria-hidden="true"
+                            >🎨</span
+                          >
+                        </button>
+
+                        <button
+                          type="button"
+                          class="pq-tajweed-toggle pq-font-toggle"
+                          id="pocketQuranFontToggle"
+                          aria-label="Change Arabic font"
+                          title="Change Arabic font"
+                        >
+                          <span
+                            class="pq-tajweed-toggle-icon"
+                            aria-hidden="true"
+                            >Aa</span
+                          >
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="pocket-quran-content"
+                    id="pocketQuranContent"
+                    aria-live="polite"
+                  ></div>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+
+      <aside
+        class="sidebar-column sidebar-right"
+        id="sidebarRight"
+        aria-label="Right sidebar"
+      >
+        <div class="sidebar-zone count-0" id="sidebarRightZone"></div>
+      </aside>
     </div>
 
     <!-- Bottom-right Hamburger Menu (expands upward) -->
@@ -1751,6 +1832,28 @@
       <div class="fab-menu-items" id="fabMenuItems" aria-hidden="true">
         <!-- Dynamic items (e.g., Sticky Notes buttons) are injected here -->
         <div class="fab-menu-dynamic" id="fabMenuDynamicItems"></div>
+
+        <button
+          class="sidebar-mode-btn"
+          id="sidebarModeBtn"
+          title="Sidebar Mode"
+          aria-label="Toggle Sidebar Mode"
+          aria-pressed="false"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="4" width="5" height="16"></rect>
+            <rect x="9.5" y="4" width="5" height="16"></rect>
+            <rect x="16" y="4" width="5" height="16"></rect>
+          </svg>
+        </button>
 
         <button
           class="quran-focus-btn"

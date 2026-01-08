@@ -38,6 +38,8 @@ class MuslimDashboard {
 
     // Grid layout manager for drag-and-drop
     this.gridLayout = null; // Will be initialized after DOM
+    // Sidebar mode (3-column layout)
+    this.sidebarModeEnabled = false;
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -351,6 +353,53 @@ class MuslimDashboard {
     }, startupDelay);
   }
 
+  initSidebarMode() {
+    const btn = document.getElementById("sidebarModeBtn");
+    if (!btn) return;
+
+    const setEnabled = (enabled) => {
+      const next = enabled === true;
+
+      // Disabling: restore first (so markers are honored) then clear mode
+      if (!next) {
+        try {
+          if (
+            this.gridLayout &&
+            typeof this.gridLayout.restoreSidebarItems === "function"
+          ) {
+            this.gridLayout.restoreSidebarItems();
+          }
+        } catch (e) {
+          console.warn("Sidebar restore failed:", e);
+        }
+      }
+
+      this.sidebarModeEnabled = next;
+      document.body.classList.toggle("sidebar-mode", next);
+
+      btn.classList.toggle("active", next);
+      btn.setAttribute("aria-pressed", next ? "true" : "false");
+
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setSidebarModeEnabled === "function"
+        ) {
+          this.gridLayout.setSidebarModeEnabled(next);
+        }
+      } catch (e) {
+        console.warn("Sidebar mode flag set failed:", e);
+      }
+    };
+
+    // Ensure initial state is OFF
+    setEnabled(false);
+
+    btn.addEventListener("click", () => {
+      setEnabled(!this.sidebarModeEnabled);
+    });
+  }
+
   /**
    * Initialize the dashboard
    * Non-blocking startup: All UI components render immediately,
@@ -482,6 +531,9 @@ class MuslimDashboard {
     } catch (e) {
       console.warn("GridLayoutManager init failed:", e);
     }
+
+    // Initialize sidebar mode toggle (FAB button)
+    this.initSidebarMode();
 
     // Apply heading settings
     this.applyHeadingSettings();

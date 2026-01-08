@@ -201,6 +201,134 @@ body {
   flex-direction: column;
 }
 
+/* ========================================
+   Sidebar Mode
+   3-column layout with sticky sidebars
+   ======================================== */
+
+/* Default (non-sidebar-mode): behave exactly like the old layout */
+.sidebar-layout {
+  width: 100%;
+}
+
+.sidebar-column {
+  display: none;
+}
+
+.sidebar-middle {
+  width: 100%;
+}
+
+body.sidebar-mode .sidebar-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr; /* 25% / 50% / 25% */
+  grid-template-rows: 1fr;
+  align-items: start;
+  width: 100%;
+}
+
+body.sidebar-mode .sidebar-column {
+  display: block;
+  position: sticky;
+  top: var(--spacing-xl);
+  max-height: calc(100vh - 2 * var(--spacing-xl));
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+/* Middle column should keep the normal page scroll behavior */
+body.sidebar-mode .main-container {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+}
+
+/* Sidebar zones: max 3 items, distributed vertically */
+.sidebar-zone {
+  height: 100%;
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.sidebar-zone.count-0 {
+  grid-template-rows: 1fr;
+}
+
+.sidebar-zone.count-1 {
+  grid-template-rows: 1fr;
+}
+
+.sidebar-zone.count-2 {
+  grid-template-rows: 1fr 1fr;
+}
+
+.sidebar-zone.count-3 {
+  grid-template-rows: 1fr 1fr 1fr;
+}
+
+.sidebar-slot {
+  display: flex;
+  align-items: center; /* vertically center the component within its slot */
+  justify-content: center;
+  min-height: 0;
+}
+
+.sidebar-slot > * {
+  width: 100%;
+}
+
+/* Drop target highlight (set by JS during drag) */
+.sidebar-zone.sidebar-drop-target {
+  outline: 2px dashed rgba(255, 255, 255, 0.35);
+  outline-offset: 6px;
+  border-radius: var(--radius-lg);
+}
+
+/* Sidebar Mode Button in FAB Menu */
+.sidebar-mode-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(26, 95, 74, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.sidebar-mode-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sidebar-mode-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(26, 95, 74, 0.55);
+}
+
+.sidebar-mode-btn.active {
+  background: linear-gradient(
+    135deg,
+    var(--accent-gold),
+    var(--accent-gold-light)
+  );
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+}
+
+.sidebar-mode-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
 /* Blur-safe fade-in: uses minimal opacity to trigger backdrop-filter compositing
    immediately while still appearing invisible to the user */
 @keyframes fadeInBlurSafe {
@@ -2500,6 +2628,15 @@ textarea.notes-editor:focus {
 
 body.quran-focus-mode {
   overflow: hidden;
+}
+
+/* Focus mode overrides sidebar mode layout */
+body.quran-focus-mode .sidebar-layout {
+  display: block !important;
+}
+
+body.quran-focus-mode .sidebar-column {
+  display: none !important;
 }
 
 body.quran-focus-mode .main-container {
