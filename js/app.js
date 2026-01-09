@@ -514,11 +514,7 @@ class MuslimDashboard {
    * API-dependent data loads in background without blocking interaction
    */
   async init() {
-    console.log("Muslim Dashboard initializing...");
-
-    try {
-      window.renderLucideIcons?.();
-    } catch (e) {}
+    console.log("🕌 Muslim Dashboard initializing...");
 
     // Ensure Pocket Quran has a default Arabic font family before the component
     // initializes (so existing users missing this field get a stable default).
@@ -677,11 +673,7 @@ class MuslimDashboard {
     // Setup location updates
     this.setupLocationUpdates();
 
-    try {
-      window.renderLucideIcons?.();
-    } catch (e) {}
-
-    console.log("Muslim Dashboard UI ready!");
+    console.log("✅ Muslim Dashboard UI ready!");
 
     // ════════════════════════════════════════════════════════════════════════
     // ASYNC BACKGROUND INITIALIZATION
@@ -749,10 +741,7 @@ class MuslimDashboard {
 
     // Wait for all background tasks to complete (non-blocking for UI)
     Promise.allSettled(backgroundTasks).then(() => {
-      try {
-        window.renderLucideIcons?.();
-      } catch (e) {}
-      console.log("Muslim Dashboard fully loaded (all data fetched)!");
+      console.log("✅ Muslim Dashboard fully loaded (all data fetched)!");
     });
   }
 
@@ -960,15 +949,12 @@ class MuslimDashboard {
         }
 
         // Update button icon based on state
-        const iconName =
-          state === "off" ? "square" : state === "on" ? "sparkles" : "link";
-        if (typeof window.setLucideIcon === "function") {
-          window.setLucideIcon(btn, iconName);
+        if (state === "off") {
+          btn.textContent = "⬜";
+        } else if (state === "on") {
+          btn.textContent = "✨";
         } else {
-          btn.innerHTML = `<i data-lucide="${iconName}"></i>`;
-          if (typeof window.renderLucideIcons === "function") {
-            window.renderLucideIcons(btn);
-          }
+          btn.textContent = "🔗";
         }
 
         // Notify components

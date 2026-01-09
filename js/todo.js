@@ -193,7 +193,7 @@ class TodoManager {
     if (filteredTodos.length === 0) {
       this.todoList.innerHTML = `
         <li class="empty-state">
-          <div class="empty-state-icon"><i data-lucide="list-todo"></i></div>
+          <div class="empty-state-icon">📝</div>
           <p>${
             this.filter === "all"
               ? "No tasks yet. Add one above!"
@@ -211,10 +211,6 @@ class TodoManager {
         .join("");
 
       this.renderPagination({ totalPages, visible: shouldPaginate });
-    }
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.todoList);
     }
 
     // Update count
@@ -246,7 +242,6 @@ class TodoManager {
 
     const mkBtn = ({
       label,
-      labelHtml = null,
       pageValue,
       disabled = false,
       ariaLabel,
@@ -255,11 +250,7 @@ class TodoManager {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = `todo-page-btn${active ? " active" : ""}`;
-      if (labelHtml != null) {
-        btn.innerHTML = labelHtml;
-      } else {
-        btn.textContent = label;
-      }
+      btn.textContent = label;
       if (ariaLabel) btn.setAttribute("aria-label", ariaLabel);
       btn.disabled = !!disabled;
       btn.dataset.page = String(pageValue);
@@ -271,8 +262,7 @@ class TodoManager {
 
     container.appendChild(
       mkBtn({
-        labelHtml: '<i data-lucide="chevron-left"></i>',
-        label: "",
+        label: "❮",
         pageValue: page - 1,
         disabled: page <= 1,
         ariaLabel: "Previous todo page",
@@ -340,8 +330,7 @@ class TodoManager {
 
     container.appendChild(
       mkBtn({
-        labelHtml: '<i data-lucide="chevron-right"></i>',
-        label: "",
+        label: "❯",
         pageValue: page + 1,
         disabled: page >= totalPages,
         ariaLabel: "Next todo page",
@@ -350,10 +339,6 @@ class TodoManager {
 
     this.todoPagination.innerHTML = "";
     this.todoPagination.appendChild(container);
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.todoPagination);
-    }
 
     if (!this._paginationBound) {
       this._paginationBound = true;
@@ -378,7 +363,7 @@ class TodoManager {
     }">
         <div class="todo-checkbox ${
           todo.completed ? "checked" : ""
-        }" data-action="toggle"><i data-lucide="check"></i></div>
+        }" data-action="toggle"></div>
         <span class="todo-text" data-action="toggle">${this.escapeHtml(
           todo.text
         )}</span>

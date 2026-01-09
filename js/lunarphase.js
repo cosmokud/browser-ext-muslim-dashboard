@@ -46,20 +46,16 @@ class LunarPhaseManager {
     if (this.locationEl) {
       const city = (loc.city || "").trim();
       if (city) {
-        this.locationEl.innerHTML = `<i data-lucide="map-pin"></i> ${city}`;
+        this.locationEl.textContent = `📍 ${city}`;
       } else if (
         Number.isFinite(Number(loc.latitude)) &&
         Number.isFinite(Number(loc.longitude))
       ) {
-        this.locationEl.innerHTML = `<i data-lucide="map-pin"></i> ${Number(
-          loc.latitude
-        ).toFixed(2)}, ${Number(loc.longitude).toFixed(2)}`;
+        this.locationEl.textContent = `📍 ${Number(loc.latitude).toFixed(
+          2
+        )}, ${Number(loc.longitude).toFixed(2)}`;
       } else {
-        this.locationEl.innerHTML = '<i data-lucide="map-pin"></i> Location';
-      }
-
-      if (typeof window.renderLucideIcons === "function") {
-        window.renderLucideIcons(this.locationEl);
+        this.locationEl.textContent = "📍 Location";
       }
     }
 

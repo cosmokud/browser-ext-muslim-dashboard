@@ -15,15 +15,15 @@ class PrayerTimesManager {
 
     // All available prayer times
     this.allPrayers = [
-      { key: "fajr", name: "Fajr", icon: "moon" },
-      { key: "sunrise", name: "Sunrise", icon: "sunrise" },
-      { key: "duha", name: "Duha", icon: "sun" },
-      { key: "dhuhr", name: "Dhuhr", icon: "sun" },
-      { key: "asr", name: "Asr", icon: "cloud-sun" },
-      { key: "maghrib", name: "Maghrib", icon: "sunset" },
-      { key: "isha", name: "Isha", icon: "moon" },
-      { key: "midnight", name: "Midnight", icon: "clock-12" },
-      { key: "qiyam", name: "Qiyam", icon: "moon-star" },
+      { key: "fajr", name: "Fajr", icon: "🌙" },
+      { key: "sunrise", name: "Sunrise", icon: "🌅" },
+      { key: "duha", name: "Duha", icon: "☀️" },
+      { key: "dhuhr", name: "Dhuhr", icon: "🌤️" },
+      { key: "asr", name: "Asr", icon: "⛅" },
+      { key: "maghrib", name: "Maghrib", icon: "🌇" },
+      { key: "isha", name: "Isha", icon: "🌙" },
+      { key: "midnight", name: "Midnight", icon: "🕛" },
+      { key: "qiyam", name: "Qiyam", icon: "🌃" },
     ];
 
     // DOM elements
@@ -121,7 +121,7 @@ class PrayerTimesManager {
         prayerItem.dataset.prayer = prayer.key;
         prayerItem.innerHTML = `
           <span class="prayer-name">
-            <span class="prayer-icon"><i data-lucide="${prayer.icon}"></i></span>
+            <span class="prayer-icon">${prayer.icon}</span>
             ${prayer.name}
           </span>
           <span class="prayer-time" id="${prayer.key}Time">--:--</span>
@@ -129,10 +129,6 @@ class PrayerTimesManager {
         this.prayerList.appendChild(prayerItem);
       }
     });
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.prayerList);
-    }
   }
 
   /**

@@ -1,10 +1,10 @@
-# Muslim Dashboard - Islamic New Tab Extension
+# 🕌 Muslim Dashboard - Islamic New Tab Extension
 
 A beautiful, interactive, and fully responsive Chrome/Edge browser extension that transforms your new tab page into a comprehensive Islamic dashboard.
 
-## Features
+## ✨ Features
 
-### Prayer Times
+### 🕋 Prayer Times
 
 - **Automatic Location Detection**: Uses GPS to detect your location automatically
 - **Manual City Search**: Enter any city name to get prayer times
@@ -20,20 +20,20 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - **Time Adjustments**: Fine-tune each prayer time by minutes
 - **Next Prayer Countdown**: Real-time countdown to the next prayer
 
-### Qibla Direction
+### 🧭 Qibla Direction
 
 - Compass showing the direction of the Ka'bah from your location
 - Degree display with cardinal direction
 - Device orientation support for mobile devices
 
-### Hijri Calendar
+### 📅 Hijri Calendar
 
 - Toggle between Hijri (Islamic) and Gregorian calendar
 - Automatic Islamic date calculation
 - Special Islamic event notifications
 - Hijri date adjustment support
 
-### To-Do List
+### ✅ To-Do List
 
 - Full CRUD functionality (Create, Read, Update, Delete)
 - Filter tasks: All, Active, Completed
@@ -41,7 +41,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Clear completed tasks with one click
 - Beautiful animations
 
-### Islamic Quotes
+### 📖 Islamic Quotes
 
 - 100+ quotes from Quran and authentic Hadith
 - Random quote display with refresh button
@@ -49,19 +49,19 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Choose to display default quotes, custom quotes, or both
 - Smooth fade transitions
 
-### Flashcards
+### � Flashcards
 
 - Two built-in read-only default sets are included: `Default` and `99 Names`.
 - Import your own flashcards via CSV, create/edit custom sets (defaults are protected), and study or quiz yourself.
 
-### Dynamic Backgrounds
+### �🖼️ Dynamic Backgrounds
 
 - High-resolution nature backgrounds from Unsplash
 - Multiple categories: Nature, Mosques, Landscapes, Mountains, Ocean, Forests, Sky
 - Configurable rotation interval (15 min to daily)
 - Smooth crossfade transitions
 
-### Comprehensive Settings
+### ⚙️ Comprehensive Settings
 
 - Location settings with auto-detect or manual entry
 - Prayer calculation customization
@@ -69,7 +69,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 - Background preferences
 - All settings persist across sessions
 
-## Installation
+## 🚀 Installation
 
 ### Chrome
 
@@ -89,7 +89,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 5. Select the `browser-ext-muslim-dashboard` folder
 6. Open a new tab to see your Muslim Dashboard!
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 browser-ext-muslim-dashboard/
@@ -120,7 +120,7 @@ browser-ext-muslim-dashboard/
 └── README.md              # This file
 ```
 
-## Design Features
+## 🎨 Design Features
 
 - **Glassmorphism UI**: Modern frosted glass effect with backdrop blur
 - **Responsive Design**: Works on all screen sizes
@@ -128,11 +128,11 @@ browser-ext-muslim-dashboard/
 - **Dark Theme**: Easy on the eyes for any time of day
 - **Arabic Typography**: Proper Arabic font support
 
-## Customization
+## 🔧 Customization
 
 ### Adding Custom Quotes
 
-1. Click the settings button in the bottom right
+1. Click the settings button (⚙️) in the bottom right
 2. Go to the "Quotes" tab
 3. Enter your quote text and source
 4. Click "Add Quote"
@@ -151,13 +151,13 @@ browser-ext-muslim-dashboard/
 3. Set rotation interval
 4. Click "Change Background Now" for immediate change
 
-## API Credits
+## 🌐 API Credits
 
 - **Background Images**: [Unsplash](https://unsplash.com/) (Free to use)
 - **Geocoding**: [OpenStreetMap Nominatim](https://nominatim.org/)
 - **Prayer Times Algorithm**: Based on [PrayTimes.org](http://praytimes.org/)
 
-## Islamic Sources
+## 📜 Islamic Sources
 
 The default quotes are sourced from:
 
@@ -170,20 +170,20 @@ The default quotes are sourced from:
 - Sunan an-Nasa'i
 - Musnad Ahmad
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## Dua
+## 🤲 Dua
 
 May Allah accept this work and make it beneficial for the Ummah. Ameen.
 
 ---
 
-**Made with care for the Muslim community worldwide**
+**Made with ❤️ for the Muslim community worldwide**
 
-_As-salamu alaykum wa Rahmatullahi wa Barakatuh_
+_As-salamu alaykum wa Rahmatullahi wa Barakatuh_ 🌙

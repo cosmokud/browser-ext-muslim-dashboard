@@ -113,19 +113,15 @@ class PinnedAppsManager {
     this.contextMenu.className = "pinned-app-context-menu";
     this.contextMenu.innerHTML = `
       <button class="context-menu-item context-menu-edit">
-        <span class="context-menu-icon"><i data-lucide="pencil"></i></span>
+        <span class="context-menu-icon">✏️</span>
         <span>Edit</span>
       </button>
       <button class="context-menu-item context-menu-delete">
-        <span class="context-menu-icon"><i data-lucide="trash-2"></i></span>
+        <span class="context-menu-icon">🗑️</span>
         <span>Delete</span>
       </button>
     `;
     document.body.appendChild(this.contextMenu);
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.contextMenu);
-    }
 
     // Context menu item click handlers
     this.contextMenu
@@ -541,32 +537,8 @@ class PinnedAppsManager {
   showFaviconStatus(message, type = "info") {
     if (!this.editFaviconStatus) return;
 
-    const iconName =
-      type === "loading"
-        ? "loader"
-        : type === "success"
-        ? "check"
-        : type === "error"
-        ? "x"
-        : null;
-
-    this.editFaviconStatus.innerHTML = "";
+    this.editFaviconStatus.textContent = message;
     this.editFaviconStatus.className = `favicon-status favicon-status-${type}`;
-
-    if (iconName) {
-      const iconWrap = document.createElement("span");
-      iconWrap.className = "favicon-status-icon";
-      iconWrap.innerHTML = `<i data-lucide="${iconName}"></i>`;
-      this.editFaviconStatus.appendChild(iconWrap);
-    }
-
-    const msg = document.createElement("span");
-    msg.textContent = String(message ?? "");
-    this.editFaviconStatus.appendChild(msg);
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.editFaviconStatus);
-    }
 
     // Auto-clear success messages
     if (type === "success") {

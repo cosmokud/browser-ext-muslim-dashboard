@@ -530,7 +530,7 @@ class GridLayoutManager {
       this.grid.classList.add("grid-layout-ready");
     });
 
-    console.log("GridLayoutManager initialized");
+    console.log("✅ GridLayoutManager initialized");
   }
 
   /**

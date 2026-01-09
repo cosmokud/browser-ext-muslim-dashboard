@@ -16,7 +16,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     emerald: {
       name: "Emerald",
-      icon: "diamond",
+      icon: "💎",
       description: "Classic Islamic green - the original glass theme",
       dark: {
         primary: "#1a5f4a",
@@ -56,7 +56,7 @@ class ThemeManager {
 
     forest: {
       name: "Forest",
-      icon: "tree-pine",
+      icon: "🌲",
       description: "Deep forest green with earthy tones",
       dark: {
         primary: "#2d5a3d",
@@ -99,7 +99,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     ocean: {
       name: "Ocean",
-      icon: "waves",
+      icon: "🌊",
       description: "Deep ocean blue with coral accents",
       dark: {
         primary: "#1a4a6a",
@@ -139,7 +139,7 @@ class ThemeManager {
 
     sapphire: {
       name: "Sapphire",
-      icon: "gem",
+      icon: "💠",
       description: "Royal blue with silver highlights",
       dark: {
         primary: "#1e3a5f",
@@ -182,7 +182,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     amethyst: {
       name: "Amethyst",
-      icon: "sparkles",
+      icon: "🔮",
       description: "Rich purple with mystical vibes",
       dark: {
         primary: "#5a3d7a",
@@ -222,7 +222,7 @@ class ThemeManager {
 
     lavender: {
       name: "Lavender",
-      icon: "flower-2",
+      icon: "💜",
       description: "Soft lavender with rose gold accents",
       dark: {
         primary: "#6b5b95",
@@ -265,7 +265,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     ruby: {
       name: "Ruby",
-      icon: "heart",
+      icon: "❤️",
       description: "Deep ruby red with warm undertones",
       dark: {
         primary: "#8b1a1a",
@@ -305,7 +305,7 @@ class ThemeManager {
 
     rose: {
       name: "Rose",
-      icon: "flower",
+      icon: "🌹",
       description: "Elegant rose with champagne highlights",
       dark: {
         primary: "#9c4a6d",
@@ -348,7 +348,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     sunset: {
       name: "Sunset",
-      icon: "sunset",
+      icon: "🌅",
       description: "Warm sunset orange with golden glow",
       dark: {
         primary: "#c95a30",
@@ -388,7 +388,7 @@ class ThemeManager {
 
     amber: {
       name: "Amber",
-      icon: "droplet",
+      icon: "🍯",
       description: "Golden amber with honey tones",
       dark: {
         primary: "#a67c00",
@@ -431,7 +431,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     midnight: {
       name: "Midnight",
-      icon: "moon",
+      icon: "🌙",
       description: "Deep midnight blue, perfect for night",
       dark: {
         primary: "#2c3e50",
@@ -471,7 +471,7 @@ class ThemeManager {
 
     slate: {
       name: "Slate",
-      icon: "mountain",
+      icon: "🪨",
       description: "Modern slate gray with teal accents",
       dark: {
         primary: "#475569",
@@ -514,7 +514,7 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     pureWhite: {
       name: "Pure White",
-      icon: "square",
+      icon: "⬜",
       description: "Clean white glass with customizable accent",
       customizable: true,
       dark: {
@@ -555,7 +555,7 @@ class ThemeManager {
 
     pureBlack: {
       name: "Pure Black",
-      icon: "square",
+      icon: "⬛",
       description: "Deep black glass with customizable accent",
       customizable: true,
       dark: {

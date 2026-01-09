@@ -502,32 +502,8 @@ class SearchBarManager {
   showFaviconStatus(message, type = "info") {
     if (!this.editFaviconStatus) return;
 
-    const iconName =
-      type === "loading"
-        ? "loader"
-        : type === "success"
-        ? "check"
-        : type === "error"
-        ? "x"
-        : null;
-
-    this.editFaviconStatus.innerHTML = "";
+    this.editFaviconStatus.textContent = message;
     this.editFaviconStatus.className = `favicon-status favicon-status-${type}`;
-
-    if (iconName) {
-      const iconWrap = document.createElement("span");
-      iconWrap.className = "favicon-status-icon";
-      iconWrap.innerHTML = `<i data-lucide="${iconName}"></i>`;
-      this.editFaviconStatus.appendChild(iconWrap);
-    }
-
-    const msg = document.createElement("span");
-    msg.textContent = String(message ?? "");
-    this.editFaviconStatus.appendChild(msg);
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(this.editFaviconStatus);
-    }
 
     // Auto-clear success messages
     if (type === "success") {
@@ -578,7 +554,7 @@ class SearchBarManager {
     menu.classList.add("search-bar-context-menu");
     menu.innerHTML = `
       <button class="context-menu-item context-menu-edit" type="button">
-        <span class="context-menu-icon"><i data-lucide="pencil"></i></span>
+        <span class="context-menu-icon">✏️</span>
         <span>Edit</span>
       </button>
       <div class="context-menu-divider" role="separator"></div>
@@ -586,23 +562,19 @@ class SearchBarManager {
         <div class="context-menu-accent-title">Accent color</div>
         <div class="context-menu-accent-palette" data-role="accent-palette"></div>
         <button class="context-menu-item context-menu-accent-custom" type="button">
-          <span class="context-menu-icon"><i data-lucide="palette"></i></span>
+          <span class="context-menu-icon">🎨</span>
           <span>Custom color…</span>
         </button>
       </div>
       <div class="context-menu-divider" role="separator"></div>
       <button class="context-menu-item context-menu-delete" type="button">
-        <span class="context-menu-icon"><i data-lucide="trash-2"></i></span>
+        <span class="context-menu-icon">🗑️</span>
         <span>Delete</span>
       </button>
     `;
 
     document.body.appendChild(menu);
     this.contextMenu = menu;
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(menu);
-    }
 
     // Hidden color input to allow arbitrary selection.
     const colorInput = document.createElement("input");

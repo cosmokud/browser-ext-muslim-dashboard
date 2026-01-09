@@ -353,12 +353,8 @@ class FlashcardManager {
         ? "Resume auto-advance"
         : "Pause auto-advance";
       this.autoAdvanceToggleBtn.innerHTML = `<span class="auto-icon" aria-hidden="true">${
-        paused ? '<i data-lucide="play"></i>' : '<i data-lucide="pause"></i>'
+        paused ? "▶" : "⏸"
       }</span>`;
-
-      if (typeof window.renderLucideIcons === "function") {
-        window.renderLucideIcons(this.autoAdvanceToggleBtn);
-      }
 
       this.autoAdvanceToggleBtn.disabled = !visible;
       this.autoAdvanceToggleBtn.style.display = visible ? "" : "none";
@@ -396,20 +392,16 @@ class FlashcardManager {
 
     if (this.modeToggleBtn) {
       this.modeToggleBtn.dataset.mode = mode;
-      const icon = mode === "study" ? "book-open" : "help-circle";
+      const icon = mode === "study" ? "📖" : "❓";
       const nextTitle =
         mode === "study" ? "Switch to Quiz mode" : "Switch to Study mode";
-      this.modeToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true"><i data-lucide="${icon}"></i></span>`;
+      this.modeToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true">${icon}</span>`;
       this.modeToggleBtn.title = nextTitle;
       this.modeToggleBtn.setAttribute("aria-label", nextTitle);
       this.modeToggleBtn.setAttribute(
         "aria-pressed",
         mode === "study" ? "true" : "false"
       );
-
-      if (typeof window.renderLucideIcons === "function") {
-        window.renderLucideIcons(this.modeToggleBtn);
-      }
     }
 
     // Update auto-advance toggle UI to reflect paused state and mode
@@ -1861,18 +1853,12 @@ class FlashcardManager {
 
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
-    const iconName =
-      type === "success" ? "check" : type === "error" ? "x" : "info";
     toast.innerHTML = `
-      <span><i data-lucide="${iconName}"></i></span>
+      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
       <span>${this.escapeHtmlAttr(message)}</span>
     `;
 
     container.appendChild(toast);
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(toast);
-    }
 
     const removeToast = () => {
       try {
@@ -1919,13 +1905,9 @@ class FlashcardManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "flashcard-set-selector-btn";
-    btn.innerHTML = '<i data-lucide="library"></i>';
+    btn.innerHTML = "📚";
     btn.title = "Select flashcard set";
     btn.setAttribute("aria-label", "Select flashcard set");
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(btn);
-    }
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -1955,7 +1937,7 @@ class FlashcardManager {
     modal.innerHTML = `
       <div class="flashcard-set-modal-content">
         <div class="flashcard-set-modal-header">
-          <h3 class="flashcard-set-modal-title"><i data-lucide="library"></i> Select Flashcard Set</h3>
+          <h3 class="flashcard-set-modal-title">📚 Select Flashcard Set</h3>
           <button type="button" class="flashcard-set-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="flashcard-set-modal-body">
@@ -1969,10 +1951,6 @@ class FlashcardManager {
     `;
     document.body.appendChild(modal);
     this._setModal = modal;
-
-    if (typeof window.renderLucideIcons === "function") {
-      window.renderLucideIcons(modal);
-    }
 
     // Event listeners
     modal
@@ -2070,22 +2048,18 @@ class FlashcardManager {
               ${
                 Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
                 FlashcardManager.PROTECTED_SET_IDS.includes(s.id)
-                  ? '<span class="flashcard-set-item-lock" title="Default set — read only"><i data-lucide="lock"></i></span>'
+                  ? '<span class="flashcard-set-item-lock" title="Default set — read only">🔒</span>'
                   : ""
               }
               ${
                 isActive
-                  ? '<span style="color: var(--accent-gold);"><i data-lucide="check"></i></span>'
+                  ? '<span style="color: var(--accent-gold);">✓</span>'
                   : ""
               }
             </div>
           `;
         })
         .join("");
-
-      if (typeof window.renderLucideIcons === "function") {
-        window.renderLucideIcons(listContainer);
-      }
 
       // Click handlers
       listContainer.querySelectorAll(".flashcard-set-item").forEach((el) => {
