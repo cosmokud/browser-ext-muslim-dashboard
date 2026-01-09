@@ -1873,10 +1873,11 @@ class FlashcardManager {
       document.body.appendChild(container);
     }
 
+    const iconEmoji = type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     toast.innerHTML = `
-      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
+      <span>${this._getIcon(iconEmoji, { size: 16 })}</span>
       <span>${this.escapeHtmlAttr(message)}</span>
     `;
 
@@ -2081,12 +2082,12 @@ class FlashcardManager {
               ${
                 Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
                 FlashcardManager.PROTECTED_SET_IDS.includes(s.id)
-                  ? '<span class="flashcard-set-item-lock" title="Default set — read only">🔒</span>'
+                  ? `<span class="flashcard-set-item-lock" title="Default set — read only">${this._getIcon("🔒", { size: 14 })}</span>`
                   : ""
               }
               ${
                 isActive
-                  ? '<span style="color: var(--accent-gold);">✓</span>'
+                  ? `<span style="color: var(--accent-gold);">${this._getIcon("✓", { size: 16 })}</span>`
                   : ""
               }
             </div>
@@ -2158,7 +2159,7 @@ class FlashcardManager {
     container.innerHTML = `
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage - 1
-      }" ${currentPage === 1 ? "disabled" : ""}>←</button>
+      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", { size: 14 })}</button>
       ${pages
         .map((p) =>
           p === "..."
@@ -2170,7 +2171,7 @@ class FlashcardManager {
         .join("")}
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage + 1
-      }" ${currentPage === totalPages ? "disabled" : ""}>→</button>
+      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", { size: 14 })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {

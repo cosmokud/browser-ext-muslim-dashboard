@@ -1161,14 +1161,14 @@ class HadithManager {
     if (isDefault) {
       this.settingsList.innerHTML = `
         <div class="adhkar-default-notice">
-          <div class="adhkar-default-notice-icon">🔒</div>
+          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", { size: 24 })}</div>
           <div class="adhkar-default-notice-title">Default Hadith Set</div>
           <div class="adhkar-default-notice-text">
             This is a protected default set and cannot be edited, renamed, or deleted.
             Create a custom set to add your own hadith.
           </div>
           <button class="setting-btn adhkar-default-notice-btn" type="button" id="hadithCreateCustomBtn">
-            ➕ Create Custom Set
+            ${this._getIcon("➕", { size: 16 })} Create Custom Set
           </button>
         </div>
       `;
@@ -2152,10 +2152,11 @@ class HadithManager {
       document.body.appendChild(container);
     }
 
+    const iconEmoji = type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     toast.innerHTML = `
-      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
+      <span>${this._getIcon(iconEmoji, { size: 16 })}</span>
       <span>${this.escapeHtmlAttr(message)}</span>
     `;
 

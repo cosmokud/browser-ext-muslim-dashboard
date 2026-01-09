@@ -1279,7 +1279,7 @@ class SettingsManager {
     this._clearCitySearchResults(this.weatherCitySearchResults);
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.textContent = "🔍 Searching...";
+      this.weatherSearchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Searching...";
       this.weatherSearchCityBtn.disabled = true;
     }
 
@@ -1317,7 +1317,7 @@ class SettingsManager {
     }
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.textContent = "🔍 Search City";
+      this.weatherSearchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Search City";
       this.weatherSearchCityBtn.disabled = false;
     }
   }
@@ -1839,7 +1839,7 @@ class SettingsManager {
                 )}</span></button>`
               : ""
           }
-          <div class="theme-card-check">✓</div>
+          <div class="theme-card-check">${this._getIcon("✓", { size: 16 })}</div>
         </div>
       `;
     }
@@ -3736,7 +3736,7 @@ class SettingsManager {
     this._clearCitySearchResults(this.citySearchResults);
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.textContent = "🔍 Searching...";
+      this.searchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Searching...";
       this.searchCityBtn.disabled = true;
     }
 
@@ -3769,7 +3769,7 @@ class SettingsManager {
     }
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.textContent = "🔍 Search City";
+      this.searchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Search City";
       this.searchCityBtn.disabled = false;
     }
   }
@@ -3915,8 +3915,8 @@ class SettingsManager {
     toast.className = `toast ${type}`;
 
     const iconSpan = document.createElement("span");
-    iconSpan.textContent =
-      type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
+    const iconEmoji = type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
+    iconSpan.innerHTML = this._getIcon(iconEmoji, { size: 16 });
 
     const msgSpan = document.createElement("span");
     msgSpan.textContent = String(message ?? "");
@@ -4456,7 +4456,7 @@ class SettingsManager {
         const prevText = btn.textContent;
 
         btn.disabled = true;
-        btn.textContent = "⏳ Refreshing…";
+        btn.innerHTML = this._getIcon("⏳", { size: 16 }) + " Refreshing…";
 
         try {
           const tasks = [];
@@ -4533,7 +4533,7 @@ class SettingsManager {
     const openResetNukeConfirmModal = (opts = {}) => {
       const title = String(opts.title || "Confirm");
       const text = String(opts.text || "");
-      const icon = String(opts.icon || "⚠️");
+      const iconEmoji = String(opts.icon || "⚠️");
       const confirmLabel = String(opts.confirmLabel || "Confirm");
       const cancelLabel = String(opts.cancelLabel || "Cancel");
 
@@ -4555,7 +4555,7 @@ class SettingsManager {
       }
 
       if (this.resetNukeConfirmIcon)
-        this.resetNukeConfirmIcon.textContent = icon;
+        this.resetNukeConfirmIcon.innerHTML = this._getIcon(iconEmoji, { size: 32 });
       if (this.resetNukeConfirmTitle)
         this.resetNukeConfirmTitle.textContent = title;
       if (this.resetNukeConfirmText)

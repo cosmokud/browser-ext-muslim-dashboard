@@ -63,6 +63,11 @@ class WeatherManager {
     // Listen for resize to update forecast layout (keeps last-row spreading correct)
     window.addEventListener("resize", this._onForecastResize);
 
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._refreshWeatherIcons();
+    });
+
     // Weather code to icon/description mapping (WMO codes)
     this.weatherCodes = {
       0: { icon: "☀️", desc: "Clear sky" },
@@ -94,6 +99,31 @@ class WeatherManager {
       96: { icon: "⛈️", desc: "Thunderstorm with slight hail" },
       99: { icon: "⛈️", desc: "Thunderstorm with heavy hail" },
     };
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Refresh all weather icons when theme changes
+   */
+  _refreshWeatherIcons() {
+    if (this.currentWeather) {
+      this.displayCurrentWeather(this.currentWeather);
+    }
+    if (this.dailyForecast) {
+      this.displayForecast(this.dailyForecast);
+    }
+    if (this.hourlyForecast) {
+      this.renderHourlyChart();
+    }
   }
 
   _getLocalDateKey(ts) {
@@ -359,7 +389,7 @@ class WeatherManager {
     const humidityEl = compactEl.querySelector(".compact-weather-humidity");
     const windEl = compactEl.querySelector(".compact-weather-wind");
 
-    if (iconEl) iconEl.textContent = weatherInfo.icon;
+    if (iconEl) iconEl.innerHTML = this._getIcon(weatherInfo.icon, { size: 24 });
     if (tempEl) {
       tempEl.textContent =
         weather.temperature === null
@@ -1037,7 +1067,7 @@ class WeatherManager {
    */
   showError(message) {
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = "⚠️";
+      this.weatherIcon.innerHTML = this._getIcon("⚠️", { size: 48 });
     }
     if (this.weatherTemp) {
       this.weatherTemp.textContent = "--";
@@ -1069,7 +1099,7 @@ class WeatherManager {
    */
   showLoadingState() {
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = "🌡️";
+      this.weatherIcon.innerHTML = this._getIcon("🌡️", { size: 48 });
     }
     if (this.weatherTemp) {
       this.weatherTemp.textContent = "--°";
@@ -1190,7 +1220,7 @@ window.WeatherManager = WeatherManager;
     const windUnitLabel = weather.unit === "fahrenheit" ? "mph" : "km/h";
 
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = weatherInfo.icon;
+      this.weatherIcon.innerHTML = this._getIcon(weatherInfo.icon, { size: 48 });
       this._applyWeatherIconAnimation(weather.weatherCode);
     }
 
@@ -1258,6 +1288,7 @@ window.WeatherManager = WeatherManager;
       const precip = daily.precipitation_sum?.[index];
       const windMax = daily.wind_speed_10m_max?.[index];
       const info = this.weatherCodes[code] || { icon: "🌡️", desc: "" };
+      const themedIcon = this._getIcon(info.icon, { size: 24 });
 
       const dayName = new Date(dateStr).toLocaleDateString(undefined, {
         weekday: "short",
@@ -1280,7 +1311,7 @@ window.WeatherManager = WeatherManager;
       return `
         <div class="weather-forecast-day${selectedClass}" data-day-index="${index}" title="${info.desc}">
           <div class="day-name">${dayName}</div>
-          <div class="day-icon">${info.icon}</div>
+          <div class="day-icon">${themedIcon}</div>
           <div class="day-temp">${tempText}</div>
           <div class="day-meta">
             <span>${precipText}</span>
