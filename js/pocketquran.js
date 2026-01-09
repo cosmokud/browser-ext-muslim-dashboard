@@ -1373,6 +1373,8 @@ class PocketQuranManager {
     this._virtualContent.innerHTML = "";
     this._virtualContent.appendChild(fragment);
 
+    window.renderLucideIcons?.(this._virtualContent);
+
     // Measure rendered ayahs and update heights
     requestAnimationFrame(() => {
       this.measureRenderedAyahs();
@@ -1594,7 +1596,9 @@ class PocketQuranManager {
     if (isBookmarked) {
       starBtn.classList.add("bookmarked");
     }
-    starBtn.innerHTML = isBookmarked ? "⭐" : "☆";
+    starBtn.innerHTML = isBookmarked
+      ? '<i data-lucide="bookmark-check"></i>'
+      : '<i data-lucide="bookmark"></i>';
     starBtn.title = isBookmarked ? "Manage bookmark" : "Bookmark this ayah";
     starBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -3551,7 +3555,7 @@ class PocketQuranManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content pq-translation-modal-content">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">🎙️ Select Reciter</h3>
+          <h3 class="pq-bookmark-modal-title"><i data-lucide="mic"></i> Select Reciter</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
@@ -3564,6 +3568,8 @@ class PocketQuranManager {
     `;
     document.body.appendChild(modal);
     this._reciterModal = modal;
+
+    window.renderLucideIcons?.(modal);
 
     // Close button
     modal
@@ -3649,7 +3655,11 @@ class PocketQuranManager {
         isActive ? "active" : ""
       }" data-reciter-id="${r.id}">
         <span class="pq-translation-name">${this.escapeHtml(displayName)}</span>
-        ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+        ${
+          isActive
+            ? '<span class="pq-translation-check"><i data-lucide="check"></i></span>'
+            : ""
+        }
       </button>`;
     }
 
@@ -3660,6 +3670,8 @@ class PocketQuranManager {
     }
 
     container.innerHTML = html;
+
+    window.renderLucideIcons?.(container);
 
     // Add click handlers
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
@@ -3965,7 +3977,11 @@ class PocketQuranManager {
         isActive ? "active" : ""
       }" data-font-family="${this.escapeHtml(f)}">
         <span class="pq-translation-name">${this.escapeHtml(f)}</span>
-        ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+        ${
+          isActive
+            ? '<span class="pq-translation-check"><i data-lucide="check"></i></span>'
+            : ""
+        }
       </button>`;
     }
 
@@ -3978,6 +3994,8 @@ class PocketQuranManager {
     }
 
     container.innerHTML = html;
+
+    window.renderLucideIcons?.(container);
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
       btn.addEventListener("click", () => {
         const font = btn.getAttribute("data-font-family");
@@ -4384,7 +4402,7 @@ class PocketQuranManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "pq-bookmark-btn";
-    btn.innerHTML = "📑";
+    btn.innerHTML = '<i data-lucide="bookmark"></i>';
     btn.title = "View bookmarked ayahs";
     btn.setAttribute("aria-label", "View bookmarked ayahs");
 
@@ -4400,6 +4418,8 @@ class PocketQuranManager {
     } else {
       headerActions.appendChild(btn);
     }
+
+    window.renderLucideIcons?.(btn);
   }
 
   /**
@@ -4414,13 +4434,13 @@ class PocketQuranManager {
       modal.innerHTML = `
         <div class="pq-bookmark-modal-content">
           <div class="pq-bookmark-modal-header">
-            <h3 class="pq-bookmark-modal-title">📑 Bookmarked Ayahs</h3>
+            <h3 class="pq-bookmark-modal-title"><i data-lucide="bookmark"></i> Bookmarked Ayahs</h3>
             <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="pq-bookmark-modal-body">
             <div class="pq-bookmark-search">
               <input type="text" class="pq-bookmark-search-input" placeholder="Search categories..." />
-              <button type="button" class="pq-bookmark-add-category" title="Add category">➕</button>
+              <button type="button" class="pq-bookmark-add-category" title="Add category"><i data-lucide="plus"></i></button>
             </div>
             <div class="pq-bookmark-categories"></div>
             <div class="pq-bookmark-ayahs"></div>
@@ -4430,6 +4450,8 @@ class PocketQuranManager {
       `;
       document.body.appendChild(modal);
       this._bookmarkModal = modal;
+
+      window.renderLucideIcons?.(modal);
 
       // Event listeners
       modal
@@ -4471,13 +4493,13 @@ class PocketQuranManager {
       modal.innerHTML = `
         <div class="pq-bookmark-modal-content" style="max-width: 450px;">
           <div class="pq-bookmark-modal-header">
-            <h3 class="pq-bookmark-modal-title">⭐ Bookmark Ayah</h3>
+            <h3 class="pq-bookmark-modal-title"><i data-lucide="bookmark-plus"></i> Bookmark Ayah</h3>
             <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="pq-bookmark-modal-body">
             <div class="pq-bookmark-search">
               <input type="text" class="pq-bookmark-search-input" placeholder="Search categories..." />
-              <button type="button" class="pq-bookmark-add-category" title="Add category">➕</button>
+              <button type="button" class="pq-bookmark-add-category" title="Add category"><i data-lucide="plus"></i></button>
             </div>
             <div class="pq-bookmark-categories"></div>
             <div class="pq-bookmark-pagination"></div>
@@ -4490,6 +4512,8 @@ class PocketQuranManager {
       `;
       document.body.appendChild(modal);
       this._bookmarkCategoryModal = modal;
+
+      window.renderLucideIcons?.(modal);
 
       // Event listeners
       modal
@@ -4544,7 +4568,7 @@ class PocketQuranManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content pq-translation-modal-content">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">🌐 Select Translation</h3>
+          <h3 class="pq-bookmark-modal-title"><i data-lucide="languages"></i> Select Translation</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
@@ -4557,6 +4581,8 @@ class PocketQuranManager {
     `;
     document.body.appendChild(modal);
     this._translationModal = modal;
+
+    window.renderLucideIcons?.(modal);
 
     // Close button
     modal
@@ -4674,7 +4700,11 @@ class PocketQuranManager {
           isActive ? "active" : ""
         }" data-translation-id="${t.id}">
           <span class="pq-translation-name">${this.escapeHtml(t.label)}</span>
-          ${isActive ? '<span class="pq-translation-check">✓</span>' : ""}
+          ${
+            isActive
+              ? '<span class="pq-translation-check"><i data-lucide="check"></i></span>'
+              : ""
+          }
         </button>`;
       }
 
@@ -4688,6 +4718,8 @@ class PocketQuranManager {
     }
 
     container.innerHTML = html;
+
+    window.renderLucideIcons?.(container);
 
     // Add click handlers
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
@@ -4824,7 +4856,7 @@ class PocketQuranManager {
         if (pageBookmarks.length === 0) {
           ayahsContainer.innerHTML = `
             <div class="pq-bookmark-empty">
-              <div class="pq-bookmark-empty-icon">📭</div>
+              <div class="pq-bookmark-empty-icon"><i data-lucide="inbox"></i></div>
               <div>No bookmarks in this category</div>
             </div>
           `;
@@ -4848,7 +4880,7 @@ class PocketQuranManager {
                 (b.translationText || "").length > 150 ? "..." : ""
               }</div>
               </div>
-              <button type="button" class="pq-bookmark-ayah-remove" title="Remove bookmark">🗑️</button>
+              <button type="button" class="pq-bookmark-ayah-remove" title="Remove bookmark"><i data-lucide="trash-2"></i></button>
             </div>
           `
             )
@@ -4910,7 +4942,7 @@ class PocketQuranManager {
       if (pageCategories.length === 0) {
         categoriesContainer.innerHTML = `
           <div class="pq-bookmark-empty">
-            <div class="pq-bookmark-empty-icon">📁</div>
+            <div class="pq-bookmark-empty-icon"><i data-lucide="folder"></i></div>
             <div>No categories found</div>
           </div>
         `;
@@ -4930,12 +4962,12 @@ class PocketQuranManager {
             <div class="pq-bookmark-category-actions">
               ${
                 c.id !== "default"
-                  ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename">✏️</button>`
+                  ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename"><i data-lucide="pencil"></i></button>`
                   : ""
               }
               ${
                 c.id !== "default"
-                  ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete">🗑️</button>`
+                  ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>`
                   : ""
               }
             </div>
@@ -4996,6 +5028,8 @@ class PocketQuranManager {
         }
       );
     }
+
+    window.renderLucideIcons?.(modal);
   }
 
   /**
@@ -5066,7 +5100,7 @@ class PocketQuranManager {
     if (pageCategories.length === 0) {
       categoriesContainer.innerHTML = `
         <div class="pq-bookmark-empty">
-          <div class="pq-bookmark-empty-icon">📁</div>
+          <div class="pq-bookmark-empty-icon"><i data-lucide="folder"></i></div>
           <div>No categories found</div>
         </div>
       `;
@@ -5081,7 +5115,7 @@ class PocketQuranManager {
               <div class="pq-bookmark-category-info">
                 <div class="pq-bookmark-checkbox ${
                   isChecked ? "checked" : ""
-                }"></div>
+                }"><i data-lucide="check"></i></div>
                 <span class="pq-bookmark-category-name">${this.escapeHtml(
                   c.name
                 )}</span>
@@ -5129,6 +5163,8 @@ class PocketQuranManager {
         this.renderCategorySelectionModal();
       }
     );
+
+    window.renderLucideIcons?.(modal);
   }
 
   /**
@@ -5171,9 +5207,13 @@ class PocketQuranManager {
       const isBookmarked = this.isAyahBookmarked(this._activeSurah, ayahNumber);
 
       btn.classList.toggle("bookmarked", isBookmarked);
-      btn.innerHTML = isBookmarked ? "⭐" : "☆";
+      btn.innerHTML = isBookmarked
+        ? '<i data-lucide="bookmark-check"></i>'
+        : '<i data-lucide="bookmark"></i>';
       btn.title = isBookmarked ? "Manage bookmark" : "Bookmark this ayah";
     });
+
+    window.renderLucideIcons?.(this._virtualContent);
   }
 
   /**

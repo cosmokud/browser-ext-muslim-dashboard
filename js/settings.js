@@ -1276,7 +1276,11 @@ class SettingsManager {
     this._clearCitySearchResults(this.weatherCitySearchResults);
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.textContent = "🔍 Searching...";
+      this.weatherSearchCityBtn.innerHTML =
+        '<i data-lucide="search"></i> Searching...';
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(this.weatherSearchCityBtn);
+      }
       this.weatherSearchCityBtn.disabled = true;
     }
 
@@ -1314,7 +1318,11 @@ class SettingsManager {
     }
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.textContent = "🔍 Search City";
+      this.weatherSearchCityBtn.innerHTML =
+        '<i data-lucide="search"></i> Search City';
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(this.weatherSearchCityBtn);
+      }
       this.weatherSearchCityBtn.disabled = false;
     }
   }
@@ -1765,21 +1773,27 @@ class SettingsManager {
             <div class="theme-preview-bg" style="background: ${previewBg}"></div>
           </div>
           <div class="theme-card-header">
-            <span class="theme-card-icon">${theme.icon}</span>
+            <span class="theme-card-icon"><i data-lucide="${
+              theme.icon
+            }"></i></span>
             <span class="theme-card-name">${theme.name}</span>
           </div>
           <div class="theme-card-desc">${theme.description}</div>
           ${
             isCustomizable
-              ? '<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">🎨</span></button>'
+              ? '<button class="theme-card-customize" type="button" title="Customize palette"><i data-lucide="palette"></i></button>'
               : ""
           }
-          <div class="theme-card-check">✓</div>
+          <div class="theme-card-check"><i data-lucide="check"></i></div>
         </div>
       `;
     }
 
     this.themePickerGrid.innerHTML = html;
+
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(this.themePickerGrid);
+    }
   }
 
   openThemePaletteModal(themeName) {
@@ -1807,7 +1821,11 @@ class SettingsManager {
 
     const title = document.getElementById("themePaletteModalTitle");
     if (title) {
-      title.textContent = `🎨 Customize ${theme.name} Palette`;
+      title.innerHTML = `<i data-lucide="palette"></i> Customize ${theme.name} Palette`;
+
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(title);
+      }
     }
 
     this.updateThemePaletteModeButtons(this._paletteModalMode);
@@ -3671,7 +3689,11 @@ class SettingsManager {
     this._clearCitySearchResults(this.citySearchResults);
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.textContent = "🔍 Searching...";
+      this.searchCityBtn.innerHTML =
+        '<i data-lucide="search"></i> Searching...';
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(this.searchCityBtn);
+      }
       this.searchCityBtn.disabled = true;
     }
 
@@ -3704,7 +3726,10 @@ class SettingsManager {
     }
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.textContent = "🔍 Search City";
+      this.searchCityBtn.innerHTML = '<i data-lucide="search"></i> Search City';
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(this.searchCityBtn);
+      }
       this.searchCityBtn.disabled = false;
     }
   }
@@ -3850,8 +3875,9 @@ class SettingsManager {
     toast.className = `toast ${type}`;
 
     const iconSpan = document.createElement("span");
-    iconSpan.textContent =
-      type === "success" ? "✓" : type === "error" ? "✗" : "ℹ";
+    const iconName =
+      type === "success" ? "check" : type === "error" ? "x" : "info";
+    iconSpan.innerHTML = `<i data-lucide="${iconName}"></i>`;
 
     const msgSpan = document.createElement("span");
     msgSpan.textContent = String(message ?? "");
@@ -3860,6 +3886,10 @@ class SettingsManager {
     toast.appendChild(msgSpan);
 
     container.appendChild(toast);
+
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(toast);
+    }
 
     const removeToast = () => {
       try {
@@ -4388,10 +4418,13 @@ class SettingsManager {
     if (this.refreshDefaultDataBtn) {
       this.refreshDefaultDataBtn.addEventListener("click", async () => {
         const btn = this.refreshDefaultDataBtn;
-        const prevText = btn.textContent;
+        const prevHtml = btn.innerHTML;
 
         btn.disabled = true;
-        btn.textContent = "⏳ Refreshing…";
+        btn.innerHTML = '<i data-lucide="loader"></i> Refreshing…';
+        if (typeof window.renderLucideIcons === "function") {
+          window.renderLucideIcons(btn);
+        }
 
         try {
           const tasks = [];
@@ -4425,7 +4458,10 @@ class SettingsManager {
           this.showToast("Failed to refresh default data.", "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = prevText;
+          btn.innerHTML = prevHtml;
+          if (typeof window.renderLucideIcons === "function") {
+            window.renderLucideIcons(btn);
+          }
         }
       });
     }
@@ -4468,7 +4504,7 @@ class SettingsManager {
     const openResetNukeConfirmModal = (opts = {}) => {
       const title = String(opts.title || "Confirm");
       const text = String(opts.text || "");
-      const icon = String(opts.icon || "⚠️");
+      const icon = String(opts.icon || "triangle-alert");
       const confirmLabel = String(opts.confirmLabel || "Confirm");
       const cancelLabel = String(opts.cancelLabel || "Cancel");
 
@@ -4489,8 +4525,9 @@ class SettingsManager {
         this._resetNukeConfirmResolve = null;
       }
 
-      if (this.resetNukeConfirmIcon)
-        this.resetNukeConfirmIcon.textContent = icon;
+      if (this.resetNukeConfirmIcon) {
+        this.resetNukeConfirmIcon.innerHTML = `<i data-lucide="${icon}"></i>`;
+      }
       if (this.resetNukeConfirmTitle)
         this.resetNukeConfirmTitle.textContent = title;
       if (this.resetNukeConfirmText)
@@ -4499,6 +4536,10 @@ class SettingsManager {
       this.resetNukeCancelBtn.textContent = cancelLabel;
 
       this.resetNukeConfirmModal.classList.add("active");
+
+      if (typeof window.renderLucideIcons === "function") {
+        window.renderLucideIcons(this.resetNukeConfirmModal);
+      }
 
       return new Promise((resolve) => {
         this._resetNukeConfirmResolve = resolve;
@@ -4563,7 +4604,7 @@ class SettingsManager {
     if (this.resetWholeSettingsBtn) {
       this.resetWholeSettingsBtn.addEventListener("click", async () => {
         const ok = await openResetNukeConfirmModal({
-          icon: "🧹",
+          icon: "rotate-ccw",
           title: "Reset Whole Settings?",
           text: "This resets all settings to defaults, but keeps your custom data (flashcards, quotes, wallpapers, notes, Pocket Quran bookmarks, etc.).",
           confirmLabel: "Reset",
@@ -4577,7 +4618,7 @@ class SettingsManager {
     if (this.nukeAllDataBtn) {
       this.nukeAllDataBtn.addEventListener("click", async () => {
         const ok1 = await openResetNukeConfirmModal({
-          icon: "☢️",
+          icon: "radiation",
           title: "Nuke Everything?",
           text: "This will permanently delete ALL settings and ALL user data on this device.",
           confirmLabel: "Continue",
@@ -4586,7 +4627,7 @@ class SettingsManager {
         if (!ok1) return;
 
         const ok2 = await openResetNukeConfirmModal({
-          icon: "☢️",
+          icon: "radiation",
           title: "Final Confirmation",
           text: "Last chance: this cannot be undone. Proceed to reset EVERYTHING?",
           confirmLabel: "Yes, nuke it",

@@ -329,7 +329,9 @@ class HadithManager {
         paused ? "Resume auto-advance" : "Pause auto-advance"
       );
       const icon = btn.querySelector(".auto-icon");
-      if (icon) icon.textContent = paused ? "▶" : "⏸";
+      if (icon) {
+        window.setLucideIcon?.(icon, paused ? "play" : "pause");
+      }
     }
 
     if (status) {
@@ -549,29 +551,7 @@ class HadithManager {
   }
 
   getLanguageFlag(code) {
-    const flags = {
-      en: "🇬🇧",
-      id: "🇮🇩",
-      ar: "🇸🇦",
-      tr: "🇹🇷",
-      ur: "🇵🇰",
-      ms: "🇲🇾",
-      fr: "🇫🇷",
-      de: "🇩🇪",
-      es: "🇪🇸",
-      bn: "🇧🇩",
-      fa: "🇮🇷",
-      hi: "🇮🇳",
-      pt: "🇵🇹",
-      ru: "🇷🇺",
-      zh: "🇨🇳",
-      ja: "🇯🇵",
-      ko: "🇰🇷",
-      nl: "🇳🇱",
-      it: "🇮🇹",
-      th: "🇹🇭",
-    };
-    return flags[code] || "🌐";
+    return '<i data-lucide="languages"></i>';
   }
 
   getCardTitle(card) {
@@ -611,6 +591,7 @@ class HadithManager {
         langInfo.code
       )}</span>`;
       btn.title = `Language: ${langInfo.name}`;
+      window.renderLucideIcons?.();
     } else {
       btn.style.display = "none";
       btn.disabled = true;
@@ -1122,17 +1103,19 @@ class HadithManager {
     if (isDefault) {
       this.settingsList.innerHTML = `
         <div class="adhkar-default-notice">
-          <div class="adhkar-default-notice-icon">🔒</div>
+          <div class="adhkar-default-notice-icon"><i data-lucide="lock"></i></div>
           <div class="adhkar-default-notice-title">Default Hadith Set</div>
           <div class="adhkar-default-notice-text">
             This is a protected default set and cannot be edited, renamed, or deleted.
             Create a custom set to add your own hadith.
           </div>
           <button class="setting-btn adhkar-default-notice-btn" type="button" id="hadithCreateCustomBtn">
-            ➕ Create Custom Set
+            <i data-lucide="plus"></i> Create Custom Set
           </button>
         </div>
       `;
+
+      window.renderLucideIcons?.();
 
       const createBtn = this.settingsList.querySelector(
         "#hadithCreateCustomBtn"
@@ -1697,7 +1680,7 @@ class HadithManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn";
-    btn.innerHTML = "📚";
+    btn.innerHTML = '<i data-lucide="book-open"></i>';
     btn.title = "Select hadith set";
     btn.setAttribute("aria-label", "Select hadith set");
 
@@ -1713,6 +1696,8 @@ class HadithManager {
     } else {
       headerActions.insertBefore(btn, headerActions.firstChild);
     }
+
+    window.renderLucideIcons?.();
   }
 
   createSetSelectorModal() {
@@ -1725,7 +1710,7 @@ class HadithManager {
       <div class="adhkar-set-modal-content">
         <div class="adhkar-set-modal-header">
           <div class="adhkar-set-modal-title">
-            <span aria-hidden="true">📚</span>
+            <span aria-hidden="true"><i data-lucide="book-open"></i></span>
             Select Hadith Set
           </div>
           <button class="adhkar-set-modal-close" type="button" aria-label="Close">×</button>
@@ -1742,6 +1727,8 @@ class HadithManager {
 
     document.body.appendChild(modal);
     this._setModal = modal;
+
+    window.renderLucideIcons?.();
 
     const closeBtn = modal.querySelector(".adhkar-set-modal-close");
     closeBtn?.addEventListener("click", () => this.closeSetSelectorModal());
@@ -1840,7 +1827,7 @@ class HadithManager {
               ${this.escapeHtmlAttr(set.name || "Unnamed")}
               ${
                 locked
-                  ? '<span class="adhkar-set-item-lock" title="Protected">🔒</span>'
+                  ? '<span class="adhkar-set-item-lock" title="Protected"><i data-lucide="lock"></i></span>'
                   : ""
               }
             </div>
@@ -1914,6 +1901,8 @@ class HadithManager {
 
     paginationEl.innerHTML = btns.join("");
 
+    window.renderLucideIcons?.();
+
     if (paginationEl.dataset.bound !== "true") {
       paginationEl.dataset.bound = "true";
       paginationEl.addEventListener("click", (e) => {
@@ -1938,7 +1927,7 @@ class HadithManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true"><i data-lucide="languages"></i></span>`;
     btn.title = "Select language";
     btn.setAttribute("aria-label", "Select language");
     btn.style.display = "none";
@@ -1949,6 +1938,8 @@ class HadithManager {
     });
 
     headerActions.insertBefore(btn, headerActions.firstChild);
+
+    window.renderLucideIcons?.();
   }
 
   createLanguageSelectorModal() {
@@ -1961,7 +1952,7 @@ class HadithManager {
       <div class="adhkar-lang-modal-content">
         <div class="adhkar-lang-modal-header">
           <div class="adhkar-lang-modal-title">
-            <span aria-hidden="true">🌐</span>
+            <span aria-hidden="true"><i data-lucide="languages"></i></span>
             Select Language
           </div>
           <button class="adhkar-lang-modal-close" type="button" aria-label="Close">×</button>
@@ -1977,6 +1968,8 @@ class HadithManager {
 
     document.body.appendChild(modal);
     this._langModal = modal;
+
+    window.renderLucideIcons?.();
 
     const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
     closeBtn?.addEventListener("click", () =>
@@ -2068,6 +2061,8 @@ class HadithManager {
       })
       .join("");
 
+    window.renderLucideIcons?.();
+
     if (listEl.dataset.bound !== "true") {
       listEl.dataset.bound = "true";
       listEl.addEventListener("click", (e) => {
@@ -2115,11 +2110,15 @@ class HadithManager {
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     toast.innerHTML = `
-      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
+      <span class="toast-icon"><i data-lucide="${
+        type === "success" ? "check" : type === "error" ? "x" : "info"
+      }"></i></span>
       <span>${this.escapeHtmlAttr(message)}</span>
     `;
 
     container.appendChild(toast);
+
+    window.renderLucideIcons?.();
 
     const removeToast = () => {
       try {

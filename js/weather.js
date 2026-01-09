@@ -65,34 +65,34 @@ class WeatherManager {
 
     // Weather code to icon/description mapping (WMO codes)
     this.weatherCodes = {
-      0: { icon: "☀️", desc: "Clear sky" },
-      1: { icon: "🌤️", desc: "Mainly clear" },
-      2: { icon: "⛅", desc: "Partly cloudy" },
-      3: { icon: "☁️", desc: "Overcast" },
-      45: { icon: "🌫️", desc: "Foggy" },
-      48: { icon: "🌫️", desc: "Depositing rime fog" },
-      51: { icon: "🌧️", desc: "Light drizzle" },
-      53: { icon: "🌧️", desc: "Moderate drizzle" },
-      55: { icon: "🌧️", desc: "Dense drizzle" },
-      56: { icon: "🌧️", desc: "Light freezing drizzle" },
-      57: { icon: "🌧️", desc: "Dense freezing drizzle" },
-      61: { icon: "🌧️", desc: "Slight rain" },
-      63: { icon: "🌧️", desc: "Moderate rain" },
-      65: { icon: "🌧️", desc: "Heavy rain" },
-      66: { icon: "🌧️", desc: "Light freezing rain" },
-      67: { icon: "🌧️", desc: "Heavy freezing rain" },
-      71: { icon: "🌨️", desc: "Slight snow" },
-      73: { icon: "🌨️", desc: "Moderate snow" },
-      75: { icon: "❄️", desc: "Heavy snow" },
-      77: { icon: "🌨️", desc: "Snow grains" },
-      80: { icon: "🌦️", desc: "Slight rain showers" },
-      81: { icon: "🌦️", desc: "Moderate rain showers" },
-      82: { icon: "⛈️", desc: "Violent rain showers" },
-      85: { icon: "🌨️", desc: "Slight snow showers" },
-      86: { icon: "🌨️", desc: "Heavy snow showers" },
-      95: { icon: "⛈️", desc: "Thunderstorm" },
-      96: { icon: "⛈️", desc: "Thunderstorm with slight hail" },
-      99: { icon: "⛈️", desc: "Thunderstorm with heavy hail" },
+      0: { icon: "sun", desc: "Clear sky" },
+      1: { icon: "sun", desc: "Mainly clear" },
+      2: { icon: "cloud-sun", desc: "Partly cloudy" },
+      3: { icon: "cloud", desc: "Overcast" },
+      45: { icon: "cloud-fog", desc: "Foggy" },
+      48: { icon: "cloud-fog", desc: "Depositing rime fog" },
+      51: { icon: "cloud-drizzle", desc: "Light drizzle" },
+      53: { icon: "cloud-drizzle", desc: "Moderate drizzle" },
+      55: { icon: "cloud-drizzle", desc: "Dense drizzle" },
+      56: { icon: "cloud-drizzle", desc: "Light freezing drizzle" },
+      57: { icon: "cloud-drizzle", desc: "Dense freezing drizzle" },
+      61: { icon: "cloud-rain", desc: "Slight rain" },
+      63: { icon: "cloud-rain", desc: "Moderate rain" },
+      65: { icon: "cloud-rain", desc: "Heavy rain" },
+      66: { icon: "cloud-rain", desc: "Light freezing rain" },
+      67: { icon: "cloud-rain", desc: "Heavy freezing rain" },
+      71: { icon: "cloud-snow", desc: "Slight snow" },
+      73: { icon: "cloud-snow", desc: "Moderate snow" },
+      75: { icon: "cloud-snow", desc: "Heavy snow" },
+      77: { icon: "cloud-snow", desc: "Snow grains" },
+      80: { icon: "cloud-sun-rain", desc: "Slight rain showers" },
+      81: { icon: "cloud-sun-rain", desc: "Moderate rain showers" },
+      82: { icon: "cloud-lightning", desc: "Violent rain showers" },
+      85: { icon: "cloud-snow", desc: "Slight snow showers" },
+      86: { icon: "cloud-snow", desc: "Heavy snow showers" },
+      95: { icon: "cloud-lightning", desc: "Thunderstorm" },
+      96: { icon: "cloud-hail", desc: "Thunderstorm with slight hail" },
+      99: { icon: "cloud-hail", desc: "Thunderstorm with heavy hail" },
     };
   }
 
@@ -346,7 +346,7 @@ class WeatherManager {
 
     const mode = settings.compactWeatherMode || "simple";
     const weatherInfo = this.weatherCodes[weather.weatherCode] || {
-      icon: "🌡️",
+      icon: "thermometer",
       desc: "Unknown",
     };
     const unitSymbol = weather.unit === "fahrenheit" ? "°F" : "°C";
@@ -359,7 +359,9 @@ class WeatherManager {
     const humidityEl = compactEl.querySelector(".compact-weather-humidity");
     const windEl = compactEl.querySelector(".compact-weather-wind");
 
-    if (iconEl) iconEl.textContent = weatherInfo.icon;
+    if (iconEl) {
+      window.setLucideIcon?.(iconEl, weatherInfo.icon);
+    }
     if (tempEl) {
       tempEl.textContent =
         weather.temperature === null
@@ -1037,7 +1039,7 @@ class WeatherManager {
    */
   showError(message) {
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = "⚠️";
+      window.setLucideIcon?.(this.weatherIcon, "triangle-alert");
     }
     if (this.weatherTemp) {
       this.weatherTemp.textContent = "--";
@@ -1069,7 +1071,7 @@ class WeatherManager {
    */
   showLoadingState() {
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = "🌡️";
+      window.setLucideIcon?.(this.weatherIcon, "thermometer");
     }
     if (this.weatherTemp) {
       this.weatherTemp.textContent = "--°";
@@ -1183,14 +1185,14 @@ window.WeatherManager = WeatherManager;
 
     const weather = this.currentWeather;
     const weatherInfo = this.weatherCodes[weather.weatherCode] || {
-      icon: "🌡️",
+      icon: "thermometer",
       desc: "Unknown",
     };
     const unitSymbol = weather.unit === "fahrenheit" ? "°F" : "°C";
     const windUnitLabel = weather.unit === "fahrenheit" ? "mph" : "km/h";
 
     if (this.weatherIcon) {
-      this.weatherIcon.textContent = weatherInfo.icon;
+      window.setLucideIcon?.(this.weatherIcon, weatherInfo.icon);
       this._applyWeatherIconAnimation(weather.weatherCode);
     }
 
@@ -1257,7 +1259,7 @@ window.WeatherManager = WeatherManager;
       const min = daily.temperature_2m_min?.[index];
       const precip = daily.precipitation_sum?.[index];
       const windMax = daily.wind_speed_10m_max?.[index];
-      const info = this.weatherCodes[code] || { icon: "🌡️", desc: "" };
+      const info = this.weatherCodes[code] || { icon: "thermometer", desc: "" };
 
       const dayName = new Date(dateStr).toLocaleDateString(undefined, {
         weekday: "short",
@@ -1280,7 +1282,7 @@ window.WeatherManager = WeatherManager;
       return `
         <div class="weather-forecast-day${selectedClass}" data-day-index="${index}" title="${info.desc}">
           <div class="day-name">${dayName}</div>
-          <div class="day-icon">${info.icon}</div>
+          <div class="day-icon"><i data-lucide="${info.icon}"></i></div>
           <div class="day-temp">${tempText}</div>
           <div class="day-meta">
             <span>${precipText}</span>
@@ -1291,6 +1293,7 @@ window.WeatherManager = WeatherManager;
     });
 
     this.weatherForecast.innerHTML = items.join("");
+    window.renderLucideIcons?.();
 
     // Click to select day (updates chart with animation)
     this.weatherForecast

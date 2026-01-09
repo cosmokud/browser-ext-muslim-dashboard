@@ -326,8 +326,9 @@ class AdhkarManager {
         paused ? "Resume auto-advance" : "Pause auto-advance"
       );
       this.autoAdvanceToggleBtn.innerHTML = `<span class="auto-icon" aria-hidden="true">${
-        paused ? "▶" : "⏸"
+        paused ? '<i data-lucide="play"></i>' : '<i data-lucide="pause"></i>'
       }</span>`;
+      window.renderLucideIcons?.();
 
       this.autoAdvanceToggleBtn.disabled = !visible;
       this.autoAdvanceToggleBtn.style.display = visible ? "" : "none";
@@ -1137,32 +1138,10 @@ class AdhkarManager {
   }
 
   /**
-   * Get an emoji flag or icon for a language code.
+   * Get an icon for a language code.
    */
   getLanguageFlag(code) {
-    const flags = {
-      en: "🇬🇧",
-      id: "🇮🇩",
-      ar: "🇸🇦",
-      tr: "🇹🇷",
-      ur: "🇵🇰",
-      ms: "🇲🇾",
-      fr: "🇫🇷",
-      de: "🇩🇪",
-      es: "🇪🇸",
-      bn: "🇧🇩",
-      fa: "🇮🇷",
-      hi: "🇮🇳",
-      pt: "🇵🇹",
-      ru: "🇷🇺",
-      zh: "🇨🇳",
-      ja: "🇯🇵",
-      ko: "🇰🇷",
-      nl: "🇳🇱",
-      it: "🇮🇹",
-      th: "🇹🇭",
-    };
-    return flags[code] || "🌐";
+    return '<i data-lucide="languages"></i>';
   }
 
   // ---------- Settings tab ----------
@@ -1435,17 +1414,19 @@ class AdhkarManager {
     if (isDefault) {
       this.settingsList.innerHTML = `
         <div class="adhkar-default-notice">
-          <div class="adhkar-default-notice-icon">🔒</div>
+          <div class="adhkar-default-notice-icon"><i data-lucide="lock"></i></div>
           <div class="adhkar-default-notice-title">Default Adhkar Set</div>
           <div class="adhkar-default-notice-text">
             This is a protected default set and cannot be edited. 
             You can still view and recite from it, or create a custom set to add your own adhkar.
           </div>
           <button class="setting-btn adhkar-default-notice-btn" type="button" id="adhkarCreateCustomBtn">
-            ➕ Create Custom Set
+            <i data-lucide="plus"></i> Create Custom Set
           </button>
         </div>
       `;
+
+      window.renderLucideIcons?.();
 
       // Bind the create custom set button
       const createBtn = this.settingsList.querySelector(
@@ -2120,7 +2101,7 @@ class AdhkarManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn";
-    btn.innerHTML = "📚";
+    btn.innerHTML = '<i data-lucide="book-open"></i>';
     btn.title = "Select adhkar set";
     btn.setAttribute("aria-label", "Select adhkar set");
 
@@ -2149,7 +2130,7 @@ class AdhkarManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true"><i data-lucide="languages"></i></span>`;
     btn.title = "Select translation language";
     btn.setAttribute("aria-label", "Select translation language");
     btn.style.display = "none"; // Hidden by default
@@ -2177,7 +2158,7 @@ class AdhkarManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content" style="max-width: 400px;">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">🌐 Select Translation</h3>
+          <h3 class="pq-bookmark-modal-title"><i data-lucide="languages"></i> Select Translation</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
@@ -2190,6 +2171,8 @@ class AdhkarManager {
     `;
     document.body.appendChild(modal);
     this._langModal = modal;
+
+    window.renderLucideIcons?.();
 
     modal
       .querySelector(".pq-bookmark-modal-close")
@@ -2275,11 +2258,17 @@ class AdhkarManager {
             <span class="adhkar-lang-name">${this.escapeHtmlAttr(
               lang.name
             )}</span>
-            ${isActive ? '<span class="adhkar-lang-check">✓</span>' : ""}
+            ${
+              isActive
+                ? '<span class="adhkar-lang-check"><i data-lucide="check"></i></span>'
+                : ""
+            }
           </div>
         `;
       })
       .join("");
+
+    window.renderLucideIcons?.();
 
     // Bind click handlers
     listContainer.querySelectorAll(".adhkar-lang-item").forEach((el) => {
@@ -2307,7 +2296,7 @@ class AdhkarManager {
     modal.innerHTML = `
       <div class="adhkar-set-modal-content">
         <div class="adhkar-set-modal-header">
-          <h3 class="adhkar-set-modal-title">📚 Select Adhkar Set</h3>
+          <h3 class="adhkar-set-modal-title"><i data-lucide="book-open"></i> Select Adhkar Set</h3>
           <button type="button" class="adhkar-set-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="adhkar-set-modal-body">
@@ -2321,6 +2310,8 @@ class AdhkarManager {
     `;
     document.body.appendChild(modal);
     this._setModal = modal;
+
+    window.renderLucideIcons?.();
 
     modal
       .querySelector(".adhkar-set-modal-close")
@@ -2423,18 +2414,20 @@ class AdhkarManager {
               ${
                 Array.isArray(AdhkarManager.PROTECTED_SET_IDS) &&
                 AdhkarManager.PROTECTED_SET_IDS.includes(s.id)
-                  ? '<span class="adhkar-set-item-lock" title="Default set — read only">🔒</span>'
+                  ? '<span class="adhkar-set-item-lock" title="Default set — read only"><i data-lucide="lock"></i></span>'
                   : ""
               }
               ${
                 isActive
-                  ? '<span style="color: var(--accent-gold);">✓</span>'
+                  ? '<span style="color: var(--accent-gold);"><i data-lucide="check"></i></span>'
                   : ""
               }
             </div>
           `;
         })
         .join("");
+
+      window.renderLucideIcons?.();
 
       listContainer.querySelectorAll(".adhkar-set-item").forEach((el) => {
         el.addEventListener("click", () => {
@@ -2553,7 +2546,9 @@ class AdhkarManager {
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     toast.innerHTML = `
-      <span>${type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
+      <span class="toast-icon"><i data-lucide="${
+        type === "success" ? "check" : type === "error" ? "x" : "info"
+      }"></i></span>
       <span>${this.escapeHtmlAttr(message)}</span>
     `;
 

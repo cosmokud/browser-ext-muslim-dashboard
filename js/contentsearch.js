@@ -100,14 +100,17 @@ class ContentSearchManager {
 
     const title =
       context === "quotes"
-        ? "🔎 Search Quotes"
+        ? "Search Quotes"
         : context === "adhkar"
-        ? "🔎 Search Adhkar"
+        ? "Search Adhkar"
         : context === "hadith"
-        ? "🔎 Search Hadith"
-        : "🔎 Search";
+        ? "Search Hadith"
+        : "Search";
 
-    this.titleEl.textContent = title;
+    this.titleEl.innerHTML = `<i data-lucide="search"></i> ${title}`;
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(this.titleEl);
+    }
 
     this.modalEl.classList.add("active");
     this.modalEl.setAttribute("aria-hidden", "false");
@@ -146,9 +149,13 @@ class ContentSearchManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn quote-search-btn";
-    btn.innerHTML = "🔎︎";
+    btn.innerHTML = '<i data-lucide="search"></i>';
     btn.title = "Search quotes";
     btn.setAttribute("aria-label", "Search quotes");
+
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(btn);
+    }
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -170,7 +177,7 @@ class ContentSearchManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `adhkar-set-selector-btn content-search-btn ${cls}`;
-    btn.innerHTML = "🔎︎";
+    btn.innerHTML = '<i data-lucide="search"></i>';
 
     const label =
       context === "adhkar"
@@ -181,6 +188,10 @@ class ContentSearchManager {
 
     btn.title = label;
     btn.setAttribute("aria-label", label);
+
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(btn);
+    }
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();

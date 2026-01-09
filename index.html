@@ -87,7 +87,7 @@
                     type="button"
                     aria-label="Scroll searches left"
                   >
-                    ❮
+                    <i data-lucide="chevron-left"></i>
                   </button>
                   <div
                     class="search-bar-engine-viewport"
@@ -106,7 +106,7 @@
                     type="button"
                     aria-label="Scroll searches right"
                   >
-                    ❯
+                    <i data-lucide="chevron-right"></i>
                   </button>
                 </div>
 
@@ -130,7 +130,7 @@
                     aria-label="Search"
                     title="Search"
                   >
-                    🔎︎
+                    <i data-lucide="search"></i>
                   </button>
                   <button
                     class="search-bar-btn search-bar-add"
@@ -139,7 +139,7 @@
                     aria-label="Add custom search"
                     title="Add custom search"
                   >
-                    ✚
+                    <i data-lucide="plus"></i>
                   </button>
                 </form>
               </div>
@@ -148,7 +148,7 @@
             <!-- Quote Section -->
             <section class="quote-section" id="quoteSection">
               <div class="quote-container">
-                <div class="quote-icon">❝</div>
+                <div class="quote-icon"><i data-lucide="quote"></i></div>
                 <p class="quote-text" id="quoteText">Loading inspiration...</p>
                 <p class="quote-source" id="quoteSource"></p>
                 <button
@@ -198,7 +198,7 @@
             <section class="card prayer-times-card" id="prayerTimesCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">🕌</span>
+                  <span class="card-icon"><i data-lucide="landmark"></i></span>
                   Prayer Times
                 </h2>
                 <div class="location-display" id="locationDisplay">
@@ -208,8 +208,8 @@
                     tabindex="0"
                     title="Open Location settings"
                     aria-label="Open Location settings"
-                    >📍</span
-                  >
+                    ><i data-lucide="map-pin"></i
+                  ></span>
                   <span class="location-text" id="locationText"
                     >Detecting...</span
                   >
@@ -218,7 +218,7 @@
                     id="detectLocationBtn"
                     title="Refresh Location"
                   >
-                    🔄
+                    <i data-lucide="refresh-cw"></i>
                   </button>
                 </div>
               </div>
@@ -238,7 +238,9 @@
             <section class="card calendar-card" id="calendarCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📅</span>
+                  <span class="card-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   Calendar
                 </h2>
                 <div class="calendar-toggle-btns">
@@ -252,12 +254,26 @@
               </div>
               <div class="calendar-container" id="calendarContainer">
                 <div class="calendar-header">
-                  <button class="calendar-nav-btn" id="prevMonth">❮</button>
+                  <button
+                    class="calendar-nav-btn"
+                    id="prevMonth"
+                    aria-label="Previous month"
+                    title="Previous month"
+                  >
+                    <i data-lucide="chevron-left"></i>
+                  </button>
                   <div class="calendar-month-year">
                     <span class="calendar-month" id="calendarMonth">--</span>
                     <span class="calendar-year" id="calendarYear">----</span>
                   </div>
-                  <button class="calendar-nav-btn" id="nextMonth">❯</button>
+                  <button
+                    class="calendar-nav-btn"
+                    id="nextMonth"
+                    aria-label="Next month"
+                    title="Next month"
+                  >
+                    <i data-lucide="chevron-right"></i>
+                  </button>
                 </div>
                 <div class="calendar-weekdays">
                   <span>Sun</span>
@@ -284,7 +300,7 @@
             <section class="card qibla-card" id="qiblaCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">🧭</span>
+                  <span class="card-icon"><i data-lucide="compass"></i></span>
                   Qibla Direction
                 </h2>
               </div>
@@ -299,7 +315,7 @@
                   <div class="compass-inner" id="compassInner">
                     <div class="qibla-needle" id="qiblaNeedle">
                       <div class="needle-point"></div>
-                      <div class="kaaba-icon">🕋</div>
+                      <div class="kaaba-icon"><i data-lucide="target"></i></div>
                     </div>
                   </div>
                 </div>
@@ -314,7 +330,7 @@
             <section class="card weather-card" id="weatherCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">🌤️</span>
+                  <span class="card-icon"><i data-lucide="cloud-sun"></i></span>
                   Weather
                 </h2>
                 <button
@@ -336,7 +352,9 @@
               </div>
               <div class="weather-content">
                 <div class="weather-main">
-                  <span class="weather-icon" id="weatherIcon">🌡️</span>
+                  <span class="weather-icon" id="weatherIcon"
+                    ><i data-lucide="thermometer"></i
+                  ></span>
                   <div class="weather-temp-group">
                     <span class="weather-temp" id="weatherTemp">--</span>
                     <span class="weather-desc" id="weatherDesc"
@@ -349,19 +367,25 @@
                 </div>
                 <div class="weather-details">
                   <div class="weather-detail-item">
-                    <span class="weather-detail-icon">🌡️</span>
+                    <span class="weather-detail-icon"
+                      ><i data-lucide="thermometer"></i
+                    ></span>
                     <span class="weather-detail-value" id="weatherFeelsLike"
                       >--</span
                     >
                   </div>
                   <div class="weather-detail-item">
-                    <span class="weather-detail-icon">💧</span>
+                    <span class="weather-detail-icon"
+                      ><i data-lucide="droplet"></i
+                    ></span>
                     <span class="weather-detail-value" id="weatherHumidity"
                       >--%</span
                     >
                   </div>
                   <div class="weather-detail-item">
-                    <span class="weather-detail-icon">💨</span>
+                    <span class="weather-detail-icon"
+                      ><i data-lucide="wind"></i
+                    ></span>
                     <span class="weather-detail-value" id="weatherWind"
                       >-- km/h</span
                     >
@@ -429,7 +453,7 @@
             <section class="card lunar-phase-card" id="lunarPhaseCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">🌙</span>
+                  <span class="card-icon"><i data-lucide="moon"></i></span>
                   Lunar Phase
                 </h2>
                 <div class="lunar-phase-location" id="lunarPhaseLocation">
@@ -454,7 +478,7 @@
             <section class="card fasting-card" id="fastingCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">🥗</span>
+                  <span class="card-icon"><i data-lucide="salad"></i></span>
                   Fasting Times
                 </h2>
                 <div class="fasting-subtitle" id="fastingHijriNow">--</div>
@@ -471,7 +495,7 @@
             <section class="card flashcard-card" id="flashcardCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📇</span>
+                  <span class="card-icon"><i data-lucide="id-card"></i></span>
                   Flashcards
                 </h2>
                 <div class="card-header-actions">
@@ -482,7 +506,9 @@
                     aria-label="Toggle flashcard mode"
                     title="Toggle flashcard mode"
                   >
-                    <span class="mode-icon">📖</span>
+                    <span class="mode-icon"
+                      ><i data-lucide="book-open"></i
+                    ></span>
                   </button>
 
                   <div
@@ -497,12 +523,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -521,7 +549,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -529,7 +559,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -537,7 +569,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -577,7 +611,7 @@
                   aria-label="Previous card"
                   title="Previous"
                 >
-                  ❮
+                  <i data-lucide="chevron-left"></i>
                 </button>
 
                 <div class="flashcard-flip-scene" id="flashcardFlipScene">
@@ -612,7 +646,7 @@
                   aria-label="Next card"
                   title="Next"
                 >
-                  ❯
+                  <i data-lucide="chevron-right"></i>
                 </button>
               </div>
 
@@ -655,7 +689,9 @@
                     title="Pause auto-advance"
                     aria-label="Pause auto-advance"
                   >
-                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                    <span class="auto-icon" aria-hidden="true"
+                      ><i data-lucide="pause"></i
+                    ></span>
                   </button>
                   <div class="flashcard-auto-status" id="flashcardAutoStatus">
                     Auto
@@ -668,7 +704,9 @@
             <section class="card todo-card" id="todoCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">✅</span>
+                  <span class="card-icon"
+                    ><i data-lucide="circle-check"></i
+                  ></span>
                   To-Do List
                 </h2>
                 <div class="card-header-actions">
@@ -682,7 +720,7 @@
                     aria-label="Clear completed"
                     style="display: none"
                   >
-                    🗑
+                    <i data-lucide="trash-2"></i>
                   </button>
 
                   <div
@@ -697,12 +735,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -721,7 +761,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -729,7 +771,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -737,7 +781,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -809,7 +855,9 @@
             <section class="card adhkar-card" id="adhkarCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📿</span>
+                  <span class="card-icon"
+                    ><i data-lucide="hand-heart"></i
+                  ></span>
                   <span
                     id="adhkarHeaderText"
                     class="adhkar-header-text"
@@ -840,12 +888,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -864,7 +914,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -872,7 +924,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -880,7 +934,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -921,7 +977,7 @@
                   aria-label="Previous adhkar"
                   title="Previous"
                 >
-                  ❮
+                  <i data-lucide="chevron-left"></i>
                 </button>
 
                 <div class="adhkar-shell" id="adhkarCardShell">
@@ -954,7 +1010,7 @@
                   aria-label="Next adhkar"
                   title="Next"
                 >
-                  ❯
+                  <i data-lucide="chevron-right"></i>
                 </button>
               </div>
 
@@ -997,7 +1053,9 @@
                     title="Pause auto-advance"
                     aria-label="Pause auto-advance"
                   >
-                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                    <span class="auto-icon" aria-hidden="true"
+                      ><i data-lucide="pause"></i
+                    ></span>
                   </button>
                   <div class="flashcard-auto-status" id="adhkarAutoStatus">
                     Auto
@@ -1010,7 +1068,9 @@
             <section class="card hadith-card" id="hadithCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📜</span>
+                  <span class="card-icon"
+                    ><i data-lucide="scroll-text"></i
+                  ></span>
                   <span
                     id="hadithHeaderText"
                     class="adhkar-header-text"
@@ -1031,12 +1091,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -1055,7 +1117,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -1063,7 +1127,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -1071,7 +1137,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -1112,7 +1180,7 @@
                   aria-label="Previous hadith"
                   title="Previous"
                 >
-                  ❮
+                  <i data-lucide="chevron-left"></i>
                 </button>
 
                 <div class="hadith-shell" id="hadithCardShell">
@@ -1136,7 +1204,7 @@
                   aria-label="Next hadith"
                   title="Next"
                 >
-                  ❯
+                  <i data-lucide="chevron-right"></i>
                 </button>
               </div>
 
@@ -1179,7 +1247,9 @@
                     title="Pause auto-advance"
                     aria-label="Pause auto-advance"
                   >
-                    <span class="auto-icon" aria-hidden="true">⏸</span>
+                    <span class="auto-icon" aria-hidden="true"
+                      ><i data-lucide="pause"></i
+                    ></span>
                   </button>
                   <div class="flashcard-auto-status" id="hadithAutoStatus">
                     Auto
@@ -1192,7 +1262,9 @@
             <section class="card notes-card" id="notesCard">
               <div class="card-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📝</span>
+                  <span class="card-icon"
+                    ><i data-lucide="notebook-pen"></i
+                  ></span>
                   Notes
                 </h2>
                 <div class="card-header-actions">
@@ -1204,7 +1276,7 @@
                       aria-label="Create new note"
                       title="New note"
                     >
-                      ✚
+                      <i data-lucide="plus"></i>
                     </button>
                     <button
                       class="notes-delete-btn"
@@ -1214,7 +1286,7 @@
                       title="Delete note"
                       disabled
                     >
-                      🗑
+                      <i data-lucide="trash-2"></i>
                     </button>
                   </div>
 
@@ -1230,12 +1302,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -1254,7 +1328,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -1262,7 +1338,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -1270,7 +1348,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -1314,7 +1394,7 @@
                       type="button"
                       aria-label="Previous notes page"
                     >
-                      ❮
+                      <i data-lucide="chevron-left"></i>
                     </button>
                     <div class="notes-page-info" id="notesPageInfo"></div>
                     <button
@@ -1323,7 +1403,7 @@
                       type="button"
                       aria-label="Next notes page"
                     >
-                      ❯
+                      <i data-lucide="chevron-right"></i>
                     </button>
                   </div>
                 </div>
@@ -1414,7 +1494,7 @@
                       aria-label="Checkmark list"
                       title="Checkmark list"
                     >
-                      ☑
+                      <i data-lucide="list-checks"></i>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1509,7 +1589,7 @@
             <section class="card pocket-quran-card" id="pocketQuranCard">
               <div class="card-header pocket-quran-header">
                 <h2 class="card-title">
-                  <span class="card-icon">📖</span>
+                  <span class="card-icon"><i data-lucide="book-open"></i></span>
                   Pocket Quran
                 </h2>
                 <div class="card-header-actions">
@@ -1532,12 +1612,14 @@
                       aria-label="Open blur settings"
                       title="Blur & Glass Settings"
                     >
-                      ✨
+                      <i data-lucide="sparkles"></i>
                     </button>
                     <div class="blur-settings-popup">
                       <div class="blur-popup-header">
                         <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
+                          <span class="blur-popup-title-icon"
+                            ><i data-lucide="sparkles"></i
+                          ></span>
                           Glass Settings
                         </span>
                         <button
@@ -1556,7 +1638,9 @@
                             data-glass-value="off"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="square"></i
+                            ></span>
                             <span class="blur-glass-option-label">Off</span>
                           </button>
                           <button
@@ -1564,7 +1648,9 @@
                             data-glass-value="dashboard"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">🔗</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="link"></i
+                            ></span>
                             <span class="blur-glass-option-label">Dash</span>
                           </button>
                           <button
@@ -1572,7 +1658,9 @@
                             data-glass-value="on"
                             type="button"
                           >
-                            <span class="blur-glass-option-icon">✨</span>
+                            <span class="blur-glass-option-icon"
+                              ><i data-lucide="sparkles"></i
+                            ></span>
                             <span class="blur-glass-option-label">On</span>
                           </button>
                         </div>
@@ -1631,7 +1719,7 @@
                           aria-label="Previous surah"
                           title="Previous surah"
                         >
-                          ❮
+                          <i data-lucide="chevron-left"></i>
                         </button>
                         <input
                           class="pocket-quran-pill-input pocket-quran-pill-input-with-nav"
@@ -1648,7 +1736,7 @@
                           aria-label="Next surah"
                           title="Next surah"
                         >
-                          ❯
+                          <i data-lucide="chevron-right"></i>
                         </button>
                         <div
                           class="pocket-quran-dropdown"
@@ -1685,7 +1773,7 @@
                           aria-label="Previous ayah"
                           title="Previous ayah"
                         >
-                          ❮
+                          <i data-lucide="chevron-left"></i>
                         </button>
                         <input
                           class="pocket-quran-pill-input pocket-quran-pill-input-with-nav pocket-quran-ayah-input"
@@ -1703,7 +1791,7 @@
                           aria-label="Next ayah"
                           title="Next ayah"
                         >
-                          ❯
+                          <i data-lucide="chevron-right"></i>
                         </button>
                         <div
                           class="pocket-quran-dropdown"
@@ -1779,8 +1867,8 @@
                           <span
                             class="pq-tajweed-toggle-icon"
                             aria-hidden="true"
-                            >🎨</span
-                          >
+                            ><i data-lucide="palette"></i
+                          ></span>
                         </button>
 
                         <button
@@ -1955,57 +2043,77 @@
     <div class="modal-overlay" id="settingsModal">
       <div class="modal modal-large">
         <div class="modal-header">
-          <h2 class="modal-title">⚙️ Settings</h2>
+          <h2 class="modal-title"><i data-lucide="settings"></i> Settings</h2>
           <button class="modal-close" id="settingsClose">&times;</button>
         </div>
         <div class="modal-body">
           <!-- Tabs -->
           <div class="settings-tabs">
             <button class="settings-tab active" data-tab="location">
-              📍 Location
+              <i data-lucide="map-pin"></i> Location
             </button>
             <button class="settings-tab" data-tab="prayer">
-              🕌 Prayer Times
+              <i data-lucide="landmark"></i> Prayer Times
             </button>
-            <button class="settings-tab" data-tab="heading">🕐 Header</button>
+            <button class="settings-tab" data-tab="heading">
+              <i data-lucide="clock"></i> Header
+            </button>
             <button class="settings-tab" data-tab="visibility">
-              🧩 Components
+              <i data-lucide="puzzle"></i> Components
             </button>
             <button class="settings-tab" data-tab="pinnedApps">
-              📌 Pinned Apps
+              <i data-lucide="pin"></i> Pinned Apps
             </button>
             <button class="settings-tab" data-tab="searchBar">
-              🔎 Search Bar
+              <i data-lucide="search"></i> Search Bar
             </button>
-            <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
+            <button class="settings-tab" data-tab="weather">
+              <i data-lucide="cloud-sun"></i> Weather
+            </button>
             <button class="settings-tab" data-tab="fasting">
-              🥗 Fasting Times
+              <i data-lucide="salad"></i> Fasting Times
             </button>
-            <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
+            <button class="settings-tab" data-tab="quotes">
+              <i data-lucide="message-square-quote"></i> Quotes
+            </button>
             <button class="settings-tab" data-tab="flashcards">
-              📇 Flashcards
+              <i data-lucide="id-card"></i> Flashcards
             </button>
-            <button class="settings-tab" data-tab="hadith">📜 Hadith</button>
-            <button class="settings-tab" data-tab="adhkar">📿 Adhkar</button>
-            <button class="settings-tab" data-tab="notes">📝 Notes</button>
+            <button class="settings-tab" data-tab="hadith">
+              <i data-lucide="scroll-text"></i> Hadith
+            </button>
+            <button class="settings-tab" data-tab="adhkar">
+              <i data-lucide="hand-heart"></i> Adhkar
+            </button>
+            <button class="settings-tab" data-tab="notes">
+              <i data-lucide="notebook-pen"></i> Notes
+            </button>
             <button class="settings-tab" data-tab="pocketQuran">
-              📖 Pocket Quran
+              <i data-lucide="book-open"></i> Pocket Quran
             </button>
             <button class="settings-tab" data-tab="background">
-              🖼️ Background
+              <i data-lucide="image"></i> Background
             </button>
-            <button class="settings-tab" data-tab="themes">🎨 Themes</button>
-            <button class="settings-tab" data-tab="credits">✨ Credits</button>
-            <button class="settings-tab" data-tab="support">💝 Support</button>
+            <button class="settings-tab" data-tab="themes">
+              <i data-lucide="palette"></i> Themes
+            </button>
+            <button class="settings-tab" data-tab="credits">
+              <i data-lucide="sparkles"></i> Credits
+            </button>
+            <button class="settings-tab" data-tab="support">
+              <i data-lucide="heart"></i> Support
+            </button>
             <button
               class="settings-tab hidden"
               data-tab="debug"
               id="debugTab"
               type="button"
             >
-              🐞 Debug
+              <i data-lucide="bug"></i> Debug
             </button>
-            <button class="settings-tab" data-tab="general">⚙️ General</button>
+            <button class="settings-tab" data-tab="general">
+              <i data-lucide="settings"></i> General
+            </button>
           </div>
 
           <!-- Location Settings -->
@@ -2031,7 +2139,7 @@
                 class="setting-btn detect-location-btn"
                 id="requestLocationBtn"
               >
-                🌍 Request Location Permission
+                <i data-lucide="globe"></i> Request Location Permission
               </button>
             </div>
             <div
@@ -2069,7 +2177,7 @@
               </div>
               <div class="setting-btn-row">
                 <button class="setting-btn" id="searchCityBtn" type="button">
-                  🔍 Search City
+                  <i data-lucide="search"></i> Search City
                 </button>
                 <button
                   class="setting-btn setting-btn-icon"
@@ -2078,7 +2186,7 @@
                   title='Paste coordinates from clipboard (e.g., "21.4225, -39.8262")'
                   aria-label='Paste coordinates from clipboard (e.g., "21.4225, -39.8262")'
                 >
-                  📋
+                  <i data-lucide="clipboard"></i>
                 </button>
               </div>
               <div
@@ -2253,7 +2361,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌙</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="moon"></i
+                    ></span>
                     <span>Fajr</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Fajr">
@@ -2298,7 +2408,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌅</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="sunrise"></i
+                    ></span>
                     <span>Sunrise</span>
                   </div>
                   <label
@@ -2346,7 +2458,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">☀️</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="sun"></i
+                    ></span>
                     <span>Duha</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Duha">
@@ -2391,7 +2505,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌤️</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="sun-medium"></i
+                    ></span>
                     <span>Dhuhr</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Dhuhr">
@@ -2436,7 +2552,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">⛅</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="sun-dim"></i
+                    ></span>
                     <span>Asr</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Asr">
@@ -2481,7 +2599,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌇</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="sunset"></i
+                    ></span>
                     <span>Maghrib</span>
                   </div>
                   <label
@@ -2529,7 +2649,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌙</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="moon"></i
+                    ></span>
                     <span>Isha</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Isha">
@@ -2574,7 +2696,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🕛</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="clock-12"></i
+                    ></span>
                     <span>Midnight</span>
                   </div>
                   <label
@@ -2622,7 +2746,9 @@
 
                 <div class="prayer-settings-row" role="listitem">
                   <div class="prayer-settings-title">
-                    <span class="prayer-settings-icon">🌃</span>
+                    <span class="prayer-settings-icon"
+                      ><i data-lucide="moon-star"></i
+                    ></span>
                     <span>Qiyam</span>
                   </div>
                   <label class="prayer-settings-toggle" aria-label="Show Qiyam">
@@ -2999,7 +3125,9 @@
               </p>
               <div class="visibility-toggle-list">
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🕐</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="clock"></i
+                  ></span>
                   <span class="visibility-name"
                     >Header (Greeting, Date & Clock)</span
                   >
@@ -3007,25 +3135,31 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📌</span>
+                  <span class="visibility-icon"><i data-lucide="pin"></i></span>
                   <span class="visibility-name">Pinned Apps</span>
                   <input type="checkbox" id="visibilityQuickPins" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🔎</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="search"></i
+                  ></span>
                   <span class="visibility-name">Search Bar</span>
                   <input type="checkbox" id="visibilitySearchBar" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">💬</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="message-square-quote"></i
+                  ></span>
                   <span class="visibility-name">Quotes</span>
                   <input type="checkbox" id="visibilityQuotes" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <div class="visibility-toggle-item">
-                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="landmark"></i
+                  ></span>
                   <label class="visibility-name" for="visibilityPrayerTimes"
                     >Prayer Times</label
                   >
@@ -3044,7 +3178,9 @@
                   </label>
                 </div>
                 <div class="visibility-toggle-item">
-                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   <label class="visibility-name" for="visibilityHijriCalendar"
                     >Hijri Calendar</label
                   >
@@ -3067,7 +3203,9 @@
                   </label>
                 </div>
                 <div class="visibility-toggle-item">
-                  <span class="visibility-icon">🧭</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="compass"></i
+                  ></span>
                   <label class="visibility-name" for="visibilityQiblaDirection"
                     >Qibla Direction</label
                   >
@@ -3090,25 +3228,33 @@
                   </label>
                 </div>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌤️</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="cloud-sun"></i
+                  ></span>
                   <span class="visibility-name">Weather</span>
                   <input type="checkbox" id="visibilityWeather" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="moon"></i
+                  ></span>
                   <span class="visibility-name">Lunar Phase</span>
                   <input type="checkbox" id="visibilityLunarPhase" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🥗</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="salad"></i
+                  ></span>
                   <span class="visibility-name">Fasting Times</span>
                   <input type="checkbox" id="visibilityFasting" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <div class="visibility-toggle-item">
-                  <span class="visibility-icon">📇</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="id-card"></i
+                  ></span>
                   <label class="visibility-name" for="visibilityFlashcards"
                     >Flashcards</label
                   >
@@ -3127,19 +3273,25 @@
                   </label>
                 </div>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📿</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="hand-heart"></i
+                  ></span>
                   <span class="visibility-name">Adhkar</span>
                   <input type="checkbox" id="visibilityAdhkar" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📜</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="scroll-text"></i
+                  ></span>
                   <span class="visibility-name">Hadith</span>
                   <input type="checkbox" id="visibilityHadith" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <div class="visibility-toggle-item">
-                  <span class="visibility-icon">✅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="circle-check"></i
+                  ></span>
                   <label class="visibility-name" for="visibilityTodoList"
                     >To-Do List</label
                   >
@@ -3158,13 +3310,17 @@
                   </label>
                 </div>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📝</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="notebook-pen"></i
+                  ></span>
                   <span class="visibility-name">Notes</span>
                   <input type="checkbox" id="visibilityNotes" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📖</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="book-open"></i
+                  ></span>
                   <span class="visibility-name">Pocket Quran</span>
                   <input type="checkbox" id="visibilityPocketQuran" checked />
                   <span class="toggle-switch"></span>
@@ -3204,10 +3360,10 @@
               </p>
               <div class="import-export-btns">
                 <button class="setting-btn" id="exportCustomSearchesBtn">
-                  📤 Export Custom Searches
+                  <i data-lucide="download"></i> Export Custom Searches
                 </button>
                 <button class="setting-btn" id="importCustomSearchesBtn">
-                  📥 Import Custom Searches
+                  <i data-lucide="upload"></i> Import Custom Searches
                 </button>
                 <input
                   type="file"
@@ -3286,7 +3442,7 @@
                   id="weatherSearchCityBtn"
                   type="button"
                 >
-                  🔍 Search City
+                  <i data-lucide="search"></i> Search City
                 </button>
                 <button
                   class="setting-btn setting-btn-icon"
@@ -3295,7 +3451,7 @@
                   title='Paste coordinates from clipboard (e.g., "21.4225, -39.8262")'
                   aria-label='Paste coordinates from clipboard (e.g., "21.4225, -39.8262")'
                 >
-                  📋
+                  <i data-lucide="clipboard"></i>
                 </button>
               </div>
               <div
@@ -3335,37 +3491,49 @@
               </p>
               <div class="visibility-toggle-list">
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   <span class="visibility-name">Monday Fast</span>
                   <input type="checkbox" id="fastingShowMonday" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   <span class="visibility-name">Thursday Fast</span>
                   <input type="checkbox" id="fastingShowThursday" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="moon"></i
+                  ></span>
                   <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
                   <input type="checkbox" id="fastingShowAyyamAlBeed" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="landmark"></i
+                  ></span>
                   <span class="visibility-name">Dhu al-Hijjah</span>
                   <input type="checkbox" id="fastingShowDhuAlHijjah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">⛰️</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="mountain"></i
+                  ></span>
                   <span class="visibility-name">Day of Arafah</span>
                   <input type="checkbox" id="fastingShowArafah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌟</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="star"></i
+                  ></span>
                   <span class="visibility-name">Ramadan</span>
                   <input type="checkbox" id="fastingShowRamadan" checked />
                   <span class="toggle-switch"></span>
@@ -3451,19 +3619,25 @@
                   Select which fasting days to receive notifications:
                 </p>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   <span class="visibility-name">Monday Fast</span>
                   <input type="checkbox" id="fastingNotifyMonday" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">📅</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="calendar-days"></i
+                  ></span>
                   <span class="visibility-name">Thursday Fast</span>
                   <input type="checkbox" id="fastingNotifyThursday" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="moon"></i
+                  ></span>
                   <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
                   <input
                     type="checkbox"
@@ -3473,7 +3647,9 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="landmark"></i
+                  ></span>
                   <span class="visibility-name">Dhu al-Hijjah (1st-9th)</span>
                   <input
                     type="checkbox"
@@ -3483,13 +3659,17 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">⛰️</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="mountain"></i
+                  ></span>
                   <span class="visibility-name">Day of Arafah</span>
                   <input type="checkbox" id="fastingNotifyArafah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
-                  <span class="visibility-icon">🌟</span>
+                  <span class="visibility-icon"
+                    ><i data-lucide="star"></i
+                  ></span>
                   <span class="visibility-name">Ramadan</span>
                   <input type="checkbox" id="fastingNotifyRamadan" checked />
                   <span class="toggle-switch"></span>
@@ -3547,7 +3727,7 @@
                   <span>Arabic Text</span>
                 </label>
                 <button class="setting-btn" id="addQuoteBtn">
-                  ➕ Add Quote
+                  <i data-lucide="plus"></i> Add Quote
                 </button>
               </div>
             </div>
@@ -3556,10 +3736,10 @@
               <label class="setting-label">Import / Export Quotes</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="importQuotesBtn">
-                  📥 Import JSON
+                  <i data-lucide="upload"></i> Import JSON
                 </button>
                 <button class="setting-btn" id="exportQuotesBtn">
-                  📤 Export JSON
+                  <i data-lucide="download"></i> Export JSON
                 </button>
                 <input
                   type="file"
@@ -3594,10 +3774,10 @@
                   id="flashcardsSetSelect"
                 ></select>
                 <button class="setting-btn" id="flashcardsNewSetBtn">
-                  ➕ New Set
+                  <i data-lucide="plus"></i> New Set
                 </button>
                 <button class="setting-btn" id="flashcardsDeleteSetBtn">
-                  🗑️ Delete Set
+                  <i data-lucide="trash-2"></i> Delete Set
                 </button>
               </div>
               <div class="flashcards-meta" id="flashcardsMeta"></div>
@@ -3673,10 +3853,10 @@
               <label class="setting-label">Import / Export</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="flashcardsImportBtn">
-                  📥 Import CSV
+                  <i data-lucide="upload"></i> Import CSV
                 </button>
                 <button class="setting-btn" id="flashcardsExportBtn">
-                  📤 Export CSV
+                  <i data-lucide="download"></i> Export CSV
                 </button>
                 <input
                   type="file"
@@ -3692,7 +3872,7 @@
               <div class="flashcards-editor" id="flashcardsEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="flashcardsAddCardBtn">
-                  ➕ Add Card
+                  <i data-lucide="plus"></i> Add Card
                 </button>
                 <div class="quotes-pagination" id="flashcardsPagination"></div>
               </div>
@@ -3710,13 +3890,13 @@
               <div class="flashcards-toolbar">
                 <select class="setting-select" id="hadithSetSelect"></select>
                 <button class="setting-btn" id="hadithNewSetBtn">
-                  ➕ New Set
+                  <i data-lucide="plus"></i> New Set
                 </button>
                 <button class="setting-btn" id="hadithRenameSetBtn">
-                  ✏️ Rename
+                  <i data-lucide="pencil"></i> Rename
                 </button>
                 <button class="setting-btn" id="hadithDeleteSetBtn">
-                  🗑️ Delete Set
+                  <i data-lucide="trash-2"></i> Delete Set
                 </button>
               </div>
               <div class="flashcards-meta" id="hadithMeta"></div>
@@ -3795,10 +3975,10 @@
               <label class="setting-label">Import / Export</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="hadithImportBtn">
-                  📥 Import JSON
+                  <i data-lucide="upload"></i> Import JSON
                 </button>
                 <button class="setting-btn" id="hadithExportBtn">
-                  📤 Export JSON
+                  <i data-lucide="download"></i> Export JSON
                 </button>
                 <input
                   type="file"
@@ -3814,7 +3994,7 @@
               <div class="flashcards-editor" id="hadithEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="hadithAddItemBtn">
-                  ➕ Add Item
+                  <i data-lucide="plus"></i> Add Item
                 </button>
                 <div class="quotes-pagination" id="hadithPagination"></div>
               </div>
@@ -3832,10 +4012,10 @@
               <div class="flashcards-toolbar">
                 <select class="setting-select" id="adhkarSetSelect"></select>
                 <button class="setting-btn" id="adhkarNewSetBtn">
-                  ➕ New Set
+                  <i data-lucide="plus"></i> New Set
                 </button>
                 <button class="setting-btn" id="adhkarDeleteSetBtn">
-                  🗑️ Delete Set
+                  <i data-lucide="trash-2"></i> Delete Set
                 </button>
               </div>
               <div class="flashcards-meta" id="adhkarMeta"></div>
@@ -3914,10 +4094,10 @@
               <label class="setting-label">Import / Export</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="adhkarImportBtn">
-                  📥 Import JSON
+                  <i data-lucide="upload"></i> Import JSON
                 </button>
                 <button class="setting-btn" id="adhkarExportBtn">
-                  📤 Export JSON
+                  <i data-lucide="download"></i> Export JSON
                 </button>
                 <input
                   type="file"
@@ -3933,7 +4113,7 @@
               <div class="adhkar-editor" id="adhkarEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="adhkarAddItemBtn">
-                  ➕ Add Item
+                  <i data-lucide="plus"></i> Add Item
                 </button>
                 <div class="quotes-pagination" id="adhkarPagination"></div>
               </div>
@@ -3949,10 +4129,10 @@
               </p>
               <div class="import-export-btns">
                 <button class="setting-btn" id="importNotesBtn">
-                  📥 Import JSON
+                  <i data-lucide="upload"></i> Import JSON
                 </button>
                 <button class="setting-btn" id="exportNotesBtn">
-                  📤 Export JSON
+                  <i data-lucide="download"></i> Export JSON
                 </button>
                 <input
                   type="file"
@@ -4367,14 +4547,14 @@
                   class="setting-btn"
                   id="pocketQuranExportBookmarksBtn"
                 >
-                  📤 Export Bookmarks
+                  <i data-lucide="upload"></i> Export Bookmarks
                 </button>
                 <button
                   type="button"
                   class="setting-btn"
                   id="pocketQuranImportBookmarksBtn"
                 >
-                  📥 Import Bookmarks
+                  <i data-lucide="download"></i> Import Bookmarks
                 </button>
                 <input
                   type="file"
@@ -4448,14 +4628,14 @@
                   multiple
                 />
                 <button class="setting-btn" id="addCustomBgBtn">
-                  🖼️ Add Background
+                  <i data-lucide="image-plus"></i> Add Background
                 </button>
                 <span class="custom-bg-count" id="customBgCount">0/10</span>
               </div>
             </div>
             <div class="setting-group">
               <button class="setting-btn" id="changeBackgroundBtn">
-                🔄 Change Background Now
+                <i data-lucide="refresh-cw"></i> Change Background Now
               </button>
             </div>
           </div>
@@ -4474,7 +4654,9 @@
                   data-mode="dark"
                   type="button"
                 >
-                  <span class="theme-mode-icon">🌙</span>
+                  <span class="theme-mode-icon"
+                    ><i data-lucide="moon"></i
+                  ></span>
                   <span class="theme-mode-label">Dark</span>
                 </button>
                 <button
@@ -4483,7 +4665,7 @@
                   data-mode="light"
                   type="button"
                 >
-                  <span class="theme-mode-icon">☀️</span>
+                  <span class="theme-mode-icon"><i data-lucide="sun"></i></span>
                   <span class="theme-mode-label">Light</span>
                 </button>
               </div>
@@ -4574,7 +4756,7 @@
               </p>
 
               <div class="credits-card">
-                <div class="credits-icon">📖</div>
+                <div class="credits-icon"><i data-lucide="book-open"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Quran API</h3>
                   <p class="credits-desc">
@@ -4593,7 +4775,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🕌</div>
+                <div class="credits-icon"><i data-lucide="landmark"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Prayer Times Algorithm</h3>
                   <p class="credits-desc">
@@ -4611,7 +4793,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🗺️</div>
+                <div class="credits-icon"><i data-lucide="map"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Geocoding API</h3>
                   <p class="credits-desc">
@@ -4629,7 +4811,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🌦️</div>
+                <div class="credits-icon"><i data-lucide="cloud-sun"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Weather API</h3>
                   <p class="credits-desc">
@@ -4647,7 +4829,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">📍</div>
+                <div class="credits-icon"><i data-lucide="map-pin"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Weather Geocoding (Extra)</h3>
                   <p class="credits-desc">
@@ -4665,7 +4847,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🔖</div>
+                <div class="credits-icon"><i data-lucide="bookmark"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Favicons API</h3>
                   <p class="credits-desc">
@@ -4683,7 +4865,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🖼️</div>
+                <div class="credits-icon"><i data-lucide="image"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Background Images</h3>
                   <p class="credits-desc">
@@ -4701,7 +4883,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">🔤</div>
+                <div class="credits-icon"><i data-lucide="languages"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Fonts (Extra)</h3>
                   <p class="credits-desc">
@@ -4719,7 +4901,7 @@
               </div>
 
               <div class="credits-card">
-                <div class="credits-icon">📇</div>
+                <div class="credits-icon"><i data-lucide="id-card"></i></div>
                 <div class="credits-card-body">
                   <h3 class="credits-title">Default Flashcards</h3>
                   <p class="credits-desc">
@@ -4748,7 +4930,9 @@
               </p>
 
               <div class="support-kofi-card">
-                <div class="support-kofi-badge" aria-hidden="true">☕</div>
+                <div class="support-kofi-badge" aria-hidden="true">
+                  <i data-lucide="coffee"></i>
+                </div>
                 <div class="support-kofi-body">
                   <h3 class="support-kofi-title">Donate on Ko-fi</h3>
                   <p class="support-kofi-desc">
@@ -4773,7 +4957,9 @@
               </p>
 
               <div class="support-feedback-card">
-                <div class="support-feedback-badge" aria-hidden="true">📝</div>
+                <div class="support-feedback-badge" aria-hidden="true">
+                  <i data-lucide="notebook-pen"></i>
+                </div>
                 <div class="support-feedback-body">
                   <h3 class="support-feedback-title">Send Feedback</h3>
                   <p class="support-feedback-desc">
@@ -4806,7 +4992,7 @@
                 id="testNotificationBtn"
                 type="button"
               >
-                🔔 Test Browser Notification
+                <i data-lucide="bell"></i> Test Browser Notification
               </button>
             </div>
           </div>
@@ -4820,7 +5006,7 @@
                 them. Use this button to reset to the default layout.
               </p>
               <button class="setting-btn" id="resetGridLayoutBtn">
-                🔄 Reset Layout to Default
+                <i data-lucide="refresh-cw"></i> Reset Layout to Default
               </button>
             </div>
 
@@ -4832,7 +5018,7 @@
                 extension.
               </p>
               <button class="setting-btn" id="refreshDefaultDataBtn">
-                🔄 Refresh Default Data
+                <i data-lucide="refresh-cw"></i> Refresh Default Data
               </button>
             </div>
 
@@ -4846,13 +5032,13 @@
               </p>
               <div class="import-export-btns">
                 <button class="setting-btn" id="exportSettingsBtn">
-                  📤 Export Settings
+                  <i data-lucide="upload"></i> Export Settings
                 </button>
                 <button class="setting-btn" id="fullExportBtn">
-                  📦 Full Export
+                  <i data-lucide="package"></i> Full Export
                 </button>
                 <button class="setting-btn" id="importSettingsBtn">
-                  📥 Import Settings
+                  <i data-lucide="download"></i> Import Settings
                 </button>
                 <input
                   type="file"
@@ -4871,7 +5057,7 @@
                 Pocket Quran bookmarks, etc.) will be kept.
               </p>
               <button class="setting-btn" id="resetWholeSettingsBtn">
-                🧹 Reset Whole Settings
+                <i data-lucide="broom"></i> Reset Whole Settings
               </button>
             </div>
 
@@ -4883,14 +5069,14 @@
                 bookmarks, and custom wallpapers.
               </p>
               <button class="setting-btn" id="nukeAllDataBtn">
-                ☢️ Nuke Button
+                <i data-lucide="radiation"></i> Nuke Button
               </button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="modal-btn save-btn" id="saveSettingsBtn">
-            💾 Save Settings
+            <i data-lucide="save"></i> Save Settings
           </button>
         </div>
       </div>
@@ -4905,7 +5091,7 @@
       >
         <div class="modal-header">
           <h2 class="modal-title" id="themePaletteModalTitle">
-            🎨 Customize Theme Palette
+            <i data-lucide="palette"></i> Customize Theme Palette
           </h2>
           <button class="modal-close" id="themePaletteClose" type="button">
             &times;
@@ -4923,7 +5109,7 @@
               type="button"
               data-mode="dark"
             >
-              🌙 Dark
+              <i data-lucide="moon"></i> Dark
             </button>
             <button
               class="theme-palette-mode-btn"
@@ -4931,7 +5117,7 @@
               type="button"
               data-mode="light"
             >
-              ☀️ Light
+              <i data-lucide="sun"></i> Light
             </button>
           </div>
 
@@ -5000,7 +5186,9 @@
     <!-- Delete Confirmation Modal -->
     <div class="modal-overlay delete-confirm-modal" id="deleteConfirmModal">
       <div class="delete-confirm-content">
-        <div class="delete-confirm-icon">⚠️</div>
+        <div class="delete-confirm-icon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
         <h3>Delete Pin?</h3>
         <p>
           Are you sure you want to remove "<span
@@ -5020,7 +5208,7 @@
             Cancel
           </button>
           <button class="delete-confirm-btn confirm" id="confirmDeleteBtn">
-            🗑️ Delete
+            <i data-lucide="trash-2"></i> Delete
           </button>
         </div>
       </div>
@@ -5029,7 +5217,9 @@
     <!-- Reset / Nuke Confirmation Modal -->
     <div class="modal-overlay delete-confirm-modal" id="resetNukeConfirmModal">
       <div class="delete-confirm-content" role="dialog" aria-modal="true">
-        <div class="delete-confirm-icon" id="resetNukeConfirmIcon">⚠️</div>
+        <div class="delete-confirm-icon" id="resetNukeConfirmIcon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
         <h3 id="resetNukeConfirmTitle">Confirm</h3>
         <p id="resetNukeConfirmText"></p>
         <div class="delete-confirm-buttons">
@@ -5047,7 +5237,7 @@
     <div class="modal-overlay" id="pinnedAppModal">
       <div class="modal modal-medium">
         <div class="modal-header">
-          <h2 class="modal-title">🔗 Add Website</h2>
+          <h2 class="modal-title"><i data-lucide="link"></i> Add Website</h2>
           <button class="modal-close" id="closePinnedAppModal">&times;</button>
         </div>
         <div class="modal-body">
@@ -5089,7 +5279,7 @@
     <div class="modal-overlay" id="editPinnedAppModal">
       <div class="modal modal-medium">
         <div class="modal-header">
-          <h2 class="modal-title">✏️ Edit Website</h2>
+          <h2 class="modal-title"><i data-lucide="pencil"></i> Edit Website</h2>
           <button class="modal-close" id="closeEditPinnedAppModal">
             &times;
           </button>
@@ -5129,7 +5319,7 @@
                     id="editPinnedAppRefreshFavicon"
                     title="Refresh from website"
                   >
-                    🔄 Refresh
+                    <i data-lucide="refresh-cw"></i> Refresh
                   </button>
                   <button
                     type="button"
@@ -5137,7 +5327,7 @@
                     id="editPinnedAppImportFavicon"
                     title="Import custom icon (PNG/ICO)"
                   >
-                    📁 Import
+                    <i data-lucide="folder-open"></i> Import
                   </button>
                 </div>
                 <input
@@ -5177,7 +5367,9 @@
       id="searchBarDeleteConfirmModal"
     >
       <div class="delete-confirm-content">
-        <div class="delete-confirm-icon">⚠️</div>
+        <div class="delete-confirm-icon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
         <h3>Delete Search?</h3>
         <p>
           Are you sure you want to remove "<span
@@ -5203,7 +5395,7 @@
             class="delete-confirm-btn confirm"
             id="confirmSearchBarDeleteBtn"
           >
-            🗑️ Delete
+            <i data-lucide="trash-2"></i> Delete
           </button>
         </div>
       </div>
@@ -5215,7 +5407,9 @@
       id="notesDeleteConfirmModal"
     >
       <div class="delete-confirm-content">
-        <div class="delete-confirm-icon">⚠️</div>
+        <div class="delete-confirm-icon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
         <h3>Delete Note?</h3>
         <p>
           Are you sure you want to delete "<span
@@ -5235,7 +5429,7 @@
             Cancel
           </button>
           <button class="delete-confirm-btn confirm" id="confirmNotesDeleteBtn">
-            🗑️ Delete
+            <i data-lucide="trash-2"></i> Delete
           </button>
         </div>
       </div>
@@ -5245,7 +5439,9 @@
     <div class="modal-overlay" id="searchBarModal">
       <div class="modal modal-medium">
         <div class="modal-header">
-          <h2 class="modal-title">🔎 Add Custom Search</h2>
+          <h2 class="modal-title">
+            <i data-lucide="search"></i> Add Custom Search
+          </h2>
           <button class="modal-close" id="closeSearchBarModal">&times;</button>
         </div>
         <div class="modal-body">
@@ -5295,7 +5491,9 @@
     <div class="modal-overlay" id="editSearchBarModal">
       <div class="modal modal-medium">
         <div class="modal-header">
-          <h2 class="modal-title">✏️ Edit Custom Search</h2>
+          <h2 class="modal-title">
+            <i data-lucide="pencil"></i> Edit Custom Search
+          </h2>
           <button class="modal-close" id="closeEditSearchBarModal">
             &times;
           </button>
@@ -5336,7 +5534,7 @@
                     id="editSearchBarRefreshFavicon"
                     title="Refresh from website"
                   >
-                    🔄 Refresh
+                    <i data-lucide="refresh-cw"></i> Refresh
                   </button>
                   <button
                     type="button"
@@ -5344,7 +5542,7 @@
                     id="editSearchBarImportFavicon"
                     title="Import custom icon (PNG/ICO)"
                   >
-                    📁 Import
+                    <i data-lucide="folder-open"></i> Import
                   </button>
                 </div>
                 <input
@@ -5382,7 +5580,7 @@
     <div class="modal-overlay" id="editTodoModal">
       <div class="modal modal-wide">
         <div class="modal-header">
-          <h2 class="modal-title">✏️ Edit Task</h2>
+          <h2 class="modal-title"><i data-lucide="pencil"></i> Edit Task</h2>
           <button class="modal-close" id="editTodoClose">&times;</button>
         </div>
         <div class="modal-body">
@@ -5406,7 +5604,9 @@
     <!-- Delete Confirmation Modal (Todo) -->
     <div class="modal-overlay delete-confirm-modal" id="todoDeleteConfirmModal">
       <div class="delete-confirm-content" role="dialog" aria-modal="true">
-        <div class="delete-confirm-icon">⚠️</div>
+        <div class="delete-confirm-icon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
         <h3>Delete Task?</h3>
         <p>
           Are you sure you want to delete "<span
@@ -5426,7 +5626,7 @@
             Cancel
           </button>
           <button class="delete-confirm-btn confirm" id="confirmTodoDeleteBtn">
-            🗑️ Delete
+            <i data-lucide="trash-2"></i> Delete
           </button>
         </div>
       </div>
@@ -5438,7 +5638,7 @@
       id="todoClearCompletedConfirmModal"
     >
       <div class="delete-confirm-content" role="dialog" aria-modal="true">
-        <div class="delete-confirm-icon">🧹</div>
+        <div class="delete-confirm-icon"><i data-lucide="broom"></i></div>
         <h3>Clear Completed?</h3>
         <p>
           This will remove
@@ -5464,7 +5664,7 @@
             id="confirmTodoClearCompletedBtn"
             type="button"
           >
-            🗑️ Clear
+            <i data-lucide="trash-2"></i> Clear
           </button>
         </div>
       </div>
@@ -5479,7 +5679,9 @@
         aria-labelledby="contentSearchTitle"
       >
         <div class="modal-header">
-          <h2 class="modal-title" id="contentSearchTitle">🔎 Search</h2>
+          <h2 class="modal-title" id="contentSearchTitle">
+            <i data-lucide="search"></i> Search
+          </h2>
           <button
             class="modal-close"
             id="closeContentSearchModal"
@@ -5516,6 +5718,8 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/vendor/lucide.min.js"></script>
+    <script src="js/lucide.js"></script>
     <script src="js/config.js"></script>
     <script src="js/praytimes.js"></script>
     <script src="js/hijri.js"></script>

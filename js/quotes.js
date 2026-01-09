@@ -1021,29 +1021,7 @@ class QuotesManager {
   }
 
   getLanguageFlag(code) {
-    const flags = {
-      en: "🇬🇧",
-      id: "🇮🇩",
-      ar: "🇸🇦",
-      tr: "🇹🇷",
-      ur: "🇵🇰",
-      ms: "🇲🇾",
-      fr: "🇫🇷",
-      de: "🇩🇪",
-      es: "🇪🇸",
-      bn: "🇧🇩",
-      fa: "🇮🇷",
-      hi: "🇮🇳",
-      pt: "🇵🇹",
-      ru: "🇷🇺",
-      zh: "🇨🇳",
-      ja: "🇯🇵",
-      ko: "🇰🇷",
-      nl: "🇳🇱",
-      it: "🇮🇹",
-      th: "🇹🇭",
-    };
-    return flags[code] || "🌐";
+    return '<i data-lucide="languages"></i>';
   }
 
   isDefaultQuotesInUse() {
@@ -1095,7 +1073,7 @@ class QuotesManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true"><i data-lucide="languages"></i></span>`;
     btn.title = "Select quote language";
     btn.setAttribute("aria-label", "Select quote language");
     btn.style.display = "none";
@@ -1106,6 +1084,8 @@ class QuotesManager {
     });
 
     container.appendChild(btn);
+
+    window.renderLucideIcons?.();
   }
 
   updateLanguageSelectorButton() {
@@ -1126,6 +1106,7 @@ class QuotesManager {
         langInfo.code
       )}</span>`;
       btn.title = `Language: ${langInfo.name}`;
+      window.renderLucideIcons?.();
     } else {
       btn.style.display = "none";
       btn.disabled = true;
@@ -1145,7 +1126,7 @@ class QuotesManager {
       <div class="adhkar-lang-modal-content">
         <div class="adhkar-lang-modal-header">
           <div class="adhkar-lang-modal-title">
-            <span aria-hidden="true">🌐</span>
+            <span aria-hidden="true"><i data-lucide="languages"></i></span>
             Select Quote Language
           </div>
           <button class="adhkar-lang-modal-close" type="button" aria-label="Close">×</button>
@@ -1161,6 +1142,8 @@ class QuotesManager {
 
     document.body.appendChild(modal);
     this._langModal = modal;
+
+    window.renderLucideIcons?.();
 
     const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
     closeBtn?.addEventListener("click", () =>
@@ -1250,6 +1233,8 @@ class QuotesManager {
         `;
       })
       .join("");
+
+    window.renderLucideIcons?.();
 
     if (listEl.dataset.bound !== "true") {
       listEl.dataset.bound = "true";

@@ -428,7 +428,7 @@ class BackgroundManager {
     // Styles are now defined in CSS
 
     const cam = document.createElement("span");
-    cam.textContent = "📷";
+    cam.innerHTML = '<i data-lucide="camera"></i>';
     cam.setAttribute("aria-hidden", "true");
     Object.assign(cam.style, {
       display: "inline-flex",
@@ -455,6 +455,10 @@ class BackgroundManager {
     el.appendChild(cam);
     el.appendChild(label);
     el.appendChild(anchor);
+
+    if (typeof window.renderLucideIcons === "function") {
+      window.renderLucideIcons(cam);
+    }
 
     document.body.appendChild(el);
     // Initially hide from assistive tech; visible state will set aria-hidden=false

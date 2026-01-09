@@ -699,7 +699,7 @@ async function showFastingNotification() {
   );
   const fastingType = getTodayFastingType(settings, todayStart);
 
-  const title = "🌙 Suhur Time";
+  const title = "Suhur Time";
   let message = `Time to prepare for Suhur! Fajr is in ${minutesBefore} minutes.`;
 
   if (fastingType) {

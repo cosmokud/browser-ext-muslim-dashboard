@@ -3,6 +3,14 @@
    Beautiful Islamic Dashboard Extension
    ======================================== */
 
+/* Lucide Icons */
+.lucide {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+
 /* Pocket Quran Arabic Fonts */
 @font-face {
   font-family: "Uthmani Tajweed";
@@ -1286,14 +1294,27 @@ textarea.notes-editor:focus {
 }
 
 .notes-editor .notes-checklist li::before {
-  content: "☐";
+  content: "";
   position: absolute;
   left: 0;
-  top: 0;
+  top: 0.05em;
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--text-secondary);
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='3'%20y='3'%20width='18'%20height='18'%20rx='2'%20ry='2'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='3'%20y='3'%20width='18'%20height='18'%20rx='2'%20ry='2'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .notes-editor .notes-checklist li[data-checked="true"]::before {
-  content: "☑";
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='3'%20y='3'%20width='18'%20height='18'%20rx='2'%20ry='2'/%3E%3Cpath%20d='M9%2012l2%202%204-4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='3'%20y='3'%20width='18'%20height='18'%20rx='2'%20ry='2'/%3E%3Cpath%20d='M9%2012l2%202%204-4'/%3E%3C/svg%3E");
 }
 
 .notes-editor .notes-checklist li[data-checked="true"] {
@@ -2038,12 +2059,17 @@ textarea.notes-editor:focus {
 .todo-checkbox.checked {
   background: var(--primary-color);
   border-color: var(--primary-color);
+  color: #fff;
 }
 
-.todo-checkbox.checked::after {
-  content: "✓";
-  color: white;
-  font-size: 14px;
+.todo-checkbox .lucide {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+}
+
+.todo-checkbox.checked .lucide {
+  opacity: 1;
 }
 
 .todo-text {
@@ -3262,16 +3288,11 @@ body.quran-focus-mode .grid-flex-row {
   color: var(--error-color);
 }
 
-.favicon-status-loading::before {
-  content: "⏳ ";
-}
-
-.favicon-status-success::before {
-  content: "✓ ";
-}
-
-.favicon-status-error::before {
-  content: "✗ ";
+.favicon-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.35rem;
 }
 
 .favicon-file-input {
@@ -10157,13 +10178,17 @@ body.sticky-note-resizing {
 .pq-bookmark-checkbox.checked {
   background: var(--accent-gold);
   border-color: var(--accent-gold);
+  color: #000;
 }
 
-.pq-bookmark-checkbox.checked::after {
-  content: "✓";
-  color: #000;
-  font-size: 0.8rem;
-  font-weight: bold;
+.pq-bookmark-checkbox .lucide {
+  width: 0.9em;
+  height: 0.9em;
+  opacity: 0;
+}
+
+.pq-bookmark-checkbox.checked .lucide {
+  opacity: 1;
 }
 
 .pq-bookmark-modal-footer {
