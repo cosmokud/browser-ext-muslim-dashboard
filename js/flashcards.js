@@ -2082,12 +2082,18 @@ class FlashcardManager {
               ${
                 Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
                 FlashcardManager.PROTECTED_SET_IDS.includes(s.id)
-                  ? `<span class="flashcard-set-item-lock" title="Default set — read only">${this._getIcon("🔒", { size: 14 })}</span>`
+                  ? `<span class="flashcard-set-item-lock" title="Default set — read only">${this._getIcon(
+                      "🔒",
+                      { size: 14 }
+                    )}</span>`
                   : ""
               }
               ${
                 isActive
-                  ? `<span style="color: var(--accent-gold);">${this._getIcon("✓", { size: 16 })}</span>`
+                  ? `<span style="color: var(--accent-gold);">${this._getIcon(
+                      "✓",
+                      { size: 16 }
+                    )}</span>`
                   : ""
               }
             </div>
@@ -2159,7 +2165,9 @@ class FlashcardManager {
     container.innerHTML = `
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage - 1
-      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", { size: 14 })}</button>
+      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", {
+      size: 14,
+    })}</button>
       ${pages
         .map((p) =>
           p === "..."
@@ -2171,7 +2179,9 @@ class FlashcardManager {
         .join("")}
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage + 1
-      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", { size: 14 })}</button>
+      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", {
+      size: 14,
+    })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {

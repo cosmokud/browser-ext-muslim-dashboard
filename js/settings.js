@@ -1279,7 +1279,8 @@ class SettingsManager {
     this._clearCitySearchResults(this.weatherCitySearchResults);
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Searching...";
+      this.weatherSearchCityBtn.innerHTML =
+        this._getIcon("🔍", { size: 16 }) + " Searching...";
       this.weatherSearchCityBtn.disabled = true;
     }
 
@@ -1317,7 +1318,8 @@ class SettingsManager {
     }
 
     if (this.weatherSearchCityBtn) {
-      this.weatherSearchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Search City";
+      this.weatherSearchCityBtn.innerHTML =
+        this._getIcon("🔍", { size: 16 }) + " Search City";
       this.weatherSearchCityBtn.disabled = false;
     }
   }
@@ -1839,7 +1841,9 @@ class SettingsManager {
                 )}</span></button>`
               : ""
           }
-          <div class="theme-card-check">${this._getIcon("✓", { size: 16 })}</div>
+          <div class="theme-card-check">${this._getIcon("✓", {
+            size: 16,
+          })}</div>
         </div>
       `;
     }
@@ -3736,7 +3740,8 @@ class SettingsManager {
     this._clearCitySearchResults(this.citySearchResults);
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Searching...";
+      this.searchCityBtn.innerHTML =
+        this._getIcon("🔍", { size: 16 }) + " Searching...";
       this.searchCityBtn.disabled = true;
     }
 
@@ -3769,7 +3774,8 @@ class SettingsManager {
     }
 
     if (this.searchCityBtn) {
-      this.searchCityBtn.innerHTML = this._getIcon("🔍", { size: 16 }) + " Search City";
+      this.searchCityBtn.innerHTML =
+        this._getIcon("🔍", { size: 16 }) + " Search City";
       this.searchCityBtn.disabled = false;
     }
   }
@@ -4555,7 +4561,9 @@ class SettingsManager {
       }
 
       if (this.resetNukeConfirmIcon)
-        this.resetNukeConfirmIcon.innerHTML = this._getIcon(iconEmoji, { size: 32 });
+        this.resetNukeConfirmIcon.innerHTML = this._getIcon(iconEmoji, {
+          size: 32,
+        });
       if (this.resetNukeConfirmTitle)
         this.resetNukeConfirmTitle.textContent = title;
       if (this.resetNukeConfirmText)

@@ -101,12 +101,17 @@ class IconThemeManager {
       colorful: "#f59e0b",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>',
     },
-    "�": {
+    "📁": {
       name: "folder",
       colorful: "#f59e0b",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
     },
-    "�📝": {
+    "📝": {
+      name: "file-text",
+      colorful: "#6366f1",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+    },
+    "📝️": {
       name: "file-text",
       colorful: "#6366f1",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
@@ -465,7 +470,7 @@ class IconThemeManager {
       colorful: "#f59e0b",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
     },
-    "ℹ": {
+    ℹ: {
       name: "info",
       colorful: "#3b82f6",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
@@ -496,6 +501,183 @@ class IconThemeManager {
       colorful: "#22c55e",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',
     },
+
+    // Extra UI icons found in static HTML
+    "☕": {
+      name: "coffee",
+      colorful: "#a16207",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 8h12"/><path d="M6 8v8a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4V8"/><path d="M18 11h1a3 3 0 0 1 0 6h-1"/></svg>',
+    },
+    "☢": {
+      name: "radiation",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v.01"/><path d="M14.5 9.5 16 8"/><path d="M9.5 9.5 8 8"/><path d="M14.5 14.5 16 16"/><path d="M9.5 14.5 8 16"/><path d="M20 12a8 8 0 1 1-16 0"/></svg>',
+    },
+    "☢️": {
+      name: "radiation",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v.01"/><path d="M14.5 9.5 16 8"/><path d="M9.5 9.5 8 8"/><path d="M14.5 14.5 16 16"/><path d="M9.5 14.5 8 16"/><path d="M20 12a8 8 0 1 1-16 0"/></svg>',
+    },
+    "⛰": {
+      name: "mountain",
+      colorful: "#16a34a",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3Z"/></svg>',
+    },
+    "🌍": {
+      name: "globe",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>',
+    },
+    "🌐": {
+      name: "globe",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>',
+    },
+    "🌟": {
+      name: "star",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a1 1 0 0 0 .757.547l5.163.75a.53.53 0 0 1 .294.904l-3.736 3.64a1 1 0 0 0-.287.885l.882 5.142a.53.53 0 0 1-.771.56l-4.618-2.43a1 1 0 0 0-.93 0l-4.618 2.43a.53.53 0 0 1-.771-.56l.882-5.142a1 1 0 0 0-.287-.885L2.911 9.175a.53.53 0 0 1 .294-.904l5.163-.75a1 1 0 0 0 .757-.547l2.31-4.679Z"/></svg>',
+    },
+    "🐞": {
+      name: "bug",
+      colorful: "#ef4444",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3 3 0 0 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3c0 3.3-2.7 6-6 6Z"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.35 3 6.6 3 4"/><path d="M6 13H2"/><path d="M3 20c0-2.1 1.7-3.9 3.8-4"/><path d="M17.47 9C19.4 8.35 21 6.6 21 4"/><path d="M18 13h4"/><path d="M21 20c0-2.1-1.7-3.9-3.8-4"/></svg>',
+    },
+    "💝": {
+      name: "heart",
+      colorful: "#ef4444",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.63 0L12 5.37l-.79-.79a5.4 5.4 0 0 0-7.63 7.63L12 20.63l8.42-8.42a5.4 5.4 0 0 0 0-7.63z"/></svg>',
+    },
+    "💧": {
+      name: "droplet",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-4-7-13-7-13S5 11 5 15a7 7 0 0 0 7 7z"/></svg>',
+    },
+    "💨": {
+      name: "wind",
+      colorful: "#60a5fa",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 0-3.4 3.6H3"/><path d="M9.6 4.6A2.5 2.5 0 1 1 12 9H3"/><path d="M12.6 19.4A2.5 2.5 0 1 0 15 15H3"/></svg>',
+    },
+    "💬": {
+      name: "message-circle",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>',
+    },
+    "💾": {
+      name: "save",
+      colorful: "#6b7280",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M17 21v-7H7v7"/><path d="M7 3v5h8"/></svg>',
+    },
+    "🎙": {
+      name: "mic",
+      colorful: "#a855f7",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="23"/><line x1="8" x2="16" y1="23" y2="23"/></svg>',
+    },
+    "🎙️": {
+      name: "mic",
+      colorful: "#a855f7",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="23"/><line x1="8" x2="16" y1="23" y2="23"/></svg>',
+    },
+    "📭": {
+      name: "inbox",
+      colorful: "#6b7280",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>',
+    },
+    "📁": {
+      name: "folder",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h5l2 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>',
+    },
+    "📇": {
+      name: "contact",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"/><path d="M6 2h12a2 2 0 0 1 2 2v2H4V4a2 2 0 0 1 2-2Z"/><path d="M8 14a3 3 0 1 0 6 0"/><path d="M9 16h6"/></svg>',
+    },
+    "📌": {
+      name: "pin",
+      colorful: "#ef4444",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 2h6l1 7 3 3-7 2-7-2 3-3 1-7z"/></svg>',
+    },
+    "📜": {
+      name: "scroll",
+      colorful: "#a16207",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h12a2 2 0 0 0 2-2V7"/><path d="M4 7h12a2 2 0 0 1 2 2v12"/><path d="M4 7V5a2 2 0 0 1 2-2h10"/><path d="M4 7a2 2 0 0 0 2 2h6"/></svg>',
+    },
+    "📤": {
+      name: "upload",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
+    },
+    "📥": {
+      name: "download",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>',
+    },
+    "📦": {
+      name: "package",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+    },
+    "📿": {
+      name: "sparkles",
+      colorful: "#a855f7",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.937A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063A2 2 0 0 0 14.063 15.5l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>',
+    },
+    "🔄": {
+      name: "refresh-cw",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9 9 0 0 0-6.3 2.6L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9 9 0 0 0 6.3-2.6L21 16"/><path d="M21 21v-5h-5"/></svg>',
+    },
+    "🔔": {
+      name: "bell",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A2 2 0 0 0 4 17h16a2 2 0 0 0 .738-1.674C19.744 13.327 18 11 18 8a6 6 0 1 0-12 0c0 3-1.744 5.327-2.738 7.326"/></svg>',
+    },
+    "🔖": {
+      name: "bookmark",
+      colorful: "#f59e0b",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+    },
+    "🔤": {
+      name: "type",
+      colorful: "#6b7280",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>',
+    },
+    "🕋": {
+      name: "landmark",
+      colorful: "#6b7280",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
+    },
+    "🕐": {
+      name: "clock",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14.5 13.5"/></svg>',
+    },
+    "🖼": {
+      name: "image",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
+    },
+    "🗺": {
+      name: "map",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-6l-6-2v6"/><path d="M9 21V7l-6-2v14"/><path d="M15 21l6-2V5l-6 2"/><path d="M15 5l-6 2"/></svg>',
+    },
+    "🥗": {
+      name: "utensils",
+      colorful: "#22c55e",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h1v11"/><path d="M7 2v20"/><path d="M21 15V2h-3v13a3 3 0 0 1-3 3h-1v4"/></svg>',
+    },
+    "🧩": {
+      name: "puzzle",
+      colorful: "#a855f7",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.44 7.85a2 2 0 0 0-2.83 0l-.71.71V6a2 2 0 0 0-2-2h-2.56l.71-.71a2 2 0 1 0-2.83 0L7.44 4H5a2 2 0 0 0-2 2v2.56l.71-.71a2 2 0 1 1 2.83 2.83l-.71.71H3V16a2 2 0 0 0 2 2h2.56l-.71.71a2 2 0 1 0 2.83 0l.71-.71H14a2 2 0 0 0 2-2v-2.56l.71.71a2 2 0 1 0 2.83-2.83l-.71-.71V10a2 2 0 0 0 0-2.15Z"/></svg>',
+    },
+    "🧹": {
+      name: "brush",
+      colorful: "#6b7280",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 8-8 4 4-8 8"/><path d="M21 7l-4-4"/><path d="M3 21c0-3 2-5 5-5 2 0 3 1 3 3 0 3-2 5-5 5-2 0-3-1-3-3Z"/></svg>',
+    },
   };
 
   constructor(storage) {
@@ -508,6 +690,9 @@ class IconThemeManager {
   init() {
     this.loadSettings();
     this.applyIconTheme();
+
+    // Initial pass for static HTML emojis (cards, settings tabs, etc.)
+    this._scheduleDomIconify();
 
     // Listen for theme mode changes
     document.addEventListener("md:theme-change", (e) => {
@@ -538,6 +723,7 @@ class IconThemeManager {
     }
     this._currentTheme = themeId;
     this.applyIconTheme();
+    this.applyDomIconReplacements(document);
     if (save) {
       this.saveSettings();
     }
@@ -547,6 +733,142 @@ class IconThemeManager {
         detail: { theme: themeId },
       })
     );
+  }
+
+  _scheduleDomIconify() {
+    const run = () => {
+      try {
+        this.applyDomIconReplacements(document);
+      } catch (e) {
+        // ignore
+      }
+      this._setupDomObserver();
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", run, { once: true });
+    } else {
+      run();
+    }
+  }
+
+  _setupDomObserver() {
+    if (this._domIconObserver) return;
+    if (!document.body) return;
+
+    this._domIconObserver = new MutationObserver((mutations) => {
+      if (this._currentTheme === "emoji") return;
+      for (const m of mutations) {
+        for (const n of m.addedNodes) {
+          if (n && n.nodeType === 1) {
+            this.applyDomIconReplacements(n);
+          }
+        }
+      }
+    });
+
+    this._domIconObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  applyDomIconReplacements(root = document) {
+    if (!root || typeof root.querySelectorAll !== "function") return;
+
+    // Icon-only containers
+    const iconOnly = root.querySelectorAll(
+      [
+        ".card-icon",
+        ".quote-icon",
+        ".kaaba-icon",
+        ".weather-icon",
+        ".weather-detail-icon",
+        ".visibility-icon",
+        ".support-feedback-badge",
+        ".mode-icon",
+        ".card-blur-btn",
+        ".blur-popup-title-icon",
+        ".blur-glass-option-icon",
+        ".pq-bookmark-empty-icon",
+        ".auto-icon",
+        ".calendar-nav-btn",
+        ".search-bar-btn",
+        ".search-bar-engine-arrow",
+      ].join(",")
+    );
+    iconOnly.forEach((el) => this._applyIconOnlyElement(el));
+
+    // Emoji + label text elements
+    const textEls = root.querySelectorAll(
+      [
+        ".settings-tab",
+        ".modal-title",
+        ".blur-popup-title",
+        ".blur-glass-option-title",
+        ".pq-bookmark-modal-title",
+      ].join(",")
+    );
+    textEls.forEach((el) => this._applyTextElement(el));
+  }
+
+  _applyIconOnlyElement(el) {
+    if (!el || el.nodeType !== 1) return;
+
+    const alreadyProcessed = !!(el.dataset && el.dataset.mdIconifyOriginal);
+    if (!alreadyProcessed && el.children && el.children.length) return;
+
+    const emoji = this._getOrStoreOriginalText(el);
+    if (!emoji) return;
+
+    const fontSize = parseFloat(getComputedStyle(el).fontSize);
+    const size = Number.isFinite(fontSize)
+      ? Math.max(12, Math.round(fontSize))
+      : 24;
+
+    if (this._currentTheme === "emoji") {
+      el.textContent = emoji;
+      return;
+    }
+
+    el.innerHTML = this.getIcon(emoji, { size });
+  }
+
+  _applyTextElement(el) {
+    if (!el || el.nodeType !== 1) return;
+
+    const alreadyProcessed = !!(el.dataset && el.dataset.mdIconifyOriginal);
+    if (!alreadyProcessed && el.children && el.children.length) return;
+
+    const original = this._getOrStoreOriginalText(el);
+    if (!original) return;
+
+    if (this._currentTheme === "emoji") {
+      el.textContent = original;
+      return;
+    }
+
+    // Settings tabs + modal titles should use smaller, inline icons.
+    el.innerHTML = this.replaceEmojisInText(original, {
+      size: 16,
+      inline: true,
+    });
+  }
+
+  _getOrStoreOriginalText(el) {
+    if (el.dataset && el.dataset.mdIconifyOriginal) {
+      return el.dataset.mdIconifyOriginal;
+    }
+
+    const text = String(el.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) return "";
+
+    if (el.dataset) {
+      el.dataset.mdIconifyOriginal = text;
+    }
+    return text;
   }
 
   getThemes() {

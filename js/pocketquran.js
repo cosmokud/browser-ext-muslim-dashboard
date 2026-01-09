@@ -1611,7 +1611,9 @@ class PocketQuranManager {
     if (isBookmarked) {
       starBtn.classList.add("bookmarked");
     }
-    starBtn.innerHTML = isBookmarked ? this._getIcon("⭐", { size: 18 }) : this._getIcon("☆", { size: 18 });
+    starBtn.innerHTML = isBookmarked
+      ? this._getIcon("⭐", { size: 18 })
+      : this._getIcon("☆", { size: 18 });
     starBtn.title = isBookmarked ? "Manage bookmark" : "Bookmark this ayah";
     starBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -3666,7 +3668,13 @@ class PocketQuranManager {
         isActive ? "active" : ""
       }" data-reciter-id="${r.id}">
         <span class="pq-translation-name">${this.escapeHtml(displayName)}</span>
-        ${isActive ? `<span class="pq-translation-check">${this._getIcon("✓", { size: 14 })}</span>` : ""}
+        ${
+          isActive
+            ? `<span class="pq-translation-check">${this._getIcon("✓", {
+                size: 14,
+              })}</span>`
+            : ""
+        }
       </button>`;
     }
 
@@ -3982,7 +3990,13 @@ class PocketQuranManager {
         isActive ? "active" : ""
       }" data-font-family="${this.escapeHtml(f)}">
         <span class="pq-translation-name">${this.escapeHtml(f)}</span>
-        ${isActive ? `<span class="pq-translation-check">${this._getIcon("✓", { size: 14 })}</span>` : ""}
+        ${
+          isActive
+            ? `<span class="pq-translation-check">${this._getIcon("✓", {
+                size: 14,
+              })}</span>`
+            : ""
+        }
       </button>`;
     }
 
@@ -4431,13 +4445,18 @@ class PocketQuranManager {
       modal.innerHTML = `
         <div class="pq-bookmark-modal-content">
           <div class="pq-bookmark-modal-header">
-            <h3 class="pq-bookmark-modal-title">${this._getIcon("📑", { size: 20 })} Bookmarked Ayahs</h3>
+            <h3 class="pq-bookmark-modal-title">${this._getIcon("📑", {
+              size: 20,
+            })} Bookmarked Ayahs</h3>
             <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="pq-bookmark-modal-body">
             <div class="pq-bookmark-search">
               <input type="text" class="pq-bookmark-search-input" placeholder="Search categories..." />
-              <button type="button" class="pq-bookmark-add-category" title="Add category">${this._getIcon("➕", { size: 16 })}</button>
+              <button type="button" class="pq-bookmark-add-category" title="Add category">${this._getIcon(
+                "➕",
+                { size: 16 }
+              )}</button>
             </div>
             <div class="pq-bookmark-categories"></div>
             <div class="pq-bookmark-ayahs"></div>
@@ -4488,13 +4507,18 @@ class PocketQuranManager {
       modal.innerHTML = `
         <div class="pq-bookmark-modal-content" style="max-width: 450px;">
           <div class="pq-bookmark-modal-header">
-            <h3 class="pq-bookmark-modal-title">${this._getIcon("⭐", { size: 20 })} Bookmark Ayah</h3>
+            <h3 class="pq-bookmark-modal-title">${this._getIcon("⭐", {
+              size: 20,
+            })} Bookmark Ayah</h3>
             <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="pq-bookmark-modal-body">
             <div class="pq-bookmark-search">
               <input type="text" class="pq-bookmark-search-input" placeholder="Search categories..." />
-              <button type="button" class="pq-bookmark-add-category" title="Add category">${this._getIcon("➕", { size: 16 })}</button>
+              <button type="button" class="pq-bookmark-add-category" title="Add category">${this._getIcon(
+                "➕",
+                { size: 16 }
+              )}</button>
             </div>
             <div class="pq-bookmark-categories"></div>
             <div class="pq-bookmark-pagination"></div>
@@ -4691,7 +4715,13 @@ class PocketQuranManager {
           isActive ? "active" : ""
         }" data-translation-id="${t.id}">
           <span class="pq-translation-name">${this.escapeHtml(t.label)}</span>
-          ${isActive ? `<span class="pq-translation-check">${this._getIcon("✓", { size: 14 })}</span>` : ""}
+          ${
+            isActive
+              ? `<span class="pq-translation-check">${this._getIcon("✓", {
+                  size: 14,
+                })}</span>`
+              : ""
+          }
         </button>`;
       }
 
@@ -4803,7 +4833,10 @@ class PocketQuranManager {
         categoriesContainer.innerHTML = `
           <div class="pq-bookmark-category active">
             <div class="pq-bookmark-category-info">
-              <button type="button" class="pq-bookmark-category-btn back" title="Back to categories">${this._getIcon("←", { size: 14 })}</button>
+              <button type="button" class="pq-bookmark-category-btn back" title="Back to categories">${this._getIcon(
+                "←",
+                { size: 14 }
+              )}</button>
               <span class="pq-bookmark-category-name">${this.escapeHtml(
                 category.name
               )}</span>
@@ -5201,7 +5234,9 @@ class PocketQuranManager {
       const isBookmarked = this.isAyahBookmarked(this._activeSurah, ayahNumber);
 
       btn.classList.toggle("bookmarked", isBookmarked);
-      btn.innerHTML = isBookmarked ? this._getIcon("⭐", { size: 18 }) : this._getIcon("☆", { size: 18 });
+      btn.innerHTML = isBookmarked
+        ? this._getIcon("⭐", { size: 18 })
+        : this._getIcon("☆", { size: 18 });
       btn.title = isBookmarked ? "Manage bookmark" : "Bookmark this ayah";
     });
   }
@@ -5246,7 +5281,9 @@ class PocketQuranManager {
     container.innerHTML = `
       <button type="button" class="pq-bookmark-page-btn" data-page="${
         currentPage - 1
-      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", { size: 14 })}</button>
+      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", {
+      size: 14,
+    })}</button>
       ${pages
         .map((p) =>
           p === "..."
@@ -5258,7 +5295,9 @@ class PocketQuranManager {
         .join("")}
       <button type="button" class="pq-bookmark-page-btn" data-page="${
         currentPage + 1
-      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", { size: 14 })}</button>
+      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", {
+      size: 14,
+    })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {

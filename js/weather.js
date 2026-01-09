@@ -389,7 +389,8 @@ class WeatherManager {
     const humidityEl = compactEl.querySelector(".compact-weather-humidity");
     const windEl = compactEl.querySelector(".compact-weather-wind");
 
-    if (iconEl) iconEl.innerHTML = this._getIcon(weatherInfo.icon, { size: 24 });
+    if (iconEl)
+      iconEl.innerHTML = this._getIcon(weatherInfo.icon, { size: 24 });
     if (tempEl) {
       tempEl.textContent =
         weather.temperature === null
@@ -1220,7 +1221,9 @@ window.WeatherManager = WeatherManager;
     const windUnitLabel = weather.unit === "fahrenheit" ? "mph" : "km/h";
 
     if (this.weatherIcon) {
-      this.weatherIcon.innerHTML = this._getIcon(weatherInfo.icon, { size: 48 });
+      this.weatherIcon.innerHTML = this._getIcon(weatherInfo.icon, {
+        size: 48,
+      });
       this._applyWeatherIconAnimation(weather.weatherCode);
     }
 

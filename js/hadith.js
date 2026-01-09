@@ -1161,7 +1161,9 @@ class HadithManager {
     if (isDefault) {
       this.settingsList.innerHTML = `
         <div class="adhkar-default-notice">
-          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", { size: 24 })}</div>
+          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", {
+            size: 24,
+          })}</div>
           <div class="adhkar-default-notice-title">Default Hadith Set</div>
           <div class="adhkar-default-notice-text">
             This is a protected default set and cannot be edited, renamed, or deleted.

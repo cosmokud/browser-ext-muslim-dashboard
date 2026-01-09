@@ -1474,7 +1474,9 @@ class AdhkarManager {
     if (isDefault) {
       this.settingsList.innerHTML = `
         <div class="adhkar-default-notice">
-          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", { size: 24 })}</div>
+          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", {
+            size: 24,
+          })}</div>
           <div class="adhkar-default-notice-title">Default Adhkar Set</div>
           <div class="adhkar-default-notice-text">
             This is a protected default set and cannot be edited. 
@@ -2315,7 +2317,13 @@ class AdhkarManager {
             <span class="adhkar-lang-name">${this.escapeHtmlAttr(
               lang.name
             )}</span>
-            ${isActive ? `<span class="adhkar-lang-check">${this._getIcon("✓", { size: 14 })}</span>` : ""}
+            ${
+              isActive
+                ? `<span class="adhkar-lang-check">${this._getIcon("✓", {
+                    size: 14,
+                  })}</span>`
+                : ""
+            }
           </div>
         `;
       })
@@ -2466,12 +2474,18 @@ class AdhkarManager {
               ${
                 Array.isArray(AdhkarManager.PROTECTED_SET_IDS) &&
                 AdhkarManager.PROTECTED_SET_IDS.includes(s.id)
-                  ? `<span class="adhkar-set-item-lock" title="Default set — read only">${this._getIcon("🔒", { size: 14 })}</span>`
+                  ? `<span class="adhkar-set-item-lock" title="Default set — read only">${this._getIcon(
+                      "🔒",
+                      { size: 14 }
+                    )}</span>`
                   : ""
               }
               ${
                 isActive
-                  ? `<span style="color: var(--accent-gold);">${this._getIcon("✓", { size: 16 })}</span>`
+                  ? `<span style="color: var(--accent-gold);">${this._getIcon(
+                      "✓",
+                      { size: 16 }
+                    )}</span>`
                   : ""
               }
             </div>
@@ -2537,7 +2551,9 @@ class AdhkarManager {
     container.innerHTML = `
       <button type="button" class="adhkar-set-page-btn" data-page="${
         currentPage - 1
-      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", { size: 14 })}</button>
+      }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", {
+      size: 14,
+    })}</button>
       ${pages
         .map((p) =>
           p === "..."
@@ -2549,7 +2565,9 @@ class AdhkarManager {
         .join("")}
       <button type="button" class="adhkar-set-page-btn" data-page="${
         currentPage + 1
-      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", { size: 14 })}</button>
+      }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", {
+      size: 14,
+    })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {
