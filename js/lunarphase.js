@@ -20,6 +20,11 @@ class LunarPhaseManager {
     this.metaEl = document.getElementById("lunarPhaseMeta");
 
     this._timer = null;
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this.refresh();
+    });
   }
 
   init() {
@@ -45,17 +50,18 @@ class LunarPhaseManager {
 
     if (this.locationEl) {
       const city = (loc.city || "").trim();
+      const pinIcon = this._getIcon("📍", { size: 14, inline: true });
       if (city) {
-        this.locationEl.textContent = `📍 ${city}`;
+        this.locationEl.innerHTML = `${pinIcon} ${city}`;
       } else if (
         Number.isFinite(Number(loc.latitude)) &&
         Number.isFinite(Number(loc.longitude))
       ) {
-        this.locationEl.textContent = `📍 ${Number(loc.latitude).toFixed(
+        this.locationEl.innerHTML = `${pinIcon} ${Number(loc.latitude).toFixed(
           2
         )}, ${Number(loc.longitude).toFixed(2)}`;
       } else {
-        this.locationEl.textContent = "📍 Location";
+        this.locationEl.innerHTML = `${pinIcon} Location`;
       }
     }
 
@@ -71,6 +77,16 @@ class LunarPhaseManager {
     if (this.moonEl) {
       this.moonEl.innerHTML = this._renderMoonSvg(data.phaseFraction);
     }
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
   }
 
   _resolveLocation() {

@@ -122,6 +122,45 @@ class AdhkarManager {
     // Language selector state
     this._langModal = null;
     this._selectedLangCode = null;
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._updateSetSelectorIcon();
+      this._updateSetModalIcons();
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Update set selector button icon
+   */
+  _updateSetSelectorIcon() {
+    if (this._setModalBtn) {
+      this._setModalBtn.innerHTML = this._getIcon("📚", { size: 18 });
+    }
+  }
+
+  /**
+   * Update set modal icons
+   */
+  _updateSetModalIcons() {
+    if (this._setModal) {
+      const titleEl = this._setModal.querySelector(".adhkar-set-modal-title");
+      if (titleEl) {
+        titleEl.innerHTML = `${this._getIcon("📚", {
+          size: 20,
+        })} Select Adhkar Set`;
+      }
+    }
   }
 
   async init() {
@@ -2120,7 +2159,8 @@ class AdhkarManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn";
-    btn.innerHTML = "📚";
+    btn.innerHTML = this._getIcon("📚", { size: 18 });
+    this._setModalBtn = btn;
     btn.title = "Select adhkar set";
     btn.setAttribute("aria-label", "Select adhkar set");
 
@@ -2307,7 +2347,9 @@ class AdhkarManager {
     modal.innerHTML = `
       <div class="adhkar-set-modal-content">
         <div class="adhkar-set-modal-header">
-          <h3 class="adhkar-set-modal-title">📚 Select Adhkar Set</h3>
+          <h3 class="adhkar-set-modal-title">${this._getIcon("📚", {
+            size: 20,
+          })} Select Adhkar Set</h3>
           <button type="button" class="adhkar-set-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="adhkar-set-modal-body">
@@ -2320,6 +2362,7 @@ class AdhkarManager {
       </div>
     `;
     document.body.appendChild(modal);
+    this._setModal = modal;
     this._setModal = modal;
 
     modal

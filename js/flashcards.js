@@ -111,6 +111,23 @@ class FlashcardManager {
     this._setModalPage = 1;
     this._setModalSearchQuery = "";
     this._setModal = null;
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this.applyAutoAdvanceUI();
+      this.applyModeToDashboard();
+      this._updateSetSelectorButton();
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
   }
 
   async init() {
@@ -343,6 +360,10 @@ class FlashcardManager {
     const cards = this.getActiveSet()?.cards || [];
     const visible = this.isStudyMode() && cards.length > 1;
 
+    // Get icon based on theme
+    const pauseIcon = this._getIcon("⏸", { size: 16 });
+    const playIcon = this._getIcon("▶", { size: 16 });
+
     if (this.autoAdvanceToggleBtn) {
       this.autoAdvanceToggleBtn.setAttribute(
         "aria-pressed",
@@ -353,7 +374,7 @@ class FlashcardManager {
         ? "Resume auto-advance"
         : "Pause auto-advance";
       this.autoAdvanceToggleBtn.innerHTML = `<span class="auto-icon" aria-hidden="true">${
-        paused ? "▶" : "⏸"
+        paused ? playIcon : pauseIcon
       }</span>`;
 
       this.autoAdvanceToggleBtn.disabled = !visible;
@@ -392,7 +413,8 @@ class FlashcardManager {
 
     if (this.modeToggleBtn) {
       this.modeToggleBtn.dataset.mode = mode;
-      const icon = mode === "study" ? "📖" : "❓";
+      const iconEmoji = mode === "study" ? "📖" : "❓";
+      const icon = this._getIcon(iconEmoji, { size: 16 });
       const nextTitle =
         mode === "study" ? "Switch to Quiz mode" : "Switch to Study mode";
       this.modeToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true">${icon}</span>`;
@@ -1893,6 +1915,16 @@ class FlashcardManager {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
+   * Update the set selector button icon
+   */
+  _updateSetSelectorButton() {
+    const btn = this.cardEl?.querySelector(".flashcard-set-selector-btn");
+    if (btn) {
+      btn.innerHTML = this._getIcon("📚", { size: 18 });
+    }
+  }
+
+  /**
    * Create the set selector button in the flashcard card header.
    */
   createSetSelectorButton() {
@@ -1905,7 +1937,7 @@ class FlashcardManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "flashcard-set-selector-btn";
-    btn.innerHTML = "📚";
+    btn.innerHTML = this._getIcon("📚", { size: 18 });
     btn.title = "Select flashcard set";
     btn.setAttribute("aria-label", "Select flashcard set");
 
@@ -1931,13 +1963,14 @@ class FlashcardManager {
   createSetSelectorModal() {
     if (document.getElementById("flashcardSetModal")) return;
 
+    const libraryIcon = this._getIcon("📚", { size: 20 });
     const modal = document.createElement("div");
     modal.id = "flashcardSetModal";
     modal.className = "flashcard-set-modal";
     modal.innerHTML = `
       <div class="flashcard-set-modal-content">
         <div class="flashcard-set-modal-header">
-          <h3 class="flashcard-set-modal-title">📚 Select Flashcard Set</h3>
+          <h3 class="flashcard-set-modal-title">${libraryIcon} Select Flashcard Set</h3>
           <button type="button" class="flashcard-set-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="flashcard-set-modal-body">

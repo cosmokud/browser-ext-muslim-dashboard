@@ -111,7 +111,42 @@ class SearchBarManager {
     // Suppress click that would otherwise fire after a drag
     document.addEventListener("click", this.boundCaptureClick, true);
 
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._updateContextMenuIcons();
+    });
+
     this.init();
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Update context menu icons when theme changes
+   */
+  _updateContextMenuIcons() {
+    if (this.contextMenu) {
+      const editIcon = this.contextMenu.querySelector(
+        ".context-menu-edit .context-menu-icon"
+      );
+      const colorIcon = this.contextMenu.querySelector(
+        ".context-menu-accent-custom .context-menu-icon"
+      );
+      const deleteIcon = this.contextMenu.querySelector(
+        ".context-menu-delete .context-menu-icon"
+      );
+      if (editIcon) editIcon.innerHTML = this._getIcon("✏️", { size: 16 });
+      if (colorIcon) colorIcon.innerHTML = this._getIcon("🎨", { size: 16 });
+      if (deleteIcon) deleteIcon.innerHTML = this._getIcon("🗑️", { size: 16 });
+    }
   }
 
   _captureClickWhileDragging(e) {
@@ -554,7 +589,9 @@ class SearchBarManager {
     menu.classList.add("search-bar-context-menu");
     menu.innerHTML = `
       <button class="context-menu-item context-menu-edit" type="button">
-        <span class="context-menu-icon">✏️</span>
+        <span class="context-menu-icon">${this._getIcon("✏️", {
+          size: 16,
+        })}</span>
         <span>Edit</span>
       </button>
       <div class="context-menu-divider" role="separator"></div>
@@ -562,13 +599,17 @@ class SearchBarManager {
         <div class="context-menu-accent-title">Accent color</div>
         <div class="context-menu-accent-palette" data-role="accent-palette"></div>
         <button class="context-menu-item context-menu-accent-custom" type="button">
-          <span class="context-menu-icon">🎨</span>
+          <span class="context-menu-icon">${this._getIcon("🎨", {
+            size: 16,
+          })}</span>
           <span>Custom color…</span>
         </button>
       </div>
       <div class="context-menu-divider" role="separator"></div>
       <button class="context-menu-item context-menu-delete" type="button">
-        <span class="context-menu-icon">🗑️</span>
+        <span class="context-menu-icon">${this._getIcon("🗑️", {
+          size: 16,
+        })}</span>
         <span>Delete</span>
       </button>
     `;

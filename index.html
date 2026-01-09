@@ -4531,6 +4531,143 @@
             </div>
 
             <div class="setting-group">
+              <label class="setting-label">Icon Style</label>
+              <p class="setting-hint">
+                Choose the icon style used throughout the dashboard.
+              </p>
+              <div class="icon-theme-picker" id="iconThemePicker">
+                <button
+                  class="icon-theme-card active"
+                  data-icon-theme="emoji"
+                  type="button"
+                >
+                  <span class="icon-theme-preview">
+                    <span class="icon-theme-sample">🌙</span>
+                    <span class="icon-theme-sample">📚</span>
+                    <span class="icon-theme-sample">🔎</span>
+                  </span>
+                  <span class="icon-theme-name">Emoji</span>
+                  <span class="icon-theme-desc">Classic emoji icons</span>
+                  <span class="icon-theme-check">✓</span>
+                </button>
+                <button
+                  class="icon-theme-card"
+                  data-icon-theme="colorful"
+                  type="button"
+                >
+                  <span class="icon-theme-preview">
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#6366f1"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    </svg>
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#f59e0b"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m16 6 4 14" />
+                      <path d="M12 6v14" />
+                      <path d="M8 8v12" />
+                      <path d="M4 4v16" />
+                    </svg>
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#3b82f6"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                  </span>
+                  <span class="icon-theme-name">Colorful</span>
+                  <span class="icon-theme-desc">Vibrant Lucide icons</span>
+                  <span class="icon-theme-check">✓</span>
+                </button>
+                <button
+                  class="icon-theme-card"
+                  data-icon-theme="monochrome"
+                  type="button"
+                >
+                  <span class="icon-theme-preview">
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    </svg>
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m16 6 4 14" />
+                      <path d="M12 6v14" />
+                      <path d="M8 8v12" />
+                      <path d="M4 4v16" />
+                    </svg>
+                    <svg
+                      class="icon-theme-sample"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                  </span>
+                  <span class="icon-theme-name">Monochrome</span>
+                  <span class="icon-theme-desc">Clean single-color icons</span>
+                  <span class="icon-theme-check">✓</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
               <label class="setting-label">Dashboard Width</label>
               <select class="setting-select" id="themeContainerWidth">
                 <option value="extra-compact">Extra Compact (800px)</option>
@@ -5522,6 +5659,7 @@
     <script src="js/storage.js"></script>
     <script src="js/faviconcache.js"></script>
     <script src="js/themes.js"></script>
+    <script src="js/iconthemes.js"></script>
     <script src="js/backgrounds.js"></script>
     <script src="js/quotes.js"></script>
     <script src="js/qibla.js"></script>

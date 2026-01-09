@@ -662,6 +662,23 @@ class PocketQuranManager {
     this._headerControlsBox = null;
 
     this.init();
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      if (this._bookmarkModal && document.body.contains(this._bookmarkModal)) {
+        this.renderBookmarkModal();
+      }
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
   }
 
   init() {
@@ -4848,7 +4865,10 @@ class PocketQuranManager {
                 (b.translationText || "").length > 150 ? "..." : ""
               }</div>
               </div>
-              <button type="button" class="pq-bookmark-ayah-remove" title="Remove bookmark">🗑️</button>
+              <button type="button" class="pq-bookmark-ayah-remove" title="Remove bookmark">${this._getIcon(
+                "🗑️",
+                { size: 16 }
+              )}</button>
             </div>
           `
             )
@@ -4910,7 +4930,9 @@ class PocketQuranManager {
       if (pageCategories.length === 0) {
         categoriesContainer.innerHTML = `
           <div class="pq-bookmark-empty">
-            <div class="pq-bookmark-empty-icon">📁</div>
+            <div class="pq-bookmark-empty-icon">${this._getIcon("📁", {
+              size: 32,
+            })}</div>
             <div>No categories found</div>
           </div>
         `;
@@ -4930,12 +4952,18 @@ class PocketQuranManager {
             <div class="pq-bookmark-category-actions">
               ${
                 c.id !== "default"
-                  ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename">✏️</button>`
+                  ? `<button type="button" class="pq-bookmark-category-btn rename" title="Rename">${this._getIcon(
+                      "✏️",
+                      { size: 16 }
+                    )}</button>`
                   : ""
               }
               ${
                 c.id !== "default"
-                  ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete">🗑️</button>`
+                  ? `<button type="button" class="pq-bookmark-category-btn delete" title="Delete">${this._getIcon(
+                      "🗑️",
+                      { size: 16 }
+                    )}</button>`
                   : ""
               }
             </div>
@@ -5066,7 +5094,9 @@ class PocketQuranManager {
     if (pageCategories.length === 0) {
       categoriesContainer.innerHTML = `
         <div class="pq-bookmark-empty">
-          <div class="pq-bookmark-empty-icon">📁</div>
+          <div class="pq-bookmark-empty-icon">${this._getIcon("📁", {
+            size: 32,
+          })}</div>
           <div>No categories found</div>
         </div>
       `;

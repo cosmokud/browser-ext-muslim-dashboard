@@ -15,6 +15,9 @@ class MuslimDashboard {
     // Initialize Theme Manager
     this.themes = new ThemeManager(this.storage);
 
+    // Initialize Icon Theme Manager
+    this.iconThemes = new IconThemeManager(this.storage);
+
     // Initialize managers
     this.backgrounds = new BackgroundManager(this.storage);
     this.prayerTimes = new PrayerTimesManager(this.storage);
@@ -949,12 +952,19 @@ class MuslimDashboard {
         }
 
         // Update button icon based on state
+        const getThemedIcon = (emoji) => {
+          if (window.dashboard?.iconThemes) {
+            return window.dashboard.iconThemes.getIcon(emoji, { size: 16 });
+          }
+          return emoji;
+        };
+
         if (state === "off") {
-          btn.textContent = "⬜";
+          btn.innerHTML = getThemedIcon("⬜");
         } else if (state === "on") {
-          btn.textContent = "✨";
+          btn.innerHTML = getThemedIcon("✨");
         } else {
-          btn.textContent = "🔗";
+          btn.innerHTML = getThemedIcon("🔗");
         }
 
         // Notify components
@@ -1214,6 +1224,42 @@ class MuslimDashboard {
     this._blurMenus = blurConfigs
       .map((cfg) => setupBlurMenu(cfg))
       .filter(Boolean);
+
+    // Listen for icon theme changes and update blur menu button icons
+    document.addEventListener("md:icon-theme-change", () => {
+      const readSettings = () => this.storage.getSettings();
+      const getThemedIcon = (emoji) => {
+        if (window.dashboard?.iconThemes) {
+          return window.dashboard.iconThemes.getIcon(emoji, { size: 16 });
+        }
+        return emoji;
+      };
+
+      blurConfigs.forEach(({ stateKey }) => {
+        const settings = readSettings();
+        const state = settings?.[stateKey] || "dashboard";
+        const menu = document.querySelector(`.card-blur-menu[data-card-id]`);
+
+        document.querySelectorAll(".card-blur-btn").forEach((btn) => {
+          const cardMenu = btn.closest(".card-blur-menu");
+          const cardId = cardMenu?.dataset?.cardId;
+          if (!cardId) return;
+
+          const cardStateKey = blurConfigs.find(
+            (c) => c.cardId === cardId
+          )?.stateKey;
+          const cardState = settings?.[cardStateKey] || "dashboard";
+
+          if (cardState === "off") {
+            btn.innerHTML = getThemedIcon("⬜");
+          } else if (cardState === "on") {
+            btn.innerHTML = getThemedIcon("✨");
+          } else {
+            btn.innerHTML = getThemedIcon("🔗");
+          }
+        });
+      });
+    });
   }
 
   /**

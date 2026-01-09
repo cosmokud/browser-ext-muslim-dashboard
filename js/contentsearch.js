@@ -88,6 +88,16 @@ class ContentSearchManager {
     return !!this.modalEl?.classList.contains("active");
   }
 
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
   open(context) {
     this.cacheElements();
 
@@ -98,16 +108,17 @@ class ContentSearchManager {
     this._activeContext = context;
     this._page = 1;
 
+    const searchIcon = this._getIcon("🔎", { size: 18, inline: true });
     const title =
       context === "quotes"
-        ? "🔎 Search Quotes"
+        ? `${searchIcon} Search Quotes`
         : context === "adhkar"
-        ? "🔎 Search Adhkar"
+        ? `${searchIcon} Search Adhkar`
         : context === "hadith"
-        ? "🔎 Search Hadith"
-        : "🔎 Search";
+        ? `${searchIcon} Search Hadith`
+        : `${searchIcon} Search`;
 
-    this.titleEl.textContent = title;
+    this.titleEl.innerHTML = title;
 
     this.modalEl.classList.add("active");
     this.modalEl.setAttribute("aria-hidden", "false");
@@ -146,7 +157,7 @@ class ContentSearchManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn quote-search-btn";
-    btn.innerHTML = "🔎︎";
+    btn.innerHTML = this._getIcon("🔎", { size: 16 });
     btn.title = "Search quotes";
     btn.setAttribute("aria-label", "Search quotes");
 
@@ -170,7 +181,7 @@ class ContentSearchManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `adhkar-set-selector-btn content-search-btn ${cls}`;
-    btn.innerHTML = "🔎︎";
+    btn.innerHTML = this._getIcon("🔎", { size: 16 });
 
     const label =
       context === "adhkar"

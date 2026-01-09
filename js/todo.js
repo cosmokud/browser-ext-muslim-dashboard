@@ -53,6 +53,22 @@ class TodoManager {
     this.editSaveBtn = document.getElementById("editTodoSave");
     this.editCancelBtn = document.getElementById("editTodoCancel");
     this.editCloseBtn = document.getElementById("editTodoClose");
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this.render();
+      this._updatePaginationIcons();
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
   }
 
   /**
@@ -191,9 +207,10 @@ class TodoManager {
     }
 
     if (filteredTodos.length === 0) {
+      const emptyIcon = this._getIcon("📝", { size: 32 });
       this.todoList.innerHTML = `
         <li class="empty-state">
-          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-icon">${emptyIcon}</div>
           <p>${
             this.filter === "all"
               ? "No tasks yet. Add one above!"
@@ -246,11 +263,16 @@ class TodoManager {
       disabled = false,
       ariaLabel,
       active = false,
+      isIcon = false,
     }) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = `todo-page-btn${active ? " active" : ""}`;
-      btn.textContent = label;
+      if (isIcon) {
+        btn.innerHTML = this._getIcon(label, { size: 16 });
+      } else {
+        btn.textContent = label;
+      }
       if (ariaLabel) btn.setAttribute("aria-label", ariaLabel);
       btn.disabled = !!disabled;
       btn.dataset.page = String(pageValue);
@@ -266,6 +288,7 @@ class TodoManager {
         pageValue: page - 1,
         disabled: page <= 1,
         ariaLabel: "Previous todo page",
+        isIcon: true,
       })
     );
 
@@ -334,6 +357,7 @@ class TodoManager {
         pageValue: page + 1,
         disabled: page >= totalPages,
         ariaLabel: "Next todo page",
+        isIcon: true,
       })
     );
 
@@ -351,6 +375,21 @@ class TodoManager {
         this.render();
       });
     }
+  }
+
+  /**
+   * Update pagination icons when theme changes
+   */
+  _updatePaginationIcons() {
+    if (!this.todoPagination || this.todoPagination.hidden) return;
+    const prevBtn = this.todoPagination.querySelector(
+      'button[aria-label="Previous todo page"]'
+    );
+    const nextBtn = this.todoPagination.querySelector(
+      'button[aria-label="Next todo page"]'
+    );
+    if (prevBtn) prevBtn.innerHTML = this._getIcon("❮", { size: 16 });
+    if (nextBtn) nextBtn.innerHTML = this._getIcon("❯", { size: 16 });
   }
 
   /**

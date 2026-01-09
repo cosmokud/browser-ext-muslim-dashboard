@@ -81,7 +81,38 @@ class PinnedAppsManager {
     // Suppress the click that would otherwise fire after a drag
     document.addEventListener("click", this.boundCaptureClick, true);
 
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._updateContextMenuIcons();
+    });
+
     this.init();
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Update context menu icons when theme changes
+   */
+  _updateContextMenuIcons() {
+    if (this.contextMenu) {
+      const editIcon = this.contextMenu.querySelector(
+        ".context-menu-edit .context-menu-icon"
+      );
+      const deleteIcon = this.contextMenu.querySelector(
+        ".context-menu-delete .context-menu-icon"
+      );
+      if (editIcon) editIcon.innerHTML = this._getIcon("✏️", { size: 16 });
+      if (deleteIcon) deleteIcon.innerHTML = this._getIcon("🗑️", { size: 16 });
+    }
   }
 
   captureClickWhileDragging(e) {
@@ -113,11 +144,15 @@ class PinnedAppsManager {
     this.contextMenu.className = "pinned-app-context-menu";
     this.contextMenu.innerHTML = `
       <button class="context-menu-item context-menu-edit">
-        <span class="context-menu-icon">✏️</span>
+        <span class="context-menu-icon">${this._getIcon("✏️", {
+          size: 16,
+        })}</span>
         <span>Edit</span>
       </button>
       <button class="context-menu-item context-menu-delete">
-        <span class="context-menu-icon">🗑️</span>
+        <span class="context-menu-icon">${this._getIcon("🗑️", {
+          size: 16,
+        })}</span>
         <span>Delete</span>
       </button>
     `;

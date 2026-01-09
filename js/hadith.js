@@ -104,6 +104,45 @@ class HadithManager {
 
     // Language selector state
     this._langModal = null;
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._updateSetSelectorIcon();
+      this._updateSetModalIcons();
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Update set selector button icon
+   */
+  _updateSetSelectorIcon() {
+    if (this._setModalBtn) {
+      this._setModalBtn.innerHTML = this._getIcon("📚", { size: 18 });
+    }
+  }
+
+  /**
+   * Update set modal icons
+   */
+  _updateSetModalIcons() {
+    if (this._setModal) {
+      const titleIcon = this._setModal.querySelector(
+        ".hadith-set-modal-title span[aria-hidden]"
+      );
+      if (titleIcon) {
+        titleIcon.innerHTML = this._getIcon("📚", { size: 20 });
+      }
+    }
   }
 
   async init() {
@@ -1697,9 +1736,10 @@ class HadithManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-set-selector-btn";
-    btn.innerHTML = "📚";
+    btn.innerHTML = this._getIcon("📚", { size: 18 });
     btn.title = "Select hadith set";
     btn.setAttribute("aria-label", "Select hadith set");
+    this._setModalBtn = btn;
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -1725,7 +1765,7 @@ class HadithManager {
       <div class="adhkar-set-modal-content">
         <div class="adhkar-set-modal-header">
           <div class="adhkar-set-modal-title">
-            <span aria-hidden="true">📚</span>
+            <span aria-hidden="true">${this._getIcon("📚", { size: 20 })}</span>
             Select Hadith Set
           </div>
           <button class="adhkar-set-modal-close" type="button" aria-label="Close">×</button>

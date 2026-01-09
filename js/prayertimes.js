@@ -32,6 +32,12 @@ class PrayerTimesManager {
     this.nextPrayerName = document.getElementById("nextPrayerName");
     this.nextPrayerCountdown = document.getElementById("nextPrayerCountdown");
     this.locationBtn = document.getElementById("detectLocationBtn");
+
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      const settings = this.storage.getSettings();
+      this.renderPrayerList(settings.prayerVisibility);
+    });
   }
 
   /**
@@ -107,6 +113,16 @@ class PrayerTimesManager {
   }
 
   /**
+   * Get icon HTML based on current icon theme
+   */
+  getIconHtml(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
    * Render prayer list based on visibility
    */
   renderPrayerList(visibility) {
@@ -119,9 +135,10 @@ class PrayerTimesManager {
         const prayerItem = document.createElement("div");
         prayerItem.className = "prayer-item";
         prayerItem.dataset.prayer = prayer.key;
+        const iconHtml = this.getIconHtml(prayer.icon, { size: 18 });
         prayerItem.innerHTML = `
           <span class="prayer-name">
-            <span class="prayer-icon">${prayer.icon}</span>
+            <span class="prayer-icon">${iconHtml}</span>
             ${prayer.name}
           </span>
           <span class="prayer-time" id="${prayer.key}Time">--:--</span>

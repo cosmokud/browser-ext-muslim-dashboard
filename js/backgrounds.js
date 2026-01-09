@@ -11,6 +11,11 @@ class BackgroundManager {
     this.currentBg = 1;
     this.intervalId = null;
 
+    // Listen for icon theme changes
+    document.addEventListener("md:icon-theme-change", () => {
+      this._updateCameraIcon();
+    });
+
     // High-quality nature background metadata from Unsplash (free to use)
     // Each image has a `url`, `credit` and `href` (dummy placeholders for now).
     // Use `this.imageParams` to control image size/quality globally (e.g., "w=1920&q=80")
@@ -306,6 +311,28 @@ class BackgroundManager {
   }
 
   /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Update camera icon when theme changes
+   */
+  _updateCameraIcon() {
+    if (this.attributionEl) {
+      const cam = this.attributionEl.querySelector('span[aria-hidden="true"]');
+      if (cam) {
+        cam.innerHTML = this._getIcon("📷", { size: 16 });
+      }
+    }
+  }
+
+  /**
    * Initialize backgrounds
    */
   init() {
@@ -428,7 +455,7 @@ class BackgroundManager {
     // Styles are now defined in CSS
 
     const cam = document.createElement("span");
-    cam.textContent = "📷";
+    cam.innerHTML = this._getIcon("📷", { size: 16 });
     cam.setAttribute("aria-hidden", "true");
     Object.assign(cam.style, {
       display: "inline-flex",

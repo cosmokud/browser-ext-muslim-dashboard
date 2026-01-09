@@ -247,6 +247,9 @@ class SettingsManager {
       "themeCustomWidthValue"
     );
 
+    // Icon theme picker
+    this.iconThemePicker = document.getElementById("iconThemePicker");
+
     // Custom searches import/export
     this.exportCustomSearchesBtn = document.getElementById(
       "exportCustomSearchesBtn"
@@ -1601,6 +1604,63 @@ class SettingsManager {
     this.renderThemePickerGrid();
     this.loadThemePanelSettings();
     this.setupThemePanelEventListeners();
+    this.setupIconThemePicker();
+
+    // Listen for icon theme changes and update theme picker grid
+    document.addEventListener("md:icon-theme-change", () => {
+      this.renderThemePickerGrid();
+    });
+  }
+
+  /**
+   * Get icon based on current icon theme
+   */
+  _getIcon(emoji, options = {}) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, options);
+    }
+    return emoji;
+  }
+
+  /**
+   * Setup icon theme picker
+   */
+  setupIconThemePicker() {
+    if (!this.iconThemePicker) return;
+
+    // Load current icon theme setting
+    const settings = this.storage.getSettings();
+    const currentIconTheme = settings.iconTheme || "emoji";
+    this.updateIconThemePickerState(currentIconTheme);
+
+    // Add click handlers to icon theme cards
+    this.iconThemePicker.addEventListener("click", (e) => {
+      const card = e.target.closest(".icon-theme-card");
+      if (!card) return;
+
+      const themeId = card.dataset.iconTheme;
+      if (!themeId) return;
+
+      this.updateIconThemePickerState(themeId);
+
+      // Apply icon theme immediately
+      if (window.dashboard?.iconThemes) {
+        window.dashboard.iconThemes.setTheme(themeId, true);
+      }
+    });
+  }
+
+  /**
+   * Update icon theme picker active state
+   */
+  updateIconThemePickerState(activeTheme) {
+    if (!this.iconThemePicker) return;
+
+    const cards = this.iconThemePicker.querySelectorAll(".icon-theme-card");
+    cards.forEach((card) => {
+      const themeId = card.dataset.iconTheme;
+      card.classList.toggle("active", themeId === activeTheme);
+    });
   }
 
   /**
@@ -1765,13 +1825,18 @@ class SettingsManager {
             <div class="theme-preview-bg" style="background: ${previewBg}"></div>
           </div>
           <div class="theme-card-header">
-            <span class="theme-card-icon">${theme.icon}</span>
+            <span class="theme-card-icon">${this._getIcon(theme.icon, {
+              size: 20,
+            })}</span>
             <span class="theme-card-name">${theme.name}</span>
           </div>
           <div class="theme-card-desc">${theme.description}</div>
           ${
             isCustomizable
-              ? '<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">🎨</span></button>'
+              ? `<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">${this._getIcon(
+                  "🎨",
+                  { size: 16 }
+                )}</span></button>`
               : ""
           }
           <div class="theme-card-check">✓</div>
