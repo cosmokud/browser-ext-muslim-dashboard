@@ -293,7 +293,7 @@ class IconThemeManager {
     "🕌": {
       name: "landmark",
       colorful: "#10b981",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
     },
     "🧭": {
       name: "compass",
@@ -654,7 +654,17 @@ class IconThemeManager {
       colorful: "#3b82f6",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
     },
+    "🖼️": {
+      name: "image",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
+    },
     "🗺": {
+      name: "map",
+      colorful: "#3b82f6",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-6l-6-2v6"/><path d="M9 21V7l-6-2v14"/><path d="M15 21l6-2V5l-6 2"/><path d="M15 5l-6 2"/></svg>',
+    },
+    "🗺️": {
       name: "map",
       colorful: "#3b82f6",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-6l-6-2v6"/><path d="M9 21V7l-6-2v14"/><path d="M15 21l6-2V5l-6 2"/><path d="M15 5l-6 2"/></svg>',
@@ -780,8 +790,14 @@ class IconThemeManager {
         ".kaaba-icon",
         ".weather-icon",
         ".weather-detail-icon",
+        ".prayer-settings-icon",
         ".visibility-icon",
+        ".credits-icon",
+        ".support-kofi-badge",
         ".support-feedback-badge",
+        ".delete-confirm-icon",
+        ".theme-mode-icon",
+        ".icon-theme-sample",
         ".mode-icon",
         ".card-blur-btn",
         ".blur-popup-title-icon",
@@ -800,6 +816,10 @@ class IconThemeManager {
       [
         ".settings-tab",
         ".modal-title",
+        ".setting-btn",
+        ".modal-btn",
+        ".delete-confirm-btn",
+        ".theme-palette-mode-btn",
         ".blur-popup-title",
         ".blur-glass-option-title",
         ".pq-bookmark-modal-title",
