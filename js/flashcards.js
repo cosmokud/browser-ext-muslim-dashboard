@@ -699,6 +699,12 @@ class FlashcardManager {
         // Avoid flipping when clicking nav buttons (they are siblings, but be safe)
         const targetBtn = e.target.closest("button");
         if (targetBtn) return;
+
+        // If the user is selecting/copying text, don't treat it as a flip.
+        const selection = window.getSelection?.();
+        if (selection && !selection.isCollapsed && selection.toString().trim()) {
+          return;
+        }
         this.toggleFlip();
       });
 

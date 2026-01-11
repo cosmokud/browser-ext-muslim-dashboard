@@ -3099,6 +3099,7 @@ body.quran-focus-mode .grid-flex-row {
 #settingsModal .modal-body {
   scrollbar-width: thin;
   scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.08);
+  scrollbar-gutter: stable;
 }
 
 #settingsModal .modal-body::-webkit-scrollbar {
@@ -3283,11 +3284,46 @@ body.quran-focus-mode .grid-flex-row {
   display: flex;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.08);
+}
+
+.settings-tabs::-webkit-scrollbar {
+  height: 8px;
+}
+
+.settings-tabs::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+.settings-tabs::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  background-clip: padding-box;
+}
+
+.settings-tabs::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }
 
 .settings-tab {
-  padding: var(--spacing-sm) var(--spacing-md);
+  flex: 0 0 auto;
+  white-space: nowrap;
+  height: 34px;
+  padding: 0 var(--spacing-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
@@ -12480,13 +12516,16 @@ body.sticky-note-resizing {
 .grid-draggable {
   touch-action: manipulation;
   transition: transform 0.15s ease, box-shadow 0.15s ease, flex 0.3s ease;
-  user-select: none;
+  user-select: text;
+  -webkit-user-select: text;
   position: relative;
 }
 
 /* Edit mode enabled - allow dragging */
 .grid-edit-mode .grid-draggable {
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Hover state for draggable items - only in edit mode */

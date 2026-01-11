@@ -3863,9 +3863,20 @@ class SettingsManager {
   switchTab(tabName) {
     if (tabName === "debug" && !this.debugEnabled) return;
 
+    const activeTab = Array.from(this.tabs || []).find(
+      (tab) => tab.dataset.tab === tabName
+    );
+
     // Update tabs
     this.tabs.forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.tab === tabName);
+    });
+
+    // Keep the active tab visible in the (horizontally scrollable) tab strip.
+    activeTab?.scrollIntoView?.({
+      block: "nearest",
+      inline: "nearest",
+      behavior: "smooth",
     });
 
     // Update panels
