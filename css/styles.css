@@ -239,7 +239,8 @@ body.sidebar-mode .sidebar-column {
   height: calc(100vh - 2 * var(--spacing-xl));
   max-height: calc(100vh - 2 * var(--spacing-xl));
   overflow-x: hidden;
-  overflow-y: hidden; /* scrollbar only on hover */
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: var(--spacing-xl) var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -248,7 +249,6 @@ body.sidebar-mode .sidebar-column {
 }
 
 body.sidebar-mode .sidebar-column:hover {
-  overflow-y: auto;
   scrollbar-color: var(--primary-color) transparent;
 }
 
