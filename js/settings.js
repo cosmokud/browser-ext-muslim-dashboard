@@ -3276,10 +3276,16 @@ class SettingsManager {
     this.applySettings(settings);
 
     // Show confirmation
-    this.showToast("Settings saved successfully!", "success");
+    this.showToast("Settings saved successfully! Refreshing...", "success");
 
     // Close modal
     this.closeModal();
+
+    // Some UI (especially icons) is injected/cached by many components.
+    // A hard refresh ensures everything re-renders consistently.
+    setTimeout(() => {
+      window.location.reload();
+    }, 350);
   }
 
   /**

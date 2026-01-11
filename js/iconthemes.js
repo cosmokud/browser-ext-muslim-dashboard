@@ -640,9 +640,9 @@ class IconThemeManager {
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>',
     },
     "🕋": {
-      name: "landmark",
-      colorful: "#6b7280",
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
+      name: "kaaba",
+      colorful: "#d4af37",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"> <path d="M2.69 6.45L12 9.35l9.31-2.91L12 3.54 2.69 6.45zm8.92-4.84c.25-.08.53-.08.78 0l10.45 3.27c.54.17.91.67.91 1.25v1.52l-11.56 3.61c-.13.04-.26.04-.39 0L.24 7.64V6.12c0-.57.37-1.08.92-1.25L11.61 1.61zm.98 10.89l11.17-3.49v1.9l-2.16.67c-.34.11-.53.47-.43.82.11.34.47.53.82.43l1.77-.55v5.6c0 .57-.37 1.08-.92 1.25l-10.45 3.27c-.25.08-.53.08-.78 0l-10.45-3.27c-.55-.17-.92-.68-.92-1.25v-5.6l1.76.55c.34.11.71-.09.82-.43.11-.34-.09-.71-.43-.82L.24 10.91V9.01l11.18 3.49c.38.12.79.12 1.17 0zm-7.57-.11c-.34-.11-.71.09-.82.43-.11.34.09.71.43.82l2.61.82c.34.11.71-.09.82-.43.11-.34-.09-.71-.43-.82l-2.61-.82zm14.37 1.25c.34-.11.53-.47.43-.82-.11-.34-.47-.53-.82-.43l-2.61.82c-.34.11-.53.47-.43.82.11.34.47.53.82.43l2.61-.82zm-9.15.39c-.34-.11-.71.09-.82.43-.11.34.09.71.43.82l1.57.49c.38.12.79.12 1.17 0l1.57-.49c.34-.11.53-.47.43-.82-.11-.34-.47-.53-.82-.43l-1.57.49c-.13.04-.26.04-.39 0l-1.57-.49z"/></svg>',
     },
     "🕐": {
       name: "clock",
@@ -830,6 +830,20 @@ class IconThemeManager {
 
   _applyIconOnlyElement(el) {
     if (!el || el.nodeType !== 1) return;
+
+    // Keep the Emoji theme preview card showing emojis even when a Lucide theme
+    // is active (so the user can still see what “Emoji” means).
+    if (
+      this._currentTheme !== "emoji" &&
+      el.classList?.contains("icon-theme-sample") &&
+      el.closest?.('.icon-theme-card[data-icon-theme="emoji"]')
+    ) {
+      const emoji = this._getOrStoreOriginalText(el);
+      if (emoji) {
+        el.textContent = emoji;
+      }
+      return;
+    }
 
     const alreadyProcessed = !!(el.dataset && el.dataset.mdIconifyOriginal);
     if (!alreadyProcessed && el.children && el.children.length) return;
