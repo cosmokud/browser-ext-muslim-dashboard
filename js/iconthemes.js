@@ -793,7 +793,6 @@ class IconThemeManager {
         ".prayer-settings-icon",
         ".visibility-icon",
         ".credits-icon",
-        ".support-kofi-badge",
         ".support-feedback-badge",
         ".delete-confirm-icon",
         ".theme-mode-icon",

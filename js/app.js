@@ -94,11 +94,45 @@ class MuslimDashboard {
       } catch (e) {}
     };
 
-    const setOpen = (open) => {
+    const setItemsHidden = (hidden, opts = {}) => {
+      try {
+        if (hidden) {
+          // If focus is inside the menu items, move it out BEFORE hiding
+          // from assistive tech to avoid browser warnings and AT focus traps.
+          const active = document.activeElement;
+          if (active && items.contains(active)) {
+            try {
+              active.blur();
+            } catch (e) {}
+
+            if (opts.returnFocusToToggle) {
+              try {
+                if (toggle.getAttribute("aria-hidden") !== "true") {
+                  toggle.focus({ preventScroll: true });
+                }
+              } catch (e) {}
+            }
+          }
+
+          try {
+            items.setAttribute("inert", "");
+          } catch (e) {}
+          items.setAttribute("aria-hidden", "true");
+          return;
+        }
+
+        items.removeAttribute("inert");
+        items.setAttribute("aria-hidden", "false");
+      } catch (e) {}
+    };
+
+    const setOpen = (open, opts = {}) => {
       menu.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-      items.setAttribute("aria-hidden", open ? "false" : "true");
+      setItemsHidden(!open, {
+        returnFocusToToggle: !!opts.returnFocusToToggle,
+      });
       // keep toggle visible while menu is open
       if (open) setHotVisible(true);
     };
@@ -243,7 +277,7 @@ class MuslimDashboard {
     document.addEventListener("keydown", (e) => {
       if (!isOpen()) return;
       if (e.key === "Escape") {
-        setOpen(false);
+        setOpen(false, { returnFocusToToggle: true });
         setTimeout(() => setHotVisible(false), 300);
       }
     });
@@ -1347,6 +1381,16 @@ class MuslimDashboard {
           fabToggle.setAttribute("aria-label", "Open menu");
         }
         if (fabItems) {
+          try {
+            const active = document.activeElement;
+            if (active && fabItems.contains(active)) {
+              try {
+                active.blur();
+              } catch (e) {}
+            }
+
+            fabItems.setAttribute("inert", "");
+          } catch (e) {}
           fabItems.setAttribute("aria-hidden", "true");
         }
       }

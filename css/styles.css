@@ -3639,6 +3639,14 @@ body.quran-focus-mode .grid-flex-row {
   z-index: 1;
 }
 
+.support-kofi-badge img {
+  width: 60%;
+  height: 60%;
+  display: block;
+  pointer-events: none;
+  object-fit: contain;
+}
+
 .support-kofi-body {
   flex: 1;
   min-width: 0;
