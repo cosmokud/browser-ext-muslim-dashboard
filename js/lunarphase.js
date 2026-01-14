@@ -503,9 +503,9 @@ class LunarPhaseManager {
     </clipPath>
   </defs>
 
-  <g filter="url(#moonGlow)">
-    <!-- Layer 1: Dark background (the unlit portion) -->
-    <circle cx="0" cy="0" r="${radius}" fill="url(#moonDarkSide)" />
+  <g filter="url(#moonGlow)" transform="scale(-1 1)">
+    <!-- Layer 1: Lit background (the illuminated portion) -->
+    <circle cx="0" cy="0" r="${radius}" fill="url(#moonLitSurface)" />
     
     <!-- Layer 2: Moon texture (craters) - rotated by disk rotation (r) -->
     <g transform="rotate(${diskRotDeg})" clip-path="url(#moonClip)">
@@ -539,9 +539,9 @@ class LunarPhaseManager {
       <circle cx="0" cy="0" r="${radius}" fill="url(#moonTexture)" opacity="0.3" />
     </g>
     
-    <!-- Layer 3: Illuminated portion - rotated by local bright-limb angle -->
+    <!-- Layer 3: Shadow portion - rotated by local bright-limb angle -->
     <g transform="rotate(${posAngleDeg})">
-      <path d="${litPath}" fill="url(#moonLitSurface)" />
+      <path d="${litPath}" fill="url(#moonDarkSide)" />
       
       <!-- Re-apply crater texture on lit portion for visibility -->
       <g clip-path="url(#litClip${Math.round(
