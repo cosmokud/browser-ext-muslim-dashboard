@@ -1791,173 +1791,85 @@ class MuslimDashboard {
     const settings = this.storage.getSettings();
     const visibility = settings.componentVisibility || {};
 
+    let visibilityChanged = false;
+    const setVisibility = (el, shouldHide) => {
+      if (!el) return;
+      const nextDisplay = shouldHide ? "none" : "";
+      const nextAria = shouldHide ? "true" : "false";
+
+      if (el.style.display !== nextDisplay) {
+        el.style.display = nextDisplay;
+        visibilityChanged = true;
+      }
+      if (el.getAttribute("aria-hidden") !== nextAria) {
+        el.setAttribute("aria-hidden", nextAria);
+        visibilityChanged = true;
+      }
+    };
+
     // Header (greeting, date, clock)
     const header = document.querySelector(".header");
-    if (header) {
-      header.style.display = visibility.header === false ? "none" : "";
-      header.setAttribute(
-        "aria-hidden",
-        visibility.header === false ? "true" : "false"
-      );
-    }
+    setVisibility(header, visibility.header === false);
 
     // Quick Pins
     const pinnedAppsSection = document.getElementById("pinnedAppsSection");
-    if (pinnedAppsSection) {
-      pinnedAppsSection.style.display =
-        visibility.quickPins === false ? "none" : "";
-      pinnedAppsSection.setAttribute(
-        "aria-hidden",
-        visibility.quickPins === false ? "true" : "false"
-      );
-    }
+    setVisibility(pinnedAppsSection, visibility.quickPins === false);
 
     // Search Bar
     const searchBarSection = document.getElementById("searchBarSection");
-    if (searchBarSection) {
-      searchBarSection.style.display =
-        visibility.searchBar === false ? "none" : "";
-      searchBarSection.setAttribute(
-        "aria-hidden",
-        visibility.searchBar === false ? "true" : "false"
-      );
-    }
+    setVisibility(searchBarSection, visibility.searchBar === false);
 
     // Quotes
     const quoteSection = document.getElementById("quoteSection");
-    if (quoteSection) {
-      quoteSection.style.display = visibility.quotes === false ? "none" : "";
-      quoteSection.setAttribute(
-        "aria-hidden",
-        visibility.quotes === false ? "true" : "false"
-      );
-    }
+    setVisibility(quoteSection, visibility.quotes === false);
 
     // Prayer Times
     const prayerTimesCard = document.getElementById("prayerTimesCard");
-    if (prayerTimesCard) {
-      prayerTimesCard.style.display =
-        visibility.prayerTimes === false ? "none" : "";
-      prayerTimesCard.setAttribute(
-        "aria-hidden",
-        visibility.prayerTimes === false ? "true" : "false"
-      );
-    }
+    setVisibility(prayerTimesCard, visibility.prayerTimes === false);
 
     // Hijri Calendar
     const calendarCard = document.getElementById("calendarCard");
-    if (calendarCard) {
-      calendarCard.style.display =
-        visibility.hijriCalendar === false ? "none" : "";
-      calendarCard.setAttribute(
-        "aria-hidden",
-        visibility.hijriCalendar === false ? "true" : "false"
-      );
-    }
+    setVisibility(calendarCard, visibility.hijriCalendar === false);
 
     // Qibla Direction
     const qiblaCard = document.getElementById("qiblaCard");
-    if (qiblaCard) {
-      qiblaCard.style.display =
-        visibility.qiblaDirection === false ? "none" : "";
-      qiblaCard.setAttribute(
-        "aria-hidden",
-        visibility.qiblaDirection === false ? "true" : "false"
-      );
-    }
+    setVisibility(qiblaCard, visibility.qiblaDirection === false);
 
     // Weather
     const weatherCard = document.getElementById("weatherCard");
-    if (weatherCard) {
-      weatherCard.style.display = visibility.weather === false ? "none" : "";
-      weatherCard.setAttribute(
-        "aria-hidden",
-        visibility.weather === false ? "true" : "false"
-      );
-    }
+    setVisibility(weatherCard, visibility.weather === false);
 
     // Lunar Phase
     const lunarPhaseCard = document.getElementById("lunarPhaseCard");
-    if (lunarPhaseCard) {
-      lunarPhaseCard.style.display =
-        visibility.lunarPhase === false ? "none" : "";
-      lunarPhaseCard.setAttribute(
-        "aria-hidden",
-        visibility.lunarPhase === false ? "true" : "false"
-      );
-    }
+    setVisibility(lunarPhaseCard, visibility.lunarPhase === false);
 
     // Fasting
     const fastingCard = document.getElementById("fastingCard");
-    if (fastingCard) {
-      fastingCard.style.display = visibility.fasting === false ? "none" : "";
-      fastingCard.setAttribute(
-        "aria-hidden",
-        visibility.fasting === false ? "true" : "false"
-      );
-    }
+    setVisibility(fastingCard, visibility.fasting === false);
 
     // Flashcards
     const flashcardCard = document.getElementById("flashcardCard");
-    if (flashcardCard) {
-      flashcardCard.style.display =
-        visibility.flashcards === false ? "none" : "";
-      flashcardCard.setAttribute(
-        "aria-hidden",
-        visibility.flashcards === false ? "true" : "false"
-      );
-    }
+    setVisibility(flashcardCard, visibility.flashcards === false);
 
     // Adhkar
     const adhkarCard = document.getElementById("adhkarCard");
-    if (adhkarCard) {
-      adhkarCard.style.display = visibility.adhkar === false ? "none" : "";
-      adhkarCard.setAttribute(
-        "aria-hidden",
-        visibility.adhkar === false ? "true" : "false"
-      );
-    }
+    setVisibility(adhkarCard, visibility.adhkar === false);
 
     // Hadith
     const hadithCard = document.getElementById("hadithCard");
-    if (hadithCard) {
-      hadithCard.style.display = visibility.hadith === false ? "none" : "";
-      hadithCard.setAttribute(
-        "aria-hidden",
-        visibility.hadith === false ? "true" : "false"
-      );
-    }
+    setVisibility(hadithCard, visibility.hadith === false);
 
-    // Todo List
+    // Todo
     const todoCard = document.getElementById("todoCard");
-    if (todoCard) {
-      todoCard.style.display = visibility.todoList === false ? "none" : "";
-      todoCard.setAttribute(
-        "aria-hidden",
-        visibility.todoList === false ? "true" : "false"
-      );
-    }
+    setVisibility(todoCard, visibility.todoList === false);
 
     // Notes
     const notesCard = document.getElementById("notesCard");
-    if (notesCard) {
-      notesCard.style.display = visibility.notes === false ? "none" : "";
-      notesCard.setAttribute(
-        "aria-hidden",
-        visibility.notes === false ? "true" : "false"
-      );
-    }
+    setVisibility(notesCard, visibility.notes === false);
 
     // Pocket Quran
     const pocketQuranCard = document.getElementById("pocketQuranCard");
-    if (pocketQuranCard) {
-      pocketQuranCard.style.display =
-        visibility.pocketQuran === false ? "none" : "";
-      pocketQuranCard.setAttribute(
-        "aria-hidden",
-        visibility.pocketQuran === false ? "true" : "false"
-      );
-    }
+    setVisibility(pocketQuranCard, visibility.pocketQuran === false);
 
     // Apply quote layout style
     if (this.quotes && typeof this.quotes.applyLayoutStyle === "function") {
@@ -1972,13 +1884,15 @@ class MuslimDashboard {
       this.weather.updateCompactWeather();
     }
 
-    // Notify grid layout manager to recalculate layout
-    try {
-      document.dispatchEvent(new CustomEvent("md:visibility-changed"));
-    } catch (e) {
-      // Fallback for older browsers
-      if (this.gridLayout) {
-        this.gridLayout.recalculateLayout();
+    // Notify grid layout manager to recalculate layout (only when visibility changed)
+    if (visibilityChanged) {
+      try {
+        document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+      } catch (e) {
+        // Fallback for older browsers
+        if (this.gridLayout) {
+          this.gridLayout.recalculateLayout();
+        }
       }
     }
   }
