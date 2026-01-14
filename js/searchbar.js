@@ -149,6 +149,23 @@ class SearchBarManager {
     }
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   _captureClickWhileDragging(e) {
     if (!this.blockNextClick) return;
     e.preventDefault();
@@ -287,9 +304,7 @@ class SearchBarManager {
       );
     }
     if (this.addModal) {
-      this.addModal.addEventListener("click", (e) => {
-        if (e.target === this.addModal) this.hideAddModal();
-      });
+      this._bindOverlayCloseBehavior(this.addModal, () => this.hideAddModal());
     }
     if (this.addModalForm) {
       this.addModalForm.addEventListener("submit", (e) => {
@@ -310,9 +325,9 @@ class SearchBarManager {
       );
     }
     if (this.editModal) {
-      this.editModal.addEventListener("click", (e) => {
-        if (e.target === this.editModal) this.hideEditModal();
-      });
+      this._bindOverlayCloseBehavior(this.editModal, () =>
+        this.hideEditModal()
+      );
     }
     if (this.editModalForm) {
       this.editModalForm.addEventListener("submit", (e) => {
@@ -354,9 +369,9 @@ class SearchBarManager {
       );
     }
     if (this.deleteModal) {
-      this.deleteModal.addEventListener("click", (e) => {
-        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
-      });
+      this._bindOverlayCloseBehavior(this.deleteModal, () =>
+        this.hideDeleteConfirmation()
+      );
     }
 
     // Escape closes context menu + modals

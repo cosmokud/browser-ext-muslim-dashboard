@@ -89,6 +89,23 @@ class PinnedAppsManager {
     this.init();
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   /**
    * Get icon based on current icon theme
    */
@@ -337,23 +354,11 @@ class PinnedAppsManager {
       );
     }
 
-    // Close edit modal on outside click
-    if (this.editModal) {
-      this.editModal.addEventListener("click", (e) => {
-        if (e.target === this.editModal) {
-          this.hideEditModal();
-        }
-      });
-    }
+    // Close edit modal on backdrop click (guarded against text-selection drags)
+    this._bindOverlayCloseBehavior(this.editModal, () => this.hideEditModal());
 
-    // Close modal on outside click
-    if (this.modal) {
-      this.modal.addEventListener("click", (e) => {
-        if (e.target === this.modal) {
-          this.hideModal();
-        }
-      });
-    }
+    // Close modal on backdrop click (guarded against text-selection drags)
+    this._bindOverlayCloseBehavior(this.modal, () => this.hideModal());
 
     // Delete confirmation modal buttons
     if (this.confirmDeleteBtn) {
@@ -367,14 +372,10 @@ class PinnedAppsManager {
       );
     }
 
-    // Close delete modal on outside click
-    if (this.deleteModal) {
-      this.deleteModal.addEventListener("click", (e) => {
-        if (e.target === this.deleteModal) {
-          this.hideDeleteConfirmation();
-        }
-      });
-    }
+    // Close delete modal on backdrop click
+    this._bindOverlayCloseBehavior(this.deleteModal, () =>
+      this.hideDeleteConfirmation()
+    );
   }
 
   /**
