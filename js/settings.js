@@ -73,6 +73,7 @@ class SettingsManager {
     // Tabs
     this.tabs = document.querySelectorAll(".settings-tab");
     this.panels = document.querySelectorAll(".settings-panel");
+    this.tabStrip = this.modal?.querySelector?.(".settings-tabs");
 
     // Debug mode (gated)
     this.debugEnabled = globalThis.ENABLE_DEBUG_MODE === true;
@@ -470,9 +471,32 @@ class SettingsManager {
     // Initialize themes panel
     this.initThemesPanel();
 
+    // Keep Settings tabs compact + consistent width
+    this.updateSettingsTabsMinWidth();
+
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+  }
+
+  updateSettingsTabsMinWidth() {
+    const strip = this.tabStrip || document.querySelector(".settings-tabs");
+    if (!strip) return;
+
+    const referenceTab = strip.querySelector(
+      '.settings-tab[data-tab="pocketQuran"]'
+    );
+    if (!referenceTab) return;
+
+    // Wait a tick so icon-theme DOM replacements/fonts have landed.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const width = Math.ceil(referenceTab.getBoundingClientRect().width);
+        if (Number.isFinite(width) && width > 0) {
+          strip.style.setProperty("--settings-tab-min-width", `${width}px`);
+        }
+      });
+    });
   }
 
   /**
@@ -3835,6 +3859,8 @@ class SettingsManager {
     if (this.modal) {
       this.modal.classList.add("active");
     }
+
+    this.updateSettingsTabsMinWidth();
   }
 
   /**
@@ -4153,6 +4179,14 @@ class SettingsManager {
     this.tabs.forEach((tab) => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
+
+    // Recompute min-width when icon theme changes (emoji vs Lucide sizes differ)
+    if (!document.documentElement.dataset.settingsTabsMinWidthBound) {
+      document.documentElement.dataset.settingsTabsMinWidthBound = "1";
+      document.addEventListener("md:icon-theme-change", () => {
+        this.updateSettingsTabsMinWidth();
+      });
+    }
 
     // Make the location pin open the Location settings (click + keyboard)
     try {

@@ -2868,6 +2868,7 @@ body.quran-focus-mode .grid-flex-row {
 
 /* Refresh Background Button (next to Settings) */
 .refresh-bg-btn {
+  justify-content: center;
   position: fixed;
   bottom: var(--spacing-xl);
   right: calc(
@@ -3441,12 +3442,9 @@ body.quran-focus-mode .grid-flex-row {
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  color: #112;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.85);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -3559,12 +3557,9 @@ body.quran-focus-mode .grid-flex-row {
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  color: var(--primary-dark);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.85);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   animation: supportKofiFloat 2.6s ease-in-out infinite;
   z-index: 1;
@@ -3618,12 +3613,9 @@ body.quran-focus-mode .grid-flex-row {
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.85);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   animation: supportKofiFloat 2.6s ease-in-out infinite;
   z-index: 1;
@@ -5418,6 +5410,10 @@ body.quran-focus-mode .grid-flex-row {
 }
 
 /* Import/Export buttons */
+gap: 8px;
+min-width: var(--settings-tab-min-width, 0px);
+text-align: center;
+line-height: 1;
 .import-export-btns {
   display: flex;
   gap: var(--spacing-sm);
