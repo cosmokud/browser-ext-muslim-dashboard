@@ -84,7 +84,7 @@ class GridLayoutManager {
       ["searchBarSection"],
       ["quoteSection"],
       ["prayerTimesCard", "fastingCard", "calendarCard"],
-      ["lunarPhaseCard", "qiblaCard", "todoCard"],
+      ["todoCard", "qiblaCard", "lunarPhaseCard"],
       ["flashcardCard", "adhkarCard"],
       ["hadithCard"],
       ["pocketQuranCard"],
