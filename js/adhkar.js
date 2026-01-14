@@ -11,6 +11,9 @@ class AdhkarManager {
 
   static NAV_ANIM_MS = 320;
   static SCRIPT_TOGGLE_ANIM_MS = 220;
+  static FONT_SCALE_MIN = 0.5;
+  static FONT_SCALE_MAX = 2.5;
+  static FONT_SCALE_STEP = 0.1;
 
   static DEFAULT_SETS = [
     {
@@ -57,6 +60,12 @@ class AdhkarManager {
     this.referenceEl = document.getElementById("adhkarReferenceText");
     this.repeatEl = document.getElementById("adhkarRepeatText");
     this.scriptToggleBtn = document.getElementById("adhkarScriptToggleBtn");
+    this.fontScaleDecreaseBtn = document.getElementById(
+      "adhkarFontDecreaseBtn"
+    );
+    this.fontScaleIncreaseBtn = document.getElementById(
+      "adhkarFontIncreaseBtn"
+    );
 
     // Dashboard jump controls
     this.jumpLabelEl = document.getElementById("adhkarJumpLabel");
@@ -623,6 +632,26 @@ class AdhkarManager {
       this.scriptToggleBtn.addEventListener("click", () => this.toggleScript());
     }
 
+    if (
+      this.fontScaleDecreaseBtn &&
+      this.fontScaleDecreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleDecreaseBtn.dataset.bound = "true";
+      this.fontScaleDecreaseBtn.addEventListener("click", () => {
+        this.adjustFontScale(-AdhkarManager.FONT_SCALE_STEP);
+      });
+    }
+
+    if (
+      this.fontScaleIncreaseBtn &&
+      this.fontScaleIncreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleIncreaseBtn.dataset.bound = "true";
+      this.fontScaleIncreaseBtn.addEventListener("click", () => {
+        this.adjustFontScale(AdhkarManager.FONT_SCALE_STEP);
+      });
+    }
+
     if (this.autoAdvanceToggleBtn) {
       this.autoAdvanceToggleBtn.addEventListener("click", () =>
         this.toggleAutoAdvancePaused()
@@ -948,15 +977,23 @@ class AdhkarManager {
   applyTypography() {
     if (!this.cardEl) return;
     const t = this.getTypography();
-    this.cardEl.style.setProperty("--adhkar-arabic-font-size", `${t.arabic}px`);
+    const scale = this.getFontScale();
+    const arabic = this.scaleTypographyValue(t.arabic, scale);
+    const romanization = this.scaleTypographyValue(t.romanization, scale);
+    const english = this.scaleTypographyValue(t.english, scale);
+    this.cardEl.style.setProperty(
+      "--adhkar-arabic-font-size",
+      `${arabic}px`
+    );
     this.cardEl.style.setProperty(
       "--adhkar-romanization-font-size",
-      `${t.romanization}px`
+      `${romanization}px`
     );
     this.cardEl.style.setProperty(
       "--adhkar-english-font-size",
-      `${t.english}px`
+      `${english}px`
     );
+    this.updateFontScaleButtons();
   }
 
   getTypography() {
@@ -981,6 +1018,70 @@ class AdhkarManager {
         18
       ),
     };
+  }
+
+  getFontScale() {
+    const settings = this.getAdhkarSettings();
+    const raw = settings.fontScale;
+    const parsed = parseFloat(raw);
+    const scale = Number.isFinite(parsed) ? parsed : 1;
+    return this.clampNumber(
+      scale,
+      AdhkarManager.FONT_SCALE_MIN,
+      AdhkarManager.FONT_SCALE_MAX,
+      1
+    );
+  }
+
+  normalizeScale(scale) {
+    if (!Number.isFinite(scale)) return 1;
+    return Math.round(scale * 10) / 10;
+  }
+
+  scaleTypographyValue(value, scale) {
+    const scaled = value * scale;
+    return Math.round(scaled * 10) / 10;
+  }
+
+  setFontScale(scale) {
+    const normalized = this.clampNumber(
+      this.normalizeScale(parseFloat(scale)),
+      AdhkarManager.FONT_SCALE_MIN,
+      AdhkarManager.FONT_SCALE_MAX,
+      1
+    );
+    this.setAdhkarSettings({ fontScale: normalized });
+    this.applyTypography();
+  }
+
+  adjustFontScale(delta) {
+    const next = this.getFontScale() + delta;
+    this.setFontScale(next);
+  }
+
+  updateFontScaleButtons() {
+    const scale = this.getFontScale();
+    const label = `${scale.toFixed(1)}x`;
+
+    if (this.fontScaleDecreaseBtn) {
+      this.fontScaleDecreaseBtn.disabled =
+        scale <= AdhkarManager.FONT_SCALE_MIN + 0.001;
+      this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
+      this.fontScaleDecreaseBtn.setAttribute(
+        "aria-label",
+        `Decrease adhkar font size (${label})`
+      );
+    }
+
+    if (this.fontScaleIncreaseBtn) {
+      this.fontScaleIncreaseBtn.disabled =
+        scale >= AdhkarManager.FONT_SCALE_MAX - 0.001;
+      this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
+      this.fontScaleIncreaseBtn.setAttribute(
+        "aria-label",
+        `Increase adhkar font size (${label})`
+      );
+    }
   }
 
   updateTypographyLabels(arabic, romanization, english) {

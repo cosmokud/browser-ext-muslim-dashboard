@@ -11,6 +11,9 @@ class FlashcardManager {
 
   static FLIP_ANIM_MS = 320;
   static NAV_ANIM_MS = 320;
+  static FONT_SCALE_MIN = 0.5;
+  static FONT_SCALE_MAX = 2.5;
+  static FONT_SCALE_STEP = 0.1;
 
   // Default sets that are provided read-only to all users.
   // Each entry: { id, name, file, parser } where parser may be 'csv' or 'pipe'.
@@ -53,6 +56,12 @@ class FlashcardManager {
     this.questionEl = document.getElementById("flashcardQuestion");
     this.answerEl = document.getElementById("flashcardAnswer");
     this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
+    this.fontScaleDecreaseBtn = document.getElementById(
+      "flashcardFontDecreaseBtn"
+    );
+    this.fontScaleIncreaseBtn = document.getElementById(
+      "flashcardFontIncreaseBtn"
+    );
 
     // Dashboard jump controls
     this.jumpLabelEl = document.getElementById("flashcardJumpLabel");
@@ -665,6 +674,28 @@ class FlashcardManager {
       this.modeToggleBtn.addEventListener("click", (e) => {
         e.preventDefault();
         this.toggleMode();
+      });
+    }
+
+    if (
+      this.fontScaleDecreaseBtn &&
+      this.fontScaleDecreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleDecreaseBtn.dataset.bound = "true";
+      this.fontScaleDecreaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.adjustFontScale(-FlashcardManager.FONT_SCALE_STEP);
+      });
+    }
+
+    if (
+      this.fontScaleIncreaseBtn &&
+      this.fontScaleIncreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleIncreaseBtn.dataset.bound = "true";
+      this.fontScaleIncreaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.adjustFontScale(FlashcardManager.FONT_SCALE_STEP);
       });
     }
 
@@ -1327,14 +1358,18 @@ class FlashcardManager {
   applyTypography() {
     if (!this.cardEl) return;
     const t = this.getTypography();
+    const scale = this.getFontScale();
+    const question = this.scaleTypographyValue(t.question, scale);
+    const answer = this.scaleTypographyValue(t.answer, scale);
     this.cardEl.style.setProperty(
       "--flashcard-question-font-size",
-      `${t.question}px`
+      `${question}px`
     );
     this.cardEl.style.setProperty(
       "--flashcard-answer-font-size",
-      `${t.answer}px`
+      `${answer}px`
     );
+    this.updateFontScaleButtons();
   }
 
   getTypography() {
@@ -1353,6 +1388,70 @@ class FlashcardManager {
         18
       ),
     };
+  }
+
+  getFontScale() {
+    const settings = this.getFlashcardSettings();
+    const raw = settings.fontScale;
+    const parsed = parseFloat(raw);
+    const scale = Number.isFinite(parsed) ? parsed : 1;
+    return this.clampNumber(
+      scale,
+      FlashcardManager.FONT_SCALE_MIN,
+      FlashcardManager.FONT_SCALE_MAX,
+      1
+    );
+  }
+
+  normalizeScale(scale) {
+    if (!Number.isFinite(scale)) return 1;
+    return Math.round(scale * 10) / 10;
+  }
+
+  scaleTypographyValue(value, scale) {
+    const scaled = value * scale;
+    return Math.round(scaled * 10) / 10;
+  }
+
+  setFontScale(scale) {
+    const normalized = this.clampNumber(
+      this.normalizeScale(parseFloat(scale)),
+      FlashcardManager.FONT_SCALE_MIN,
+      FlashcardManager.FONT_SCALE_MAX,
+      1
+    );
+    this.setFlashcardSettings({ fontScale: normalized });
+    this.applyTypography();
+  }
+
+  adjustFontScale(delta) {
+    const next = this.getFontScale() + delta;
+    this.setFontScale(next);
+  }
+
+  updateFontScaleButtons() {
+    const scale = this.getFontScale();
+    const label = `${scale.toFixed(1)}x`;
+
+    if (this.fontScaleDecreaseBtn) {
+      this.fontScaleDecreaseBtn.disabled =
+        scale <= FlashcardManager.FONT_SCALE_MIN + 0.001;
+      this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
+      this.fontScaleDecreaseBtn.setAttribute(
+        "aria-label",
+        `Decrease flashcard font size (${label})`
+      );
+    }
+
+    if (this.fontScaleIncreaseBtn) {
+      this.fontScaleIncreaseBtn.disabled =
+        scale >= FlashcardManager.FONT_SCALE_MAX - 0.001;
+      this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
+      this.fontScaleIncreaseBtn.setAttribute(
+        "aria-label",
+        `Increase flashcard font size (${label})`
+      );
+    }
   }
 
   updateTypographyLabels(question, answer) {

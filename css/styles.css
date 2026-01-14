@@ -5501,6 +5501,36 @@ line-height: 1;
   transition: all var(--transition-fast);
 }
 
+.card-font-scale-btn {
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: 0.02em;
+}
+
+.card-font-scale-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+}
+
+.card-font-scale-btn:focus-visible {
+  outline: 3px solid rgba(212, 175, 55, 0.18);
+  outline-offset: 3px;
+}
+
 .flashcard-mode-toggle-btn .mode-icon {
   font-size: 18px;
   line-height: 1;
@@ -5631,6 +5661,46 @@ line-height: 1;
 
 .flashcard-nav-next {
   right: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flashcard-card .card-header-actions,
+  .adhkar-card .card-header-actions,
+  .hadith-card .card-header-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .flashcard-card:hover .card-header-actions,
+  .flashcard-card:focus-within .card-header-actions,
+  .adhkar-card:hover .card-header-actions,
+  .adhkar-card:focus-within .card-header-actions,
+  .hadith-card:hover .card-header-actions,
+  .hadith-card:focus-within .card-header-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .flashcard-card .flashcard-nav,
+  .adhkar-card .flashcard-nav,
+  .hadith-card .flashcard-nav {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .flashcard-card:hover .flashcard-nav,
+  .flashcard-card:focus-within .flashcard-nav,
+  .adhkar-card:hover .flashcard-nav,
+  .adhkar-card:focus-within .flashcard-nav,
+  .hadith-card:hover .flashcard-nav,
+  .hadith-card:focus-within .flashcard-nav {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .flashcard-flip-scene {

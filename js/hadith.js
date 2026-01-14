@@ -10,6 +10,9 @@ class HadithManager {
   static PAGE_SIZE = 20;
 
   static NAV_ANIM_MS = 320;
+  static FONT_SCALE_MIN = 0.5;
+  static FONT_SCALE_MAX = 2.5;
+  static FONT_SCALE_STEP = 0.1;
 
   static DEFAULT_SETS = [
     {
@@ -37,6 +40,12 @@ class HadithManager {
     this.shellEl = document.getElementById("hadithCardShell");
     this.prevBtn = document.getElementById("hadithPrevBtn");
     this.nextBtn = document.getElementById("hadithNextBtn");
+    this.fontScaleDecreaseBtn = document.getElementById(
+      "hadithFontDecreaseBtn"
+    );
+    this.fontScaleIncreaseBtn = document.getElementById(
+      "hadithFontIncreaseBtn"
+    );
 
     this.titleEl = document.getElementById("hadithTitleText");
     this.textEl = document.getElementById("hadithBodyText");
@@ -809,6 +818,26 @@ class HadithManager {
       this.nextBtn.addEventListener("click", () => this.gotoNextCard());
     }
 
+    if (
+      this.fontScaleDecreaseBtn &&
+      this.fontScaleDecreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleDecreaseBtn.dataset.bound = "true";
+      this.fontScaleDecreaseBtn.addEventListener("click", () => {
+        this.adjustFontScale(-HadithManager.FONT_SCALE_STEP);
+      });
+    }
+
+    if (
+      this.fontScaleIncreaseBtn &&
+      this.fontScaleIncreaseBtn.dataset.bound !== "true"
+    ) {
+      this.fontScaleIncreaseBtn.dataset.bound = "true";
+      this.fontScaleIncreaseBtn.addEventListener("click", () => {
+        this.adjustFontScale(HadithManager.FONT_SCALE_STEP);
+      });
+    }
+
     const headerText = document.getElementById("hadithHeaderText");
     if (headerText && headerText.dataset.bound !== "true") {
       headerText.dataset.bound = "true";
@@ -903,9 +932,78 @@ class HadithManager {
   applyTypography() {
     if (!this.cardEl) return;
     const t = this.getTypography();
-    this.cardEl.style.setProperty("--hadith-title-font-size", `${t.title}px`);
-    this.cardEl.style.setProperty("--hadith-text-font-size", `${t.text}px`);
-    this.cardEl.style.setProperty("--hadith-meta-font-size", `${t.meta}px`);
+    const scale = this.getFontScale();
+    const title = this.scaleTypographyValue(t.title, scale);
+    const text = this.scaleTypographyValue(t.text, scale);
+    const meta = this.scaleTypographyValue(t.meta, scale);
+    this.cardEl.style.setProperty("--hadith-title-font-size", `${title}px`);
+    this.cardEl.style.setProperty("--hadith-text-font-size", `${text}px`);
+    this.cardEl.style.setProperty("--hadith-meta-font-size", `${meta}px`);
+    this.updateFontScaleButtons();
+  }
+
+  getFontScale() {
+    const settings = this.getHadithSettings();
+    const raw = settings.fontScale;
+    const parsed = parseFloat(raw);
+    const scale = Number.isFinite(parsed) ? parsed : 1;
+    return this.clampNumber(
+      scale,
+      HadithManager.FONT_SCALE_MIN,
+      HadithManager.FONT_SCALE_MAX,
+      1
+    );
+  }
+
+  normalizeScale(scale) {
+    if (!Number.isFinite(scale)) return 1;
+    return Math.round(scale * 10) / 10;
+  }
+
+  scaleTypographyValue(value, scale) {
+    const scaled = value * scale;
+    return Math.round(scaled * 10) / 10;
+  }
+
+  setFontScale(scale) {
+    const normalized = this.clampNumber(
+      this.normalizeScale(parseFloat(scale)),
+      HadithManager.FONT_SCALE_MIN,
+      HadithManager.FONT_SCALE_MAX,
+      1
+    );
+    this.setHadithSettings({ fontScale: normalized });
+    this.applyTypography();
+  }
+
+  adjustFontScale(delta) {
+    const next = this.getFontScale() + delta;
+    this.setFontScale(next);
+  }
+
+  updateFontScaleButtons() {
+    const scale = this.getFontScale();
+    const label = `${scale.toFixed(1)}x`;
+
+    if (this.fontScaleDecreaseBtn) {
+      this.fontScaleDecreaseBtn.disabled =
+        scale <= HadithManager.FONT_SCALE_MIN + 0.001;
+      this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
+      this.fontScaleDecreaseBtn.setAttribute(
+        "aria-label",
+        `Decrease hadith font size (${label})`
+      );
+    }
+
+    if (this.fontScaleIncreaseBtn) {
+      this.fontScaleIncreaseBtn.disabled =
+        scale >= HadithManager.FONT_SCALE_MAX - 0.001;
+      this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
+      this.fontScaleIncreaseBtn.setAttribute(
+        "aria-label",
+        `Increase hadith font size (${label})`
+      );
+    }
   }
 
   updateTypographyLabels(title, text, meta) {

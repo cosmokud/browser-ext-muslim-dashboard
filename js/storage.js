@@ -306,6 +306,7 @@ class StorageManager {
         mode: "study", // 'study' or 'test'
         studyAutoAdvanceSeconds: 10,
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
+        fontScale: 1,
         questionFontSize: 60,
         answerFontSize: 32,
       },
@@ -316,6 +317,7 @@ class StorageManager {
         autoAdvanceSeconds: 15,
         autoAdvancePaused: false,
         showRomanization: false,
+        fontScale: 1,
         arabicFontSize: 28,
         romanizationFontSize: 18,
         englishFontSize: 18,
@@ -326,6 +328,7 @@ class StorageManager {
         activeSetId: null,
         autoAdvanceSeconds: 20,
         autoAdvancePaused: false,
+        fontScale: 1,
         titleFontSize: 22,
         textFontSize: 18,
         metaFontSize: 14,
