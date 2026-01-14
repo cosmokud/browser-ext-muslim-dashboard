@@ -702,7 +702,11 @@ class FlashcardManager {
 
         // If the user is selecting/copying text, don't treat it as a flip.
         const selection = window.getSelection?.();
-        if (selection && !selection.isCollapsed && selection.toString().trim()) {
+        if (
+          selection &&
+          !selection.isCollapsed &&
+          selection.toString().trim()
+        ) {
           return;
         }
         this.toggleFlip();
