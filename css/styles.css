@@ -2932,6 +2932,15 @@ body.quran-focus-mode .grid-flex-row {
   transition: all var(--transition-normal);
 }
 
+/* Settings modal: anchor near top so tab switches don't recenter the dialog */
+#settingsModal.modal-overlay {
+  align-items: flex-start;
+  box-sizing: border-box;
+  padding-top: clamp(16px, 6vh, 72px);
+  padding-bottom: clamp(16px, 4vh, 48px);
+  overflow-y: auto;
+}
+
 .modal-overlay.active {
   opacity: 1;
   visibility: visible;
