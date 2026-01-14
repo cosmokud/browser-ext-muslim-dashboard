@@ -483,16 +483,29 @@ class SettingsManager {
     const strip = this.tabStrip || document.querySelector(".settings-tabs");
     if (!strip) return;
 
-    const referenceTab = strip.querySelector(
-      '.settings-tab[data-tab="pocketQuran"]'
-    );
-    if (!referenceTab) return;
+    const tabs = Array.from(strip.querySelectorAll(".settings-tab"));
+    if (!tabs.length) return;
+
+    // Clear any previous width so we can measure natural content widths.
+    strip.style.removeProperty("--settings-tab-width");
+    strip.style.removeProperty("--settings-tab-min-width");
 
     // Wait a tick so icon-theme DOM replacements/fonts have landed.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const width = Math.ceil(referenceTab.getBoundingClientRect().width);
+        let maxWidth = 0;
+        for (const tab of tabs) {
+          const rect = tab.getBoundingClientRect();
+          if (rect && Number.isFinite(rect.width)) {
+            maxWidth = Math.max(maxWidth, rect.width);
+          }
+        }
+
+        const width = Math.ceil(maxWidth);
         if (Number.isFinite(width) && width > 0) {
+          // Primary variable used by CSS
+          strip.style.setProperty("--settings-tab-width", `${width}px`);
+          // Back-compat with older CSS naming
           strip.style.setProperty("--settings-tab-min-width", `${width}px`);
         }
       });
