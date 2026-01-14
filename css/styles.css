@@ -5670,8 +5670,7 @@ line-height: 1;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-6px);
-    transition: opacity var(--transition-fast),
-      transform var(--transition-fast);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
   }
 
   .flashcard-card:hover .card-header-actions,
@@ -11003,6 +11002,7 @@ body.sticky-note-resizing {
   display: flex !important;
   flex-direction: column;
   min-height: 700px;
+  --adhkar-title-font-size: 20px;
   --adhkar-arabic-font-size: 28px;
   --adhkar-romanization-font-size: 18px;
   --adhkar-english-font-size: 18px;
@@ -11027,7 +11027,7 @@ body.sticky-note-resizing {
 }
 
 .adhkar-meta-title {
-  font-size: 1.25rem;
+  font-size: var(--adhkar-title-font-size, 1.25rem);
   font-weight: 600;
   color: var(--accent-gold-light);
   margin-bottom: -5px; /* Pull closer to the text below */

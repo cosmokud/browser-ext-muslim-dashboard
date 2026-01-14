@@ -978,21 +978,18 @@ class AdhkarManager {
     if (!this.cardEl) return;
     const t = this.getTypography();
     const scale = this.getFontScale();
+    const titleBase = t.romanization * 1.1;
+    const titleSize = this.scaleTypographyValue(titleBase, scale);
     const arabic = this.scaleTypographyValue(t.arabic, scale);
     const romanization = this.scaleTypographyValue(t.romanization, scale);
     const english = this.scaleTypographyValue(t.english, scale);
-    this.cardEl.style.setProperty(
-      "--adhkar-arabic-font-size",
-      `${arabic}px`
-    );
+    this.cardEl.style.setProperty("--adhkar-title-font-size", `${titleSize}px`);
+    this.cardEl.style.setProperty("--adhkar-arabic-font-size", `${arabic}px`);
     this.cardEl.style.setProperty(
       "--adhkar-romanization-font-size",
       `${romanization}px`
     );
-    this.cardEl.style.setProperty(
-      "--adhkar-english-font-size",
-      `${english}px`
-    );
+    this.cardEl.style.setProperty("--adhkar-english-font-size", `${english}px`);
     this.updateFontScaleButtons();
   }
 

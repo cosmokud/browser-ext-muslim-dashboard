@@ -30,6 +30,7 @@ class GridLayoutManager {
     this.scrollInterval = null;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
+    this.containerResizeObserver = null;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -504,7 +505,7 @@ class GridLayoutManager {
     this.isEditModeEnabled = settings.gridEditModeEnabled === true;
 
     // Calculate initial responsive layout based on viewport
-    this.lastViewportWidth = window.innerWidth;
+    this.lastViewportWidth = this.getLayoutWidth();
     this.calculateResponsiveLayout();
 
     // Apply the layout to create flex rows
@@ -646,6 +647,39 @@ class GridLayoutManager {
     window.addEventListener("orientationchange", () => {
       setTimeout(() => this.handleViewportResize(), 100);
     });
+
+    // Observe container width changes (e.g., devtools open/close, custom width)
+    if (typeof ResizeObserver !== "undefined" && this.grid) {
+      if (this.containerResizeObserver) {
+        this.containerResizeObserver.disconnect();
+      }
+      this.containerResizeObserver = new ResizeObserver(() => {
+        this.handleViewportResize();
+      });
+      this.containerResizeObserver.observe(this.grid);
+    }
+  }
+
+  /**
+   * Get the current layout width for responsive calculations
+   */
+  getLayoutWidth() {
+    if (this.grid) {
+      const rect = this.grid.getBoundingClientRect();
+      if (rect && rect.width) {
+        return Math.round(rect.width);
+      }
+      if (this.grid.offsetWidth) {
+        return this.grid.offsetWidth;
+      }
+    }
+
+    return (
+      window.innerWidth ||
+      document.documentElement.clientWidth ||
+      document.body.clientWidth ||
+      0
+    );
   }
 
   /**
@@ -658,10 +692,10 @@ class GridLayoutManager {
     }
 
     this.viewportResizeTimer = setTimeout(() => {
-      const newWidth = window.innerWidth;
+      const newWidth = this.getLayoutWidth();
 
-      // Only recalculate if viewport width changed significantly (more than 10px)
-      if (Math.abs(newWidth - this.lastViewportWidth) > 10) {
+      // Only recalculate if layout width changed (avoid tiny jitter)
+      if (newWidth > 0 && Math.abs(newWidth - this.lastViewportWidth) > 2) {
         this.lastViewportWidth = newWidth;
         this.calculateResponsiveLayout();
         this.recalculateLayout();
@@ -677,7 +711,7 @@ class GridLayoutManager {
     if (!this.grid) return;
 
     // Get container width (accounts for padding, max-width constraints)
-    const containerWidth = this.grid.offsetWidth || window.innerWidth;
+    const containerWidth = this.getLayoutWidth();
     const gap = 32; // var(--spacing-xl) in pixels, approximate
 
     // Calculate width per span unit (6 spans = container width minus gaps)
@@ -1914,6 +1948,11 @@ class GridLayoutManager {
 
     // Remove event listeners
     window.removeEventListener("resize", this.handleViewportResize);
+
+    if (this.containerResizeObserver) {
+      this.containerResizeObserver.disconnect();
+      this.containerResizeObserver = null;
+    }
 
     if (this.grid) {
       this.grid.removeEventListener("mousedown", this.handleMouseDown);
