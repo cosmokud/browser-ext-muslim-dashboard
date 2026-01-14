@@ -203,6 +203,18 @@ class PinnedAppsManager {
       }
     });
 
+    // Close context menu on outside right-click
+    // Use capture so openers that call stopPropagation() don't block dismissal.
+    document.addEventListener(
+      "contextmenu",
+      (e) => {
+        if (!this.contextMenu.contains(e.target)) {
+          this.hideContextMenu();
+        }
+      },
+      true
+    );
+
     // Close context menu on escape
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {

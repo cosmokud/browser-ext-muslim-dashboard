@@ -721,6 +721,18 @@ class SearchBarManager {
       }
     });
 
+    // Close context menu on outside right-click.
+    // Capture phase ensures opener stopPropagation() doesn't prevent dismissal.
+    document.addEventListener(
+      "contextmenu",
+      (e) => {
+        if (this.contextMenu && !this.contextMenu.contains(e.target)) {
+          this.hideContextMenu();
+        }
+      },
+      true
+    );
+
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         this.hideContextMenu();
