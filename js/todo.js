@@ -71,6 +71,23 @@ class TodoManager {
     return emoji;
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   /**
    * Initialize todo manager
    */
@@ -568,11 +585,9 @@ class TodoManager {
         this.confirmDelete()
       );
     }
-    if (this.deleteModal) {
-      this.deleteModal.addEventListener("click", (e) => {
-        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
-      });
-    }
+    this._bindOverlayCloseBehavior(this.deleteModal, () =>
+      this.hideDeleteConfirmation()
+    );
 
     // Clear-completed confirmation modal
     if (this.cancelClearCompletedBtn) {
@@ -585,12 +600,9 @@ class TodoManager {
         this.confirmClearCompleted()
       );
     }
-    if (this.clearCompletedModal) {
-      this.clearCompletedModal.addEventListener("click", (e) => {
-        if (e.target === this.clearCompletedModal)
-          this.hideClearCompletedConfirmation();
-      });
-    }
+    this._bindOverlayCloseBehavior(this.clearCompletedModal, () =>
+      this.hideClearCompletedConfirmation()
+    );
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
@@ -609,11 +621,7 @@ class TodoManager {
       }
     });
 
-    this.editModal.addEventListener("click", (e) => {
-      if (e.target === this.editModal) {
-        this.closeEditModal();
-      }
-    });
+    this._bindOverlayCloseBehavior(this.editModal, () => this.closeEditModal());
   }
 
   /**

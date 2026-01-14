@@ -56,9 +56,7 @@ class ContentSearchManager {
     }
 
     if (this.modalEl) {
-      this.modalEl.addEventListener("click", (e) => {
-        if (e.target === this.modalEl) this.close();
-      });
+      this._bindOverlayCloseBehavior(this.modalEl, () => this.close());
     }
 
     if (this.inputEl) {
@@ -96,6 +94,23 @@ class ContentSearchManager {
       return window.dashboard.iconThemes.getIcon(emoji, options);
     }
     return emoji;
+  }
+
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
   }
 
   open(context) {

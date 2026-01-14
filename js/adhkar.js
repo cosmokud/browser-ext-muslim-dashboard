@@ -140,6 +140,23 @@ class AdhkarManager {
     return emoji;
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   /**
    * Update set selector button icon
    */
@@ -2239,9 +2256,9 @@ class AdhkarManager {
         this.closeLanguageSelectorModal();
       });
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeLanguageSelectorModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () =>
+      this.closeLanguageSelectorModal()
+    );
 
     modal
       .querySelector(".adhkar-lang-search-input")
@@ -2379,9 +2396,7 @@ class AdhkarManager {
         this.closeSetSelectorModal();
       });
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeSetSelectorModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () => this.closeSetSelectorModal());
 
     modal
       .querySelector(".adhkar-set-search-input")

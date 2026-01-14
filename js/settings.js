@@ -1661,6 +1661,23 @@ class SettingsManager {
     return emoji;
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   /**
    * Setup icon theme picker
    */
@@ -2119,9 +2136,9 @@ class SettingsManager {
     const glassTintEl = document.getElementById("themePaletteGlassTint");
 
     if (paletteOverlay) {
-      paletteOverlay.addEventListener("click", (evt) => {
-        if (evt.target === paletteOverlay) this.closeThemePaletteModal();
-      });
+      this._bindOverlayCloseBehavior(paletteOverlay, () =>
+        this.closeThemePaletteModal()
+      );
     }
     if (paletteClose) {
       paletteClose.addEventListener("click", () =>
@@ -4180,13 +4197,7 @@ class SettingsManager {
       this.saveBtn.addEventListener("click", () => this.saveSettings());
     }
 
-    if (this.modal) {
-      this.modal.addEventListener("click", (e) => {
-        if (e.target === this.modal) {
-          this.closeModal();
-        }
-      });
-    }
+    this._bindOverlayCloseBehavior(this.modal, () => this.closeModal());
 
     // Tabs
     this.tabs.forEach((tab) => {
@@ -4587,11 +4598,9 @@ class SettingsManager {
       );
     }
     if (this.resetNukeConfirmModal) {
-      this.resetNukeConfirmModal.addEventListener("click", (e) => {
-        if (e.target === this.resetNukeConfirmModal) {
-          resolveResetNukeConfirm(false);
-        }
-      });
+      this._bindOverlayCloseBehavior(this.resetNukeConfirmModal, () =>
+        resolveResetNukeConfirm(false)
+      );
     }
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;

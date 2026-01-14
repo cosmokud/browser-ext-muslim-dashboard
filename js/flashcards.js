@@ -130,6 +130,23 @@ class FlashcardManager {
     return emoji;
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   async init() {
     await this.ensureDefaultSet();
     this.applyTypography();
@@ -2003,9 +2020,7 @@ class FlashcardManager {
         this.closeSetSelectorModal();
       });
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeSetSelectorModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () => this.closeSetSelectorModal());
 
     modal
       .querySelector(".flashcard-set-search-input")

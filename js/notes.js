@@ -113,6 +113,23 @@ class NotesManager {
     }
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   setupEventListeners() {
     if (this.newBtn) {
       this.newBtn.addEventListener("click", () => {
@@ -140,11 +157,9 @@ class NotesManager {
         this.confirmDelete()
       );
     }
-    if (this.deleteModal) {
-      this.deleteModal.addEventListener("click", (e) => {
-        if (e.target === this.deleteModal) this.hideDeleteConfirmation();
-      });
-    }
+    this._bindOverlayCloseBehavior(this.deleteModal, () =>
+      this.hideDeleteConfirmation()
+    );
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;

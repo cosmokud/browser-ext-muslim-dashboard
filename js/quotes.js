@@ -46,6 +46,23 @@ class QuotesManager {
     this.importInput = document.getElementById("importQuotesInput");
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   /**
    * Initialize quotes
    */
@@ -1167,9 +1184,9 @@ class QuotesManager {
       this.closeLanguageSelectorModal()
     );
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeLanguageSelectorModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () =>
+      this.closeLanguageSelectorModal()
+    );
 
     const searchInput = modal.querySelector(".adhkar-lang-search-input");
     searchInput?.addEventListener("input", (e) => {

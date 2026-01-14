@@ -681,6 +681,23 @@ class PocketQuranManager {
     return emoji;
   }
 
+  _bindOverlayCloseBehavior(overlayEl, closeFn) {
+    if (!overlayEl || typeof closeFn !== "function") return;
+
+    let pointerDownOnBackdrop = false;
+    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
+
+    overlayEl.addEventListener(downEvent, (e) => {
+      pointerDownOnBackdrop = e.target === overlayEl;
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target !== overlayEl) return;
+      if (!pointerDownOnBackdrop) return;
+      closeFn();
+    });
+  }
+
   init() {
     const pq = this.storage.getSettings()?.pocketQuran || {};
 
@@ -3592,9 +3609,7 @@ class PocketQuranManager {
       });
 
     // Click outside to close
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeReciterModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () => this.closeReciterModal());
 
     // Search input
     const searchInput = modal.querySelector(".pq-reciter-search");
@@ -3933,9 +3948,7 @@ class PocketQuranManager {
       .querySelector(".pq-bookmark-modal-close")
       .addEventListener("click", () => this.closeFontPickerModal());
 
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeFontPickerModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () => this.closeFontPickerModal());
 
     const searchInput = modal.querySelector(".pq-font-search");
     searchInput.addEventListener("input", () => {
@@ -4474,9 +4487,7 @@ class PocketQuranManager {
           this.closeBookmarkModal();
         });
 
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) this.closeBookmarkModal();
-      });
+      this._bindOverlayCloseBehavior(modal, () => this.closeBookmarkModal());
 
       modal
         .querySelector(".pq-bookmark-search-input")
@@ -4539,9 +4550,9 @@ class PocketQuranManager {
           this.closeCategorySelectionModal();
         });
 
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) this.closeCategorySelectionModal();
-      });
+      this._bindOverlayCloseBehavior(modal, () =>
+        this.closeCategorySelectionModal()
+      );
 
       modal
         .querySelector(".pq-bookmark-search-input")
@@ -4607,9 +4618,7 @@ class PocketQuranManager {
       });
 
     // Click outside to close
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) this.closeTranslationModal();
-    });
+    this._bindOverlayCloseBehavior(modal, () => this.closeTranslationModal());
 
     // Search input
     const searchInput = modal.querySelector(".pq-translation-search");
