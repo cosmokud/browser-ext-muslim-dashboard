@@ -11,6 +11,10 @@ const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
 const FASTING_ALARM_NAME = "md_fasting_suhur";
 
+// If a device sleeps, Chrome may deliver missed alarms immediately on wake.
+// Suppress notifications that are *too late* to avoid spamming.
+const MAX_ALARM_LATE_MS = 5 * 60 * 1000;
+
 const STORAGE_KEYS = {
   settings: "md_settings",
   lastLocation: "md_lastLocation",
@@ -82,6 +86,14 @@ function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+function isStaleAlarm(alarm, maxLateMs) {
+  const scheduledTime = alarm?.scheduledTime;
+  if (!Number.isFinite(scheduledTime)) return false;
+
+  const lateMs = Date.now() - scheduledTime;
+  return lateMs > maxLateMs;
 }
 
 function toISODateKey(date) {
@@ -754,11 +766,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 
   if (name === FASTING_ALARM_NAME) {
+    if (isStaleAlarm(alarm, MAX_ALARM_LATE_MS)) return;
     void showFastingNotification();
     return;
   }
 
   if (typeof name !== "string" || !name.startsWith(PRAYER_ALARM_PREFIX)) return;
+
+  if (isStaleAlarm(alarm, MAX_ALARM_LATE_MS)) return;
 
   const tail = name.slice(PRAYER_ALARM_PREFIX.length);
   const parts = tail.split("_");
