@@ -13,8 +13,7 @@
  * - `r` (radians): Disk rotation - which way the lunar features are tilted
  *
  * Notes:
- * - The Moon phase is fundamentally time-based; we optionally adjust the sampling time
- *   by longitude to reflect a location-based local-date boundary.
+ * - The Moon phase is time-based and computed from Sun/Moon geometry at the instant.
  * - No external APIs are required.
  */
 
@@ -132,29 +131,40 @@ class LunarPhaseManager {
    * - r (disk rotation): parallactic angle + axis rotation in radians
    */
   _computeLunarPhase(date, latitudeDegrees, longitudeDegrees) {
-    // Longitude-based sampling adjustment (4 minutes per degree).
-    const longitudeOffsetMs = (Number(longitudeDegrees) || 0) * 240000;
-    const t = new Date(date.getTime() + longitudeOffsetMs);
-
     // Julian date from Unix epoch (UTC-based).
-    const jd = t.getTime() / 86400000 + 2440587.5;
+    const jd = date.getTime() / 86400000 + 2440587.5;
 
-    // Reference new moon: 2000-01-06 18:14 UTC (approx), Julian date 2451550.1
-    const jdRefNewMoon = 2451550.1;
     const synodicMonth = 29.530588853;
 
-    let phase = (jd - jdRefNewMoon) / synodicMonth;
-    phase = phase - Math.floor(phase);
-    if (phase < 0) phase += 1;
-
-    const ageDays = phase * synodicMonth;
-    
-    // i = Illumination fraction (0 = new moon, 1 = full moon)
-    const illumination = 0.5 * (1 - Math.cos(2 * Math.PI * phase));
-
     // Calculate Moon and Sun positions for angles
-    const moonPos = this._getMoonPosition(jd, latitudeDegrees, longitudeDegrees);
+    const moonPos = this._getMoonPosition(
+      jd,
+      latitudeDegrees,
+      longitudeDegrees
+    );
     const sunPos = this._getSunPosition(jd, latitudeDegrees, longitudeDegrees);
+
+    // Angular separation between Sun and Moon (elongation)
+    const dRA = sunPos.rightAscension - moonPos.rightAscension;
+    const cosElongation =
+      Math.sin(moonPos.declination) * Math.sin(sunPos.declination) +
+      Math.cos(moonPos.declination) *
+        Math.cos(sunPos.declination) *
+        Math.cos(dRA);
+    const elongation = Math.acos(Math.max(-1, Math.min(1, cosElongation)));
+
+    // Phase angle from 0..2π using ecliptic longitude difference for waxing/waning
+    const deltaLon = this._normalizeAngleRad(
+      moonPos.eclipticLon - sunPos.eclipticLon
+    );
+    const phaseAngle =
+      deltaLon <= Math.PI ? elongation : 2 * Math.PI - elongation;
+
+    const phase = phaseAngle / (2 * Math.PI);
+    const ageDays = phase * synodicMonth;
+
+    // i = Illumination fraction (0 = new moon, 1 = full moon)
+    const illumination = 0.5 * (1 - Math.cos(phaseAngle));
 
     // p = Position angle of bright limb
     // The angle from lunar north to the midpoint of the illuminated limb
@@ -203,10 +213,7 @@ class LunarPhaseManager {
 
     // Mean anomaly of the Moon
     const M = this._normalizeAngle(
-      134.9633964 +
-        477198.8675055 * T +
-        0.0087414 * T * T +
-        (T * T * T) / 69699
+      134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + (T * T * T) / 69699
     );
 
     // Mean anomaly of the Sun
@@ -356,7 +363,8 @@ class LunarPhaseManager {
    */
   _getGMST(jd) {
     const T = (jd - 2451545.0) / 36525;
-    let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T;
+    let gmst =
+      280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T;
     gmst = this._normalizeAngle(gmst);
     return (gmst * Math.PI) / 180;
   }
@@ -368,6 +376,19 @@ class LunarPhaseManager {
     let result = deg % 360;
     if (result < 0) result += 360;
     return result;
+  }
+
+  _normalizeAngleRad(rad) {
+    let result = rad % (2 * Math.PI);
+    if (result < 0) result += 2 * Math.PI;
+    return result;
+  }
+
+  _angleToSvgDeg(angleRad) {
+    const deg = (angleRad * 180) / Math.PI;
+    let svgDeg = 270 - deg;
+    svgDeg = ((svgDeg % 360) + 360) % 360;
+    return svgDeg;
   }
 
   /**
@@ -421,11 +442,11 @@ class LunarPhaseManager {
 
   /**
    * Render the Moon using a layered compositing model:
-   * 
+   *
    * Layer 1: Dark background circle
    * Layer 2: Moon texture (craters) - rotated by diskRotation (r)
    * Layer 3: Shadow mask - shaped by illumination (i), rotated by positionAngle (p)
-   * 
+   *
    * @param {Object} data - Phase data containing illumination, positionAngle, diskRotation
    */
   _renderMoonSvg(data) {
@@ -433,8 +454,9 @@ class LunarPhaseManager {
     const radius = 40;
 
     // Convert radians to degrees for SVG transforms
-    const diskRotDeg = (diskRotation * 180) / Math.PI;
-    const posAngleDeg = (positionAngle * 180) / Math.PI;
+    const diskRotDeg = this._angleToSvgDeg(diskRotation);
+    const limbAngleRad = positionAngle - diskRotation;
+    const posAngleDeg = this._angleToSvgDeg(limbAngleRad);
 
     // Calculate the terminator (shadow edge) shape
     // The terminator is an ellipse whose x-radius depends on phase
@@ -442,11 +464,6 @@ class LunarPhaseManager {
     // At new/full (0, 0.5), it's a full circle (rx = radius)
     const phaseAngle = 2 * Math.PI * phaseFraction;
     const terminatorRx = Math.abs(radius * Math.cos(phaseAngle));
-
-    // Determine which side is lit based on phase
-    // Waxing (0 to 0.5): right side lit
-    // Waning (0.5 to 1): left side lit
-    const isWaxing = phaseFraction < 0.5;
 
     // Build the illuminated portion path
     // This creates a path that represents the lit portion of the Moon
@@ -522,12 +539,14 @@ class LunarPhaseManager {
       <circle cx="0" cy="0" r="${radius}" fill="url(#moonTexture)" opacity="0.3" />
     </g>
     
-    <!-- Layer 3: Illuminated portion - rotated by position angle (p) -->
+    <!-- Layer 3: Illuminated portion - rotated by local bright-limb angle -->
     <g transform="rotate(${posAngleDeg})">
       <path d="${litPath}" fill="url(#moonLitSurface)" />
       
       <!-- Re-apply crater texture on lit portion for visibility -->
-      <g clip-path="url(#litClip${Math.round(phaseFraction * 1000)})" opacity="0.15" fill="rgba(80,80,80,0.5)">
+      <g clip-path="url(#litClip${Math.round(
+        phaseFraction * 1000
+      )})" opacity="0.15" fill="rgba(80,80,80,0.5)">
         <g transform="rotate(${diskRotDeg - posAngleDeg})">
           <circle cx="-12" cy="-14" r="8" />
           <circle cx="-18" cy="-8" r="4" />
@@ -558,7 +577,7 @@ class LunarPhaseManager {
 
   /**
    * Build the SVG path for the illuminated portion of the Moon
-   * 
+   *
    * The lit portion is defined by:
    * - One arc following the limb (outer edge, always a semicircle)
    * - One arc following the terminator (inner edge, varies with phase)
@@ -567,29 +586,11 @@ class LunarPhaseManager {
     const r = radius;
     const rx = Math.max(0.01, terminatorRx); // Prevent zero radius
 
-    // Determine the sweep direction based on phase
-    // Phase 0-0.25: Waxing crescent (right side, terminator curves right)
-    // Phase 0.25-0.5: Waxing gibbous (right side, terminator curves left)
-    // Phase 0.5-0.75: Waning gibbous (left side, terminator curves right)
-    // Phase 0.75-1: Waning crescent (left side, terminator curves left)
+    // Draw with a consistent base orientation (bright limb to +x).
+    // The rotation is handled by the bright-limb position angle.
+    const isCrescent = phaseFraction < 0.25 || phaseFraction > 0.75;
+    const terminatorSweep = isCrescent ? 1 : 0;
 
-    const p = phaseFraction;
-
-    if (p < 0.25) {
-      // Waxing crescent: Right side lit, terminator bulges toward dark side
-      // Terminator sweep = 1 (curves toward the lit side)
-      return `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${rx} ${r} 0 0 1 0 ${-r} Z`;
-    } else if (p < 0.5) {
-      // Waxing gibbous: Right side lit, terminator bulges toward lit side
-      // Terminator sweep = 0 (curves toward dark side)
-      return `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${rx} ${r} 0 0 0 0 ${-r} Z`;
-    } else if (p < 0.75) {
-      // Waning gibbous: Left side lit, terminator bulges toward lit side
-      // We flip by drawing on the other side
-      return `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${rx} ${r} 0 0 1 0 ${-r} Z`;
-    } else {
-      // Waning crescent: Left side lit, terminator bulges toward dark side
-      return `M 0 ${-r} A ${r} ${r} 0 0 0 0 ${r} A ${rx} ${r} 0 0 0 0 ${-r} Z`;
-    }
+    return `M 0 ${-r} A ${r} ${r} 0 0 1 0 ${r} A ${rx} ${r} 0 0 ${terminatorSweep} 0 ${-r} Z`;
   }
 }
