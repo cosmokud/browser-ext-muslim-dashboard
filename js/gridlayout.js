@@ -963,8 +963,7 @@ class GridLayoutManager {
 
     const baseRows = Array.isArray(this.rows) ? this.rows : [];
     const baseOrder = baseRows.flat();
-    const hasResponsiveOverrides =
-      Object.keys(this.effectiveSpans).length > 0;
+    const hasResponsiveOverrides = Object.keys(this.effectiveSpans).length > 0;
 
     // If no responsive overrides are needed, restore the canonical layout.
     if (!hasResponsiveOverrides) {
