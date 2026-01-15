@@ -11,6 +11,7 @@ class GridLayoutManager {
     this.grid = null;
     this.gridItems = [];
     this.rows = [];
+    this.activeRows = [];
     this.draggedItem = null;
     this.draggedItemRect = null;
     this.placeholder = null;
@@ -175,6 +176,7 @@ class GridLayoutManager {
     // Normalize/validate
     const normalized = this.normalizeLayout(savedLayout);
     this.rows = normalized;
+    this.activeRows = JSON.parse(JSON.stringify(normalized));
   }
 
   normalizeLayout(layout) {
@@ -802,8 +804,11 @@ class GridLayoutManager {
    * Apply the current layout to the DOM
    * Creates flex row wrappers for each row
    */
-  applyLayout() {
+  applyLayout(rowsOverride = null) {
     if (!this.grid) return;
+
+    const layoutRows = Array.isArray(rowsOverride) ? rowsOverride : this.rows;
+    this.activeRows = JSON.parse(JSON.stringify(layoutRows));
 
     // Store all grid items
     const items = {};
@@ -831,7 +836,7 @@ class GridLayoutManager {
     const fragment = document.createDocumentFragment();
 
     // Create flex rows for each row in layout
-    this.rows.forEach((rowItems, rowIndex) => {
+    layoutRows.forEach((rowItems, rowIndex) => {
       const rowWrapper = document.createElement("div");
       rowWrapper.className = "grid-flex-row";
       rowWrapper.dataset.rowIndex = rowIndex;
@@ -956,8 +961,49 @@ class GridLayoutManager {
     // First, recalculate effective spans based on current viewport
     this.calculateResponsiveLayout();
 
+    const baseRows = Array.isArray(this.rows) ? this.rows : [];
+    const baseOrder = baseRows.flat();
+    const hasResponsiveOverrides =
+      Object.keys(this.effectiveSpans).length > 0;
+
+    // If no responsive overrides are needed, restore the canonical layout.
+    if (!hasResponsiveOverrides) {
+      const layoutChanged =
+        JSON.stringify(baseRows) !== JSON.stringify(this.activeRows || []);
+
+      if (layoutChanged) {
+        this.applyLayout(baseRows);
+      } else {
+        // Just update flex basis for existing layout
+        const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
+        rowWrappers.forEach((rowWrapper) => {
+          const rowItems = Array.from(rowWrapper.children);
+          const visibleItems = rowItems.filter(
+            (el) => !this.isComponentHidden(el)
+          );
+
+          rowItems.forEach((el) => {
+            const id = el.dataset.gridId;
+            if (id) {
+              this.setItemFlexBasis(el, id, visibleItems.length);
+            }
+          });
+
+          // Hide row if all items are hidden
+          if (visibleItems.length === 0) {
+            rowWrapper.style.display = "none";
+          } else {
+            rowWrapper.style.display = "";
+          }
+        });
+      }
+
+      this.updateGridItems();
+      return;
+    }
+
     // Get visible components in their current order
-    const allComponentIds = this.rows.flat();
+    const allComponentIds = baseOrder;
     const visibleComponentIds = allComponentIds.filter((id) => {
       const el = this.getElementByComponentId(id);
       return el && !this.isComponentHidden(el);
@@ -1008,10 +1054,21 @@ class GridLayoutManager {
       return !el || this.isComponentHidden(el);
     });
 
+    const baseRowIndexMap = new Map();
+    baseRows.forEach((row, rowIndex) => {
+      row.forEach((id) => {
+        if (!baseRowIndexMap.has(id)) {
+          baseRowIndexMap.set(id, rowIndex);
+        }
+      });
+    });
+
     // Append hidden components to maintain order (they won't be visible anyway)
     hiddenComponentIds.forEach((id) => {
       // Find original row index and add to corresponding new row
-      const originalRowIdx = this.rows.findIndex((row) => row.includes(id));
+      const originalRowIdx = baseRowIndexMap.has(id)
+        ? baseRowIndexMap.get(id)
+        : -1;
       if (originalRowIdx >= 0 && newRows[originalRowIdx]) {
         newRows[originalRowIdx].push(id);
       } else if (newRows.length > 0) {
@@ -1022,11 +1079,11 @@ class GridLayoutManager {
     });
 
     // Only update DOM if layout actually changed
-    const layoutChanged = JSON.stringify(newRows) !== JSON.stringify(this.rows);
+    const layoutChanged =
+      JSON.stringify(newRows) !== JSON.stringify(this.activeRows || []);
 
     if (layoutChanged) {
-      this.rows = newRows;
-      this.applyLayout();
+      this.applyLayout(newRows);
       // Don't save layout on resize - only save on manual drag operations
     } else {
       // Just update flex basis for existing layout
@@ -1750,6 +1807,8 @@ class GridLayoutManager {
         this.rows.push(rowIds);
       }
     });
+
+    this.activeRows = JSON.parse(JSON.stringify(this.rows));
   }
 
   /**
@@ -1857,7 +1916,7 @@ class GridLayoutManager {
   resetToDefault() {
     this.rows = JSON.parse(JSON.stringify(this.defaultLayout));
     this.expandedComponents.clear(); // Clear breakpoint states
-    this.applyLayout();
+    this.applyLayout(this.rows);
     this.saveLayout();
   }
 
@@ -1874,7 +1933,7 @@ class GridLayoutManager {
   setLayout(layout) {
     if (Array.isArray(layout) && layout.length > 0) {
       this.rows = layout;
-      this.applyLayout();
+      this.applyLayout(this.rows);
       this.saveLayout();
     }
   }
