@@ -80,7 +80,11 @@ class LunarPhaseManager {
     if (this.nameEl) this.nameEl.textContent = data.phaseName;
 
     if (this.metaEl) {
-      const illumPct = Math.round(data.illumination * 100);
+      // Show illumination percentage with two decimal places (locale-aware)
+      const illumPct = (data.illumination * 100).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
       const rotDeg = Math.round((data.diskRotation * 180) / Math.PI);
       this.metaEl.textContent = `${illumPct}% illum • Age ${data.ageDays.toFixed(
         1
