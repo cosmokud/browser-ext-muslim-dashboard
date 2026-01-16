@@ -356,6 +356,75 @@ body.sidebar-mode .main-container {
   }
 }
 
+/* ============================================
+   Sidebar Drag-and-Drop Styles (Edit Mode)
+   Mirror the main grid dragging behavior
+   ============================================ */
+
+/* Enable grab cursor for sidebar components in edit mode */
+body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hover state for sidebar draggable items - only in edit mode */
+body.grid-edit-mode
+  .sidebar-zone
+  .sidebar-slot
+  .grid-draggable:hover:not(.grid-dragging) {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Show drag handle indicator on sidebar items in edit mode */
+body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:hover::before {
+  opacity: 1;
+}
+
+/* Active grabbing cursor when dragging sidebar items */
+body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
+  cursor: grabbing;
+}
+
+/* Sidebar zone behavior during dragging */
+.sidebar-zone.sidebar-is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sidebar-zone.sidebar-is-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Smooth transitions for non-dragged sidebar items when repositioning */
+.sidebar-zone.sidebar-is-dragging
+  .sidebar-slot
+  .grid-draggable:not(.grid-dragging) {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Dim and slightly scale down other sidebar items during drag */
+.sidebar-zone.sidebar-is-dragging
+  .sidebar-slot
+  .grid-draggable:not(.grid-dragging) {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+/* Show drag handle on all sidebar items during drag */
+.sidebar-zone.sidebar-is-dragging .sidebar-slot .grid-draggable::before {
+  opacity: 0.6;
+}
+
+/* Sidebar slot transitions during drag */
+.sidebar-zone.sidebar-is-dragging .sidebar-slot {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Sidebar Mode Button in FAB Menu */
 .sidebar-mode-btn {
   width: 48px;

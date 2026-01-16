@@ -302,6 +302,16 @@ class GridLayoutManager {
     // Ensure element is not counted in grid
     el.classList.add("sidebar-detached");
 
+    // Ensure element is draggable (for sidebar drag support)
+    el.classList.add("grid-draggable");
+    el.setAttribute("draggable", "false"); // We use custom drag
+
+    // Ensure data-grid-id is set
+    const id = el.id || el.dataset.gridId;
+    if (id && !el.dataset.gridId) {
+      el.dataset.gridId = id;
+    }
+
     // Remove flex constraints so it can fit sidebar width
     el.style.flex = "";
     el.style.maxWidth = "";
@@ -364,6 +374,26 @@ class GridLayoutManager {
     // Legacy no-op: old implementation toggled count-* classes.
     // Sidebar now supports infinite rows.
     return;
+  }
+
+  /**
+   * Add sidebar-is-dragging class to both sidebar zones for visual feedback
+   */
+  addSidebarDraggingClass() {
+    const leftZone = this.getSidebarZone("left");
+    const rightZone = this.getSidebarZone("right");
+    if (leftZone) leftZone.classList.add("sidebar-is-dragging");
+    if (rightZone) rightZone.classList.add("sidebar-is-dragging");
+  }
+
+  /**
+   * Remove sidebar-is-dragging class from both sidebar zones
+   */
+  removeSidebarDraggingClass() {
+    const leftZone = this.getSidebarZone("left");
+    const rightZone = this.getSidebarZone("right");
+    if (leftZone) leftZone.classList.remove("sidebar-is-dragging");
+    if (rightZone) rightZone.classList.remove("sidebar-is-dragging");
   }
 
   clearSidebarDropTarget() {
@@ -654,6 +684,8 @@ class GridLayoutManager {
     if (this.grid) {
       this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
     }
+    // Also add to body so sidebar CSS selectors work
+    document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
 
     // Show toast notification
     this.showToast(
@@ -683,6 +715,8 @@ class GridLayoutManager {
     if (this.grid) {
       this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
     }
+    // Also add to body so sidebar CSS selectors work
+    document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
   }
 
   /**
@@ -1391,6 +1425,9 @@ class GridLayoutManager {
     // Add dragging class to grid
     this.grid.classList.add("grid-is-dragging");
 
+    // Add dragging class to sidebar zones for visual feedback
+    this.addSidebarDraggingClass();
+
     // Setup auto-scroll
     this.setupAutoScroll();
   }
@@ -1788,6 +1825,9 @@ class GridLayoutManager {
     // Remove dragging class from grid
     this.grid.classList.remove("grid-is-dragging");
 
+    // Remove dragging class from sidebar zones
+    this.removeSidebarDraggingClass();
+
     // Save layout
     this.saveLayout();
 
@@ -1845,6 +1885,7 @@ class GridLayoutManager {
 
     // Cleanup grid drag styling
     this.grid.classList.remove("grid-is-dragging");
+    this.removeSidebarDraggingClass();
     this.grid
       .querySelectorAll(".grid-flex-row")
       .forEach((r) => r.classList.remove("grid-row-target"));
@@ -1981,6 +2022,7 @@ class GridLayoutManager {
 
     // Remove styling
     this.grid.classList.remove("grid-is-dragging");
+    this.removeSidebarDraggingClass();
     this.grid
       .querySelectorAll(".grid-flex-row")
       .forEach((r) => r.classList.remove("grid-row-target"));
