@@ -34,6 +34,7 @@ class GridLayoutManager {
     this.scrollBehaviorRestoreHtml = null;
     this.scrollBehaviorRestoreBody = null;
     this.scrollBehaviorOverridden = false;
+    this.autoScrollVelocity = 0;
     this.scrollInterval = null;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
@@ -1997,14 +1998,15 @@ class GridLayoutManager {
    */
   setupAutoScroll() {
     const scrollThreshold = 280;
-    const minSpeed = 45;
-    const maxSpeed = 260;
+    const minSpeed = 22;
+    const maxSpeed = 180;
+    const smoothing = 0.2;
 
     const getSpeed = (intensity) => {
       const clamped = Math.max(0, Math.min(scrollThreshold, intensity));
       const ratio = clamped / scrollThreshold;
-      const eased = Math.pow(ratio, 0.55);
-      return Math.round(minSpeed + eased * (maxSpeed - minSpeed));
+      const eased = Math.pow(ratio, 0.65);
+      return minSpeed + eased * (maxSpeed - minSpeed);
     };
 
     this.scrollInterval = setInterval(() => {
@@ -2021,15 +2023,27 @@ class GridLayoutManager {
       const distanceToTop = pointerY;
       const distanceToBottom = windowHeight - pointerY;
 
+      let targetSpeed = 0;
+
       // Scroll up
       if (distanceToTop < scrollThreshold) {
-        const speed = getSpeed(scrollThreshold - distanceToTop);
-        window.scrollBy({ top: -speed, left: 0, behavior: "auto" });
+        targetSpeed = -getSpeed(scrollThreshold - distanceToTop);
       }
       // Scroll down
       else if (distanceToBottom < scrollThreshold) {
-        const speed = getSpeed(scrollThreshold - distanceToBottom);
-        window.scrollBy({ top: speed, left: 0, behavior: "auto" });
+        targetSpeed = getSpeed(scrollThreshold - distanceToBottom);
+      }
+
+      // Smooth velocity for less jittery motion
+      this.autoScrollVelocity =
+        this.autoScrollVelocity * (1 - smoothing) + targetSpeed * smoothing;
+
+      if (Math.abs(this.autoScrollVelocity) > 0.5) {
+        window.scrollBy({
+          top: Math.round(this.autoScrollVelocity),
+          left: 0,
+          behavior: "auto",
+        });
       }
     }, 16);
   }
@@ -2042,6 +2056,7 @@ class GridLayoutManager {
       clearInterval(this.scrollInterval);
       this.scrollInterval = null;
     }
+    this.autoScrollVelocity = 0;
   }
 
   /**
