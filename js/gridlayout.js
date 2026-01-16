@@ -29,6 +29,8 @@ class GridLayoutManager {
     this.dragOffsetY = 0;
     this.initialMouseX = 0;
     this.initialMouseY = 0;
+    this.lastPointerX = 0;
+    this.lastPointerY = 0;
     this.scrollInterval = null;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
@@ -103,6 +105,7 @@ class GridLayoutManager {
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleWheel = this.handleWheel.bind(this);
     this.handleViewportResize = this.handleViewportResize.bind(this);
   }
 
@@ -646,6 +649,7 @@ class GridLayoutManager {
       this.grid.classList.add("grid-layout-ready");
     });
 
+    document.addEventListener("wheel", this.handleWheel, { passive: false });
     console.log("✅ GridLayoutManager initialized");
   }
 
@@ -1390,6 +1394,8 @@ class GridLayoutManager {
     this.draggedItemRect = originalRect;
     this.initialMouseX = clientX;
     this.initialMouseY = clientY;
+    this.lastPointerX = clientX;
+    this.lastPointerY = clientY;
 
     // Calculate offset from element top-left
     this.dragOffsetX = clientX - this.draggedItemRect.left;
@@ -1491,6 +1497,10 @@ class GridLayoutManager {
    */
   updateDrag(clientX, clientY) {
     if (!this.draggedItem) return;
+
+    // Track last pointer position for auto-scroll calculations
+    this.lastPointerX = clientX;
+    this.lastPointerY = clientY;
 
     // Update dragged item position
     this.draggedItem.style.left = `${clientX - this.dragOffsetX}px`;
@@ -1943,22 +1953,40 @@ class GridLayoutManager {
    * Setup auto-scroll when dragging near edges
    */
   setupAutoScroll() {
-    const scrollSpeed = 10;
-    const scrollThreshold = 80;
+    const scrollThreshold = 220;
+    const minSpeed = 25;
+    const maxSpeed = 140;
+
+    const getSpeed = (intensity) => {
+      const clamped = Math.max(0, Math.min(scrollThreshold, intensity));
+      const ratio = clamped / scrollThreshold;
+      const eased = Math.pow(ratio, 0.7);
+      return minSpeed + eased * (maxSpeed - minSpeed);
+    };
 
     this.scrollInterval = setInterval(() => {
       if (!this.isDragging || !this.draggedItem) return;
 
-      const rect = this.draggedItem.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
+      const windowHeight = window.innerHeight || 0;
+      if (!windowHeight) return;
 
-      // Scroll down
-      if (rect.bottom > windowHeight - scrollThreshold) {
-        window.scrollBy(0, scrollSpeed);
-      }
+      const pointerY =
+        Number.isFinite(this.lastPointerY) && this.lastPointerY > 0
+          ? this.lastPointerY
+          : this.draggedItem.getBoundingClientRect().top + this.dragOffsetY;
+
+      const distanceToTop = pointerY;
+      const distanceToBottom = windowHeight - pointerY;
+
       // Scroll up
-      else if (rect.top < scrollThreshold) {
-        window.scrollBy(0, -scrollSpeed);
+      if (distanceToTop < scrollThreshold) {
+        const speed = getSpeed(scrollThreshold - distanceToTop);
+        window.scrollBy(0, -speed);
+      }
+      // Scroll down
+      else if (distanceToBottom < scrollThreshold) {
+        const speed = getSpeed(scrollThreshold - distanceToBottom);
+        window.scrollBy(0, speed);
       }
     }, 16);
   }
@@ -1971,6 +1999,25 @@ class GridLayoutManager {
       clearInterval(this.scrollInterval);
       this.scrollInterval = null;
     }
+  }
+
+  /**
+   * Allow mouse wheel scrolling during drag
+   */
+  handleWheel(e) {
+    if (!this.isDragging) return;
+
+    let deltaY = e.deltaY;
+    if (e.deltaMode === 1) {
+      // Line mode
+      deltaY *= 16;
+    } else if (e.deltaMode === 2) {
+      // Page mode
+      deltaY *= window.innerHeight || 0;
+    }
+
+    window.scrollBy({ top: deltaY, left: 0, behavior: "auto" });
+    e.preventDefault();
   }
 
   /**
@@ -2151,6 +2198,7 @@ class GridLayoutManager {
     document.removeEventListener("touchmove", this.handleTouchMove);
     document.removeEventListener("touchend", this.handleTouchEnd);
     document.removeEventListener("keydown", this.handleKeyDown);
+    document.removeEventListener("wheel", this.handleWheel);
   }
 }
 
