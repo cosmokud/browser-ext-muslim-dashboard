@@ -1347,6 +1347,10 @@ class GridLayoutManager {
     this.isDragging = true;
     this.draggedItem = element;
 
+    // Capture the bounding rect BEFORE any DOM manipulation
+    // This is critical for sidebar items to get correct dimensions
+    const originalRect = element.getBoundingClientRect();
+
     // If dragging from a sidebar, undock it into the grid so placeholder logic works.
     this.sidebarDragOrigin = null;
     const sidebarSlot = element.closest?.(".sidebar-slot");
@@ -1382,7 +1386,8 @@ class GridLayoutManager {
       tempRow.appendChild(element);
     }
 
-    this.draggedItemRect = element.getBoundingClientRect();
+    // Use the original rect captured before DOM manipulation
+    this.draggedItemRect = originalRect;
     this.initialMouseX = clientX;
     this.initialMouseY = clientY;
 
