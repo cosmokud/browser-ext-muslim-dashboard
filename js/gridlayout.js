@@ -31,6 +31,9 @@ class GridLayoutManager {
     this.initialMouseY = 0;
     this.lastPointerX = 0;
     this.lastPointerY = 0;
+    this.scrollBehaviorRestoreHtml = null;
+    this.scrollBehaviorRestoreBody = null;
+    this.scrollBehaviorOverridden = false;
     this.scrollInterval = null;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
@@ -397,6 +400,34 @@ class GridLayoutManager {
     const rightZone = this.getSidebarZone("right");
     if (leftZone) leftZone.classList.remove("sidebar-is-dragging");
     if (rightZone) rightZone.classList.remove("sidebar-is-dragging");
+  }
+
+  /**
+   * Disable smooth scroll during drag for faster auto-scroll
+   */
+  disableSmoothScrollDuringDrag() {
+    if (this.scrollBehaviorOverridden) return;
+    const docEl = document.documentElement;
+    const bodyEl = document.body;
+    this.scrollBehaviorRestoreHtml = docEl.style.scrollBehavior;
+    this.scrollBehaviorRestoreBody = bodyEl.style.scrollBehavior;
+    docEl.style.scrollBehavior = "auto";
+    bodyEl.style.scrollBehavior = "auto";
+    this.scrollBehaviorOverridden = true;
+  }
+
+  /**
+   * Restore smooth scroll behavior after drag
+   */
+  restoreSmoothScrollAfterDrag() {
+    if (!this.scrollBehaviorOverridden) return;
+    const docEl = document.documentElement;
+    const bodyEl = document.body;
+    docEl.style.scrollBehavior = this.scrollBehaviorRestoreHtml || "";
+    bodyEl.style.scrollBehavior = this.scrollBehaviorRestoreBody || "";
+    this.scrollBehaviorRestoreHtml = null;
+    this.scrollBehaviorRestoreBody = null;
+    this.scrollBehaviorOverridden = false;
   }
 
   clearSidebarDropTarget() {
@@ -1397,6 +1428,9 @@ class GridLayoutManager {
     this.lastPointerX = clientX;
     this.lastPointerY = clientY;
 
+    // Disable smooth scrolling for fast edge auto-scroll
+    this.disableSmoothScrollDuringDrag();
+
     // Calculate offset from element top-left
     this.dragOffsetX = clientX - this.draggedItemRect.left;
     this.dragOffsetY = clientY - this.draggedItemRect.top;
@@ -1762,6 +1796,9 @@ class GridLayoutManager {
     // Stop auto-scroll
     this.stopAutoScroll();
 
+    // Restore smooth scroll behavior
+    this.restoreSmoothScrollAfterDrag();
+
     // Sidebar drop takes precedence (no grid animation)
     if (this.isSidebarModeEnabled && this.sidebarDropTarget) {
       this.finalizeSidebarDrop(this.sidebarDropTarget);
@@ -1846,6 +1883,9 @@ class GridLayoutManager {
     // Save layout
     this.saveLayout();
 
+    // Restore smooth scroll behavior
+    this.restoreSmoothScrollAfterDrag();
+
     // If we dragged out of a sidebar while in sidebar mode, persist sidebar contents.
     if (this.isSidebarModeEnabled) {
       try {
@@ -1916,6 +1956,9 @@ class GridLayoutManager {
     this.updateFlexBasisForCurrentDOM();
     this.saveLayout();
 
+    // Restore smooth scroll behavior
+    this.restoreSmoothScrollAfterDrag();
+
     // Reset state
     this.isDragging = false;
     this.draggedItem = null;
@@ -1953,15 +1996,15 @@ class GridLayoutManager {
    * Setup auto-scroll when dragging near edges
    */
   setupAutoScroll() {
-    const scrollThreshold = 220;
-    const minSpeed = 25;
-    const maxSpeed = 140;
+    const scrollThreshold = 280;
+    const minSpeed = 45;
+    const maxSpeed = 260;
 
     const getSpeed = (intensity) => {
       const clamped = Math.max(0, Math.min(scrollThreshold, intensity));
       const ratio = clamped / scrollThreshold;
-      const eased = Math.pow(ratio, 0.7);
-      return minSpeed + eased * (maxSpeed - minSpeed);
+      const eased = Math.pow(ratio, 0.55);
+      return Math.round(minSpeed + eased * (maxSpeed - minSpeed));
     };
 
     this.scrollInterval = setInterval(() => {
@@ -1981,12 +2024,12 @@ class GridLayoutManager {
       // Scroll up
       if (distanceToTop < scrollThreshold) {
         const speed = getSpeed(scrollThreshold - distanceToTop);
-        window.scrollBy(0, -speed);
+        window.scrollBy({ top: -speed, left: 0, behavior: "auto" });
       }
       // Scroll down
       else if (distanceToBottom < scrollThreshold) {
         const speed = getSpeed(scrollThreshold - distanceToBottom);
-        window.scrollBy(0, speed);
+        window.scrollBy({ top: speed, left: 0, behavior: "auto" });
       }
     }, 16);
   }
