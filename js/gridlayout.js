@@ -2148,10 +2148,32 @@ class GridLayoutManager {
    * Reset layout to default
    */
   resetToDefault() {
-    this.rows = JSON.parse(JSON.stringify(this.defaultLayout));
+    const defaultRows = JSON.parse(JSON.stringify(this.defaultLayout));
+
+    this.rows = JSON.parse(JSON.stringify(defaultRows));
+    this.activeRows = JSON.parse(JSON.stringify(defaultRows));
     this.expandedComponents.clear(); // Clear breakpoint states
+
+    // Reset both layout modes and sidebar positions in storage
+    try {
+      const settings = this.storage.getSettings();
+      settings.gridLayoutNormal = JSON.parse(JSON.stringify(defaultRows));
+      settings.gridLayoutSidebar = JSON.parse(JSON.stringify(defaultRows));
+      settings.gridLayout = JSON.parse(JSON.stringify(defaultRows));
+      settings[this.getSidebarStateStorageKey()] = { left: [], right: [] };
+      this.storage.saveSettings(settings);
+    } catch (e) {
+      // ignore
+    }
+
+    // Ensure any docked sidebar items return to the grid
+    try {
+      this.undockAllSidebarItemsToGrid();
+    } catch (e) {}
+
     this.applyLayout(this.rows);
-    this.saveLayout();
+    this.updateSidebarZoneCounts();
+    this.updateFlexBasisForCurrentDOM();
   }
 
   /**

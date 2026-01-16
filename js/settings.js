@@ -1661,6 +1661,35 @@ class SettingsManager {
     return emoji;
   }
 
+  _startRefreshButton(btn, { label = "Refreshing…" } = {}) {
+    if (!btn) return () => {};
+
+    const originalText =
+      btn.dataset?.mdIconifyOriginal || btn.textContent || "";
+    const prevDisabled = btn.disabled === true;
+
+    const iconHtml = `<span class="refresh-cw-icon" aria-hidden="true">${this._getIcon(
+      "🔄",
+      { size: 16, inline: true }
+    )}</span>`;
+
+    btn.classList.add("is-refreshing");
+    btn.disabled = true;
+    btn.innerHTML = `${iconHtml}<span class="refresh-label">${label}</span>`;
+
+    let finished = false;
+    return () => {
+      if (finished) return;
+      finished = true;
+      btn.classList.remove("is-refreshing");
+      btn.disabled = prevDisabled;
+      btn.textContent = originalText;
+      try {
+        window.dashboard?.iconThemes?.applyDomIconReplacements?.(btn);
+      } catch (e) {}
+    };
+  }
+
   _bindOverlayCloseBehavior(overlayEl, closeFn) {
     if (!overlayEl || typeof closeFn !== "function") return;
 
@@ -4524,8 +4553,20 @@ class SettingsManager {
     if (resetGridLayoutBtn) {
       resetGridLayoutBtn.addEventListener("click", () => {
         if (window.dashboard && window.dashboard.gridLayout) {
-          window.dashboard.gridLayout.resetToDefault();
-          this.showToast("Layout reset to default!", "success");
+          const stopRefresh = this._startRefreshButton(resetGridLayoutBtn, {
+            label: "Resetting…",
+          });
+          const startedAt = Date.now();
+
+          try {
+            window.dashboard.gridLayout.resetToDefault();
+            this.showToast("Layout reset to default!", "success");
+          } finally {
+            const minDuration = 900;
+            const elapsed = Date.now() - startedAt;
+            const delay = Math.max(0, minDuration - elapsed);
+            setTimeout(() => stopRefresh(), delay);
+          }
         }
       });
     }
@@ -4534,10 +4575,10 @@ class SettingsManager {
     if (this.refreshDefaultDataBtn) {
       this.refreshDefaultDataBtn.addEventListener("click", async () => {
         const btn = this.refreshDefaultDataBtn;
-        const prevText = btn.textContent;
-
-        btn.disabled = true;
-        btn.innerHTML = this._getIcon("⏳", { size: 16 }) + " Refreshing…";
+        const stopRefresh = this._startRefreshButton(btn, {
+          label: "Refreshing…",
+        });
+        const startedAt = Date.now();
 
         try {
           const tasks = [];
@@ -4570,8 +4611,10 @@ class SettingsManager {
           console.error("Failed to refresh default data:", e);
           this.showToast("Failed to refresh default data.", "error");
         } finally {
-          btn.disabled = false;
-          btn.textContent = prevText;
+          const minDuration = 900;
+          const elapsed = Date.now() - startedAt;
+          const delay = Math.max(0, minDuration - elapsed);
+          setTimeout(() => stopRefresh(), delay);
         }
       });
     }
