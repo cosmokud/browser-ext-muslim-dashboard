@@ -1685,7 +1685,12 @@ class SettingsManager {
       btn.disabled = prevDisabled;
       btn.textContent = originalText;
       try {
-        window.dashboard?.iconThemes?.applyDomIconReplacements?.(btn);
+        const iconThemes = window.dashboard?.iconThemes;
+        if (iconThemes?.applyDomIconReplacements) {
+          // applyDomIconReplacements doesn't process the root element itself,
+          // so target the parent (or document) to re-iconify this button.
+          iconThemes.applyDomIconReplacements(btn.parentElement || document);
+        }
       } catch (e) {}
     };
   }
