@@ -308,6 +308,54 @@ body.sidebar-mode .main-container {
   border-radius: var(--radius-lg);
 }
 
+/* Sidebar placeholder for drop position preview */
+.sidebar-placeholder {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.2) 0%,
+    rgba(212, 175, 55, 0.1) 100%
+  );
+  border: 2px dashed var(--accent-gold);
+  border-radius: var(--radius-lg);
+  min-height: 100px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  animation: sidebarPlaceholderPulse 1.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Add a visual indicator icon/text */
+.sidebar-placeholder::before {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.3) 0%,
+    rgba(212, 175, 55, 0.15) 100%
+  );
+  border: 2px dashed rgba(212, 175, 55, 0.5);
+}
+
+@keyframes sidebarPlaceholderPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    border-color: var(--accent-gold);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    border-color: var(--accent-gold-light);
+    transform: scale(1.01);
+  }
+}
+
 /* Sidebar Mode Button in FAB Menu */
 .sidebar-mode-btn {
   width: 48px;

@@ -24,6 +24,7 @@ class GridLayoutManager {
     this.sidebarDropIndex = null;
     this.sidebarMarkers = new Map(); // componentId -> marker element
     this.sidebarDragOrigin = null; // { side: 'left'|'right', index: number } | null
+    this.sidebarPlaceholder = null; // Placeholder element for sidebar drop preview
     this.dragOffsetX = 0;
     this.dragOffsetY = 0;
     this.initialMouseX = 0;
@@ -372,6 +373,81 @@ class GridLayoutManager {
       const zone = document.getElementById(id);
       if (zone) zone.classList.remove("sidebar-drop-target");
     });
+    // Remove sidebar placeholder if it exists
+    this.removeSidebarPlaceholder();
+  }
+
+  /**
+   * Create or return the existing sidebar placeholder element
+   */
+  createSidebarPlaceholder() {
+    if (!this.sidebarPlaceholder) {
+      this.sidebarPlaceholder = document.createElement("div");
+      this.sidebarPlaceholder.className = "sidebar-placeholder";
+      // Use the dragged item's height as a reference for the placeholder
+      if (this.draggedItemRect) {
+        this.sidebarPlaceholder.style.minHeight = `${Math.min(
+          this.draggedItemRect.height,
+          150
+        )}px`;
+      } else {
+        this.sidebarPlaceholder.style.minHeight = "100px";
+      }
+    }
+    return this.sidebarPlaceholder;
+  }
+
+  /**
+   * Remove the sidebar placeholder from DOM
+   */
+  removeSidebarPlaceholder() {
+    if (this.sidebarPlaceholder) {
+      try {
+        this.sidebarPlaceholder.remove();
+      } catch (e) {}
+      this.sidebarPlaceholder = null;
+    }
+  }
+
+  /**
+   * Update the sidebar placeholder position within the target zone
+   */
+  updateSidebarPlaceholder(zone, insertIndex) {
+    if (!zone) {
+      this.removeSidebarPlaceholder();
+      return;
+    }
+
+    const placeholder = this.createSidebarPlaceholder();
+    const slots = Array.from(zone.querySelectorAll(":scope > .sidebar-slot"));
+
+    // Calculate the target element to insert before
+    const targetSlot = slots[insertIndex] || null;
+
+    // If placeholder is already in the correct position, skip DOM manipulation
+    if (placeholder.parentNode === zone) {
+      const nextSibling = placeholder.nextElementSibling;
+      // If target is null (insert at end) and placeholder is at end
+      // Or if target matches the next sibling, we're already in position
+      if (targetSlot === null && nextSibling === null) {
+        return;
+      }
+      if (targetSlot && nextSibling === targetSlot) {
+        return;
+      }
+    }
+
+    // Remove from current position if it's in a different zone
+    if (placeholder.parentNode && placeholder.parentNode !== zone) {
+      placeholder.remove();
+    }
+
+    // Insert at the correct position
+    if (targetSlot) {
+      zone.insertBefore(placeholder, targetSlot);
+    } else {
+      zone.appendChild(placeholder);
+    }
   }
 
   getSidebarInsertionIndex(zoneEl, clientY) {
@@ -389,13 +465,17 @@ class GridLayoutManager {
   }
 
   updateSidebarDropTarget(clientX, clientY) {
-    this.clearSidebarDropTarget();
-
     const leftZone = this.getSidebarZone("left");
     const rightZone = this.getSidebarZone("right");
 
-    // If zones aren't present/visible, skip
-    if (!leftZone || !rightZone) return;
+    // If zones aren't present/visible, clear and skip
+    if (!leftZone || !rightZone) {
+      this.clearSidebarDropTarget();
+      return;
+    }
+
+    let targetZone = null;
+    let targetSide = null;
 
     // Prefer DOM hit-testing (more reliable than rect math when zones contain content)
     try {
@@ -403,57 +483,60 @@ class GridLayoutManager {
       const zoneAtPoint = elAtPoint?.closest?.(
         "#sidebarLeftZone, #sidebarRightZone"
       );
-      if (
-        zoneAtPoint &&
-        (zoneAtPoint === leftZone || zoneAtPoint === rightZone)
-      ) {
-        if (zoneAtPoint === leftZone) {
-          this.sidebarDropTarget = "left";
-          this.sidebarDropIndex = this.getSidebarInsertionIndex(
-            leftZone,
-            clientY
-          );
-          leftZone.classList.add("sidebar-drop-target");
-          return;
-        }
-        if (zoneAtPoint === rightZone) {
-          this.sidebarDropTarget = "right";
-          this.sidebarDropIndex = this.getSidebarInsertionIndex(
-            rightZone,
-            clientY
-          );
-          rightZone.classList.add("sidebar-drop-target");
-          return;
-        }
+      if (zoneAtPoint === leftZone) {
+        targetZone = leftZone;
+        targetSide = "left";
+      } else if (zoneAtPoint === rightZone) {
+        targetZone = rightZone;
+        targetSide = "right";
       }
     } catch (e) {
-      // Fall back to rect-based hit testing
+      // Fall back to rect-based hit testing below
     }
 
-    const leftRect = leftZone.getBoundingClientRect();
-    const rightRect = rightZone.getBoundingClientRect();
+    // Fallback to rect-based hit testing if elementFromPoint didn't find a zone
+    if (!targetZone) {
+      const leftRect = leftZone.getBoundingClientRect();
+      const rightRect = rightZone.getBoundingClientRect();
 
-    const inLeft =
-      clientX >= leftRect.left &&
-      clientX <= leftRect.right &&
-      clientY >= leftRect.top &&
-      clientY <= leftRect.bottom;
+      const inLeft =
+        clientX >= leftRect.left &&
+        clientX <= leftRect.right &&
+        clientY >= leftRect.top &&
+        clientY <= leftRect.bottom;
 
-    const inRight =
-      clientX >= rightRect.left &&
-      clientX <= rightRect.right &&
-      clientY >= rightRect.top &&
-      clientY <= rightRect.bottom;
+      const inRight =
+        clientX >= rightRect.left &&
+        clientX <= rightRect.right &&
+        clientY >= rightRect.top &&
+        clientY <= rightRect.bottom;
 
-    if (inLeft) {
-      this.sidebarDropTarget = "left";
-      this.sidebarDropIndex = this.getSidebarInsertionIndex(leftZone, clientY);
-      leftZone.classList.add("sidebar-drop-target");
-    } else if (inRight) {
-      this.sidebarDropTarget = "right";
-      this.sidebarDropIndex = this.getSidebarInsertionIndex(rightZone, clientY);
-      rightZone.classList.add("sidebar-drop-target");
+      if (inLeft) {
+        targetZone = leftZone;
+        targetSide = "left";
+      } else if (inRight) {
+        targetZone = rightZone;
+        targetSide = "right";
+      }
     }
+
+    // If not hovering over any sidebar zone, clear and exit
+    if (!targetZone) {
+      this.clearSidebarDropTarget();
+      return;
+    }
+
+    // Remove highlight from the other zone if switching sides
+    if (this.sidebarDropTarget && this.sidebarDropTarget !== targetSide) {
+      const otherZone = this.getSidebarZone(this.sidebarDropTarget);
+      if (otherZone) otherZone.classList.remove("sidebar-drop-target");
+    }
+
+    // Update state
+    this.sidebarDropTarget = targetSide;
+    this.sidebarDropIndex = this.getSidebarInsertionIndex(targetZone, clientY);
+    targetZone.classList.add("sidebar-drop-target");
+    this.updateSidebarPlaceholder(targetZone, this.sidebarDropIndex);
   }
 
   /**
