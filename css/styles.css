@@ -3001,7 +3001,10 @@ body.moment-mode {
 /* Moment mode uses 3-column layout like sidebar mode */
 body.moment-mode .sidebar-layout {
   display: grid;
-  grid-template-columns: 15% 70% 15%;
+  grid-template-columns: minmax(320px, 1fr) minmax(600px, 2fr) minmax(
+      320px,
+      1fr
+    );
   grid-template-rows: 1fr;
   align-items: start;
   width: 100%;
@@ -3082,10 +3085,10 @@ body.moment-mode .moment-mode-right {
 body.moment-mode .moment-mode-middle {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: flex-start;
   width: 100%;
-  max-width: none;
+  max-width: 900px;
   gap: var(--spacing-lg);
 }
 
@@ -3162,8 +3165,7 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0;
-  margin: 0;
+  padding: var(--spacing-md);
   animation: none;
 }
 
@@ -3215,10 +3217,6 @@ body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current {
   box-shadow: none !important;
 }
 
-body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
-  border: none !important;
-}
-
 /* ===== Moment Mode: Quote Section Styling ===== */
 body.moment-mode .moment-mode-middle .quote-section {
   background: transparent !important;
@@ -3226,11 +3224,10 @@ body.moment-mode .moment-mode-middle .quote-section {
   -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
-  outline: none !important;
   padding: var(--spacing-lg);
   animation: none;
   width: 100%;
-  max-width: none;
+  max-width: 800px;
 }
 
 body.moment-mode .moment-mode-middle .quote-section * {
@@ -3239,7 +3236,6 @@ body.moment-mode .moment-mode-middle .quote-section * {
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
-  outline: none !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section:hover {
@@ -3283,11 +3279,9 @@ body.moment-mode .moment-mode-middle .pinned-apps-section {
   -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
-  outline: none !important;
   padding: var(--spacing-md);
   animation: none;
   width: 100%;
-  max-width: none;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -3309,7 +3303,6 @@ body.moment-mode .moment-mode-middle .pinned-apps-section * {
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
-  outline: none !important;
 }
 
 body.moment-mode .moment-mode-middle .pinned-apps-section:hover {
@@ -3399,6 +3392,10 @@ body.moment-mode .moment-mode-middle .search-bar-btn {
 
 body.moment-mode .moment-mode-middle .search-bar-btn:hover {
   background: transparent !important;
+}
+
+body.moment-mode .moment-mode-middle .search-bar-engines {
+  background: transparent;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engine-tab {
