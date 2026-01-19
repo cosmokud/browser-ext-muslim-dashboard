@@ -1620,7 +1620,7 @@ class MuslimDashboard {
 
     this._momentModeActive = false;
     this._momentModeUpdateInterval = null;
-    
+
     // Store original parent references for restoring components
     this._momentModeOriginalParents = {};
 

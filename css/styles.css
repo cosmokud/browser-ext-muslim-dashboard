@@ -3134,8 +3134,28 @@ body.moment-mode .moment-mode-left *,
 body.moment-mode .moment-mode-middle *,
 body.moment-mode .moment-mode-right * {
   text-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.6),
-    0 4px 16px rgba(0, 0, 0, 0.4);
+    0 2px 8px rgba(0, 0, 0, 0.7),
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+body.moment-mode .moment-mode-left button,
+body.moment-mode .moment-mode-middle button,
+body.moment-mode .moment-mode-right button {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+body.moment-mode .moment-mode-middle .search-bar-input {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
 }
 
 /* ===== Moment Mode: Prayer Times Card Styling ===== */
@@ -3159,7 +3179,7 @@ body.moment-mode .moment-mode-left .prayer-times-card .card-header {
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .card-title {
-  font-size: 1.3rem;
+  display: none !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .location-display {
@@ -3167,21 +3187,25 @@ body.moment-mode .moment-mode-left .prayer-times-card .location-display {
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
-  background: rgba(212, 175, 55, 0.15);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
   margin-bottom: var(--spacing-sm);
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
   padding: var(--spacing-xs) 0;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current {
-  background: rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  margin: 0 calc(-1 * var(--spacing-sm));
+  background: transparent !important;
+  border-radius: 0;
+  padding: var(--spacing-xs) 0;
+  margin: 0;
+  box-shadow: none !important;
 }
 
 /* ===== Moment Mode: Quote Section Styling ===== */
@@ -3195,6 +3219,13 @@ body.moment-mode .moment-mode-middle .quote-section {
   animation: none;
   width: 100%;
   max-width: 800px;
+}
+
+body.moment-mode .moment-mode-middle .quote-section * {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section:hover {
@@ -3222,12 +3253,13 @@ body.moment-mode .moment-mode-middle .quote-section .quote-source {
 }
 
 body.moment-mode .moment-mode-middle .quote-section .quote-nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section .quote-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent !important;
 }
 
 /* ===== Moment Mode: Pinned Apps Section Styling ===== */
@@ -3255,6 +3287,13 @@ body.moment-mode .moment-mode-middle .pinned-apps-section:focus-within {
   pointer-events: auto;
 }
 
+body.moment-mode .moment-mode-middle .pinned-apps-section * {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
 body.moment-mode .moment-mode-middle .pinned-apps-section:hover {
   transform: none;
   box-shadow: none;
@@ -3265,16 +3304,21 @@ body.moment-mode .moment-mode-middle .pinned-apps-grid {
 }
 
 body.moment-mode .moment-mode-middle .pinned-app {
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
 }
 
 body.moment-mode .moment-mode-middle .pinned-app-icon {
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
 }
 
 body.moment-mode .moment-mode-middle .pinned-app-add {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: transparent !important;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.moment-mode .moment-mode-middle .pinned-app:hover {
+  background: transparent !important;
 }
 
 /* ===== Moment Mode: Search Bar Section Styling ===== */
@@ -3309,51 +3353,61 @@ body.moment-mode .moment-mode-middle .search-bar-section:hover {
 }
 
 body.moment-mode .moment-mode-middle .search-bar-shell {
-  background: transparent;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engines {
   background: transparent;
 }
 
-body.moment-mode .moment-mode-middle .search-bar-engine-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+body.moment-mode .moment-mode-middle .search-bar-engine-tab {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
+  filter: none !important;
 }
 
-body.moment-mode .moment-mode-middle .search-bar-engine-btn:hover,
-body.moment-mode .moment-mode-middle .search-bar-engine-btn.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+body.moment-mode .moment-mode-middle .search-bar-engine-tab:hover,
+body.moment-mode .moment-mode-middle .search-bar-engine-tab[aria-selected="true"] {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engine-arrow {
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: transparent !important;
 }
 
 /* Grid Toast Notifications (fallback when settings manager not available) */
