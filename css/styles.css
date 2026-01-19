@@ -3203,15 +3203,27 @@ body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
 }
 
 /* Left side of next-prayer: label and name grouped */
-body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-label,
-body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-name {
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-label,
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-name {
   grid-column: 1 !important;
   justify-self: start !important;
   white-space: nowrap !important;
 }
 
 /* Right side of next-prayer: countdown aligned right */
-body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-countdown {
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-countdown {
   grid-column: 2 !important;
   justify-self: end !important;
   text-align: right !important;
@@ -3251,7 +3263,11 @@ body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
 }
 
 /* Prayer Name - Column 1, left aligned */
-body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-name {
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .prayer-item
+  .prayer-name {
   grid-column: 1 !important;
   justify-self: start !important;
   text-align: left !important;
@@ -3259,7 +3275,11 @@ body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-name 
 }
 
 /* Prayer Time - Column 2, right aligned */
-body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-time {
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .prayer-item
+  .prayer-time {
   grid-column: 2 !important;
   justify-self: end !important;
   text-align: right !important;
@@ -3267,6 +3287,16 @@ body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-time 
 }
 
 /* ===== Moment Mode: Quote Section Styling ===== */
+
+/* Wrapper container to center the quote section independently */
+body.moment-mode .moment-mode-middle .moment-quote-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+}
+
 body.moment-mode .moment-mode-middle .quote-section {
   background: transparent !important;
   backdrop-filter: none !important;
@@ -3275,8 +3305,9 @@ body.moment-mode .moment-mode-middle .quote-section {
   box-shadow: none !important;
   padding: var(--spacing-lg);
   animation: none;
-  width: 100%;
-  max-width: 800px;
+  width: auto;
+  min-width: 400px;
+  max-width: 600px;
 }
 
 body.moment-mode .moment-mode-middle .quote-section * {
@@ -3391,6 +3422,16 @@ body.moment-mode .moment-mode-middle .pinned-app:hover {
 }
 
 /* ===== Moment Mode: Search Bar Section Styling ===== */
+
+/* Wrapper container to center the search bar independently */
+body.moment-mode .moment-mode-middle .moment-search-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+}
+
 body.moment-mode .moment-mode-middle .search-bar-section {
   background: transparent !important;
   backdrop-filter: none !important;
@@ -3399,8 +3440,9 @@ body.moment-mode .moment-mode-middle .search-bar-section {
   box-shadow: none !important;
   padding: var(--spacing-md);
   animation: none;
-  width: 100%;
-  max-width: 520px;
+  width: auto;
+  min-width: 320px;
+  max-width: 480px;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -3410,7 +3452,11 @@ body.moment-mode .moment-mode-middle .search-bar-section {
 }
 
 body.moment-mode .moment-mode-middle:hover .search-bar-section,
-body.moment-mode .moment-mode-middle .search-bar-section:focus-within {
+body.moment-mode .moment-mode-middle .search-bar-section:focus-within,
+body.moment-mode
+  .moment-mode-middle
+  .moment-search-wrapper:hover
+  .search-bar-section {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;

@@ -1711,7 +1711,13 @@ class MuslimDashboard {
           nextSibling: quoteSection.nextElementSibling,
         };
         if (momentMiddle) {
-          momentMiddle.appendChild(quoteSection);
+          // Create a wrapper container for the quote section to allow centering
+          // while the quote maintains its own compact width
+          const quoteWrapper = document.createElement("div");
+          quoteWrapper.className = "moment-quote-wrapper";
+          quoteWrapper.id = "momentQuoteWrapper";
+          quoteWrapper.appendChild(quoteSection);
+          momentMiddle.appendChild(quoteWrapper);
         }
       }
 
@@ -1731,7 +1737,13 @@ class MuslimDashboard {
           nextSibling: searchBarSection.nextElementSibling,
         };
         if (momentMiddle) {
-          momentMiddle.appendChild(searchBarSection);
+          // Create a wrapper container for the search bar to allow centering
+          // while the search bar maintains its own compact width
+          const searchWrapper = document.createElement("div");
+          searchWrapper.className = "moment-search-wrapper";
+          searchWrapper.id = "momentSearchWrapper";
+          searchWrapper.appendChild(searchBarSection);
+          momentMiddle.appendChild(searchWrapper);
         }
       }
     };
@@ -1749,6 +1761,18 @@ class MuslimDashboard {
           }
         }
       };
+
+      // Remove the search bar wrapper before restoring
+      const searchWrapper = document.getElementById("momentSearchWrapper");
+      if (searchWrapper) {
+        searchWrapper.remove();
+      }
+
+      // Remove the quote wrapper before restoring
+      const quoteWrapper = document.getElementById("momentQuoteWrapper");
+      if (quoteWrapper) {
+        quoteWrapper.remove();
+      }
 
       restoreComponent("prayerTimesCard");
       restoreComponent("quoteSection");
