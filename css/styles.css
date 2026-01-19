@@ -3400,7 +3400,7 @@ body.moment-mode .moment-mode-middle .search-bar-section {
   padding: var(--spacing-md);
   animation: none;
   width: 100%;
-  max-width: 700px;
+  max-width: 520px;
   opacity: 0;
   transform: translateY(10px);
   transition:
