@@ -3183,7 +3183,7 @@ body.moment-mode .moment-mode-left .prayer-times-card .card-title {
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .location-display {
-  opacity: 0.8;
+  display: none !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
@@ -3192,6 +3192,15 @@ body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
   box-shadow: none !important;
   padding: 0;
   margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+body.moment-mode .moment-mode-left .prayer-times-card .next-prayer > * {
+  white-space: nowrap;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
@@ -3226,6 +3235,7 @@ body.moment-mode .moment-mode-middle .quote-section * {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
+  border: none !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section:hover {
@@ -3292,6 +3302,7 @@ body.moment-mode .moment-mode-middle .pinned-apps-section * {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
+  border: none !important;
 }
 
 body.moment-mode .moment-mode-middle .pinned-apps-section:hover {
@@ -3395,7 +3406,9 @@ body.moment-mode .moment-mode-middle .search-bar-engine-tab {
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engine-tab:hover,
-body.moment-mode .moment-mode-middle .search-bar-engine-tab[aria-selected="true"] {
+body.moment-mode
+  .moment-mode-middle
+  .search-bar-engine-tab[aria-selected="true"] {
   background: transparent !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
