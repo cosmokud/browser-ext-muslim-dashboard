@@ -43,19 +43,19 @@ class PinnedAppsManager {
 
     // Favicon controls in edit modal
     this.editFaviconPreview = document.getElementById(
-      "editPinnedAppFaviconPreview"
+      "editPinnedAppFaviconPreview",
     );
     this.editRefreshFaviconBtn = document.getElementById(
-      "editPinnedAppRefreshFavicon"
+      "editPinnedAppRefreshFavicon",
     );
     this.editImportFaviconBtn = document.getElementById(
-      "editPinnedAppImportFavicon"
+      "editPinnedAppImportFavicon",
     );
     this.editFaviconFileInput = document.getElementById(
-      "editPinnedAppFaviconFile"
+      "editPinnedAppFaviconFile",
     );
     this.editFaviconStatus = document.getElementById(
-      "editPinnedAppFaviconStatus"
+      "editPinnedAppFaviconStatus",
     );
 
     // Track if favicon was changed during edit
@@ -122,10 +122,10 @@ class PinnedAppsManager {
   _updateContextMenuIcons() {
     if (this.contextMenu) {
       const editIcon = this.contextMenu.querySelector(
-        ".context-menu-edit .context-menu-icon"
+        ".context-menu-edit .context-menu-icon",
       );
       const deleteIcon = this.contextMenu.querySelector(
-        ".context-menu-delete .context-menu-icon"
+        ".context-menu-delete .context-menu-icon",
       );
       if (editIcon) editIcon.innerHTML = this._getIcon("✏️", { size: 16 });
       if (deleteIcon) deleteIcon.innerHTML = this._getIcon("🗑️", { size: 16 });
@@ -212,7 +212,7 @@ class PinnedAppsManager {
           this.hideContextMenu();
         }
       },
-      true
+      true,
     );
 
     // Close context menu on escape
@@ -228,7 +228,7 @@ class PinnedAppsManager {
       () => {
         this.hideContextMenu();
       },
-      true
+      true,
     );
   }
 
@@ -341,14 +341,14 @@ class PinnedAppsManager {
     // Edit form submit
     if (this.editForm) {
       this.editForm.addEventListener("submit", (e) =>
-        this.handleEditFormSubmit(e)
+        this.handleEditFormSubmit(e),
       );
     }
 
     // Favicon refresh button
     if (this.editRefreshFaviconBtn) {
       this.editRefreshFaviconBtn.addEventListener("click", () =>
-        this.handleRefreshFavicon()
+        this.handleRefreshFavicon(),
       );
     }
 
@@ -362,7 +362,7 @@ class PinnedAppsManager {
     // Favicon file input change
     if (this.editFaviconFileInput) {
       this.editFaviconFileInput.addEventListener("change", (e) =>
-        this.handleFaviconFileSelect(e)
+        this.handleFaviconFileSelect(e),
       );
     }
 
@@ -375,18 +375,18 @@ class PinnedAppsManager {
     // Delete confirmation modal buttons
     if (this.confirmDeleteBtn) {
       this.confirmDeleteBtn.addEventListener("click", () =>
-        this.confirmDelete()
+        this.confirmDelete(),
       );
     }
     if (this.cancelDeleteBtn) {
       this.cancelDeleteBtn.addEventListener("click", () =>
-        this.hideDeleteConfirmation()
+        this.hideDeleteConfirmation(),
       );
     }
 
     // Close delete modal on backdrop click
     this._bindOverlayCloseBehavior(this.deleteModal, () =>
-      this.hideDeleteConfirmation()
+      this.hideDeleteConfirmation(),
     );
   }
 
@@ -496,7 +496,7 @@ class PinnedAppsManager {
       if (window.faviconCache) {
         const dataUrl = await window.faviconCache.refreshFromGoogle(
           normalizedUrl,
-          "pinned"
+          "pinned",
         );
         if (dataUrl) {
           this.pendingFaviconDataUrl = dataUrl;
@@ -549,7 +549,7 @@ class PinnedAppsManager {
         const dataUrl = await window.faviconCache.importFromFile(
           file,
           normalizedUrl,
-          "pinned"
+          "pinned",
         );
         this.pendingFaviconDataUrl = dataUrl;
         if (this.editFaviconPreview) {
@@ -653,7 +653,7 @@ class PinnedAppsManager {
           const cachedFavicon = await window.faviconCache.fetchAndCache(
             url,
             "pinned",
-            true
+            true,
           );
           if (cachedFavicon) {
             app.cachedFavicon = cachedFavicon;
@@ -711,7 +711,7 @@ class PinnedAppsManager {
       cachedFavicon = await window.faviconCache.fetchAndCache(
         url,
         "pinned",
-        true
+        true,
       );
       if (cachedFavicon) {
         favicon = cachedFavicon;
@@ -798,6 +798,10 @@ class PinnedAppsManager {
       addEl.addEventListener("click", () => this.showModal());
       this.container.appendChild(addEl);
     }
+
+    try {
+      window.dashboard?.applyPinnedAppsSettings?.();
+    } catch (e) {}
   }
 
   /**
@@ -849,7 +853,7 @@ class PinnedAppsManager {
     el.addEventListener(
       "touchstart",
       (e) => this.handleTouchStart(e, app, el),
-      { passive: false }
+      { passive: false },
     );
 
     // Right-click context menu
@@ -1040,7 +1044,7 @@ class PinnedAppsManager {
     // Create ghost
     this.dragGhost = this.createDragGhost(
       this.draggedItem,
-      this.draggedElement
+      this.draggedElement,
     );
     this.updateDragPosition();
 
@@ -1050,7 +1054,7 @@ class PinnedAppsManager {
     // Defensive: clear any stale shift classes from older versions
     this.container
       ?.querySelectorAll(
-        ".pinned-app-item.shift-left, .pinned-app-item.shift-right"
+        ".pinned-app-item.shift-left, .pinned-app-item.shift-right",
       )
       .forEach((el) => el.classList.remove("shift-left", "shift-right"));
 
@@ -1108,7 +1112,7 @@ class PinnedAppsManager {
     if (!this.container) return;
     const addButton = this.container.querySelector(".pinned-app-add");
     const existing = new Map(
-      this.getPinnedItemElements().map((el) => [Number(el.dataset.appId), el])
+      this.getPinnedItemElements().map((el) => [Number(el.dataset.appId), el]),
     );
 
     const frag = document.createDocumentFragment();
@@ -1126,7 +1130,7 @@ class PinnedAppsManager {
 
   animateFlip(beforeRects) {
     const elements = this.getPinnedItemElements().filter(
-      (el) => !el.classList.contains("dragging")
+      (el) => !el.classList.contains("dragging"),
     );
 
     for (const el of elements) {
@@ -1147,7 +1151,7 @@ class PinnedAppsManager {
 
     requestAnimationFrame(() => {
       const elements2 = this.getPinnedItemElements().filter(
-        (el) => !el.classList.contains("dragging")
+        (el) => !el.classList.contains("dragging"),
       );
       for (const el of elements2) {
         if (!el.style.transform) continue;
@@ -1166,7 +1170,7 @@ class PinnedAppsManager {
 
     // Fallback: closest by center distance
     const items = this.getPinnedItemElements().filter(
-      (el) => !el.classList.contains("dragging")
+      (el) => !el.classList.contains("dragging"),
     );
     let best = null;
     let bestDist = Infinity;
@@ -1191,10 +1195,10 @@ class PinnedAppsManager {
     // Clear previous hover state
     this.container
       .querySelectorAll(
-        ".pinned-app-item.drag-over, .pinned-app-item.shift-left, .pinned-app-item.shift-right"
+        ".pinned-app-item.drag-over, .pinned-app-item.shift-left, .pinned-app-item.shift-right",
       )
       .forEach((el) =>
-        el.classList.remove("drag-over", "shift-left", "shift-right")
+        el.classList.remove("drag-over", "shift-left", "shift-right"),
       );
 
     if (!targetEl) {
@@ -1210,7 +1214,7 @@ class PinnedAppsManager {
     }
 
     const draggedIndex = this.apps.findIndex(
-      (a) => a.id === this.draggedItem.id
+      (a) => a.id === this.draggedItem.id,
     );
     const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
     if (draggedIndex === -1 || targetIndex === -1) return;
@@ -1265,7 +1269,7 @@ class PinnedAppsManager {
     if (!this.draggedItem) return;
 
     const items = this.container.querySelectorAll(
-      ".pinned-app-item:not(.dragging)"
+      ".pinned-app-item:not(.dragging)",
     );
     let targetApp = null;
     let targetElement = null;
@@ -1275,7 +1279,7 @@ class PinnedAppsManager {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       const distance = Math.sqrt(
-        Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+        Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2),
       );
 
       // If we're within the item bounds or close to center
@@ -1298,7 +1302,7 @@ class PinnedAppsManager {
 
     if (targetApp && targetElement && targetApp.id !== this.draggedItem.id) {
       const draggedIndex = this.apps.findIndex(
-        (a) => a.id === this.draggedItem.id
+        (a) => a.id === this.draggedItem.id,
       );
       const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
 
@@ -1354,7 +1358,7 @@ class PinnedAppsManager {
         "dragging",
         "drag-over",
         "shift-left",
-        "shift-right"
+        "shift-right",
       );
     });
 
@@ -1387,7 +1391,7 @@ class PinnedAppsManager {
         "dragging",
         "drag-over",
         "shift-left",
-        "shift-right"
+        "shift-right",
       );
     });
   }
@@ -1419,7 +1423,7 @@ class PinnedAppsManager {
 
     // Find indexes
     const draggedIndex = this.apps.findIndex(
-      (a) => a.id === this.draggedItem.id
+      (a) => a.id === this.draggedItem.id,
     );
     const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
 

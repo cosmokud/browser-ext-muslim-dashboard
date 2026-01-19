@@ -978,9 +978,16 @@ class SettingsManager {
     this.pinnedAppsPerRowValue.textContent = String(clamped);
 
     // Apply live change to the pinned apps grid width (for immediate preview)
-    const grid = document.getElementById("pinnedAppsGrid");
-    if (grid) {
-      grid.style.setProperty("--pinned-apps-per-row", String(clamped));
+    if (
+      window.dashboard &&
+      typeof window.dashboard.applyPinnedAppsSettings === "function"
+    ) {
+      window.dashboard.applyPinnedAppsSettings(clamped);
+    } else {
+      const grid = document.getElementById("pinnedAppsGrid");
+      if (grid) {
+        grid.style.setProperty("--pinned-apps-per-row", String(clamped));
+      }
     }
   }
 

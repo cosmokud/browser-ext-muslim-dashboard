@@ -3000,15 +3000,22 @@ body.moment-mode {
 
 /* Moment mode uses 3-column layout like sidebar mode */
 body.moment-mode .sidebar-layout {
+  --moment-sidebar-min: 280px;
+  --moment-middle-min: 520px;
+  --moment-layout-min-width: 1440px;
+  --moment-scale: min(1, calc(100vw / var(--moment-layout-min-width)));
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(600px, 2fr) minmax(
-      320px,
-      1fr
-    );
+  grid-template-columns:
+    minmax(var(--moment-sidebar-min), 1fr)
+    minmax(var(--moment-middle-min), 2fr)
+    minmax(var(--moment-sidebar-min), 1fr);
   grid-template-rows: 1fr;
   align-items: start;
-  width: 100%;
-  height: 100vh;
+  width: calc(100% / var(--moment-scale));
+  height: calc(100vh / var(--moment-scale));
+  margin: 0 auto;
+  transform: scale(var(--moment-scale));
+  transform-origin: top center;
 }
 
 body.moment-mode .sidebar-column {
@@ -3166,6 +3173,7 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-md);
+  padding-top: 0px;
   animation: none;
 }
 
@@ -3175,7 +3183,7 @@ body.moment-mode .moment-mode-left .prayer-times-card:hover {
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .card-header {
-  padding-bottom: var(--spacing-sm);
+  display: none !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card .card-title {

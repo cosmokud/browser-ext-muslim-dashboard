@@ -1886,16 +1886,24 @@ class MuslimDashboard {
     } catch (e) {}
   }
 
-  applyPinnedAppsSettings() {
+  applyPinnedAppsSettings(perRowOverride) {
     const settings = this.storage.getSettings();
-    const perRowRaw = Number(settings.pinnedAppsPerRow);
+    const perRowRaw = Number.isFinite(perRowOverride)
+      ? perRowOverride
+      : Number(settings.pinnedAppsPerRow);
     const perRow = Number.isFinite(perRowRaw)
       ? Math.min(20, Math.max(3, perRowRaw))
       : 10;
 
+    const appCount = Array.isArray(this.pinnedApps?.apps)
+      ? this.pinnedApps.apps.length
+      : 0;
+    const needsBuffer = appCount > 0 && appCount % perRow === 0;
+    const effectivePerRow = needsBuffer ? perRow + 1 : perRow;
+
     const grid = document.getElementById("pinnedAppsGrid");
     if (grid) {
-      grid.style.setProperty("--pinned-apps-per-row", String(perRow));
+      grid.style.setProperty("--pinned-apps-per-row", String(effectivePerRow));
     }
   }
 
