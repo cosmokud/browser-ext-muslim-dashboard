@@ -52,7 +52,7 @@ class SettingsManager {
     weather,
     flashcards,
     hadith,
-    adhkar
+    adhkar,
   ) {
     this.storage = storage;
     this.prayerTimes = prayerTimes;
@@ -84,7 +84,7 @@ class SettingsManager {
 
     // Location elements
     this.locationMethodRadios = document.querySelectorAll(
-      'input[name="locationMethod"]'
+      'input[name="locationMethod"]',
     );
     this.manualLocationFields = document.getElementById("manualLocationFields");
     this.cityInput = document.getElementById("cityInput");
@@ -134,7 +134,7 @@ class SettingsManager {
 
     // Prayer notification controls
     this.enablePrayerNotifications = document.getElementById(
-      "enablePrayerNotifications"
+      "enablePrayerNotifications",
     );
 
     this.notificationCheckboxes = {
@@ -200,29 +200,28 @@ class SettingsManager {
     this.customWidthValue = document.getElementById("customWidthValue");
     this.uiBlurPower = document.getElementById("uiBlurPower");
     this.uiBlurPowerValue = document.getElementById("uiBlurPowerValue");
-    this.exportSettingsBtn = document.getElementById("exportSettingsBtn");
     this.fullExportBtn = document.getElementById("fullExportBtn");
     this.importSettingsBtn = document.getElementById("importSettingsBtn");
     this.importSettingsInput = document.getElementById("importSettingsInput");
 
     // General: reset buttons
     this.resetWholeSettingsBtn = document.getElementById(
-      "resetWholeSettingsBtn"
+      "resetWholeSettingsBtn",
     );
     this.nukeAllDataBtn = document.getElementById("nukeAllDataBtn");
 
     // General: refresh default content
     this.refreshDefaultDataBtn = document.getElementById(
-      "refreshDefaultDataBtn"
+      "refreshDefaultDataBtn",
     );
 
     // Reset/Nuke confirmation modal
     this.resetNukeConfirmModal = document.getElementById(
-      "resetNukeConfirmModal"
+      "resetNukeConfirmModal",
     );
     this.resetNukeConfirmIcon = document.getElementById("resetNukeConfirmIcon");
     this.resetNukeConfirmTitle = document.getElementById(
-      "resetNukeConfirmTitle"
+      "resetNukeConfirmTitle",
     );
     this.resetNukeConfirmText = document.getElementById("resetNukeConfirmText");
     this.resetNukeCancelBtn = document.getElementById("resetNukeCancelBtn");
@@ -239,13 +238,13 @@ class SettingsManager {
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
-      "themeContainerWidthCustom"
+      "themeContainerWidthCustom",
     );
     this.themeCustomWidthGroup = document.getElementById(
-      "themeCustomWidthGroup"
+      "themeCustomWidthGroup",
     );
     this.themeCustomWidthValue = document.getElementById(
-      "themeCustomWidthValue"
+      "themeCustomWidthValue",
     );
 
     // Icon theme picker
@@ -253,13 +252,13 @@ class SettingsManager {
 
     // Custom searches import/export
     this.exportCustomSearchesBtn = document.getElementById(
-      "exportCustomSearchesBtn"
+      "exportCustomSearchesBtn",
     );
     this.importCustomSearchesBtn = document.getElementById(
-      "importCustomSearchesBtn"
+      "importCustomSearchesBtn",
     );
     this.importCustomSearchesInput = document.getElementById(
-      "importCustomSearchesInput"
+      "importCustomSearchesInput",
     );
 
     // Method angles display
@@ -269,7 +268,7 @@ class SettingsManager {
 
     // Heading settings elements
     this.greetingTypeRadios = document.querySelectorAll(
-      'input[name="greetingType"]'
+      'input[name="greetingType"]',
     );
     this.customGreetingGroup = document.getElementById("customGreetingGroup");
     this.customGreetingInput = document.getElementById("customGreetingInput");
@@ -280,18 +279,18 @@ class SettingsManager {
     this.greetingNight = document.getElementById("greetingNight");
     this.showClock = document.getElementById("showClock");
     this.clockFormatRadios = document.querySelectorAll(
-      'input[name="clockFormat"]'
+      'input[name="clockFormat"]',
     );
     this.showSeconds = document.getElementById("showSeconds");
     this.showAmPm = document.getElementById("showAmPm");
     this.clockStyleRadios = document.querySelectorAll(
-      'input[name="clockStyle"]'
+      'input[name="clockStyle"]',
     );
     this.showDate = document.getElementById("showDate");
     this.showIslamicEvents = document.getElementById("showIslamicEvents");
     this.dateFormatSelect = document.getElementById("dateFormatSelect");
     this.dateCalendarRadios = document.querySelectorAll(
-      'input[name="dateCalendar"]'
+      'input[name="dateCalendar"]',
     );
 
     // Component visibility elements
@@ -300,13 +299,13 @@ class SettingsManager {
     this.visibilitySearchBar = document.getElementById("visibilitySearchBar");
     this.visibilityQuotes = document.getElementById("visibilityQuotes");
     this.visibilityPrayerTimes = document.getElementById(
-      "visibilityPrayerTimes"
+      "visibilityPrayerTimes",
     );
     this.visibilityHijriCalendar = document.getElementById(
-      "visibilityHijriCalendar"
+      "visibilityHijriCalendar",
     );
     this.visibilityQiblaDirection = document.getElementById(
-      "visibilityQiblaDirection"
+      "visibilityQiblaDirection",
     );
     this.visibilityWeather = document.getElementById("visibilityWeather");
     this.visibilityLunarPhase = document.getElementById("visibilityLunarPhase");
@@ -317,91 +316,91 @@ class SettingsManager {
     this.visibilityTodoList = document.getElementById("visibilityTodoList");
     this.visibilityNotes = document.getElementById("visibilityNotes");
     this.visibilityPocketQuran = document.getElementById(
-      "visibilityPocketQuran"
+      "visibilityPocketQuran",
     );
     this.weatherUnitRadios = document.querySelectorAll(
-      'input[name="weatherUnit"]'
+      'input[name="weatherUnit"]',
     );
 
     // Quote layout style element
     this.quoteLayoutStyleSelect = document.getElementById(
-      "quoteLayoutStyleSelect"
+      "quoteLayoutStyleSelect",
     );
 
     // Compact weather elements
     this.compactWeatherEnabled = document.getElementById(
-      "compactWeatherEnabled"
+      "compactWeatherEnabled",
     );
     this.compactWeatherOptions = document.getElementById(
-      "compactWeatherOptions"
+      "compactWeatherOptions",
     );
     this.compactWeatherModeRadios = document.querySelectorAll(
-      'input[name="compactWeatherMode"]'
+      'input[name="compactWeatherMode"]',
     );
 
     // Weather tab elements
     this.weatherLocationModeRadios = document.querySelectorAll(
-      'input[name="weatherLocationMode"]'
+      'input[name="weatherLocationMode"]',
     );
     this.weatherManualLocationFields = document.getElementById(
-      "weatherManualLocationFields"
+      "weatherManualLocationFields",
     );
     this.weatherCityInput = document.getElementById("weatherCityInput");
     this.weatherLatitudeInput = document.getElementById("weatherLatitudeInput");
     this.weatherLongitudeInput = document.getElementById(
-      "weatherLongitudeInput"
+      "weatherLongitudeInput",
     );
     this.weatherSearchCityBtn = document.getElementById("weatherSearchCityBtn");
     this.weatherPasteCoordsBtn = document.getElementById(
-      "weatherPasteCoordsBtn"
+      "weatherPasteCoordsBtn",
     );
     this.weatherCitySearchResults = document.getElementById(
-      "weatherCitySearchResults"
+      "weatherCitySearchResults",
     );
 
     // Fasting Times tab elements
     this.fastingShowMonday = document.getElementById("fastingShowMonday");
     this.fastingShowThursday = document.getElementById("fastingShowThursday");
     this.fastingShowAyyamAlBeed = document.getElementById(
-      "fastingShowAyyamAlBeed"
+      "fastingShowAyyamAlBeed",
     );
     this.fastingShowDhuAlHijjah = document.getElementById(
-      "fastingShowDhuAlHijjah"
+      "fastingShowDhuAlHijjah",
     );
     this.fastingShowArafah = document.getElementById("fastingShowArafah");
     this.fastingShowRamadan = document.getElementById("fastingShowRamadan");
     this.fastingDhuAlHijjahWithinDays = document.getElementById(
-      "fastingDhuAlHijjahWithinDays"
+      "fastingDhuAlHijjahWithinDays",
     );
     this.fastingArafahWithinDays = document.getElementById(
-      "fastingArafahWithinDays"
+      "fastingArafahWithinDays",
     );
     this.fastingNotificationsEnabled = document.getElementById(
-      "fastingNotificationsEnabled"
+      "fastingNotificationsEnabled",
     );
     this.fastingNotificationMinutesBefore = document.getElementById(
-      "fastingNotificationMinutesBefore"
+      "fastingNotificationMinutesBefore",
     );
     this.fastingNotifyMonday = document.getElementById("fastingNotifyMonday");
     this.fastingNotifyThursday = document.getElementById(
-      "fastingNotifyThursday"
+      "fastingNotifyThursday",
     );
     this.fastingNotifyAyyamAlBeed = document.getElementById(
-      "fastingNotifyAyyamAlBeed"
+      "fastingNotifyAyyamAlBeed",
     );
     this.fastingNotifyDhuAlHijjah = document.getElementById(
-      "fastingNotifyDhuAlHijjah"
+      "fastingNotifyDhuAlHijjah",
     );
     this.fastingNotifyArafah = document.getElementById("fastingNotifyArafah");
     this.fastingNotifyRamadan = document.getElementById("fastingNotifyRamadan");
     this.fastingNotificationToggles = document.getElementById(
-      "fastingNotificationToggles"
+      "fastingNotificationToggles",
     );
 
     // Pinned Apps tab elements
     this.pinnedAppsPerRow = document.getElementById("pinnedAppsPerRow");
     this.pinnedAppsPerRowValue = document.getElementById(
-      "pinnedAppsPerRowValue"
+      "pinnedAppsPerRowValue",
     );
 
     // Notes tab elements
@@ -412,47 +411,47 @@ class SettingsManager {
 
     // Pocket Quran tab elements
     this.pocketQuranArabicSize = document.getElementById(
-      "pocketQuranArabicSize"
+      "pocketQuranArabicSize",
     );
     this.pocketQuranArabicSizeValue = document.getElementById(
-      "pocketQuranArabicSizeSettingValue"
+      "pocketQuranArabicSizeSettingValue",
     );
     this.pocketQuranTranslationSize = document.getElementById(
-      "pocketQuranTranslationSize"
+      "pocketQuranTranslationSize",
     );
     this.pocketQuranTranslationSizeValue = document.getElementById(
-      "pocketQuranTranslationSizeSettingValue"
+      "pocketQuranTranslationSizeSettingValue",
     );
     this.pocketQuranTranslationPickerBtn = document.getElementById(
-      "pocketQuranTranslationPickerBtn"
+      "pocketQuranTranslationPickerBtn",
     );
     this.pocketQuranTranslationPickerLabel = document.getElementById(
-      "pocketQuranTranslationPickerLabel"
+      "pocketQuranTranslationPickerLabel",
     );
     this.pocketQuranTranslationSelect = document.getElementById(
-      "pocketQuranTranslationSelect"
+      "pocketQuranTranslationSelect",
     );
 
     this.pocketQuranTajweedColors = document.getElementById(
-      "pocketQuranTajweedColors"
+      "pocketQuranTajweedColors",
     );
 
     this.pocketQuranResetAllTajweedColorsBtn = document.getElementById(
-      "pocketQuranResetAllTajweedColorsBtn"
+      "pocketQuranResetAllTajweedColorsBtn",
     );
 
     // Pocket Quran bookmark elements
     this.pocketQuranExportBookmarksBtn = document.getElementById(
-      "pocketQuranExportBookmarksBtn"
+      "pocketQuranExportBookmarksBtn",
     );
     this.pocketQuranImportBookmarksBtn = document.getElementById(
-      "pocketQuranImportBookmarksBtn"
+      "pocketQuranImportBookmarksBtn",
     );
     this.pocketQuranImportBookmarksInput = document.getElementById(
-      "pocketQuranImportBookmarksInput"
+      "pocketQuranImportBookmarksInput",
     );
     this.pocketQuranBookmarkStats = document.getElementById(
-      "pocketQuranBookmarkStats"
+      "pocketQuranBookmarkStats",
     );
   }
 
@@ -529,7 +528,7 @@ class SettingsManager {
 
     // Location settings
     const locationRadio = document.querySelector(
-      `input[name="locationMethod"][value="${settings.locationMethod}"]`
+      `input[name="locationMethod"][value="${settings.locationMethod}"]`,
     );
     if (locationRadio) locationRadio.checked = true;
     this.toggleManualLocation(settings.locationMethod === "manual");
@@ -582,13 +581,13 @@ class SettingsManager {
       parseInt(pn.beforeMinutes, 10),
       0,
       180,
-      10
+      10,
     );
     const defaultAfterMinutes = this.clampNumber(
       parseInt(pn.afterMinutes, 10),
       0,
       180,
-      0
+      0,
     );
 
     const perPrayerRaw =
@@ -601,8 +600,8 @@ class SettingsManager {
         entry && typeof entry === "object"
           ? entry.enabled === true
           : typeof entry === "boolean"
-          ? entry === true
-          : settings.prayerVisibility?.[prayer] === true;
+            ? entry === true
+            : settings.prayerVisibility?.[prayer] === true;
 
       if (this.notificationCheckboxes[prayer]) {
         this.notificationCheckboxes[prayer].checked = enabled;
@@ -614,7 +613,7 @@ class SettingsManager {
               parseInt(entry.beforeMinutes, 10),
               0,
               180,
-              defaultBeforeMinutes
+              defaultBeforeMinutes,
             )
           : defaultBeforeMinutes;
       const afterMinutes =
@@ -623,7 +622,7 @@ class SettingsManager {
               parseInt(entry.afterMinutes, 10),
               0,
               180,
-              defaultAfterMinutes
+              defaultAfterMinutes,
             )
           : defaultAfterMinutes;
 
@@ -646,7 +645,7 @@ class SettingsManager {
     const quoteLayoutStyle = settings.quoteLayoutStyle || "classic";
     if (this.quoteLayoutStyleSelect) {
       const hasOption = this.quoteLayoutStyleSelect.querySelector(
-        `option[value="${quoteLayoutStyle}"]`
+        `option[value="${quoteLayoutStyle}"]`,
       );
       this.quoteLayoutStyleSelect.value = hasOption
         ? quoteLayoutStyle
@@ -676,7 +675,7 @@ class SettingsManager {
           settings.containerWidthCustom,
           20,
           98,
-          70
+          70,
         );
         this.containerWidthCustom.value = String(clamped);
       }
@@ -720,7 +719,7 @@ class SettingsManager {
       const hasOption =
         Number.isFinite(desired) &&
         this.pocketQuranTranslationSelect.querySelector(
-          `option[value="${desired}"]`
+          `option[value="${desired}"]`,
         );
       this.pocketQuranTranslationSelect.value = hasOption
         ? String(desired)
@@ -741,7 +740,7 @@ class SettingsManager {
     }
     const compactWeatherMode = settings.compactWeatherMode || "simple";
     const compactWeatherModeRadio = document.querySelector(
-      `input[name="compactWeatherMode"][value="${compactWeatherMode}"]`
+      `input[name="compactWeatherMode"][value="${compactWeatherMode}"]`,
     );
     if (compactWeatherModeRadio) compactWeatherModeRadio.checked = true;
 
@@ -878,7 +877,7 @@ class SettingsManager {
       parseInt(this.pocketQuranArabicSize.value, 10),
       8,
       144,
-      32
+      32,
     );
     this.pocketQuranArabicSize.value = String(clamped);
     this.pocketQuranArabicSizeValue.textContent = `${clamped}px`;
@@ -894,7 +893,7 @@ class SettingsManager {
       parseInt(this.pocketQuranTranslationSize.value, 10),
       8,
       144,
-      18
+      18,
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
@@ -951,7 +950,7 @@ class SettingsManager {
           this.updatePocketQuranBookmarkStats();
           this.showToast(
             `Imported ${result.categoriesCount} categories, ${result.bookmarksCount} bookmarks`,
-            "success"
+            "success",
           );
         } else {
           this.showToast(`Import failed: ${result.error}`, "error");
@@ -973,7 +972,7 @@ class SettingsManager {
       parseInt(this.pinnedAppsPerRow.value, 10),
       3,
       20,
-      10
+      10,
     );
     this.pinnedAppsPerRow.value = String(clamped);
     this.pinnedAppsPerRowValue.textContent = String(clamped);
@@ -1022,7 +1021,7 @@ class SettingsManager {
     // Greeting type
     const useCustom = heading.useCustomGreeting || false;
     const greetingRadio = document.querySelector(
-      `input[name="greetingType"][value="${useCustom ? "custom" : "auto"}"]`
+      `input[name="greetingType"][value="${useCustom ? "custom" : "auto"}"]`,
     );
     if (greetingRadio) greetingRadio.checked = true;
     this.toggleCustomGreeting(useCustom);
@@ -1053,7 +1052,7 @@ class SettingsManager {
 
     const clockFormat = heading.clockFormat || "24h";
     const clockFormatRadio = document.querySelector(
-      `input[name="clockFormat"][value="${clockFormat}"]`
+      `input[name="clockFormat"][value="${clockFormat}"]`,
     );
     if (clockFormatRadio) clockFormatRadio.checked = true;
     this.toggleAmPmOption(clockFormat === "12h");
@@ -1064,7 +1063,7 @@ class SettingsManager {
 
     const clockStyle = heading.clockStyle || "default";
     const clockStyleRadio = document.querySelector(
-      `input[name="clockStyle"][value="${clockStyle}"]`
+      `input[name="clockStyle"][value="${clockStyle}"]`,
     );
     if (clockStyleRadio) clockStyleRadio.checked = true;
 
@@ -1075,14 +1074,14 @@ class SettingsManager {
     if (this.dateFormatSelect) {
       const normalizedDateFormat = normalizeHeadingDateFormat(
         heading.dateFormat || "full",
-        heading.showWeekday
+        heading.showWeekday,
       );
       this.dateFormatSelect.value = normalizedDateFormat;
     }
 
     const dateCalendar = heading.dateCalendar || "hijri";
     const dateCalendarRadio = document.querySelector(
-      `input[name="dateCalendar"][value="${dateCalendar}"]`
+      `input[name="dateCalendar"][value="${dateCalendar}"]`,
     );
     if (dateCalendarRadio) dateCalendarRadio.checked = true;
   }
@@ -1188,13 +1187,13 @@ class SettingsManager {
   loadWeatherSettings(settings) {
     const weatherUnit = settings.weatherUnit || "celsius";
     const weatherUnitRadio = document.querySelector(
-      `input[name="weatherUnit"][value="${weatherUnit}"]`
+      `input[name="weatherUnit"][value="${weatherUnit}"]`,
     );
     if (weatherUnitRadio) weatherUnitRadio.checked = true;
 
     const weatherLocationMode = settings.weatherLocationMode || "dashboard";
     const modeRadio = document.querySelector(
-      `input[name="weatherLocationMode"][value="${weatherLocationMode}"]`
+      `input[name="weatherLocationMode"][value="${weatherLocationMode}"]`,
     );
     if (modeRadio) modeRadio.checked = true;
     this.toggleWeatherManualLocation(weatherLocationMode === "custom");
@@ -1242,7 +1241,7 @@ class SettingsManager {
         fasting.dhuAlHijjahWithinDays,
         7,
         365,
-        30
+        30,
       );
       this.fastingDhuAlHijjahWithinDays.value = String(clamped);
     }
@@ -1333,18 +1332,18 @@ class SettingsManager {
               this.weatherCityInput.value = result.city;
             if (this.weatherLatitudeInput)
               this.weatherLatitudeInput.value = Number(result.latitude).toFixed(
-                4
+                4,
               );
             if (this.weatherLongitudeInput)
               this.weatherLongitudeInput.value = Number(
-                result.longitude
+                result.longitude,
               ).toFixed(4);
 
             const pickedLabel = result.fullName
               ? `${result.city} (${result.fullName})`
               : result.city;
             this.showToast(`Selected: ${pickedLabel}`, "success");
-          }
+          },
         );
         this.showToast("Select a city from the list below.", "info");
       } else {
@@ -1399,7 +1398,7 @@ class SettingsManager {
     for (const candidate of candidates) {
       // Google Maps URL often includes: @lat,lng,zoom
       const atMatch = candidate.match(
-        /@\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/
+        /@\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/,
       );
       if (atMatch) {
         const normalized = this._normalizeLatLng(atMatch[1], atMatch[2]);
@@ -1408,7 +1407,7 @@ class SettingsManager {
 
       // Google Maps data format sometimes includes: !3dLAT!4dLNG
       const dataMatch = candidate.match(
-        /!3d\s*(-?\d+(?:\.\d+)?)\s*!4d\s*(-?\d+(?:\.\d+)?)/
+        /!3d\s*(-?\d+(?:\.\d+)?)\s*!4d\s*(-?\d+(?:\.\d+)?)/,
       );
       if (dataMatch) {
         const normalized = this._normalizeLatLng(dataMatch[1], dataMatch[2]);
@@ -1417,7 +1416,7 @@ class SettingsManager {
 
       // Query params: q=lat,lng or ll=lat,lng or center=lat,lng
       const paramMatch = candidate.match(
-        /[?&](?:q|query|ll|center)=\s*(-?\d+(?:\.\d+)?)(?:%2C|,|\s)+\s*(-?\d+(?:\.\d+)?)/i
+        /[?&](?:q|query|ll|center)=\s*(-?\d+(?:\.\d+)?)(?:%2C|,|\s)+\s*(-?\d+(?:\.\d+)?)/i,
       );
       if (paramMatch) {
         const normalized = this._normalizeLatLng(paramMatch[1], paramMatch[2]);
@@ -1468,7 +1467,7 @@ class SettingsManager {
 
     // Fallback for environments that block clipboard reads
     const manual = window.prompt(
-      "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)"
+      "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)",
     );
     return manual || "";
   }
@@ -1491,7 +1490,7 @@ class SettingsManager {
     if (!latLng) {
       this.showToast(
         "Could not parse coordinates. Copy a Google Maps link or 'lat, lng' format.",
-        "error"
+        "error",
       );
       return;
     }
@@ -1506,7 +1505,7 @@ class SettingsManager {
     if (!latLng) {
       this.showToast(
         "Could not parse coordinates. Copy a Google Maps link or 'lat, lng' format.",
-        "error"
+        "error",
       );
       return;
     }
@@ -1514,7 +1513,7 @@ class SettingsManager {
     this._applyLatLngToInputs(
       this.weatherLatitudeInput,
       this.weatherLongitudeInput,
-      latLng
+      latLng,
     );
     this.showToast("Coordinates pasted into Weather settings.", "success");
   }
@@ -1593,7 +1592,7 @@ class SettingsManager {
         parseInt(this.containerWidthCustom.value, 10),
         20,
         98,
-        70
+        70,
       );
       this.containerWidthCustom.value = String(clamped);
       this.customWidthValue.textContent = clamped + "%";
@@ -1606,7 +1605,7 @@ class SettingsManager {
         parseInt(this.uiBlurPower.value, 10),
         0,
         200,
-        100
+        100,
       );
       this.uiBlurPower.value = String(clamped);
       this.uiBlurPowerValue.textContent = clamped + "%";
@@ -1618,7 +1617,7 @@ class SettingsManager {
     const multiplier = clamped / 100;
     document.documentElement.style.setProperty(
       "--ui-blur-multiplier",
-      String(multiplier)
+      String(multiplier),
     );
 
     // Notify components that render UI outside their card's DOM subtree
@@ -1627,7 +1626,7 @@ class SettingsManager {
       document.dispatchEvent(
         new CustomEvent("md:ui-blur-update", {
           detail: { multiplier },
-        })
+        }),
       );
     } catch (e) {}
   }
@@ -1670,7 +1669,7 @@ class SettingsManager {
 
     const iconHtml = `<span class="refresh-cw-icon" aria-hidden="true">${this._getIcon(
       "🔄",
-      { size: 16, inline: true }
+      { size: 16, inline: true },
     )}</span>`;
 
     btn.classList.add("is-refreshing");
@@ -1720,7 +1719,7 @@ class SettingsManager {
 
     // Load current icon theme setting
     const settings = this.storage.getSettings();
-    const currentIconTheme = settings.iconTheme || "emoji";
+    const currentIconTheme = settings.iconTheme || "colorful";
     this.updateIconThemePickerState(currentIconTheme);
 
     // Add click handlers to icon theme cards
@@ -1789,7 +1788,7 @@ class SettingsManager {
           settings.containerWidthCustom,
           20,
           98,
-          70
+          70,
         );
         this.themeContainerWidthCustom.value = String(clamped);
       }
@@ -1831,7 +1830,7 @@ class SettingsManager {
         parseInt(this.themeBlurPower.value, 10),
         0,
         200,
-        100
+        100,
       );
       this.themeBlurPower.value = String(clamped);
       this.themeBlurPowerValue.textContent = clamped + "%";
@@ -1856,7 +1855,7 @@ class SettingsManager {
         parseInt(this.themeContainerWidthCustom.value, 10),
         20,
         98,
-        70
+        70,
       );
       this.themeContainerWidthCustom.value = String(clamped);
       this.themeCustomWidthValue.textContent = clamped + "%";
@@ -1907,8 +1906,8 @@ class SettingsManager {
 
       html += `
         <div class="theme-card${isActive ? " active" : ""}${
-        isCustomizable ? " customizable" : ""
-      }" data-theme="${id}" data-customizable="${isCustomizable}">
+          isCustomizable ? " customizable" : ""
+        }" data-theme="${id}" data-customizable="${isCustomizable}">
           <div class="theme-card-preview">
             <div class="theme-preview-primary" style="background: ${previewPrimary}"></div>
             <div class="theme-preview-accent" style="background: ${previewAccent}"></div>
@@ -1925,7 +1924,7 @@ class SettingsManager {
             isCustomizable
               ? `<button class="theme-card-customize" type="button" title="Customize palette"><span aria-hidden="true">${this._getIcon(
                   "🎨",
-                  { size: 16 }
+                  { size: 16 },
                 )}</span></button>`
               : ""
           }
@@ -2062,7 +2061,7 @@ class SettingsManager {
         bodyBg: bgEl.value,
         glassTint: glassTintEl.value,
       },
-      save
+      save,
     );
 
     this.renderThemePickerGrid();
@@ -2171,22 +2170,22 @@ class SettingsManager {
 
     if (paletteOverlay) {
       this._bindOverlayCloseBehavior(paletteOverlay, () =>
-        this.closeThemePaletteModal()
+        this.closeThemePaletteModal(),
       );
     }
     if (paletteClose) {
       paletteClose.addEventListener("click", () =>
-        this.closeThemePaletteModal()
+        this.closeThemePaletteModal(),
       );
     }
     if (paletteDone) {
       paletteDone.addEventListener("click", () =>
-        this.closeThemePaletteModal()
+        this.closeThemePaletteModal(),
       );
     }
     if (paletteReset) {
       paletteReset.addEventListener("click", () =>
-        this.resetThemePaletteToDefaults(true)
+        this.resetThemePaletteToDefaults(true),
       );
     }
     if (modeDark) {
@@ -2216,7 +2215,7 @@ class SettingsManager {
         this.toggleThemeCustomWidth(e.target.value === "custom");
         this.applyContainerWidth(
           e.target.value,
-          parseInt(this.themeContainerWidthCustom?.value, 10) || 70
+          parseInt(this.themeContainerWidthCustom?.value, 10) || 70,
         );
       });
     }
@@ -2229,7 +2228,7 @@ class SettingsManager {
           this.themeContainerWidth?.value === "custom"
             ? "custom"
             : this.themeContainerWidth?.value,
-          parseInt(this.themeContainerWidthCustom.value, 10)
+          parseInt(this.themeContainerWidthCustom.value, 10),
         );
       });
     }
@@ -2278,7 +2277,7 @@ class SettingsManager {
       parseInt(this.themeBlurPower?.value, 10),
       0,
       200,
-      100
+      100,
     );
 
     // Save container width (now from Themes panel)
@@ -2288,7 +2287,7 @@ class SettingsManager {
         parseInt(this.themeContainerWidthCustom?.value, 10),
         20,
         98,
-        70
+        70,
       );
     }
 
@@ -2349,7 +2348,7 @@ class SettingsManager {
             }" class="custom-bg-thumb" />
             <button class="custom-bg-remove" data-index="${index}" title="Remove">×</button>
           </div>
-        `
+        `,
           )
           .join("");
 
@@ -2419,78 +2418,10 @@ class SettingsManager {
   }
 
   /**
-   * Export all settings
+   * Export all settings (alias for exportFullExport for backward compatibility)
    */
   exportAllSettings() {
-    const settings = this.storage.getSettings();
-    const todos = this.storage.getTodos();
-    const userQuotes = this.storage.getUserQuotes();
-    const pinnedApps = this.storage.getPinnedApps();
-    const lastLocation = this.storage.getLastLocation();
-
-    const notes = this.storage.getNotes
-      ? this.storage.getNotes()
-      : this.storage.get("notes", []);
-
-    const notesActiveId = this.storage.get("notes_active", null);
-    const notesPage = this.storage.get("notes_page", 1);
-
-    const pocketQuranBookmarkCategories = this.storage.get(
-      "pocketQuran_bookmarkCategories",
-      []
-    );
-    const pocketQuranBookmarks = this.storage.get("pocketQuran_bookmarks", []);
-
-    const customSearches = this.storage.getCustomSearches
-      ? this.storage.getCustomSearches()
-      : this.storage.get("customSearches", []);
-
-    const customSearchLastId = this.storage.getLastCustomSearchId
-      ? this.storage.getLastCustomSearchId()
-      : this.storage.get("customSearchLastId", null);
-
-    const exportData = {
-      version: 2,
-      exportDate: new Date().toISOString(),
-      settings: settings,
-      todos: todos,
-      userQuotes: userQuotes,
-      pinnedApps: pinnedApps,
-      lastLocation: lastLocation,
-      customSearches: Array.isArray(customSearches) ? customSearches : [],
-      customSearchLastId: customSearchLastId ?? null,
-
-      // Notes
-      notes: Array.isArray(notes) ? notes : [],
-      notesActiveId: notesActiveId ?? null,
-      notesPage: Number.isFinite(Number(notesPage)) ? Number(notesPage) : 1,
-
-      // Pocket Quran bookmarks
-      pocketQuranBookmarks: {
-        categories: Array.isArray(pocketQuranBookmarkCategories)
-          ? pocketQuranBookmarkCategories
-          : [],
-        bookmarks: Array.isArray(pocketQuranBookmarks)
-          ? pocketQuranBookmarks
-          : [],
-      },
-    };
-
-    const json = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `muslim-dashboard-backup-${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    this.showToast("Settings exported successfully!", "success");
+    this.exportFullExport();
   }
 
   /**
@@ -2540,12 +2471,12 @@ class SettingsManager {
       const searches = Array.isArray(data)
         ? data
         : Array.isArray(data?.searches)
-        ? data.searches
-        : null;
+          ? data.searches
+          : null;
 
       if (!searches) {
         throw new Error(
-          "Invalid format: expected an array or { searches: [] }"
+          "Invalid format: expected an array or { searches: [] }",
         );
       }
 
@@ -2556,7 +2487,7 @@ class SettingsManager {
             typeof s.name === "string" &&
             s.name.trim() !== "" &&
             typeof s.url === "string" &&
-            s.url.trim() !== ""
+            s.url.trim() !== "",
         )
         .map((s) => ({
           id: s.id ?? Date.now() + Math.random(),
@@ -2589,7 +2520,7 @@ class SettingsManager {
    * Export custom content (Flashcards sets, Custom backgrounds, Custom quotes)
    */
   exportFullExport() {
-    // Base payload = same as "Export Settings" (so Full Export is a strict superset)
+    // Complete export of ALL user data and settings
     const settings = this.storage.getSettings();
     const todos = this.storage.getTodos();
     const userQuotes = this.storage.getUserQuotes();
@@ -2612,7 +2543,7 @@ class SettingsManager {
 
     const pocketQuranBookmarkCategories = this.storage.get(
       "pocketQuran_bookmarkCategories",
-      []
+      [],
     );
     const pocketQuranBookmarks = this.storage.get("pocketQuran_bookmarks", []);
 
@@ -2630,23 +2561,31 @@ class SettingsManager {
       stickyNotesVisible = null;
     }
 
-    // Extra payload = custom content not covered by settings export (custom flashcard sets)
+    // Custom backgrounds
     const customBackgrounds = Array.isArray(settings.customBackgrounds)
       ? settings.customBackgrounds
       : [];
 
-    const sets = this.flashcards?.getSets
+    // Flashcard sets - export ALL sets (including defaults with user progress)
+    const allFlashcardSets = this.flashcards?.getSets
       ? this.flashcards.getSets()
       : this.storage.get("flashcardSets", []);
 
-    const protectedIds =
+    const flashcardProtectedIds =
       typeof FlashcardManager !== "undefined" &&
       Array.isArray(FlashcardManager.PROTECTED_SET_IDS)
         ? FlashcardManager.PROTECTED_SET_IDS
-        : ["default"];
+        : [
+            "default_top300wordforms",
+            "default_99names_ar",
+            "default_99names_en",
+          ];
 
-    const customSets = (Array.isArray(sets) ? sets : [])
-      .filter((s) => s && s.id && !protectedIds.includes(s.id))
+    // Separate custom sets and protected set references
+    const customFlashcardSets = (
+      Array.isArray(allFlashcardSets) ? allFlashcardSets : []
+    )
+      .filter((s) => s && s.id && !flashcardProtectedIds.includes(s.id))
       .map((s) => ({
         id: String(s.id),
         name: String(s.name || "Imported").slice(0, 40),
@@ -2662,8 +2601,14 @@ class SettingsManager {
           : [],
       }));
 
-    // Adhkar custom sets (JSON)
-    const adhkarSets = this.adhkar?.getSets
+    // Flashcard card index positions (remembers which card user was on)
+    const flashcardCardIndexBySet = this.storage.get(
+      "flashcardCardIndexBySet",
+      {},
+    );
+
+    // Adhkar sets - export custom sets
+    const allAdhkarSets = this.adhkar?.getSets
       ? this.adhkar.getSets()
       : this.storage.get("adhkarSets", []);
 
@@ -2677,7 +2622,7 @@ class SettingsManager {
             "default_adhkar_general",
           ];
 
-    const customAdhkarSets = (Array.isArray(adhkarSets) ? adhkarSets : [])
+    const customAdhkarSets = (Array.isArray(allAdhkarSets) ? allAdhkarSets : [])
       .filter((s) => s && s.id && !adhkarProtectedIds.includes(s.id))
       .map((s) => ({
         id: String(s.id),
@@ -2693,7 +2638,7 @@ class SettingsManager {
                     c.romanization ||
                     c.english ||
                     c.title ||
-                    c.reference)
+                    c.reference),
               )
               .map((c) => ({
                 title: String(c.title || ""),
@@ -2710,9 +2655,51 @@ class SettingsManager {
           : [],
       }));
 
+    // Adhkar card index positions
+    const adhkarCardIndexBySet = this.storage.get("adhkarCardIndexBySet", {});
+
+    // Hadith sets - export custom sets
+    const allHadithSets = this.hadith?.getSets
+      ? this.hadith.getSets()
+      : this.storage.get("hadithSets", []);
+
+    const hadithProtectedIds =
+      typeof HadithManager !== "undefined" &&
+      Array.isArray(HadithManager.PROTECTED_SET_IDS)
+        ? HadithManager.PROTECTED_SET_IDS
+        : ["default_hadith_nawawi40", "default_hadith_random200"];
+
+    const customHadithSets = (Array.isArray(allHadithSets) ? allHadithSets : [])
+      .filter((s) => s && s.id && !hadithProtectedIds.includes(s.id))
+      .map((s) => ({
+        id: String(s.id),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || null,
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.text || c.title || c.narrator))
+              .map((c) => ({
+                title: String(c.title || ""),
+                text: String(c.text || ""),
+                narrator: String(c.narrator || ""),
+                source: String(c.source || ""),
+                grade: String(c.grade || ""),
+                arabicText: String(c.arabicText || ""),
+                reference: String(c.reference || ""),
+                book: String(c.book || ""),
+                chapter: String(c.chapter || ""),
+                number: c.number ?? null,
+              }))
+          : [],
+      }));
+
+    // Hadith card index positions
+    const hadithCardIndexBySet = this.storage.get("hadithCardIndexBySet", {});
+
     const exportData = {
       exportType: "full",
-      version: 2,
+      version: 3,
       exportDate: new Date().toISOString(),
       settings,
       todos,
@@ -2739,24 +2726,37 @@ class SettingsManager {
           : [],
       },
 
-      // Additive / full-export-only fields
+      // Flashcards - custom sets only (defaults are auto-loaded)
       flashcards: {
         activeSetId:
           this.flashcards?.getActiveSetId?.() ||
           settings.flashcards?.activeSetId ||
           null,
-        sets: customSets,
+        sets: customFlashcardSets,
+        cardIndexBySet: flashcardCardIndexBySet,
       },
 
+      // Adhkar - custom sets only (defaults are auto-loaded)
       adhkar: {
         activeSetId:
           this.adhkar?.getActiveSetId?.() ||
           settings.adhkar?.activeSetId ||
           null,
         sets: customAdhkarSets,
+        cardIndexBySet: adhkarCardIndexBySet,
       },
 
-      // Kept for clarity/backward-compat (also included within settings.customBackgrounds)
+      // Hadith - custom sets only (defaults are auto-loaded)
+      hadith: {
+        activeSetId:
+          this.hadith?.getActiveSetId?.() ||
+          settings.hadith?.activeSetId ||
+          null,
+        sets: customHadithSets,
+        cardIndexBySet: hadithCardIndexBySet,
+      },
+
+      // Custom backgrounds (also in settings.customBackgrounds but kept for clarity)
       customBackgrounds,
 
       // Sticky Notes (not prefixed under StorageManager)
@@ -2863,7 +2863,7 @@ class SettingsManager {
         if (typeof data.stickyNotes.visible === "boolean") {
           localStorage.setItem(
             "stickyNotesVisible",
-            String(data.stickyNotes.visible)
+            String(data.stickyNotes.visible),
           );
         }
       } catch (e) {
@@ -2946,7 +2946,7 @@ class SettingsManager {
     // Prepend protected default sets in their canonical order and truncate to maxSets
     this.storage.set(
       "flashcardSets",
-      [...protectedSetsOrdered, ...cleanedCustomSets].slice(0, maxSets)
+      [...protectedSetsOrdered, ...cleanedCustomSets].slice(0, maxSets),
     );
 
     // Flashcards active set (optional)
@@ -2998,12 +2998,12 @@ class SettingsManager {
       ? adhkarDefaultDefs
           .map((def) =>
             (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).find(
-              (s) => s && s.id === def.id
-            )
+              (s) => s && s.id === def.id,
+            ),
           )
           .filter(Boolean)
       : (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).filter(
-          (s) => s && s.id && adhkarProtectedIds.includes(s.id)
+          (s) => s && s.id && adhkarProtectedIds.includes(s.id),
         );
 
     const incomingAdhkarSetsRaw =
@@ -3030,7 +3030,7 @@ class SettingsManager {
                     c.romanization ||
                     c.english ||
                     c.title ||
-                    c.reference)
+                    c.reference),
               )
               .map((c) => ({
                 title: String(c.title || ""),
@@ -3064,6 +3064,116 @@ class SettingsManager {
       ...(settings.adhkar || {}),
       activeSetId: validActiveAdhkarId,
     };
+
+    // Hadith (import custom sets; defaults will be restored by HadithManager.ensureDefaultSets on reload)
+    const maxHadithSets =
+      typeof HadithManager !== "undefined" &&
+      typeof HadithManager.MAX_SETS === "number"
+        ? HadithManager.MAX_SETS
+        : 100;
+
+    const existingHadithSets = this.storage.get("hadithSets", []);
+
+    const hadithProtectedIds =
+      typeof HadithManager !== "undefined" &&
+      Array.isArray(HadithManager.PROTECTED_SET_IDS)
+        ? HadithManager.PROTECTED_SET_IDS
+        : ["default_hadith_nawawi40", "default_hadith_random200"];
+
+    const hadithDefaultDefs =
+      typeof HadithManager !== "undefined" &&
+      Array.isArray(HadithManager.DEFAULT_SETS)
+        ? HadithManager.DEFAULT_SETS
+        : [];
+
+    const keptProtectedHadithSets = hadithDefaultDefs.length
+      ? hadithDefaultDefs
+          .map((def) =>
+            (Array.isArray(existingHadithSets) ? existingHadithSets : []).find(
+              (s) => s && s.id === def.id,
+            ),
+          )
+          .filter(Boolean)
+      : (Array.isArray(existingHadithSets) ? existingHadithSets : []).filter(
+          (s) => s && s.id && hadithProtectedIds.includes(s.id),
+        );
+
+    const incomingHadithSetsRaw =
+      data.hadith?.sets ||
+      data.hadithSets ||
+      (Array.isArray(data.hadith) ? data.hadith : []);
+    const incomingHadithSets = Array.isArray(incomingHadithSetsRaw)
+      ? incomingHadithSetsRaw
+      : [];
+
+    const cleanedCustomHadithSets = incomingHadithSets
+      .filter((s) => s && s.id && !hadithProtectedIds.includes(s.id))
+      .map((s, i) => ({
+        id: String(s.id || `set_${Date.now()}_${i}`),
+        name: String(s.name || "Imported").slice(0, 40),
+        createdAt: s.createdAt || new Date().toISOString(),
+        updatedAt: s.updatedAt || null,
+        cards: Array.isArray(s.cards)
+          ? s.cards
+              .filter((c) => c && (c.text || c.title || c.narrator))
+              .map((c) => ({
+                title: String(c.title || ""),
+                text: String(c.text || ""),
+                narrator: String(c.narrator || ""),
+                source: String(c.source || ""),
+                grade: String(c.grade || ""),
+                arabicText: String(c.arabicText || ""),
+                reference: String(c.reference || ""),
+                book: String(c.book || ""),
+                chapter: String(c.chapter || ""),
+                number: c.number ?? null,
+              }))
+          : [],
+      }))
+      .slice(0, Math.max(0, maxHadithSets - keptProtectedHadithSets.length));
+
+    const mergedHadithSets = [
+      ...keptProtectedHadithSets,
+      ...cleanedCustomHadithSets,
+    ].slice(0, maxHadithSets);
+    this.storage.set("hadithSets", mergedHadithSets);
+
+    const incomingHadithActiveSetId = data.hadith?.activeSetId;
+    const validActiveHadithId =
+      typeof incomingHadithActiveSetId === "string" &&
+      mergedHadithSets.some((s) => s && s.id === incomingHadithActiveSetId)
+        ? incomingHadithActiveSetId
+        : mergedHadithSets[0]?.id || null;
+
+    settings.hadith = {
+      ...(settings.hadith || {}),
+      activeSetId: validActiveHadithId,
+    };
+
+    // Import card index positions (which card user was on in each set)
+    if (
+      data.flashcards?.cardIndexBySet &&
+      typeof data.flashcards.cardIndexBySet === "object"
+    ) {
+      this.storage.set(
+        "flashcardCardIndexBySet",
+        data.flashcards.cardIndexBySet,
+      );
+    }
+
+    if (
+      data.adhkar?.cardIndexBySet &&
+      typeof data.adhkar.cardIndexBySet === "object"
+    ) {
+      this.storage.set("adhkarCardIndexBySet", data.adhkar.cardIndexBySet);
+    }
+
+    if (
+      data.hadith?.cardIndexBySet &&
+      typeof data.hadith.cardIndexBySet === "object"
+    ) {
+      this.storage.set("hadithCardIndexBySet", data.hadith.cardIndexBySet);
+    }
 
     this.storage.saveSettings(settings);
   }
@@ -3129,7 +3239,7 @@ class SettingsManager {
         } else {
           this.storage.set(
             "customSearchLastId",
-            data.customSearchLastId ?? null
+            data.customSearchLastId ?? null,
           );
         }
       }
@@ -3187,7 +3297,7 @@ class SettingsManager {
 
     // Location settings
     const locationRadio = document.querySelector(
-      'input[name="locationMethod"]:checked'
+      'input[name="locationMethod"]:checked',
     );
     if (locationRadio) settings.locationMethod = locationRadio.value;
     settings.city = this.cityInput?.value || "";
@@ -3227,13 +3337,13 @@ class SettingsManager {
       settings.prayerNotifications.beforeMinutes,
       0,
       180,
-      10
+      10,
     );
     const existingAfterMinutes = this.clampNumber(
       settings.prayerNotifications.afterMinutes,
       0,
       180,
-      0
+      0,
     );
 
     settings.prayerNotifications.enabled =
@@ -3251,13 +3361,13 @@ class SettingsManager {
         parseInt(this.notificationBeforeMinutesInputs?.[prayer]?.value, 10),
         0,
         180,
-        existingBeforeMinutes
+        existingBeforeMinutes,
       );
       const afterMinutes = this.clampNumber(
         parseInt(this.notificationAfterMinutesInputs?.[prayer]?.value, 10),
         0,
         180,
-        existingAfterMinutes
+        existingAfterMinutes,
       );
 
       settings.prayerNotifications.perPrayer[prayer] = {
@@ -3279,7 +3389,7 @@ class SettingsManager {
     settings.compactWeatherEnabled =
       this.compactWeatherEnabled?.checked ?? false;
     const compactWeatherModeRadio = document.querySelector(
-      'input[name="compactWeatherMode"]:checked'
+      'input[name="compactWeatherMode"]:checked',
     );
     settings.compactWeatherMode = compactWeatherModeRadio?.value || "simple";
 
@@ -3302,7 +3412,7 @@ class SettingsManager {
       parseInt(this.pinnedAppsPerRow?.value, 10),
       3,
       20,
-      10
+      10,
     );
 
     // Pocket Quran settings
@@ -3317,19 +3427,19 @@ class SettingsManager {
         parseInt(this.pocketQuranArabicSize?.value, 10),
         8,
         144,
-        existingPocketQuran.arabicFontSize ?? 32
+        existingPocketQuran.arabicFontSize ?? 32,
       ),
       translationFontSize: this.clampNumber(
         parseInt(this.pocketQuranTranslationSize?.value, 10),
         8,
         144,
-        existingPocketQuran.translationFontSize ?? 18
+        existingPocketQuran.translationFontSize ?? 18,
       ),
       translationResourceId: this.clampNumber(
         parseInt(this.pocketQuranTranslationSelect?.value, 10),
         1,
         10000,
-        existingPocketQuran.translationResourceId ?? 85
+        existingPocketQuran.translationResourceId ?? 85,
       ),
     };
 
@@ -3381,7 +3491,7 @@ class SettingsManager {
    */
   saveHeadingSettings(settings) {
     const greetingTypeRadio = document.querySelector(
-      'input[name="greetingType"]:checked'
+      'input[name="greetingType"]:checked',
     );
     const useCustomGreeting = greetingTypeRadio?.value === "custom";
 
@@ -3417,13 +3527,13 @@ class SettingsManager {
     // Clock settings
     settings.heading.showClock = this.showClock?.checked ?? true;
     const clockFormatRadio = document.querySelector(
-      'input[name="clockFormat"]:checked'
+      'input[name="clockFormat"]:checked',
     );
     settings.heading.clockFormat = clockFormatRadio?.value || "24h";
     settings.heading.showSeconds = this.showSeconds?.checked ?? true;
     settings.heading.showAmPm = this.showAmPm?.checked ?? true;
     const clockStyleRadio = document.querySelector(
-      'input[name="clockStyle"]:checked'
+      'input[name="clockStyle"]:checked',
     );
     settings.heading.clockStyle = clockStyleRadio?.value || "default";
 
@@ -3434,7 +3544,7 @@ class SettingsManager {
     settings.heading.dateFormat =
       this.dateFormatSelect?.value || "full-weekday";
     const dateCalendarRadio = document.querySelector(
-      'input[name="dateCalendar"]:checked'
+      'input[name="dateCalendar"]:checked',
     );
     settings.heading.dateCalendar = dateCalendarRadio?.value || "hijri";
   }
@@ -3468,12 +3578,12 @@ class SettingsManager {
    */
   saveWeatherSettings(settings) {
     const weatherUnitRadio = document.querySelector(
-      'input[name="weatherUnit"]:checked'
+      'input[name="weatherUnit"]:checked',
     );
     settings.weatherUnit = weatherUnitRadio?.value || "celsius";
 
     const weatherLocationModeRadio = document.querySelector(
-      'input[name="weatherLocationMode"]:checked'
+      'input[name="weatherLocationMode"]:checked',
     );
     settings.weatherLocationMode =
       weatherLocationModeRadio?.value || "dashboard";
@@ -3507,13 +3617,13 @@ class SettingsManager {
       parseInt(this.fastingDhuAlHijjahWithinDays?.value, 10),
       7,
       365,
-      30
+      30,
     );
     settings.fasting.arafahWithinDays = this.clampNumber(
       parseInt(this.fastingArafahWithinDays?.value, 10),
       7,
       365,
-      30
+      30,
     );
 
     // Notification settings
@@ -3523,7 +3633,7 @@ class SettingsManager {
         parseInt(this.fastingNotificationMinutesBefore?.value, 10),
         5,
         180,
-        60
+        60,
       ),
       notify: {
         monday: this.fastingNotifyMonday?.checked ?? true,
@@ -3568,7 +3678,7 @@ class SettingsManager {
         this.prayerTimes.setManualLocation(
           settings.latitude,
           settings.longitude,
-          settings.city
+          settings.city,
         );
       }
       if (this.qibla) {
@@ -3590,7 +3700,7 @@ class SettingsManager {
     // Apply container width
     this.applyContainerWidth(
       settings.containerWidth,
-      settings.containerWidthCustom
+      settings.containerWidthCustom,
     );
 
     // Apply UI blur power
@@ -3698,7 +3808,7 @@ class SettingsManager {
           const pqSettings = settings.pocketQuran || {};
           if (pqSettings.translationResourceId) {
             window.dashboard.pocketQuran.reloadTranslation(
-              pqSettings.translationResourceId
+              pqSettings.translationResourceId,
             );
           }
           // Also apply font sizes
@@ -3706,7 +3816,7 @@ class SettingsManager {
             window.dashboard.pocketQuran.applyFontSizes(
               pqSettings.arabicFontSize ?? 32,
               pqSettings.translationFontSize ?? 18,
-              { syncInputs: true, persist: false }
+              { syncInputs: true, persist: false },
             );
           }
         } catch (e) {
@@ -3719,7 +3829,7 @@ class SettingsManager {
         document.dispatchEvent(
           new CustomEvent("md:settings-applied", {
             detail: { settings },
-          })
+          }),
         );
       } catch (e) {}
     } catch (e) {
@@ -3744,7 +3854,7 @@ class SettingsManager {
       "container-medium",
       "container-wide",
       "container-full",
-      "container-custom"
+      "container-custom",
     );
     mainContainer.style.removeProperty("--custom-container-width");
 
@@ -3780,7 +3890,7 @@ class SettingsManager {
           }
           mainContainer.style.setProperty(
             "--custom-container-width",
-            clamped + "%"
+            clamped + "%",
           );
         }
         break;
@@ -3857,7 +3967,7 @@ class SettingsManager {
               ? `${result.city} (${result.fullName})`
               : result.city;
             this.showToast(`Selected: ${pickedLabel}`, "success");
-          }
+          },
         );
         this.showToast("Select a city from the list below.", "info");
       } else {
@@ -3954,7 +4064,7 @@ class SettingsManager {
     if (tabName === "debug" && !this.debugEnabled) return;
 
     const activeTab = Array.from(this.tabs || []).find(
-      (tab) => tab.dataset.tab === tabName
+      (tab) => tab.dataset.tab === tabName,
     );
 
     // Update tabs
@@ -4061,7 +4171,7 @@ class SettingsManager {
           clearTimeout(t);
           removeToast();
         },
-        { once: true }
+        { once: true },
       );
     };
 
@@ -4121,8 +4231,8 @@ class SettingsManager {
         const incoming = Array.isArray(data)
           ? data
           : data && Array.isArray(data.notes)
-          ? data.notes
-          : null;
+            ? data.notes
+            : null;
 
         if (!incoming) {
           this.showToast("Invalid notes JSON format.", "error");
@@ -4132,11 +4242,11 @@ class SettingsManager {
         const existing = this.storage.getNotes
           ? this.storage.getNotes()
           : Array.isArray(this.storage.get("notes", []))
-          ? this.storage.get("notes", [])
-          : [];
+            ? this.storage.get("notes", [])
+            : [];
 
         const byId = new Set(
-          existing.map((n) => String(n && n.id ? n.id : ""))
+          existing.map((n) => String(n && n.id ? n.id : "")),
         );
         const now = Date.now();
 
@@ -4168,7 +4278,7 @@ class SettingsManager {
 
         const merged = existing.concat(normalized);
         merged.sort(
-          (a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0)
+          (a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0),
         );
 
         if (this.storage.saveNotes) this.storage.saveNotes(merged);
@@ -4186,7 +4296,7 @@ class SettingsManager {
           `Imported ${normalized.length} note${
             normalized.length === 1 ? "" : "s"
           }.`,
-          "success"
+          "success",
         );
       } catch (err) {
         console.error("Notes import error:", err);
@@ -4289,7 +4399,7 @@ class SettingsManager {
 
     if (this.testNotificationBtn) {
       this.testNotificationBtn.addEventListener("click", () =>
-        this.testBrowserNotification()
+        this.testBrowserNotification(),
       );
     }
 
@@ -4306,7 +4416,7 @@ class SettingsManager {
 
     if (this.importNotesInput) {
       this.importNotesInput.addEventListener("change", (e) =>
-        this.handleNotesImport(e)
+        this.handleNotesImport(e),
       );
     }
 
@@ -4320,7 +4430,7 @@ class SettingsManager {
     // Request location permission
     if (this.requestLocationBtn) {
       this.requestLocationBtn.addEventListener("click", () =>
-        this.requestLocation()
+        this.requestLocation(),
       );
     }
 
@@ -4332,7 +4442,7 @@ class SettingsManager {
     // Paste coords (location)
     if (this.pasteCoordsBtn) {
       this.pasteCoordsBtn.addEventListener("click", () =>
-        this.pasteLocationCoordinatesFromClipboard()
+        this.pasteLocationCoordinatesFromClipboard(),
       );
     }
 
@@ -4362,14 +4472,14 @@ class SettingsManager {
     // Search city (weather)
     if (this.weatherSearchCityBtn) {
       this.weatherSearchCityBtn.addEventListener("click", () =>
-        this.searchWeatherCity()
+        this.searchWeatherCity(),
       );
     }
 
     // Paste coords (weather)
     if (this.weatherPasteCoordsBtn) {
       this.weatherPasteCoordsBtn.addEventListener("click", () =>
-        this.pasteWeatherCoordinatesFromClipboard()
+        this.pasteWeatherCoordinatesFromClipboard(),
       );
     }
 
@@ -4430,7 +4540,7 @@ class SettingsManager {
         // Apply preview immediately
         this.applyContainerWidth(
           e.target.value,
-          parseInt(this.containerWidthCustom?.value, 10) || 70
+          parseInt(this.containerWidthCustom?.value, 10) || 70,
         );
       });
     }
@@ -4443,7 +4553,7 @@ class SettingsManager {
           this.containerWidth?.value === "custom"
             ? "custom"
             : this.containerWidth?.value,
-          parseInt(this.containerWidthCustom.value, 10)
+          parseInt(this.containerWidthCustom.value, 10),
         );
       });
     }
@@ -4502,7 +4612,7 @@ class SettingsManager {
 
       if (this.pocketQuranTranslationSelect) {
         const has = this.pocketQuranTranslationSelect.querySelector(
-          `option[value="${id}"]`
+          `option[value="${id}"]`,
         );
         if (has) {
           this.pocketQuranTranslationSelect.value = String(id);
@@ -4610,7 +4720,7 @@ class SettingsManager {
           await Promise.all(tasks);
           this.showToast(
             "Default hadith, adhkar, flashcards and quotes refreshed!",
-            "success"
+            "success",
           );
         } catch (e) {
           console.error("Failed to refresh default data:", e);
@@ -4637,17 +4747,17 @@ class SettingsManager {
 
     if (this.resetNukeCancelBtn) {
       this.resetNukeCancelBtn.addEventListener("click", () =>
-        resolveResetNukeConfirm(false)
+        resolveResetNukeConfirm(false),
       );
     }
     if (this.resetNukeConfirmBtn) {
       this.resetNukeConfirmBtn.addEventListener("click", () =>
-        resolveResetNukeConfirm(true)
+        resolveResetNukeConfirm(true),
       );
     }
     if (this.resetNukeConfirmModal) {
       this._bindOverlayCloseBehavior(this.resetNukeConfirmModal, () =>
-        resolveResetNukeConfirm(false)
+        resolveResetNukeConfirm(false),
       );
     }
     document.addEventListener("keydown", (e) => {
@@ -4705,7 +4815,7 @@ class SettingsManager {
 
       // Preserve user data that is stored inside settings.
       const preservedCustomBackgrounds = Array.isArray(
-        current.customBackgrounds
+        current.customBackgrounds,
       )
         ? current.customBackgrounds
             .filter((x) => typeof x === "string" && x.startsWith("data:image"))
@@ -4792,13 +4902,6 @@ class SettingsManager {
       });
     }
 
-    // Export settings
-    if (this.exportSettingsBtn) {
-      this.exportSettingsBtn.addEventListener("click", () => {
-        this.exportAllSettings();
-      });
-    }
-
     // Export custom searches
     if (this.exportCustomSearchesBtn) {
       this.exportCustomSearchesBtn.addEventListener("click", () => {
@@ -4869,7 +4972,7 @@ class SettingsManager {
         prayerCard.style.display = prayerChecked ? "" : "none";
         prayerCard.setAttribute(
           "aria-hidden",
-          prayerChecked ? "false" : "true"
+          prayerChecked ? "false" : "true",
         );
       }
       if (calCard) {
@@ -4970,7 +5073,7 @@ class SettingsManager {
           if (err) {
             this.showToast(
               `Notification failed: ${err.message || String(err)}`,
-              "error"
+              "error",
             );
             return;
           }
@@ -4978,7 +5081,7 @@ class SettingsManager {
             `Test notification sent${
               notificationId ? ": " + notificationId : ""
             }.`,
-            "success"
+            "success",
           );
         });
         return;
@@ -4988,7 +5091,7 @@ class SettingsManager {
       Promise.resolve(browser.notifications.create("md-debug-test", options))
         .then(() => this.showToast("Test notification sent.", "success"))
         .catch((e) =>
-          this.showToast(`Notification failed: ${e?.message || e}`, "error")
+          this.showToast(`Notification failed: ${e?.message || e}`, "error"),
         );
     } catch (e) {
       this.showToast(`Notification failed: ${e?.message || e}`, "error");

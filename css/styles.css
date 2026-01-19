@@ -373,7 +373,9 @@ body.grid-edit-mode
   .sidebar-zone
   .sidebar-slot
   .grid-draggable:hover:not(.grid-dragging) {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
 
@@ -402,7 +404,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .sidebar-zone.sidebar-is-dragging
   .sidebar-slot
   .grid-draggable:not(.grid-dragging) {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease,
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease,
     box-shadow 0.2s ease;
 }
 
@@ -421,7 +425,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 /* Sidebar slot transitions during drag */
 .sidebar-zone.sidebar-is-dragging .sidebar-slot {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     margin 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -712,7 +717,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: var(--spacing-xl);
   text-align: center;
   box-shadow: var(--glass-shadow);
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
   will-change: transform, box-shadow;
   backface-visibility: hidden;
@@ -762,8 +768,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity var(--transition-normal),
-    background var(--transition-normal), transform var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    background var(--transition-normal),
+    transform var(--transition-normal);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -1426,7 +1434,8 @@ textarea.notes-editor:focus {
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   box-shadow: var(--glass-shadow);
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
   animation: scaleIn 0.5s ease-out both;
   /* Prevent visual glitches during hover transforms */
@@ -1552,8 +1561,10 @@ textarea.notes-editor:focus {
   justify-content: center;
   cursor: pointer;
   z-index: 2;
-  transition: background var(--transition-normal),
-    transform var(--transition-normal), opacity var(--transition-normal),
+  transition:
+    background var(--transition-normal),
+    transform var(--transition-normal),
+    opacity var(--transition-normal),
     box-shadow var(--transition-normal);
   opacity: 0.85;
   font-size: 10px;
@@ -2053,8 +2064,10 @@ textarea.notes-editor:focus {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background var(--transition-fast),
-    transform var(--transition-fast), border-color var(--transition-fast),
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
     color var(--transition-fast);
 }
 
@@ -2293,7 +2306,9 @@ textarea.notes-editor:focus {
   opacity: 0;
   visibility: hidden;
   transform: translateY(4px) scale(0.98);
-  transition: opacity var(--transition-fast), transform var(--transition-fast),
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
     visibility 0s linear 200ms;
 }
 
@@ -2301,7 +2316,9 @@ textarea.notes-editor:focus {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
-  transition: opacity var(--transition-fast), transform var(--transition-fast),
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
     visibility 0s linear 0s;
 }
 
@@ -2348,7 +2365,8 @@ textarea.notes-editor:focus {
   transform: translateY(10px) scale(0.98);
   transform-origin: 50% 100%;
   pointer-events: none;
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     transform var(--transition-normal);
 }
 
@@ -2362,7 +2380,8 @@ textarea.notes-editor:focus {
 .fab-menu-items button {
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     transform var(--transition-normal);
 }
 
@@ -2413,8 +2432,10 @@ textarea.notes-editor:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-normal),
-    box-shadow var(--transition-normal), opacity var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal),
+    opacity var(--transition-normal);
 }
 
 /* When JS autohide is enabled the toggle is hidden by default and only shown when 'hot-visible' is active */
@@ -2423,7 +2444,9 @@ textarea.notes-editor:focus {
   visibility: hidden;
   pointer-events: none;
   transform: translateY(8px) scale(0.98);
-  transition: opacity var(--transition-fast), transform var(--transition-fast),
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
     visibility 0s linear 200ms;
 }
 
@@ -2435,7 +2458,9 @@ textarea.notes-editor:focus {
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
-  transition: opacity var(--transition-fast), transform var(--transition-fast),
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
     visibility 0s linear 0s;
 }
 
@@ -2500,7 +2525,8 @@ textarea.notes-editor:focus {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+  transition:
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -2622,7 +2648,8 @@ textarea.notes-editor:focus {
   border-radius: var(--radius-full);
   background: currentColor;
   transform-origin: center;
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     opacity var(--transition-normal);
 }
 
@@ -2699,7 +2726,8 @@ textarea.notes-editor:focus {
     box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
   }
   50% {
-    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7),
+    box-shadow:
+      0 4px 25px rgba(212, 175, 55, 0.7),
       0 0 0 4px rgba(212, 175, 55, 0.2);
   }
 }
@@ -2751,7 +2779,8 @@ textarea.notes-editor:focus {
     box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
   }
   50% {
-    box-shadow: 0 4px 25px rgba(212, 175, 55, 0.7),
+    box-shadow:
+      0 4px 25px rgba(212, 175, 55, 0.7),
       0 0 0 4px rgba(212, 175, 55, 0.2);
   }
 }
@@ -3002,7 +3031,8 @@ body.quran-focus-mode .grid-flex-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
   z-index: 100;
 }
@@ -4176,7 +4206,8 @@ body.quran-focus-mode .grid-flex-row {
 }
 
 .setting-btn.is-refreshing .refresh-cw-icon {
-  animation: md-refresh-spin 1.1s linear infinite,
+  animation:
+    md-refresh-spin 1.1s linear infinite,
     md-refresh-glow 1.8s ease-in-out infinite;
   transform-origin: 50% 50%;
   will-change: transform, filter;
@@ -4464,7 +4495,9 @@ body.quran-focus-mode .grid-flex-row {
   animation: slideInRight 0.3s ease-out;
   opacity: 1;
   transform: translateX(0);
-  transition: opacity 220ms ease, transform 220ms ease;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
   will-change: opacity, transform;
   display: flex;
   align-items: center;
@@ -4527,8 +4560,10 @@ body.quran-focus-mode .grid-flex-row {
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
   backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
-  transition: background-color var(--transition-normal),
-    border-color var(--transition-normal), box-shadow var(--transition-normal),
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
     transform var(--transition-normal);
   animation: fadeInUpBlurSafe 0.6s ease-out 0.12s backwards;
 }
@@ -4550,7 +4585,9 @@ body.quran-focus-mode .grid-flex-row {
   max-width: 72vw;
   opacity: 1;
   transform: translateX(0);
-  transition: max-width 320ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 220ms ease,
+  transition:
+    max-width 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 220ms ease,
     transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
     margin-right 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -4570,8 +4607,10 @@ body.quran-focus-mode .grid-flex-row {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform var(--transition-fast),
-    background-color var(--transition-fast), border-color var(--transition-fast),
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
     opacity var(--transition-fast);
   user-select: none;
 }
@@ -4627,8 +4666,10 @@ body.quran-focus-mode .grid-flex-row {
   align-items: center;
   justify-content: center;
   cursor: grab;
-  transition: transform var(--transition-fast),
-    background-color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
   will-change: transform;
   backface-visibility: hidden;
   transform: translateZ(0);
@@ -4709,8 +4750,10 @@ body.quran-focus-mode .grid-flex-row {
   background: rgba(var(--sb-accent-rgb), 0.12);
   color: var(--text-primary);
   outline: none;
-  transition: border-color var(--transition-fast),
-    background-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .search-bar-input::placeholder {
@@ -4731,8 +4774,10 @@ body.quran-focus-mode .grid-flex-row {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform var(--transition-fast),
-    background-color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .search-bar-btn:hover {
@@ -4752,8 +4797,10 @@ body.quran-focus-mode .grid-flex-row {
   max-height: 0;
   opacity: 0;
   transform: translateY(-6px);
-  transition: max-height 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 200ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    max-height 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 200ms ease,
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .search-bar-add-panel.active {
@@ -4806,8 +4853,10 @@ body.quran-focus-mode .grid-flex-row {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color var(--transition-fast),
-    border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .search-bar-add-action:hover {
@@ -4843,7 +4892,8 @@ body.quran-focus-mode .grid-flex-row {
   border-radius: var(--radius-lg);
   min-height: 80px;
   box-shadow: var(--glass-shadow);
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     box-shadow var(--transition-normal);
   will-change: transform, box-shadow;
   backface-visibility: hidden;
@@ -4915,7 +4965,8 @@ body.quran-focus-mode .grid-flex-row {
   align-items: center;
   text-align: center;
   cursor: grab;
-  transition: transform var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
     opacity var(--transition-normal);
   will-change: transform;
   backface-visibility: hidden;
@@ -4981,8 +5032,11 @@ body.quran-focus-mode .grid-flex-row {
   pointer-events: none;
   z-index: 10000;
   transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 5px 15px rgba(0, 0, 0, 0.3),
-    0 0 0 4px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.5),
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(212, 175, 55, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: dragGhostAppear 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   overflow: hidden;
@@ -5065,8 +5119,10 @@ body.quran-focus-mode .grid-flex-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-normal),
-    background var(--transition-normal), border-color var(--transition-normal),
+  transition:
+    transform var(--transition-normal),
+    background var(--transition-normal),
+    border-color var(--transition-normal),
     box-shadow var(--transition-normal);
   overflow: hidden;
   will-change: transform;
@@ -5175,8 +5231,10 @@ body.quran-focus-mode .grid-flex-row {
   cursor: pointer;
   padding: 0;
   outline: none;
-  transition: transform var(--transition-fast),
-    border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .context-menu-swatch:hover {
@@ -5393,7 +5451,9 @@ body.quran-focus-mode .grid-flex-row {
   color: var(--text-muted);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
     border-color var(--transition-fast);
   will-change: background, color;
   backface-visibility: hidden;
@@ -5480,7 +5540,9 @@ body.quran-focus-mode .grid-flex-row {
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
   will-change: background;
   backface-visibility: hidden;
   transform: translateZ(0);
@@ -5745,7 +5807,10 @@ line-height: 1;
   justify-content: center;
   font-size: 16px;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
   will-change: transform, box-shadow;
   backdrop-filter: blur(8px) saturate(120%);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
@@ -5803,8 +5868,10 @@ line-height: 1;
   justify-content: center;
   font-size: 1.2rem;
   line-height: 1;
-  transition: background var(--transition-fast),
-    transform var(--transition-fast), opacity var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
   z-index: 2;
 }
 
@@ -5833,7 +5900,9 @@ line-height: 1;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-6px);
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
   }
 
   .flashcard-card:hover .card-header-actions,
@@ -6269,7 +6338,9 @@ line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .flashcard-row-delete:hover {
@@ -6861,13 +6932,16 @@ line-height: 1;
   min-width: 200px;
   min-height: 150px;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: visible;
   opacity: 0;
   transform: scale(0.8) rotate(-3deg);
-  transition: opacity 0.3s ease,
+  transition:
+    opacity 0.3s ease,
     transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow var(--transition-normal);
   font-family: var(--font-primary);
@@ -6902,7 +6976,9 @@ line-height: 1;
 }
 
 .sticky-note.dragging {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 2px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
   cursor: grabbing;
 }
@@ -7448,7 +7524,9 @@ body.sticky-note-resizing {
 /* High DPI / Retina adjustments */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .sticky-note {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.25),
+      0 0 0 0.5px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -7939,7 +8017,9 @@ body.sticky-note-resizing {
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, calc(-100% - 6px));
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
@@ -8036,8 +8116,10 @@ body.sticky-note-resizing {
 .weather-chart-tab.active {
   background: rgba(255, 255, 255, 0.14);
   color: var(--text-primary); /* Ensure active tab text stays readable */
-  transition: background var(--transition-fast),
-    border-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 /* Temperature: border + subtle tint when active, hover only affects border */
@@ -8140,6 +8222,85 @@ body.sticky-note-resizing {
     /* 2 columns layout on mobile: default fixed 2-column basis (no grow); JS will upgrade last-row items to grow */
     flex: 0 0 calc((100% - (1 * var(--wf-gap))) / 2);
   }
+}
+
+/* ========================================
+   WEATHER IN SIDEBAR MODE
+   Prevent horizontal overflow when placed in sidebar columns
+   ======================================== */
+
+body.sidebar-mode .sidebar-zone .weather-card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+body.sidebar-mode .sidebar-zone .weather-content {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  gap: var(--spacing-md);
+}
+
+body.sidebar-mode .sidebar-zone .weather-main {
+  grid-column: 1;
+  justify-self: center;
+  min-width: 0;
+}
+
+body.sidebar-mode .sidebar-zone .weather-location {
+  grid-column: 1;
+  justify-self: center;
+  font-size: 1.8rem;
+  word-break: break-word;
+}
+
+body.sidebar-mode .sidebar-zone .weather-details {
+  grid-column: 1;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+body.sidebar-mode .sidebar-zone .weather-forecast {
+  --wf-gap: 8px;
+}
+
+body.sidebar-mode .sidebar-zone .weather-forecast-day {
+  /* 2 columns in sidebar */
+  flex: 0 0 calc((100% - var(--wf-gap)) / 2);
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart-wrap {
+  padding: var(--spacing-sm);
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart-header {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  gap: var(--spacing-sm);
+  min-height: auto;
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart-title {
+  grid-column: 1;
+  justify-self: center;
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart-tabs {
+  grid-column: 1;
+  justify-self: center;
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart-legend {
+  grid-column: 1;
+  justify-self: center;
+  text-align: center;
+}
+
+body.sidebar-mode .sidebar-zone .weather-chart {
+  height: 200px;
 }
 
 /* ========================================
@@ -8410,7 +8571,8 @@ body.sticky-note-resizing {
 .clock-preview-neon .preview-time {
   font-size: 1.45rem;
   font-weight: 800;
-  text-shadow: 0 0 12px rgba(212, 175, 55, 0.35),
+  text-shadow:
+    0 0 12px rgba(212, 175, 55, 0.35),
     0 0 20px rgba(212, 175, 55, 0.18);
 }
 
@@ -8481,8 +8643,10 @@ body.sticky-note-resizing {
 }
 
 .time-section.clock-style-neon .current-time {
-  text-shadow: 0 0 14px rgba(212, 175, 55, 0.45),
-    0 0 24px rgba(212, 175, 55, 0.22), 3px 3px 15px rgba(0, 0, 0, 0.4);
+  text-shadow:
+    0 0 14px rgba(212, 175, 55, 0.45),
+    0 0 24px rgba(212, 175, 55, 0.22),
+    3px 3px 15px rgba(0, 0, 0, 0.4);
 }
 
 .time-section.clock-style-neon .current-seconds {
@@ -8596,7 +8760,9 @@ body.sticky-note-resizing {
   margin-left: auto; /* fallback for older browsers */
   margin-right: var(--spacing-sm); /* fallback */
   align-self: center;
-  transition: margin 150ms ease, transform 150ms ease;
+  transition:
+    margin 150ms ease,
+    transform 150ms ease;
 }
 
 .pocket-quran-header.pq-has-recitation-controls .card-header-actions {
@@ -8670,7 +8836,9 @@ body.sticky-note-resizing {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
   font-size: 0.75rem;
   padding: 0;
   outline: none;
@@ -8875,12 +9043,16 @@ body.sticky-note-resizing {
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(30, 40, 50, 1);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35),
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.35),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px) scale(0.96);
-  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s;
   pointer-events: none;
 }
 
@@ -9153,7 +9325,8 @@ body.sticky-note-resizing {
   border: 2px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  transition: transform var(--transition-fast),
+  transition:
+    transform var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
@@ -9229,8 +9402,10 @@ body.sticky-note-resizing {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform var(--transition-fast),
-    background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
   text-align: left;
 }
 
@@ -9345,7 +9520,8 @@ body.sticky-note-resizing {
   background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform var(--transition-fast),
+  transition:
+    transform var(--transition-fast),
     background var(--transition-fast);
 }
 
@@ -9388,8 +9564,10 @@ body.sticky-note-resizing {
   cursor: pointer;
   text-align: left;
   font-variant-numeric: tabular-nums;
-  transition: transform var(--transition-fast),
-    background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .pocket-quran-ayah-option:hover {
@@ -9501,8 +9679,10 @@ body.sticky-note-resizing {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-  transition: transform var(--transition-fast),
-    background var(--transition-fast), border-color 0.22s ease;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color 0.22s ease;
   will-change: transform, background, border-color;
 }
 
@@ -9776,8 +9956,10 @@ body.sticky-note-resizing {
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: transform var(--transition-fast),
-    border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .pq-tajweed-color-swatch:hover {
@@ -9912,7 +10094,8 @@ body.sticky-note-resizing {
   background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform var(--transition-fast),
+  transition:
+    transform var(--transition-fast),
     background var(--transition-fast);
 }
 
@@ -10113,7 +10296,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     visibility var(--transition-normal);
 }
 
@@ -10907,7 +11091,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     visibility var(--transition-normal);
 }
 
@@ -11500,7 +11685,9 @@ body.sticky-note-resizing {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .hadith-row-delete:hover {
@@ -11615,7 +11802,9 @@ body.sticky-note-resizing {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
   grid-row: 1 / span 2;
   align-self: center;
 }
@@ -11627,7 +11816,10 @@ body.sticky-note-resizing {
 @media (max-width: 560px) {
   .adhkar-editor-header,
   .adhkar-row {
-    grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 30px;
+    grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr) minmax(
+        0,
+        1fr
+      ) 30px;
   }
 }
 
@@ -11691,7 +11883,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     visibility var(--transition-normal);
 }
 
@@ -12083,7 +12276,8 @@ body.sticky-note-resizing {
   z-index: 10000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--transition-normal),
+  transition:
+    opacity var(--transition-normal),
     visibility var(--transition-normal);
 }
 
@@ -12327,7 +12521,9 @@ body.sticky-note-resizing {
 
 /* Blur Group (only visible when glass enabled) */
 .theme-blur-group {
-  transition: opacity var(--transition-fast), max-height var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    max-height var(--transition-fast);
 }
 
 .theme-blur-group.disabled {
@@ -12500,8 +12696,10 @@ body.sticky-note-resizing {
   background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color var(--transition-fast),
-    border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .theme-palette-mode-btn:hover {
@@ -12722,7 +12920,9 @@ body.sticky-note-resizing {
   gap: var(--spacing-xl);
   width: 100%;
   min-height: 50px;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   border-radius: var(--radius-md);
   position: relative;
 }
@@ -12749,7 +12949,10 @@ body.sticky-note-resizing {
 /* Draggable grid items - only show drag affordances when edit mode is enabled */
 .grid-draggable {
   touch-action: manipulation;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, flex 0.3s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    flex 0.3s ease;
   user-select: text;
   -webkit-user-select: text;
   position: relative;
@@ -12764,7 +12967,9 @@ body.sticky-note-resizing {
 
 /* Hover state for draggable items - only in edit mode */
 .grid-edit-mode .grid-draggable:hover:not(.grid-dragging) {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 /* Visual drag handle indicator */
@@ -12800,7 +13005,9 @@ body.sticky-note-resizing {
 .grid-draggable.grid-dragging {
   cursor: grabbing;
   opacity: 0.95;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 3px var(--accent-gold);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 3px var(--accent-gold);
   transform: scale(1.02) rotate(1deg);
   z-index: 10000 !important;
   border-radius: var(--radius-lg);
@@ -12845,7 +13052,9 @@ body.sticky-note-resizing {
 
 /* Smooth transitions for non-dragged items when repositioning */
 .grid-is-dragging .grid-draggable:not(.grid-dragging) {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 /* Dim other items slightly during drag */

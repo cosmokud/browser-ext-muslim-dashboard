@@ -709,7 +709,7 @@ class IconThemeManager {
 
   loadSettings() {
     const settings = this.storage.getSettings();
-    this._currentTheme = settings.iconTheme || "emoji";
+    this._currentTheme = settings.iconTheme || "colorful";
     this._isDarkMode = (settings.theme?.mode || "dark") === "dark";
   }
 
@@ -737,7 +737,7 @@ class IconThemeManager {
     document.dispatchEvent(
       new CustomEvent("md:icon-theme-change", {
         detail: { theme: themeId },
-      })
+      }),
     );
   }
 
@@ -806,7 +806,7 @@ class IconThemeManager {
         ".calendar-nav-btn",
         ".search-bar-btn",
         ".search-bar-engine-arrow",
-      ].join(",")
+      ].join(","),
     );
     iconOnly.forEach((el) => this._applyIconOnlyElement(el));
 
@@ -822,7 +822,7 @@ class IconThemeManager {
         ".blur-popup-title",
         ".blur-glass-option-title",
         ".pq-bookmark-modal-title",
-      ].join(",")
+      ].join(","),
     );
     textEls.forEach((el) => this._applyTextElement(el));
   }
@@ -1007,7 +1007,7 @@ class IconThemeManager {
       if (result.includes(emoji)) {
         result = result.replace(
           new RegExp(this._escapeRegex(emoji), "g"),
-          this.getIcon(emoji, { ...options, inline: true })
+          this.getIcon(emoji, { ...options, inline: true }),
         );
       }
     }
