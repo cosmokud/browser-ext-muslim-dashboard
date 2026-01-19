@@ -92,7 +92,7 @@ class PrayerTimesManager {
       this.prayTimes.setFajrAngle(settings.customFajrAngle);
       this.prayTimes.setIshaAngle(
         settings.customIshaAngle,
-        settings.customIshaMinutes
+        settings.customIshaMinutes,
       );
     }
 
@@ -180,7 +180,7 @@ class PrayerTimesManager {
       // Try to get city name
       await this.reverseGeocode(
         position.coords.latitude,
-        position.coords.longitude
+        position.coords.longitude,
       );
 
       // Save location
@@ -266,7 +266,7 @@ class PrayerTimesManager {
         // Try to get city name
         await this.reverseGeocode(
           position.coords.latitude,
-          position.coords.longitude
+          position.coords.longitude,
         );
 
         // Save location
@@ -311,7 +311,7 @@ class PrayerTimesManager {
           headers: {
             "Accept-Language": "en",
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -343,13 +343,13 @@ class PrayerTimesManager {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          cityName
+          cityName,
         )}&limit=5`,
         {
           headers: {
             "Accept-Language": "en",
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -383,7 +383,7 @@ class PrayerTimesManager {
       [this.location.latitude, this.location.longitude],
       "auto",
       "auto",
-      settings.timeFormat || "24h"
+      settings.timeFormat || "24h",
     );
 
     // Display times
@@ -463,7 +463,7 @@ class PrayerTimesManager {
     // Highlight next prayer
     if (nextPrayer) {
       const nextPrayerItem = document.querySelector(
-        `[data-prayer="${nextPrayer.key}"]`
+        `[data-prayer="${nextPrayer.key}"]`,
       );
       if (nextPrayerItem) {
         nextPrayerItem.classList.add("next");
@@ -555,7 +555,7 @@ class PrayerTimesManager {
 
       if (this.nextPrayerCountdown) {
         this.nextPrayerCountdown.textContent = `${this.padZero(
-          hours
+          hours,
         )}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
       }
     }

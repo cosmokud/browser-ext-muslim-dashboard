@@ -1755,16 +1755,13 @@ textarea.notes-editor:focus {
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
 }
 
-.prayer-item.next {
-  border: 2px solid var(--accent-gold);
-}
-
 .prayer-name {
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .prayer-time {
+  margin-left: auto;
   font-size: 1.1rem;
   font-weight: 600;
   font-family: "Courier New", monospace;
@@ -2998,24 +2995,16 @@ body.moment-mode {
   overflow: hidden;
 }
 
-/* Moment mode uses 3-column layout like sidebar mode */
+/* Moment mode uses 3-column layout with exact viewport percentages */
 body.moment-mode .sidebar-layout {
-  --moment-sidebar-min: 280px;
-  --moment-middle-min: 520px;
-  --moment-layout-min-width: 1440px;
-  --moment-scale: min(1, calc(100vw / var(--moment-layout-min-width)));
   display: grid;
-  grid-template-columns:
-    minmax(var(--moment-sidebar-min), 1fr)
-    minmax(var(--moment-middle-min), 2fr)
-    minmax(var(--moment-sidebar-min), 1fr);
+  grid-template-columns: 15vw 70vw 15vw;
   grid-template-rows: 1fr;
   align-items: start;
-  width: calc(100% / var(--moment-scale));
-  height: calc(100vh / var(--moment-scale));
-  margin: 0 auto;
-  transform: scale(var(--moment-scale));
-  transform-origin: top center;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
 }
 
 body.moment-mode .sidebar-column {
@@ -3095,8 +3084,13 @@ body.moment-mode .moment-mode-middle {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  max-width: 900px;
   gap: var(--spacing-lg);
+}
+
+/* Content width constraint for most middle elements (except pinned apps) */
+body.moment-mode .moment-mode-middle > *:not(.pinned-apps-section) {
+  max-width: 800px;
+  width: 100%;
 }
 
 /* ===== Moment Mode: Right Panel (Clock & Date) ===== */
@@ -3175,6 +3169,7 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   padding: var(--spacing-md);
   padding-top: 0px;
   animation: none;
+  width: 100%;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card:hover {
@@ -3194,35 +3189,97 @@ body.moment-mode .moment-mode-left .prayer-times-card .location-display {
   display: none !important;
 }
 
+/* Next Prayer Row - serves as width reference */
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0;
   margin-bottom: var(--spacing-sm);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: nowrap;
-  justify-content: space-between;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
 }
 
-body.moment-mode .moment-mode-left .prayer-times-card .next-prayer > * {
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-label,
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-name {
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .next-prayer
+  .next-prayer-countdown {
+  flex: 0 0 auto;
+  margin-left: auto !important;
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+/* Prayer List Container */
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--spacing-xs) !important;
+  width: 100% !important;
+}
+
+/* Prayer Item Row - justified content */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
-  padding: var(--spacing-xs) 0;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: var(--spacing-xs) 0 !important;
   background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current,
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.active,
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
 }
 
-body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current {
-  background: transparent !important;
-  border-radius: 0;
-  padding: var(--spacing-xs) 0;
-  margin: 0;
-  box-shadow: none !important;
+/* Prayer Name - aligned left */
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .prayer-item
+  .prayer-name {
+  flex: 0 1 auto !important;
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+/* Prayer Time - aligned right */
+body.moment-mode
+  .moment-mode-left
+  .prayer-times-card
+  .prayer-item
+  .prayer-time {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  text-align: right !important;
+  white-space: nowrap;
 }
 
 /* ===== Moment Mode: Quote Section Styling ===== */
@@ -3289,7 +3346,8 @@ body.moment-mode .moment-mode-middle .pinned-apps-section {
   box-shadow: none !important;
   padding: var(--spacing-md);
   animation: none;
-  width: 100%;
+  width: auto;
+  max-width: none;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -3320,6 +3378,13 @@ body.moment-mode .moment-mode-middle .pinned-apps-section:hover {
 
 body.moment-mode .moment-mode-middle .pinned-apps-grid {
   justify-content: center;
+  width: auto;
+  max-width: none;
+}
+
+body.moment-mode .moment-mode-middle .pinned-apps-track {
+  width: auto;
+  max-width: none;
 }
 
 body.moment-mode .moment-mode-middle .pinned-app {
@@ -6160,10 +6225,6 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
 }
 
 /* Import/Export buttons */
-gap: 8px;
-min-width: var(--settings-tab-min-width, 0px);
-text-align: center;
-line-height: 1;
 .import-export-btns {
   display: flex;
   gap: var(--spacing-sm);
