@@ -3160,96 +3160,87 @@ body.moment-mode .moment-mode-middle .search-bar-input {
 }
 
 /* ===== Moment Mode: Prayer Times Card Styling ===== */
+
+/* Prayer Times Card - full width of momentModeLeft */
 body.moment-mode .moment-mode-left .prayer-times-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
   background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
-  padding: var(--spacing-md);
-  padding-top: 0px;
-  animation: none;
-  width: 100%;
+  padding: 0 !important;
+  margin: 0 !important;
+  animation: none !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card:hover {
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-body.moment-mode .moment-mode-left .prayer-times-card .card-header {
-  display: none !important;
-}
-
-body.moment-mode .moment-mode-left .prayer-times-card .card-title {
-  display: none !important;
-}
-
+/* Hide card header elements */
+body.moment-mode .moment-mode-left .prayer-times-card .card-header,
+body.moment-mode .moment-mode-left .prayer-times-card .card-title,
 body.moment-mode .moment-mode-left .prayer-times-card .location-display {
   display: none !important;
 }
 
-/* Next Prayer Row - serves as width reference */
+/* Next Prayer Row - CSS Grid for perfect alignment */
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  width: 100% !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0;
-  margin-bottom: var(--spacing-sm);
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-wrap: nowrap !important;
-  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 0 var(--spacing-sm) 0 !important;
+  gap: var(--spacing-md) !important;
 }
 
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-label,
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-name {
-  flex: 0 0 auto;
-  white-space: nowrap;
+/* Left side of next-prayer: label and name grouped */
+body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-label,
+body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-name {
+  grid-column: 1 !important;
+  justify-self: start !important;
+  white-space: nowrap !important;
 }
 
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-countdown {
-  flex: 0 0 auto;
-  margin-left: auto !important;
+/* Right side of next-prayer: countdown aligned right */
+body.moment-mode .moment-mode-left .prayer-times-card .next-prayer .next-prayer-countdown {
+  grid-column: 2 !important;
+  justify-self: end !important;
   text-align: right !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
 /* Prayer List Container */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-list {
   display: flex !important;
   flex-direction: column !important;
-  gap: var(--spacing-xs) !important;
   width: 100% !important;
+  gap: var(--spacing-xs) !important;
 }
 
-/* Prayer Item Row - justified content */
+/* Prayer Item - CSS Grid for 2-column layout */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-between !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
   align-items: center !important;
   width: 100% !important;
   padding: var(--spacing-xs) 0 !important;
   background: transparent !important;
-  box-shadow: none !important;
   border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  gap: var(--spacing-md) !important;
 }
 
+/* All prayer item states - transparent */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current,
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.active,
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
@@ -3259,27 +3250,20 @@ body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
   box-shadow: none !important;
 }
 
-/* Prayer Name - aligned left */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .prayer-item
-  .prayer-name {
-  flex: 0 1 auto !important;
+/* Prayer Name - Column 1, left aligned */
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-name {
+  grid-column: 1 !important;
+  justify-self: start !important;
   text-align: left !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
-/* Prayer Time - aligned right */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .prayer-item
-  .prayer-time {
-  flex: 0 0 auto !important;
-  margin-left: auto !important;
+/* Prayer Time - Column 2, right aligned */
+body.moment-mode .moment-mode-left .prayer-times-card .prayer-item .prayer-time {
+  grid-column: 2 !important;
+  justify-self: end !important;
   text-align: right !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
 /* ===== Moment Mode: Quote Section Styling ===== */
