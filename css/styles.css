@@ -6155,6 +6155,10 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
 }
 
 /* Import/Export buttons */
+gap: 8px;
+min-width: var(--settings-tab-min-width, 0px);
+text-align: center;
+line-height: 1;
 .import-export-btns {
   display: flex;
   gap: var(--spacing-sm);
