@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
@@ -28,9 +28,15 @@
         aria-label="Left sidebar"
       >
         <div class="sidebar-zone count-0" id="sidebarLeftZone"></div>
+
+        <!-- Moment Mode: Left Panel Container (Prayer Times will be moved here) -->
+        <div class="moment-mode-left" id="momentModeLeft"></div>
       </aside>
 
       <div class="sidebar-middle" id="sidebarMiddle">
+        <!-- Moment Mode: Middle Panel Container (Quote, Pinned Apps, Search will be moved here) -->
+        <div class="moment-mode-middle" id="momentModeMiddle"></div>
+
         <!-- Main Container -->
         <div class="main-container">
           <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
@@ -1874,6 +1880,20 @@
         aria-label="Right sidebar"
       >
         <div class="sidebar-zone count-0" id="sidebarRightZone"></div>
+
+        <!-- Moment Mode: Right Panel (Clock and Date) -->
+        <div class="moment-mode-right" id="momentModeRight">
+          <div class="moment-clock">
+            <span id="momentClockTime">00:00</span>
+            <span class="moment-clock-seconds" id="momentClockSeconds"
+              >:00</span
+            >
+            <span class="moment-clock-ampm" id="momentClockAmPm"></span>
+          </div>
+          <div class="moment-date" id="momentDate">
+            <!-- Date will be dynamically populated -->
+          </div>
+        </div>
       </aside>
     </div>
 
@@ -1888,6 +1908,27 @@
       <div class="fab-menu-items" id="fabMenuItems" aria-hidden="true">
         <!-- Dynamic items (e.g., Sticky Notes buttons) are injected here -->
         <div class="fab-menu-dynamic" id="fabMenuDynamicItems"></div>
+
+        <button
+          class="moment-mode-btn"
+          id="momentModeBtn"
+          title="Moment Mode"
+          aria-label="Toggle Moment Mode"
+          aria-pressed="false"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+        </button>
 
         <button
           class="sidebar-mode-btn"
@@ -5744,5 +5785,3 @@
     <script src="js/app.js"></script>
   </body>
 </html>
-
-

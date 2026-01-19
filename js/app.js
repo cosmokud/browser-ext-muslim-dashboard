@@ -188,13 +188,13 @@ class MuslimDashboard {
       }
       left = Math.max(
         margin,
-        Math.min(left, window.innerWidth - rect.width - margin)
+        Math.min(left, window.innerWidth - rect.width - margin),
       );
 
       let top = y - rect.height / 2;
       top = Math.max(
         margin,
-        Math.min(top, window.innerHeight - rect.height - margin)
+        Math.min(top, window.innerHeight - rect.height - margin),
       );
 
       tip.style.left = `${left}px`;
@@ -270,7 +270,7 @@ class MuslimDashboard {
           e.stopPropagation();
         }
       },
-      { capture: true }
+      { capture: true },
     );
 
     // Close on Escape
@@ -341,7 +341,7 @@ class MuslimDashboard {
           hideTimer = setTimeout(hideHot, hideDelay * 3);
         }
       },
-      { passive: true }
+      { passive: true },
     );
 
     // Show on focus (keyboard)
@@ -424,8 +424,8 @@ class MuslimDashboard {
     const setEnabled = (enabled) => {
       const next = enabled === true;
 
-      // Enforce mutual exclusivity: sidebar mode cannot coexist with Quran focus mode.
-      // Exit focus mode first so visibility/layout restore happens cleanly.
+      // Enforce mutual exclusivity: sidebar mode cannot coexist with Quran focus mode or Moment mode.
+      // Exit other modes first so visibility/layout restore happens cleanly.
       if (next) {
         try {
           if (
@@ -435,13 +435,22 @@ class MuslimDashboard {
             this._setQuranFocusModeEnabled(false);
           }
         } catch (e) {}
+
+        try {
+          if (
+            this._momentModeActive &&
+            typeof this._setMomentModeEnabled === "function"
+          ) {
+            this._setMomentModeEnabled(false);
+          }
+        } catch (e) {}
       }
 
       // Guard: sidebar mode requires enough viewport width.
       if (next && !isSidebarWidthSupported()) {
         this.showToast(
           "Your screen width doesn't support sidebar mode",
-          "info"
+          "info",
         );
 
         try {
@@ -467,6 +476,7 @@ class MuslimDashboard {
           s.sidebarModeEnabled = true;
           // Ensure other modes are off.
           s.quranFocusModeEnabled = false;
+          s.momentModeEnabled = false;
           s.lastDashboardMode = "sidebar";
           this.storage.saveSettings(s);
         } catch (e) {}
@@ -503,19 +513,22 @@ class MuslimDashboard {
     // Restore last state from settings
     try {
       const s = this.storage.getSettings();
-      // Enforce exclusivity on startup: if Quran focus is the active/last mode,
+      // Enforce exclusivity on startup: if Quran focus or Moment mode is the active/last mode,
       // do not also restore sidebar mode.
       const focusInitial =
         s.quranFocusModeEnabled === true ||
         s.lastDashboardMode === "quranFocus";
+      const momentInitial =
+        s.momentModeEnabled === true || s.lastDashboardMode === "moment";
       const initial =
         !focusInitial &&
+        !momentInitial &&
         (s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar");
 
       if (initial && !isSidebarWidthSupported()) {
         this.showToast(
           "Your screen width doesn't support sidebar mode",
-          "info"
+          "info",
         );
         setEnabled(false);
       } else {
@@ -538,7 +551,7 @@ class MuslimDashboard {
           setEnabled(false);
           this.showToast(
             "It's no longer possible to stay in sidebars mode with your current screen width.",
-            "info"
+            "info",
           );
         }
       }, 120);
@@ -648,7 +661,7 @@ class MuslimDashboard {
       this.weather,
       this.flashcards,
       this.hadith,
-      this.adhkar
+      this.adhkar,
     );
     this.settings.init();
 
@@ -656,7 +669,7 @@ class MuslimDashboard {
     const settings = this.storage.getSettings();
     this.settings.applyContainerWidth(
       settings.containerWidth || "narrow",
-      settings.containerWidthCustom || 70
+      settings.containerWidthCustom || 70,
     );
 
     // Apply floating mode positions/states before visibility + layout calculations
@@ -691,6 +704,9 @@ class MuslimDashboard {
 
     // Initialize Quran Focus Mode
     this.initQuranFocusMode();
+
+    // Initialize Moment Mode
+    this.initMomentMode();
 
     // Add global Refresh Background button handler (bottom-right UI)
     const refreshBtn = document.getElementById("refreshBgBtn");
@@ -738,42 +754,42 @@ class MuslimDashboard {
         })
         .catch((err) => {
           console.warn("Prayer times init background error:", err);
-        })
+        }),
     );
 
     // Quotes initialization (loads default quotes JSON)
     backgroundTasks.push(
       this.quotes.init().catch((err) => {
         console.warn("Quotes init background error:", err);
-      })
+      }),
     );
 
     // Weather initialization (includes geolocation + weather API)
     backgroundTasks.push(
       this.weather.init().catch((err) => {
         console.warn("Weather init background error:", err);
-      })
+      }),
     );
 
     // Flashcards initialization (loads CSV data)
     backgroundTasks.push(
       this.flashcards.init().catch((err) => {
         console.warn("Flashcards init background error:", err);
-      })
+      }),
     );
 
     // Hadith initialization (loads default JSON sets)
     backgroundTasks.push(
       this.hadith.init().catch((err) => {
         console.warn("Hadith init background error:", err);
-      })
+      }),
     );
 
     // Adhkar initialization (loads default JSON sets)
     backgroundTasks.push(
       this.adhkar.init().catch((err) => {
         console.warn("Adhkar init background error:", err);
-      })
+      }),
     );
 
     // Wait for all background tasks to complete (non-blocking for UI)
@@ -843,7 +859,7 @@ class MuslimDashboard {
     const setupBlurMenu = ({ cardId, stateKey, blurPowerKey }) => {
       const card = document.getElementById(cardId);
       const menu = document.querySelector(
-        `.card-blur-menu[data-card-id="${cardId}"]`
+        `.card-blur-menu[data-card-id="${cardId}"]`,
       );
 
       if (!card || !menu) return null;
@@ -877,7 +893,7 @@ class MuslimDashboard {
           card.style.setProperty("--glass-border", colors.glassBorder);
           card.style.setProperty(
             "--glass-shadow",
-            "0 8px 32px rgba(0, 0, 0, 0.3)"
+            "0 8px 32px rgba(0, 0, 0, 0.3)",
           );
           return;
         }
@@ -900,7 +916,7 @@ class MuslimDashboard {
 
           return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
             base.b,
-            mix.b
+            mix.b,
           )})`;
         };
 
@@ -919,7 +935,7 @@ class MuslimDashboard {
         card.style.setProperty("--glass-border", solidBorder);
         card.style.setProperty(
           "--glass-shadow",
-          "0 4px 20px rgba(0, 0, 0, 0.2)"
+          "0 4px 20px rgba(0, 0, 0, 0.2)",
         );
       };
 
@@ -976,7 +992,7 @@ class MuslimDashboard {
           // Custom blur power
           card.style.setProperty(
             "--ui-blur-multiplier",
-            String(effectiveBlurPower)
+            String(effectiveBlurPower),
           );
           card.dataset.blurOverride = String(effectiveBlurPower);
         } else {
@@ -1004,7 +1020,7 @@ class MuslimDashboard {
         // Notify components
         try {
           document.dispatchEvent(
-            new CustomEvent("md:card-blur-update", { detail: { cardId } })
+            new CustomEvent("md:card-blur-update", { detail: { cardId } }),
           );
         } catch (e) {}
       };
@@ -1040,7 +1056,7 @@ class MuslimDashboard {
         if (sliderWrap) {
           sliderWrap.classList.toggle(
             "disabled",
-            isGlassOff || !customBlurEnabled
+            isGlassOff || !customBlurEnabled,
           );
         }
 
@@ -1072,7 +1088,7 @@ class MuslimDashboard {
       applyGlassState(
         currentGlassState,
         currentCustomEnabled,
-        currentCustomPower
+        currentCustomPower,
       );
 
       // Toggle popup open/close
@@ -1127,7 +1143,7 @@ class MuslimDashboard {
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
-            currentCustomPower
+            currentCustomPower,
           );
           writeSettings({ [stateKey]: newState });
         });
@@ -1150,7 +1166,7 @@ class MuslimDashboard {
         applyGlassState(
           currentGlassState,
           currentCustomEnabled,
-          currentCustomPower
+          currentCustomPower,
         );
         writeSettings({ [blurPowerKey + "Enabled"]: currentCustomEnabled });
       });
@@ -1171,7 +1187,7 @@ class MuslimDashboard {
         applyGlassState(
           currentGlassState,
           currentCustomEnabled,
-          currentCustomPower
+          currentCustomPower,
         );
         writeSettings({ [blurPowerKey]: currentCustomPower });
       });
@@ -1183,7 +1199,7 @@ class MuslimDashboard {
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
-            currentCustomPower
+            currentCustomPower,
           );
         }
       });
@@ -1193,7 +1209,7 @@ class MuslimDashboard {
         applyGlassState(
           currentGlassState,
           currentCustomEnabled,
-          currentCustomPower
+          currentCustomPower,
         );
       });
 
@@ -1204,7 +1220,7 @@ class MuslimDashboard {
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
-            currentCustomPower
+            currentCustomPower,
           );
         }
       });
@@ -1216,7 +1232,7 @@ class MuslimDashboard {
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
-            currentCustomPower
+            currentCustomPower,
           ),
       };
     };
@@ -1280,7 +1296,7 @@ class MuslimDashboard {
           if (!cardId) return;
 
           const cardStateKey = blurConfigs.find(
-            (c) => c.cardId === cardId
+            (c) => c.cardId === cardId,
           )?.stateKey;
           const cardState = settings?.[cardStateKey] || "dashboard";
 
@@ -1357,6 +1373,16 @@ class MuslimDashboard {
         }
       } catch (e) {}
 
+      // Also exit Moment Mode if active
+      try {
+        if (
+          this._momentModeActive &&
+          typeof this._setMomentModeEnabled === "function"
+        ) {
+          this._setMomentModeEnabled(false);
+        }
+      } catch (e) {}
+
       this._quranFocusModeActive = true;
       focusBtn.setAttribute("aria-pressed", "true");
       focusBtn.classList.add("active");
@@ -1366,6 +1392,7 @@ class MuslimDashboard {
         s.quranFocusModeEnabled = true;
         // Ensure other modes are off.
         s.sidebarModeEnabled = false;
+        s.momentModeEnabled = false;
         s.lastDashboardMode = "quranFocus";
         this.storage.saveSettings(s);
       } catch (e) {}
@@ -1484,7 +1511,7 @@ class MuslimDashboard {
           typeof this.gridLayout.applyLayout === "function"
         ) {
           this.gridLayout.loadLayoutForMode(
-            this.gridLayout.isSidebarModeEnabled ? "sidebar" : "normal"
+            this.gridLayout.isSidebarModeEnabled ? "sidebar" : "normal",
           );
           this.gridLayout.applyLayout();
         }
@@ -1504,7 +1531,7 @@ class MuslimDashboard {
         ) {
           this.settings.applyContainerWidth(
             s.containerWidth || "narrow",
-            s.containerWidthCustom || 70
+            s.containerWidthCustom || 70,
           );
         }
       } catch (e) {}
@@ -1554,9 +1581,13 @@ class MuslimDashboard {
     // Restore last state from settings
     try {
       const s = this.storage.getSettings();
+      // Don't restore Quran focus if Moment mode is the last mode
+      const momentInitial =
+        s.momentModeEnabled === true || s.lastDashboardMode === "moment";
       const initial =
-        s.quranFocusModeEnabled === true ||
-        s.lastDashboardMode === "quranFocus";
+        !momentInitial &&
+        (s.quranFocusModeEnabled === true ||
+          s.lastDashboardMode === "quranFocus");
       if (initial) {
         // Capture what the user was using before focus (if we have a hint),
         // but do not restore it simultaneously.
@@ -1573,6 +1604,284 @@ class MuslimDashboard {
         } catch (e) {}
 
         enterFocusMode({ preservePreviousMode: true });
+      }
+    } catch (e) {}
+  }
+
+  /**
+   * Initialize Moment Mode
+   * Minimalist layout with transparent components
+   * Moves actual components (prayerTimesCard, quoteSection, pinnedAppsSection, searchBarSection)
+   * into moment mode containers with transparent styling
+   */
+  initMomentMode() {
+    const momentBtn = document.getElementById("momentModeBtn");
+    if (!momentBtn) return;
+
+    this._momentModeActive = false;
+    this._momentModeUpdateInterval = null;
+    
+    // Store original parent references for restoring components
+    this._momentModeOriginalParents = {};
+
+    const updateMomentClock = () => {
+      const now = new Date();
+      const settings = this.storage.getSettings();
+      const headingSettings = settings.heading || {};
+      const clockFormat =
+        headingSettings.clockFormat || settings.timeFormat || "24h";
+      const is24h = clockFormat === "24h";
+      const showAmPm = headingSettings.showAmPm !== false;
+
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+
+      const clockTime = document.getElementById("momentClockTime");
+      const clockSeconds = document.getElementById("momentClockSeconds");
+      const clockAmPm = document.getElementById("momentClockAmPm");
+
+      if (!is24h) {
+        const suffix = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        if (clockTime) clockTime.textContent = `${hours}:${minutes}`;
+        if (clockSeconds) clockSeconds.textContent = `:${seconds}`;
+        if (clockAmPm) {
+          clockAmPm.textContent = showAmPm ? suffix : "";
+          clockAmPm.style.display = showAmPm ? "" : "none";
+        }
+      } else {
+        if (clockTime)
+          clockTime.textContent = `${String(hours).padStart(2, "0")}:${minutes}`;
+        if (clockSeconds) clockSeconds.textContent = `:${seconds}`;
+        if (clockAmPm) {
+          clockAmPm.textContent = "";
+          clockAmPm.style.display = "none";
+        }
+      }
+    };
+
+    const updateMomentDate = () => {
+      const now = new Date();
+      const settings = this.storage.getSettings();
+
+      // Format Hijri date
+      const hijriDate = this.hijri.toHijri(now, settings.hijriAdjustment || 0);
+      const hijriText = this.hijri.format(hijriDate, "full", "en");
+
+      // Format Gregorian date
+      const gregorianOptions = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      const gregorianText = now.toLocaleDateString("en-US", gregorianOptions);
+
+      const momentDate = document.getElementById("momentDate");
+      if (momentDate) {
+        momentDate.innerHTML = `${hijriText} AH<br>${gregorianText}`;
+      }
+    };
+
+    const moveComponentsToMomentMode = () => {
+      const momentLeft = document.getElementById("momentModeLeft");
+      const momentMiddle = document.getElementById("momentModeMiddle");
+
+      // Components to move
+      const prayerTimesCard = document.getElementById("prayerTimesCard");
+      const quoteSection = document.getElementById("quoteSection");
+      const pinnedAppsSection = document.getElementById("pinnedAppsSection");
+      const searchBarSection = document.getElementById("searchBarSection");
+
+      // Store original parents and next siblings for restoration
+      if (prayerTimesCard) {
+        this._momentModeOriginalParents.prayerTimesCard = {
+          parent: prayerTimesCard.parentElement,
+          nextSibling: prayerTimesCard.nextElementSibling,
+        };
+        if (momentLeft) {
+          momentLeft.appendChild(prayerTimesCard);
+        }
+      }
+
+      if (quoteSection) {
+        this._momentModeOriginalParents.quoteSection = {
+          parent: quoteSection.parentElement,
+          nextSibling: quoteSection.nextElementSibling,
+        };
+        if (momentMiddle) {
+          momentMiddle.appendChild(quoteSection);
+        }
+      }
+
+      if (pinnedAppsSection) {
+        this._momentModeOriginalParents.pinnedAppsSection = {
+          parent: pinnedAppsSection.parentElement,
+          nextSibling: pinnedAppsSection.nextElementSibling,
+        };
+        if (momentMiddle) {
+          momentMiddle.appendChild(pinnedAppsSection);
+        }
+      }
+
+      if (searchBarSection) {
+        this._momentModeOriginalParents.searchBarSection = {
+          parent: searchBarSection.parentElement,
+          nextSibling: searchBarSection.nextElementSibling,
+        };
+        if (momentMiddle) {
+          momentMiddle.appendChild(searchBarSection);
+        }
+      }
+    };
+
+    const restoreComponentsFromMomentMode = () => {
+      // Restore each component to its original location
+      const restoreComponent = (id) => {
+        const component = document.getElementById(id);
+        const original = this._momentModeOriginalParents[id];
+        if (component && original && original.parent) {
+          if (original.nextSibling) {
+            original.parent.insertBefore(component, original.nextSibling);
+          } else {
+            original.parent.appendChild(component);
+          }
+        }
+      };
+
+      restoreComponent("prayerTimesCard");
+      restoreComponent("quoteSection");
+      restoreComponent("pinnedAppsSection");
+      restoreComponent("searchBarSection");
+
+      // Clear stored references
+      this._momentModeOriginalParents = {};
+    };
+
+    const enterMomentMode = () => {
+      // Exit other modes first
+      try {
+        if (
+          this._quranFocusModeActive &&
+          typeof this._setQuranFocusModeEnabled === "function"
+        ) {
+          this._setQuranFocusModeEnabled(false);
+        }
+      } catch (e) {}
+
+      try {
+        if (
+          this.sidebarModeEnabled &&
+          typeof this._setSidebarModeEnabled === "function"
+        ) {
+          this._setSidebarModeEnabled(false);
+        }
+      } catch (e) {}
+
+      this._momentModeActive = true;
+      momentBtn.setAttribute("aria-pressed", "true");
+      momentBtn.classList.add("active");
+      document.body.classList.add("moment-mode");
+
+      // Move actual components to moment mode containers
+      moveComponentsToMomentMode();
+
+      // Initialize clock and date
+      updateMomentClock();
+      updateMomentDate();
+
+      // Start update interval for clock
+      this._momentModeUpdateInterval = setInterval(() => {
+        updateMomentClock();
+      }, 1000);
+
+      // Close FAB menu
+      const fabMenu = document.getElementById("fabMenu");
+      const fabToggle = document.getElementById("fabMenuToggle");
+      const fabItems = document.getElementById("fabMenuItems");
+      if (fabMenu && fabMenu.classList.contains("open")) {
+        fabMenu.classList.remove("open");
+        if (fabToggle) {
+          fabToggle.setAttribute("aria-expanded", "false");
+        }
+        if (fabItems) {
+          fabItems.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      // Save state
+      try {
+        const s = this.storage.getSettings();
+        s.momentModeEnabled = true;
+        s.sidebarModeEnabled = false;
+        s.quranFocusModeEnabled = false;
+        s.lastDashboardMode = "moment";
+        this.storage.saveSettings(s);
+      } catch (e) {}
+    };
+
+    const exitMomentMode = () => {
+      this._momentModeActive = false;
+      momentBtn.setAttribute("aria-pressed", "false");
+      momentBtn.classList.remove("active");
+      document.body.classList.remove("moment-mode");
+
+      // Restore components to original locations
+      restoreComponentsFromMomentMode();
+
+      // Clear update interval
+      if (this._momentModeUpdateInterval) {
+        clearInterval(this._momentModeUpdateInterval);
+        this._momentModeUpdateInterval = null;
+      }
+
+      // Save state
+      try {
+        const s = this.storage.getSettings();
+        s.momentModeEnabled = false;
+        s.lastDashboardMode = "normal";
+        this.storage.saveSettings(s);
+      } catch (e) {}
+
+      // Trigger resize to restore layout
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch (e) {}
+    };
+
+    // Expose setter for other modes
+    this._setMomentModeEnabled = (enabled) => {
+      if (enabled) enterMomentMode();
+      else exitMomentMode();
+    };
+
+    const toggleMomentMode = () => {
+      if (this._momentModeActive) {
+        exitMomentMode();
+      } else {
+        enterMomentMode();
+      }
+    };
+
+    momentBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMomentMode();
+    });
+
+    // Handle Escape key to exit moment mode
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this._momentModeActive) {
+        exitMomentMode();
+      }
+    });
+
+    // Restore last state from settings
+    try {
+      const s = this.storage.getSettings();
+      if (s.momentModeEnabled === true || s.lastDashboardMode === "moment") {
+        enterMomentMode();
       }
     } catch (e) {}
   }
@@ -1625,7 +1934,7 @@ class MuslimDashboard {
     } else {
       this.currentTime.textContent = `${String(hours).padStart(
         2,
-        "0"
+        "0",
       )}:${minutes}`;
       if (this.currentAmPm) {
         this.currentAmPm.textContent = "";
@@ -1651,7 +1960,7 @@ class MuslimDashboard {
     const legacyShowWeekday = headingSettings.showWeekday;
     const dateFormat = this.normalizeHeadingDateFormat(
       headingSettings.dateFormat || "full",
-      legacyShowWeekday
+      legacyShowWeekday,
     );
     const showIslamicEvents = headingSettings.showIslamicEvents !== false;
 
@@ -1940,7 +2249,7 @@ class MuslimDashboard {
   setupLocationUpdates() {
     // Update qibla when prayer times location changes
     const originalUpdate = this.prayerTimes.updatePrayerTimes.bind(
-      this.prayerTimes
+      this.prayerTimes,
     );
     this.prayerTimes.updatePrayerTimes = () => {
       originalUpdate();
