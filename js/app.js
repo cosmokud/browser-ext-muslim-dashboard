@@ -1894,6 +1894,16 @@ class MuslimDashboard {
       toggleMomentMode();
     });
 
+    // Exit button at the bottom center of moment mode
+    const exitBtn = document.getElementById("momentModeExitBtn");
+    if (exitBtn) {
+      exitBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        exitMomentMode();
+      });
+    }
+
     // Handle Escape key to exit moment mode
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && this._momentModeActive) {
