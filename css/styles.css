@@ -3545,11 +3545,11 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-xl);
-  min-width: 160px;
-  height: 56px;
-  border-radius: var(--radius-full);
+  gap: 0;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border-radius: 50%;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.15) 0%,
@@ -3593,6 +3593,15 @@ body.moment-mode .moment-mode-exit-btn {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Auto-hide state (shown on activity, fades out after idle) */
+body.moment-mode .moment-mode-exit-btn.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(16px);
+  animation: none;
+}
+
 /* Icon styling */
 .moment-mode-exit-btn svg {
   width: 22px;
@@ -3604,8 +3613,15 @@ body.moment-mode .moment-mode-exit-btn {
 
 /* Label styling */
 .moment-mode-exit-btn-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  border: 0;
 }
 
 /* Hover state with beautiful glow effect */
