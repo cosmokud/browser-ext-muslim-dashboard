@@ -1625,34 +1625,6 @@ class MuslimDashboard {
     this._momentModeOriginalParents = {};
 
     const exitBtn = document.getElementById("momentModeExitBtn");
-    let exitBtnHideTimer = null;
-
-    const hideExitBtn = () => {
-      if (!exitBtn) return;
-      exitBtn.classList.add("is-hidden");
-      if (exitBtnHideTimer) {
-        clearTimeout(exitBtnHideTimer);
-        exitBtnHideTimer = null;
-      }
-    };
-
-    const showExitBtn = () => {
-      if (!exitBtn) return;
-      exitBtn.classList.remove("is-hidden");
-      if (exitBtnHideTimer) {
-        clearTimeout(exitBtnHideTimer);
-      }
-      exitBtnHideTimer = setTimeout(() => {
-        if (this._momentModeActive && exitBtn) {
-          exitBtn.classList.add("is-hidden");
-        }
-      }, 3000);
-    };
-
-    const handleExitBtnActivity = () => {
-      if (!this._momentModeActive) return;
-      showExitBtn();
-    };
 
     const updateMomentClock = () => {
       const now = new Date();
@@ -1838,8 +1810,6 @@ class MuslimDashboard {
       momentBtn.classList.add("active");
       document.body.classList.add("moment-mode");
 
-      showExitBtn();
-
       // Move actual components to moment mode containers
       moveComponentsToMomentMode();
 
@@ -1882,8 +1852,6 @@ class MuslimDashboard {
       momentBtn.setAttribute("aria-pressed", "false");
       momentBtn.classList.remove("active");
       document.body.classList.remove("moment-mode");
-
-      hideExitBtn();
 
       // Restore components to original locations
       restoreComponentsFromMomentMode();
@@ -1936,11 +1904,6 @@ class MuslimDashboard {
         exitMomentMode();
       });
     }
-
-    ["mousemove", "keydown", "touchstart", "wheel"].forEach((eventName) => {
-      const options = eventName === "keydown" ? false : { passive: true };
-      document.addEventListener(eventName, handleExitBtnActivity, options);
-    });
 
     // Handle Escape key to exit moment mode
     document.addEventListener("keydown", (e) => {

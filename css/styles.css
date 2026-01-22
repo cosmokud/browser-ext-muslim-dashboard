@@ -3537,6 +3537,30 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
    Moment Mode: Exit Button (Back to Grid)
    Beautiful floating button at bottom center
    ======================================== */
+.moment-mode-exit-hover-zone {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(640px, 96vw);
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9998;
+  pointer-events: none;
+}
+
+/* Only allow hover interaction while in moment mode */
+body.moment-mode .moment-mode-exit-hover-zone {
+  pointer-events: auto;
+}
+
+/* Keep the hover zone completely non-blocking outside moment mode */
+body:not(.moment-mode) .moment-mode-exit-hover-zone {
+  display: none;
+}
+
 .moment-mode-exit-btn {
   position: fixed;
   bottom: var(--spacing-2xl);
@@ -3585,8 +3609,9 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
     0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Show button only in moment mode */
-body.moment-mode .moment-mode-exit-btn {
+/* Reveal only when hovering/focusing the bottom-center activation zone */
+body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
+body.moment-mode .moment-mode-exit-hover-zone:focus-within .moment-mode-exit-btn {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -3662,7 +3687,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 /* Subtle floating animation when idle in moment mode */
-body.moment-mode .moment-mode-exit-btn {
+body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
+body.moment-mode .moment-mode-exit-hover-zone:focus-within .moment-mode-exit-btn {
   animation: momentExitBtnFloat 4s ease-in-out infinite;
   animation-delay: 0.5s;
 }
@@ -3680,6 +3706,16 @@ body.moment-mode .moment-mode-exit-btn {
 /* Pause animation on hover to prevent jumpiness */
 .moment-mode-exit-btn:hover {
   animation-play-state: paused;
+}
+
+/* Touch / non-hover fallback: keep the exit button visible in moment mode */
+@media (hover: none) {
+  body.moment-mode .moment-mode-exit-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Grid Toast Notifications (fallback when settings manager not available) */
