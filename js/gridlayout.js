@@ -224,7 +224,7 @@ class GridLayoutManager {
     const getIds = (zone) => {
       if (!zone) return [];
       return Array.from(
-        zone.querySelectorAll(":scope > .sidebar-slot > .grid-draggable")
+        zone.querySelectorAll(":scope > .sidebar-slot > .grid-draggable"),
       )
         .map((el) => el.dataset.gridId)
         .filter(Boolean);
@@ -295,7 +295,7 @@ class GridLayoutManager {
           try {
             slot.remove();
           } catch (e) {}
-        }
+        },
       );
     });
 
@@ -348,12 +348,12 @@ class GridLayoutManager {
         (el) =>
           el.classList &&
           el.classList.contains("grid-draggable") &&
-          !this.isComponentHidden(el)
+          !this.isComponentHidden(el),
       );
       if (visibleChildren.length === 0) {
         // If it's an empty row (or only contains placeholders/markers), remove it.
         const hasReal = Array.from(row.children).some(
-          (el) => el.classList && el.classList.contains("grid-draggable")
+          (el) => el.classList && el.classList.contains("grid-draggable"),
         );
         if (!hasReal) {
           row.remove();
@@ -453,7 +453,7 @@ class GridLayoutManager {
       if (this.draggedItemRect) {
         this.sidebarPlaceholder.style.minHeight = `${Math.min(
           this.draggedItemRect.height,
-          150
+          150,
         )}px`;
       } else {
         this.sidebarPlaceholder.style.minHeight = "100px";
@@ -546,7 +546,7 @@ class GridLayoutManager {
     try {
       const elAtPoint = document.elementFromPoint(clientX, clientY);
       const zoneAtPoint = elAtPoint?.closest?.(
-        "#sidebarLeftZone, #sidebarRightZone"
+        "#sidebarLeftZone, #sidebarRightZone",
       );
       if (zoneAtPoint === leftZone) {
         targetZone = leftZone;
@@ -676,9 +676,13 @@ class GridLayoutManager {
     });
 
     // Remove the loading state to reveal the grid
+    // Use double-rAF to ensure layout is fully calculated before showing
+    // This prevents any flash of jumbled content on fast machines
     requestAnimationFrame(() => {
-      this.grid.classList.remove("grid-layout-loading");
-      this.grid.classList.add("grid-layout-ready");
+      requestAnimationFrame(() => {
+        this.grid.classList.remove("grid-layout-loading");
+        this.grid.classList.add("grid-layout-ready");
+      });
     });
 
     document.addEventListener("wheel", this.handleWheel, { passive: false });
@@ -728,7 +732,7 @@ class GridLayoutManager {
       this.isEditModeEnabled
         ? "Layout edit mode enabled - drag components to reposition"
         : "Layout edit mode disabled",
-      this.isEditModeEnabled ? "success" : "info"
+      this.isEditModeEnabled ? "success" : "info",
     );
   }
 
@@ -740,7 +744,7 @@ class GridLayoutManager {
 
     toggleBtn.setAttribute(
       "aria-pressed",
-      this.isEditModeEnabled ? "true" : "false"
+      this.isEditModeEnabled ? "true" : "false",
     );
     toggleBtn.classList.toggle("active", this.isEditModeEnabled);
     toggleBtn.title = this.isEditModeEnabled
@@ -1097,10 +1101,10 @@ class GridLayoutManager {
    */
   updateGridItems() {
     this.gridItems = Array.from(
-      this.grid.querySelectorAll(".grid-draggable")
+      this.grid.querySelectorAll(".grid-draggable"),
     ).filter(
       (el) =>
-        !this.isComponentHidden(el) && !el.classList.contains("floating-card")
+        !this.isComponentHidden(el) && !el.classList.contains("floating-card"),
     );
   }
 
@@ -1131,7 +1135,7 @@ class GridLayoutManager {
         rowWrappers.forEach((rowWrapper) => {
           const rowItems = Array.from(rowWrapper.children);
           const visibleItems = rowItems.filter(
-            (el) => !this.isComponentHidden(el)
+            (el) => !this.isComponentHidden(el),
           );
 
           rowItems.forEach((el) => {
@@ -1243,7 +1247,7 @@ class GridLayoutManager {
       rowWrappers.forEach((rowWrapper) => {
         const rowItems = Array.from(rowWrapper.children);
         const visibleItems = rowItems.filter(
-          (el) => !this.isComponentHidden(el)
+          (el) => !this.isComponentHidden(el),
         );
 
         rowItems.forEach((el) => {
@@ -1309,7 +1313,7 @@ class GridLayoutManager {
     // Check if clicking on interactive elements - don't drag
     if (
       target.closest(
-        'button, input, select, textarea, a, [contenteditable="true"], .todo-list, .notes-editor, .flashcard-flip-card, .pocket-quran-content, .calendar-days'
+        'button, input, select, textarea, a, [contenteditable="true"], .todo-list, .notes-editor, .flashcard-flip-card, .pocket-quran-content, .calendar-days',
       )
     ) {
       return null;
@@ -1416,7 +1420,7 @@ class GridLayoutManager {
       const tempRow = document.createElement("div");
       tempRow.className = "grid-flex-row grid-flex-row-new";
       tempRow.dataset.rowIndex = String(
-        this.grid.querySelectorAll(".grid-flex-row").length
+        this.grid.querySelectorAll(".grid-flex-row").length,
       );
       this.grid.appendChild(tempRow);
       tempRow.appendChild(element);
@@ -1443,7 +1447,7 @@ class GridLayoutManager {
       row = document.createElement("div");
       row.className = "grid-flex-row grid-flex-row-new";
       row.dataset.rowIndex = String(
-        this.grid.querySelectorAll(".grid-flex-row").length
+        this.grid.querySelectorAll(".grid-flex-row").length,
       );
       this.grid.appendChild(row);
       row.appendChild(element);
@@ -1492,7 +1496,7 @@ class GridLayoutManager {
     // Insert placeholder where dragged item was
     this.draggedItem.parentNode.insertBefore(
       this.placeholder,
-      this.draggedItem
+      this.draggedItem,
     );
   }
 
@@ -1603,7 +1607,7 @@ class GridLayoutManager {
 
     const targetRowRect = targetRow.getBoundingClientRect();
     const targetLayoutRowIndex = Number.isFinite(
-      parseInt(targetRow.dataset.rowIndex, 10)
+      parseInt(targetRow.dataset.rowIndex, 10),
     )
       ? parseInt(targetRow.dataset.rowIndex, 10)
       : targetRowIndex;
@@ -1613,7 +1617,7 @@ class GridLayoutManager {
       (el) =>
         el !== this.placeholder &&
         el !== this.draggedItem &&
-        !this.isComponentHidden(el)
+        !this.isComponentHidden(el),
     );
 
     // Calculate total span in target row
@@ -1642,13 +1646,13 @@ class GridLayoutManager {
       if (wantsNewRow) {
         this.movePlaceholderToNewRow(
           targetLayoutRowIndex,
-          nearTopEdge ? "before" : "after"
+          nearTopEdge ? "before" : "after",
         );
       } else {
         const rowCenterY = targetRowRect.top + targetRowRect.height / 2;
         this.movePlaceholderToNewRow(
           targetLayoutRowIndex,
-          clientY < rowCenterY ? "before" : "after"
+          clientY < rowCenterY ? "before" : "after",
         );
       }
     } else {
@@ -1679,7 +1683,7 @@ class GridLayoutManager {
     }
 
     const children = Array.from(row.children).filter(
-      (el) => el !== this.draggedItem && !this.isComponentHidden(el)
+      (el) => el !== this.draggedItem && !this.isComponentHidden(el),
     );
 
     if (position >= children.length) {
@@ -1732,7 +1736,7 @@ class GridLayoutManager {
     }
 
     const rows = this.grid.querySelectorAll(
-      ".grid-flex-row:not(.grid-flex-row-new)"
+      ".grid-flex-row:not(.grid-flex-row-new)",
     );
     const targetRow = rows[rowIndex];
 
@@ -1809,7 +1813,7 @@ class GridLayoutManager {
     // Get final position from placeholder
     const placeholderParent = this.placeholder.parentNode;
     const placeholderIndex = Array.from(placeholderParent.children).indexOf(
-      this.placeholder
+      this.placeholder,
     );
 
     // Animate dragged item to placeholder position
@@ -1854,7 +1858,7 @@ class GridLayoutManager {
     this.grid.querySelectorAll(".grid-flex-row").forEach((row) => {
       row.classList.remove("grid-flex-row-new", "grid-row-target");
       const visibleChildren = Array.from(row.children).filter(
-        (el) => !this.isComponentHidden(el)
+        (el) => !this.isComponentHidden(el),
       );
       if (visibleChildren.length === 0) {
         // Move any hidden items to nearest row before removing

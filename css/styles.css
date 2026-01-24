@@ -517,7 +517,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
   text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
-  animation: slideInLeft 0.6s ease-out;
+  /* Animation applied by .grid-layout-ready for controlled startup */
 }
 
 @keyframes slideInLeft {
@@ -560,7 +560,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .time-section {
   display: flex;
   align-items: baseline;
-  animation: slideInRight 0.6s ease-out;
+  /* Animation applied by .grid-layout-ready for controlled startup */
   /* Keep clock layout stable as digits change */
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -723,7 +723,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   will-change: transform, box-shadow;
   backface-visibility: hidden;
   transform: translateZ(0);
-  animation: fadeInUpBlurSafe 0.8s ease-out 0.2s backwards;
+  /* Animation applied by .grid-layout-ready for controlled startup */
 }
 
 .quote-container:hover {
@@ -3611,7 +3611,9 @@ body:not(.moment-mode) .moment-mode-exit-hover-zone {
 
 /* Reveal only when hovering/focusing the bottom-center activation zone */
 body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
-body.moment-mode .moment-mode-exit-hover-zone:focus-within .moment-mode-exit-btn {
+body.moment-mode
+  .moment-mode-exit-hover-zone:focus-within
+  .moment-mode-exit-btn {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -3688,7 +3690,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 /* Subtle floating animation when idle in moment mode */
 body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
-body.moment-mode .moment-mode-exit-hover-zone:focus-within .moment-mode-exit-btn {
+body.moment-mode
+  .moment-mode-exit-hover-zone:focus-within
+  .moment-mode-exit-btn {
   animation: momentExitBtnFloat 4s ease-in-out infinite;
   animation-delay: 0.5s;
 }
@@ -13668,21 +13672,87 @@ body.sidebar-mode .sidebar-zone .weather-chart {
    ======================================== */
 
 /* 
- * Fast startup: Show components immediately with very brief opacity transition.
- * Components are visible and interactive from the start.
- * The opacity transition is purely cosmetic and does not block interaction.
+ * Fast startup: Hide content completely until layout is stable to prevent FOUC.
+ * The JS applies layout order first, then reveals with a fast, smooth animation.
+ * This prevents the "jumbled components" flash on startup/refresh.
  */
 .grid-layout-loading {
-  opacity: 0.7;
-  visibility: visible;
-  pointer-events: auto; /* Allow interaction even during loading */
+  opacity: 0;
+  visibility: hidden;
+  /* Layout is calculated but not visible - prevents jumbled flash */
 }
 
-/* Smooth reveal after layout is ready - fast transition */
+/* Smooth reveal after layout is ready - very fast but polished transition */
 .grid-layout-ready {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.15s ease-out;
+  pointer-events: auto;
+  /* Fast 120ms transition - quick enough to feel instant but smooth enough to look polished */
+  transition:
+    opacity 0.12s ease-out,
+    visibility 0s linear 0s;
+}
+
+/* Ensure child animations only play AFTER the grid is visible */
+.grid-layout-loading .greeting,
+.grid-layout-loading .time-section,
+.grid-layout-loading .pinned-apps-section,
+.grid-layout-loading .search-bar-section,
+.grid-layout-loading .quote-section,
+.grid-layout-loading .quote-container,
+.grid-layout-loading .widget-card,
+.grid-layout-loading .compact-weather {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Apply fast startup animations only when grid is ready */
+.grid-layout-ready .greeting {
+  animation: fastSlideInLeft 0.2s ease-out;
+}
+
+.grid-layout-ready .time-section {
+  animation: fastSlideInRight 0.2s ease-out;
+}
+
+/* Fast, subtle fade-in for quote on startup */
+.grid-layout-ready .quote-container {
+  animation: fastFadeInUp 0.25s ease-out;
+}
+
+/* Fast startup animations - shorter duration for snappy feel */
+@keyframes fastSlideInLeft {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fastSlideInRight {
+  0% {
+    opacity: 0.5;
+    transform: translateX(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fastFadeInUp {
+  0% {
+    opacity: 0.6;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Weather loading placeholder */

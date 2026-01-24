@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Muslim Dashboard</title>
+    <!-- Critical CSS: Prevent FOUC by hiding content until JS is ready -->
+    <style>
+      /* Hide main content until layout is stable - prevents flash of jumbled content */
+      .content-grid.grid-layout-loading {
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+      /* Fast reveal animation class applied by JS */
+      .content-grid.grid-layout-ready {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+    </style>
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
