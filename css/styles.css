@@ -2998,7 +2998,7 @@ body.moment-mode {
 /* Moment mode uses 3-column layout with exact viewport percentages */
 body.moment-mode .sidebar-layout {
   display: grid;
-  grid-template-columns: 15vw 70vw 15vw;
+  grid-template-columns: 10vw 80vw 10vw;
   grid-template-rows: 1fr;
   align-items: start;
   width: 100vw;
@@ -3020,7 +3020,7 @@ body.moment-mode .sidebar-column {
 
 body.moment-mode .sidebar-left {
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 body.moment-mode .sidebar-right {
@@ -3057,6 +3057,7 @@ body.moment-mode .sidebar-zone {
 body.moment-mode .moment-mode-left {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--spacing-md);
   width: 100%;
 }
@@ -3166,6 +3167,8 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
   background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -3174,6 +3177,12 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   padding: 0 !important;
   margin: 0 !important;
   animation: none !important;
+}
+
+/* Force all children to stretch full width */
+body.moment-mode .moment-mode-left .prayer-times-card > * {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card:hover {
@@ -3188,10 +3197,9 @@ body.moment-mode .moment-mode-left .prayer-times-card .location-display {
   display: none !important;
 }
 
-/* Next Prayer Row - CSS Grid for perfect alignment */
+/* Next Prayer Row - keep countdown alignment, align label + name inline */
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
+  display: flex !important;
   align-items: center !important;
   width: 100% !important;
   background: transparent !important;
@@ -3199,10 +3207,11 @@ body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
   box-shadow: none !important;
   padding: 0 !important;
   margin: 0 0 var(--spacing-sm) 0 !important;
-  gap: var(--spacing-md) !important;
+  gap: var(--spacing-xs) !important;
+  flex-wrap: nowrap !important;
 }
 
-/* Left side of next-prayer: label and name grouped */
+/* Left side of next-prayer: label and name inline */
 body.moment-mode
   .moment-mode-left
   .prayer-times-card
@@ -3213,19 +3222,16 @@ body.moment-mode
   .prayer-times-card
   .next-prayer
   .next-prayer-name {
-  grid-column: 1 !important;
-  justify-self: start !important;
   white-space: nowrap !important;
 }
 
-/* Right side of next-prayer: countdown aligned right */
+/* Right side of next-prayer: countdown aligned right (unchanged positioning) */
 body.moment-mode
   .moment-mode-left
   .prayer-times-card
   .next-prayer
   .next-prayer-countdown {
-  grid-column: 2 !important;
-  justify-self: end !important;
+  margin-left: auto !important;
   text-align: right !important;
   white-space: nowrap !important;
 }
