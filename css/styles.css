@@ -2987,84 +2987,93 @@ body.quran-focus-mode .grid-flex-row {
 
 /* ========================================
    Moment Mode
-   Minimalist layout with transparent components
-   Uses actual components from normal mode
+   Simple flexbox 3-column layout with zoom scaling
    ======================================== */
 
+/* Base body state */
 body.moment-mode {
   overflow: hidden;
 }
 
-/* Moment mode uses 3-column layout */
+/* Main layout container - simple flexbox row */
 body.moment-mode .sidebar-layout {
-  display: grid;
-  grid-template-columns: 20vw 1fr 20vw;
-  grid-template-rows: 1fr;
-  align-items: start;
+  display: flex;
+  flex-direction: row;
   width: 100vw;
   height: 100vh;
-  margin: 0;
   overflow: hidden;
 }
 
-body.moment-mode .sidebar-column {
+/* Left sidebar */
+body.moment-mode .sidebar-left {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 180px;
+  max-width: 280px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden;
+  justify-content: flex-start;
+  align-items: flex-start;
   padding: var(--spacing-xl);
 }
 
-body.moment-mode .sidebar-left {
-  justify-content: flex-start;
-  align-items: stretch;
-}
-
-body.moment-mode .sidebar-right {
-  justify-content: flex-start;
-  align-items: flex-end;
-}
-
+/* Middle section - takes remaining space */
 body.moment-mode .sidebar-middle {
+  flex: 1 1 auto;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  height: 100vh;
   padding: var(--spacing-xl);
   padding-top: var(--spacing-2xl);
 }
 
+/* Right sidebar */
+body.moment-mode .sidebar-right {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 180px;
+  max-width: 280px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: var(--spacing-xl);
+}
+
+/* Hide main container in moment mode */
 body.moment-mode .main-container {
   display: none !important;
 }
 
-/* Hide the default sidebar zones in moment mode */
+/* Hide sidebar zones in moment mode */
 body.moment-mode .sidebar-zone {
   display: none;
 }
 
 /* ===== Moment Mode Panel Containers ===== */
 
-/* Left panel container (for prayer times) */
-.moment-mode-left {
+.moment-mode-left,
+.moment-mode-middle,
+.moment-mode-right {
   display: none;
 }
 
 body.moment-mode .moment-mode-left {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: var(--spacing-md);
-  width: 100%;
 }
 
-/* Right panel container (clock and date) */
-.moment-mode-right {
-  display: none;
+body.moment-mode .moment-mode-middle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  width: 100%;
 }
 
 body.moment-mode .moment-mode-right {
@@ -3074,38 +3083,17 @@ body.moment-mode .moment-mode-right {
   gap: var(--spacing-xs);
 }
 
-/* Middle panel container (quote, pinned apps, search) */
-.moment-mode-middle {
-  display: none;
-}
-
-body.moment-mode .moment-mode-middle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  gap: var(--spacing-lg);
-}
-
-/* Content width constraint for most middle elements (except pinned apps) */
-body.moment-mode .moment-mode-middle > *:not(.pinned-apps-section) {
-  max-width: 800px;
-  width: 100%;
-}
-
-/* ===== Moment Mode: Right Panel (Clock & Date) ===== */
+/* ===== Moment Mode: Clock & Date ===== */
 
 .moment-clock {
   font-size: 4rem;
   font-weight: 300;
   color: var(--text-primary);
-  text-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   line-height: 1;
   display: flex;
   align-items: baseline;
+  white-space: nowrap;
 }
 
 .moment-clock-seconds {
@@ -3124,22 +3112,21 @@ body.moment-mode .moment-mode-middle > *:not(.pinned-apps-section) {
 .moment-date {
   font-size: 1.1rem;
   color: var(--text-secondary);
-  text-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   text-align: right;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
-/* ===== Moment Mode: Text Shadow Mixin for All Text ===== */
+/* ===== Moment Mode: Text Shadows ===== */
+
 body.moment-mode .moment-mode-left *,
 body.moment-mode .moment-mode-middle *,
 body.moment-mode .moment-mode-right * {
-  text-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Transparent buttons */
 body.moment-mode .moment-mode-left button,
 body.moment-mode .moment-mode-middle button,
 body.moment-mode .moment-mode-right button {
@@ -3147,196 +3134,103 @@ body.moment-mode .moment-mode-right button {
   border: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-input {
   background: transparent !important;
   border: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
 }
 
-/* ===== Moment Mode: Prayer Times Card Styling ===== */
+/* ===== Moment Mode: Prayer Times ===== */
 
-/* Prayer Times Card - full width of momentModeLeft */
 body.moment-mode .moment-mode-left .prayer-times-card {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 100% !important;
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  margin: 0 !important;
   animation: none !important;
-}
-
-/* Force all children to stretch full width */
-body.moment-mode .moment-mode-left .prayer-times-card > * {
-  width: 100% !important;
-  max-width: 100% !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card:hover {
   transform: none !important;
-  box-shadow: none !important;
 }
 
-/* Hide card header elements */
 body.moment-mode .moment-mode-left .prayer-times-card .card-header,
 body.moment-mode .moment-mode-left .prayer-times-card .card-title,
 body.moment-mode .moment-mode-left .prayer-times-card .location-display {
   display: none !important;
 }
 
-/* Next Prayer Row - keep countdown alignment, align label + name inline */
 body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
   display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  margin: 0 0 var(--spacing-sm) 0 !important;
-  gap: var(--spacing-xs) !important;
-  flex-wrap: nowrap !important;
-}
-
-/* Left side of next-prayer: label and name inline */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-label,
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-name {
+  margin-bottom: var(--spacing-sm) !important;
   white-space: nowrap !important;
 }
 
-/* Right side of next-prayer: countdown aligned right (unchanged positioning) */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .next-prayer
-  .next-prayer-countdown {
+body.moment-mode .moment-mode-left .prayer-times-card .next-prayer-countdown {
   margin-left: auto !important;
-  text-align: right !important;
-  white-space: nowrap !important;
 }
 
-/* Prayer List Container */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-list {
   display: flex !important;
   flex-direction: column !important;
-  width: 100% !important;
   gap: var(--spacing-xs) !important;
 }
 
-/* Prayer Item - CSS Grid for 2-column layout */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
-  align-items: center !important;
-  width: 100% !important;
-  padding: var(--spacing-xs) 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
   background: transparent !important;
   border: none !important;
-  border-radius: 0 !important;
   box-shadow: none !important;
-  gap: var(--spacing-md) !important;
+  padding: var(--spacing-xs) 0 !important;
+  white-space: nowrap !important;
 }
 
-/* All prayer item states - transparent */
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.current,
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.active,
 body.moment-mode .moment-mode-left .prayer-times-card .prayer-item.next {
   background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
 }
 
-/* Prayer Name - Column 1, left aligned */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .prayer-item
-  .prayer-name {
-  grid-column: 1 !important;
-  justify-self: start !important;
-  text-align: left !important;
-  white-space: nowrap !important;
-}
+/* ===== Moment Mode: Quote Section ===== */
 
-/* Prayer Time - Column 2, right aligned */
-body.moment-mode
-  .moment-mode-left
-  .prayer-times-card
-  .prayer-item
-  .prayer-time {
-  grid-column: 2 !important;
-  justify-self: end !important;
-  text-align: right !important;
-  white-space: nowrap !important;
-}
-
-/* ===== Moment Mode: Quote Section Styling ===== */
-
-/* Wrapper container to center the quote section independently */
 body.moment-mode .moment-mode-middle .moment-quote-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
-  max-width: 1200px;
 }
 
 body.moment-mode .moment-mode-middle .quote-section {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-lg);
   animation: none;
-  width: fit-content;
-  min-width: 0;
-  max-width: 1200px;
+  max-width: 900px;
 }
 
-/* Ensure nav buttons don't overlap content - add side padding for button space */
-body.moment-mode .moment-mode-middle .quote-section .quote-container {
-  padding-left: 60px;
-  padding-right: 60px;
+body.moment-mode .moment-mode-middle .quote-section:hover {
+  transform: none;
 }
 
 body.moment-mode .moment-mode-middle .quote-section * {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
 }
 
-body.moment-mode .moment-mode-middle .quote-section:hover {
-  transform: none;
-  box-shadow: none;
-}
-
 body.moment-mode .moment-mode-middle .quote-section .quote-container {
   text-align: center;
+  padding: 0 50px;
 }
 
 body.moment-mode .moment-mode-middle .quote-section .quote-icon {
@@ -3355,26 +3249,18 @@ body.moment-mode .moment-mode-middle .quote-section .quote-source {
 }
 
 body.moment-mode .moment-mode-middle .quote-section .quote-nav-btn {
-  background: transparent !important;
-  border: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
 }
 
-body.moment-mode .moment-mode-middle .quote-section .quote-nav-btn:hover {
-  background: transparent !important;
-}
+/* ===== Moment Mode: Pinned Apps ===== */
 
-/* ===== Moment Mode: Pinned Apps Section Styling ===== */
 body.moment-mode .moment-mode-middle .pinned-apps-section {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-md);
   animation: none;
-  width: auto;
-  max-width: none;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -3393,25 +3279,8 @@ body.moment-mode .moment-mode-middle .pinned-apps-section:focus-within {
 body.moment-mode .moment-mode-middle .pinned-apps-section * {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
-}
-
-body.moment-mode .moment-mode-middle .pinned-apps-section:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-body.moment-mode .moment-mode-middle .pinned-apps-grid {
-  justify-content: center;
-  width: auto;
-  max-width: none;
-}
-
-body.moment-mode .moment-mode-middle .pinned-apps-track {
-  width: auto;
-  max-width: none;
 }
 
 body.moment-mode .moment-mode-middle .pinned-app {
@@ -3420,41 +3289,25 @@ body.moment-mode .moment-mode-middle .pinned-app {
 
 body.moment-mode .moment-mode-middle .pinned-app-icon {
   border: 1px solid rgba(255, 255, 255, 0.4);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
 
-body.moment-mode .moment-mode-middle .pinned-app-add {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-}
+/* ===== Moment Mode: Search Bar ===== */
 
-body.moment-mode .moment-mode-middle .pinned-app:hover {
-  background: transparent !important;
-}
-
-/* ===== Moment Mode: Search Bar Section Styling ===== */
-
-/* Wrapper container to center the search bar independently */
 body.moment-mode .moment-mode-middle .moment-search-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
-  max-width: 1200px;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-section {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-md);
   animation: none;
-  width: auto;
-  min-width: 200px;
-  max-width: 480px;
+  min-width: 280px;
+  max-width: 400px;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -3464,85 +3317,26 @@ body.moment-mode .moment-mode-middle .search-bar-section {
 }
 
 body.moment-mode .moment-mode-middle:hover .search-bar-section,
-body.moment-mode .moment-mode-middle .search-bar-section:focus-within,
-body.moment-mode
-  .moment-mode-middle
-  .moment-search-wrapper:hover
-  .search-bar-section {
+body.moment-mode .moment-mode-middle .search-bar-section:focus-within {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-section:hover {
-  transform: none;
-  box-shadow: none;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-shell {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-input {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-input:focus {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-btn {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-btn:hover {
-  background: transparent !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-engines {
-  background: transparent;
 }
 
 body.moment-mode .moment-mode-middle .search-bar-engine-tab {
   background: transparent !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-  filter: none !important;
 }
 
-body.moment-mode .moment-mode-middle .search-bar-engine-tab:hover,
-body.moment-mode
-  .moment-mode-middle
-  .search-bar-engine-tab[aria-selected="true"] {
-  background: transparent !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-}
+/* ===== Moment Mode: Exit Button ===== */
 
-body.moment-mode .moment-mode-middle .search-bar-engine-arrow {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
-}
-
-body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
-  background: transparent !important;
-}
-
-/* ========================================
-   Moment Mode: Exit Button (Back to Grid)
-   Beautiful floating button at bottom center
-   ======================================== */
 .moment-mode-exit-hover-zone {
   position: fixed;
   left: 50%;
@@ -3557,12 +3351,10 @@ body.moment-mode .moment-mode-middle .search-bar-engine-arrow:hover {
   pointer-events: none;
 }
 
-/* Only allow hover interaction while in moment mode */
 body.moment-mode .moment-mode-exit-hover-zone {
   pointer-events: auto;
 }
 
-/* Keep the hover zone completely non-blocking outside moment mode */
 body:not(.moment-mode) .moment-mode-exit-hover-zone {
   display: none;
 }
@@ -3575,47 +3367,26 @@ body:not(.moment-mode) .moment-mode-exit-hover-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
   width: 64px;
   height: 64px;
-  padding: 0;
   border-radius: 50%;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 100%
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.05)
   );
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: var(--text-primary);
   cursor: pointer;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.25),
-    0 4px 16px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition:
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.4s ease,
-    visibility 0.4s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+  transition: all 0.4s ease;
   z-index: 9999;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Reveal only when hovering/focusing the bottom-center activation zone */
 body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
 body.moment-mode
   .moment-mode-exit-hover-zone:focus-within
@@ -3626,99 +3397,34 @@ body.moment-mode
   transform: translateX(-50%) translateY(0);
 }
 
-/* Auto-hide state (shown on activity, fades out after idle) */
-body.moment-mode .moment-mode-exit-btn.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(16px);
-  animation: none;
+.moment-mode-exit-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.08)
+  );
+  transform: translateX(-50%) translateY(-3px);
 }
 
-/* Icon styling */
 .moment-mode-exit-btn svg {
   width: 22px;
   height: 22px;
-  flex-shrink: 0;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  transition: transform 0.3s ease;
 }
 
-/* Label styling */
 .moment-mode-exit-btn-label {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
-  margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
-/* Hover state with beautiful glow effect */
-.moment-mode-exit-btn:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.06) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.3),
-    0 6px 20px rgba(0, 0, 0, 0.2),
-    0 0 30px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateX(-50%) translateY(-3px);
-}
-
-.moment-mode-exit-btn:hover svg {
-  transform: scale(1.08);
-}
-
-/* Active/pressed state */
-.moment-mode-exit-btn:active {
-  transform: translateX(-50%) translateY(0);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.25),
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transition-duration: 0.1s;
-}
-
-/* Focus state for accessibility */
 .moment-mode-exit-btn:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 3px;
 }
 
-/* Subtle floating animation when idle in moment mode */
-body.moment-mode .moment-mode-exit-hover-zone:hover .moment-mode-exit-btn,
-body.moment-mode
-  .moment-mode-exit-hover-zone:focus-within
-  .moment-mode-exit-btn {
-  animation: momentExitBtnFloat 4s ease-in-out infinite;
-  animation-delay: 0.5s;
-}
-
-@keyframes momentExitBtnFloat {
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-6px);
-  }
-}
-
-/* Pause animation on hover to prevent jumpiness */
-.moment-mode-exit-btn:hover {
-  animation-play-state: paused;
-}
-
-/* Touch / non-hover fallback: keep the exit button visible in moment mode */
 @media (hover: none) {
   body.moment-mode .moment-mode-exit-btn {
     opacity: 1;
@@ -3728,154 +3434,124 @@ body.moment-mode
   }
 }
 
-/* Grid Toast Notifications (fallback when settings manager not available) */
-.grid-toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
-  z-index: 10001;
-  opacity: 0;
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
+/* ===== Moment Mode: Responsive Layout ===== */
 
-.grid-toast-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.grid-toast-success {
-  border-color: var(--primary-light);
-  background: linear-gradient(135deg, rgba(26, 95, 74, 0.3), var(--glass-bg));
-}
-
-.grid-toast-info {
-  border-color: var(--settings-light);
-  background: linear-gradient(135deg, rgba(0, 102, 170, 0.3), var(--glass-bg));
-}
-
-.grid-toast-error {
-  border-color: #ff6b6b;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 107, 107, 0.3),
-    var(--glass-bg)
-  );
-}
-
-/* ========================================
-   Moment Mode: Responsive Scaling System
-   Uses CSS zoom for scaling on smaller viewports
-   ======================================== */
-
-/* Base responsive scaling using zoom */
-body.moment-mode .sidebar-layout {
-  zoom: 1;
-}
-
-/* Responsive breakpoints using zoom for scaling */
-@media (max-width: 1399px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.95;
+/* Medium screens - reduce padding and font sizes */
+@media (max-width: 1200px) {
+  body.moment-mode .sidebar-left,
+  body.moment-mode .sidebar-right {
+    padding: var(--spacing-lg);
+    min-width: 150px;
+    max-width: 220px;
+  }
+  
+  body.moment-mode .sidebar-middle {
+    padding: var(--spacing-lg);
+    padding-top: var(--spacing-xl);
+  }
+  
+  body.moment-mode .moment-clock {
+    font-size: 3rem;
+  }
+  
+  body.moment-mode .moment-clock-seconds {
+    font-size: 1.5rem;
+  }
+  
+  body.moment-mode .moment-date {
+    font-size: 0.95rem;
+  }
+  
+  body.moment-mode .moment-mode-middle .quote-section .quote-text {
+    font-size: 1.25rem;
   }
 }
 
-@media (max-width: 1199px) {
+/* Small screens - stack layout vertically */
+@media (max-width: 900px) {
   body.moment-mode .sidebar-layout {
-    zoom: 0.85;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  body.moment-mode .sidebar-left,
+  body.moment-mode .sidebar-right,
+  body.moment-mode .sidebar-middle {
+    width: 100%;
+    height: auto;
+    min-width: unset;
+    max-width: unset;
+    padding: var(--spacing-lg);
+  }
+  
+  body.moment-mode .sidebar-left {
+    order: 2;
+    align-items: center;
+  }
+  
+  body.moment-mode .sidebar-middle {
+    order: 1;
+    padding-top: var(--spacing-lg);
+  }
+  
+  body.moment-mode .sidebar-right {
+    order: 0;
+    align-items: center;
+    padding-bottom: var(--spacing-md);
+  }
+  
+  body.moment-mode .moment-mode-right {
+    align-items: center;
+    text-align: center;
+  }
+  
+  body.moment-mode .moment-mode-left {
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  body.moment-mode .moment-mode-left .prayer-times-card {
+    max-width: 300px;
+  }
+  
+  body.moment-mode .moment-date {
+    text-align: center;
   }
 }
 
-@media (max-width: 999px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.75;
+/* Extra small screens */
+@media (max-width: 600px) {
+  body.moment-mode .sidebar-left,
+  body.moment-mode .sidebar-right,
+  body.moment-mode .sidebar-middle {
+    padding: var(--spacing-md);
   }
-}
-
-@media (max-width: 849px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.65;
+  
+  body.moment-mode .moment-clock {
+    font-size: 2.5rem;
   }
-}
-
-@media (max-width: 699px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.55;
+  
+  body.moment-mode .moment-clock-seconds {
+    font-size: 1.25rem;
   }
-}
-
-@media (max-width: 549px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.45;
+  
+  body.moment-mode .moment-clock-ampm {
+    font-size: 1rem;
   }
-}
-
-@media (max-width: 399px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.38;
+  
+  body.moment-mode .moment-date {
+    font-size: 0.85rem;
   }
-}
-
-/* Height-based scaling */
-@media (max-height: 600px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.8;
+  
+  body.moment-mode .moment-mode-middle .quote-section .quote-text {
+    font-size: 1.1rem;
   }
-}
-
-@media (max-height: 500px) {
-  body.moment-mode .sidebar-layout {
-    zoom: 0.7;
-  }
-}
-
-/* Ensure clock and date don't wrap */
-body.moment-mode .moment-clock {
-  white-space: nowrap;
-}
-
-body.moment-mode .moment-date {
-  white-space: nowrap;
-}
-
-/* Quote section styling */
-body.moment-mode .moment-mode-middle .quote-section .quote-text {
-  word-break: normal;
-  overflow-wrap: break-word;
-}
-
-/* Prayer times - ensure proper fit */
-body.moment-mode .moment-mode-left .prayer-times-card .prayer-item {
-  white-space: nowrap;
-}
-
-body.moment-mode .moment-mode-left .prayer-times-card .next-prayer {
-  white-space: nowrap;
-}
-
-/* Pinned apps - keep inline */
-body.moment-mode .moment-mode-middle .pinned-apps-grid {
-  flex-wrap: nowrap;
-}
-
-body.moment-mode .moment-mode-middle .pinned-apps-track {
-  flex-wrap: nowrap;
-}
-
-/* Ultra-wide screens */
-@media (min-width: 2000px) {
-  body.moment-mode .sidebar-layout {
-    grid-template-columns: 15vw 70vw 15vw;
+  
+  body.moment-mode .moment-mode-middle .quote-section .quote-container {
+    padding: 0 30px;
   }
 }
 
