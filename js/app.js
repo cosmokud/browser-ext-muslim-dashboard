@@ -1696,6 +1696,30 @@ class MuslimDashboard {
       const pinnedAppsSection = document.getElementById("pinnedAppsSection");
       const searchBarSection = document.getElementById("searchBarSection");
 
+      // Helper function to reset animation states on moved components
+      // This ensures Normal Mode animations don't interfere with Moment Mode visibility
+      const resetAnimationState = (element) => {
+        if (!element) return;
+        // Force style recalculation by reading a layout property
+        void element.offsetHeight;
+        // Explicitly set styles to override any animation states
+        element.style.opacity = "1";
+        element.style.visibility = "visible";
+        element.style.transform = "none";
+        element.style.animation = "none";
+
+        // Also reset any child elements that might have animations (like .card, .quote-container)
+        const animatedChildren = element.querySelectorAll(
+          ".card, .quote-container, .widget-card",
+        );
+        animatedChildren.forEach((child) => {
+          child.style.opacity = "1";
+          child.style.visibility = "visible";
+          child.style.transform = "none";
+          child.style.animation = "none";
+        });
+      };
+
       // Store original parents and next siblings for restoration
       if (prayerTimesCard) {
         this._momentModeOriginalParents.prayerTimesCard = {
@@ -1704,6 +1728,7 @@ class MuslimDashboard {
         };
         if (momentLeft) {
           momentLeft.appendChild(prayerTimesCard);
+          resetAnimationState(prayerTimesCard);
         }
       }
 
@@ -1720,6 +1745,7 @@ class MuslimDashboard {
           quoteWrapper.id = "momentQuoteWrapper";
           quoteWrapper.appendChild(quoteSection);
           momentMiddle.appendChild(quoteWrapper);
+          resetAnimationState(quoteSection);
         }
       }
 
@@ -1730,6 +1756,7 @@ class MuslimDashboard {
         };
         if (momentMiddle) {
           momentMiddle.appendChild(pinnedAppsSection);
+          resetAnimationState(pinnedAppsSection);
         }
       }
 
@@ -1746,16 +1773,40 @@ class MuslimDashboard {
           searchWrapper.id = "momentSearchWrapper";
           searchWrapper.appendChild(searchBarSection);
           momentMiddle.appendChild(searchWrapper);
+          resetAnimationState(searchBarSection);
         }
       }
     };
 
     const restoreComponentsFromMomentMode = () => {
+      // Helper function to clear inline styles set during Moment Mode
+      const clearMomentModeStyles = (element) => {
+        if (!element) return;
+        element.style.opacity = "";
+        element.style.visibility = "";
+        element.style.transform = "";
+        element.style.animation = "";
+
+        // Also clear styles from child elements
+        const animatedChildren = element.querySelectorAll(
+          ".card, .quote-container, .widget-card",
+        );
+        animatedChildren.forEach((child) => {
+          child.style.opacity = "";
+          child.style.visibility = "";
+          child.style.transform = "";
+          child.style.animation = "";
+        });
+      };
+
       // Restore each component to its original location
       const restoreComponent = (id) => {
         const component = document.getElementById(id);
         const original = this._momentModeOriginalParents[id];
         if (component && original && original.parent) {
+          // Clear the inline styles before restoring
+          clearMomentModeStyles(component);
+
           if (original.nextSibling) {
             original.parent.insertBefore(component, original.nextSibling);
           } else {
