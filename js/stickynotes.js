@@ -266,7 +266,7 @@ class StickyNotesManager {
                         data-color-index="${i}" 
                         style="background: ${c.bg}"
                         title="${c.name}"></button>
-              `
+              `,
                 )
                 .join("")}
             </div>
@@ -290,10 +290,10 @@ class StickyNotesManager {
           <div class="sticky-note-dropdown-section">
             <label class="dropdown-label">
               <span>Opacity: <span class="opacity-value">${Math.round(
-                note.transparency * 100
+                note.transparency * 100,
               )}</span>%</span>
               <input type="range" class="opacity-slider" min="20" max="100" value="${Math.round(
-                note.transparency * 100
+                note.transparency * 100,
               )}">
             </label>
           </div>
@@ -408,7 +408,7 @@ class StickyNotesManager {
    */
   adjustAlpha(rgba, alpha) {
     const match = rgba.match(
-      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
     );
     if (match) {
       const [, r, g, b] = match;
@@ -487,7 +487,7 @@ class StickyNotesManager {
         // focus the first focusable element to improve keyboard UX
         requestAnimationFrame(() => {
           const firstInteractive = dropdown.querySelector(
-            'button, input, a, [tabindex]:not([tabindex="-1"])'
+            'button, input, a, [tabindex]:not([tabindex="-1"])',
           );
           if (firstInteractive) {
             firstInteractive.focus();
@@ -664,7 +664,7 @@ class StickyNotesManager {
       element,
       NodeFilter.SHOW_TEXT,
       null,
-      false
+      false,
     );
     const textNodes = [];
 
@@ -682,7 +682,7 @@ class StickyNotesManager {
         const span = document.createElement("span");
         span.innerHTML = text.replace(
           urlRegex,
-          '<a href="$1" class="sticky-note-link" title="Ctrl+Click to open">$1</a>'
+          '<a href="$1" class="sticky-note-link" title="Ctrl+Click to open">$1</a>',
         );
         node.parentNode.replaceChild(span, node);
       }
@@ -918,7 +918,7 @@ class StickyNotesManager {
         const index = parseInt(btn.dataset.colorIndex);
         btn.classList.toggle(
           "active",
-          this.colorPresets[index].name === color.name
+          this.colorPresets[index].name === color.name,
         );
       });
     }
