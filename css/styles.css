@@ -3004,6 +3004,15 @@ body.moment-mode .sidebar-layout {
   overflow: hidden;
 }
 
+/* Override base sidebar-column display:none in moment mode */
+body.moment-mode .sidebar-column {
+  display: flex;
+  /* Ensure visibility is not affected by Normal Mode CSS */
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
 /* Left sidebar */
 body.moment-mode .sidebar-left {
   flex: 0 0 auto;
@@ -3016,6 +3025,9 @@ body.moment-mode .sidebar-left {
   justify-content: flex-start;
   align-items: flex-start;
   padding: var(--spacing-xl);
+  /* Ensure visibility */
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Middle section - takes remaining space */
@@ -3028,6 +3040,9 @@ body.moment-mode .sidebar-middle {
   align-items: center;
   padding: var(--spacing-xl);
   padding-top: var(--spacing-2xl);
+  /* Ensure visibility */
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Right sidebar */
@@ -3042,6 +3057,9 @@ body.moment-mode .sidebar-right {
   justify-content: flex-start;
   align-items: flex-end;
   padding: var(--spacing-xl);
+  /* Ensure visibility */
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Hide main container in moment mode */
@@ -3081,6 +3099,29 @@ body.moment-mode .moment-mode-right {
   flex-direction: column;
   align-items: flex-end;
   gap: var(--spacing-xs);
+}
+
+/* ===== Moment Mode: Reset Normal Mode Animation States =====
+   Components moved to moment mode panels may have animation states
+   from Normal Mode (e.g., scaleIn animation with opacity: 0.01).
+   We must explicitly reset these to ensure visibility. */
+body.moment-mode .moment-mode-left,
+body.moment-mode .moment-mode-middle,
+body.moment-mode .moment-mode-right {
+  /* Ensure containers themselves are visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Reset animation states for all cards inside moment mode panels */
+body.moment-mode .moment-mode-left .card,
+body.moment-mode .moment-mode-middle .card,
+body.moment-mode .moment-mode-right .card {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
 }
 
 /* ===== Moment Mode: Clock & Date ===== */
@@ -3150,7 +3191,11 @@ body.moment-mode .moment-mode-left .prayer-times-card {
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  /* Reset Normal Mode animation states */
   animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
 }
 
 body.moment-mode .moment-mode-left .prayer-times-card:hover {
@@ -3213,8 +3258,11 @@ body.moment-mode .moment-mode-middle .quote-section {
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-lg);
-  animation: none;
   max-width: 900px;
+  /* Reset Normal Mode animation states */
+  animation: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section:hover {
@@ -3231,6 +3279,11 @@ body.moment-mode .moment-mode-middle .quote-section * {
 body.moment-mode .moment-mode-middle .quote-section .quote-container {
   text-align: center;
   padding: 0 50px;
+  /* Reset Normal Mode animation states */
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
 }
 
 body.moment-mode .moment-mode-middle .quote-section .quote-icon {
