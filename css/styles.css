@@ -3444,24 +3444,24 @@ body.moment-mode
     min-width: 150px;
     max-width: 220px;
   }
-  
+
   body.moment-mode .sidebar-middle {
     padding: var(--spacing-lg);
     padding-top: var(--spacing-xl);
   }
-  
+
   body.moment-mode .moment-clock {
     font-size: 3rem;
   }
-  
+
   body.moment-mode .moment-clock-seconds {
     font-size: 1.5rem;
   }
-  
+
   body.moment-mode .moment-date {
     font-size: 0.95rem;
   }
-  
+
   body.moment-mode .moment-mode-middle .quote-section .quote-text {
     font-size: 1.25rem;
   }
@@ -3475,7 +3475,7 @@ body.moment-mode
     min-height: 100vh;
     overflow-y: auto;
   }
-  
+
   body.moment-mode .sidebar-left,
   body.moment-mode .sidebar-right,
   body.moment-mode .sidebar-middle {
@@ -3485,38 +3485,38 @@ body.moment-mode
     max-width: unset;
     padding: var(--spacing-lg);
   }
-  
+
   body.moment-mode .sidebar-left {
     order: 2;
     align-items: center;
   }
-  
+
   body.moment-mode .sidebar-middle {
     order: 1;
     padding-top: var(--spacing-lg);
   }
-  
+
   body.moment-mode .sidebar-right {
     order: 0;
     align-items: center;
     padding-bottom: var(--spacing-md);
   }
-  
+
   body.moment-mode .moment-mode-right {
     align-items: center;
     text-align: center;
   }
-  
+
   body.moment-mode .moment-mode-left {
     align-items: center;
     width: 100%;
     max-width: 400px;
   }
-  
+
   body.moment-mode .moment-mode-left .prayer-times-card {
     max-width: 300px;
   }
-  
+
   body.moment-mode .moment-date {
     text-align: center;
   }
@@ -3529,27 +3529,27 @@ body.moment-mode
   body.moment-mode .sidebar-middle {
     padding: var(--spacing-md);
   }
-  
+
   body.moment-mode .moment-clock {
     font-size: 2.5rem;
   }
-  
+
   body.moment-mode .moment-clock-seconds {
     font-size: 1.25rem;
   }
-  
+
   body.moment-mode .moment-clock-ampm {
     font-size: 1rem;
   }
-  
+
   body.moment-mode .moment-date {
     font-size: 0.85rem;
   }
-  
+
   body.moment-mode .moment-mode-middle .quote-section .quote-text {
     font-size: 1.1rem;
   }
-  
+
   body.moment-mode .moment-mode-middle .quote-section .quote-container {
     padding: 0 30px;
   }
