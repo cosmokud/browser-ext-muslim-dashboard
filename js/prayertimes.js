@@ -15,7 +15,7 @@ class PrayerTimesManager {
 
     // All available prayer times
     this.allPrayers = [
-      { key: "fajr", name: "Fajr", icon: "🌙" },
+      { key: "fajr", name: "Fajr", icon: "🌄" },
       { key: "sunrise", name: "Sunrise", icon: "🌅" },
       { key: "duha", name: "Duha", icon: "☀️" },
       { key: "dhuhr", name: "Dhuhr", icon: "🌤️" },
