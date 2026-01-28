@@ -2105,7 +2105,6 @@ class MuslimDashboard {
       };
       window.addEventListener("resize", this._momentModeResizeHandler);
 
-
       // Run an extra check after a short delay to catch layout changes during startup
       setTimeout(() => {
         try {
@@ -2175,7 +2174,6 @@ class MuslimDashboard {
         clearTimeout(this._momentModeResizeTimer);
         this._momentModeResizeTimer = null;
       }
-
 
       // Save state
       try {
