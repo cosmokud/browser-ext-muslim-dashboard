@@ -206,19 +206,6 @@ body {
    3-column layout with sticky sidebars
    ======================================== */
 
-/* Default (non-sidebar-mode): behave exactly like the old layout */
-.sidebar-layout {
-  width: 100%;
-}
-
-.sidebar-column {
-  display: none;
-}
-
-.sidebar-middle {
-  width: 100%;
-}
-
 body.sidebar-mode .sidebar-layout {
   display: grid;
   --sidebar-min-width: 480px;
@@ -3074,23 +3061,20 @@ body.moment-mode .moment-mode-right {
 }
 
 /* Middle panel container (quote, pinned apps, search) */
-.moment-mode-middle {
-  display: none;
-}
 
 body.moment-mode .moment-mode-middle {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
+  width: 1000px;
   gap: var(--spacing-lg);
 }
 
 /* Content width constraint for most middle elements (except pinned apps) */
 body.moment-mode .moment-mode-middle > *:not(.pinned-apps-section) {
   max-width: 800px;
-  width: 100%;
+  width: 1000px;
 }
 
 /* ===== Moment Mode: Right Panel (Clock & Date) ===== */
