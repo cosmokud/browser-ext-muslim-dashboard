@@ -1696,321 +1696,66 @@ class MuslimDashboard {
       const pinnedAppsSection = document.getElementById("pinnedAppsSection");
       const searchBarSection = document.getElementById("searchBarSection");
 
-      if (!momentLeft || !momentMiddle) return;
-
-      // Prevent double-move
-      if (this._momentModeComponentsMoved) return;
-
-      // If some components aren't yet present, retry a few times (handles late init)
-      const missing = [];
-      if (!prayerTimesCard) missing.push("prayerTimesCard");
-      if (!quoteSection) missing.push("quoteSection");
-      if (!pinnedAppsSection) missing.push("pinnedAppsSection");
-      if (!searchBarSection) missing.push("searchBarSection");
-
-      if (missing.length && (this._momentMoveRetryCount || 0) < 6) {
-        this._momentMoveRetryCount = (this._momentMoveRetryCount || 0) + 1;
-        setTimeout(() => moveComponentsToMomentMode(), 120);
-        return;
-      }
-      // If we reached here but some components were missing repeatedly, warn for debugging
-      if (missing.length) {
-        console.warn("Moment Mode: components missing after retries:", missing);
-      }
-
-      this._momentMoveRetryCount = 0;
-
-      const saveOriginalLocation = (el, key) => {
-        if (!el || !key) return;
-        if (!this._momentModeOriginalParents[key]) {
-          this._momentModeOriginalParents[key] = {
-            parent: el.parentElement,
-            nextSibling: el.nextElementSibling,
-          };
+      // Store original parents and next siblings for restoration
+      if (prayerTimesCard) {
+        this._momentModeOriginalParents.prayerTimesCard = {
+          parent: prayerTimesCard.parentElement,
+          nextSibling: prayerTimesCard.nextElementSibling,
+        };
+        if (momentLeft) {
+          momentLeft.appendChild(prayerTimesCard);
         }
-      };
-
-      const makeVisible = (el) => {
-        if (!el) return;
-        try {
-          // Clear inline display so Moment Mode CSS controls layout
-          el.style.display = "";
-          el.style.opacity = "1";
-          el.style.visibility = "visible";
-          el.style.transform = "none";
-          el.style.animation = "none";
-          el.setAttribute("aria-hidden", "false");
-        } catch (e) {}
-      };
-
-      // Move prayer times to moment left (top-left)
-      if (prayerTimesCard && momentLeft) {
-        saveOriginalLocation(prayerTimesCard, "prayerTimesCard");
-        momentLeft.insertBefore(prayerTimesCard, momentLeft.firstChild);
-        makeVisible(prayerTimesCard);
       }
 
-      // Move/Wrap quote to top of middle
-      if (quoteSection && momentMiddle) {
-        saveOriginalLocation(quoteSection, "quoteSection");
-        let quoteWrapper = document.getElementById("momentQuoteWrapper");
-        if (!quoteWrapper) {
-          quoteWrapper = document.createElement("div");
-          quoteWrapper.id = "momentQuoteWrapper";
+      if (quoteSection) {
+        this._momentModeOriginalParents.quoteSection = {
+          parent: quoteSection.parentElement,
+          nextSibling: quoteSection.nextElementSibling,
+        };
+        if (momentMiddle) {
+          // Create a wrapper container for the quote section to allow centering
+          // while the quote maintains its own compact width
+          const quoteWrapper = document.createElement("div");
           quoteWrapper.className = "moment-quote-wrapper";
+          quoteWrapper.id = "momentQuoteWrapper";
+          quoteWrapper.appendChild(quoteSection);
+          momentMiddle.appendChild(quoteWrapper);
         }
-        // Ensure wrapper contains only the quote
-        quoteWrapper.innerHTML = "";
-        quoteWrapper.appendChild(quoteSection);
-        momentMiddle.insertBefore(quoteWrapper, momentMiddle.firstChild);
-        makeVisible(quoteSection);
-        makeVisible(quoteWrapper);
       }
 
-      // Then pinned apps
-      if (pinnedAppsSection && momentMiddle) {
-        saveOriginalLocation(pinnedAppsSection, "pinnedAppsSection");
-        // Place after quote wrapper if present
-        const quoteWrapperEl = document.getElementById("momentQuoteWrapper");
-        if (quoteWrapperEl && quoteWrapperEl.nextSibling) {
-          momentMiddle.insertBefore(
-            pinnedAppsSection,
-            quoteWrapperEl.nextSibling,
-          );
-        } else {
+      if (pinnedAppsSection) {
+        this._momentModeOriginalParents.pinnedAppsSection = {
+          parent: pinnedAppsSection.parentElement,
+          nextSibling: pinnedAppsSection.nextElementSibling,
+        };
+        if (momentMiddle) {
           momentMiddle.appendChild(pinnedAppsSection);
         }
-        makeVisible(pinnedAppsSection);
       }
 
-      // Then search bar (wrapped for centering)
-      if (searchBarSection && momentMiddle) {
-        saveOriginalLocation(searchBarSection, "searchBarSection");
-        let searchWrapper = document.getElementById("momentSearchWrapper");
-        if (!searchWrapper) {
-          searchWrapper = document.createElement("div");
-          searchWrapper.id = "momentSearchWrapper";
-          searchWrapper.className = "moment-search-wrapper";
-        }
-        searchWrapper.innerHTML = "";
-        searchWrapper.appendChild(searchBarSection);
-        momentMiddle.appendChild(searchWrapper);
-        makeVisible(searchBarSection);
-        makeVisible(searchWrapper);
-      }
-
-      this._momentModeComponentsMoved = true;
-
-      // Force reflow and notify layout managers
-      void document.body.offsetHeight;
-      try {
-        window.dispatchEvent(new Event("resize"));
-      } catch (e) {}
-    };
-
-    // Diagnostic + Auto-fixer for Moment Mode visibility issues
-    const fixMomentVisibility = () => {
-      try {
-        const targets = [
-          {
-            name: "sidebarLeft",
-            el: document.querySelector(".sidebar-left"),
-            role: "sidebar",
-          },
-          {
-            name: "sidebarMiddle",
-            el: document.querySelector(".sidebar-middle"),
-            role: "middle",
-          },
-          {
-            name: "sidebarRight",
-            el: document.querySelector(".sidebar-right"),
-            role: "sidebar",
-          },
-          {
-            name: "momentModeLeft",
-            el: document.getElementById("momentModeLeft"),
-            role: "panel",
-          },
-          {
-            name: "momentModeMiddle",
-            el: document.getElementById("momentModeMiddle"),
-            role: "panel",
-          },
-        ];
-
-        const problems = [];
-        targets.forEach(({ name, el }) => {
-          if (!el) {
-            problems.push({ name, reason: "missing" });
-            return;
-          }
-          try {
-            const cs = window.getComputedStyle(el);
-            const rect = el.getBoundingClientRect();
-            const hidden =
-              cs.display === "none" ||
-              cs.visibility === "hidden" ||
-              parseFloat(cs.opacity) === 0 ||
-              rect.width < 10;
-            if (hidden)
-              problems.push({
-                name,
-                display: cs.display,
-                visibility: cs.visibility,
-                opacity: cs.opacity,
-                rect,
-              });
-          } catch (ex) {
-            problems.push({ name, reason: "computed-style-error" });
-          }
-        });
-
-        if (problems.length)
-          console.warn("Moment Mode visibility problems detected:", problems);
-
-        let applied = false;
-        const applyFix = (el, role) => {
-          if (!el) return false;
-          try {
-            const cs = window.getComputedStyle(el);
-            const rect = el.getBoundingClientRect();
-            const hidden =
-              cs.display === "none" ||
-              cs.visibility === "hidden" ||
-              parseFloat(cs.opacity) === 0 ||
-              rect.width < 10;
-            if (!hidden) return false;
-            if (role === "sidebar") {
-              el.style.display = "flex";
-              el.style.flex = "0 0 220px";
-            } else if (role === "middle") {
-              el.style.display = "flex";
-              el.style.flex = "1 1 auto";
-            } else {
-              el.style.display = "flex";
-            }
-            el.style.opacity = "1";
-            el.style.visibility = "visible";
-            el.style.transform = "none";
-            el.style.animation = "none";
-            try {
-              el.setAttribute("aria-hidden", "false");
-            } catch (e) {}
-            console.info(
-              "Moment Mode autofix applied to",
-              el.id || el.className,
-            );
-            return true;
-          } catch (e) {
-            return false;
-          }
+      if (searchBarSection) {
+        this._momentModeOriginalParents.searchBarSection = {
+          parent: searchBarSection.parentElement,
+          nextSibling: searchBarSection.nextElementSibling,
         };
-
-        applied =
-          applyFix(document.querySelector(".sidebar-left"), "sidebar") ||
-          applied;
-        applied =
-          applyFix(document.querySelector(".sidebar-middle"), "middle") ||
-          applied;
-        applied =
-          applyFix(document.querySelector(".sidebar-right"), "sidebar") ||
-          applied;
-        applied =
-          applyFix(document.getElementById("momentModeLeft"), "panel") ||
-          applied;
-        applied =
-          applyFix(document.getElementById("momentModeMiddle"), "panel") ||
-          applied;
-
-        if (applied) {
-          try {
-            void document.body.offsetHeight;
-          } catch (e) {}
-          try {
-            window.dispatchEvent(new Event("resize"));
-          } catch (e) {}
+        if (momentMiddle) {
+          // Create a wrapper container for the search bar to allow centering
+          // while the search bar maintains its own compact width
+          const searchWrapper = document.createElement("div");
+          searchWrapper.className = "moment-search-wrapper";
+          searchWrapper.id = "momentSearchWrapper";
+          searchWrapper.appendChild(searchBarSection);
+          momentMiddle.appendChild(searchWrapper);
         }
-
-        return problems.length;
-      } catch (e) {
-        console.warn("fixMomentVisibility failed", e);
-        return -1;
       }
     };
 
     const restoreComponentsFromMomentMode = () => {
-      // Helper function to clear inline styles set during Moment Mode and restore original display/aria-hidden
-      const clearMomentModeStyles = (element) => {
-        if (!element) return;
-        element.style.opacity = "";
-        element.style.visibility = "";
-        element.style.transform = "";
-        element.style.animation = "";
-        // Restore original inline display if we saved one
-        if (element.dataset.momentOriginalDisplay !== undefined) {
-          element.style.display = element.dataset.momentOriginalDisplay;
-          delete element.dataset.momentOriginalDisplay;
-        }
-        // If the user changed visibility while in Moment Mode, prefer that stored preference
-        if (element.dataset.preferredDisplay !== undefined) {
-          element.style.display = element.dataset.preferredDisplay;
-          delete element.dataset.preferredDisplay;
-        }
-        // Restore original aria-hidden if we saved one
-        if (element.dataset.momentOriginalAriaHidden !== undefined) {
-          const origAria = element.dataset.momentOriginalAriaHidden;
-          if (origAria === "") element.removeAttribute("aria-hidden");
-          else element.setAttribute("aria-hidden", origAria);
-          delete element.dataset.momentOriginalAriaHidden;
-        }
-        // Apply preferred aria-hidden if changed while in Moment Mode
-        if (element.dataset.preferredAriaHidden !== undefined) {
-          const prefAria = element.dataset.preferredAriaHidden;
-          if (prefAria === "") element.removeAttribute("aria-hidden");
-          else element.setAttribute("aria-hidden", prefAria);
-          delete element.dataset.preferredAriaHidden;
-        }
-        // Also clear/restore styles from child elements
-        const animatedChildren = element.querySelectorAll(
-          ".card, .quote-container, .widget-card",
-        );
-        animatedChildren.forEach((child) => {
-          child.style.opacity = "";
-          child.style.visibility = "";
-          child.style.transform = "";
-          child.style.animation = "";
-          if (child.dataset.momentOriginalDisplay !== undefined) {
-            child.style.display = child.dataset.momentOriginalDisplay;
-            delete child.dataset.momentOriginalDisplay;
-          }
-          if (child.dataset.preferredDisplay !== undefined) {
-            child.style.display = child.dataset.preferredDisplay;
-            delete child.dataset.preferredDisplay;
-          }
-          if (child.dataset.momentOriginalAriaHidden !== undefined) {
-            const origAriaChild = child.dataset.momentOriginalAriaHidden;
-            if (origAriaChild === "") child.removeAttribute("aria-hidden");
-            else child.setAttribute("aria-hidden", origAriaChild);
-            delete child.dataset.momentOriginalAriaHidden;
-          }
-          if (child.dataset.preferredAriaHidden !== undefined) {
-            const prefAriaChild = child.dataset.preferredAriaHidden;
-            if (prefAriaChild === "") child.removeAttribute("aria-hidden");
-            else child.setAttribute("aria-hidden", prefAriaChild);
-            delete child.dataset.preferredAriaHidden;
-          }
-        });
-      };
-
       // Restore each component to its original location
       const restoreComponent = (id) => {
         const component = document.getElementById(id);
         const original = this._momentModeOriginalParents[id];
         if (component && original && original.parent) {
-          // Clear the inline styles before restoring
-          clearMomentModeStyles(component);
-
           if (original.nextSibling) {
             original.parent.insertBefore(component, original.nextSibling);
           } else {
@@ -2036,19 +1781,8 @@ class MuslimDashboard {
       restoreComponent("pinnedAppsSection");
       restoreComponent("searchBarSection");
 
-      // Re-apply visibility preferences (in case they changed while in Moment Mode)
-      try {
-        this.applyComponentVisibility();
-      } catch (e) {}
-
       // Clear stored references
       this._momentModeOriginalParents = {};
-      this._momentModeComponentsMoved = false;
-
-      // Trigger resize so layout recalcs and visibility restore cleanly
-      try {
-        window.dispatchEvent(new Event("resize"));
-      } catch (e) {}
     };
 
     const enterMomentMode = () => {
@@ -2078,41 +1812,6 @@ class MuslimDashboard {
 
       // Move actual components to moment mode containers
       moveComponentsToMomentMode();
-
-      // Diagnostic fix - detect and correct visibility problems (auto-fix + logs)
-      try {
-        const issuesFound = fixMomentVisibility();
-        if (issuesFound > 0)
-          console.warn(
-            "Moment Mode initial visibility issues detected:",
-            issuesFound,
-          );
-      } catch (e) {
-        console.warn("fixMomentVisibility call failed", e);
-      }
-
-      // Add debounced resize handler to re-check visibility on viewport changes
-      this._momentModeResizeHandler = () => {
-        if (this._momentModeResizeTimer)
-          clearTimeout(this._momentModeResizeTimer);
-        this._momentModeResizeTimer = setTimeout(() => {
-          try {
-            fixMomentVisibility();
-          } catch (e) {
-            console.warn("fixMomentVisibility failed on resize", e);
-          }
-        }, 120);
-      };
-      window.addEventListener("resize", this._momentModeResizeHandler);
-
-      // Run an extra check after a short delay to catch layout changes during startup
-      setTimeout(() => {
-        try {
-          fixMomentVisibility();
-        } catch (e) {
-          console.warn("fixMomentVisibility delayed call failed", e);
-        }
-      }, 220);
 
       // Initialize clock and date
       updateMomentClock();
@@ -2161,18 +1860,6 @@ class MuslimDashboard {
       if (this._momentModeUpdateInterval) {
         clearInterval(this._momentModeUpdateInterval);
         this._momentModeUpdateInterval = null;
-      }
-
-      // Remove debounced resize handler if present
-      if (this._momentModeResizeHandler) {
-        try {
-          window.removeEventListener("resize", this._momentModeResizeHandler);
-        } catch (e) {}
-        this._momentModeResizeHandler = null;
-      }
-      if (this._momentModeResizeTimer) {
-        clearTimeout(this._momentModeResizeTimer);
-        this._momentModeResizeTimer = null;
       }
 
       // Save state
@@ -2461,31 +2148,6 @@ class MuslimDashboard {
       if (!el) return;
       const nextDisplay = shouldHide ? "none" : "";
       const nextAria = shouldHide ? "true" : "false";
-
-      // If the element is currently moved into a Moment Mode panel, don't apply the
-      // user's inline display preference directly (which would hide it while in use).
-      // Instead, store the user's preference and ensure the element remains visible
-      // while Moment Mode is active; the preference will be applied when restoring.
-      const isInMomentPanel =
-        this._momentModeActive &&
-        (el.closest("#momentModeLeft") || el.closest("#momentModeMiddle"));
-
-      if (isInMomentPanel) {
-        try {
-          el.dataset.preferredDisplay = nextDisplay;
-          el.dataset.preferredAriaHidden = nextAria;
-        } catch (e) {}
-        // Keep it visible while in Moment Mode
-        if (el.style.display !== "") {
-          el.style.display = "";
-          visibilityChanged = true;
-        }
-        if (el.getAttribute("aria-hidden") !== "false") {
-          el.setAttribute("aria-hidden", "false");
-          visibilityChanged = true;
-        }
-        return;
-      }
 
       if (el.style.display !== nextDisplay) {
         el.style.display = nextDisplay;
