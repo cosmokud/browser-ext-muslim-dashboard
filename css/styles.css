@@ -3006,7 +3006,20 @@ body.moment-mode .sidebar-layout {
 
 /* Override base sidebar-column display:none in moment mode */
 body.moment-mode .sidebar-column {
+  display: flex !important;
+  /* Mirror sidebar-mode column behavior so components look & behave the same */
+  position: sticky;
+  top: var(--spacing-xl);
+  height: calc(100vh - 2 * var(--spacing-xl));
+  max-height: calc(100vh - 2 * var(--spacing-xl));
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--spacing-xl) var(--spacing-lg);
   display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
   /* Ensure visibility is not affected by Normal Mode CSS */
   opacity: 1 !important;
   visibility: visible !important;
@@ -3186,12 +3199,8 @@ body.moment-mode .moment-mode-middle .search-bar-input {
 /* ===== Moment Mode: Prayer Times ===== */
 
 body.moment-mode .moment-mode-left .prayer-times-card {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  /* Reset Normal Mode animation states */
+  /* Keep the normal card appearance from .card (don’t strip visuals here). */
+  /* Reset only animation and visibility so it appears consistently in Moment Mode */
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
@@ -3253,10 +3262,7 @@ body.moment-mode .moment-mode-middle .moment-quote-wrapper {
 }
 
 body.moment-mode .moment-mode-middle .quote-section {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  /* Preserve the normal quote-section visuals from Normal Mode */
   padding: var(--spacing-lg);
   max-width: 900px;
   /* Reset Normal Mode animation states */
@@ -3313,20 +3319,11 @@ body.moment-mode .moment-mode-middle .pinned-apps-section {
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-md);
-  animation: none;
-  opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-  pointer-events: none;
-}
-
-body.moment-mode .moment-mode-middle:hover .pinned-apps-section,
-body.moment-mode .moment-mode-middle .pinned-apps-section:focus-within {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
 }
 
 body.moment-mode .moment-mode-middle .pinned-apps-section * {
@@ -3358,15 +3355,13 @@ body.moment-mode .moment-mode-middle .search-bar-section {
   border: none !important;
   box-shadow: none !important;
   padding: var(--spacing-md);
-  animation: none;
+  animation: none !important;
   min-width: 280px;
   max-width: 400px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-  pointer-events: none;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: auto !important;
 }
 
 body.moment-mode .moment-mode-middle:hover .search-bar-section,
