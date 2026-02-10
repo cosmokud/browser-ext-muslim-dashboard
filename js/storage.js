@@ -373,19 +373,19 @@ class StorageManager {
           morning: {
             start: 3,
             end: 12,
-            text: "Assalamu Alaikum, Good Morning",
+            text: "As-salamu alaykum, Good Morning",
           },
           afternoon: {
             start: 12,
             end: 15,
-            text: "Assalamu Alaikum, Good Afternoon",
+            text: "As-salamu alaykum, Good Afternoon",
           },
           evening: {
             start: 15,
             end: 18,
-            text: "Assalamu Alaikum, Good Evening",
+            text: "As-salamu alaykum, Good Evening",
           },
-          night: { start: 18, end: 3, text: "Assalamu Alaikum, Good Night" },
+          night: { start: 18, end: 3, text: "As-salamu alaykum, Good Night" },
         },
 
         // Clock settings

@@ -12,6 +12,7 @@ class PrayerTimesManager {
     this.location = null;
     this.countdownInterval = null;
     this.locationPermissionRequested = false;
+    this.prayerDisplayDay = null;
 
     // All available prayer times
     this.allPrayers = [
@@ -38,6 +39,13 @@ class PrayerTimesManager {
       const settings = this.storage.getSettings();
       this.renderPrayerList(settings.prayerVisibility);
     });
+  }
+
+  getPrayerDisplayName(prayer) {
+    if (prayer?.key === "dhuhr" && new Date().getDay() === 5) {
+      return "Jumu'ah";
+    }
+    return prayer?.name || "";
   }
 
   /**
@@ -136,16 +144,26 @@ class PrayerTimesManager {
         prayerItem.className = "prayer-item";
         prayerItem.dataset.prayer = prayer.key;
         const iconHtml = this.getIconHtml(prayer.icon, { size: 18 });
+        const prayerName = this.getPrayerDisplayName(prayer);
         prayerItem.innerHTML = `
           <span class="prayer-name">
             <span class="prayer-icon">${iconHtml}</span>
-            ${prayer.name}
+            ${prayerName}
           </span>
           <span class="prayer-time" id="${prayer.key}Time">--:--</span>
         `;
         this.prayerList.appendChild(prayerItem);
       }
     });
+
+    this.prayerDisplayDay = new Date().getDay();
+  }
+
+  refreshPrayerListForDay(visibility) {
+    const currentDay = new Date().getDay();
+    if (this.prayerDisplayDay === currentDay) return;
+    this.renderPrayerList(visibility);
+    this.displayPrayerTimes(visibility);
   }
 
   /**
@@ -441,7 +459,7 @@ class PrayerTimesManager {
 
         return {
           key: prayer.key,
-          name: prayer.name,
+          name: this.getPrayerDisplayName(prayer),
           minutes: hours * 60 + minutes,
         };
       })
@@ -496,6 +514,7 @@ class PrayerTimesManager {
   updateCountdown() {
     const settings = this.storage.getSettings();
     const visibility = settings.prayerVisibility;
+    this.refreshPrayerListForDay(visibility);
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -520,7 +539,7 @@ class PrayerTimesManager {
 
         return {
           key: prayer.key,
-          name: prayer.name,
+          name: this.getPrayerDisplayName(prayer),
           minutes: hours * 60 + minutes,
         };
       })

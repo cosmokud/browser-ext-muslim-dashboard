@@ -372,7 +372,12 @@ async function schedulePrayerNotifications() {
 }
 
 function getPrayerName(prayerKey) {
-  return PRAYER_DEFS.find((p) => p.key === prayerKey)?.name || prayerKey;
+  const baseName =
+    PRAYER_DEFS.find((p) => p.key === prayerKey)?.name || prayerKey;
+  if (prayerKey === "dhuhr" && new Date().getDay() === 5) {
+    return "Jumu'ah";
+  }
+  return baseName;
 }
 
 function formatMinutes(n) {

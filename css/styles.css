@@ -3017,6 +3017,7 @@ body.moment-mode .sidebar-right {
 
 body.moment-mode .sidebar-middle {
   display: flex;
+  overflow: visible;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
