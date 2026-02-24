@@ -2354,7 +2354,7 @@ class AdhkarManager {
         <div class="adhkar-lang-modal-header">
           <div class="adhkar-lang-modal-title">
             <span aria-hidden="true">🌐</span>
-            Select Translation
+            Select Language
           </div>
           <button class="adhkar-lang-modal-close" type="button" aria-label="Close">×</button>
         </div>
@@ -2366,120 +2366,117 @@ class AdhkarManager {
         </div>
       </div>
     `;
+
     document.body.appendChild(modal);
     this._langModal = modal;
 
-    modal
-      .querySelector(".adhkar-lang-modal-close")
-      .addEventListener("click", () => {
-        this.closeLanguageSelectorModal();
-      });
+    const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
+    closeBtn?.addEventListener("click", () =>
+      this.closeLanguageSelectorModal(),
+    );
 
     this._bindOverlayCloseBehavior(modal, () =>
       this.closeLanguageSelectorModal(),
     );
 
-    modal
-      .querySelector(".adhkar-lang-search-input")
-      .addEventListener("input", (e) => {
-        this.renderLanguageSelectorModal(e.target.value);
-      });
+    const searchInput = modal.querySelector(".adhkar-lang-search-input");
+    searchInput?.addEventListener("input", (e) => {
+      this.renderLanguageSelectorModal(String(e.target.value || ""));
+    });
+
+    this.renderLanguageSelectorModal("");
   }
 
   openLanguageSelectorModal() {
-    const modal = document.getElementById("adhkarLangModal");
-    if (!modal) return;
+    if (!this._langModal) this.createLanguageSelectorModal();
+    if (!this._langModal) return;
 
-    const searchInput = modal.querySelector(".adhkar-lang-search-input");
-    if (searchInput) {
-      searchInput.value = "";
-    }
+    this._langModal.classList.add("active");
 
-    modal.classList.add("active");
-    this.renderLanguageSelectorModal();
+    const searchInput = this._langModal.querySelector(
+      ".adhkar-lang-search-input",
+    );
+    if (searchInput) searchInput.value = "";
 
-    // Focus search input
+    this.renderLanguageSelectorModal("");
+
     setTimeout(() => {
-      if (searchInput) searchInput.focus();
+      try {
+        searchInput?.focus();
+      } catch (e) {}
     }, 50);
   }
 
   closeLanguageSelectorModal() {
-    const modal = document.getElementById("adhkarLangModal");
-    if (modal) {
-      modal.classList.remove("active");
-    }
+    if (!this._langModal) return;
+    this._langModal.classList.remove("active");
   }
 
   renderLanguageSelectorModal(searchQuery = "") {
-    const modal = document.getElementById("adhkarLangModal");
-    if (!modal) return;
-
-    const listContainer = modal.querySelector(".adhkar-lang-list");
-    if (!listContainer) return;
+    if (!this._langModal) return;
 
     const activeSet = this.getActiveSet();
-    let languages = this.getAvailableLanguages(activeSet);
-    const currentLangCode = this.getSelectedLanguageCode();
+    const languages = this.getAvailableLanguages(activeSet);
+    const current = this.getSelectedLanguageCode();
 
-    // Filter by search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      languages = languages.filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q),
-      );
-    }
+    const q = String(searchQuery || "")
+      .trim()
+      .toLowerCase();
+    const filtered = q
+      ? languages.filter(
+          (l) =>
+            l.code.toLowerCase().includes(q) ||
+            l.name.toLowerCase().includes(q),
+        )
+      : languages;
 
-    if (!languages.length) {
-      listContainer.innerHTML = `
-        <div class="adhkar-lang-empty">
-          No languages found.
-        </div>
-      `;
+    const listEl = this._langModal.querySelector(".adhkar-lang-list");
+    if (!listEl) return;
+
+    if (!filtered.length) {
+      listEl.innerHTML = `<div class="adhkar-set-empty">No languages found.</div>`;
       return;
     }
 
-    listContainer.innerHTML = languages
+    listEl.innerHTML = filtered
       .map((lang) => {
-        const isActive = lang.code === currentLangCode;
+        const isActive = lang.code === current;
         return `
           <div class="adhkar-lang-item ${
             isActive ? "active" : ""
-          }" data-lang-code="${lang.code}">
-            <span class="adhkar-lang-flag">${this.getLanguageFlag(
+          }" data-lang="${this.escapeHtmlAttr(lang.code)}">
+            <span class="flag" aria-hidden="true">${this.getLanguageFlag(
               lang.code,
             )}</span>
-            <span class="adhkar-lang-name">${this.escapeHtmlAttr(
-              lang.name,
-            )}</span>
-            ${
-              isActive
-                ? `<span class="adhkar-lang-check">${this._getIcon("✓", {
-                    size: 14,
-                  })}</span>`
-                : ""
-            }
+            <div class="adhkar-lang-item-info">
+              <div class="adhkar-lang-item-name">${this.escapeHtmlAttr(
+                lang.name,
+              )}</div>
+              <div class="adhkar-lang-item-code">${this.escapeHtmlAttr(
+                lang.code,
+              )}</div>
+            </div>
           </div>
         `;
       })
       .join("");
 
-    // Bind click handlers
-    listContainer.querySelectorAll(".adhkar-lang-item").forEach((el) => {
-      el.addEventListener("click", () => {
-        const langCode = el.dataset.langCode;
-        this.setSelectedLanguageCode(langCode);
-        this.closeLanguageSelectorModal();
-        this.updateLanguageSelectorButton();
-        this.renderDashboard();
+    if (listEl.dataset.bound !== "true") {
+      listEl.dataset.bound = "true";
+      listEl.addEventListener("click", (e) => {
+        const item = e.target.closest(".adhkar-lang-item");
+        if (!item) return;
+        const code = item.dataset.lang;
+        if (!code) return;
 
-        const lang = languages.find((l) => l.code === langCode);
-        if (lang) {
-          this.showToast(`Translation: ${lang.name}`, "success");
-        }
+        this.setSelectedLanguageCode(code);
+        this.renderDashboard();
+        this.renderSettings();
+        const lang = languages.find((l) => l.code === code);
+        if (lang) this.showToast(`Language: ${lang.name}`, "success");
+        this.closeLanguageSelectorModal();
       });
-    });
+    }
   }
 
   createSetSelectorModal() {
