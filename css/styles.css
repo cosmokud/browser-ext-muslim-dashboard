@@ -9905,7 +9905,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   pointer-events: none;
 }
 
-.card-blur-menu.blur-menu-open .blur-settings-popup {
+.blur-settings-popup.blur-popup-portal {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: auto;
+  z-index: 2147483647;
+}
+
+.card-blur-menu.blur-menu-open .blur-settings-popup,
+.blur-settings-popup.blur-popup-open {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);

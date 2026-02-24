@@ -991,6 +991,76 @@ class MuslimDashboard {
       this.storage.set("settings", { ...current, ...patch });
     };
 
+    const blurPopupByCardId = new Map();
+    const blurPopupPortalled = new WeakSet();
+    let blurPopupPositionRaf = null;
+
+    const ensureBlurPopupPortal = (menu, popup) => {
+      if (!menu || !popup) return;
+      if (blurPopupPortalled.has(popup)) return;
+
+      try {
+        document.body.appendChild(popup);
+        popup.classList.add("blur-popup-portal");
+        blurPopupPortalled.add(popup);
+      } catch (e) {}
+    };
+
+    const positionBlurPopup = (menu, popup) => {
+      if (!menu || !popup || !popup.classList.contains("blur-popup-open")) {
+        return;
+      }
+
+      const anchorRect = menu.getBoundingClientRect();
+      const viewportPadding = 10;
+      const gap = 10;
+
+      const popupWidth = Math.max(220, Math.round(popup.offsetWidth || 280));
+      const popupHeight = Math.max(200, Math.round(popup.offsetHeight || 320));
+
+      let left = Math.round(anchorRect.right - popupWidth);
+      left = Math.max(
+        viewportPadding,
+        Math.min(left, window.innerWidth - viewportPadding - popupWidth),
+      );
+
+      const belowTop = Math.round(anchorRect.bottom + gap);
+      const aboveTop = Math.round(anchorRect.top - gap - popupHeight);
+      const canFitBelow =
+        belowTop + popupHeight <= window.innerHeight - viewportPadding;
+      const canFitAbove = aboveTop >= viewportPadding;
+
+      let top = belowTop;
+      if (!canFitBelow && canFitAbove) {
+        top = aboveTop;
+      } else if (!canFitBelow && !canFitAbove) {
+        top = Math.max(
+          viewportPadding,
+          Math.min(top, window.innerHeight - viewportPadding - popupHeight),
+        );
+      }
+
+      popup.style.left = `${left}px`;
+      popup.style.top = `${top}px`;
+      popup.style.right = "auto";
+      popup.style.bottom = "auto";
+    };
+
+    const repositionOpenBlurPopups = () => {
+      if (blurPopupPositionRaf) cancelAnimationFrame(blurPopupPositionRaf);
+      blurPopupPositionRaf = requestAnimationFrame(() => {
+        document
+          .querySelectorAll(".card-blur-menu.blur-menu-open")
+          .forEach((menu) => {
+            const cardId = menu.dataset.cardId;
+            if (!cardId) return;
+            const popup = blurPopupByCardId.get(cardId);
+            if (!popup) return;
+            positionBlurPopup(menu, popup);
+          });
+      });
+    };
+
     // Close all open blur menus
     const closeAllBlurMenus = () => {
       document
@@ -998,6 +1068,17 @@ class MuslimDashboard {
         .forEach((menu) => {
           menu.classList.remove("blur-menu-open");
           menu.closest(".card")?.classList.remove("card-blur-popup-open");
+
+          const cardId = menu.dataset.cardId;
+          if (!cardId) return;
+          const popup = blurPopupByCardId.get(cardId);
+          popup?.classList.remove("blur-popup-open");
+        });
+
+      document
+        .querySelectorAll(".blur-settings-popup.blur-popup-open")
+        .forEach((popup) => {
+          popup.classList.remove("blur-popup-open");
         });
     };
 
@@ -1014,6 +1095,9 @@ class MuslimDashboard {
         closeAllBlurMenus();
       }
     });
+
+    window.addEventListener("resize", repositionOpenBlurPopups);
+    window.addEventListener("scroll", repositionOpenBlurPopups, true);
 
     const setupBlurMenu = ({ cardId, stateKey, blurPowerKey }) => {
       const card = document.getElementById(cardId);
@@ -1034,6 +1118,9 @@ class MuslimDashboard {
       const blurPowerToggleLabel = popup?.querySelector(".blur-power-toggle");
 
       if (!btn || !popup) return null;
+
+      blurPopupByCardId.set(cardId, popup);
+      ensureBlurPopupPortal(menu, popup);
 
       const clearCardGlassVars = () => {
         card.style.removeProperty("--glass-bg");
@@ -1264,6 +1351,9 @@ class MuslimDashboard {
         if (!isOpen) {
           menu.classList.add("blur-menu-open");
           card.classList.add("card-blur-popup-open");
+          popup.classList.add("blur-popup-open");
+          ensureBlurPopupPortal(menu, popup);
+          positionBlurPopup(menu, popup);
         }
       });
 
@@ -1273,6 +1363,7 @@ class MuslimDashboard {
         e.stopPropagation();
         menu.classList.remove("blur-menu-open");
         card.classList.remove("card-blur-popup-open");
+        popup.classList.remove("blur-popup-open");
       });
 
       // Prevent popup clicks from closing it
