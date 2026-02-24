@@ -80,6 +80,12 @@ class SettingsManager {
     this.debugTab = document.getElementById("debugTab");
     this.debugPanel = document.getElementById("debugPanel");
     this.testNotificationBtn = document.getElementById("testNotificationBtn");
+    this.debugSimDateEnabled = document.getElementById("debugSimDateEnabled");
+    this.debugDateControls = document.getElementById("debugDateControls");
+    this.debugSimDatePicker = document.getElementById("debugSimDatePicker");
+    this.debugSimDateYear = document.getElementById("debugSimDateYear");
+    this.debugSimDateMonth = document.getElementById("debugSimDateMonth");
+    this.debugSimDateDay = document.getElementById("debugSimDateDay");
     this.applyDebugModeVisibility();
 
     // Location elements
@@ -755,6 +761,9 @@ class SettingsManager {
 
     // Load fasting settings
     this.loadFastingSettings(settings);
+
+    // Load debug settings
+    this.loadDebugSettings(settings);
 
     this.updateNotesCountHint();
   }
@@ -3462,6 +3471,11 @@ class SettingsManager {
     // Save fasting settings
     this.saveFastingSettings(settings);
 
+    // Save debug settings
+    if (!this.saveDebugSettings(settings)) {
+      return;
+    }
+
     // Save to storage
     this.storage.saveSettings(settings);
 
@@ -3728,6 +3742,15 @@ class SettingsManager {
    */
   applyLiveUpdates(settings) {
     try {
+      // Apply debug date simulation first so all date/time renders use it.
+      if (
+        window.dashboard &&
+        typeof window.dashboard.applyDebugDateSimulationFromSettings ===
+          "function"
+      ) {
+        window.dashboard.applyDebugDateSimulationFromSettings(settings);
+      }
+
       // Update greeting
       if (
         window.dashboard &&
@@ -4128,6 +4151,187 @@ class SettingsManager {
     }
   }
 
+  setDebugDateControlsEnabled(enabled) {
+    const next = enabled === true;
+
+    if (this.debugDateControls) {
+      this.debugDateControls.classList.toggle("is-disabled", !next);
+    }
+
+    [
+      this.debugSimDatePicker,
+      this.debugSimDateYear,
+      this.debugSimDateMonth,
+      this.debugSimDateDay,
+    ]
+      .filter(Boolean)
+      .forEach((el) => {
+        el.disabled = !next;
+      });
+  }
+
+  normalizeDebugDateYMD(rawValue) {
+    const raw = String(rawValue || "").trim();
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return "";
+
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+
+    if (
+      !Number.isFinite(year) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(day) ||
+      year < 1 ||
+      year > 9999 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return "";
+    }
+
+    const probe = new Date(year, month - 1, day);
+    if (
+      probe.getFullYear() !== year ||
+      probe.getMonth() !== month - 1 ||
+      probe.getDate() !== day
+    ) {
+      return "";
+    }
+
+    return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  getDebugDateFromParts() {
+    const yearRaw = String(this.debugSimDateYear?.value || "").trim();
+    const monthRaw = String(this.debugSimDateMonth?.value || "").trim();
+    const dayRaw = String(this.debugSimDateDay?.value || "").trim();
+
+    if (!yearRaw && !monthRaw && !dayRaw) {
+      return "";
+    }
+
+    if (!yearRaw || !monthRaw || !dayRaw) {
+      return "";
+    }
+
+    const year = parseInt(yearRaw, 10);
+    const month = parseInt(monthRaw, 10);
+    const day = parseInt(dayRaw, 10);
+
+    if (
+      !Number.isFinite(year) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(day)
+    ) {
+      return "";
+    }
+
+    const combined = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return this.normalizeDebugDateYMD(combined);
+  }
+
+  syncDebugDatePartsFromPicker() {
+    const normalized = this.normalizeDebugDateYMD(
+      this.debugSimDatePicker?.value,
+    );
+
+    if (!normalized) {
+      if (this.debugSimDateYear) this.debugSimDateYear.value = "";
+      if (this.debugSimDateMonth) this.debugSimDateMonth.value = "";
+      if (this.debugSimDateDay) this.debugSimDateDay.value = "";
+      return;
+    }
+
+    const [year, month, day] = normalized.split("-");
+    if (this.debugSimDateYear) this.debugSimDateYear.value = year;
+    if (this.debugSimDateMonth) this.debugSimDateMonth.value = month;
+    if (this.debugSimDateDay) this.debugSimDateDay.value = day;
+  }
+
+  syncDebugDatePickerFromParts() {
+    const normalized = this.getDebugDateFromParts();
+
+    if (normalized) {
+      if (this.debugSimDatePicker) this.debugSimDatePicker.value = normalized;
+      return;
+    }
+
+    const hasAnyPart =
+      String(this.debugSimDateYear?.value || "").trim() ||
+      String(this.debugSimDateMonth?.value || "").trim() ||
+      String(this.debugSimDateDay?.value || "").trim();
+
+    if (!hasAnyPart && this.debugSimDatePicker) {
+      this.debugSimDatePicker.value = "";
+    }
+  }
+
+  loadDebugSettings(settings) {
+    const debug =
+      settings && typeof settings.debug === "object" ? settings.debug : {};
+
+    const enabled = debug.simulatedDateEnabled === true;
+    const normalized = this.normalizeDebugDateYMD(debug.simulatedDate);
+
+    if (this.debugSimDateEnabled) {
+      this.debugSimDateEnabled.checked = enabled;
+    }
+
+    if (this.debugSimDatePicker) {
+      this.debugSimDatePicker.value = normalized || "";
+    }
+
+    if (normalized) {
+      const [year, month, day] = normalized.split("-");
+      if (this.debugSimDateYear) this.debugSimDateYear.value = year;
+      if (this.debugSimDateMonth) this.debugSimDateMonth.value = month;
+      if (this.debugSimDateDay) this.debugSimDateDay.value = day;
+    } else {
+      if (this.debugSimDateYear) this.debugSimDateYear.value = "";
+      if (this.debugSimDateMonth) this.debugSimDateMonth.value = "";
+      if (this.debugSimDateDay) this.debugSimDateDay.value = "";
+    }
+
+    this.setDebugDateControlsEnabled(enabled);
+  }
+
+  saveDebugSettings(settings) {
+    settings.debug =
+      settings.debug && typeof settings.debug === "object"
+        ? settings.debug
+        : {};
+
+    const enabled = this.debugSimDateEnabled?.checked === true;
+    const fromPicker = this.normalizeDebugDateYMD(
+      this.debugSimDatePicker?.value,
+    );
+    const fromParts = this.getDebugDateFromParts();
+    const selectedDate = fromPicker || fromParts;
+
+    if (enabled && !selectedDate) {
+      this.showToast(
+        "Please select a valid simulated date (YYYY-MM-DD).",
+        "error",
+      );
+      if (this.debugEnabled) {
+        try {
+          this.switchTab("debug");
+        } catch (e) {}
+      }
+      return false;
+    }
+
+    settings.debug.simulatedDateEnabled = enabled;
+    settings.debug.simulatedDate =
+      selectedDate || settings.debug.simulatedDate || null;
+
+    return true;
+  }
+
   /**
    * Show toast notification
    */
@@ -4156,6 +4360,8 @@ class SettingsManager {
 
     container.appendChild(toast);
 
+    let hideTimer = null;
+
     const removeToast = () => {
       try {
         toast.remove();
@@ -4165,6 +4371,13 @@ class SettingsManager {
     };
 
     const hideToast = () => {
+      if (toast.classList.contains("toast-hiding")) return;
+
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+
       toast.classList.add("toast-hiding");
 
       // Remove after transition; also keep a safety timeout.
@@ -4182,7 +4395,23 @@ class SettingsManager {
       );
     };
 
-    setTimeout(hideToast, 2500);
+    const scheduleHide = (delayMs) => {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+      }
+      hideTimer = setTimeout(hideToast, delayMs);
+    };
+
+    // If the user hovers over a toast (often near the FAB region), hide it quickly.
+    toast.addEventListener(
+      "mouseenter",
+      () => {
+        scheduleHide(120);
+      },
+      { once: true },
+    );
+
+    scheduleHide(2500);
   }
 
   updateNotesCountHint() {
@@ -4409,6 +4638,27 @@ class SettingsManager {
         this.testBrowserNotification(),
       );
     }
+
+    if (this.debugSimDateEnabled) {
+      this.debugSimDateEnabled.addEventListener("change", () => {
+        this.setDebugDateControlsEnabled(this.debugSimDateEnabled.checked);
+      });
+    }
+
+    if (this.debugSimDatePicker) {
+      this.debugSimDatePicker.addEventListener("change", () => {
+        this.syncDebugDatePartsFromPicker();
+      });
+      this.debugSimDatePicker.addEventListener("input", () => {
+        this.syncDebugDatePartsFromPicker();
+      });
+    }
+
+    [this.debugSimDateYear, this.debugSimDateMonth, this.debugSimDateDay]
+      .filter(Boolean)
+      .forEach((el) => {
+        el.addEventListener("input", () => this.syncDebugDatePickerFromParts());
+      });
 
     // Notes import/export
     if (this.importNotesBtn && this.importNotesInput) {

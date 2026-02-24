@@ -364,6 +364,12 @@ class StorageManager {
         },
       },
 
+      // Debug settings (visible only when ENABLE_DEBUG_MODE is true)
+      debug: {
+        simulatedDateEnabled: false,
+        simulatedDate: null,
+      },
+
       // Heading customization settings
       heading: {
         // Greeting settings

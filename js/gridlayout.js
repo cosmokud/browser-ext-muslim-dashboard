@@ -814,14 +814,38 @@ class GridLayoutManager {
     toast.textContent = message;
     document.body.appendChild(toast);
 
+    let hideTimer = null;
+
+    const hideToast = () => {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+
+      toast.classList.remove("grid-toast-visible");
+      setTimeout(() => toast.remove(), 300);
+    };
+
+    const scheduleHide = (delayMs) => {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+      }
+      hideTimer = setTimeout(hideToast, delayMs);
+    };
+
     requestAnimationFrame(() => {
       toast.classList.add("grid-toast-visible");
     });
 
-    setTimeout(() => {
-      toast.classList.remove("grid-toast-visible");
-      setTimeout(() => toast.remove(), 300);
-    }, 2500);
+    toast.addEventListener(
+      "mouseenter",
+      () => {
+        scheduleHide(120);
+      },
+      { once: true },
+    );
+
+    scheduleHide(2500);
   }
 
   /**

@@ -61,6 +61,11 @@ class MuslimDashboard {
     this.currentTime = document.getElementById("currentTime");
     this.currentSeconds = document.getElementById("currentSeconds");
     this.currentAmPm = document.getElementById("currentAmPm");
+
+    // Keep a handle to the native Date constructor for debug date simulation.
+    this._nativeDateCtor = Date;
+    this._debugDateSimulationEnabled = false;
+    this._debugSimulatedDateYMD = null;
   }
 
   showToast(message, type = "info") {
@@ -74,6 +79,120 @@ class MuslimDashboard {
     try {
       this.gridLayout?.showToast?.(message, type);
     } catch (e) {}
+  }
+
+  normalizeDebugDateYMD(rawValue) {
+    const raw = String(rawValue || "").trim();
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return "";
+
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+
+    if (
+      !Number.isFinite(year) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(day) ||
+      year < 1 ||
+      year > 9999 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return "";
+    }
+
+    const NativeDate = this._nativeDateCtor || Date;
+    const probe = new NativeDate(year, month - 1, day);
+    if (
+      probe.getFullYear() !== year ||
+      probe.getMonth() !== month - 1 ||
+      probe.getDate() !== day
+    ) {
+      return "";
+    }
+
+    return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  /**
+   * Apply or clear app-wide debug date simulation.
+   * When enabled, `new Date()` (without args) returns the simulated date
+   * while preserving the real current time of day.
+   */
+  applyDebugDateSimulationFromSettings(settingsOverride = null) {
+    const settings =
+      settingsOverride && typeof settingsOverride === "object"
+        ? settingsOverride
+        : this.storage.getSettings();
+
+    const debugSettings =
+      settings && typeof settings.debug === "object" ? settings.debug : {};
+
+    const debugModeEnabled = globalThis.ENABLE_DEBUG_MODE === true;
+
+    const simulationEnabled =
+      debugModeEnabled && debugSettings.simulatedDateEnabled === true;
+    const simulatedYmd = this.normalizeDebugDateYMD(
+      debugSettings.simulatedDate,
+    );
+
+    const NativeDate = this._nativeDateCtor || Date;
+
+    if (simulationEnabled && simulatedYmd) {
+      const [yearText, monthText, dayText] = simulatedYmd.split("-");
+      const simYear = parseInt(yearText, 10);
+      const simMonth = parseInt(monthText, 10);
+      const simDay = parseInt(dayText, 10);
+
+      const getSimulatedNowMs = () => {
+        const realNow = new NativeDate();
+        return new NativeDate(
+          simYear,
+          simMonth - 1,
+          simDay,
+          realNow.getHours(),
+          realNow.getMinutes(),
+          realNow.getSeconds(),
+          realNow.getMilliseconds(),
+        ).getTime();
+      };
+
+      const SimulatedDate = class extends NativeDate {
+        constructor(...args) {
+          if (args.length === 0) {
+            super(getSimulatedNowMs());
+            return;
+          }
+          super(...args);
+        }
+
+        static now() {
+          return getSimulatedNowMs();
+        }
+
+        static parse(value) {
+          return NativeDate.parse(value);
+        }
+
+        static UTC(...args) {
+          return NativeDate.UTC(...args);
+        }
+      };
+
+      window.Date = SimulatedDate;
+      this._debugDateSimulationEnabled = true;
+      this._debugSimulatedDateYMD = simulatedYmd;
+      return;
+    }
+
+    if (window.Date !== NativeDate) {
+      window.Date = NativeDate;
+    }
+    this._debugDateSimulationEnabled = false;
+    this._debugSimulatedDateYMD = null;
   }
 
   setupFabMenu() {
@@ -308,6 +427,11 @@ class MuslimDashboard {
           }
           return;
         }
+      }
+
+      // Add Sticky Note should keep the FAB menu open.
+      if (button.id === "addStickyNoteBtn") {
+        return;
       }
 
       setOpen(false);
@@ -605,6 +729,11 @@ class MuslimDashboard {
         s.pocketQuran.arabicFontFamily = "KFGQPC Uthman Taha Naskh";
         this.storage.saveSettings(s);
       }
+    } catch (e) {}
+
+    // Apply debug date simulation as early as possible so all modules share it.
+    try {
+      this.applyDebugDateSimulationFromSettings();
     } catch (e) {}
 
     // Initialize themes first (applies CSS variables before any UI renders)

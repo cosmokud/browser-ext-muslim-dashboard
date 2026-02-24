@@ -2954,11 +2954,11 @@ body.quran-focus-mode .grid-flex-row {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #6b5b95, #9b8bb8);
+  background: linear-gradient(135deg, #1f84cf, #4aa9eb);
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(107, 91, 149, 0.4);
+  box-shadow: 0 4px 15px rgba(31, 132, 207, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2972,14 +2972,14 @@ body.quran-focus-mode .grid-flex-row {
 
 .moment-mode-btn:hover {
   transform: scale(1.06);
-  box-shadow: 0 6px 20px rgba(107, 91, 149, 0.5);
+  box-shadow: 0 6px 20px rgba(31, 132, 207, 0.54);
 }
 
 .moment-mode-btn.active {
-  background: linear-gradient(135deg, #7c6ca6, #b0a2cb);
+  background: linear-gradient(135deg, #2b90da, #64bcf7);
   box-shadow:
-    0 4px 16px rgba(124, 108, 166, 0.48),
-    0 0 0 2px rgba(176, 162, 203, 0.24);
+    0 4px 16px rgba(43, 144, 218, 0.5),
+    0 0 0 2px rgba(100, 188, 247, 0.24);
   animation: momentModePulse 2s ease-in-out infinite;
 }
 
@@ -2987,18 +2987,18 @@ body.quran-focus-mode .grid-flex-row {
   0%,
   100% {
     box-shadow:
-      0 4px 16px rgba(124, 108, 166, 0.48),
-      0 0 0 2px rgba(176, 162, 203, 0.24);
+      0 4px 16px rgba(43, 144, 218, 0.5),
+      0 0 0 2px rgba(100, 188, 247, 0.24);
   }
   50% {
     box-shadow:
-      0 4px 24px rgba(124, 108, 166, 0.62),
-      0 0 0 4px rgba(176, 162, 203, 0.26);
+      0 4px 24px rgba(43, 144, 218, 0.65),
+      0 0 0 4px rgba(100, 188, 247, 0.28);
   }
 }
 
 .moment-mode-btn:focus-visible {
-  outline: 2px solid #b0a2cb;
+  outline: 2px solid #64bcf7;
   outline-offset: 3px;
 }
 
@@ -4336,6 +4336,50 @@ body.moment-mode
   align-items: center;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
+}
+
+.debug-date-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.debug-date-controls.is-disabled {
+  opacity: 0.62;
+}
+
+.debug-date-picker-row .setting-input[type="date"] {
+  max-width: 280px;
+}
+
+.debug-date-parts {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.debug-date-parts .setting-input {
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-sm);
+}
+
+.debug-date-parts .debug-date-year {
+  width: 110px;
+}
+
+.debug-date-parts .debug-date-month,
+.debug-date-parts .debug-date-day {
+  width: 82px;
 }
 
 .setting-sublabel {

@@ -5088,6 +5088,67 @@
                 🔔 Test Browser Notification
               </button>
             </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Simulate Date</label>
+              <p class="setting-hint">
+                Simulate a specific date for testing date-sensitive behavior.
+                Pick from calendar or enter it manually as YYYY-MM-DD.
+              </p>
+
+              <div class="setting-options">
+                <label class="checkbox-option" for="debugSimDateEnabled">
+                  <input type="checkbox" id="debugSimDateEnabled" />
+                  Enable date simulation
+                </label>
+              </div>
+
+              <div class="debug-date-controls" id="debugDateControls">
+                <div class="setting-row debug-date-picker-row">
+                  <span class="setting-sublabel">Calendar</span>
+                  <input
+                    type="date"
+                    class="setting-input"
+                    id="debugSimDatePicker"
+                  />
+                </div>
+
+                <div class="setting-row debug-date-manual-row">
+                  <span class="setting-sublabel">Manual</span>
+                  <div class="debug-date-parts" aria-label="Manual date input">
+                    <input
+                      type="number"
+                      class="setting-input setting-input-narrow debug-date-year"
+                      id="debugSimDateYear"
+                      placeholder="YYYY"
+                      min="1"
+                      max="9999"
+                      inputmode="numeric"
+                    />
+                    <span class="setting-suffix">-</span>
+                    <input
+                      type="number"
+                      class="setting-input setting-input-narrow debug-date-month"
+                      id="debugSimDateMonth"
+                      placeholder="MM"
+                      min="1"
+                      max="12"
+                      inputmode="numeric"
+                    />
+                    <span class="setting-suffix">-</span>
+                    <input
+                      type="number"
+                      class="setting-input setting-input-narrow debug-date-day"
+                      id="debugSimDateDay"
+                      placeholder="DD"
+                      min="1"
+                      max="31"
+                      inputmode="numeric"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- General Settings -->
