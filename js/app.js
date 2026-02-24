@@ -1383,6 +1383,21 @@ class MuslimDashboard {
         }
       } catch (e) {}
 
+      // Disable and lock layout editing while Quran Focus Mode is active.
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setEditModeLocked === "function"
+        ) {
+          this.gridLayout.setEditModeLocked(true);
+        } else if (
+          this.gridLayout &&
+          typeof this.gridLayout.disableEditMode === "function"
+        ) {
+          this.gridLayout.disableEditMode();
+        }
+      } catch (e) {}
+
       this._quranFocusModeActive = true;
       focusBtn.setAttribute("aria-pressed", "true");
       focusBtn.classList.add("active");
@@ -1458,6 +1473,17 @@ class MuslimDashboard {
 
     const exitFocusMode = () => {
       this._quranFocusModeActive = false;
+
+      // Unlock layout editing when Quran Focus Mode exits.
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setEditModeLocked === "function"
+        ) {
+          this.gridLayout.setEditModeLocked(false);
+        }
+      } catch (e) {}
+
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
 

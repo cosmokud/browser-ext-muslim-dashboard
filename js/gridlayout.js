@@ -17,6 +17,7 @@ class GridLayoutManager {
     this.placeholder = null;
     this.isDragging = false;
     this.isEditModeEnabled = false; // Drag-drop mode disabled by default
+    this.isEditModeLocked = false;
 
     // Sidebar mode (3-column layout) drag-drop support
     this.isSidebarModeEnabled = false;
@@ -709,6 +710,21 @@ class GridLayoutManager {
    * Toggle drag-and-drop edit mode
    */
   toggleEditMode() {
+    if (this.isEditModeLocked) {
+      // Safety: if lock is active, ensure edit mode is off.
+      if (this.isEditModeEnabled) {
+        this.isEditModeEnabled = false;
+
+        const settings = this.storage.getSettings();
+        settings.gridEditModeEnabled = false;
+        this.storage.saveSettings(settings);
+      }
+
+      const toggleBtn = document.getElementById("layoutEditBtn");
+      this.updateEditModeUI(toggleBtn);
+      return;
+    }
+
     this.isEditModeEnabled = !this.isEditModeEnabled;
 
     // Save state to settings
@@ -742,14 +758,28 @@ class GridLayoutManager {
   updateEditModeUI(toggleBtn) {
     if (!toggleBtn) return;
 
+    // Keep button hoverable so FAB custom tooltips continue to work even when locked.
+    toggleBtn.disabled = false;
+    toggleBtn.setAttribute(
+      "aria-disabled",
+      this.isEditModeLocked ? "true" : "false",
+    );
+    toggleBtn.classList.toggle("is-locked", this.isEditModeLocked);
+
+    const tooltipText = this.isEditModeLocked
+      ? "Layout Edit Mode locked while Quran Focus Mode is active"
+      : this.isEditModeEnabled
+        ? "Disable Layout Edit Mode"
+        : "Enable Layout Edit Mode";
+
     toggleBtn.setAttribute(
       "aria-pressed",
       this.isEditModeEnabled ? "true" : "false",
     );
     toggleBtn.classList.toggle("active", this.isEditModeEnabled);
-    toggleBtn.title = this.isEditModeEnabled
-      ? "Disable Layout Edit Mode"
-      : "Enable Layout Edit Mode";
+    toggleBtn.setAttribute("data-tooltip", tooltipText);
+    toggleBtn.setAttribute("aria-label", tooltipText);
+    toggleBtn.removeAttribute("title");
 
     // Update grid class
     if (this.grid) {
@@ -2202,6 +2232,10 @@ class GridLayoutManager {
    * Enable edit mode programmatically
    */
   enableEditMode() {
+    if (this.isEditModeLocked) {
+      return;
+    }
+
     if (!this.isEditModeEnabled) {
       this.toggleEditMode();
     }
@@ -2214,6 +2248,25 @@ class GridLayoutManager {
     if (this.isEditModeEnabled) {
       this.toggleEditMode();
     }
+  }
+
+  /**
+   * Lock/unlock edit mode (used by Quran Focus Mode)
+   */
+  setEditModeLocked(locked) {
+    const next = locked === true;
+    this.isEditModeLocked = next;
+
+    if (this.isEditModeLocked && this.isEditModeEnabled) {
+      this.isEditModeEnabled = false;
+
+      const settings = this.storage.getSettings();
+      settings.gridEditModeEnabled = false;
+      this.storage.saveSettings(settings);
+    }
+
+    const toggleBtn = document.getElementById("layoutEditBtn");
+    this.updateEditModeUI(toggleBtn);
   }
 
   /**
