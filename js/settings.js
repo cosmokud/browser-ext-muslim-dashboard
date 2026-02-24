@@ -4929,9 +4929,22 @@ class SettingsManager {
             label: "Resetting…",
           });
           const startedAt = Date.now();
+          const defaultGridLayoutRows = [
+            ["header"],
+            ["pinnedAppsSection"],
+            ["searchBarSection"],
+            ["quoteSection"],
+            ["prayerTimesCard", "fastingCard", "calendarCard"],
+            ["flashcardCard", "adhkarCard"],
+            ["hadithCard"],
+            ["pocketQuranCard"],
+            ["notesCard"],
+            ["todoCard", "qiblaCard", "lunarPhaseCard"],
+            ["weatherCard"],
+          ];
 
           try {
-            window.dashboard.gridLayout.resetToDefault();
+            window.dashboard.gridLayout.resetToDefault(defaultGridLayoutRows);
             this.showToast("Layout reset to default!", "success");
           } finally {
             const minDuration = 900;
