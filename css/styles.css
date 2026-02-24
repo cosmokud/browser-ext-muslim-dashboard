@@ -448,16 +448,14 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .sidebar-mode-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #2f7f66, #4ea78b);
+  box-shadow:
+    0 4px 16px rgba(47, 127, 102, 0.48),
+    0 0 0 2px rgba(78, 167, 139, 0.24);
 }
 
 .sidebar-mode-btn:focus-visible {
-  outline: 2px solid var(--accent-gold);
+  outline: 2px solid #4ea78b;
   outline-offset: 3px;
 }
 
@@ -2695,29 +2693,46 @@ textarea.notes-editor:focus {
 }
 
 .layout-edit-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #6f7dc9, #8f99d8);
+  box-shadow:
+    0 4px 16px rgba(111, 125, 201, 0.48),
+    0 0 0 2px rgba(143, 153, 216, 0.24);
   animation: layoutEditPulse 2s ease-in-out infinite;
 }
 
 @keyframes layoutEditPulse {
   0%,
   100% {
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+    box-shadow:
+      0 4px 16px rgba(111, 125, 201, 0.48),
+      0 0 0 2px rgba(143, 153, 216, 0.24);
   }
   50% {
     box-shadow:
-      0 4px 25px rgba(212, 175, 55, 0.7),
-      0 0 0 4px rgba(212, 175, 55, 0.2);
+      0 4px 24px rgba(111, 125, 201, 0.62),
+      0 0 0 4px rgba(143, 153, 216, 0.26);
   }
 }
 
+.layout-edit-btn.is-locked,
+.layout-edit-btn.is-locked.active {
+  background: linear-gradient(135deg, #8d949f, #a8aeb8);
+  box-shadow:
+    0 4px 12px rgba(141, 148, 159, 0.35),
+    0 0 0 1px rgba(220, 224, 230, 0.28);
+  animation: none;
+  cursor: not-allowed;
+}
+
+.layout-edit-btn.is-locked:hover {
+  transform: none;
+  box-shadow:
+    0 4px 14px rgba(141, 148, 159, 0.4),
+    0 0 0 1px rgba(220, 224, 230, 0.34);
+}
+
 .layout-edit-btn:focus-visible {
-  outline: 2px solid var(--accent-gold);
+  outline: 2px solid #8f99d8;
   outline-offset: 3px;
 }
 
@@ -2748,29 +2763,29 @@ textarea.notes-editor:focus {
 }
 
 .quran-focus-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #3f8f44, #63be68);
+  box-shadow:
+    0 4px 16px rgba(63, 143, 68, 0.48),
+    0 0 0 2px rgba(99, 190, 104, 0.24);
   animation: quranFocusPulse 2s ease-in-out infinite;
 }
 
 @keyframes quranFocusPulse {
   0%,
   100% {
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+    box-shadow:
+      0 4px 16px rgba(63, 143, 68, 0.48),
+      0 0 0 2px rgba(99, 190, 104, 0.24);
   }
   50% {
     box-shadow:
-      0 4px 25px rgba(212, 175, 55, 0.7),
-      0 0 0 4px rgba(212, 175, 55, 0.2);
+      0 4px 24px rgba(63, 143, 68, 0.62),
+      0 0 0 4px rgba(99, 190, 104, 0.26);
   }
 }
 
 .quran-focus-btn:focus-visible {
-  outline: 2px solid var(--accent-gold);
+  outline: 2px solid #63be68;
   outline-offset: 3px;
 }
 
@@ -2946,29 +2961,29 @@ body.quran-focus-mode .grid-flex-row {
 }
 
 .moment-mode-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold),
-    var(--accent-gold-light)
-  );
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #7c6ca6, #b0a2cb);
+  box-shadow:
+    0 4px 16px rgba(124, 108, 166, 0.48),
+    0 0 0 2px rgba(176, 162, 203, 0.24);
   animation: momentModePulse 2s ease-in-out infinite;
 }
 
 @keyframes momentModePulse {
   0%,
   100% {
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+    box-shadow:
+      0 4px 16px rgba(124, 108, 166, 0.48),
+      0 0 0 2px rgba(176, 162, 203, 0.24);
   }
   50% {
     box-shadow:
-      0 4px 25px rgba(212, 175, 55, 0.7),
-      0 0 0 4px rgba(212, 175, 55, 0.2);
+      0 4px 24px rgba(124, 108, 166, 0.62),
+      0 0 0 4px rgba(176, 162, 203, 0.26);
   }
 }
 
 .moment-mode-btn:focus-visible {
-  outline: 2px solid var(--accent-gold);
+  outline: 2px solid #b0a2cb;
   outline-offset: 3px;
 }
 
