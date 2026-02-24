@@ -61,7 +61,7 @@ class FastingManager {
       now.getDate() + 1,
       0,
       0,
-      2
+      2,
     );
     const ms = Math.max(1000, nextMidnight.getTime() - now.getTime());
 
@@ -86,13 +86,13 @@ class FastingManager {
       fastingSettings.dhuAlHijjahWithinDays,
       7,
       365,
-      30
+      30,
     );
     const arafahWithinDays = this._clampInt(
       fastingSettings.arafahWithinDays,
       7,
       365,
-      30
+      30,
     );
 
     // Required: derive Hijri first (with adjustment)
@@ -162,7 +162,7 @@ class FastingManager {
         adjustment,
         12,
         1,
-        dhuAlHijjahWithinDays
+        dhuAlHijjahWithinDays,
       );
       if (dhu1) {
         items.push({
@@ -185,7 +185,7 @@ class FastingManager {
         adjustment,
         12,
         9,
-        arafahWithinDays
+        arafahWithinDays,
       );
       if (arafah) {
         items.push({
@@ -366,7 +366,7 @@ class FastingManager {
       targetYear,
       targetMonth,
       13,
-      adjustment
+      adjustment,
     );
     const daysLeft = this._diffDays(nowStart, target);
 
@@ -391,7 +391,7 @@ class FastingManager {
     adjustment,
     targetMonth,
     targetDay,
-    withinDays
+    withinDays,
   ) {
     const hy = hijriNow.year;
     const hm = hijriNow.month;
@@ -408,7 +408,7 @@ class FastingManager {
       targetYear,
       targetMonth,
       targetDay,
-      adjustment
+      adjustment,
     );
 
     const daysLeft = this._diffDays(nowStart, target);
@@ -425,7 +425,7 @@ class FastingManager {
     const g = this.hijri.toGregorian(hy, hm, hd);
     const shifted = this._addDays(
       this._startOfDay(g),
-      -Number(adjustment || 0)
+      -Number(adjustment || 0),
     );
     return shifted;
   }
