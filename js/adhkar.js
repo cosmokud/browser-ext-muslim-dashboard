@@ -2350,12 +2350,15 @@ class AdhkarManager {
     modal.id = "adhkarLangModal";
     modal.className = "pq-bookmark-modal adhkar-lang-modal";
     modal.innerHTML = `
-      <div class="pq-bookmark-modal-content" style="max-width: 400px;">
-        <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">🌐 Select Translation</h3>
-          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+      <div class="adhkar-lang-modal-content">
+        <div class="adhkar-lang-modal-header">
+          <div class="adhkar-lang-modal-title">
+            <span aria-hidden="true">🌐</span>
+            Select Translation
+          </div>
+          <button class="adhkar-lang-modal-close" type="button" aria-label="Close">×</button>
         </div>
-        <div class="pq-bookmark-modal-body">
+        <div class="adhkar-lang-modal-body">
           <div class="adhkar-lang-search">
             <input type="text" class="adhkar-lang-search-input" placeholder="Search languages..." />
           </div>
@@ -2367,7 +2370,7 @@ class AdhkarManager {
     this._langModal = modal;
 
     modal
-      .querySelector(".pq-bookmark-modal-close")
+      .querySelector(".adhkar-lang-modal-close")
       .addEventListener("click", () => {
         this.closeLanguageSelectorModal();
       });
