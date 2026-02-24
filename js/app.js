@@ -997,6 +997,7 @@ class MuslimDashboard {
         .querySelectorAll(".card-blur-menu.blur-menu-open")
         .forEach((menu) => {
           menu.classList.remove("blur-menu-open");
+          menu.closest(".card")?.classList.remove("card-blur-popup-open");
         });
     };
 
@@ -1262,6 +1263,7 @@ class MuslimDashboard {
         // Toggle this menu
         if (!isOpen) {
           menu.classList.add("blur-menu-open");
+          card.classList.add("card-blur-popup-open");
         }
       });
 
@@ -1270,6 +1272,7 @@ class MuslimDashboard {
         e.preventDefault();
         e.stopPropagation();
         menu.classList.remove("blur-menu-open");
+        card.classList.remove("card-blur-popup-open");
       });
 
       // Prevent popup clicks from closing it

@@ -26,6 +26,7 @@ class QuotesManager {
     // Quote auto-rotation
     this.autoRotateMs = 60 * 1000;
     this.autoRotateTimer = null;
+    this._hoverPauseAutoRotate = false;
 
     // Track running animations so we can cancel cleanly
     this._activeAnimations = [];
@@ -35,6 +36,7 @@ class QuotesManager {
     this.quoteSource = document.getElementById("quoteSource");
     this.quotePrev = document.getElementById("quotePrev");
     this.quoteNext = document.getElementById("quoteNext");
+    this.quoteSection = document.getElementById("quoteSection");
 
     this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
 
@@ -98,7 +100,7 @@ class QuotesManager {
       "quote-style-minimal",
       "quote-style-elegant",
       "quote-style-card",
-      "quote-style-banner"
+      "quote-style-banner",
     );
 
     // Add the selected style class
@@ -245,7 +247,7 @@ class QuotesManager {
     if (this._quoteHistoryIndex < this._quoteHistory.length - 1) {
       this._quoteHistory = this._quoteHistory.slice(
         0,
-        this._quoteHistoryIndex + 1
+        this._quoteHistoryIndex + 1,
       );
     }
 
@@ -293,7 +295,7 @@ class QuotesManager {
     if (!this.quoteText || !this.quoteSource) return;
 
     const prefersReducedMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     )?.matches;
     const container = this.quoteContainer || this.quoteText.parentElement;
 
@@ -420,6 +422,7 @@ class QuotesManager {
    */
   startAutoRotate() {
     this.stopAutoRotate();
+    if (this._hoverPauseAutoRotate) return;
     this.autoRotateTimer = setInterval(() => {
       this.displayRandomQuote();
     }, this.autoRotateMs);
@@ -908,6 +911,23 @@ class QuotesManager {
       });
     }
 
+    if (
+      this.quoteSection &&
+      this.quoteSection.dataset.autoRotateHoverBound !== "true"
+    ) {
+      this.quoteSection.dataset.autoRotateHoverBound = "true";
+
+      this.quoteSection.addEventListener("mouseenter", () => {
+        this._hoverPauseAutoRotate = true;
+        this.stopAutoRotate();
+      });
+
+      this.quoteSection.addEventListener("mouseleave", () => {
+        this._hoverPauseAutoRotate = false;
+        this.startAutoRotate();
+      });
+    }
+
     // Export button
     if (this.exportBtn) {
       this.exportBtn.addEventListener("click", () => {
@@ -1140,7 +1160,7 @@ class QuotesManager {
       const langInfo =
         languages.find((l) => l.code === current) || languages[0];
       btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
-        langInfo.code
+        langInfo.code,
       )}</span>`;
       btn.title = `Language: ${langInfo.name}`;
     } else {
@@ -1181,11 +1201,11 @@ class QuotesManager {
 
     const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
     closeBtn?.addEventListener("click", () =>
-      this.closeLanguageSelectorModal()
+      this.closeLanguageSelectorModal(),
     );
 
     this._bindOverlayCloseBehavior(modal, () =>
-      this.closeLanguageSelectorModal()
+      this.closeLanguageSelectorModal(),
     );
 
     const searchInput = modal.querySelector(".adhkar-lang-search-input");
@@ -1203,7 +1223,7 @@ class QuotesManager {
     this._langModal.classList.add("active");
 
     const searchInput = this._langModal.querySelector(
-      ".adhkar-lang-search-input"
+      ".adhkar-lang-search-input",
     );
     if (searchInput) searchInput.value = "";
 
@@ -1233,7 +1253,8 @@ class QuotesManager {
     const filtered = q
       ? languages.filter(
           (l) =>
-            l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q)
+            l.code.toLowerCase().includes(q) ||
+            l.name.toLowerCase().includes(q),
         )
       : languages;
 
@@ -1253,14 +1274,14 @@ class QuotesManager {
             isActive ? "active" : ""
           }" data-lang="${this.escapeHtml(lang.code)}">
             <span class="flag" aria-hidden="true">${this.getLanguageFlag(
-              lang.code
+              lang.code,
             )}</span>
             <div class="adhkar-lang-item-info">
               <div class="adhkar-lang-item-name">${this.escapeHtml(
-                lang.name
+                lang.name,
               )}</div>
               <div class="adhkar-lang-item-code">${this.escapeHtml(
-                lang.code
+                lang.code,
               )}</div>
             </div>
           </div>

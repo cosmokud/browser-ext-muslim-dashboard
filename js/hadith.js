@@ -41,10 +41,10 @@ class HadithManager {
     this.prevBtn = document.getElementById("hadithPrevBtn");
     this.nextBtn = document.getElementById("hadithNextBtn");
     this.fontScaleDecreaseBtn = document.getElementById(
-      "hadithFontDecreaseBtn"
+      "hadithFontDecreaseBtn",
     );
     this.fontScaleIncreaseBtn = document.getElementById(
-      "hadithFontIncreaseBtn"
+      "hadithFontIncreaseBtn",
     );
 
     this.titleEl = document.getElementById("hadithTitleText");
@@ -59,7 +59,7 @@ class HadithManager {
 
     // Auto-advance toggle elements
     this.autoAdvanceToggleBtn = document.getElementById(
-      "hadithAutoAdvanceToggleBtn"
+      "hadithAutoAdvanceToggleBtn",
     );
     this.autoAdvanceStatusEl = document.getElementById("hadithAutoStatus");
     this.autoAdvanceWrapEl = document.getElementById("hadithAutoWrap");
@@ -105,6 +105,7 @@ class HadithManager {
 
     // Auto-advance timer
     this._autoAdvanceTimer = null;
+    this._hoverPauseAutoAdvance = false;
 
     // Set selector modal state
     this._setModalPage = 1;
@@ -163,7 +164,7 @@ class HadithManager {
   _updateSetModalIcons() {
     if (this._setModal) {
       const titleIcon = this._setModal.querySelector(
-        ".hadith-set-modal-title span[aria-hidden]"
+        ".hadith-set-modal-title span[aria-hidden]",
       );
       if (titleIcon) {
         titleIcon.innerHTML = this._getIcon("📚", { size: 20 });
@@ -280,7 +281,7 @@ class HadithManager {
         parseInt(nextIndex, 10),
         0,
         items.length - 1,
-        0
+        0,
       );
       this.currentCardIndex = clamped;
     }
@@ -306,7 +307,7 @@ class HadithManager {
       this.currentCardIndex,
       0,
       items.length - 1,
-      0
+      0,
     );
   }
 
@@ -318,7 +319,7 @@ class HadithManager {
       parseInt(settings.autoAdvanceSeconds, 10),
       1,
       3600,
-      20
+      20,
     );
   }
 
@@ -362,7 +363,7 @@ class HadithManager {
       return;
     }
 
-    if (this.getAutoAdvancePaused()) {
+    if (this.getAutoAdvancePaused() || this._hoverPauseAutoAdvance) {
       this.clearAutoAdvanceTimer();
       return;
     }
@@ -391,7 +392,7 @@ class HadithManager {
       btn.title = paused ? "Resume auto-advance" : "Pause auto-advance";
       btn.setAttribute(
         "aria-label",
-        paused ? "Resume auto-advance" : "Pause auto-advance"
+        paused ? "Resume auto-advance" : "Pause auto-advance",
       );
       const icon = btn.querySelector(".auto-icon");
       if (icon) icon.textContent = paused ? "▶" : "⏸";
@@ -487,7 +488,7 @@ class HadithManager {
 
     // Load all default sets in parallel
     const freshSets = await Promise.all(
-      defs.map((def) => this.loadDefaultSet(def))
+      defs.map((def) => this.loadDefaultSet(def)),
     );
 
     for (const newSet of freshSets) {
@@ -673,7 +674,7 @@ class HadithManager {
         languages.find((l) => l.code === currentLang) || languages[0];
 
       btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
-        langInfo.code
+        langInfo.code,
       )}</span>`;
       btn.title = `Language: ${langInfo.name}`;
     } else {
@@ -881,8 +882,22 @@ class HadithManager {
     ) {
       this.autoAdvanceToggleBtn.dataset.bound = "true";
       this.autoAdvanceToggleBtn.addEventListener("click", () =>
-        this.toggleAutoAdvancePaused()
+        this.toggleAutoAdvancePaused(),
       );
+    }
+
+    if (this.cardEl && this.cardEl.dataset.autoAdvanceHoverBound !== "true") {
+      this.cardEl.dataset.autoAdvanceHoverBound = "true";
+
+      this.cardEl.addEventListener("mouseenter", () => {
+        this._hoverPauseAutoAdvance = true;
+        this.clearAutoAdvanceTimer();
+      });
+
+      this.cardEl.addEventListener("mouseleave", () => {
+        this._hoverPauseAutoAdvance = false;
+        this.ensureAutoAdvanceState({ reset: true });
+      });
     }
   }
 
@@ -895,21 +910,21 @@ class HadithManager {
       parseInt(settings.titleFontSize, 10),
       12,
       144,
-      22
+      22,
     );
 
     const text = this.clampNumber(
       parseInt(settings.textFontSize, 10),
       12,
       144,
-      18
+      18,
     );
 
     const meta = this.clampNumber(
       parseInt(settings.metaFontSize, 10),
       10,
       96,
-      14
+      14,
     );
 
     return { title, text, meta };
@@ -951,7 +966,7 @@ class HadithManager {
       scale,
       HadithManager.FONT_SCALE_MIN,
       HadithManager.FONT_SCALE_MAX,
-      1
+      1,
     );
   }
 
@@ -970,7 +985,7 @@ class HadithManager {
       this.normalizeScale(parseFloat(scale)),
       HadithManager.FONT_SCALE_MIN,
       HadithManager.FONT_SCALE_MAX,
-      1
+      1,
     );
     this.setHadithSettings({ fontScale: normalized });
     this.applyTypography();
@@ -991,7 +1006,7 @@ class HadithManager {
       this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
       this.fontScaleDecreaseBtn.setAttribute(
         "aria-label",
-        `Decrease hadith font size (${label})`
+        `Decrease hadith font size (${label})`,
       );
     }
 
@@ -1001,7 +1016,7 @@ class HadithManager {
       this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
       this.fontScaleIncreaseBtn.setAttribute(
         "aria-label",
-        `Increase hadith font size (${label})`
+        `Increase hadith font size (${label})`,
       );
     }
   }
@@ -1046,28 +1061,28 @@ class HadithManager {
 
     if (!this.settingsAutoAdvanceSeconds)
       this.settingsAutoAdvanceSeconds = document.getElementById(
-        "hadithAutoAdvanceSeconds"
+        "hadithAutoAdvanceSeconds",
       );
 
     if (!this.settingsTitleFontSize)
       this.settingsTitleFontSize = document.getElementById(
-        "hadithTitleFontSize"
+        "hadithTitleFontSize",
       );
     if (!this.settingsTitleFontSizeValue)
       this.settingsTitleFontSizeValue = document.getElementById(
-        "hadithTitleFontSizeValue"
+        "hadithTitleFontSizeValue",
       );
     if (!this.settingsTextFontSize)
       this.settingsTextFontSize = document.getElementById("hadithTextFontSize");
     if (!this.settingsTextFontSizeValue)
       this.settingsTextFontSizeValue = document.getElementById(
-        "hadithTextFontSizeValue"
+        "hadithTextFontSizeValue",
       );
     if (!this.settingsMetaFontSize)
       this.settingsMetaFontSize = document.getElementById("hadithMetaFontSize");
     if (!this.settingsMetaFontSizeValue)
       this.settingsMetaFontSizeValue = document.getElementById(
-        "hadithMetaFontSizeValue"
+        "hadithMetaFontSizeValue",
       );
 
     // Bind once
@@ -1087,25 +1102,25 @@ class HadithManager {
 
     if (this.settingsNewSetBtn) {
       this.settingsNewSetBtn.addEventListener("click", () =>
-        this.createNewSet()
+        this.createNewSet(),
       );
     }
 
     if (this.settingsRenameSetBtn) {
       this.settingsRenameSetBtn.addEventListener("click", () =>
-        this.renameActiveSet()
+        this.renameActiveSet(),
       );
     }
 
     if (this.settingsDeleteSetBtn) {
       this.settingsDeleteSetBtn.addEventListener("click", () =>
-        this.deleteActiveSet()
+        this.deleteActiveSet(),
       );
     }
 
     if (this.settingsImportBtn && this.settingsImportInput) {
       this.settingsImportBtn.addEventListener("click", () =>
-        this.settingsImportInput.click()
+        this.settingsImportInput.click(),
       );
 
       this.settingsImportInput.addEventListener("change", async (e) => {
@@ -1118,13 +1133,13 @@ class HadithManager {
 
     if (this.settingsExportBtn) {
       this.settingsExportBtn.addEventListener("click", () =>
-        this.exportActiveSet()
+        this.exportActiveSet(),
       );
     }
 
     if (this.settingsAddItemBtn) {
       this.settingsAddItemBtn.addEventListener("click", () =>
-        this.addNewItem()
+        this.addNewItem(),
       );
     }
 
@@ -1258,7 +1273,7 @@ class HadithManager {
 
     if (this.settingsAutoAdvanceSeconds) {
       this.settingsAutoAdvanceSeconds.value = String(
-        this.getAutoAdvanceSeconds()
+        this.getAutoAdvanceSeconds(),
       );
     }
 
@@ -1291,7 +1306,7 @@ class HadithManager {
       `;
 
       const createBtn = this.settingsList.querySelector(
-        "#hadithCreateCustomBtn"
+        "#hadithCreateCustomBtn",
       );
       if (createBtn) {
         createBtn.addEventListener("click", () => this.createNewSet());
@@ -1438,7 +1453,7 @@ class HadithManager {
   autoResizeAllTextareas() {
     if (!this.settingsList) return;
     const items = this.settingsList.querySelectorAll(
-      "textarea.hadith-editor-textarea"
+      "textarea.hadith-editor-textarea",
     );
     items.forEach((t) => this.autoResizeTextarea(t));
   }
@@ -1556,12 +1571,12 @@ class HadithManager {
 
     const isTaken = (candidate) =>
       sets.some(
-        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase()
+        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase(),
       );
 
     const protectedNames = Array.isArray(HadithManager.DEFAULT_SETS)
       ? HadithManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : [];
 
@@ -1589,7 +1604,7 @@ class HadithManager {
     if (sets.length >= HadithManager.MAX_SETS) {
       this.showToast(
         `You already have ${HadithManager.MAX_SETS} sets. Delete one first.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1604,7 +1619,7 @@ class HadithManager {
 
     const protectedNames = Array.isArray(HadithManager.DEFAULT_SETS)
       ? HadithManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : [];
 
@@ -1657,7 +1672,7 @@ class HadithManager {
 
     const name = this.makeUniqueSetName(
       trimmed,
-      sets.filter((s) => s.id !== active.id)
+      sets.filter((s) => s.id !== active.id),
     );
     sets[idx].name = name;
     this.saveSets(sets);
@@ -1758,7 +1773,7 @@ class HadithManager {
 
     const pages = Math.max(
       1,
-      Math.ceil(items.length / HadithManager.PAGE_SIZE)
+      Math.ceil(items.length / HadithManager.PAGE_SIZE),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 
@@ -1831,7 +1846,7 @@ class HadithManager {
     a.href = url;
     a.download = `${(active.name || "hadith").replace(
       /[^a-z0-9_-]+/gi,
-      "_"
+      "_",
     )}.json`;
     document.body.appendChild(a);
     a.click();
@@ -1924,7 +1939,7 @@ class HadithManager {
     this._setModalSearchQuery = "";
 
     const searchInput = this._setModal.querySelector(
-      ".adhkar-set-search-input"
+      ".adhkar-set-search-input",
     );
     if (searchInput) searchInput.value = "";
 
@@ -1955,7 +1970,7 @@ class HadithManager {
       ? sets.filter((s) =>
           String(s.name || "")
             .toLowerCase()
-            .includes(q)
+            .includes(q),
         )
       : sets;
 
@@ -2049,7 +2064,7 @@ class HadithManager {
     };
 
     btns.push(
-      makeBtn("Prev", this._setModalPage - 1, this._setModalPage <= 1, false)
+      makeBtn("Prev", this._setModalPage - 1, this._setModalPage <= 1, false),
     );
 
     for (let p = 1; p <= pages; p += 1) {
@@ -2063,8 +2078,8 @@ class HadithManager {
         "Next",
         this._setModalPage + 1,
         this._setModalPage >= pages,
-        false
-      )
+        false,
+      ),
     );
 
     paginationEl.innerHTML = btns.join("");
@@ -2135,11 +2150,11 @@ class HadithManager {
 
     const closeBtn = modal.querySelector(".adhkar-lang-modal-close");
     closeBtn?.addEventListener("click", () =>
-      this.closeLanguageSelectorModal()
+      this.closeLanguageSelectorModal(),
     );
 
     this._bindOverlayCloseBehavior(modal, () =>
-      this.closeLanguageSelectorModal()
+      this.closeLanguageSelectorModal(),
     );
 
     const searchInput = modal.querySelector(".adhkar-lang-search-input");
@@ -2157,7 +2172,7 @@ class HadithManager {
     this._langModal.classList.add("active");
 
     const searchInput = this._langModal.querySelector(
-      ".adhkar-lang-search-input"
+      ".adhkar-lang-search-input",
     );
     if (searchInput) searchInput.value = "";
 
@@ -2188,7 +2203,8 @@ class HadithManager {
     const filtered = q
       ? languages.filter(
           (l) =>
-            l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q)
+            l.code.toLowerCase().includes(q) ||
+            l.name.toLowerCase().includes(q),
         )
       : languages;
 
@@ -2208,14 +2224,14 @@ class HadithManager {
             isActive ? "active" : ""
           }" data-lang="${this.escapeHtmlAttr(lang.code)}">
             <span class="flag" aria-hidden="true">${this.getLanguageFlag(
-              lang.code
+              lang.code,
             )}</span>
             <div class="adhkar-lang-item-info">
               <div class="adhkar-lang-item-name">${this.escapeHtmlAttr(
-                lang.name
+                lang.name,
               )}</div>
               <div class="adhkar-lang-item-code">${this.escapeHtmlAttr(
-                lang.code
+                lang.code,
               )}</div>
             </div>
           </div>
@@ -2296,7 +2312,7 @@ class HadithManager {
           clearTimeout(t);
           removeToast();
         },
-        { once: true }
+        { once: true },
       );
     };
 

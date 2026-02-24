@@ -9826,6 +9826,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   align-items: center;
 }
 
+.card.card-blur-popup-open {
+  position: relative;
+  z-index: 1200;
+}
+
 .card-blur-btn {
   width: 36px;
   height: 36px;

@@ -61,10 +61,10 @@ class AdhkarManager {
     this.repeatEl = document.getElementById("adhkarRepeatText");
     this.scriptToggleBtn = document.getElementById("adhkarScriptToggleBtn");
     this.fontScaleDecreaseBtn = document.getElementById(
-      "adhkarFontDecreaseBtn"
+      "adhkarFontDecreaseBtn",
     );
     this.fontScaleIncreaseBtn = document.getElementById(
-      "adhkarFontIncreaseBtn"
+      "adhkarFontIncreaseBtn",
     );
 
     // Dashboard jump controls
@@ -74,7 +74,7 @@ class AdhkarManager {
 
     // Auto-advance toggle elements
     this.autoAdvanceToggleBtn = document.getElementById(
-      "adhkarAutoAdvanceToggleBtn"
+      "adhkarAutoAdvanceToggleBtn",
     );
     this.autoAdvanceStatusEl = document.getElementById("adhkarAutoStatus");
     this.autoAdvanceWrapEl = document.getElementById("adhkarAutoWrap");
@@ -122,6 +122,7 @@ class AdhkarManager {
 
     // Auto-advance timer
     this._autoAdvanceTimer = null;
+    this._hoverPauseAutoAdvance = false;
 
     // Set selector modal state
     this._setModalPage = 1;
@@ -298,7 +299,7 @@ class AdhkarManager {
         parseInt(nextIndex, 10),
         0,
         cards.length - 1,
-        0
+        0,
       );
       this.currentCardIndex = clamped;
     }
@@ -321,7 +322,7 @@ class AdhkarManager {
       parseInt(settings.autoAdvanceSeconds, 10),
       1,
       3600,
-      15
+      15,
     );
   }
 
@@ -359,7 +360,7 @@ class AdhkarManager {
   updateAutoAdvanceToggleUi() {
     if (!this.autoAdvanceToggleBtn)
       this.autoAdvanceToggleBtn = document.getElementById(
-        "adhkarAutoAdvanceToggleBtn"
+        "adhkarAutoAdvanceToggleBtn",
       );
     if (!this.autoAdvanceStatusEl)
       this.autoAdvanceStatusEl = document.getElementById("adhkarAutoStatus");
@@ -380,7 +381,7 @@ class AdhkarManager {
     if (this.autoAdvanceToggleBtn) {
       this.autoAdvanceToggleBtn.setAttribute(
         "aria-pressed",
-        paused ? "true" : "false"
+        paused ? "true" : "false",
       );
       this.autoAdvanceToggleBtn.dataset.paused = paused ? "true" : "false";
       this.autoAdvanceToggleBtn.title = paused
@@ -388,7 +389,7 @@ class AdhkarManager {
         : "Pause auto-advance";
       this.autoAdvanceToggleBtn.setAttribute(
         "aria-label",
-        paused ? "Resume auto-advance" : "Pause auto-advance"
+        paused ? "Resume auto-advance" : "Pause auto-advance",
       );
       this.autoAdvanceToggleBtn.innerHTML = `<span class="auto-icon" aria-hidden="true">${
         paused ? "▶" : "⏸"
@@ -418,7 +419,7 @@ class AdhkarManager {
   ensureAutoAdvanceState({ reset = false } = {}) {
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
-    const paused = this.getAutoAdvancePaused();
+    const paused = this.getAutoAdvancePaused() || this._hoverPauseAutoAdvance;
 
     if (cards.length <= 1 || paused) {
       this.clearAutoAdvanceTimer();
@@ -524,7 +525,7 @@ class AdhkarManager {
         const missingTranslations = cards.every((c) => {
           if (!c || typeof c !== "object") return false;
           const hasTranslationKey = Object.keys(c).some(
-            (k) => k === "translation" || k.startsWith("translation_")
+            (k) => k === "translation" || k.startsWith("translation_"),
           );
           const hasEnglish = typeof c.english === "string" && c.english.trim();
           return !hasTranslationKey && hasEnglish;
@@ -590,7 +591,7 @@ class AdhkarManager {
 
     // Load all default sets in parallel
     const freshSets = await Promise.all(
-      defs.map((def) => this.loadDefaultSet(def))
+      defs.map((def) => this.loadDefaultSet(def)),
     );
 
     for (const newSet of freshSets) {
@@ -654,7 +655,7 @@ class AdhkarManager {
 
     if (this.autoAdvanceToggleBtn) {
       this.autoAdvanceToggleBtn.addEventListener("click", () =>
-        this.toggleAutoAdvancePaused()
+        this.toggleAutoAdvancePaused(),
       );
     }
 
@@ -715,6 +716,20 @@ class AdhkarManager {
           }
         });
       }
+
+      if (this.cardEl.dataset.autoAdvanceHoverBound !== "true") {
+        this.cardEl.dataset.autoAdvanceHoverBound = "true";
+
+        this.cardEl.addEventListener("mouseenter", () => {
+          this._hoverPauseAutoAdvance = true;
+          this.clearAutoAdvanceTimer();
+        });
+
+        this.cardEl.addEventListener("mouseleave", () => {
+          this._hoverPauseAutoAdvance = false;
+          this.ensureAutoAdvanceState({ reset: true });
+        });
+      }
     }
   }
 
@@ -770,9 +785,12 @@ class AdhkarManager {
 
     this.shellEl.classList.add(className);
 
-    this._dashboardMidTimer = setTimeout(() => {
-      advance();
-    }, Math.floor(AdhkarManager.NAV_ANIM_MS / 2));
+    this._dashboardMidTimer = setTimeout(
+      () => {
+        advance();
+      },
+      Math.floor(AdhkarManager.NAV_ANIM_MS / 2),
+    );
 
     this._dashboardEndTimer = setTimeout(() => {
       if (this.shellEl) this.shellEl.classList.remove(className);
@@ -987,7 +1005,7 @@ class AdhkarManager {
     this.cardEl.style.setProperty("--adhkar-arabic-font-size", `${arabic}px`);
     this.cardEl.style.setProperty(
       "--adhkar-romanization-font-size",
-      `${romanization}px`
+      `${romanization}px`,
     );
     this.cardEl.style.setProperty("--adhkar-english-font-size", `${english}px`);
     this.updateFontScaleButtons();
@@ -1000,19 +1018,19 @@ class AdhkarManager {
         parseInt(settings.arabicFontSize, 10),
         12,
         144,
-        28
+        28,
       ),
       romanization: this.clampNumber(
         parseInt(settings.romanizationFontSize, 10),
         12,
         144,
-        18
+        18,
       ),
       english: this.clampNumber(
         parseInt(settings.englishFontSize, 10),
         12,
         144,
-        18
+        18,
       ),
     };
   }
@@ -1026,7 +1044,7 @@ class AdhkarManager {
       scale,
       AdhkarManager.FONT_SCALE_MIN,
       AdhkarManager.FONT_SCALE_MAX,
-      1
+      1,
     );
   }
 
@@ -1045,7 +1063,7 @@ class AdhkarManager {
       this.normalizeScale(parseFloat(scale)),
       AdhkarManager.FONT_SCALE_MIN,
       AdhkarManager.FONT_SCALE_MAX,
-      1
+      1,
     );
     this.setAdhkarSettings({ fontScale: normalized });
     this.applyTypography();
@@ -1066,7 +1084,7 @@ class AdhkarManager {
       this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
       this.fontScaleDecreaseBtn.setAttribute(
         "aria-label",
-        `Decrease adhkar font size (${label})`
+        `Decrease adhkar font size (${label})`,
       );
     }
 
@@ -1076,7 +1094,7 @@ class AdhkarManager {
       this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
       this.fontScaleIncreaseBtn.setAttribute(
         "aria-label",
-        `Increase adhkar font size (${label})`
+        `Increase adhkar font size (${label})`,
       );
     }
   }
@@ -1281,7 +1299,7 @@ class AdhkarManager {
       const langInfo =
         languages.find((l) => l.code === currentLang) || languages[0];
       btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
-        langInfo.code
+        langInfo.code,
       )}</span>`;
       btn.title = `Translation: ${langInfo.name}`;
     } else {
@@ -1348,34 +1366,34 @@ class AdhkarManager {
 
     if (!this.settingsAutoAdvanceSeconds)
       this.settingsAutoAdvanceSeconds = document.getElementById(
-        "adhkarAutoAdvanceSeconds"
+        "adhkarAutoAdvanceSeconds",
       );
 
     if (!this.settingsArabicFontSize)
       this.settingsArabicFontSize = document.getElementById(
-        "adhkarArabicFontSize"
+        "adhkarArabicFontSize",
       );
     if (!this.settingsArabicFontSizeValue)
       this.settingsArabicFontSizeValue = document.getElementById(
-        "adhkarArabicFontSizeValue"
+        "adhkarArabicFontSizeValue",
       );
 
     if (!this.settingsRomanizationFontSize)
       this.settingsRomanizationFontSize = document.getElementById(
-        "adhkarRomanizationFontSize"
+        "adhkarRomanizationFontSize",
       );
     if (!this.settingsRomanizationFontSizeValue)
       this.settingsRomanizationFontSizeValue = document.getElementById(
-        "adhkarRomanizationFontSizeValue"
+        "adhkarRomanizationFontSizeValue",
       );
 
     if (!this.settingsEnglishFontSize)
       this.settingsEnglishFontSize = document.getElementById(
-        "adhkarEnglishFontSize"
+        "adhkarEnglishFontSize",
       );
     if (!this.settingsEnglishFontSizeValue)
       this.settingsEnglishFontSizeValue = document.getElementById(
-        "adhkarEnglishFontSizeValue"
+        "adhkarEnglishFontSizeValue",
       );
 
     if (
@@ -1436,7 +1454,7 @@ class AdhkarManager {
     if (this.settingsAutoAdvanceSeconds) {
       this.settingsAutoAdvanceSeconds.addEventListener("change", () => {
         const next = this.setAutoAdvanceSeconds(
-          this.settingsAutoAdvanceSeconds.value
+          this.settingsAutoAdvanceSeconds.value,
         );
         this.settingsAutoAdvanceSeconds.value = String(next);
       });
@@ -1450,7 +1468,7 @@ class AdhkarManager {
           parseInt(rangeEl.value, 10),
           12,
           144,
-          t[key]
+          t[key],
         );
         rangeEl.value = String(v);
         this.setAdhkarSettings({ [`${key}FontSize`]: v });
@@ -1458,7 +1476,7 @@ class AdhkarManager {
         this.updateTypographyLabels(
           nextT.arabic,
           nextT.romanization,
-          nextT.english
+          nextT.english,
         );
         this.applyTypography();
       });
@@ -1467,17 +1485,17 @@ class AdhkarManager {
     bindFontRange(
       this.settingsArabicFontSize,
       this.settingsArabicFontSizeValue,
-      "arabic"
+      "arabic",
     );
     bindFontRange(
       this.settingsRomanizationFontSize,
       this.settingsRomanizationFontSizeValue,
-      "romanization"
+      "romanization",
     );
     bindFontRange(
       this.settingsEnglishFontSize,
       this.settingsEnglishFontSizeValue,
-      "english"
+      "english",
     );
 
     // Editor updates (delegated)
@@ -1570,7 +1588,7 @@ class AdhkarManager {
 
     if (this.settingsAutoAdvanceSeconds) {
       this.settingsAutoAdvanceSeconds.value = String(
-        this.getAutoAdvanceSeconds()
+        this.getAutoAdvanceSeconds(),
       );
     }
 
@@ -1605,7 +1623,7 @@ class AdhkarManager {
 
       // Bind the create custom set button
       const createBtn = this.settingsList.querySelector(
-        "#adhkarCreateCustomBtn"
+        "#adhkarCreateCustomBtn",
       );
       if (createBtn) {
         createBtn.addEventListener("click", () => this.createNewSet());
@@ -1749,7 +1767,7 @@ class AdhkarManager {
   autoResizeAllTextareas() {
     if (!this.settingsList) return;
     const items = this.settingsList.querySelectorAll(
-      "textarea.adhkar-editor-textarea"
+      "textarea.adhkar-editor-textarea",
     );
     items.forEach((t) => this.autoResizeTextarea(t));
   }
@@ -1843,12 +1861,12 @@ class AdhkarManager {
 
     const isTaken = (candidate) =>
       sets.some(
-        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase()
+        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase(),
       );
 
     const protectedNames = Array.isArray(AdhkarManager.DEFAULT_SETS)
       ? AdhkarManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : [];
 
@@ -1876,7 +1894,7 @@ class AdhkarManager {
     if (sets.length >= AdhkarManager.MAX_SETS) {
       this.showToast(
         `You already have ${AdhkarManager.MAX_SETS} sets. Delete one first.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1891,7 +1909,7 @@ class AdhkarManager {
 
     const protectedNames = Array.isArray(AdhkarManager.DEFAULT_SETS)
       ? AdhkarManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : [];
 
@@ -1947,7 +1965,7 @@ class AdhkarManager {
           const romanization = String(x.romanization || x.roman || "").trim();
 
           const translation = String(
-            x.translation || x.translation_en || x.english || ""
+            x.translation || x.translation_en || x.english || "",
           ).trim();
 
           // Preserve all translation_* fields (translation_en, translation_id, etc.)
@@ -1980,7 +1998,7 @@ class AdhkarManager {
         })
         .filter((c) => {
           const hasTranslationField = Object.keys(c).some(
-            (k) => k === "translation" || k.startsWith("translation_")
+            (k) => k === "translation" || k.startsWith("translation_"),
           );
           return (
             c.arabic ||
@@ -2008,7 +2026,7 @@ class AdhkarManager {
     const sets = this.getSets();
     let effectiveName = name;
     let existing = sets.find(
-      (s) => String(s.name || "").toLowerCase() === name.toLowerCase()
+      (s) => String(s.name || "").toLowerCase() === name.toLowerCase(),
     );
 
     // Never allow replacing a protected default set; create a new set instead.
@@ -2020,7 +2038,7 @@ class AdhkarManager {
     if (!existing && sets.length >= AdhkarManager.MAX_SETS) {
       this.showToast(
         `You already have ${AdhkarManager.MAX_SETS} sets. Delete one first.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -2044,7 +2062,7 @@ class AdhkarManager {
 
     if (existing) {
       const ok = confirm(
-        `A set named "${existing.name}" already exists. Replace it?`
+        `A set named "${existing.name}" already exists. Replace it?`,
       );
       if (!ok) return;
 
@@ -2092,12 +2110,12 @@ class AdhkarManager {
             arabic: String(c.arabic || ""),
             romanization: String(c.romanization || ""),
             translation: String(
-              c.translation || c.translation_en || c.english || ""
+              c.translation || c.translation_en || c.english || "",
             ),
             ...Object.fromEntries(
               Object.entries(c || {}).filter(
-                ([k, v]) => k.startsWith("translation_") && v != null
-              )
+                ([k, v]) => k.startsWith("translation_") && v != null,
+              ),
             ),
             reference: String(c.reference || ""),
             repeat:
@@ -2247,7 +2265,7 @@ class AdhkarManager {
 
     const pages = Math.max(
       1,
-      Math.ceil((active.cards.length || 0) / AdhkarManager.PAGE_SIZE)
+      Math.ceil((active.cards.length || 0) / AdhkarManager.PAGE_SIZE),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 
@@ -2355,7 +2373,7 @@ class AdhkarManager {
       });
 
     this._bindOverlayCloseBehavior(modal, () =>
-      this.closeLanguageSelectorModal()
+      this.closeLanguageSelectorModal(),
     );
 
     modal
@@ -2406,7 +2424,7 @@ class AdhkarManager {
       const q = searchQuery.toLowerCase();
       languages = languages.filter(
         (l) =>
-          l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q)
+          l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q),
       );
     }
 
@@ -2427,10 +2445,10 @@ class AdhkarManager {
             isActive ? "active" : ""
           }" data-lang-code="${lang.code}">
             <span class="adhkar-lang-flag">${this.getLanguageFlag(
-              lang.code
+              lang.code,
             )}</span>
             <span class="adhkar-lang-name">${this.escapeHtmlAttr(
-              lang.name
+              lang.name,
             )}</span>
             ${
               isActive
@@ -2578,18 +2596,18 @@ class AdhkarManager {
             }" data-set-id="${s.id}">
               <div class="adhkar-set-item-info">
                 <span class="adhkar-set-item-name">${this.escapeHtmlAttr(
-                  s.name
+                  s.name,
                 )}</span>
                 <span class="adhkar-set-item-meta">${itemCount} item${
-            itemCount === 1 ? "" : "s"
-          }</span>
+                  itemCount === 1 ? "" : "s"
+                }</span>
               </div>
               ${
                 Array.isArray(AdhkarManager.PROTECTED_SET_IDS) &&
                 AdhkarManager.PROTECTED_SET_IDS.includes(s.id)
                   ? `<span class="adhkar-set-item-lock" title="Default set — read only">${this._getIcon(
                       "🔒",
-                      { size: 14 }
+                      { size: 14 },
                     )}</span>`
                   : ""
               }
@@ -2597,7 +2615,7 @@ class AdhkarManager {
                 isActive
                   ? `<span style="color: var(--accent-gold);">${this._getIcon(
                       "✓",
-                      { size: 16 }
+                      { size: 16 },
                     )}</span>`
                   : ""
               }
@@ -2665,22 +2683,22 @@ class AdhkarManager {
       <button type="button" class="adhkar-set-page-btn" data-page="${
         currentPage - 1
       }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", {
-      size: 14,
-    })}</button>
+        size: 14,
+      })}</button>
       ${pages
         .map((p) =>
           p === "..."
             ? `<span class="adhkar-set-page-btn" style="cursor: default; border: none;">...</span>`
             : `<button type="button" class="adhkar-set-page-btn ${
                 p === currentPage ? "active" : ""
-              }" data-page="${p}">${p}</button>`
+              }" data-page="${p}">${p}</button>`,
         )
         .join("")}
       <button type="button" class="adhkar-set-page-btn" data-page="${
         currentPage + 1
       }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", {
-      size: 14,
-    })}</button>
+        size: 14,
+      })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {
@@ -2753,7 +2771,7 @@ class AdhkarManager {
           clearTimeout(t);
           removeToast();
         },
-        { once: true }
+        { once: true },
       );
     };
 

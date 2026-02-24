@@ -440,15 +440,10 @@ class BackgroundManager {
       document.addEventListener(
         "DOMContentLoaded",
         () => this.createAttributionEl(),
-        { once: true }
+        { once: true },
       );
       return;
     }
-
-    // Create hover zone for triggering attribution visibility
-    const hoverZone = document.createElement("div");
-    hoverZone.className = "bg-attribution-hover-zone";
-    document.body.appendChild(hoverZone);
 
     const el = document.createElement("div");
     el.id = "bg-attribution";
@@ -489,14 +484,16 @@ class BackgroundManager {
 
     this.attributionEl = el;
     this.attributionAnchor = anchor;
-    this.hoverZone = hoverZone;
 
-    // Setup hover zone to show attribution with graceful fade and delayed hide
+    // Setup proximity trigger to show attribution near the bottom-left corner
     // Store timers on the instance so other methods (e.g., updateAttribution)
     // can cancel or reschedule them reliably.
     this._bgAttrHideTimer = null;
     this._BG_ATTR_HIDE_DELAY = 3000; // ms (user-requested for hover)
     this._BG_ATTR_FADE_MS = 420; // ms (match CSS fade duration)
+    this._BG_ATTR_HOT_CORNER_WIDTH = 280; // px from left edge
+    this._BG_ATTR_HOT_CORNER_HEIGHT = 180; // px from bottom edge
+    this._bgAttrPointerNearCorner = false;
 
     const cancelBgAttrHide = () => {
       if (this._bgAttrHideTimer) {
@@ -548,15 +545,44 @@ class BackgroundManager {
       }, delay);
     };
 
-    hoverZone.addEventListener("mouseenter", showBgAttr, { passive: true });
-    hoverZone.addEventListener("mouseleave", () => scheduleHideBgAttr(), {
-      passive: true,
-    });
+    const isPointerNearBottomLeft = (event) => {
+      if (!event) return false;
+      const fromLeft = event.clientX;
+      const fromBottom = window.innerHeight - event.clientY;
+      return (
+        fromLeft <= this._BG_ATTR_HOT_CORNER_WIDTH &&
+        fromBottom <= this._BG_ATTR_HOT_CORNER_HEIGHT
+      );
+    };
+
+    const maybeScheduleHideBgAttr = (delay = this._BG_ATTR_HIDE_DELAY) => {
+      if (this._bgAttrPointerNearCorner) return;
+      if (el.matches(":hover")) return;
+      const active = document.activeElement;
+      if (active && el.contains(active)) return;
+      scheduleHideBgAttr(delay);
+    };
+
+    document.addEventListener(
+      "mousemove",
+      (event) => {
+        const nearCorner = isPointerNearBottomLeft(event);
+        if (nearCorner) {
+          this._bgAttrPointerNearCorner = true;
+          showBgAttr();
+        } else if (this._bgAttrPointerNearCorner) {
+          this._bgAttrPointerNearCorner = false;
+          maybeScheduleHideBgAttr();
+        }
+      },
+      { passive: true },
+    );
+
     el.addEventListener("mouseenter", showBgAttr, { passive: true });
-    el.addEventListener("mouseleave", () => scheduleHideBgAttr());
+    el.addEventListener("mouseleave", () => maybeScheduleHideBgAttr());
     // Support keyboard focus as well
     el.addEventListener("focusin", showBgAttr);
-    el.addEventListener("focusout", () => scheduleHideBgAttr());
+    el.addEventListener("focusout", () => maybeScheduleHideBgAttr());
   }
 
   /**
@@ -568,7 +594,7 @@ class BackgroundManager {
       this.attributionEl.classList.remove(
         "entrance-animate",
         "autohide",
-        "hot-visible"
+        "hot-visible",
       );
       return;
     }
@@ -589,7 +615,7 @@ class BackgroundManager {
     this.attributionEl.classList.remove(
       "autohide",
       "hot-visible",
-      "exit-animate"
+      "exit-animate",
     );
     this.attributionEl.classList.add("entrance-animate");
 

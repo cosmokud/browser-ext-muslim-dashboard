@@ -57,10 +57,10 @@ class FlashcardManager {
     this.answerEl = document.getElementById("flashcardAnswer");
     this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
     this.fontScaleDecreaseBtn = document.getElementById(
-      "flashcardFontDecreaseBtn"
+      "flashcardFontDecreaseBtn",
     );
     this.fontScaleIncreaseBtn = document.getElementById(
-      "flashcardFontIncreaseBtn"
+      "flashcardFontIncreaseBtn",
     );
 
     // Dashboard jump controls
@@ -108,10 +108,11 @@ class FlashcardManager {
 
     // Study mode auto-advance timer
     this._autoAdvanceTimer = null;
+    this._hoverPauseAutoAdvance = false;
 
     // Auto-advance toggle elements
     this.autoAdvanceToggleBtn = document.getElementById(
-      "flashcardAutoAdvanceToggleBtn"
+      "flashcardAutoAdvanceToggleBtn",
     );
     this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
     this.autoAdvanceWrapEl = document.getElementById("flashcardAutoWrap");
@@ -254,7 +255,7 @@ class FlashcardManager {
 
   setCurrentCardIndex(
     nextIndex,
-    { resetFlip = true, cancelAnimation = true } = {}
+    { resetFlip = true, cancelAnimation = true } = {},
   ) {
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
@@ -267,7 +268,7 @@ class FlashcardManager {
         parseInt(nextIndex, 10),
         0,
         cards.length - 1,
-        0
+        0,
       );
       this.currentCardIndex = clamped;
     }
@@ -321,7 +322,7 @@ class FlashcardManager {
       parseInt(settings.studyAutoAdvanceSeconds, 10),
       1,
       3600,
-      10
+      10,
     );
   }
 
@@ -360,7 +361,7 @@ class FlashcardManager {
     this.setAutoAdvancePaused(next);
     this.showToast(
       next ? "Auto-advance paused" : "Auto-advance resumed",
-      "info"
+      "info",
     );
   }
 
@@ -368,7 +369,7 @@ class FlashcardManager {
     // Ensure references exist (DOM may have been modified)
     if (!this.autoAdvanceToggleBtn)
       this.autoAdvanceToggleBtn = document.getElementById(
-        "flashcardAutoAdvanceToggleBtn"
+        "flashcardAutoAdvanceToggleBtn",
       );
     if (!this.autoAdvanceStatusEl)
       this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
@@ -393,7 +394,7 @@ class FlashcardManager {
     if (this.autoAdvanceToggleBtn) {
       this.autoAdvanceToggleBtn.setAttribute(
         "aria-pressed",
-        paused ? "true" : "false"
+        paused ? "true" : "false",
       );
       this.autoAdvanceToggleBtn.dataset.paused = paused ? "true" : "false";
       this.autoAdvanceToggleBtn.title = paused
@@ -423,7 +424,7 @@ class FlashcardManager {
     if (this.flipCardEl) {
       this.flipCardEl.classList.toggle(
         "flashcard-mode-study",
-        mode === "study"
+        mode === "study",
       );
 
       if (mode === "study") {
@@ -448,7 +449,7 @@ class FlashcardManager {
       this.modeToggleBtn.setAttribute("aria-label", nextTitle);
       this.modeToggleBtn.setAttribute(
         "aria-pressed",
-        mode === "study" ? "true" : "false"
+        mode === "study" ? "true" : "false",
       );
     }
 
@@ -467,7 +468,7 @@ class FlashcardManager {
     const isStudy = this.isStudyMode();
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
-    const paused = this.getAutoAdvancePaused();
+    const paused = this.getAutoAdvancePaused() || this._hoverPauseAutoAdvance;
 
     // Do not run auto-advance when not in study mode, only one card exists, or user paused it.
     if (!isStudy || cards.length <= 1 || paused) {
@@ -529,7 +530,7 @@ class FlashcardManager {
         } catch (e) {
           console.error(
             `Flashcards: failed to initialize default set ${def.id}`,
-            e
+            e,
           );
           created.push({
             id: def.id,
@@ -563,7 +564,7 @@ class FlashcardManager {
                 : this.parseCsvTwoColumns(text);
           } else {
             console.warn(
-              `Flashcards: failed to load default CSV (${def.file}): ${res.status}`
+              `Flashcards: failed to load default CSV (${def.file}): ${res.status}`,
             );
           }
           const newSet = {
@@ -623,7 +624,7 @@ class FlashcardManager {
         const res = await fetch(def.file, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(
-            `Failed to load default set ${def.id}: ${res.status}`
+            `Failed to load default set ${def.id}: ${res.status}`,
           );
         }
         const text = await res.text();
@@ -771,7 +772,7 @@ class FlashcardManager {
     // Re-query auto-advance elements (safe if DOM was modified)
     if (!this.autoAdvanceToggleBtn)
       this.autoAdvanceToggleBtn = document.getElementById(
-        "flashcardAutoAdvanceToggleBtn"
+        "flashcardAutoAdvanceToggleBtn",
       );
     if (!this.autoAdvanceStatusEl)
       this.autoAdvanceStatusEl = document.getElementById("flashcardAutoStatus");
@@ -787,6 +788,20 @@ class FlashcardManager {
           e.preventDefault();
           this.toggleAutoAdvancePaused();
         }
+      });
+    }
+
+    if (this.cardEl && this.cardEl.dataset.autoAdvanceHoverBound !== "true") {
+      this.cardEl.dataset.autoAdvanceHoverBound = "true";
+
+      this.cardEl.addEventListener("mouseenter", () => {
+        this._hoverPauseAutoAdvance = true;
+        this.clearAutoAdvanceTimer();
+      });
+
+      this.cardEl.addEventListener("mouseleave", () => {
+        this._hoverPauseAutoAdvance = false;
+        this.ensureAutoAdvanceState({ reset: true });
       });
     }
   }
@@ -815,7 +830,7 @@ class FlashcardManager {
       this.flipCardEl.classList.remove(
         "flashcard-anim-flip",
         "flashcard-anim-next",
-        "flashcard-anim-prev"
+        "flashcard-anim-prev",
       );
     }
   }
@@ -834,10 +849,13 @@ class FlashcardManager {
 
     this.flipCardEl.classList.add("flashcard-anim-flip");
 
-    this._dashboardMidTimer = setTimeout(() => {
-      this.isFlipped = !this.isFlipped;
-      this.renderDashboard();
-    }, Math.floor(FlashcardManager.FLIP_ANIM_MS / 2));
+    this._dashboardMidTimer = setTimeout(
+      () => {
+        this.isFlipped = !this.isFlipped;
+        this.renderDashboard();
+      },
+      Math.floor(FlashcardManager.FLIP_ANIM_MS / 2),
+    );
 
     this._dashboardEndTimer = setTimeout(() => {
       if (this.flipCardEl)
@@ -885,9 +903,12 @@ class FlashcardManager {
 
     this.flipCardEl.classList.add(className);
 
-    this._dashboardMidTimer = setTimeout(() => {
-      advance();
-    }, Math.floor(FlashcardManager.NAV_ANIM_MS / 2));
+    this._dashboardMidTimer = setTimeout(
+      () => {
+        advance();
+      },
+      Math.floor(FlashcardManager.NAV_ANIM_MS / 2),
+    );
 
     this._dashboardEndTimer = setTimeout(() => {
       if (this.flipCardEl) this.flipCardEl.classList.remove(className);
@@ -1047,7 +1068,7 @@ class FlashcardManager {
     this.settingsImportBtn = document.getElementById("flashcardsImportBtn");
     this.settingsExportBtn = document.getElementById("flashcardsExportBtn");
     this.settingsDeleteSetBtn = document.getElementById(
-      "flashcardsDeleteSetBtn"
+      "flashcardsDeleteSetBtn",
     );
     this.settingsNewSetBtn = document.getElementById("flashcardsNewSetBtn");
     this.settingsImportInput = document.getElementById("flashcardsImportInput");
@@ -1058,20 +1079,20 @@ class FlashcardManager {
 
     this.settingsModeSelect = document.getElementById("flashcardsModeSelect");
     this.settingsStudyAutoAdvanceSeconds = document.getElementById(
-      "flashcardsStudyAutoAdvanceSeconds"
+      "flashcardsStudyAutoAdvanceSeconds",
     );
 
     this.settingsQuestionFontSize = document.getElementById(
-      "flashcardsQuestionFontSize"
+      "flashcardsQuestionFontSize",
     );
     this.settingsQuestionFontSizeValue = document.getElementById(
-      "flashcardsQuestionFontSizeValue"
+      "flashcardsQuestionFontSizeValue",
     );
     this.settingsAnswerFontSize = document.getElementById(
-      "flashcardsAnswerFontSize"
+      "flashcardsAnswerFontSize",
     );
     this.settingsAnswerFontSizeValue = document.getElementById(
-      "flashcardsAnswerFontSizeValue"
+      "flashcardsAnswerFontSizeValue",
     );
   }
 
@@ -1107,13 +1128,13 @@ class FlashcardManager {
           parseInt(this.settingsQuestionFontSize.value, 10),
           12,
           144,
-          22
+          22,
         );
         const a = this.clampNumber(
           parseInt(this.settingsAnswerFontSize.value, 10),
           12,
           144,
-          18
+          18,
         );
         this.setFlashcardSettings({ questionFontSize: q, answerFontSize: a });
         this.applyTypography();
@@ -1137,7 +1158,7 @@ class FlashcardManager {
     if (this.settingsStudyAutoAdvanceSeconds) {
       this.settingsStudyAutoAdvanceSeconds.addEventListener("change", () => {
         const seconds = this.setStudyAutoAdvanceSeconds(
-          this.settingsStudyAutoAdvanceSeconds.value
+          this.settingsStudyAutoAdvanceSeconds.value,
         );
         this.settingsStudyAutoAdvanceSeconds.value = String(seconds);
       });
@@ -1271,7 +1292,7 @@ class FlashcardManager {
 
     if (this.settingsStudyAutoAdvanceSeconds) {
       this.settingsStudyAutoAdvanceSeconds.value = String(
-        this.getStudyAutoAdvanceSeconds()
+        this.getStudyAutoAdvanceSeconds(),
       );
     }
 
@@ -1363,11 +1384,11 @@ class FlashcardManager {
     const answer = this.scaleTypographyValue(t.answer, scale);
     this.cardEl.style.setProperty(
       "--flashcard-question-font-size",
-      `${question}px`
+      `${question}px`,
     );
     this.cardEl.style.setProperty(
       "--flashcard-answer-font-size",
-      `${answer}px`
+      `${answer}px`,
     );
     this.updateFontScaleButtons();
   }
@@ -1379,13 +1400,13 @@ class FlashcardManager {
         parseInt(settings.questionFontSize, 10),
         12,
         144,
-        22
+        22,
       ),
       answer: this.clampNumber(
         parseInt(settings.answerFontSize, 10),
         12,
         144,
-        18
+        18,
       ),
     };
   }
@@ -1399,7 +1420,7 @@ class FlashcardManager {
       scale,
       FlashcardManager.FONT_SCALE_MIN,
       FlashcardManager.FONT_SCALE_MAX,
-      1
+      1,
     );
   }
 
@@ -1418,7 +1439,7 @@ class FlashcardManager {
       this.normalizeScale(parseFloat(scale)),
       FlashcardManager.FONT_SCALE_MIN,
       FlashcardManager.FONT_SCALE_MAX,
-      1
+      1,
     );
     this.setFlashcardSettings({ fontScale: normalized });
     this.applyTypography();
@@ -1439,7 +1460,7 @@ class FlashcardManager {
       this.fontScaleDecreaseBtn.title = `Decrease font size (${label})`;
       this.fontScaleDecreaseBtn.setAttribute(
         "aria-label",
-        `Decrease flashcard font size (${label})`
+        `Decrease flashcard font size (${label})`,
       );
     }
 
@@ -1449,7 +1470,7 @@ class FlashcardManager {
       this.fontScaleIncreaseBtn.title = `Increase font size (${label})`;
       this.fontScaleIncreaseBtn.setAttribute(
         "aria-label",
-        `Increase flashcard font size (${label})`
+        `Increase flashcard font size (${label})`,
       );
     }
   }
@@ -1470,7 +1491,7 @@ class FlashcardManager {
   autoResizeAllTextareas() {
     if (!this.settingsList) return;
     const items = this.settingsList.querySelectorAll(
-      "textarea.flashcard-textarea"
+      "textarea.flashcard-textarea",
     );
     items.forEach((t) => this.autoResizeTextarea(t));
   }
@@ -1550,7 +1571,7 @@ class FlashcardManager {
     const sets = this.getSets();
     let effectiveName = name;
     let existing = sets.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
+      (s) => s.name.toLowerCase() === name.toLowerCase(),
     );
 
     // Never allow replacing a protected default set; instead create a new set with a unique name.
@@ -1563,7 +1584,7 @@ class FlashcardManager {
     if (!existing && sets.length >= FlashcardManager.MAX_SETS) {
       this.showToast(
         `You already have ${FlashcardManager.MAX_SETS} sets. Delete one first.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1589,7 +1610,7 @@ class FlashcardManager {
 
     if (existing) {
       const ok = confirm(
-        `A set named "${existing.name}" already exists. Replace it?`
+        `A set named "${existing.name}" already exists. Replace it?`,
       );
       if (!ok) return;
 
@@ -1736,7 +1757,7 @@ class FlashcardManager {
     // Keep page in range
     const pages = Math.max(
       1,
-      Math.ceil((active.cards.length || 0) / FlashcardManager.PAGE_SIZE)
+      Math.ceil((active.cards.length || 0) / FlashcardManager.PAGE_SIZE),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 
@@ -1901,12 +1922,12 @@ class FlashcardManager {
 
     const isTaken = (candidate) =>
       sets.some(
-        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase()
+        (s) => String(s.name || "").toLowerCase() === candidate.toLowerCase(),
       );
 
     const protectedNames = Array.isArray(FlashcardManager.DEFAULT_SETS)
       ? FlashcardManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : ["default"];
 
@@ -1931,7 +1952,7 @@ class FlashcardManager {
     if (sets.length >= FlashcardManager.MAX_SETS) {
       this.showToast(
         `You already have ${FlashcardManager.MAX_SETS} sets. Delete one first.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1946,7 +1967,7 @@ class FlashcardManager {
 
     const protectedNames = Array.isArray(FlashcardManager.DEFAULT_SETS)
       ? FlashcardManager.DEFAULT_SETS.map((d) =>
-          String(d.name || "").toLowerCase()
+          String(d.name || "").toLowerCase(),
         )
       : ["default"];
 
@@ -2030,7 +2051,7 @@ class FlashcardManager {
           clearTimeout(t);
           removeToast();
         },
-        { once: true }
+        { once: true },
       );
     };
 
@@ -2164,7 +2185,7 @@ class FlashcardManager {
 
     const listContainer = modal.querySelector(".flashcard-set-list");
     const paginationContainer = modal.querySelector(
-      ".flashcard-set-pagination"
+      ".flashcard-set-pagination",
     );
 
     let sets = this.getSets();
@@ -2197,18 +2218,18 @@ class FlashcardManager {
             }" data-set-id="${s.id}">
               <div class="flashcard-set-item-info">
                 <span class="flashcard-set-item-name">${this.escapeHtmlAttr(
-                  s.name
+                  s.name,
                 )}</span>
                 <span class="flashcard-set-item-meta">${cardCount} card${
-            cardCount === 1 ? "" : "s"
-          }</span>
+                  cardCount === 1 ? "" : "s"
+                }</span>
               </div>
               ${
                 Array.isArray(FlashcardManager.PROTECTED_SET_IDS) &&
                 FlashcardManager.PROTECTED_SET_IDS.includes(s.id)
                   ? `<span class="flashcard-set-item-lock" title="Default set — read only">${this._getIcon(
                       "🔒",
-                      { size: 14 }
+                      { size: 14 },
                     )}</span>`
                   : ""
               }
@@ -2216,7 +2237,7 @@ class FlashcardManager {
                 isActive
                   ? `<span style="color: var(--accent-gold);">${this._getIcon(
                       "✓",
-                      { size: 16 }
+                      { size: 16 },
                     )}</span>`
                   : ""
               }
@@ -2290,22 +2311,22 @@ class FlashcardManager {
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage - 1
       }" ${currentPage === 1 ? "disabled" : ""}>${this._getIcon("←", {
-      size: 14,
-    })}</button>
+        size: 14,
+      })}</button>
       ${pages
         .map((p) =>
           p === "..."
             ? `<span class="flashcard-set-page-btn" style="cursor: default; border: none;">...</span>`
             : `<button type="button" class="flashcard-set-page-btn ${
                 p === currentPage ? "active" : ""
-              }" data-page="${p}">${p}</button>`
+              }" data-page="${p}">${p}</button>`,
         )
         .join("")}
       <button type="button" class="flashcard-set-page-btn" data-page="${
         currentPage + 1
       }" ${currentPage === totalPages ? "disabled" : ""}>${this._getIcon("→", {
-      size: 14,
-    })}</button>
+        size: 14,
+      })}</button>
     `;
 
     container.querySelectorAll("button[data-page]").forEach((btn) => {
