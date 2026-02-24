@@ -286,7 +286,36 @@ class MuslimDashboard {
     items.addEventListener("click", (e) => {
       const button = e.target.closest("button");
       if (!button) return;
+
+      // Sticky Notes behavior:
+      // - Show Sticky Notes  => keep FAB menu open
+      // - Hide Sticky Notes  => close FAB menu
+      if (button.id === "toggleStickyNotesBtn") {
+        const stickyState = button.dataset.stickyNotesState;
+        if (stickyState === "visible") {
+          // Keep tooltip text in sync immediately after toggling.
+          if (activeTooltipBtn === button) {
+            const rect = button.getBoundingClientRect();
+            const x =
+              Number.isFinite(e.clientX) && e.clientX > 0
+                ? e.clientX
+                : rect.left + rect.width / 2;
+            const y =
+              Number.isFinite(e.clientY) && e.clientY > 0
+                ? e.clientY
+                : rect.top + rect.height / 2;
+            showFabTooltip(getFabTooltipText(button), x, y);
+          }
+          return;
+        }
+      }
+
       setOpen(false);
+
+      if (activeTooltipBtn === button) {
+        hideFabTooltip();
+        activeTooltipBtn = null;
+      }
     });
 
     // Autohide behaviour: show toggle when pointer is near bottom-right, or on touch
@@ -1831,6 +1860,21 @@ class MuslimDashboard {
         }
       } catch (e) {}
 
+      // Disable and lock layout editing while Moment Mode is active.
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setEditModeLocked === "function"
+        ) {
+          this.gridLayout.setEditModeLocked(true);
+        } else if (
+          this.gridLayout &&
+          typeof this.gridLayout.disableEditMode === "function"
+        ) {
+          this.gridLayout.disableEditMode();
+        }
+      } catch (e) {}
+
       this._momentModeActive = true;
       momentBtn.setAttribute("aria-pressed", "true");
       momentBtn.classList.add("active");
@@ -1875,6 +1919,17 @@ class MuslimDashboard {
 
     const exitMomentMode = () => {
       this._momentModeActive = false;
+
+      // Unlock layout editing when Moment Mode exits.
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setEditModeLocked === "function"
+        ) {
+          this.gridLayout.setEditModeLocked(false);
+        }
+      } catch (e) {}
+
       momentBtn.setAttribute("aria-pressed", "false");
       momentBtn.classList.remove("active");
       document.body.classList.remove("moment-mode");

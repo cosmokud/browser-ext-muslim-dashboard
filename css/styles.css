@@ -452,6 +452,21 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   box-shadow:
     0 4px 16px rgba(47, 127, 102, 0.48),
     0 0 0 2px rgba(78, 167, 139, 0.24);
+  animation: sidebarModePulse 2s ease-in-out infinite;
+}
+
+@keyframes sidebarModePulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(47, 127, 102, 0.48),
+      0 0 0 2px rgba(78, 167, 139, 0.24);
+  }
+  50% {
+    box-shadow:
+      0 4px 24px rgba(47, 127, 102, 0.62),
+      0 0 0 4px rgba(78, 167, 139, 0.26);
+  }
 }
 
 .sidebar-mode-btn:focus-visible {

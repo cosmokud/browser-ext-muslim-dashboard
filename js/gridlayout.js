@@ -767,7 +767,7 @@ class GridLayoutManager {
     toggleBtn.classList.toggle("is-locked", this.isEditModeLocked);
 
     const tooltipText = this.isEditModeLocked
-      ? "Layout Edit Mode locked while Quran Focus Mode is active"
+      ? "Layout Edit Mode locked while Quran Focus Mode or Moment Mode is active"
       : this.isEditModeEnabled
         ? "Disable Layout Edit Mode"
         : "Enable Layout Edit Mode";

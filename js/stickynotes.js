@@ -109,7 +109,9 @@ class StickyNotesManager {
     this.addBtn = document.createElement("button");
     this.addBtn.id = "addStickyNoteBtn";
     this.addBtn.className = "sticky-note-fab sticky-note-add-btn";
-    this.addBtn.title = "Add Sticky Note";
+    this.addBtn.setAttribute("data-tooltip", "Add Sticky Note");
+    this.addBtn.setAttribute("aria-label", "Add Sticky Note");
+    this.addBtn.removeAttribute("title");
     this.addBtn.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -124,7 +126,6 @@ class StickyNotesManager {
     this.toggleBtn = document.createElement("button");
     this.toggleBtn.id = "toggleStickyNotesBtn";
     this.toggleBtn.className = "sticky-note-fab sticky-note-toggle-btn";
-    this.toggleBtn.title = "Toggle Sticky Notes";
     this.updateToggleButtonIcon();
     this.toggleBtn.addEventListener("click", () => this.toggleVisibility());
     fabHost.appendChild(this.toggleBtn);
@@ -134,6 +135,10 @@ class StickyNotesManager {
    * Update toggle button icon based on visibility
    */
   updateToggleButtonIcon() {
+    const tooltipText = this.isVisible
+      ? "Hide Sticky Notes"
+      : "Show Sticky Notes";
+
     if (this.isVisible) {
       this.toggleBtn.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -141,7 +146,6 @@ class StickyNotesManager {
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
       `;
-      this.toggleBtn.title = "Hide Sticky Notes";
     } else {
       this.toggleBtn.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -149,8 +153,18 @@ class StickyNotesManager {
           <line x1="1" y1="1" x2="23" y2="23"></line>
         </svg>
       `;
-      this.toggleBtn.title = "Show Sticky Notes";
     }
+
+    this.toggleBtn.setAttribute("data-tooltip", tooltipText);
+    this.toggleBtn.setAttribute("aria-label", tooltipText);
+    this.toggleBtn.setAttribute(
+      "aria-pressed",
+      this.isVisible ? "true" : "false",
+    );
+    this.toggleBtn.dataset.stickyNotesState = this.isVisible
+      ? "visible"
+      : "hidden";
+    this.toggleBtn.removeAttribute("title");
   }
 
   /**
@@ -266,7 +280,7 @@ class StickyNotesManager {
                         data-color-index="${i}" 
                         style="background: ${c.bg}"
                         title="${c.name}"></button>
-              `
+              `,
                 )
                 .join("")}
             </div>
@@ -290,10 +304,10 @@ class StickyNotesManager {
           <div class="sticky-note-dropdown-section">
             <label class="dropdown-label">
               <span>Opacity: <span class="opacity-value">${Math.round(
-                note.transparency * 100
+                note.transparency * 100,
               )}</span>%</span>
               <input type="range" class="opacity-slider" min="20" max="100" value="${Math.round(
-                note.transparency * 100
+                note.transparency * 100,
               )}">
             </label>
           </div>
@@ -408,7 +422,7 @@ class StickyNotesManager {
    */
   adjustAlpha(rgba, alpha) {
     const match = rgba.match(
-      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
     );
     if (match) {
       const [, r, g, b] = match;
@@ -487,7 +501,7 @@ class StickyNotesManager {
         // focus the first focusable element to improve keyboard UX
         requestAnimationFrame(() => {
           const firstInteractive = dropdown.querySelector(
-            'button, input, a, [tabindex]:not([tabindex="-1"])'
+            'button, input, a, [tabindex]:not([tabindex="-1"])',
           );
           if (firstInteractive) {
             firstInteractive.focus();
@@ -664,7 +678,7 @@ class StickyNotesManager {
       element,
       NodeFilter.SHOW_TEXT,
       null,
-      false
+      false,
     );
     const textNodes = [];
 
@@ -682,7 +696,7 @@ class StickyNotesManager {
         const span = document.createElement("span");
         span.innerHTML = text.replace(
           urlRegex,
-          '<a href="$1" class="sticky-note-link" title="Ctrl+Click to open">$1</a>'
+          '<a href="$1" class="sticky-note-link" title="Ctrl+Click to open">$1</a>',
         );
         node.parentNode.replaceChild(span, node);
       }
@@ -918,7 +932,7 @@ class StickyNotesManager {
         const index = parseInt(btn.dataset.colorIndex);
         btn.classList.toggle(
           "active",
-          this.colorPresets[index].name === color.name
+          this.colorPresets[index].name === color.name,
         );
       });
     }
