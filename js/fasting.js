@@ -104,12 +104,20 @@ class FastingManager {
     }
 
     const items = [];
+    const isRamadanNow = hijriNow.month === 9;
 
     // Compute Ramadan separately so we can always place it at the bottom.
     const ramadanItem =
       visibility.ramadan !== false
         ? this._ramadanCountdown(nowStart, hijriNow, adjustment)
         : null;
+
+    // During Ramadan, only show the Ramadan row.
+    if (isRamadanNow) {
+      if (ramadanItem) items.push(ramadanItem);
+      this._renderBars(items);
+      return;
+    }
 
     // Monday/Thursday fasts (weekday-based)
     // Max days in-between is 6, so width uses total=6 (full scale)

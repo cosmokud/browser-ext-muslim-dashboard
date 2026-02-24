@@ -2576,6 +2576,7 @@ textarea.notes-editor:focus {
   pointer-events: none;
 }
 
+#bg-attribution.hot-visible,
 #bg-attribution.autohide:hover,
 #bg-attribution.autohide.hot-visible {
   opacity: 1;
