@@ -1040,21 +1040,32 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border-radius: var(--radius-full);
-  border: none;
+  border: 1px solid var(--glass-border);
   background: linear-gradient(
     135deg,
-    var(--primary-color),
-    var(--primary-light)
+    var(--primary-light),
+    var(--primary-color)
   );
   color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .notes-new-btn:hover {
-  transform: scale(1.05);
+  transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
+}
+
+.notes-new-btn:active {
+  transform: translateY(0);
 }
 
 .notes-delete-btn {
@@ -1063,18 +1074,23 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border-radius: var(--radius-full);
-  border: none;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, #c05050 0%, #973a3a 100%);
   color: #ffffff;
+  line-height: 1;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .notes-delete-btn:hover {
-  background: linear-gradient(135deg, #ff5252 0%, #e04848 100%);
+  background: linear-gradient(135deg, #cf5a5a 0%, #a24242 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 4px 15px rgba(102, 36, 36, 0.42);
 }
 
 .notes-delete-btn:disabled {
@@ -6741,7 +6757,8 @@ body.moment-mode
 @media (hover: hover) and (pointer: fine) {
   .flashcard-card .card-header-actions,
   .adhkar-card .card-header-actions,
-  .hadith-card .card-header-actions {
+  .hadith-card .card-header-actions,
+  .notes-card .card-header-actions {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-6px);
@@ -6755,7 +6772,9 @@ body.moment-mode
   .adhkar-card:hover .card-header-actions,
   .adhkar-card:focus-within .card-header-actions,
   .hadith-card:hover .card-header-actions,
-  .hadith-card:focus-within .card-header-actions {
+  .hadith-card:focus-within .card-header-actions,
+  .notes-card:hover .card-header-actions,
+  .notes-card:focus-within .card-header-actions {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
@@ -6776,6 +6795,28 @@ body.moment-mode
   .hadith-card:focus-within .flashcard-nav {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  .flashcard-card .flashcard-jump,
+  .adhkar-card .flashcard-jump,
+  .hadith-card .flashcard-jump {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .flashcard-card:hover .flashcard-jump,
+  .flashcard-card:focus-within .flashcard-jump,
+  .adhkar-card:hover .flashcard-jump,
+  .adhkar-card:focus-within .flashcard-jump,
+  .hadith-card:hover .flashcard-jump,
+  .hadith-card:focus-within .flashcard-jump {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 }
 
