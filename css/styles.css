@@ -704,7 +704,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   );
 }
 
-.compact-weather.compact-weather-detailed.show-location .compact-weather-location {
+.compact-weather.compact-weather-detailed.show-location
+  .compact-weather-location {
   max-width: clamp(5.5rem, 14vw, 9rem);
 }
 
