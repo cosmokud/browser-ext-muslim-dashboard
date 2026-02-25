@@ -611,7 +611,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 /* ========================================
-   Compact Weather (beside clock)
+  Compact Weather (below date)
    ======================================== */
 .compact-weather {
   display: none; /* Hidden by default, shown via JS */
@@ -622,7 +622,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(calc(15px * var(--ui-blur-multiplier)));
-  margin-left: var(--spacing-md);
+  margin-left: 0;
+  width: fit-content;
   animation: fadeInScale 0.4s ease-out;
   flex-shrink: 0;
 }
@@ -666,6 +667,45 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .compact-weather-details span {
   white-space: nowrap;
+}
+
+.compact-weather-location {
+  display: none;
+  position: relative;
+  max-width: clamp(7rem, 22vw, 13rem);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: var(--spacing-xs);
+  padding-left: var(--spacing-sm);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-weather.show-location .compact-weather-location {
+  display: inline-flex;
+  align-items: center;
+}
+
+.compact-weather-location::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1px;
+  height: 1.1em;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--glass-border),
+    transparent
+  );
+}
+
+.compact-weather.compact-weather-detailed.show-location .compact-weather-location {
+  max-width: clamp(5.5rem, 14vw, 9rem);
 }
 
 /* Simple mode hides extra details */

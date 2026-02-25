@@ -202,9 +202,10 @@ class StorageManager {
       weatherLatitude: null,
       weatherLongitude: null,
 
-      // Compact weather settings (displays mini weather beside clock)
+      // Compact weather settings (displays mini weather in header)
       compactWeatherEnabled: false,
       compactWeatherMode: "simple", // 'simple' or 'detailed'
+      compactWeatherShowLocationName: false,
 
       // Fasting settings
       fasting: {

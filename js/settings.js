@@ -343,6 +343,9 @@ class SettingsManager {
     this.compactWeatherModeRadios = document.querySelectorAll(
       'input[name="compactWeatherMode"]',
     );
+    this.compactWeatherShowLocationName = document.getElementById(
+      "compactWeatherShowLocationName",
+    );
 
     // Weather tab elements
     this.weatherLocationModeRadios = document.querySelectorAll(
@@ -749,6 +752,10 @@ class SettingsManager {
       `input[name="compactWeatherMode"][value="${compactWeatherMode}"]`,
     );
     if (compactWeatherModeRadio) compactWeatherModeRadio.checked = true;
+    if (this.compactWeatherShowLocationName) {
+      this.compactWeatherShowLocationName.checked =
+        settings.compactWeatherShowLocationName === true;
+    }
 
     // Load heading settings
     this.loadHeadingSettings(settings);
@@ -3408,6 +3415,8 @@ class SettingsManager {
       'input[name="compactWeatherMode"]:checked',
     );
     settings.compactWeatherMode = compactWeatherModeRadio?.value || "simple";
+    settings.compactWeatherShowLocationName =
+      this.compactWeatherShowLocationName?.checked ?? false;
 
     // Background settings
     const bgIntervalValue = this.bgInterval?.value;

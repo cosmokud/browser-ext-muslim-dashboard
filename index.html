@@ -3053,7 +3053,7 @@
             <div class="setting-group">
               <label class="setting-label">Compact Weather Display</label>
               <p class="setting-hint">
-                Show a compact weather indicator beside the clock in the header.
+                Show a compact weather indicator below the date in the header.
               </p>
               <div class="setting-options">
                 <label class="checkbox-option">
@@ -3085,6 +3085,15 @@
                     <span>Detailed (+ Humidity, Feels Like, Wind)</span>
                   </label>
                 </div>
+                <div class="setting-options">
+                  <label class="checkbox-option">
+                    <input
+                      type="checkbox"
+                      id="compactWeatherShowLocationName"
+                    />
+                    <span>Show Location Name</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -3106,15 +3115,11 @@
             <div class="setting-group">
               <label class="setting-label">Date Format</label>
               <select class="setting-select" id="dateFormatSelect">
-                <option value="full-weekday">
-                  Full (Monday, January 1, 2025)
-                </option>
-                <option value="full">Full (January 1, 2025)</option>
-                <option value="medium-weekday">
-                  Medium (Mon, Jan 1, 2025)
-                </option>
-                <option value="medium">Medium (Jan 1, 2025)</option>
-                <option value="short">Short (1/1/2025)</option>
+                <option value="full-weekday">Monday, January 1, 2025</option>
+                <option value="full">January 1, 2025</option>
+                <option value="medium-weekday">Mon, Jan 1, 2025</option>
+                <option value="medium">Jan 1, 2025</option>
+                <option value="short">1/1/2025</option>
               </select>
             </div>
 

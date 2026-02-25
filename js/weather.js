@@ -21,7 +21,7 @@ class WeatherManager {
     this.weatherChart = document.getElementById("weatherChart");
     this.weatherChartLegend = document.getElementById("weatherChartLegend");
     this.weatherChartTabs = document.querySelectorAll(
-      "#weatherCard .weather-chart-tab[data-metric]"
+      "#weatherCard .weather-chart-tab[data-metric]",
     );
 
     this.weatherChartWrap = this.weatherChart?.closest(".weather-chart-wrap");
@@ -177,9 +177,12 @@ class WeatherManager {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
-    this.refreshInterval = setInterval(() => {
-      this.fetchWeather({ force: false });
-    }, 30 * 60 * 1000);
+    this.refreshInterval = setInterval(
+      () => {
+        this.fetchWeather({ force: false });
+      },
+      30 * 60 * 1000,
+    );
 
     return;
     /*
@@ -310,34 +313,27 @@ class WeatherManager {
   }
 
   /**
-   * Create compact weather element in header beside clock
+   * Create compact weather element in header below date display
    */
   ensureCompactWeatherElement() {
-    if (document.getElementById("compactWeather")) return;
-
     const header = document.querySelector(".header");
+    const greetingSection = document.querySelector(".greeting-section");
+    const dateDisplay = document.getElementById("dateDisplay");
     const timeSection = document.querySelector(".time-section");
-    if (!header || !timeSection) return;
+    if (!header || !greetingSection || !timeSection) return;
 
-    // Create a wrapper for time and weather if not exists
-    let rightSection = document.querySelector(".header-right-section");
-    if (!rightSection) {
-      rightSection = document.createElement("div");
-      rightSection.className = "header-right-section";
-      rightSection.style.display = "flex";
-      rightSection.style.alignItems = "center";
-      rightSection.style.gap = "var(--spacing-md)";
-
-      // Move time section into the wrapper
-      timeSection.parentNode.insertBefore(rightSection, timeSection);
-      rightSection.appendChild(timeSection);
+    const legacyRightSection = document.querySelector(".header-right-section");
+    if (legacyRightSection && legacyRightSection.contains(timeSection)) {
+      header.insertBefore(timeSection, legacyRightSection);
     }
 
-    const compactWeather = document.createElement("div");
-    compactWeather.id = "compactWeather";
-    compactWeather.className = "compact-weather";
+    let compactWeather = document.getElementById("compactWeather");
+    if (!compactWeather) {
+      compactWeather = document.createElement("div");
+      compactWeather.id = "compactWeather";
+      compactWeather.className = "compact-weather";
 
-    compactWeather.innerHTML = `
+      compactWeather.innerHTML = `
       <span class="compact-weather-icon"></span>
       <span class="compact-weather-temp"></span>
       <div class="compact-weather-details">
@@ -345,10 +341,29 @@ class WeatherManager {
         <span class="compact-weather-humidity"></span>
         <span class="compact-weather-wind"></span>
       </div>
+      <span class="compact-weather-location"></span>
     `;
+    }
 
-    // Insert after time section within the wrapper
-    rightSection.appendChild(compactWeather);
+    if (!compactWeather.querySelector(".compact-weather-location")) {
+      const locationEl = document.createElement("span");
+      locationEl.className = "compact-weather-location";
+      compactWeather.appendChild(locationEl);
+    }
+
+    if (legacyRightSection && legacyRightSection.contains(compactWeather)) {
+      legacyRightSection.removeChild(compactWeather);
+    }
+    if (legacyRightSection && legacyRightSection.childElementCount === 0) {
+      legacyRightSection.remove();
+    }
+
+    if (dateDisplay && dateDisplay.parentNode === greetingSection) {
+      dateDisplay.insertAdjacentElement("afterend", compactWeather);
+    } else {
+      greetingSection.appendChild(compactWeather);
+    }
+
     this.compactWeatherEl = compactWeather;
   }
 
@@ -375,6 +390,9 @@ class WeatherManager {
     }
 
     const mode = settings.compactWeatherMode || "simple";
+    const showLocationName = settings.compactWeatherShowLocationName === true;
+    const locationName =
+      typeof weather.location === "string" ? weather.location.trim() : "";
     const weatherInfo = this.weatherCodes[weather.weatherCode] || {
       icon: "🌡️",
       desc: "Unknown",
@@ -388,6 +406,7 @@ class WeatherManager {
     const feelsEl = compactEl.querySelector(".compact-weather-feels");
     const humidityEl = compactEl.querySelector(".compact-weather-humidity");
     const windEl = compactEl.querySelector(".compact-weather-wind");
+    const locationEl = compactEl.querySelector(".compact-weather-location");
 
     if (iconEl)
       iconEl.innerHTML = this._getIcon(weatherInfo.icon, { size: 24 });
@@ -417,13 +436,21 @@ class WeatherManager {
           ? `Wind -- ${windUnitLabel}`
           : `Wind ${weather.windSpeed} ${windUnitLabel}`;
     }
+    if (locationEl) {
+      locationEl.textContent = locationName;
+      locationEl.title = locationName;
+    }
 
     // Apply mode class
     compactEl.classList.remove(
       "compact-weather-simple",
-      "compact-weather-detailed"
+      "compact-weather-detailed",
     );
     compactEl.classList.add(`compact-weather-${mode}`);
+    compactEl.classList.toggle(
+      "show-location",
+      showLocationName && locationName.length > 0,
+    );
     compactEl.classList.add("active");
   }
 
@@ -443,7 +470,7 @@ class WeatherManager {
 
     if (this.weatherRefreshBtn) {
       this.weatherRefreshBtn.addEventListener("click", () =>
-        this.fetchWeather({ force: false })
+        this.fetchWeather({ force: false }),
       );
     }
 
@@ -462,10 +489,10 @@ class WeatherManager {
 
     if (this.weatherChart) {
       this.weatherChart.addEventListener("mousemove", (e) =>
-        this._handleChartMouseMove(e)
+        this._handleChartMouseMove(e),
       );
       this.weatherChart.addEventListener("mouseleave", () =>
-        this._handleChartMouseLeave()
+        this._handleChartMouseLeave(),
       );
     }
 
@@ -489,7 +516,7 @@ class WeatherManager {
 
     // Accept rgb(...) or rgba(...)
     const rgbMatch = s.match(
-      /^rgba?\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i
+      /^rgba?\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
     );
     if (rgbMatch) {
       return {
@@ -713,7 +740,7 @@ class WeatherManager {
     const code = Number(weatherCode);
     const cls = this.weatherIcon.classList;
     ["weather-anim-sunny", "weather-anim-cloudy", "weather-anim-rainy"].forEach(
-      (c) => cls.remove(c)
+      (c) => cls.remove(c),
     );
     if (!Number.isFinite(code)) return;
 
@@ -742,7 +769,7 @@ class WeatherManager {
   async _geocodeCity(city) {
     if (!city) return null;
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-      city
+      city,
     )}&count=1&language=en&format=json`;
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -889,12 +916,12 @@ class WeatherManager {
             lastError = networkError;
             console.warn(
               `Weather fetch attempt ${attempt}/${maxRetries} failed:`,
-              networkError?.message || networkError
+              networkError?.message || networkError,
             );
             if (attempt < maxRetries) {
               // Wait before retrying
               await new Promise((resolve) =>
-                setTimeout(resolve, retryDelay * attempt)
+                setTimeout(resolve, retryDelay * attempt),
               );
             }
           }
@@ -920,10 +947,10 @@ class WeatherManager {
             console.error(
               "Weather API response not OK:",
               response.status,
-              text.substr ? text.substr(0, 200) : text
+              text.substr ? text.substr(0, 200) : text,
             );
             throw new Error(
-              `Weather API request failed (status ${response.status})`
+              `Weather API request failed (status ${response.status})`,
             );
           }
 
@@ -934,7 +961,7 @@ class WeatherManager {
             console.error(
               "Weather API JSON parse error:",
               e,
-              txt.substr ? txt.substr(0, 500) : txt
+              txt.substr ? txt.substr(0, 500) : txt,
             );
             throw new Error("Weather API returned invalid JSON");
           }
@@ -959,7 +986,7 @@ class WeatherManager {
           location.city ||
           (await this._reverseGeocodeName(
             location.latitude,
-            location.longitude
+            location.longitude,
           )) ||
           `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
       }
@@ -992,8 +1019,8 @@ class WeatherManager {
       const derivedTemp = Number.isFinite(current.temperature_2m)
         ? current.temperature_2m
         : Number.isFinite(current.temperature)
-        ? current.temperature
-        : pickNearestHourly(temps);
+          ? current.temperature
+          : pickNearestHourly(temps);
 
       const derivedFeels = Number.isFinite(current.apparent_temperature)
         ? current.apparent_temperature
@@ -1006,8 +1033,8 @@ class WeatherManager {
       const derivedWind = Number.isFinite(current.wind_speed_10m)
         ? current.wind_speed_10m
         : Number.isFinite(current.windspeed)
-        ? current.windspeed
-        : pickNearestHourly(winds);
+          ? current.windspeed
+          : pickNearestHourly(winds);
 
       const derivedWeatherCode =
         current.weather_code ?? current.weathercode ?? null;
@@ -1050,7 +1077,7 @@ class WeatherManager {
       if (dayCount > 0) {
         this.selectedForecastIndex = Math.max(
           0,
-          Math.min(this.selectedForecastIndex, dayCount - 1)
+          Math.min(this.selectedForecastIndex, dayCount - 1),
         );
       } else {
         this.selectedForecastIndex = 0;
@@ -1353,7 +1380,7 @@ window.WeatherManager = WeatherManager;
     const container = this.weatherForecast;
     if (!container) return;
     const items = Array.from(
-      container.querySelectorAll(".weather-forecast-day")
+      container.querySelectorAll(".weather-forecast-day"),
     );
     if (!items.length) return;
 
@@ -1384,7 +1411,7 @@ window.WeatherManager = WeatherManager;
 
     const lastBasis = `calc((100% - (${Math.max(
       0,
-      remainder - 1
+      remainder - 1,
     )} * ${gapPx}px)) / ${remainder})`;
     const lastItems = items.slice(-remainder);
     lastItems.forEach((el) => {
@@ -1403,7 +1430,7 @@ window.WeatherManager = WeatherManager;
     if (typeof selectedDate === "string" && selectedDate.length >= 10) {
       indices = hourly.time
         .map((t, i) =>
-          typeof t === "string" && t.startsWith(selectedDate) ? i : -1
+          typeof t === "string" && t.startsWith(selectedDate) ? i : -1,
         )
         .filter((i) => i >= 0);
     }
@@ -1627,7 +1654,7 @@ window.WeatherManager = WeatherManager;
         metric,
         numericValues[i],
         min,
-        max
+        max,
       );
       const topRgb = this._lightenHex(baseColor, 0.32);
       const topColor = this._rgbToCss(topRgb);
