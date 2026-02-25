@@ -307,6 +307,7 @@ class StorageManager {
         studyAutoAdvanceSeconds: 10,
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
         fontScale: 1,
+        arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         questionFontSize: 60,
         answerFontSize: 32,
       },
@@ -318,6 +319,7 @@ class StorageManager {
         autoAdvancePaused: false,
         showRomanization: false,
         fontScale: 1,
+        arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         arabicFontSize: 28,
         romanizationFontSize: 18,
         englishFontSize: 18,

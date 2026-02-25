@@ -14,6 +14,16 @@ class FlashcardManager {
   static FONT_SCALE_MIN = 0.5;
   static FONT_SCALE_MAX = 2.5;
   static FONT_SCALE_STEP = 0.1;
+  static ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
 
   // Default sets that are provided read-only to all users.
   // Each entry: { id, name, file, parser } where parser may be 'csv' or 'pipe'.
@@ -56,6 +66,7 @@ class FlashcardManager {
     this.questionEl = document.getElementById("flashcardQuestion");
     this.answerEl = document.getElementById("flashcardAnswer");
     this.modeToggleBtn = document.getElementById("flashcardModeToggleBtn");
+    this.fontFamilyBtn = document.getElementById("flashcardFontFamilyBtn");
     this.fontScaleDecreaseBtn = document.getElementById(
       "flashcardFontDecreaseBtn",
     );
@@ -122,6 +133,10 @@ class FlashcardManager {
     this._setModalSearchQuery = "";
     this._setModal = null;
 
+    // Arabic font picker state
+    this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+    this._fontModal = null;
+
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
       this.applyAutoAdvanceUI();
@@ -159,9 +174,13 @@ class FlashcardManager {
 
   async init() {
     await this.ensureDefaultSet();
+    this.applyArabicFontFamily(this.getFlashcardSettings().arabicFontFamily, {
+      persist: false,
+    });
     this.applyTypography();
     this.createSetSelectorButton();
     this.createSetSelectorModal();
+    this.createFontPickerModal();
     this.bindDashboardEvents();
     this.restoreCurrentCardIndexForActiveSet();
     this.applyModeToDashboard();
@@ -678,6 +697,14 @@ class FlashcardManager {
       });
     }
 
+    if (this.fontFamilyBtn && this.fontFamilyBtn.dataset.bound !== "true") {
+      this.fontFamilyBtn.dataset.bound = "true";
+      this.fontFamilyBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openFontPickerModal();
+      });
+    }
+
     if (
       this.fontScaleDecreaseBtn &&
       this.fontScaleDecreaseBtn.dataset.bound !== "true"
@@ -997,6 +1024,11 @@ class FlashcardManager {
     if (!cards.length) {
       this.questionEl.textContent = "No flashcards yet";
       this.answerEl.textContent = "Import a CSV in Settings → Flashcards";
+      this.applyTextLanguageStyling(
+        this.questionEl,
+        this.questionEl.textContent,
+      );
+      this.applyTextLanguageStyling(this.answerEl, this.answerEl.textContent);
       if (this.prevBtn) this.prevBtn.disabled = true;
       if (this.nextBtn) this.nextBtn.disabled = true;
       if (this.flipCardEl) {
@@ -1047,6 +1079,9 @@ class FlashcardManager {
         this.answerEl.classList.add("flashcard-answer");
       }
     }
+
+    this.applyTextLanguageStyling(this.questionEl, this.questionEl.textContent);
+    this.applyTextLanguageStyling(this.answerEl, this.answerEl.textContent);
 
     if (this.prevBtn) this.prevBtn.disabled = cards.length <= 1;
     if (this.nextBtn) this.nextBtn.disabled = cards.length <= 1;
@@ -1480,6 +1515,167 @@ class FlashcardManager {
       this.settingsQuestionFontSizeValue.textContent = `${question}px`;
     if (this.settingsAnswerFontSizeValue)
       this.settingsAnswerFontSizeValue.textContent = `${answer}px`;
+  }
+
+  containsArabicText(value) {
+    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(
+      String(value || ""),
+    );
+  }
+
+  applyTextLanguageStyling(element, textValue) {
+    if (!element) return;
+    const isArabic = this.containsArabicText(textValue);
+    element.classList.toggle("flashcard-text-arabic", isArabic);
+
+    if (isArabic) {
+      element.setAttribute("lang", "ar");
+      element.setAttribute("dir", "rtl");
+      return;
+    }
+
+    element.removeAttribute("lang");
+    element.setAttribute("dir", "auto");
+  }
+
+  normalizeArabicFontFamily(value) {
+    const v = String(value || "").trim();
+    if (FlashcardManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
+    return "KFGQPC Uthman Taha Naskh";
+  }
+
+  applyArabicFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeArabicFontFamily(fontFamily);
+    this._arabicFontFamily = normalized;
+
+    if (this.cardEl) {
+      const cssValue = `"${normalized}", var(--font-arabic)`;
+      this.cardEl.style.setProperty("--flashcard-arabic-font-family", cssValue);
+    }
+
+    if (this.fontFamilyBtn) {
+      const title = `Change Arabic font (current: ${normalized})`;
+      this.fontFamilyBtn.title = title;
+      this.fontFamilyBtn.setAttribute("aria-label", title);
+    }
+
+    if (persist) {
+      this.setFlashcardSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  createFontPickerModal() {
+    if (document.getElementById("flashcardFontModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "flashcardFontModal";
+    modal.className = "pq-bookmark-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-translation-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">Aa Arabic Font</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="pq-bookmark-search">
+            <input type="text" class="pq-bookmark-search-input flashcard-font-search" placeholder="Search fonts..." />
+          </div>
+          <div class="pq-translation-list">
+            <div class="pq-translation-items flashcard-font-items"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this._fontModal = modal;
+
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => this.closeFontPickerModal());
+
+    this._bindOverlayCloseBehavior(modal, () => this.closeFontPickerModal());
+
+    const searchInput = modal.querySelector(".flashcard-font-search");
+    searchInput.addEventListener("input", () => {
+      this.renderFontList(searchInput.value);
+    });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") this.closeFontPickerModal();
+    });
+  }
+
+  openFontPickerModal() {
+    const modal = document.getElementById("flashcardFontModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".flashcard-font-search");
+    if (searchInput) searchInput.value = "";
+
+    this.renderFontList("");
+    modal.classList.add("active");
+
+    setTimeout(() => {
+      try {
+        searchInput?.focus();
+      } catch (e) {}
+    }, 100);
+  }
+
+  closeFontPickerModal() {
+    const modal = document.getElementById("flashcardFontModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  renderFontList(query = "") {
+    const modal = document.getElementById("flashcardFontModal");
+    if (!modal) return;
+
+    const container = modal.querySelector(".flashcard-font-items");
+    if (!container) return;
+
+    const q = String(query || "")
+      .toLowerCase()
+      .trim();
+    const fonts = FlashcardManager.ARABIC_FONT_FAMILIES.filter((f) =>
+      f.toLowerCase().includes(q),
+    );
+
+    const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    let html = "";
+    for (const font of fonts) {
+      const isActive = font === current;
+      html += `<button type="button" class="pq-translation-item ${
+        isActive ? "active" : ""
+      }" data-font-family="${this.escapeHtmlAttr(font)}">
+        <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+        ${
+          isActive
+            ? `<span class="pq-translation-check">${this._getIcon("✓", {
+                size: 14,
+              })}</span>`
+            : ""
+        }
+      </button>`;
+    }
+
+    if (!html) {
+      html = `<div class="pq-translation-empty">No fonts found for "${this.escapeHtmlAttr(
+        query,
+      )}"</div>`;
+      container.innerHTML = html;
+      return;
+    }
+
+    container.innerHTML = html;
+    container.querySelectorAll(".pq-translation-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const font = btn.getAttribute("data-font-family");
+        this.applyArabicFontFamily(font, { persist: true });
+        this.closeFontPickerModal();
+      });
+    });
   }
 
   autoResizeTextarea(textarea) {

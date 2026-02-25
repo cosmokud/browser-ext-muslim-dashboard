@@ -14,6 +14,16 @@ class AdhkarManager {
   static FONT_SCALE_MIN = 0.5;
   static FONT_SCALE_MAX = 2.5;
   static FONT_SCALE_STEP = 0.1;
+  static ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
 
   static DEFAULT_SETS = [
     {
@@ -60,6 +70,7 @@ class AdhkarManager {
     this.referenceEl = document.getElementById("adhkarReferenceText");
     this.repeatEl = document.getElementById("adhkarRepeatText");
     this.scriptToggleBtn = document.getElementById("adhkarScriptToggleBtn");
+    this.fontFamilyBtn = document.getElementById("adhkarFontFamilyBtn");
     this.fontScaleDecreaseBtn = document.getElementById(
       "adhkarFontDecreaseBtn",
     );
@@ -133,6 +144,10 @@ class AdhkarManager {
     this._langModal = null;
     this._selectedLangCode = null;
 
+    // Arabic font picker state
+    this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+    this._fontModal = null;
+
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
       this._updateSetSelectorIcon();
@@ -192,11 +207,15 @@ class AdhkarManager {
 
   async init() {
     await this.ensureDefaultSets();
+    this.applyArabicFontFamily(this.getAdhkarSettings().arabicFontFamily, {
+      persist: false,
+    });
     this.applyTypography();
     this.createSetSelectorButton();
     this.createSetSelectorModal();
     this.createLanguageSelectorButton();
     this.createLanguageSelectorModal();
+    this.createFontPickerModal();
     this.bindDashboardEvents();
     this.restoreCurrentCardIndexForActiveSet();
     this.renderDashboard();
@@ -631,6 +650,13 @@ class AdhkarManager {
 
     if (this.scriptToggleBtn) {
       this.scriptToggleBtn.addEventListener("click", () => this.toggleScript());
+    }
+
+    if (this.fontFamilyBtn && this.fontFamilyBtn.dataset.bound !== "true") {
+      this.fontFamilyBtn.dataset.bound = "true";
+      this.fontFamilyBtn.addEventListener("click", () => {
+        this.openFontPickerModal();
+      });
     }
 
     if (
@@ -1106,6 +1132,146 @@ class AdhkarManager {
       this.settingsRomanizationFontSizeValue.textContent = `${romanization}px`;
     if (this.settingsEnglishFontSizeValue)
       this.settingsEnglishFontSizeValue.textContent = `${english}px`;
+  }
+
+  normalizeArabicFontFamily(value) {
+    const v = String(value || "").trim();
+    if (AdhkarManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
+    return "KFGQPC Uthman Taha Naskh";
+  }
+
+  applyArabicFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeArabicFontFamily(fontFamily);
+    this._arabicFontFamily = normalized;
+
+    if (this.cardEl) {
+      const cssValue = `"${normalized}", var(--font-arabic)`;
+      this.cardEl.style.setProperty("--adhkar-arabic-font-family", cssValue);
+    }
+
+    if (this.fontFamilyBtn) {
+      const title = `Change Arabic font (current: ${normalized})`;
+      this.fontFamilyBtn.title = title;
+      this.fontFamilyBtn.setAttribute("aria-label", title);
+    }
+
+    if (persist) {
+      this.setAdhkarSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  createFontPickerModal() {
+    if (document.getElementById("adhkarFontModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "adhkarFontModal";
+    modal.className = "pq-bookmark-modal";
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-translation-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title">Aa Arabic Font</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="pq-bookmark-modal-body">
+          <div class="pq-bookmark-search">
+            <input type="text" class="pq-bookmark-search-input adhkar-font-search" placeholder="Search fonts..." />
+          </div>
+          <div class="pq-translation-list">
+            <div class="pq-translation-items adhkar-font-items"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this._fontModal = modal;
+
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      .addEventListener("click", () => this.closeFontPickerModal());
+
+    this._bindOverlayCloseBehavior(modal, () => this.closeFontPickerModal());
+
+    const searchInput = modal.querySelector(".adhkar-font-search");
+    searchInput.addEventListener("input", () => {
+      this.renderFontList(searchInput.value);
+    });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") this.closeFontPickerModal();
+    });
+  }
+
+  openFontPickerModal() {
+    const modal = document.getElementById("adhkarFontModal");
+    if (!modal) return;
+
+    const searchInput = modal.querySelector(".adhkar-font-search");
+    if (searchInput) searchInput.value = "";
+
+    this.renderFontList("");
+    modal.classList.add("active");
+
+    setTimeout(() => {
+      try {
+        searchInput?.focus();
+      } catch (e) {}
+    }, 100);
+  }
+
+  closeFontPickerModal() {
+    const modal = document.getElementById("adhkarFontModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  renderFontList(query = "") {
+    const modal = document.getElementById("adhkarFontModal");
+    if (!modal) return;
+
+    const container = modal.querySelector(".adhkar-font-items");
+    if (!container) return;
+
+    const q = String(query || "")
+      .toLowerCase()
+      .trim();
+    const fonts = AdhkarManager.ARABIC_FONT_FAMILIES.filter((f) =>
+      f.toLowerCase().includes(q),
+    );
+
+    const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    let html = "";
+    for (const font of fonts) {
+      const isActive = font === current;
+      html += `<button type="button" class="pq-translation-item ${
+        isActive ? "active" : ""
+      }" data-font-family="${this.escapeHtmlAttr(font)}">
+        <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+        ${
+          isActive
+            ? `<span class="pq-translation-check">${this._getIcon("✓", {
+                size: 14,
+              })}</span>`
+            : ""
+        }
+      </button>`;
+    }
+
+    if (!html) {
+      html = `<div class="pq-translation-empty">No fonts found for "${this.escapeHtmlAttr(
+        query,
+      )}"</div>`;
+      container.innerHTML = html;
+      return;
+    }
+
+    container.innerHTML = html;
+    container.querySelectorAll(".pq-translation-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const font = btn.getAttribute("data-font-family");
+        this.applyArabicFontFamily(font, { persist: true });
+        this.closeFontPickerModal();
+      });
+    });
   }
 
   // ---------- Language selection ----------

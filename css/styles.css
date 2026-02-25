@@ -6554,6 +6554,7 @@ body.moment-mode
 .card.flashcard-card {
   display: flex;
   flex-direction: column;
+  --flashcard-arabic-font-family: var(--font-arabic);
 }
 
 .card.flashcard-card .card-header {
@@ -7002,6 +7003,13 @@ body.moment-mode
   font-size: var(--flashcard-answer-font-size, 18px);
   color: var(--text-secondary);
   line-height: 1.55;
+}
+
+.flashcard-face-content.flashcard-question.flashcard-text-arabic,
+.flashcard-face-content.flashcard-answer.flashcard-text-arabic,
+.flashcard-question.flashcard-text-arabic,
+.flashcard-answer.flashcard-text-arabic {
+  font-family: var(--flashcard-arabic-font-family, var(--font-arabic));
 }
 
 /* Card jump controls (slider + number input) */
@@ -12251,6 +12259,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   flex-direction: column;
   min-height: 700px;
   --adhkar-title-font-size: 20px;
+  --adhkar-arabic-font-family: var(--font-arabic);
   --adhkar-arabic-font-size: 28px;
   --adhkar-romanization-font-size: 18px;
   --adhkar-english-font-size: 18px;
@@ -12333,6 +12342,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .adhkar-top.adhkar-top-arabic {
   font-size: var(--adhkar-arabic-font-size);
   line-height: 1.75;
+  font-family: var(--adhkar-arabic-font-family, var(--font-arabic));
 }
 
 .adhkar-divider {
