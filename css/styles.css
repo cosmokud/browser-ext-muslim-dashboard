@@ -559,12 +559,19 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .time-section {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-end;
   /* Animation applied by .grid-layout-ready for controlled startup */
   /* Keep clock layout stable as digits change */
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  justify-content: flex-end;
+}
+
+.time-main-row {
+  display: flex;
+  align-items: baseline;
   justify-content: flex-end;
 }
 
@@ -608,6 +615,46 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: inline-block;
   width: 2.5ch;
   text-align: left;
+}
+
+.header-next-prayer {
+  display: none;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.header-next-prayer-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+.header-next-prayer-name {
+  color: var(--accent-gold-light);
+  font-weight: 600;
+}
+
+.header-next-prayer-dot {
+  opacity: 0.55;
+}
+
+.header-next-prayer-countdown {
+  min-width: 8ch;
+  text-align: right;
+  color: var(--text-primary);
+  font-family: "Courier New", monospace;
+  font-weight: 700;
 }
 
 /* ========================================

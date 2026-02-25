@@ -63,13 +63,35 @@
                 <p class="date-display" id="dateDisplay"></p>
               </div>
               <div class="time-section">
-                <div class="current-time" id="currentTime">00:00</div>
-                <div class="current-seconds" id="currentSeconds">:00</div>
+                <div class="time-main-row">
+                  <div class="current-time" id="currentTime">00:00</div>
+                  <div class="current-seconds" id="currentSeconds">:00</div>
+                  <div
+                    class="current-ampm"
+                    id="currentAmPm"
+                    aria-hidden="true"
+                  ></div>
+                </div>
                 <div
-                  class="current-ampm"
-                  id="currentAmPm"
+                  class="header-next-prayer"
+                  id="headerNextPrayer"
+                  aria-live="polite"
                   aria-hidden="true"
-                ></div>
+                >
+                  <span
+                    class="header-next-prayer-name"
+                    id="headerNextPrayerName"
+                    >--</span
+                  >
+                  <span class="header-next-prayer-dot" aria-hidden="true"
+                    >•</span
+                  >
+                  <span
+                    class="header-next-prayer-countdown"
+                    id="headerNextPrayerCountdown"
+                    >--:--:--</span
+                  >
+                </div>
               </div>
             </header>
 
@@ -2948,6 +2970,12 @@
                 <label class="checkbox-option" id="ampmOption">
                   <input type="checkbox" id="showAmPm" checked />
                   <span>Show AM/PM</span>
+                </label>
+              </div>
+              <div class="setting-options">
+                <label class="checkbox-option">
+                  <input type="checkbox" id="showNextPrayer" />
+                  <span>Show Next Prayer Under Clock</span>
                 </label>
               </div>
             </div>

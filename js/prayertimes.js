@@ -616,6 +616,76 @@ class PrayerTimesManager {
   }
 
   /**
+   * Get next visible prayer information with live countdown
+   */
+  getNextPrayerInfo(visibility = null) {
+    const activeVisibility =
+      visibility && typeof visibility === "object"
+        ? visibility
+        : this.storage.getSettings().prayerVisibility || {};
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentSeconds = now.getSeconds();
+
+    const visiblePrayers = this.allPrayers
+      .filter((p) => activeVisibility[p.key])
+      .map((prayer) => {
+        const timeStr = this.times[prayer.key];
+        if (!timeStr || timeStr === "-----") return null;
+
+        const timeParts = timeStr.match(/(\d+):(\d+)/);
+        if (!timeParts) return null;
+
+        let hours = parseInt(timeParts[1], 10);
+        const minutes = parseInt(timeParts[2], 10);
+
+        if (timeStr.includes("PM") && hours !== 12) hours += 12;
+        if (timeStr.includes("AM") && hours === 12) hours = 0;
+
+        return {
+          key: prayer.key,
+          name: this.getPrayerDisplayName(prayer),
+          minutes: hours * 60 + minutes,
+        };
+      })
+      .filter(Boolean);
+
+    if (!visiblePrayers.length) {
+      return null;
+    }
+
+    let nextPrayer = visiblePrayers.find((p) => p.minutes > currentMinutes);
+    let isTomorrow = false;
+
+    if (!nextPrayer) {
+      nextPrayer = visiblePrayers[0];
+      isTomorrow = true;
+    }
+
+    let diffMinutes;
+    if (isTomorrow) {
+      diffMinutes = 24 * 60 - currentMinutes + nextPrayer.minutes;
+    } else {
+      diffMinutes = nextPrayer.minutes - currentMinutes;
+    }
+
+    let totalSeconds = diffMinutes * 60 - currentSeconds;
+    if (totalSeconds < 0) totalSeconds = 0;
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return {
+      key: nextPrayer.key,
+      name: nextPrayer.name,
+      isTomorrow,
+      countdown: `${this.padZero(hours)}:${this.padZero(minutes)}:${this.padZero(seconds)}`,
+    };
+  }
+
+  /**
    * Pad number with zero
    */
   padZero(num) {

@@ -61,6 +61,11 @@ class MuslimDashboard {
     this.currentTime = document.getElementById("currentTime");
     this.currentSeconds = document.getElementById("currentSeconds");
     this.currentAmPm = document.getElementById("currentAmPm");
+    this.headerNextPrayer = document.getElementById("headerNextPrayer");
+    this.headerNextPrayerName = document.getElementById("headerNextPrayerName");
+    this.headerNextPrayerCountdown = document.getElementById(
+      "headerNextPrayerCountdown",
+    );
 
     // Keep a handle to the native Date constructor for debug date simulation.
     this._nativeDateCtor = Date;
@@ -2293,6 +2298,43 @@ class MuslimDashboard {
     if (this.currentSeconds) {
       this.currentSeconds.textContent = `:${seconds}`;
     }
+
+    this.updateHeaderNextPrayer();
+  }
+
+  /**
+   * Update header next-prayer display (shown underneath the clock)
+   */
+  updateHeaderNextPrayer() {
+    const settings = this.storage.getSettings();
+    const headingSettings = settings.heading || {};
+    const shouldShow =
+      headingSettings.showClock !== false &&
+      headingSettings.showNextPrayer === true;
+
+    if (this.headerNextPrayer) {
+      this.headerNextPrayer.style.display = shouldShow ? "inline-flex" : "none";
+      this.headerNextPrayer.setAttribute(
+        "aria-hidden",
+        shouldShow ? "false" : "true",
+      );
+    }
+
+    if (!shouldShow) return;
+
+    const nextPrayerInfo =
+      this.prayerTimes && typeof this.prayerTimes.getNextPrayerInfo === "function"
+        ? this.prayerTimes.getNextPrayerInfo(settings.prayerVisibility)
+        : null;
+
+    if (this.headerNextPrayerName) {
+      this.headerNextPrayerName.textContent = nextPrayerInfo?.name || "Loading...";
+    }
+
+    if (this.headerNextPrayerCountdown) {
+      this.headerNextPrayerCountdown.textContent =
+        nextPrayerInfo?.countdown || "--:--:--";
+    }
   }
 
   /**
@@ -2588,6 +2630,8 @@ class MuslimDashboard {
       this.dateDisplay.style.display =
         headingSettings.showDate === false ? "none" : "";
     }
+
+    this.updateHeaderNextPrayer();
   }
 
   /**

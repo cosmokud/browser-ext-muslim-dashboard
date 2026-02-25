@@ -402,6 +402,7 @@ class StorageManager {
         clockFormat: "24h", // '12h' or '24h'
         showSeconds: true,
         showAmPm: true, // Only applies when clockFormat is '12h'
+        showNextPrayer: false,
         clockStyle: "default", // 'default', 'minimal', 'elegant'
 
         // Date settings

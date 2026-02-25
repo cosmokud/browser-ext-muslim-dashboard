@@ -289,6 +289,7 @@ class SettingsManager {
     );
     this.showSeconds = document.getElementById("showSeconds");
     this.showAmPm = document.getElementById("showAmPm");
+    this.showNextPrayer = document.getElementById("showNextPrayer");
     this.clockStyleRadios = document.querySelectorAll(
       'input[name="clockStyle"]',
     );
@@ -1083,6 +1084,8 @@ class SettingsManager {
     if (this.showSeconds)
       this.showSeconds.checked = heading.showSeconds !== false;
     if (this.showAmPm) this.showAmPm.checked = heading.showAmPm !== false;
+    if (this.showNextPrayer)
+      this.showNextPrayer.checked = heading.showNextPrayer === true;
 
     const clockStyle = heading.clockStyle || "default";
     const clockStyleRadio = document.querySelector(
@@ -3562,6 +3565,7 @@ class SettingsManager {
     settings.heading.clockFormat = clockFormatRadio?.value || "24h";
     settings.heading.showSeconds = this.showSeconds?.checked ?? true;
     settings.heading.showAmPm = this.showAmPm?.checked ?? true;
+    settings.heading.showNextPrayer = this.showNextPrayer?.checked === true;
     const clockStyleRadio = document.querySelector(
       'input[name="clockStyle"]:checked',
     );
