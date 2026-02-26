@@ -4,7 +4,7 @@
  * Supports 25+ calculation methods, visibility settings, quotes import/export, weather, and heading customization
  */
 
-class SettingsManager {
+class SettingsManager extends BaseManager {
   static POCKET_QURAN_DEFAULT_TAJWEED_COLORS = {
     ham_wasl: "#aaaaaa",
     slnt: "#aaaaaa",
@@ -54,6 +54,7 @@ class SettingsManager {
     hadith,
     adhkar,
   ) {
+    super();
     this.storage = storage;
     this.prayerTimes = prayerTimes;
     this.qibla = qibla;
@@ -1676,16 +1677,6 @@ class SettingsManager {
     });
   }
 
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
   _startRefreshButton(btn, { label = "Refreshing…" } = {}) {
     if (!btn) return () => {};
 
@@ -1718,23 +1709,6 @@ class SettingsManager {
         }
       } catch (e) {}
     };
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
   }
 
   /**
@@ -2810,20 +2784,17 @@ class SettingsManager {
     this.showToast("Full export created!", "success");
   }
 
-  importFullExport(data) {
-    const maxSets =
-      typeof FlashcardManager !== "undefined" &&
-      typeof FlashcardManager.MAX_SETS === "number"
-        ? FlashcardManager.MAX_SETS
-        : 10;
-
-    // Import base payload (same shape as normal settings export)
+  _importSharedBackupData(data, { includeUserQuotes = false } = {}) {
     if (data.settings) {
       this.storage.saveSettings(data.settings);
     }
 
     if (data.todos) {
       this.storage.saveTodos(data.todos);
+    }
+
+    if (includeUserQuotes && data.userQuotes) {
+      this.storage.saveUserQuotes(data.userQuotes);
     }
 
     if (data.pinnedApps) {
@@ -2850,7 +2821,6 @@ class SettingsManager {
       }
     }
 
-    // Notes (replace)
     if (Array.isArray(data.notes)) {
       if (this.storage.saveNotes) this.storage.saveNotes(data.notes);
       else this.storage.set("notes", data.notes);
@@ -2863,7 +2833,6 @@ class SettingsManager {
       this.storage.set("notes_page", Number.isFinite(n) && n > 0 ? n : 1);
     }
 
-    // Pocket Quran bookmarks (replace)
     if (
       data.pocketQuranBookmarks &&
       typeof data.pocketQuranBookmarks === "object"
@@ -2874,6 +2843,16 @@ class SettingsManager {
         this.storage.set("pocketQuran_bookmarkCategories", cats);
       if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
     }
+  }
+
+  importFullExport(data) {
+    const maxSets =
+      typeof FlashcardManager !== "undefined" &&
+      typeof FlashcardManager.MAX_SETS === "number"
+        ? FlashcardManager.MAX_SETS
+        : 10;
+
+    this._importSharedBackupData(data);
 
     // Sticky notes (replace)
     if (data.stickyNotes && typeof data.stickyNotes === "object") {
@@ -3225,75 +3204,7 @@ class SettingsManager {
         throw new Error("Invalid backup file format");
       }
 
-      // Import settings
-      if (data.settings) {
-        this.storage.saveSettings(data.settings);
-      }
-
-      // Import todos
-      if (data.todos) {
-        this.storage.saveTodos(data.todos);
-      }
-
-      // Import user quotes
-      if (data.userQuotes) {
-        this.storage.saveUserQuotes(data.userQuotes);
-      }
-
-      // Import pinned apps
-      if (data.pinnedApps) {
-        this.storage.savePinnedApps(data.pinnedApps);
-      }
-
-      // Import last location
-      if (data.lastLocation) {
-        this.storage.saveLastLocation(data.lastLocation);
-      }
-
-      // Import custom searches
-      if (Array.isArray(data.customSearches)) {
-        if (this.storage.saveCustomSearches) {
-          this.storage.saveCustomSearches(data.customSearches);
-        } else {
-          this.storage.set("customSearches", data.customSearches);
-        }
-      }
-
-      if ("customSearchLastId" in (data || {})) {
-        if (this.storage.saveLastCustomSearchId) {
-          this.storage.saveLastCustomSearchId(data.customSearchLastId ?? null);
-        } else {
-          this.storage.set(
-            "customSearchLastId",
-            data.customSearchLastId ?? null,
-          );
-        }
-      }
-
-      // Import notes
-      if (Array.isArray(data.notes)) {
-        if (this.storage.saveNotes) this.storage.saveNotes(data.notes);
-        else this.storage.set("notes", data.notes);
-      }
-      if ("notesActiveId" in (data || {})) {
-        this.storage.set("notes_active", data.notesActiveId ?? null);
-      }
-      if ("notesPage" in (data || {})) {
-        const n = parseInt(data.notesPage, 10);
-        this.storage.set("notes_page", Number.isFinite(n) && n > 0 ? n : 1);
-      }
-
-      // Import Pocket Quran bookmarks
-      if (
-        data.pocketQuranBookmarks &&
-        typeof data.pocketQuranBookmarks === "object"
-      ) {
-        const cats = data.pocketQuranBookmarks.categories;
-        const bms = data.pocketQuranBookmarks.bookmarks;
-        if (Array.isArray(cats))
-          this.storage.set("pocketQuran_bookmarkCategories", cats);
-        if (Array.isArray(bms)) this.storage.set("pocketQuran_bookmarks", bms);
-      }
+      this._importSharedBackupData(data, { includeUserQuotes: true });
 
       this.showToast("Settings imported! Reloading...", "success");
 

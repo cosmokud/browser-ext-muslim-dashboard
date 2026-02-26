@@ -4,8 +4,9 @@
  * Supports temperature units, location-based weather, and auto-refresh
  */
 
-class WeatherManager {
+class WeatherManager extends BaseManager {
   constructor(storage) {
+    super();
     this.storage = storage;
     this.weatherCard = document.getElementById("weatherCard");
     this.weatherIcon = document.getElementById("weatherIcon");
@@ -102,16 +103,6 @@ class WeatherManager {
   }
 
   /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  /**
    * Refresh all weather icons when theme changes
    */
   _refreshWeatherIcons() {
@@ -185,114 +176,6 @@ class WeatherManager {
     );
 
     return;
-    /*
-    const cssWidth = canvas.clientWidth || 800;
-    const cssHeight = canvas.clientHeight || 280;
-    canvas.width = Math.round(cssWidth * dpr);
-    canvas.height = Math.round(cssHeight * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const width = cssWidth;
-    const height = cssHeight;
-    ctx.clearRect(0, 0, width, height);
-
-    const padding = { left: 54, right: 12, top: 12, bottom: 28 };
-    const plotLeft = padding.left;
-    const plotTop = padding.top;
-    const plotBottom = height - padding.bottom;
-    const plotHeight = plotBottom - plotTop;
-    const plotWidth = width - padding.left - padding.right;
-    const points = times.length;
-    if (points < 2 || plotWidth <= 20 || plotHeight <= 20) return;
-
-    const numericValues = (values || []).map((v) => Number(v));
-    const finiteValues = numericValues.filter((v) => Number.isFinite(v));
-
-    let min = 0;
-    let max = finiteValues.length ? Math.max(...finiteValues) : 1;
-
-    if (metric === "temperature") {
-      min = finiteValues.length ? Math.min(...finiteValues) : 0;
-      max = finiteValues.length ? Math.max(...finiteValues) : 1;
-      if (min === max) {
-        min -= 1;
-        max += 1;
-      }
-    } else if (metric === "humidity") {
-      min = 0;
-      max = 100;
-    } else {
-      min = 0;
-      max = max === 0 ? 1 : max;
-    }
-
-    const yFor = (v) => {
-      const vv = Number.isFinite(v) ? v : min;
-      const t = (vv - min) / (max - min);
-      return plotBottom - 2 - t * (plotHeight - 10);
-    };
-
-    // axis frame
-    ctx.strokeStyle = colorBorder;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.rect(plotLeft, plotTop, plotWidth, plotHeight);
-    ctx.stroke();
-
-    // horizontal grid lines
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = colorBorder;
-    for (let i = 1; i <= 3; i++) {
-      const y = plotTop + (plotHeight * i) / 4;
-      ctx.beginPath();
-      ctx.moveTo(plotLeft, y);
-      ctx.lineTo(plotLeft + plotWidth, y);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // y labels (min/max)
-    ctx.fillStyle = colorMuted;
-    ctx.font = "12px Poppins, sans-serif";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`${Math.round(max)}${metricUnit}`, plotLeft - 8, plotTop + 6);
-    ctx.fillText(`${Math.round(min)}${metricUnit}`, plotLeft - 8, plotBottom);
-
-    // bars
-    const stepX = plotWidth / points;
-    const barWidth = Math.max(2, Math.floor(stepX * 0.72));
-    const baseY = yFor(min);
-
-    let barColor = colorTemp;
-    if (metric === "humidity") barColor = colorHum;
-    else if (metric === "precipitation") barColor = colorPrecip;
-    else if (metric === "wind") barColor = colorWind;
-
-    ctx.save();
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = barColor;
-    for (let i = 0; i < points; i++) {
-      const x = plotLeft + i * stepX + stepX / 2;
-      const y = yFor(numericValues[i]);
-      const h = baseY - y;
-      const heightPx = Math.max(0, h);
-      ctx.fillRect(x - barWidth / 2, y, barWidth, heightPx);
-    }
-    ctx.restore();
-
-    // x labels (every 3 hours)
-    const labelEvery = 3;
-    ctx.fillStyle = colorMuted;
-    ctx.font = "11px Poppins, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    for (let i = 0; i < points; i += labelEvery) {
-      const x = plotLeft + i * stepX + stepX / 2;
-      const hourLabel = times[i].toLocaleTimeString(undefined, { hour: "numeric" });
-      ctx.fillText(hourLabel, x, plotBottom + 6);
-    }
-    */
   }
 
   /**
@@ -872,9 +755,6 @@ class WeatherManager {
       const unit = settings.weatherUnit || "celsius";
 
       const location = await this._resolveWeatherLocation(settings);
-      console.debug("Resolved weather location:", location, "settings:", {
-        weatherLocationMode: settings.weatherLocationMode,
-      });
       if (!location) {
         throw new Error("No location available");
       }
@@ -883,8 +763,6 @@ class WeatherManager {
       const windUnit = unit === "fahrenheit" ? "mph" : "kmh";
 
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=auto&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
-
-      console.debug("Weather URL:", url);
 
       const todayKey = this._getLocalDateKey(Date.now());
       const cached = this._getWeatherForecastCache();
@@ -1180,58 +1058,6 @@ class WeatherManager {
 
     window.removeEventListener("resize", this._onResize);
   }
-  /*
-      const unit = settings.weatherUnit || "celsius";
-
-// Export for use
-window.WeatherManager = WeatherManager;
-
-      const tempUnit = unit === "fahrenheit" ? "fahrenheit" : "celsius";
-      const windUnit = unit === "fahrenheit" ? "mph" : "kmh";
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=auto&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error("Weather API request failed");
-      }
-
-      const data = await response.json();
-
-      const current = data.current || {};
-
-      this.currentWeather = {
-        temperature: Number.isFinite(current.temperature_2m)
-          ? Math.round(current.temperature_2m)
-          : null,
-        feelsLike: Number.isFinite(current.apparent_temperature)
-          ? Math.round(current.apparent_temperature)
-          : null,
-        humidity: Number.isFinite(current.relative_humidity_2m)
-          ? Math.round(current.relative_humidity_2m)
-          : null,
-        windSpeed: Number.isFinite(current.wind_speed_10m)
-          ? Math.round(current.wind_speed_10m)
-          : null,
-        weatherCode: current.weather_code,
-        unit: unit,
-        windUnit: windUnit,
-        location: location.city,
-      };
-
-      this.dailyForecast = data.daily || null;
-      this.hourlyForecast = data.hourly || null;
-
-      this.lastFetch = Date.now();
-      this.updateDisplay();
-    } catch (error) {
-      console.error("Weather fetch error:", error);
-      this.showError();
-    }
-  }
-
-  */
 
   /**
    * Update the weather display
@@ -1789,149 +1615,6 @@ window.WeatherManager = WeatherManager;
     }
 
     return;
-    /*
-
-    const panelHeight =
-      (height - padding.top - padding.bottom - panelGap * (panels.length - 1)) /
-      panels.length;
-    const plotWidth = width - padding.left - padding.right;
-    const points = times.length;
-    if (points < 2 || plotWidth <= 20 || panelHeight <= 20) return;
-    const stepX = plotWidth / (points - 1);
-    const labelEvery = 3;
-
-    panels.forEach((panel, idx) => {
-      const top = padding.top + idx * (panelHeight + panelGap);
-      const left = padding.left;
-      const bottom = top + panelHeight;
-
-      // label
-      ctx.fillStyle = colorMuted;
-      ctx.font = "12px Poppins, sans-serif";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      ctx.fillText(panel.label, 10, top + 2);
-
-      // frame
-      ctx.strokeStyle = colorBorder;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(left, top);
-      ctx.lineTo(left + plotWidth, top);
-      ctx.lineTo(left + plotWidth, bottom);
-      ctx.lineTo(left, bottom);
-      ctx.closePath();
-      ctx.stroke();
-
-      const numericValues = (panel.values || []).map((v) => Number(v));
-      const finiteValues = numericValues.filter((v) => Number.isFinite(v));
-      let min = finiteValues.length ? Math.min(...finiteValues) : 0;
-      let max = finiteValues.length ? Math.max(...finiteValues) : 1;
-      if (min === max) {
-        min -= 1;
-        max += 1;
-      }
-
-      const yFor = (v) => {
-        const vv = Number.isFinite(v) ? v : min;
-        const padding = { left: 54, right: 12, top: 12, bottom: 28 };
-        const plotLeft = padding.left;
-        const plotTop = padding.top;
-        const plotBottom = height - padding.bottom;
-        const plotHeight = plotBottom - plotTop;
-        const plotWidth = width - padding.left - padding.right;
-        const points = times.length;
-        if (points < 2 || plotWidth <= 20 || plotHeight <= 20) return;
-
-        const numericValues = (values || []).map((v) => Number(v));
-        const finiteValues = numericValues.filter((v) => Number.isFinite(v));
-
-        let min = 0;
-        let max = finiteValues.length ? Math.max(...finiteValues) : 1;
-
-        if (metric === "temperature") {
-          min = finiteValues.length ? Math.min(...finiteValues) : 0;
-          max = finiteValues.length ? Math.max(...finiteValues) : 1;
-          if (min === max) {
-            min -= 1;
-            max += 1;
-          }
-        } else if (metric === "humidity") {
-          min = 0;
-          max = 100;
-        } else {
-          min = 0;
-          max = max === 0 ? 1 : max;
-        }
-
-        const yFor = (v) => {
-          const vv = Number.isFinite(v) ? v : min;
-          const t = (vv - min) / (max - min);
-          return plotBottom - 2 - t * (plotHeight - 10);
-        };
-
-        // axis frame
-        ctx.strokeStyle = colorBorder;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.rect(plotLeft, plotTop, plotWidth, plotHeight);
-        ctx.stroke();
-
-        // horizontal grid lines
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = colorBorder;
-        for (let i = 1; i <= 3; i++) {
-          const y = plotTop + (plotHeight * i) / 4;
-          ctx.beginPath();
-          ctx.moveTo(plotLeft, y);
-          ctx.lineTo(plotLeft + plotWidth, y);
-          ctx.stroke();
-        }
-        ctx.setLineDash([]);
-
-        // y labels (min/max)
-        ctx.fillStyle = colorMuted;
-        ctx.font = "12px Poppins, sans-serif";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`${Math.round(max)}${metricUnit}`, plotLeft - 8, plotTop + 6);
-        ctx.fillText(`${Math.round(min)}${metricUnit}`, plotLeft - 8, plotBottom);
-
-        // bars
-        const stepX = plotWidth / points;
-        const barWidth = Math.max(2, Math.floor(stepX * 0.72));
-        const baseY = yFor(min);
-
-        let barColor = colorTemp;
-        if (metric === "humidity") barColor = colorHum;
-        else if (metric === "precipitation") barColor = colorPrecip;
-        else if (metric === "wind") barColor = colorWind;
-
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.fillStyle = barColor;
-        for (let i = 0; i < points; i++) {
-          const x = plotLeft + i * stepX + stepX / 2;
-          const y = yFor(numericValues[i]);
-          const h = baseY - y;
-          const heightPx = Math.max(0, h);
-          ctx.fillRect(x - barWidth / 2, y, barWidth, heightPx);
-        }
-        ctx.restore();
-
-        // x labels (every 3 hours)
-        const labelEvery = 3;
-        ctx.fillStyle = colorMuted;
-        ctx.font = "11px Poppins, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        for (let i = 0; i < points; i += labelEvery) {
-          const x = plotLeft + i * stepX + stepX / 2;
-          const hourLabel = times[i].toLocaleTimeString(undefined, { hour: "numeric" });
-          ctx.fillText(hourLabel, x, plotBottom + 6);
-        }
-
-    */
   }
 }
 

@@ -5,7 +5,7 @@
  * - Dashboard reader + Settings tab editor (20 items/page)
  */
 
-class HadithManager {
+class HadithManager extends BaseManager {
   static MAX_SETS = 100;
   static PAGE_SIZE = 20;
 
@@ -33,6 +33,7 @@ class HadithManager {
   ];
 
   constructor(storage) {
+    super();
     this.storage = storage;
 
     // Dashboard elements
@@ -119,33 +120,6 @@ class HadithManager {
     document.addEventListener("md:icon-theme-change", () => {
       this._updateSetSelectorIcon();
       this._updateSetModalIcons();
-    });
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
     });
   }
 

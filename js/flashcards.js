@@ -5,7 +5,7 @@
  * - Dashboard viewer + Settings tab editor (20 cards/page)
  */
 
-class FlashcardManager {
+class FlashcardManager extends BaseManager {
   static MAX_SETS = 100;
   static PAGE_SIZE = 20;
 
@@ -56,6 +56,7 @@ class FlashcardManager {
   ];
 
   constructor(storage) {
+    super();
     this.storage = storage;
 
     // Dashboard elements
@@ -142,33 +143,6 @@ class FlashcardManager {
       this.applyAutoAdvanceUI();
       this.applyModeToDashboard();
       this._updateSetSelectorButton();
-    });
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
     });
   }
 

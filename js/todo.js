@@ -3,8 +3,9 @@
  * Handles todo list with CRUD operations
  */
 
-class TodoManager {
+class TodoManager extends BaseManager {
   constructor(storage) {
+    super();
     this.storage = storage;
     this.todos = [];
     this.filter = "all";
@@ -34,16 +35,16 @@ class TodoManager {
 
     // Clear-completed confirmation modal
     this.clearCompletedModal = document.getElementById(
-      "todoClearCompletedConfirmModal"
+      "todoClearCompletedConfirmModal",
     );
     this.clearCompletedCountEl = document.getElementById(
-      "todoClearCompletedCount"
+      "todoClearCompletedCount",
     );
     this.confirmClearCompletedBtn = document.getElementById(
-      "confirmTodoClearCompletedBtn"
+      "confirmTodoClearCompletedBtn",
     );
     this.cancelClearCompletedBtn = document.getElementById(
-      "cancelTodoClearCompletedBtn"
+      "cancelTodoClearCompletedBtn",
     );
 
     // Edit modal elements
@@ -58,33 +59,6 @@ class TodoManager {
     document.addEventListener("md:icon-theme-change", () => {
       this.render();
       this._updatePaginationIcons();
-    });
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
     });
   }
 
@@ -209,7 +183,7 @@ class TodoManager {
 
     const totalPages = Math.max(
       1,
-      Math.ceil(filteredTodos.length / this.itemsPerPage)
+      Math.ceil(filteredTodos.length / this.itemsPerPage),
     );
     this.currentPage = Math.max(1, Math.min(totalPages, this.currentPage));
 
@@ -232,8 +206,8 @@ class TodoManager {
             this.filter === "all"
               ? "No tasks yet. Add one above!"
               : this.filter === "active"
-              ? "No active tasks!"
-              : "No completed tasks!"
+                ? "No active tasks!"
+                : "No completed tasks!"
           }</p>
         </li>
       `;
@@ -306,7 +280,7 @@ class TodoManager {
         disabled: page <= 1,
         ariaLabel: "Previous todo page",
         isIcon: true,
-      })
+      }),
     );
 
     const pagesWrap = document.createElement("div");
@@ -333,7 +307,7 @@ class TodoManager {
           pageValue: 1,
           active: page === 1,
           ariaLabel: "Todo page 1",
-        })
+        }),
       );
       if (start > 2) appendEllipsis();
     }
@@ -345,7 +319,7 @@ class TodoManager {
           pageValue: p,
           active: p === page,
           ariaLabel: `Todo page ${p}`,
-        })
+        }),
       );
     }
 
@@ -357,7 +331,7 @@ class TodoManager {
           pageValue: totalPages,
           active: page === totalPages,
           ariaLabel: `Todo page ${totalPages}`,
-        })
+        }),
       );
     }
 
@@ -375,7 +349,7 @@ class TodoManager {
         disabled: page >= totalPages,
         ariaLabel: "Next todo page",
         isIcon: true,
-      })
+      }),
     );
 
     this.todoPagination.innerHTML = "";
@@ -400,10 +374,10 @@ class TodoManager {
   _updatePaginationIcons() {
     if (!this.todoPagination || this.todoPagination.hidden) return;
     const prevBtn = this.todoPagination.querySelector(
-      'button[aria-label="Previous todo page"]'
+      'button[aria-label="Previous todo page"]',
     );
     const nextBtn = this.todoPagination.querySelector(
-      'button[aria-label="Next todo page"]'
+      'button[aria-label="Next todo page"]',
     );
     if (prevBtn) prevBtn.innerHTML = this._getIcon("❮", { size: 16 });
     if (nextBtn) nextBtn.innerHTML = this._getIcon("❯", { size: 16 });
@@ -415,13 +389,13 @@ class TodoManager {
   renderTodoItem(todo) {
     return `
       <li class="todo-item ${todo.completed ? "completed" : ""}" data-id="${
-      todo.id
-    }">
+        todo.id
+      }">
         <div class="todo-checkbox ${
           todo.completed ? "checked" : ""
         }" data-action="toggle"></div>
         <span class="todo-text" data-action="toggle">${this.escapeHtml(
-          todo.text
+          todo.text,
         )}</span>
         <div class="todo-actions-btns">
           <button class="todo-action-btn edit" data-action="edit" title="Edit">
@@ -577,31 +551,31 @@ class TodoManager {
     // Delete confirmation modal
     if (this.cancelDeleteBtn) {
       this.cancelDeleteBtn.addEventListener("click", () =>
-        this.hideDeleteConfirmation()
+        this.hideDeleteConfirmation(),
       );
     }
     if (this.confirmDeleteBtn) {
       this.confirmDeleteBtn.addEventListener("click", () =>
-        this.confirmDelete()
+        this.confirmDelete(),
       );
     }
     this._bindOverlayCloseBehavior(this.deleteModal, () =>
-      this.hideDeleteConfirmation()
+      this.hideDeleteConfirmation(),
     );
 
     // Clear-completed confirmation modal
     if (this.cancelClearCompletedBtn) {
       this.cancelClearCompletedBtn.addEventListener("click", () =>
-        this.hideClearCompletedConfirmation()
+        this.hideClearCompletedConfirmation(),
       );
     }
     if (this.confirmClearCompletedBtn) {
       this.confirmClearCompletedBtn.addEventListener("click", () =>
-        this.confirmClearCompleted()
+        this.confirmClearCompleted(),
       );
     }
     this._bindOverlayCloseBehavior(this.clearCompletedModal, () =>
-      this.hideClearCompletedConfirmation()
+      this.hideClearCompletedConfirmation(),
     );
 
     document.addEventListener("keydown", (e) => {
@@ -622,15 +596,6 @@ class TodoManager {
     });
 
     this._bindOverlayCloseBehavior(this.editModal, () => this.closeEditModal());
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
 

@@ -6,10 +6,11 @@
  * - Lets the user choose an accent color per engine (via right-click menu)
  */
 
-class SearchBarManager {
+class SearchBarManager extends BaseManager {
   static MAX_VISIBLE = 10;
 
   constructor(storage) {
+    super();
     this.storage = storage;
 
     this.searches = [];
@@ -78,26 +79,26 @@ class SearchBarManager {
 
     // Favicon controls in edit modal
     this.editFaviconPreview = document.getElementById(
-      "editSearchBarFaviconPreview"
+      "editSearchBarFaviconPreview",
     );
     this.editRefreshFaviconBtn = document.getElementById(
-      "editSearchBarRefreshFavicon"
+      "editSearchBarRefreshFavicon",
     );
     this.editImportFaviconBtn = document.getElementById(
-      "editSearchBarImportFavicon"
+      "editSearchBarImportFavicon",
     );
     this.editFaviconFileInput = document.getElementById(
-      "editSearchBarFaviconFile"
+      "editSearchBarFaviconFile",
     );
     this.editFaviconStatus = document.getElementById(
-      "editSearchBarFaviconStatus"
+      "editSearchBarFaviconStatus",
     );
 
     // Delete confirm modal
     this.deleteModal = document.getElementById("searchBarDeleteConfirmModal");
     this.deleteNameEl = document.getElementById("searchBarDeleteName");
     this.confirmDeleteBtn = document.getElementById(
-      "confirmSearchBarDeleteBtn"
+      "confirmSearchBarDeleteBtn",
     );
     this.cancelDeleteBtn = document.getElementById("cancelSearchBarDeleteBtn");
 
@@ -120,50 +121,23 @@ class SearchBarManager {
   }
 
   /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  /**
    * Update context menu icons when theme changes
    */
   _updateContextMenuIcons() {
     if (this.contextMenu) {
       const editIcon = this.contextMenu.querySelector(
-        ".context-menu-edit .context-menu-icon"
+        ".context-menu-edit .context-menu-icon",
       );
       const colorIcon = this.contextMenu.querySelector(
-        ".context-menu-accent-custom .context-menu-icon"
+        ".context-menu-accent-custom .context-menu-icon",
       );
       const deleteIcon = this.contextMenu.querySelector(
-        ".context-menu-delete .context-menu-icon"
+        ".context-menu-delete .context-menu-icon",
       );
       if (editIcon) editIcon.innerHTML = this._getIcon("✏️", { size: 16 });
       if (colorIcon) colorIcon.innerHTML = this._getIcon("🎨", { size: 16 });
       if (deleteIcon) deleteIcon.innerHTML = this._getIcon("🗑️", { size: 16 });
     }
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
   }
 
   _captureClickWhileDragging(e) {
@@ -224,7 +198,7 @@ class SearchBarManager {
 
     this.searches = list
       .filter(
-        (s) => s && typeof s.name === "string" && typeof s.url === "string"
+        (s) => s && typeof s.name === "string" && typeof s.url === "string",
       )
       .map((s) => {
         const id = s.id ?? Date.now() + Math.random();
@@ -295,12 +269,12 @@ class SearchBarManager {
     // Add modal events
     if (this.addModalCloseBtn) {
       this.addModalCloseBtn.addEventListener("click", () =>
-        this.hideAddModal()
+        this.hideAddModal(),
       );
     }
     if (this.addModalCancelBtn) {
       this.addModalCancelBtn.addEventListener("click", () =>
-        this.hideAddModal()
+        this.hideAddModal(),
       );
     }
     if (this.addModal) {
@@ -316,17 +290,17 @@ class SearchBarManager {
     // Edit modal events
     if (this.editModalCloseBtn) {
       this.editModalCloseBtn.addEventListener("click", () =>
-        this.hideEditModal()
+        this.hideEditModal(),
       );
     }
     if (this.editModalCancelBtn) {
       this.editModalCancelBtn.addEventListener("click", () =>
-        this.hideEditModal()
+        this.hideEditModal(),
       );
     }
     if (this.editModal) {
       this._bindOverlayCloseBehavior(this.editModal, () =>
-        this.hideEditModal()
+        this.hideEditModal(),
       );
     }
     if (this.editModalForm) {
@@ -339,7 +313,7 @@ class SearchBarManager {
     // Favicon refresh button
     if (this.editRefreshFaviconBtn) {
       this.editRefreshFaviconBtn.addEventListener("click", () =>
-        this.handleRefreshFavicon()
+        this.handleRefreshFavicon(),
       );
     }
 
@@ -353,24 +327,24 @@ class SearchBarManager {
     // Favicon file input change
     if (this.editFaviconFileInput) {
       this.editFaviconFileInput.addEventListener("change", (e) =>
-        this.handleFaviconFileSelect(e)
+        this.handleFaviconFileSelect(e),
       );
     }
 
     // Delete modal events
     if (this.cancelDeleteBtn) {
       this.cancelDeleteBtn.addEventListener("click", () =>
-        this.hideDeleteConfirmation()
+        this.hideDeleteConfirmation(),
       );
     }
     if (this.confirmDeleteBtn) {
       this.confirmDeleteBtn.addEventListener("click", () =>
-        this.confirmDelete()
+        this.confirmDelete(),
       );
     }
     if (this.deleteModal) {
       this._bindOverlayCloseBehavior(this.deleteModal, () =>
-        this.hideDeleteConfirmation()
+        this.hideDeleteConfirmation(),
       );
     }
 
@@ -412,7 +386,7 @@ class SearchBarManager {
     // Update favicon preview
     this.updateEditFaviconPreview(
       engine.url,
-      engine.cachedFavicon || engine.favicon
+      engine.cachedFavicon || engine.favicon,
     );
 
     // Clear status
@@ -472,7 +446,7 @@ class SearchBarManager {
       if (window.faviconCache) {
         const dataUrl = await window.faviconCache.refreshFromGoogle(
           url,
-          "search"
+          "search",
         );
         if (dataUrl) {
           this.pendingFaviconDataUrl = dataUrl;
@@ -516,7 +490,7 @@ class SearchBarManager {
         const dataUrl = await window.faviconCache.importFromFile(
           file,
           url,
-          "search"
+          "search",
         );
         this.pendingFaviconDataUrl = dataUrl;
         if (this.editFaviconPreview) {
@@ -664,7 +638,7 @@ class SearchBarManager {
         if (!engineId || !this.customColorInput) return;
 
         const engine = this.searches.find(
-          (s) => String(s.id) === String(engineId)
+          (s) => String(s.id) === String(engineId),
         );
         const current = this._normalizeRgbString(engine?.accentRgb);
         this.customColorInput.value =
@@ -689,7 +663,7 @@ class SearchBarManager {
     }
 
     const palette = this.contextMenu.querySelector(
-      '[data-role="accent-palette"]'
+      '[data-role="accent-palette"]',
     );
     if (palette) {
       palette.addEventListener("click", (e) => {
@@ -730,7 +704,7 @@ class SearchBarManager {
           this.hideContextMenu();
         }
       },
-      true
+      true,
     );
 
     document.addEventListener("keydown", (e) => {
@@ -744,7 +718,7 @@ class SearchBarManager {
       () => {
         this.hideContextMenu();
       },
-      true
+      true,
     );
   }
 
@@ -777,7 +751,7 @@ class SearchBarManager {
 
   setEngineAccent(engineId, rgbString) {
     const idx = this.searches.findIndex(
-      (s) => String(s.id) === String(engineId)
+      (s) => String(s.id) === String(engineId),
     );
     if (idx < 0) return;
 
@@ -805,7 +779,7 @@ class SearchBarManager {
 
   deleteEngine(engineId) {
     const idx = this.searches.findIndex(
-      (s) => String(s.id) === String(engineId)
+      (s) => String(s.id) === String(engineId),
     );
     if (idx < 0) return;
 
@@ -850,7 +824,7 @@ class SearchBarManager {
   async addCustomSearchFromModal() {
     const normalized = this._normalizeAndValidateTemplate(
       this.newName?.value,
-      this.newUrl?.value
+      this.newUrl?.value,
     );
     if (!normalized) return;
 
@@ -863,7 +837,7 @@ class SearchBarManager {
       cachedFavicon = await window.faviconCache.fetchAndCache(
         normalized.url,
         "search",
-        true
+        true,
       );
       if (cachedFavicon) {
         favicon = cachedFavicon;
@@ -913,7 +887,7 @@ class SearchBarManager {
       this._getEngineTabElements().map((el) => [
         String(el.getAttribute("data-id")),
         el,
-      ])
+      ]),
     );
 
     const frag = document.createDocumentFragment();
@@ -927,7 +901,7 @@ class SearchBarManager {
   _animateFlip(beforeRects) {
     if (!this.strip) return;
     const elements = this._getEngineTabElements().filter(
-      (el) => !el.classList.contains("dragging")
+      (el) => !el.classList.contains("dragging"),
     );
 
     for (const el of elements) {
@@ -948,7 +922,7 @@ class SearchBarManager {
 
     requestAnimationFrame(() => {
       const elements2 = this._getEngineTabElements().filter(
-        (el) => !el.classList.contains("dragging")
+        (el) => !el.classList.contains("dragging"),
       );
       for (const el of elements2) {
         if (!el.style.transform) continue;
@@ -968,7 +942,7 @@ class SearchBarManager {
     if (direct && !direct.classList.contains("dragging")) return direct;
 
     const items = this._getEngineTabElements().filter(
-      (el) => !el.classList.contains("dragging")
+      (el) => !el.classList.contains("dragging"),
     );
     let best = null;
     let bestDist = Infinity;
@@ -1011,10 +985,10 @@ class SearchBarManager {
     }
 
     const draggedIndex = this.searches.findIndex(
-      (s) => String(s.id) === String(this.draggedEngine.id)
+      (s) => String(s.id) === String(this.draggedEngine.id),
     );
     const targetIndex = this.searches.findIndex(
-      (s) => String(s.id) === String(targetEngine.id)
+      (s) => String(s.id) === String(targetEngine.id),
     );
     if (draggedIndex === -1 || targetIndex === -1) return;
 
@@ -1101,7 +1075,7 @@ class SearchBarManager {
 
     this.dragGhost = this._createEngineDragGhost(
       this.draggedEngine,
-      this.draggedElement
+      this.draggedElement,
     );
     this._updateEngineDragPosition();
 
@@ -1270,7 +1244,7 @@ class SearchBarManager {
 
     const normalized = this._normalizeAndValidateTemplate(
       this.editName?.value,
-      this.editUrl?.value
+      this.editUrl?.value,
     );
     if (!normalized) return;
 
@@ -1293,7 +1267,7 @@ class SearchBarManager {
         const newCached = await window.faviconCache.fetchAndCache(
           normalized.url,
           "search",
-          true
+          true,
         );
         if (newCached) {
           favicon = newCached;
@@ -1375,7 +1349,7 @@ class SearchBarManager {
 
   ensureSelectionInView() {
     const idx = this.searches.findIndex(
-      (s) => String(s.id) === String(this.selectedId)
+      (s) => String(s.id) === String(this.selectedId),
     );
     if (idx < 0) return;
 
@@ -1393,7 +1367,7 @@ class SearchBarManager {
 
     this.scrollIndex = Math.max(
       0,
-      Math.min(maxStart, this.scrollIndex + delta)
+      Math.min(maxStart, this.scrollIndex + delta),
     );
     this.updateStripTransform();
   }
@@ -1421,19 +1395,19 @@ class SearchBarManager {
     const shouldShow = this.searches.length > SearchBarManager.MAX_VISIBLE;
     const maxStart = Math.max(
       0,
-      this.searches.length - SearchBarManager.MAX_VISIBLE
+      this.searches.length - SearchBarManager.MAX_VISIBLE,
     );
 
     if (this.prevBtn) {
       this.prevBtn.classList.toggle(
         "is-hidden",
-        !shouldShow || this.scrollIndex <= 0
+        !shouldShow || this.scrollIndex <= 0,
       );
     }
     if (this.nextBtn) {
       this.nextBtn.classList.toggle(
         "is-hidden",
-        !shouldShow || this.scrollIndex >= maxStart
+        !shouldShow || this.scrollIndex >= maxStart,
       );
     }
   }
@@ -1443,14 +1417,14 @@ class SearchBarManager {
 
     const selected = this.getSelected();
     this.setPlaceholder(
-      selected ? `Searching ${selected.name}` : "Searching..."
+      selected ? `Searching ${selected.name}` : "Searching...",
     );
 
     this.strip.querySelectorAll(".search-bar-engine-tab").forEach((btn) => {
       const id = btn.getAttribute("data-id");
       btn.setAttribute(
         "aria-selected",
-        selected && String(selected.id) === String(id) ? "true" : "false"
+        selected && String(selected.id) === String(id) ? "true" : "false",
       );
     });
 
@@ -1714,7 +1688,7 @@ class SearchBarManager {
   async _renderAccentPaletteForEngine(engineId) {
     if (!this.contextMenu) return;
     const paletteEl = this.contextMenu.querySelector(
-      '[data-role="accent-palette"]'
+      '[data-role="accent-palette"]',
     );
     if (!paletteEl) return;
 
@@ -1778,7 +1752,7 @@ class SearchBarManager {
 
       const visible = Math.max(
         1,
-        Math.min(SearchBarManager.MAX_VISIBLE, this.searches.length)
+        Math.min(SearchBarManager.MAX_VISIBLE, this.searches.length),
       );
       this.shell.style.setProperty("--sb-engine-visible", String(visible));
     }
@@ -1796,7 +1770,7 @@ class SearchBarManager {
       btn.setAttribute("data-id", String(engine.id));
       btn.setAttribute(
         "aria-selected",
-        String(engine.id) === String(this.selectedId) ? "true" : "false"
+        String(engine.id) === String(this.selectedId) ? "true" : "false",
       );
       btn.title = engine.name;
 
@@ -1838,14 +1812,14 @@ class SearchBarManager {
 
       // Mouse-based custom drag (desktop)
       btn.addEventListener("mousedown", (e) =>
-        this._handleEngineDragStart(e, engine, btn)
+        this._handleEngineDragStart(e, engine, btn),
       );
 
       // Touch-based drag (mobile)
       btn.addEventListener(
         "touchstart",
         (e) => this._handleEngineTouchStart(e, engine, btn),
-        { passive: false }
+        { passive: false },
       );
 
       btn.addEventListener("contextmenu", (e) => {

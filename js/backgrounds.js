@@ -3,8 +3,9 @@
  * Handles background image rotation with nature images
  */
 
-class BackgroundManager {
+class BackgroundManager extends BaseManager {
   constructor(storage) {
+    super();
     this.storage = storage;
     this.bg1 = document.getElementById("bg1");
     this.bg2 = document.getElementById("bg2");
@@ -308,16 +309,6 @@ class BackgroundManager {
     };
     // Create the attribution element that is shown at bottom-left of the page
     this.createAttributionEl();
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
   }
 
   /**

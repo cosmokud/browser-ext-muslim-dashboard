@@ -17,8 +17,9 @@
  * - No external APIs are required.
  */
 
-class LunarPhaseManager {
+class LunarPhaseManager extends BaseManager {
   constructor(storage, prayerTimes) {
+    super();
     this.storage = storage;
     this.prayerTimes = prayerTimes;
 
@@ -70,7 +71,7 @@ class LunarPhaseManager {
         Number.isFinite(Number(loc.longitude))
       ) {
         this.locationEl.innerHTML = `${pinIcon} ${Number(loc.latitude).toFixed(
-          2
+          2,
         )}, ${Number(loc.longitude).toFixed(2)}`;
       } else {
         this.locationEl.innerHTML = `${pinIcon} Location`;
@@ -87,23 +88,13 @@ class LunarPhaseManager {
       });
       const rotDeg = Math.round((data.diskRotation * 180) / Math.PI);
       this.metaEl.textContent = `${illumPct}% illum • Age ${data.ageDays.toFixed(
-        1
+        1,
       )}d • Tilt ${rotDeg}°`;
     }
 
     if (this.moonEl) {
       this.moonEl.innerHTML = this._renderMoonSvg(data);
     }
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
   }
 
   _resolveLocation() {
@@ -144,7 +135,7 @@ class LunarPhaseManager {
     const moonPos = this._getMoonPosition(
       jd,
       latitudeDegrees,
-      longitudeDegrees
+      longitudeDegrees,
     );
     const sunPos = this._getSunPosition(jd, latitudeDegrees, longitudeDegrees);
 
@@ -159,7 +150,7 @@ class LunarPhaseManager {
 
     // Phase angle from 0..2π using ecliptic longitude difference for waxing/waning
     const deltaLon = this._normalizeAngleRad(
-      moonPos.eclipticLon - sunPos.eclipticLon
+      moonPos.eclipticLon - sunPos.eclipticLon,
     );
     const phaseAngle =
       deltaLon <= Math.PI ? elongation : 2 * Math.PI - elongation;
@@ -179,7 +170,7 @@ class LunarPhaseManager {
     const diskRotation = this._calculateParallacticAngle(
       latitudeDegrees,
       moonPos.altitude,
-      moonPos.azimuth
+      moonPos.azimuth,
     );
 
     return {
@@ -204,7 +195,7 @@ class LunarPhaseManager {
       218.3164477 +
         481267.88123421 * T -
         0.0015786 * T * T +
-        (T * T * T) / 538841
+        (T * T * T) / 538841,
     );
 
     // Mean elongation of the Moon
@@ -212,22 +203,25 @@ class LunarPhaseManager {
       297.8501921 +
         445267.1114034 * T -
         0.0018819 * T * T +
-        (T * T * T) / 545868
+        (T * T * T) / 545868,
     );
 
     // Mean anomaly of the Moon
     const M = this._normalizeAngle(
-      134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + (T * T * T) / 69699
+      134.9633964 +
+        477198.8675055 * T +
+        0.0087414 * T * T +
+        (T * T * T) / 69699,
     );
 
     // Mean anomaly of the Sun
     const Msun = this._normalizeAngle(
-      357.5291092 + 35999.0502909 * T - 0.0001536 * T * T
+      357.5291092 + 35999.0502909 * T - 0.0001536 * T * T,
     );
 
     // Argument of latitude of the Moon
     const F = this._normalizeAngle(
-      93.272095 + 483202.0175233 * T - 0.0036539 * T * T
+      93.272095 + 483202.0175233 * T - 0.0036539 * T * T,
     );
 
     // Longitude of ascending node
@@ -549,7 +543,7 @@ class LunarPhaseManager {
       
       <!-- Re-apply crater texture on lit portion for visibility -->
       <g clip-path="url(#litClip${Math.round(
-        phaseFraction * 1000
+        phaseFraction * 1000,
       )})" opacity="0.15" fill="rgba(80,80,80,0.5)">
         <g transform="rotate(${diskRotDeg - posAngleDeg})">
           <circle cx="-12" cy="-14" r="8" />

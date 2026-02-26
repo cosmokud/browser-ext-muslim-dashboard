@@ -3,8 +3,9 @@
  * Handles Quran and Hadith quotes with pagination and import/export
  */
 
-class QuotesManager {
+class QuotesManager extends BaseManager {
   constructor(storage) {
+    super();
     this.storage = storage;
     this.defaultQuotes = [];
     this.userQuotes = [];
@@ -46,23 +47,6 @@ class QuotesManager {
     this.importBtn = document.getElementById("importQuotesBtn");
     this.exportBtn = document.getElementById("exportQuotesBtn");
     this.importInput = document.getElementById("importQuotesInput");
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
   }
 
   /**
@@ -1307,15 +1291,6 @@ class QuotesManager {
         this.closeLanguageSelectorModal();
       });
     }
-  }
-
-  /**
-   * Escape HTML
-   */
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
 

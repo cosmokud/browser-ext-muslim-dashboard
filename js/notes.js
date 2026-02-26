@@ -5,7 +5,7 @@
  * paginated list (10 per page), and local persistence.
  */
 
-class NotesManager {
+class NotesManager extends BaseManager {
   static STORAGE_KEY = "notes";
   static ITEMS_PER_PAGE = 10;
   static SCALE_MIN = 1;
@@ -14,6 +14,7 @@ class NotesManager {
   static MARKDOWN_PREVIEW_STORAGE_KEY = "notes_markdown_preview";
 
   constructor(storage) {
+    super();
     this.storage = storage;
 
     this.notes = [];
@@ -80,7 +81,7 @@ class NotesManager {
 
     this.isMarkdownPreview = !!this.storage.get(
       NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
-      true
+      true,
     );
 
     this.configureMarkdownParser();
@@ -113,23 +114,6 @@ class NotesManager {
     }
   }
 
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
-  }
-
   setupEventListeners() {
     if (this.newBtn) {
       this.newBtn.addEventListener("click", () => {
@@ -149,16 +133,16 @@ class NotesManager {
 
     if (this.cancelDeleteBtn) {
       this.cancelDeleteBtn.addEventListener("click", () =>
-        this.hideDeleteConfirmation()
+        this.hideDeleteConfirmation(),
       );
     }
     if (this.confirmDeleteBtn) {
       this.confirmDeleteBtn.addEventListener("click", () =>
-        this.confirmDelete()
+        this.confirmDelete(),
       );
     }
     this._bindOverlayCloseBehavior(this.deleteModal, () =>
-      this.hideDeleteConfirmation()
+      this.hideDeleteConfirmation(),
     );
 
     document.addEventListener("keydown", (e) => {
@@ -218,7 +202,7 @@ class NotesManager {
         const scale = this.clampNumber(
           this.scaleRange.value,
           NotesManager.SCALE_MIN,
-          NotesManager.SCALE_MAX
+          NotesManager.SCALE_MAX,
         );
         note.scale = scale;
         this.applyScale(scale);
@@ -328,7 +312,7 @@ class NotesManager {
 
         if (html.trim()) {
           const clean = this.normalizeMarkdownHtmlForEditor(
-            this.sanitizeHtml(String(html))
+            this.sanitizeHtml(String(html)),
           );
           try {
             document.execCommand("insertHTML", false, clean);
@@ -360,7 +344,7 @@ class NotesManager {
         prevActive && this.notes.some((n) => n.id === prevActive)
           ? prevActive
           : this.notes[0].id,
-        { skipPersistCurrent: true }
+        { skipPersistCurrent: true },
       );
     }
   }
@@ -380,8 +364,8 @@ class NotesManager {
           typeof n.md === "string"
             ? n.md
             : typeof n.markdown === "string"
-            ? n.markdown
-            : "";
+              ? n.markdown
+              : "";
         const md = mdRaw || this.htmlToMarkdown(html);
         const rawScale =
           typeof n.scale === "number" || typeof n.scale === "string"
@@ -391,7 +375,7 @@ class NotesManager {
           ? NotesManager.SCALE_MIN
           : Math.max(
               NotesManager.SCALE_MIN,
-              Math.min(NotesManager.SCALE_MAX, rawScale)
+              Math.min(NotesManager.SCALE_MAX, rawScale),
             );
         const createdAt =
           typeof n.createdAt === "number" ? n.createdAt : Date.now();
@@ -408,7 +392,7 @@ class NotesManager {
     this.currentPage = this.clampInt(
       lastPage,
       1,
-      Math.max(1, this.getTotalPages())
+      Math.max(1, this.getTotalPages()),
     );
   }
 
@@ -435,7 +419,7 @@ class NotesManager {
         // Markdown mode: editable rendered view is the source-of-truth.
         const rawHtml = String(this.editor.innerHTML || "");
         const sanitized = this.normalizeMarkdownHtmlForEditor(
-          this.sanitizeHtml(rawHtml)
+          this.sanitizeHtml(rawHtml),
         );
         nextHtml = sanitized;
         nextMd = this.htmlToMarkdown(sanitized);
@@ -519,7 +503,7 @@ class NotesManager {
       const s = this.clampNumber(
         typeof note.scale === "number" ? note.scale : 1,
         NotesManager.SCALE_MIN,
-        NotesManager.SCALE_MAX
+        NotesManager.SCALE_MAX,
       );
       this.applyScale(s);
       this.updateScaleUi(s);
@@ -547,7 +531,7 @@ class NotesManager {
     const scale = this.clampNumber(
       note.scale,
       NotesManager.SCALE_MIN,
-      NotesManager.SCALE_MAX
+      NotesManager.SCALE_MAX,
     );
     note.scale = scale;
     this.applyScale(scale);
@@ -578,7 +562,7 @@ class NotesManager {
     if (this.isMarkdownPreview) {
       const rawHtml = String(this.editor.innerHTML || "");
       const sanitized = this.normalizeMarkdownHtmlForEditor(
-        this.sanitizeHtml(rawHtml)
+        this.sanitizeHtml(rawHtml),
       );
       nextHtml = sanitized;
       nextMd = this.htmlToMarkdown(sanitized);
@@ -606,7 +590,7 @@ class NotesManager {
     const n = this.clampNumber(
       scale,
       NotesManager.SCALE_MIN,
-      NotesManager.SCALE_MAX
+      NotesManager.SCALE_MAX,
     );
     try {
       this.editor.style.setProperty("--notes-scale", String(n));
@@ -623,7 +607,7 @@ class NotesManager {
     this.isMarkdownPreview = !this.isMarkdownPreview;
     this.storage.set(
       NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
-      this.isMarkdownPreview
+      this.isMarkdownPreview,
     );
     this.applyEditorMode();
     this.renderActiveMarkdownPreview();
@@ -673,7 +657,7 @@ class NotesManager {
 
     // Markdown mode shows rendered content (editable).
     const html = this.normalizeMarkdownHtmlForEditor(
-      this.renderMarkdown(String(this.rawEditor.value || ""))
+      this.renderMarkdown(String(this.rawEditor.value || "")),
     );
     if (this.isMarkdownPreview) {
       this.editor.innerHTML = html;
@@ -694,7 +678,7 @@ class NotesManager {
     try {
       const offsets = this.getSelectionOffsets(this.editor);
       const cleaned = this.normalizeMarkdownHtmlForEditor(
-        this.sanitizeHtml(String(this.editor.innerHTML || ""))
+        this.sanitizeHtml(String(this.editor.innerHTML || "")),
       );
       if (String(this.editor.innerHTML || "") !== cleaned) {
         this.editor.innerHTML = cleaned;
@@ -736,7 +720,7 @@ class NotesManager {
       if (li.firstChild && li.firstChild.nodeType === Node.TEXT_NODE) {
         li.firstChild.nodeValue = (li.firstChild.nodeValue || "").replace(
           /^\s+/,
-          ""
+          "",
         );
       }
     });
@@ -782,12 +766,6 @@ class NotesManager {
     return this.sanitizeHtml(html);
   }
 
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = String(text || "");
-    return div.innerHTML;
-  }
-
   placeCaretAtEndTextArea(el) {
     try {
       el.focus();
@@ -821,7 +799,7 @@ class NotesManager {
         if (hasLeft && hasRight) {
           const next = `${value.slice(
             0,
-            start - l.length
+            start - l.length,
           )}${selected}${value.slice(end + r.length)}`;
           t.value = next;
           const nextStart = start - l.length;
@@ -847,7 +825,7 @@ class NotesManager {
       if (hasLeft && hasRight) {
         const next = `${value.slice(0, leftStart)}${value.slice(
           start,
-          end
+          end,
         )}${value.slice(rightEnd)}`;
         t.value = next;
         t.setSelectionRange(leftStart, leftStart);
@@ -905,7 +883,7 @@ class NotesManager {
           if (!already) return line;
           return line.replace(
             new RegExp(`^\\s*${this.escapeRegExp(pTrim)}\\s*`),
-            ""
+            "",
           );
         }
 
@@ -913,7 +891,7 @@ class NotesManager {
         if (already) return line;
         return `${p}${line}`;
       },
-      { detect: { type: "prefix", prefix: pTrim } }
+      { detect: { type: "prefix", prefix: pTrim } },
     );
   }
 
@@ -928,7 +906,7 @@ class NotesManager {
         if (detect.test(line)) return line;
         return `- [ ] ${line}`;
       },
-      { detect: { type: "checklist" } }
+      { detect: { type: "checklist" } },
     );
   }
 
@@ -945,7 +923,7 @@ class NotesManager {
         i += 1;
         return next;
       },
-      { detect: { type: "numbered" } }
+      { detect: { type: "numbered" } },
     );
   }
 
@@ -1094,10 +1072,10 @@ class NotesManager {
         el.querySelectorAll(":scope > li").forEach((li) => {
           const txt = Array.from(li.childNodes)
             .filter(
-              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL"
+              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL",
             )
             .filter(
-              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL"
+              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL",
             )
             .map(toInline)
             .join("")
@@ -1109,8 +1087,8 @@ class NotesManager {
           const prefix = isChecklist
             ? `- [${checked ? "x" : " "}] `
             : isOrdered
-            ? `${idx}. `
-            : "- ";
+              ? `${idx}. `
+              : "- ";
 
           if (txt) lines.push(`${prefix}${txt}`);
           idx += 1;
@@ -1127,8 +1105,8 @@ class NotesManager {
           Array.from(tr.querySelectorAll("th,td")).map((cell) =>
             String(cell.textContent || "")
               .replace(/\s+/g, " ")
-              .trim()
-          )
+              .trim(),
+          ),
         );
 
         const headerRow = grid.findIndex((r, i) => rows[i].querySelector("th"));
@@ -1175,7 +1153,7 @@ class NotesManager {
     const n = this.clampNumber(
       scale,
       NotesManager.SCALE_MIN,
-      NotesManager.SCALE_MAX
+      NotesManager.SCALE_MAX,
     );
 
     if (this.scaleRange) {
@@ -1258,7 +1236,7 @@ class NotesManager {
     this.currentPage = this.clampInt(
       this.currentPage,
       1,
-      Math.max(1, totalPages)
+      Math.max(1, totalPages),
     );
 
     const start = (this.currentPage - 1) * NotesManager.ITEMS_PER_PAGE;
@@ -1314,7 +1292,7 @@ class NotesManager {
     if (this.pageInfoEl) {
       this.pageInfoEl.textContent = `Page ${page} / ${Math.max(
         1,
-        totalPages
+        totalPages,
       )} (${this.notes.length})`;
     }
 
@@ -1325,7 +1303,7 @@ class NotesManager {
   getTotalPages() {
     return Math.max(
       1,
-      Math.ceil(this.notes.length / NotesManager.ITEMS_PER_PAGE)
+      Math.ceil(this.notes.length / NotesManager.ITEMS_PER_PAGE),
     );
   }
 
@@ -1424,7 +1402,7 @@ class NotesManager {
 
         if (start > lastIndex) {
           frag.appendChild(
-            document.createTextNode(text.slice(lastIndex, start))
+            document.createTextNode(text.slice(lastIndex, start)),
           );
         }
 

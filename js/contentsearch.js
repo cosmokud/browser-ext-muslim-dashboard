@@ -9,10 +9,11 @@
  * - Paginate when results > 5
  */
 
-class ContentSearchManager {
+class ContentSearchManager extends BaseManager {
   static RESULTS_PER_PAGE = 5;
 
   constructor({ storage, quotes, adhkar, hadith }) {
+    super();
     this.storage = storage;
     this.quotes = quotes;
     this.adhkar = adhkar;
@@ -86,33 +87,6 @@ class ContentSearchManager {
     return !!this.modalEl?.classList.contains("active");
   }
 
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
-  }
-
   open(context) {
     this.cacheElements();
 
@@ -128,10 +102,10 @@ class ContentSearchManager {
       context === "quotes"
         ? `${searchIcon} Search Quotes`
         : context === "adhkar"
-        ? `${searchIcon} Search Adhkar`
-        : context === "hadith"
-        ? `${searchIcon} Search Hadith`
-        : `${searchIcon} Search`;
+          ? `${searchIcon} Search Adhkar`
+          : context === "hadith"
+            ? `${searchIcon} Search Hadith`
+            : `${searchIcon} Search`;
 
     this.titleEl.innerHTML = title;
 
@@ -186,7 +160,7 @@ class ContentSearchManager {
 
   createCardSearchButton({ cardId, context }) {
     const headerActions = document.querySelector(
-      `#${cardId} .card-header-actions`
+      `#${cardId} .card-header-actions`,
     );
     if (!headerActions) return;
 
@@ -202,8 +176,8 @@ class ContentSearchManager {
       context === "adhkar"
         ? "Search adhkar"
         : context === "hadith"
-        ? "Search hadith"
-        : "Search";
+          ? "Search hadith"
+          : "Search";
 
     btn.title = label;
     btn.setAttribute("aria-label", label);
@@ -527,7 +501,7 @@ class ContentSearchManager {
         page: Math.max(1, p - 1),
         disabled: p <= 1,
         active: false,
-      })
+      }),
     );
 
     const makeEllipsis = () => {
@@ -547,7 +521,7 @@ class ContentSearchManager {
           page: i,
           disabled: false,
           active: i === p,
-        })
+        }),
       );
     };
 
@@ -582,7 +556,7 @@ class ContentSearchManager {
         page: Math.min(totalPages, p + 1),
         disabled: p >= totalPages,
         active: false,
-      })
+      }),
     );
   }
 

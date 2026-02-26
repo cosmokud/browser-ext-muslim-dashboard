@@ -4,8 +4,9 @@
  * Features: favicon fetching with caching, reordering, editing, 10 items per row
  */
 
-class PinnedAppsManager {
+class PinnedAppsManager extends BaseManager {
   constructor(storage) {
+    super();
     this.storage = storage;
     this.apps = [];
     this.draggedItem = null;
@@ -87,33 +88,6 @@ class PinnedAppsManager {
     });
 
     this.init();
-  }
-
-  _bindOverlayCloseBehavior(overlayEl, closeFn) {
-    if (!overlayEl || typeof closeFn !== "function") return;
-
-    let pointerDownOnBackdrop = false;
-    const downEvent = window.PointerEvent ? "pointerdown" : "mousedown";
-
-    overlayEl.addEventListener(downEvent, (e) => {
-      pointerDownOnBackdrop = e.target === overlayEl;
-    });
-
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target !== overlayEl) return;
-      if (!pointerDownOnBackdrop) return;
-      closeFn();
-    });
-  }
-
-  /**
-   * Get icon based on current icon theme
-   */
-  _getIcon(emoji, options = {}) {
-    if (window.dashboard?.iconThemes) {
-      return window.dashboard.iconThemes.getIcon(emoji, options);
-    }
-    return emoji;
   }
 
   /**
@@ -1442,15 +1416,6 @@ class PinnedAppsManager {
 
     this.saveApps();
     this.render();
-  }
-
-  /**
-   * Escape HTML
-   */
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
 
