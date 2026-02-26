@@ -6883,6 +6883,7 @@ body.moment-mode
   .flashcard-card .card-header-actions,
   .adhkar-card .card-header-actions,
   .hadith-card .card-header-actions,
+  .weather-card .card-header-actions,
   .notes-card .card-header-actions {
     opacity: 0;
     pointer-events: none;
@@ -6898,6 +6899,8 @@ body.moment-mode
   .adhkar-card:focus-within .card-header-actions,
   .hadith-card:hover .card-header-actions,
   .hadith-card:focus-within .card-header-actions,
+  .weather-card:hover .card-header-actions,
+  .weather-card:focus-within .card-header-actions,
   .notes-card:hover .card-header-actions,
   .notes-card:focus-within .card-header-actions {
     opacity: 1;
