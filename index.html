@@ -736,102 +736,103 @@
                   <span class="card-icon">✅</span>
                   To-Do List
                 </h2>
-                <div class="card-header-actions">
-                  <span class="todo-count" id="todoCount">0 tasks</span>
-
-                  <button
-                    class="clear-completed-btn"
-                    id="clearCompletedBtn"
-                    type="button"
-                    title="Clear completed"
-                    aria-label="Clear completed"
-                    style="display: none"
-                  >
-                    🗑
-                  </button>
-
-                  <div
-                    class="card-blur-menu"
-                    aria-label="Todo blur menu"
-                    data-card-id="todoCard"
-                  >
+                <div class="todo-header-right">
+                  <div class="card-header-actions">
                     <button
-                      class="card-blur-btn"
-                      id="todoBlurMenuBtn"
+                      class="clear-completed-btn"
+                      id="clearCompletedBtn"
                       type="button"
-                      aria-label="Open blur settings"
-                      title="Blur & Glass Settings"
+                      title="Clear completed"
+                      aria-label="Clear completed"
+                      style="display: none"
                     >
-                      ✨
+                      🗑
                     </button>
-                    <div class="blur-settings-popup">
-                      <div class="blur-popup-header">
-                        <span class="blur-popup-title">
-                          <span class="blur-popup-title-icon">✨</span>
-                          Glass Settings
-                        </span>
-                        <button
-                          class="blur-popup-close"
-                          type="button"
-                          aria-label="Close"
-                        >
-                          ×
-                        </button>
-                      </div>
-                      <div class="blur-setting-section">
-                        <span class="blur-setting-label">Glass Effect</span>
-                        <div class="blur-glass-toggle">
+
+                    <div
+                      class="card-blur-menu"
+                      aria-label="Todo blur menu"
+                      data-card-id="todoCard"
+                    >
+                      <button
+                        class="card-blur-btn"
+                        id="todoBlurMenuBtn"
+                        type="button"
+                        aria-label="Open blur settings"
+                        title="Blur & Glass Settings"
+                      >
+                        ✨
+                      </button>
+                      <div class="blur-settings-popup">
+                        <div class="blur-popup-header">
+                          <span class="blur-popup-title">
+                            <span class="blur-popup-title-icon">✨</span>
+                            Glass Settings
+                          </span>
                           <button
-                            class="blur-glass-option"
-                            data-glass-value="off"
+                            class="blur-popup-close"
                             type="button"
+                            aria-label="Close"
                           >
-                            <span class="blur-glass-option-icon">⬜</span>
-                            <span class="blur-glass-option-label">Off</span>
-                          </button>
-                          <button
-                            class="blur-glass-option active"
-                            data-glass-value="dashboard"
-                            type="button"
-                          >
-                            <span class="blur-glass-option-icon">🔗</span>
-                            <span class="blur-glass-option-label">Dash</span>
-                          </button>
-                          <button
-                            class="blur-glass-option"
-                            data-glass-value="on"
-                            type="button"
-                          >
-                            <span class="blur-glass-option-icon">✨</span>
-                            <span class="blur-glass-option-label">On</span>
+                            ×
                           </button>
                         </div>
-                      </div>
-                      <div class="blur-setting-section">
-                        <div class="blur-power-header">
-                          <span class="blur-setting-label">Blur Power</span>
-                          <label class="blur-power-toggle">
+                        <div class="blur-setting-section">
+                          <span class="blur-setting-label">Glass Effect</span>
+                          <div class="blur-glass-toggle">
+                            <button
+                              class="blur-glass-option"
+                              data-glass-value="off"
+                              type="button"
+                            >
+                              <span class="blur-glass-option-icon">⬜</span>
+                              <span class="blur-glass-option-label">Off</span>
+                            </button>
+                            <button
+                              class="blur-glass-option active"
+                              data-glass-value="dashboard"
+                              type="button"
+                            >
+                              <span class="blur-glass-option-icon">🔗</span>
+                              <span class="blur-glass-option-label">Dash</span>
+                            </button>
+                            <button
+                              class="blur-glass-option"
+                              data-glass-value="on"
+                              type="button"
+                            >
+                              <span class="blur-glass-option-icon">✨</span>
+                              <span class="blur-glass-option-label">On</span>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="blur-setting-section">
+                          <div class="blur-power-header">
+                            <span class="blur-setting-label">Blur Power</span>
+                            <label class="blur-power-toggle">
+                              <input
+                                type="checkbox"
+                                class="blur-power-checkbox"
+                              />
+                              <span class="blur-power-switch"></span>
+                              <span class="blur-power-toggle-label">Custom</span>
+                            </label>
+                          </div>
+                          <div class="blur-power-slider-wrap disabled">
                             <input
-                              type="checkbox"
-                              class="blur-power-checkbox"
+                              type="range"
+                              class="blur-power-slider"
+                              min="0"
+                              max="200"
+                              value="100"
                             />
-                            <span class="blur-power-switch"></span>
-                            <span class="blur-power-toggle-label">Custom</span>
-                          </label>
-                        </div>
-                        <div class="blur-power-slider-wrap disabled">
-                          <input
-                            type="range"
-                            class="blur-power-slider"
-                            min="0"
-                            max="200"
-                            value="100"
-                          />
-                          <span class="blur-power-value">100%</span>
+                            <span class="blur-power-value">100%</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                  <span class="todo-count" id="todoCount">0 tasks</span>
                 </div>
               </div>
               <div class="todo-input-container">

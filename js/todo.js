@@ -175,6 +175,38 @@ class TodoManager extends BaseManager {
     }
   }
 
+  getSearchItems() {
+    if (!Array.isArray(this.todos)) return [];
+    return this.todos.slice();
+  }
+
+  focusTodoById(id) {
+    const todoId =
+      typeof id === "number" ? id : parseInt(String(id || ""), 10);
+    if (!Number.isFinite(todoId)) return false;
+
+    const todoIndex = this.todos.findIndex((todo) => todo.id === todoId);
+    if (todoIndex < 0) return false;
+
+    this.filter = "all";
+    this.currentPage = Math.floor(todoIndex / this.itemsPerPage) + 1;
+
+    this.filterBtns.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.filter === "all");
+    });
+
+    this.render();
+
+    const item = this.todoList?.querySelector(`.todo-item[data-id="${todoId}"]`);
+    if (item) {
+      try {
+        item.scrollIntoView({ behavior: "smooth", block: "center" });
+      } catch (e) {}
+    }
+
+    return true;
+  }
+
   /**
    * Render todo list
    */

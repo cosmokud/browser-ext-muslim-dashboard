@@ -709,21 +709,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function applyPopupBackdropFromColors(colors) {
-    const primaryHex = normalizeHexColor(
-      colors?.primary,
-      popupBlurDefaults.palette.primary,
-    );
-    const darkPrimary =
-      mixHexToRgb(primaryHex, "#000000", 0.75) || "rgb(5, 17, 13)";
+    const { isPureTheme } = getCurrentThemeContext();
+
+    const backdropColor = (() => {
+      if (isPureTheme) {
+        return normalizeHexColor(
+          colors?.bodyBg,
+          popupBlurDefaults.palette.background,
+        );
+      }
+
+      const primaryHex = normalizeHexColor(
+        colors?.primary,
+        popupBlurDefaults.palette.primary,
+      );
+
+      return mixHexToRgb(primaryHex, "#000000", 0.75) || "rgb(5, 17, 13)";
+    })();
 
     document.documentElement.style.setProperty(
       "--popup-backdrop-color",
-      darkPrimary,
+      backdropColor,
     );
-    document.documentElement.style.background = darkPrimary;
-    document.documentElement.style.backgroundColor = darkPrimary;
-    document.body.style.background = darkPrimary;
-    document.body.style.backgroundColor = darkPrimary;
+    document.documentElement.style.background = backdropColor;
+    document.documentElement.style.backgroundColor = backdropColor;
+    document.body.style.background = backdropColor;
+    document.body.style.backgroundColor = backdropColor;
   }
 
   function syncPopupBlurModalUi() {

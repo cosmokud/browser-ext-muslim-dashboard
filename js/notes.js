@@ -1231,6 +1231,36 @@ class NotesManager extends BaseManager {
     return this.notes.find((n) => n.id === this.activeNoteId) || null;
   }
 
+  getSearchItems() {
+    if (!Array.isArray(this.notes)) return [];
+    return this.notes.slice();
+  }
+
+  focusNoteById(id) {
+    const noteId = String(id || "").trim();
+    if (!noteId) return false;
+
+    const exists = this.notes.some((n) => String(n.id) === noteId);
+    if (!exists) return false;
+
+    this.selectNote(noteId);
+    this.ensureActiveVisible();
+
+    if (this.listEl) {
+      const listItem = Array.from(this.listEl.querySelectorAll(".notes-list-item")).find(
+        (el) => String(el.dataset.noteId || "") === noteId,
+      );
+
+      if (listItem) {
+        try {
+          listItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (e) {}
+      }
+    }
+
+    return true;
+  }
+
   renderList() {
     const totalPages = this.getTotalPages();
     this.currentPage = this.clampInt(

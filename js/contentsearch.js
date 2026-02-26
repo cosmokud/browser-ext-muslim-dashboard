@@ -1,6 +1,6 @@
 /**
  * Content Search Manager
- * Provides a shared search modal for Quotes / Adhkar / Hadith.
+ * Provides a shared search modal for Quotes / Adhkar / Hadith / Notes / Todo.
  *
  * Requirements:
  * - Single input
@@ -12,12 +12,14 @@
 class ContentSearchManager extends BaseManager {
   static RESULTS_PER_PAGE = 5;
 
-  constructor({ storage, quotes, adhkar, hadith }) {
+  constructor({ storage, quotes, adhkar, hadith, notes, todos }) {
     super();
     this.storage = storage;
     this.quotes = quotes;
     this.adhkar = adhkar;
     this.hadith = hadith;
+    this.notes = notes;
+    this.todos = todos;
 
     this.modalEl = null;
     this.closeBtn = null;
@@ -26,7 +28,7 @@ class ContentSearchManager extends BaseManager {
     this.resultsEl = null;
     this.paginationEl = null;
 
-    this._activeContext = null; // 'quotes' | 'adhkar' | 'hadith'
+    this._activeContext = null; // 'quotes' | 'adhkar' | 'hadith' | 'notes' | 'todo'
     this._query = "";
     this._page = 1;
 
@@ -105,6 +107,10 @@ class ContentSearchManager extends BaseManager {
           ? `${searchIcon} Search Adhkar`
           : context === "hadith"
             ? `${searchIcon} Search Hadith`
+            : context === "notes"
+              ? `${searchIcon} Search Notes`
+              : context === "todo"
+                ? `${searchIcon} Search To-Do`
             : `${searchIcon} Search`;
 
     this.titleEl.innerHTML = title;
@@ -135,6 +141,16 @@ class ContentSearchManager extends BaseManager {
     this.createQuoteSearchButton();
     this.createCardSearchButton({ cardId: "adhkarCard", context: "adhkar" });
     this.createCardSearchButton({ cardId: "hadithCard", context: "hadith" });
+    this.createCardSearchButton({
+      cardId: "todoCard",
+      context: "todo",
+      insertAtStart: true,
+    });
+    this.createCardSearchButton({
+      cardId: "notesCard",
+      context: "notes",
+      insertAtStart: true,
+    });
   }
 
   createQuoteSearchButton() {
@@ -158,7 +174,7 @@ class ContentSearchManager extends BaseManager {
     container.appendChild(btn);
   }
 
-  createCardSearchButton({ cardId, context }) {
+  createCardSearchButton({ cardId, context, insertAtStart = false }) {
     const headerActions = document.querySelector(
       `#${cardId} .card-header-actions`,
     );
@@ -177,6 +193,10 @@ class ContentSearchManager extends BaseManager {
         ? "Search adhkar"
         : context === "hadith"
           ? "Search hadith"
+          : context === "notes"
+            ? "Search notes"
+            : context === "todo"
+              ? "Search to-do list"
           : "Search";
 
     btn.title = label;
@@ -187,7 +207,11 @@ class ContentSearchManager extends BaseManager {
       this.open(context);
     });
 
-    // Append last so it sits at the far top-right.
+    if (insertAtStart && headerActions.firstChild) {
+      headerActions.insertBefore(btn, headerActions.firstChild);
+      return;
+    }
+
     headerActions.appendChild(btn);
   }
 
@@ -223,6 +247,12 @@ class ContentSearchManager extends BaseManager {
     }
     if (this._activeContext === "hadith") {
       return this.getHadithItems(lang);
+    }
+    if (this._activeContext === "notes") {
+      return this.getNotesItems();
+    }
+    if (this._activeContext === "todo") {
+      return this.getTodoItems();
     }
     return [];
   }
@@ -350,6 +380,70 @@ class ContentSearchManager extends BaseManager {
       return {
         _context: "hadith",
         _raw: c,
+        _index: idx,
+        title,
+        text,
+        source,
+      };
+    });
+  }
+
+  getNotesItems() {
+    const allNotes = this.notes?.getSearchItems?.() || this.notes?.notes;
+    if (!Array.isArray(allNotes) || !allNotes.length) return [];
+
+    const htmlToText = (html) => {
+      const value = String(html || "").trim();
+      if (!value) return "";
+      try {
+        const host = document.createElement("div");
+        host.innerHTML = value;
+        return String(host.textContent || host.innerText || "");
+      } catch (e) {
+        return value;
+      }
+    };
+
+    return allNotes.map((note, idx) => {
+      const title = String(note?.title || "").trim() || `Note #${idx + 1}`;
+      const text =
+        typeof note?.md === "string" && note.md.trim()
+          ? String(note.md)
+          : htmlToText(note?.html);
+
+      const updated =
+        typeof note?.updatedAt === "number" && Number.isFinite(note.updatedAt)
+          ? new Date(note.updatedAt)
+          : null;
+
+      const source =
+        updated && !Number.isNaN(updated.getTime())
+          ? `Updated ${updated.toLocaleDateString()}`
+          : "";
+
+      return {
+        _context: "notes",
+        _raw: note,
+        _index: idx,
+        title,
+        text,
+        source,
+      };
+    });
+  }
+
+  getTodoItems() {
+    const allTodos = this.todos?.getSearchItems?.() || this.todos?.todos;
+    if (!Array.isArray(allTodos) || !allTodos.length) return [];
+
+    return allTodos.map((todo, idx) => {
+      const text = String(todo?.text || "").trim();
+      const title = text || `Task #${idx + 1}`;
+      const source = todo?.completed === true ? "Completed" : "Active";
+
+      return {
+        _context: "todo",
+        _raw: todo,
         _index: idx,
         title,
         text,
@@ -584,6 +678,30 @@ class ContentSearchManager extends BaseManager {
       if (this.hadith?.setCurrentCardIndex) {
         try {
           this.hadith.setCurrentCardIndex(it._index, { cancelAnimation: true });
+        } catch (e) {}
+      }
+    }
+
+    if (it._context === "notes") {
+      const noteId = String(it?._raw?.id || "").trim();
+      if (noteId) {
+        if (this.notes?.focusNoteById) {
+          try {
+            this.notes.focusNoteById(noteId);
+          } catch (e) {}
+        } else if (this.notes?.selectNote) {
+          try {
+            this.notes.selectNote(noteId);
+          } catch (e) {}
+        }
+      }
+    }
+
+    if (it._context === "todo") {
+      const todoId = it?._raw?.id;
+      if (this.todos?.focusTodoById) {
+        try {
+          this.todos.focusTodoById(todoId);
         } catch (e) {}
       }
     }

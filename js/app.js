@@ -36,7 +36,7 @@ class MuslimDashboard {
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
 
-    // Unified content search modal (Quotes / Adhkar / Hadith)
+    // Unified content search modal (Quotes / Adhkar / Hadith / Notes / Todo)
     this.contentSearch = null;
 
     // Grid layout manager for drag-and-drop
@@ -807,6 +807,8 @@ class MuslimDashboard {
           quotes: this.quotes,
           adhkar: this.adhkar,
           hadith: this.hadith,
+          notes: this.notes,
+          todos: this.todos,
         });
         this.contentSearch.init();
       }

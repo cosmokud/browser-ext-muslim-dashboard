@@ -2069,12 +2069,20 @@ textarea.notes-editor:focus {
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
 }
 
+.todo-header-right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .todo-count {
   font-size: 0.85rem;
   color: var(--text-muted);
   background: var(--glass-bg);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-xl);
+  white-space: nowrap;
 }
 
 .todo-input-container {
@@ -6868,6 +6876,7 @@ body.moment-mode
   .adhkar-card .card-header-actions,
   .hadith-card .card-header-actions,
   .weather-card .card-header-actions,
+  .todo-card .card-header-actions,
   .notes-card .card-header-actions {
     opacity: 0;
     pointer-events: none;
@@ -6885,6 +6894,8 @@ body.moment-mode
   .hadith-card:focus-within .card-header-actions,
   .weather-card:hover .card-header-actions,
   .weather-card:focus-within .card-header-actions,
+  .todo-card:hover .card-header-actions,
+  .todo-card:focus-within .card-header-actions,
   .notes-card:hover .card-header-actions,
   .notes-card:focus-within .card-header-actions {
     opacity: 1;
