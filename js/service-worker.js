@@ -69,7 +69,7 @@ function alarmsGetAll() {
   return new Promise((resolve) => {
     try {
       chrome.alarms.getAll((alarms) =>
-        resolve(Array.isArray(alarms) ? alarms : [])
+        resolve(Array.isArray(alarms) ? alarms : []),
       );
     } catch (e) {
       resolve([]);
@@ -153,7 +153,7 @@ function parseTimeToDate(timeStr, baseDate) {
     hours,
     minutes,
     0,
-    0
+    0,
   );
 }
 
@@ -164,7 +164,7 @@ function configurePrayTimes(prayTimes, settings) {
     prayTimes.setFajrAngle(settings.customFajrAngle ?? 18);
     prayTimes.setIshaAngle(
       settings.customIshaAngle ?? 17,
-      settings.customIshaMinutes ?? false
+      settings.customIshaMinutes ?? false,
     );
   }
 
@@ -212,7 +212,8 @@ async function clearPrayerAlarms() {
   const toClear = alarms
     .map((a) => a && a.name)
     .filter(
-      (name) => typeof name === "string" && name.startsWith(PRAYER_ALARM_PREFIX)
+      (name) =>
+        typeof name === "string" && name.startsWith(PRAYER_ALARM_PREFIX),
     );
 
   for (const name of toClear) {
@@ -265,13 +266,13 @@ function getPrayerNotificationsSettings(settings) {
             entry.beforeMinutes,
             0,
             180,
-            defaultBeforeMinutes
+            defaultBeforeMinutes,
           ),
           afterMinutes: clampNumber(
             entry.afterMinutes,
             0,
             180,
-            defaultAfterMinutes
+            defaultAfterMinutes,
           ),
           atTimeEnabled: true,
         };
@@ -350,7 +351,7 @@ async function schedulePrayerNotifications() {
     [location.latitude, location.longitude],
     "auto",
     "auto",
-    timeFormat
+    timeFormat,
   );
 
   // Store a small cache for debugging/visibility.
@@ -458,14 +459,14 @@ function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
   const today = new Date(
     nowDate.getFullYear(),
     nowDate.getMonth(),
-    nowDate.getDate()
+    nowDate.getDate(),
   );
   const todayTimes = prayTimes.getTimes(
     today,
     coords,
     "auto",
     "auto",
-    timeFormat
+    timeFormat,
   );
 
   for (const def of visiblePrayers) {
@@ -488,7 +489,7 @@ function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
     coords,
     "auto",
     "auto",
-    timeFormat
+    timeFormat,
   );
 
   for (const def of visiblePrayers) {
@@ -540,7 +541,7 @@ async function updateActionPrayerCountdownBadge() {
 
     const remainingMinutes = Math.max(
       0,
-      Math.ceil((next.at.getTime() - now.getTime()) / (60 * 1000))
+      Math.ceil((next.at.getTime() - now.getTime()) / (60 * 1000)),
     );
 
     const badgeText = formatBadgeCountdown(remainingMinutes);
@@ -669,7 +670,7 @@ async function showPrayerNotification(prayerKey, kind) {
             },
           });
         }
-      }
+      },
     );
   } catch (e) {
     storageSet({
@@ -806,7 +807,7 @@ async function scheduleFastingNotifications() {
   const todayStart = new Date(
     today.getFullYear(),
     today.getMonth(),
-    today.getDate()
+    today.getDate(),
   );
 
   // Check if today is a fasting day
@@ -834,7 +835,7 @@ async function scheduleFastingNotifications() {
     [location.latitude, location.longitude],
     "auto",
     "auto",
-    timeFormat
+    timeFormat,
   );
 
   const fajrTimeStr = times.fajr;
@@ -905,7 +906,7 @@ async function showFastingNotification() {
     fasting.notifications?.minutesBefore,
     5,
     180,
-    60
+    60,
   );
 
   // Get today's fasting type for the notification message
@@ -913,7 +914,7 @@ async function showFastingNotification() {
   const todayStart = new Date(
     today.getFullYear(),
     today.getMonth(),
-    today.getDate()
+    today.getDate(),
   );
   const fastingType = getTodayFastingType(settings, todayStart);
 
@@ -951,7 +952,7 @@ async function showFastingNotification() {
             },
           });
         }
-      }
+      },
     );
   } catch (e) {
     storageSet({
