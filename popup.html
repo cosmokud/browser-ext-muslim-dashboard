@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Muslim Dashboard • Prayer Times</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/popup.css" />
+  </head>
+  <body class="popup-prayer-times">
+    <main class="popup-shell" aria-live="polite">
+      <section
+        class="card prayer-times-card popup-prayer-card"
+        id="prayerTimesCard"
+      >
+        <div class="card-header">
+          <h1 class="card-title">
+            <span class="card-icon">🕌</span>
+            Prayer Times
+          </h1>
+          <div class="location-display" id="locationDisplay">
+            <span
+              class="location-icon"
+              id="popupLocationDashboardShortcut"
+              role="button"
+              tabindex="0"
+              title="Open Dashboard"
+              aria-label="Open Dashboard"
+              >📍</span
+            >
+            <span class="location-text" id="locationText">Detecting...</span>
+            <button
+              class="location-refresh-btn"
+              id="detectLocationBtn"
+              type="button"
+              title="Refresh Location"
+              aria-label="Refresh Location"
+            >
+              🔄
+            </button>
+          </div>
+        </div>
+
+        <div class="next-prayer" id="nextPrayer">
+          <span class="next-prayer-label">Next Prayer:</span>
+          <span class="next-prayer-name" id="nextPrayerName">--</span>
+          <span class="next-prayer-countdown" id="nextPrayerCountdown"
+            >--:--:--</span
+          >
+        </div>
+
+        <div class="prayer-list" id="prayerList"></div>
+      </section>
+
+      <section
+        class="card popup-hidden-note"
+        id="popupPrayerHiddenState"
+        hidden
+      >
+        <h2 class="popup-hidden-title">Prayer Times is hidden in Dashboard</h2>
+        <p class="popup-hidden-text">
+          Enable Prayer Times in Dashboard Settings to show the same component
+          here.
+        </p>
+        <button
+          class="popup-open-dashboard-btn"
+          id="popupOpenDashboardBtn"
+          type="button"
+        >
+          Open Dashboard
+        </button>
+      </section>
+    </main>
+
+    <script src="js/praytimes.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/themes.js"></script>
+    <script src="js/iconthemes.js"></script>
+    <script src="js/prayertimes.js"></script>
+    <script src="js/popup.js"></script>
+  </body>
+</html>

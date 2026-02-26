@@ -1,0 +1,120 @@
+html,
+body {
+  width: 420px;
+  min-height: 560px;
+  max-height: 600px;
+}
+
+body.popup-prayer-times {
+  margin: 0;
+  padding: var(--spacing-md);
+  min-height: 560px;
+  overflow: hidden;
+  background: linear-gradient(
+    150deg,
+    var(--primary-dark),
+    var(--primary-color)
+  );
+}
+
+.popup-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.popup-prayer-card {
+  animation: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--spacing-md);
+}
+
+.popup-prayer-card .card-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.popup-prayer-card .card-title {
+  font-size: 1.05rem;
+}
+
+.popup-prayer-card .next-prayer {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+}
+
+.popup-prayer-card .next-prayer-countdown {
+  font-size: 1.05rem;
+}
+
+.popup-prayer-card .prayer-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.popup-prayer-card .prayer-item {
+  padding: 0.7rem 0.8rem;
+}
+
+.popup-prayer-card .prayer-time {
+  font-size: 1rem;
+}
+
+.popup-prayer-card .prayer-item.next {
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+}
+
+.popup-hidden-note {
+  animation: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  text-align: left;
+}
+
+.popup-hidden-note[hidden] {
+  display: none !important;
+}
+
+.popup-hidden-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.popup-hidden-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.popup-open-dashboard-btn {
+  align-self: flex-start;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.5rem 0.85rem;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.popup-open-dashboard-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow);
+}
+
+.popup-open-dashboard-btn:active {
+  transform: translateY(0);
+}
