@@ -695,9 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
     root.style.setProperty("--text-secondary", colors.textSecondary);
     root.style.setProperty("--text-muted", colors.textMuted);
 
-    document.body.style.background = colors.bodyBg;
-    document.body.style.backgroundColor = colors.bodyBg;
-
     const settingsRgb =
       typeof themes.hexToRgb === "function"
         ? themes.hexToRgb(colors.settingsColor)
@@ -709,6 +706,24 @@ document.addEventListener("DOMContentLoaded", () => {
         `0 4px 20px rgba(${settingsRgb.r}, ${settingsRgb.g}, ${settingsRgb.b}, 0.45)`,
       );
     }
+  }
+
+  function applyPopupBackdropFromColors(colors) {
+    const primaryHex = normalizeHexColor(
+      colors?.primary,
+      popupBlurDefaults.palette.primary,
+    );
+    const darkPrimary =
+      mixHexToRgb(primaryHex, "#000000", 0.75) || "rgb(5, 17, 13)";
+
+    document.documentElement.style.setProperty(
+      "--popup-backdrop-color",
+      darkPrimary,
+    );
+    document.documentElement.style.background = darkPrimary;
+    document.documentElement.style.backgroundColor = darkPrimary;
+    document.body.style.background = darkPrimary;
+    document.body.style.backgroundColor = darkPrimary;
   }
 
   function syncPopupBlurModalUi() {
@@ -818,6 +833,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (colors) {
         applyThemeColorsToPopup(colors);
         applyPopupGlassVars(colors, effectiveGlass);
+        applyPopupBackdropFromColors(colors);
       }
     } else {
       try {
@@ -830,6 +846,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dashboardColors = themes.getThemeColors?.();
       if (dashboardColors) {
         applyPopupGlassVars(dashboardColors, effectiveGlass);
+        applyPopupBackdropFromColors(dashboardColors);
       }
     }
 
