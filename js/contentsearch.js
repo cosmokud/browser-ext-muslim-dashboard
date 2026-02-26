@@ -111,7 +111,7 @@ class ContentSearchManager extends BaseManager {
               ? `${searchIcon} Search Notes`
               : context === "todo"
                 ? `${searchIcon} Search To-Do`
-            : `${searchIcon} Search`;
+                : `${searchIcon} Search`;
 
     this.titleEl.innerHTML = title;
 
@@ -197,7 +197,7 @@ class ContentSearchManager extends BaseManager {
             ? "Search notes"
             : context === "todo"
               ? "Search to-do list"
-          : "Search";
+              : "Search";
 
     btn.title = label;
     btn.setAttribute("aria-label", label);

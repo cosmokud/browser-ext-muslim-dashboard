@@ -1247,9 +1247,9 @@ class NotesManager extends BaseManager {
     this.ensureActiveVisible();
 
     if (this.listEl) {
-      const listItem = Array.from(this.listEl.querySelectorAll(".notes-list-item")).find(
-        (el) => String(el.dataset.noteId || "") === noteId,
-      );
+      const listItem = Array.from(
+        this.listEl.querySelectorAll(".notes-list-item"),
+      ).find((el) => String(el.dataset.noteId || "") === noteId);
 
       if (listItem) {
         try {

@@ -181,8 +181,7 @@ class TodoManager extends BaseManager {
   }
 
   focusTodoById(id) {
-    const todoId =
-      typeof id === "number" ? id : parseInt(String(id || ""), 10);
+    const todoId = typeof id === "number" ? id : parseInt(String(id || ""), 10);
     if (!Number.isFinite(todoId)) return false;
 
     const todoIndex = this.todos.findIndex((todo) => todo.id === todoId);
@@ -197,7 +196,9 @@ class TodoManager extends BaseManager {
 
     this.render();
 
-    const item = this.todoList?.querySelector(`.todo-item[data-id="${todoId}"]`);
+    const item = this.todoList?.querySelector(
+      `.todo-item[data-id="${todoId}"]`,
+    );
     if (item) {
       try {
         item.scrollIntoView({ behavior: "smooth", block: "center" });
