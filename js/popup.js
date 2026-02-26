@@ -24,10 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const openPrayerSettingsButton = document.getElementById(
     "popupOpenPrayerSettingsBtn",
   );
+  const popupBlurMenu = document.getElementById("popupBlurMenu");
   const popupBlurMenuButton = document.getElementById("popupBlurMenuBtn");
   const popupBlurModal = document.getElementById("popupBlurModal");
   const popupBlurCloseBtn = document.getElementById("popupBlurClose");
-  const popupBlurDoneBtn = document.getElementById("popupBlurDoneBtn");
+  const popupUseCustomBlurPowerToggle = document.getElementById(
+    "popupUseCustomBlurPower",
+  );
+  const popupBlurCustomToggleWrap = document.getElementById(
+    "popupBlurCustomToggleWrap",
+  );
   const popupBlurResetBtn = document.getElementById("popupBlurResetBtn");
   const popupBlurPowerWrap = document.getElementById("popupBlurPowerWrap");
   const popupBlurPowerSlider = document.getElementById("popupBlurPowerSlider");
@@ -45,8 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "popupBlurBackgroundColor",
   );
   const popupBlurTintInput = document.getElementById("popupBlurTintColor");
-  const popupBlurModeButtons = Array.from(
-    document.querySelectorAll("[data-popup-blur-mode]"),
+  const popupGlassStateButtons = Array.from(
+    document.querySelectorAll("[data-popup-glass-state]"),
   );
   const popupBlurColorResetButtons = Array.from(
     document.querySelectorAll("[data-popup-reset-color]"),
@@ -56,8 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const locationStorageKey = `${storage.prefix}lastLocation`;
   const popupBlurStorageKey = "popupBlurSettings";
   const popupBlurDefaults = {
-    mode: "on",
-    power: 100,
+    glassState: "dashboard",
+    customBlurEnabled: false,
+    customBlurPower: 100,
     colorSource: "follow",
     palette: {
       primary: "#1a5f4a",
@@ -70,6 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let prayerInitialized = false;
   let resyncIntervalId = null;
   let popupBlurSettings = null;
+  let popupBlurPortalled = false;
+  let popupBlurPositionRaf = null;
 
   function getDashboardUrl(pathWithQuery = "index.html") {
     return typeof chrome !== "undefined" && chrome.runtime?.getURL
@@ -184,8 +193,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
-    const blurMode = ensurePopupBlurSettings().mode;
-    const blurEmoji = blurMode === "off" ? "⬜" : "✨";
+    const blurState = ensurePopupBlurSettings().glassState;
+    const blurEmoji =
+      blurState === "off" ? "⬜" : blurState === "on" ? "✨" : "🔗";
 
     applyIcon(openPrayerSettingsButton, "⚙️", 17);
     applyIcon(openDashboardButton, "⚙️", 18);
@@ -223,6 +233,78 @@ document.addEventListener("DOMContentLoaded", () => {
       return source.toLowerCase();
     }
     return fallback;
+  }
+
+  function ensurePopupBlurPortal() {
+    if (!popupBlurModal || popupBlurPortalled) return;
+
+    try {
+      document.body.appendChild(popupBlurModal);
+      popupBlurModal.classList.add("blur-popup-portal");
+      popupBlurPortalled = true;
+    } catch (e) {
+      popupBlurPortalled = false;
+    }
+  }
+
+  function positionPopupBlurModal() {
+    if (
+      !popupBlurMenu ||
+      !popupBlurModal ||
+      !popupBlurModal.classList.contains("blur-popup-open")
+    ) {
+      return;
+    }
+
+    const anchorRect = popupBlurMenu.getBoundingClientRect();
+    const viewportPadding = 8;
+    const gap = 8;
+
+    const popupWidth = Math.max(
+      220,
+      Math.round(popupBlurModal.offsetWidth || 320),
+    );
+    const popupHeight = Math.max(
+      220,
+      Math.round(popupBlurModal.offsetHeight || 420),
+    );
+
+    let left = Math.round(anchorRect.right - popupWidth);
+    left = Math.max(
+      viewportPadding,
+      Math.min(left, window.innerWidth - viewportPadding - popupWidth),
+    );
+
+    const belowTop = Math.round(anchorRect.bottom + gap);
+    const aboveTop = Math.round(anchorRect.top - gap - popupHeight);
+    const canFitBelow =
+      belowTop + popupHeight <= window.innerHeight - viewportPadding;
+    const canFitAbove = aboveTop >= viewportPadding;
+
+    let top = belowTop;
+    if (!canFitBelow && canFitAbove) {
+      top = aboveTop;
+    } else if (!canFitBelow && !canFitAbove) {
+      top = Math.max(
+        viewportPadding,
+        Math.min(top, window.innerHeight - viewportPadding - popupHeight),
+      );
+    }
+
+    popupBlurModal.style.left = `${left}px`;
+    popupBlurModal.style.top = `${top}px`;
+    popupBlurModal.style.right = "auto";
+    popupBlurModal.style.bottom = "auto";
+  }
+
+  function schedulePopupBlurPosition() {
+    if (popupBlurPositionRaf) {
+      cancelAnimationFrame(popupBlurPositionRaf);
+    }
+
+    popupBlurPositionRaf = requestAnimationFrame(() => {
+      positionPopupBlurModal();
+    });
   }
 
   function normalizePopupPalette(palette, fallbackPalette) {
@@ -425,11 +507,94 @@ document.addEventListener("DOMContentLoaded", () => {
     return colors;
   }
 
+  function isDashboardGlassEnabled() {
+    const settings = storage.getSettings();
+    return settings?.theme?.glassEnabled !== false;
+  }
+
+  function getDashboardBlurPower() {
+    const settings = storage.getSettings();
+    return clampNumber(
+      settings?.uiBlurPower,
+      0,
+      200,
+      popupBlurDefaults.customBlurPower,
+    );
+  }
+
+  function mixHexToRgb(baseHex, mixHex, mixWeight) {
+    const base =
+      typeof themes.hexToRgb === "function"
+        ? themes.hexToRgb(baseHex)
+        : hexToRgb(baseHex);
+    const mix =
+      typeof themes.hexToRgb === "function"
+        ? themes.hexToRgb(mixHex)
+        : hexToRgb(mixHex);
+    if (!base || !mix) return null;
+
+    const weight = Math.max(0, Math.min(1, Number(mixWeight)));
+    const blend = (channelA, channelB) =>
+      Math.round(channelA * (1 - weight) + channelB * weight);
+
+    return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
+      base.b,
+      mix.b,
+    )})`;
+  }
+
+  function getPopupGlassVars(colors, glassEnabled) {
+    if (!colors) return null;
+
+    if (glassEnabled) {
+      return {
+        glassBg: colors.glassBg,
+        glassBgHover: colors.glassBgHover,
+        glassBorder: colors.glassBorder,
+        glassShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+      };
+    }
+
+    const mode = getCurrentThemeContext().mode;
+    const isLight = mode === "light";
+
+    const bgMix = isLight ? 0.12 : 0.38;
+    const bgHoverMix = isLight ? 0.18 : 0.48;
+    const borderMix = isLight ? 0.25 : 0.58;
+
+    const solidBg =
+      mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
+      (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
+    const solidHover =
+      mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
+      (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
+    const solidBorder =
+      mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
+      (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
+
+    return {
+      glassBg: solidBg,
+      glassBgHover: solidHover,
+      glassBorder: solidBorder,
+      glassShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+    };
+  }
+
+  function applyPopupGlassVars(colors, glassEnabled) {
+    const vars = getPopupGlassVars(colors, glassEnabled);
+    if (!vars) return;
+
+    const root = document.documentElement;
+    root.style.setProperty("--glass-bg", vars.glassBg);
+    root.style.setProperty("--glass-bg-hover", vars.glassBgHover);
+    root.style.setProperty("--glass-border", vars.glassBorder);
+    root.style.setProperty("--glass-shadow", vars.glassShadow);
+    root.dataset.glassEnabled = glassEnabled ? "true" : "false";
+  }
+
   function readPopupBlurSettings() {
     const dashboardPalette = getDashboardThemePalette();
     const stored = storage.get(popupBlurStorageKey, {});
-    const mode = stored?.mode === "off" ? "off" : "on";
-    const power = clampNumber(stored?.power, 0, 200, popupBlurDefaults.power);
 
     const hasLegacyPaletteData =
       stored?.colorSource == null &&
@@ -462,7 +627,41 @@ document.addEventListener("DOMContentLoaded", () => {
       colorSource = "custom";
     }
 
-    return { mode, power, colorSource, palette };
+    let glassState = stored?.glassState;
+    if (!["off", "dashboard", "on"].includes(glassState)) {
+      if (stored?.mode === "off") {
+        glassState = "off";
+      } else {
+        glassState = popupBlurDefaults.glassState;
+      }
+    }
+
+    const hasLegacyMode = stored?.mode === "off" || stored?.mode === "on";
+    let customBlurEnabled =
+      typeof stored?.customBlurEnabled === "boolean"
+        ? stored.customBlurEnabled
+        : hasLegacyMode
+          ? false
+          : popupBlurDefaults.customBlurEnabled;
+
+    if (glassState === "off") {
+      customBlurEnabled = false;
+    }
+
+    const customBlurPower = clampNumber(
+      stored?.customBlurPower ?? stored?.power,
+      0,
+      200,
+      popupBlurDefaults.customBlurPower,
+    );
+
+    return {
+      glassState,
+      customBlurEnabled,
+      customBlurPower,
+      colorSource,
+      palette,
+    };
   }
 
   function ensurePopupBlurSettings() {
@@ -496,11 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
     root.style.setProperty("--text-secondary", colors.textSecondary);
     root.style.setProperty("--text-muted", colors.textMuted);
 
-    root.style.setProperty("--glass-bg", colors.glassBg);
-    root.style.setProperty("--glass-bg-hover", colors.glassBgHover);
-    root.style.setProperty("--glass-border", colors.glassBorder);
-    root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
-
     document.body.style.background = colors.bodyBg;
     document.body.style.backgroundColor = colors.bodyBg;
 
@@ -522,24 +716,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const dashboardPalette = getDashboardThemePalette();
     const usingCustomColors = current.colorSource === "custom";
     const palette = usingCustomColors ? current.palette : dashboardPalette;
+    const isGlassOff = current.glassState === "off";
 
-    popupBlurModeButtons.forEach((button) => {
-      const isActive = button.dataset.popupBlurMode === current.mode;
+    popupGlassStateButtons.forEach((button) => {
+      const isActive = button.dataset.popupGlassState === current.glassState;
       button.classList.toggle("active", isActive);
       button.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
+    if (popupUseCustomBlurPowerToggle) {
+      popupUseCustomBlurPowerToggle.checked =
+        !isGlassOff && current.customBlurEnabled;
+      popupUseCustomBlurPowerToggle.disabled = isGlassOff;
+    }
+
+    if (popupBlurCustomToggleWrap) {
+      popupBlurCustomToggleWrap.classList.toggle("disabled", isGlassOff);
+    }
+
     if (popupBlurPowerSlider) {
-      popupBlurPowerSlider.value = String(current.power);
-      popupBlurPowerSlider.disabled = current.mode === "off";
+      popupBlurPowerSlider.value = String(current.customBlurPower);
+      popupBlurPowerSlider.disabled = isGlassOff;
     }
 
     if (popupBlurPowerWrap) {
-      popupBlurPowerWrap.classList.toggle("disabled", current.mode === "off");
+      popupBlurPowerWrap.classList.toggle(
+        "disabled",
+        isGlassOff || !current.customBlurEnabled,
+      );
     }
 
     if (popupBlurPowerValue) {
-      popupBlurPowerValue.textContent = `${current.power}%`;
+      popupBlurPowerValue.textContent = `${current.customBlurPower}%`;
     }
 
     if (popupUseCustomColorsToggle) {
@@ -591,22 +799,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applyPopupBlurStyles() {
     const current = ensurePopupBlurSettings();
-    const usingCustomColors = current.colorSource === "custom";
-    const colors = usingCustomColors
-      ? buildThemeColorsFromPopupPalette(current.palette)
-      : themes.getThemeColors();
+    const dashboardGlassEnabled = isDashboardGlassEnabled();
+    const effectiveGlass =
+      current.glassState === "on"
+        ? true
+        : current.glassState === "off"
+          ? false
+          : dashboardGlassEnabled;
 
-    if (!colors) return;
+    const effectiveBlurPower = !effectiveGlass
+      ? 0
+      : current.customBlurEnabled
+        ? current.customBlurPower
+        : getDashboardBlurPower();
 
-    applyThemeColorsToPopup(colors);
+    if (current.colorSource === "custom") {
+      const colors = buildThemeColorsFromPopupPalette(current.palette);
+      if (colors) {
+        applyThemeColorsToPopup(colors);
+        applyPopupGlassVars(colors, effectiveGlass);
+      }
+    } else {
+      try {
+        themes.loadThemeSettings();
+        themes.applyTheme();
+      } catch (error) {
+        console.warn("Popup theme sync failed:", error);
+      }
 
-    const blurMultiplier =
-      current.mode === "off"
-        ? 0
-        : clampNumber(current.power, 0, 200, 100) / 100;
+      const dashboardColors = themes.getThemeColors?.();
+      if (dashboardColors) {
+        applyPopupGlassVars(dashboardColors, effectiveGlass);
+      }
+    }
+
     document.documentElement.style.setProperty(
       "--ui-blur-multiplier",
-      String(blurMultiplier),
+      String(clampNumber(effectiveBlurPower, 0, 200, 100) / 100),
     );
 
     syncPopupBlurModalUi();
@@ -632,9 +861,24 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     };
 
+    const nextGlassState = ["off", "dashboard", "on"].includes(next.glassState)
+      ? next.glassState
+      : popupBlurDefaults.glassState;
+
+    let nextCustomBlurEnabled = !!next.customBlurEnabled;
+    if (nextGlassState === "off") {
+      nextCustomBlurEnabled = false;
+    }
+
     popupBlurSettings = {
-      mode: next.mode === "off" ? "off" : "on",
-      power: clampNumber(next.power, 0, 200, popupBlurDefaults.power),
+      glassState: nextGlassState,
+      customBlurEnabled: nextCustomBlurEnabled,
+      customBlurPower: clampNumber(
+        next.customBlurPower,
+        0,
+        200,
+        popupBlurDefaults.customBlurPower,
+      ),
       colorSource: next.colorSource === "custom" ? "custom" : "follow",
       palette: normalizePopupPalette(next.palette, dashboardPalette),
     };
@@ -644,16 +888,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openPopupBlurModal() {
-    if (!popupBlurModal) return;
+    if (!popupBlurMenu || !popupBlurModal) return;
+    ensurePopupBlurPortal();
     syncPopupBlurModalUi();
-    popupBlurModal.classList.add("active");
-    popupBlurModal.setAttribute("aria-hidden", "false");
+    popupBlurMenu.classList.add("blur-menu-open");
+    prayerCard?.classList.add("card-blur-popup-open");
+    popupBlurModal.classList.add("blur-popup-open");
+    schedulePopupBlurPosition();
   }
 
   function closePopupBlurModal() {
-    if (!popupBlurModal) return;
-    popupBlurModal.classList.remove("active");
-    popupBlurModal.setAttribute("aria-hidden", "true");
+    if (!popupBlurMenu || !popupBlurModal) return;
+    popupBlurMenu.classList.remove("blur-menu-open");
+    prayerCard?.classList.remove("card-blur-popup-open");
+    popupBlurModal.classList.remove("blur-popup-open");
   }
 
   function setupPopupBlurModal() {
@@ -663,17 +911,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (popupBlurMenuButton) {
       popupBlurMenuButton.addEventListener("click", (event) => {
         event.preventDefault();
-        openPopupBlurModal();
+        event.stopPropagation();
+
+        if (popupBlurMenu?.classList.contains("blur-menu-open")) {
+          closePopupBlurModal();
+        } else {
+          openPopupBlurModal();
+        }
       });
     }
 
-    popupBlurCloseBtn?.addEventListener("click", () => closePopupBlurModal());
-    popupBlurDoneBtn?.addEventListener("click", () => closePopupBlurModal());
+    popupBlurCloseBtn?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closePopupBlurModal();
+    });
 
     popupBlurResetBtn?.addEventListener("click", () => {
       popupBlurSettings = {
-        mode: popupBlurDefaults.mode,
-        power: popupBlurDefaults.power,
+        glassState: popupBlurDefaults.glassState,
+        customBlurEnabled: popupBlurDefaults.customBlurEnabled,
+        customBlurPower: popupBlurDefaults.customBlurPower,
         colorSource: popupBlurDefaults.colorSource,
         palette: getDashboardThemePalette(),
       };
@@ -681,9 +939,24 @@ document.addEventListener("DOMContentLoaded", () => {
       applyPopupBlurStyles();
     });
 
-    popupBlurModeButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        updatePopupBlurSettings({ mode: button.dataset.popupBlurMode });
+    popupGlassStateButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        updatePopupBlurSettings({
+          glassState: button.dataset.popupGlassState,
+        });
+      });
+    });
+
+    popupUseCustomBlurPowerToggle?.addEventListener("change", () => {
+      if (ensurePopupBlurSettings().glassState === "off") {
+        popupUseCustomBlurPowerToggle.checked = false;
+        return;
+      }
+
+      updatePopupBlurSettings({
+        customBlurEnabled: popupUseCustomBlurPowerToggle.checked,
       });
     });
 
@@ -700,7 +973,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     popupBlurPowerSlider?.addEventListener("input", () => {
-      updatePopupBlurSettings({ power: popupBlurPowerSlider.value });
+      if (ensurePopupBlurSettings().glassState === "off") return;
+      updatePopupBlurSettings({ customBlurPower: popupBlurPowerSlider.value });
     });
 
     popupBlurPrimaryInput?.addEventListener("input", () => {
@@ -745,15 +1019,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     popupBlurModal?.addEventListener("click", (event) => {
-      if (event.target === popupBlurModal) {
+      event.stopPropagation();
+    });
+
+    document.addEventListener("click", (event) => {
+      const clickedInsideMenu = popupBlurMenu?.contains(event.target);
+      const clickedInsidePopup = popupBlurModal?.contains(event.target);
+
+      if (!clickedInsideMenu && !clickedInsidePopup) {
         closePopupBlurModal();
       }
     });
 
+    window.addEventListener("resize", schedulePopupBlurPosition);
+    window.addEventListener("scroll", schedulePopupBlurPosition, true);
+
     document.addEventListener("keydown", (event) => {
       if (
         event.key === "Escape" &&
-        popupBlurModal?.classList.contains("active")
+        popupBlurMenu?.classList.contains("blur-menu-open")
       ) {
         closePopupBlurModal();
       }

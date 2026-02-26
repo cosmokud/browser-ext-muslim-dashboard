@@ -100,11 +100,7 @@ body.popup-prayer-times {
 }
 
 .popup-prayer-card .card-blur-btn {
-  transform: none;
-}
-
-.popup-prayer-card .card-blur-btn:hover {
-  transform: translateY(-1px);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .popup-prayer-card .next-prayer {
@@ -211,30 +207,36 @@ body.popup-prayer-times {
   transform: translateY(0);
 }
 
-#popupBlurModal {
-  z-index: 1200;
+.popup-blur-popup {
+  width: 320px;
+  right: -4px;
+  top: calc(100% + 8px);
+  max-height: 460px;
+  overflow-y: auto;
 }
 
-.popup-blur-modal {
-  max-width: 360px;
+.popup-blur-popup.blur-popup-portal {
+  width: 320px;
+  max-height: 460px;
+  overflow-y: auto;
 }
 
-.popup-blur-modal .modal-body {
+.popup-blur-popup::after {
+  right: 22px;
+}
+
+.popup-blur-popup .theme-palette-fields {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
 }
 
-.popup-blur-modal .theme-palette-mode-toggle {
-  margin-bottom: 0;
-}
-
-.popup-blur-modal .theme-palette-fields {
-  gap: var(--spacing-md);
-}
-
-.popup-blur-modal .blur-power-header {
-  margin-bottom: var(--spacing-xs);
+.popup-blur-popup .theme-palette-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
 }
 
 .popup-color-source-row {
@@ -257,11 +259,7 @@ body.popup-prayer-times {
   color: var(--text-secondary);
 }
 
-.popup-blur-modal .theme-palette-field {
-  align-items: center;
-}
-
-.popup-blur-modal .theme-palette-fields.popup-palette-disabled {
+.popup-blur-popup .theme-palette-fields.popup-palette-disabled {
   opacity: 0.5;
   pointer-events: none;
 }
@@ -292,4 +290,14 @@ body.popup-prayer-times {
   background: var(--glass-bg-hover);
   color: var(--text-primary);
   transform: translateY(-1px);
+}
+
+.popup-blur-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+.popup-blur-actions #popupBlurResetBtn {
+  min-width: 94px;
 }
