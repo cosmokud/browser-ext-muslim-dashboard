@@ -770,7 +770,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   grid-area: temp;
 }
 
-.compact-weather.compact-weather-detailed.show-location .compact-weather-details {
+.compact-weather.compact-weather-detailed.show-location
+  .compact-weather-details {
   grid-area: details;
   margin-left: 0;
 }
