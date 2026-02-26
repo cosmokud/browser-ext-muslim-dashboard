@@ -4,6 +4,7 @@ body {
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
+  overflow: hidden !important;
   background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
   background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
 }
@@ -33,6 +34,7 @@ body.popup-prayer-times .popup-color-reset-btn:hover {
 .popup-shell {
   height: auto;
   min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -40,7 +42,7 @@ body.popup-prayer-times .popup-color-reset-btn:hover {
 
 .popup-prayer-card {
   animation: none;
-  padding: var(--spacing-md);
+  padding: 0.72rem;
 }
 
 body.popup-prayer-times .card.popup-prayer-card {
@@ -56,7 +58,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-card .card-header {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .popup-prayer-card .card-title {
@@ -76,7 +78,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-card .location-display {
-  min-height: 36px;
+  min-height: 0;
 }
 
 .popup-card-header-actions {
@@ -131,10 +133,11 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 0.42rem;
   flex-wrap: nowrap;
   margin-top: 0;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  padding: 0.62rem 0.72rem;
 }
 
 .popup-prayer-card .popup-next-prayer-main {
@@ -152,26 +155,27 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-prayer-card .next-prayer-label,
 .popup-prayer-card .next-prayer-name {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 .popup-prayer-card .next-prayer-countdown {
   margin-left: 0;
   text-align: right;
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 .popup-prayer-card .prayer-list {
   overflow: visible;
   padding-right: 0;
+  gap: 0.34rem;
 }
 
 .popup-prayer-card .prayer-item {
-  padding: 0.7rem 0.8rem;
+  padding: 0.55rem 0.72rem;
 }
 
 .popup-prayer-card .prayer-time {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .popup-prayer-card .prayer-item.next {
