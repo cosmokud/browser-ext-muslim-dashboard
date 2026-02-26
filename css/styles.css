@@ -751,9 +751,44 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   );
 }
 
+.compact-weather.compact-weather-detailed.show-location {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-areas:
+    "icon temp details"
+    "location location details";
+  align-items: center;
+  column-gap: var(--spacing-sm);
+  row-gap: 2px;
+}
+
+.compact-weather.compact-weather-detailed.show-location .compact-weather-icon {
+  grid-area: icon;
+}
+
+.compact-weather.compact-weather-detailed.show-location .compact-weather-temp {
+  grid-area: temp;
+}
+
+.compact-weather.compact-weather-detailed.show-location .compact-weather-details {
+  grid-area: details;
+  margin-left: 0;
+}
+
 .compact-weather.compact-weather-detailed.show-location
   .compact-weather-location {
-  max-width: clamp(5.5rem, 14vw, 9rem);
+  grid-area: location;
+  max-width: clamp(6rem, 14vw, 9rem);
+  margin-left: 0;
+  padding-left: 0;
+  justify-self: start;
+  min-width: 0;
+  display: block;
+}
+
+.compact-weather.compact-weather-detailed.show-location
+  .compact-weather-location::before {
+  display: none;
 }
 
 /* Simple mode hides extra details */
