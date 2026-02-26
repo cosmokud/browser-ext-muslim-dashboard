@@ -32,7 +32,6 @@ class PrayerTimesManager {
     this.locationText = document.getElementById("locationText");
     this.nextPrayerName = document.getElementById("nextPrayerName");
     this.nextPrayerCountdown = document.getElementById("nextPrayerCountdown");
-    this.locationBtn = document.getElementById("detectLocationBtn");
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -60,11 +59,6 @@ class PrayerTimesManager {
 
     // Render prayer list based on visibility settings (immediate)
     this.renderPrayerList(settings.prayerVisibility);
-
-    // Bind location button
-    if (this.locationBtn) {
-      this.locationBtn.addEventListener("click", () => this.requestLocation());
-    }
 
     // Show loading state
     if (this.locationText) {

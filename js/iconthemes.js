@@ -811,6 +811,7 @@ class IconThemeManager {
         ".calendar-nav-btn",
         ".search-bar-btn",
         ".search-bar-engine-arrow",
+        ".location-icon",
       ].join(","),
     );
     iconOnly.forEach((el) => this._applyIconOnlyElement(el));

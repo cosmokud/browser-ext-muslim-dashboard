@@ -6579,22 +6579,6 @@ body.moment-mode
   color: var(--text-secondary);
 }
 
-/* Location refresh button */
-.location-refresh-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.location-refresh-btn:hover {
-  background: var(--glass-bg-hover);
-  transform: rotate(180deg);
-}
-
 /* Detect location button in settings */
 .detect-location-btn {
   margin-top: var(--spacing-sm);
@@ -9681,20 +9665,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .time-section.clock-style-shadow .current-time {
   text-shadow: 5px 8px 22px rgba(0, 0, 0, 0.6);
-}
-
-/* Location refresh button */
-.location-refresh-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 2px;
-  transition: transform var(--transition-fast);
-}
-
-.location-refresh-btn:hover {
-  transform: rotate(180deg);
 }
 
 /* Visibility Grid for Prayer Times settings */
