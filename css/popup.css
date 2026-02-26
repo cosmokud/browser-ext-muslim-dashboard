@@ -39,13 +39,66 @@ body.popup-prayer-times {
   font-size: 1.05rem;
 }
 
+.popup-settings-shortcuts {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--spacing-md);
+}
+
+.popup-open-settings-btn {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.popup-open-settings-btn:hover {
+  background: var(--glass-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
 .popup-prayer-card .next-prayer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: nowrap;
   margin-top: 0;
   margin-bottom: var(--spacing-md);
 }
 
+.popup-prayer-card .popup-next-prayer-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.popup-prayer-card .next-prayer-label,
+.popup-prayer-card .next-prayer-name,
 .popup-prayer-card .next-prayer-countdown {
-  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.popup-prayer-card .next-prayer-label,
+.popup-prayer-card .next-prayer-name {
+  font-size: 0.88rem;
+}
+
+.popup-prayer-card .next-prayer-countdown {
+  margin-left: 0;
+  text-align: right;
+  font-size: 1rem;
 }
 
 .popup-prayer-card .prayer-list {

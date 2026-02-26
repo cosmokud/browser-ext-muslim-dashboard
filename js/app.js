@@ -827,6 +827,7 @@ class MuslimDashboard {
       this.adhkar,
     );
     this.settings.init();
+    this.openSettingsFromUrlIfRequested();
 
     // Apply initial container width
     const settings = this.storage.getSettings();
@@ -2323,12 +2324,14 @@ class MuslimDashboard {
     if (!shouldShow) return;
 
     const nextPrayerInfo =
-      this.prayerTimes && typeof this.prayerTimes.getNextPrayerInfo === "function"
+      this.prayerTimes &&
+      typeof this.prayerTimes.getNextPrayerInfo === "function"
         ? this.prayerTimes.getNextPrayerInfo(settings.prayerVisibility)
         : null;
 
     if (this.headerNextPrayerName) {
-      this.headerNextPrayerName.textContent = nextPrayerInfo?.name || "Loading...";
+      this.headerNextPrayerName.textContent =
+        nextPrayerInfo?.name || "Loading...";
     }
 
     if (this.headerNextPrayerCountdown) {
@@ -2652,6 +2655,67 @@ class MuslimDashboard {
         }
       }
     };
+  }
+
+  getSettingsTabFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      const raw =
+        params.get("settingsTab") || params.get("openSettingsTab") || "";
+      const tab = String(raw).trim();
+      if (!tab) return "";
+
+      const allowedTabs = new Set(["location", "prayer"]);
+      return allowedTabs.has(tab) ? tab : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  clearSettingsTabQueryFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      const hadSettingsTab =
+        url.searchParams.has("settingsTab") ||
+        url.searchParams.has("openSettingsTab");
+
+      if (!hadSettingsTab) return;
+
+      url.searchParams.delete("settingsTab");
+      url.searchParams.delete("openSettingsTab");
+
+      const searchText = url.searchParams.toString();
+      const nextUrl = `${url.pathname}${searchText ? `?${searchText}` : ""}${url.hash || ""}`;
+      history.replaceState(null, "", nextUrl);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  openSettingsFromUrlIfRequested() {
+    const requestedTab = this.getSettingsTabFromUrl();
+    if (!requestedTab || !this.settings) return;
+
+    try {
+      this.settings.openModal();
+      this.settings.switchTab(requestedTab);
+
+      if (requestedTab === "location") {
+        const locationFocusEl =
+          document.getElementById("requestLocationBtn") ||
+          document.getElementById("cityInput");
+        locationFocusEl?.focus?.();
+      } else if (requestedTab === "prayer") {
+        const prayerFocusEl =
+          document.getElementById("calculationMethod") ||
+          document.getElementById("showFajr");
+        prayerFocusEl?.focus?.();
+      }
+    } catch (e) {
+      console.warn("Failed to open settings from URL:", e);
+    }
+
+    this.clearSettingsTabQueryFromUrl();
   }
 }
 

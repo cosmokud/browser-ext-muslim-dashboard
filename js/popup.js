@@ -18,8 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const prayerCard = document.getElementById("prayerTimesCard");
   const hiddenCard = document.getElementById("popupPrayerHiddenState");
   const openDashboardButton = document.getElementById("popupOpenDashboardBtn");
-  const locationDashboardShortcut = document.getElementById(
-    "popupLocationDashboardShortcut",
+  const openLocationSettingsIcon = document.getElementById(
+    "popupOpenLocationSettingsIcon",
+  );
+  const openPrayerSettingsButton = document.getElementById(
+    "popupOpenPrayerSettingsBtn",
   );
 
   const settingsStorageKey = `${storage.prefix}settings`;
@@ -28,41 +31,69 @@ document.addEventListener("DOMContentLoaded", () => {
   let prayerInitialized = false;
   let resyncIntervalId = null;
 
-  function openDashboardTab() {
-    const dashboardUrl =
-      typeof chrome !== "undefined" && chrome.runtime?.getURL
-        ? chrome.runtime.getURL("index.html")
-        : "index.html";
+  function getDashboardUrl(pathWithQuery = "index.html") {
+    return typeof chrome !== "undefined" && chrome.runtime?.getURL
+      ? chrome.runtime.getURL(pathWithQuery)
+      : pathWithQuery;
+  }
+
+  function openUrlInNewTab(url) {
+    if (!url) return;
 
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
-        chrome.tabs.create({ url: dashboardUrl });
+        chrome.tabs.create({ url });
         window.close();
         return;
       }
     } catch (error) {
-      console.warn("Could not open dashboard tab via chrome.tabs:", error);
+      console.warn("Could not open tab via chrome.tabs:", error);
     }
 
     try {
-      window.open(dashboardUrl, "_blank", "noopener,noreferrer");
+      window.open(url, "_blank", "noopener,noreferrer");
       window.close();
     } catch (error) {
-      console.warn("Could not open dashboard tab:", error);
+      console.warn("Could not open tab:", error);
     }
   }
 
-  function bindDashboardShortcut(element) {
+  function openDashboardTab() {
+    openUrlInNewTab(getDashboardUrl("index.html"));
+  }
+
+  function openDashboardSettingsTab(tabName) {
+    if (!tabName) {
+      openDashboardTab();
+      return;
+    }
+
+    const allowedTabs = new Set(["location", "prayer"]);
+    const normalizedTab = String(tabName).trim();
+
+    if (!allowedTabs.has(normalizedTab)) {
+      openDashboardTab();
+      return;
+    }
+
+    const targetUrl = getDashboardUrl(
+      `index.html?settingsTab=${encodeURIComponent(normalizedTab)}`,
+    );
+    openUrlInNewTab(targetUrl);
+  }
+
+  function bindShortcut(element, handler) {
     if (!element) return;
+    if (typeof handler !== "function") return;
 
     element.addEventListener("click", () => {
-      openDashboardTab();
+      handler();
     });
 
     element.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
-      openDashboardTab();
+      handler();
     });
   }
 
@@ -208,8 +239,13 @@ document.addEventListener("DOMContentLoaded", () => {
     resyncIntervalId = null;
   }
 
-  bindDashboardShortcut(openDashboardButton);
-  bindDashboardShortcut(locationDashboardShortcut);
+  bindShortcut(openDashboardButton, () => openDashboardSettingsTab("prayer"));
+  bindShortcut(openLocationSettingsIcon, () =>
+    openDashboardSettingsTab("location"),
+  );
+  bindShortcut(openPrayerSettingsButton, () =>
+    openDashboardSettingsTab("prayer"),
+  );
 
   window.addEventListener("storage", handleStorageChange);
 

@@ -21,11 +21,11 @@
           <div class="location-display" id="locationDisplay">
             <span
               class="location-icon"
-              id="popupLocationDashboardShortcut"
+              id="popupOpenLocationSettingsIcon"
               role="button"
               tabindex="0"
-              title="Open Dashboard"
-              aria-label="Open Dashboard"
+              title="Open Location settings"
+              aria-label="Open Location settings"
               >📍</span
             >
             <span class="location-text" id="locationText">Detecting...</span>
@@ -41,9 +41,21 @@
           </div>
         </div>
 
+        <div class="popup-settings-shortcuts">
+          <button
+            class="popup-open-settings-btn"
+            id="popupOpenPrayerSettingsBtn"
+            type="button"
+          >
+            Prayer Times Settings
+          </button>
+        </div>
+
         <div class="next-prayer" id="nextPrayer">
-          <span class="next-prayer-label">Next Prayer:</span>
-          <span class="next-prayer-name" id="nextPrayerName">--</span>
+          <div class="popup-next-prayer-main">
+            <span class="next-prayer-label">Next Prayer:</span>
+            <span class="next-prayer-name" id="nextPrayerName">--</span>
+          </div>
           <span class="next-prayer-countdown" id="nextPrayerCountdown"
             >--:--:--</span
           >
@@ -67,7 +79,7 @@
           id="popupOpenDashboardBtn"
           type="button"
         >
-          Open Dashboard
+          Open Prayer Times Settings
         </button>
       </section>
     </main>
