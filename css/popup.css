@@ -237,8 +237,33 @@ body.popup-prayer-times {
   margin-bottom: var(--spacing-xs);
 }
 
+.popup-color-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.popup-color-source-label {
+  margin: 0;
+}
+
+.popup-color-source-row .blur-power-toggle-label {
+  min-width: 7.8rem;
+  color: var(--text-secondary);
+}
+
 .popup-blur-modal .theme-palette-field {
   align-items: center;
+}
+
+.popup-blur-modal .theme-palette-fields.popup-palette-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .popup-color-field-controls {

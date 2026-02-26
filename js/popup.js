@@ -32,6 +32,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupBlurPowerWrap = document.getElementById("popupBlurPowerWrap");
   const popupBlurPowerSlider = document.getElementById("popupBlurPowerSlider");
   const popupBlurPowerValue = document.getElementById("popupBlurPowerValue");
+  const popupUseCustomColorsToggle = document.getElementById(
+    "popupUseCustomColors",
+  );
+  const popupColorSourceText = document.getElementById("popupColorSourceText");
+  const popupPaletteFields = document.getElementById("popupPaletteFields");
   const popupBlurPrimaryInput = document.getElementById(
     "popupBlurPrimaryColor",
   );
@@ -53,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupBlurDefaults = {
     mode: "on",
     power: 100,
+    colorSource: "follow",
     palette: {
       primary: "#1a5f4a",
       accent: "#d4af37",
@@ -219,51 +225,204 @@ document.addEventListener("DOMContentLoaded", () => {
     return fallback;
   }
 
+  function normalizePopupPalette(palette, fallbackPalette) {
+    const fallback = fallbackPalette || popupBlurDefaults.palette;
+
+    return {
+      primary: normalizeHexColor(palette?.primary, fallback.primary),
+      accent: normalizeHexColor(palette?.accent, fallback.accent),
+      background: normalizeHexColor(
+        palette?.background ?? palette?.bodyBg,
+        fallback.background,
+      ),
+      glassTint: normalizeHexColor(
+        palette?.glassTint ?? palette?.tintColor,
+        fallback.glassTint,
+      ),
+    };
+  }
+
   function hexToRgb(hexColor) {
     const normalized = normalizeHexColor(hexColor);
     const red = parseInt(normalized.slice(1, 3), 16);
     const green = parseInt(normalized.slice(3, 5), 16);
     const blue = parseInt(normalized.slice(5, 7), 16);
-    return { red, green, blue };
+    return { r: red, g: green, b: blue, red, green, blue };
   }
 
-  function adjustHexColor(hexColor, percent = 0) {
-    const { red, green, blue } = hexToRgb(hexColor);
-    const adjustment = clampNumber(percent, -100, 100, 0) / 100;
+  function getCurrentThemeContext() {
+    const settings = storage.getSettings();
+    const settingsTheme = settings?.theme || {};
 
-    const blendChannel = (channel) => {
-      if (adjustment >= 0) {
-        return Math.round(channel + (255 - channel) * adjustment);
-      }
-      return Math.round(channel * (1 + adjustment));
+    const themeName =
+      settingsTheme.name ||
+      themes?.getCurrentTheme?.() ||
+      ThemeManager.DEFAULT_THEME ||
+      "emerald";
+    const mode =
+      (settingsTheme.mode || themes?.getCurrentMode?.() || "dark") === "light"
+        ? "light"
+        : "dark";
+
+    const theme =
+      ThemeManager.THEMES?.[themeName] ||
+      ThemeManager.THEMES?.[ThemeManager.DEFAULT_THEME] ||
+      ThemeManager.THEMES?.emerald;
+
+    const fallbackBase = ThemeManager.THEMES?.emerald?.[mode] || {
+      primary: popupBlurDefaults.palette.primary,
+      accent: popupBlurDefaults.palette.accent,
+      bodyBg: popupBlurDefaults.palette.background,
     };
 
-    const toHex = (channel) =>
-      clampNumber(channel, 0, 255, 0).toString(16).padStart(2, "0");
+    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
+    const base = isPureTheme
+      ? ThemeManager.THEMES?.emerald?.[mode] || theme?.[mode] || fallbackBase
+      : theme?.[mode] || fallbackBase;
 
-    return `#${toHex(blendChannel(red))}${toHex(blendChannel(green))}${toHex(blendChannel(blue))}`;
-  }
-
-  function rgbaFromHex(hexColor, alpha, fallback) {
-    try {
-      const { red, green, blue } = hexToRgb(hexColor);
-      const normalizedAlpha = clampNumber(alpha, 0, 1, 0.35);
-      return `rgba(${red}, ${green}, ${blue}, ${normalizedAlpha})`;
-    } catch (e) {
-      return fallback;
-    }
+    return {
+      settings,
+      themeName,
+      mode,
+      theme,
+      base,
+      isPureTheme,
+    };
   }
 
   function getDashboardThemePalette() {
-    const fallback = popupBlurDefaults.palette;
-    const colors = themes?.getThemeColors?.() || {};
+    const context = getCurrentThemeContext();
+    const settingsPalette =
+      context.settings?.theme?.customPalettes?.[context.themeName]?.[
+        context.mode
+      ] || null;
+    const runtimePalette = themes?.getCustomPalette?.(
+      context.themeName,
+      context.mode,
+    );
+    const activePalette = settingsPalette || runtimePalette || null;
 
-    return {
-      primary: normalizeHexColor(colors?.primary, fallback.primary),
-      accent: normalizeHexColor(colors?.accent, fallback.accent),
-      background: normalizeHexColor(colors?.bodyBg, fallback.background),
-      glassTint: normalizeHexColor(colors?.primary, fallback.glassTint),
-    };
+    const defaultGlassTint = context.isPureTheme
+      ? context.themeName === "pureBlack"
+        ? "#000000"
+        : "#ffffff"
+      : activePalette?.primary || context.base?.primary;
+
+    return normalizePopupPalette(
+      {
+        primary: activePalette?.primary || context.base?.primary,
+        accent: activePalette?.accent || context.base?.accent,
+        background: activePalette?.bodyBg || context.base?.bodyBg,
+        glassTint: context.isPureTheme
+          ? activePalette?.glassTint || defaultGlassTint
+          : activePalette?.primary || context.base?.primary,
+      },
+      popupBlurDefaults.palette,
+    );
+  }
+
+  function buildThemeColorsFromPopupPalette(inputPalette) {
+    const context = getCurrentThemeContext();
+    const themeByMode = context.isPureTheme
+      ? context.base
+      : context.theme?.[context.mode] || context.base;
+    const colors = { ...themeByMode };
+    const palette = normalizePopupPalette(
+      inputPalette,
+      getDashboardThemePalette(),
+    );
+
+    if (palette.primary) {
+      colors.primary = palette.primary;
+      colors.primaryLight =
+        typeof themes._lightenColor === "function"
+          ? themes._lightenColor(palette.primary, 18)
+          : palette.primary;
+      colors.primaryDark =
+        typeof themes._darkenColor === "function"
+          ? themes._darkenColor(palette.primary, 18)
+          : palette.primary;
+    }
+
+    if (palette.accent) {
+      const lighten =
+        typeof themes._lightenColor === "function"
+          ? themes._lightenColor.bind(themes)
+          : (hex) => hex;
+      colors.accent = palette.accent;
+      colors.accentLight = lighten(palette.accent, 18);
+      colors.accentBlue = lighten(palette.accent, 10);
+      colors.settingsColor = palette.accent;
+      colors.settingsLight = lighten(palette.accent, 25);
+    }
+
+    if (palette.background) {
+      colors.bodyBg = palette.background;
+
+      const isDarkBg =
+        typeof themes._isDarkColor === "function"
+          ? themes._isDarkColor(palette.background)
+          : true;
+
+      colors.textPrimary = isDarkBg ? "#ffffff" : "#1a1a2e";
+      colors.textSecondary = isDarkBg
+        ? "rgba(255, 255, 255, 0.85)"
+        : "rgba(0, 0, 0, 0.75)";
+      colors.textMuted = isDarkBg
+        ? "rgba(255, 255, 255, 0.6)"
+        : "rgba(0, 0, 0, 0.55)";
+    }
+
+    if (context.isPureTheme) {
+      const defaultGlassTint =
+        context.themeName === "pureBlack" ? "#000000" : "#ffffff";
+      const glassTintHex = palette?.glassTint || defaultGlassTint;
+      const tintRgb =
+        typeof themes.hexToRgb === "function"
+          ? themes.hexToRgb(glassTintHex)
+          : hexToRgb(glassTintHex);
+
+      if (tintRgb) {
+        colors.glassBg = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.12)`;
+        colors.glassBgHover = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.18)`;
+        colors.glassBorder = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.2)`;
+      }
+    } else if (palette?.primary) {
+      const primaryRgb =
+        typeof themes.hexToRgb === "function"
+          ? themes.hexToRgb(colors.primary)
+          : hexToRgb(colors.primary);
+
+      if (primaryRgb) {
+        const base = context.theme?.[context.mode] || context.base;
+        const parseAlpha = (value, fallback) => {
+          const parsed =
+            typeof themes._parseRgbaAlpha === "function"
+              ? themes._parseRgbaAlpha(value)
+              : null;
+          return Number.isFinite(parsed) ? parsed : fallback;
+        };
+
+        const aBg = parseAlpha(
+          base?.glassBg,
+          context.mode === "light" ? 0.2 : 0.35,
+        );
+        const aHover = parseAlpha(
+          base?.glassBgHover,
+          context.mode === "light" ? 0.28 : 0.45,
+        );
+        const aBorder = parseAlpha(
+          base?.glassBorder,
+          context.mode === "light" ? 0.25 : 0.4,
+        );
+
+        colors.glassBg = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBg})`;
+        colors.glassBgHover = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aHover})`;
+        colors.glassBorder = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${aBorder})`;
+      }
+    }
+
+    return colors;
   }
 
   function readPopupBlurSettings() {
@@ -271,26 +430,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const stored = storage.get(popupBlurStorageKey, {});
     const mode = stored?.mode === "off" ? "off" : "on";
     const power = clampNumber(stored?.power, 0, 200, popupBlurDefaults.power);
-    const storedPalette = stored?.palette || {};
-    const legacyTintColor = stored?.tintColor;
 
-    const palette = {
-      primary: normalizeHexColor(
-        storedPalette?.primary,
-        dashboardPalette.primary,
-      ),
-      accent: normalizeHexColor(storedPalette?.accent, dashboardPalette.accent),
-      background: normalizeHexColor(
-        storedPalette?.background,
-        dashboardPalette.background,
-      ),
-      glassTint: normalizeHexColor(
-        storedPalette?.glassTint ?? legacyTintColor,
-        dashboardPalette.glassTint,
-      ),
+    const hasLegacyPaletteData =
+      stored?.colorSource == null &&
+      (stored?.palette ||
+        stored?.tintColor ||
+        stored?.primary ||
+        stored?.accent ||
+        stored?.background ||
+        stored?.bodyBg);
+
+    const storedPalette = stored?.palette || {
+      primary: stored?.primary,
+      accent: stored?.accent,
+      background: stored?.background ?? stored?.bodyBg,
+      glassTint: stored?.glassTint ?? stored?.tintColor,
     };
 
-    return { mode, power, palette };
+    const palette = normalizePopupPalette(storedPalette, dashboardPalette);
+
+    const paletteMatchesDashboard =
+      palette.primary === dashboardPalette.primary &&
+      palette.accent === dashboardPalette.accent &&
+      palette.background === dashboardPalette.background &&
+      palette.glassTint === dashboardPalette.glassTint;
+
+    let colorSource = "follow";
+    if (stored?.colorSource === "custom" || stored?.colorSource === "follow") {
+      colorSource = stored.colorSource;
+    } else if (hasLegacyPaletteData && !paletteMatchesDashboard) {
+      colorSource = "custom";
+    }
+
+    return { mode, power, colorSource, palette };
   }
 
   function ensurePopupBlurSettings() {
@@ -308,9 +480,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function applyThemeColorsToPopup(colors) {
+    if (!colors) return;
+
+    const root = document.documentElement;
+    root.style.setProperty("--primary-color", colors.primary);
+    root.style.setProperty("--primary-light", colors.primaryLight);
+    root.style.setProperty("--primary-dark", colors.primaryDark);
+    root.style.setProperty("--accent-gold", colors.accent);
+    root.style.setProperty("--accent-gold-light", colors.accentLight);
+    root.style.setProperty("--accent-blue", colors.accentBlue);
+    root.style.setProperty("--settings-color", colors.settingsColor);
+    root.style.setProperty("--settings-light", colors.settingsLight);
+    root.style.setProperty("--text-primary", colors.textPrimary);
+    root.style.setProperty("--text-secondary", colors.textSecondary);
+    root.style.setProperty("--text-muted", colors.textMuted);
+
+    root.style.setProperty("--glass-bg", colors.glassBg);
+    root.style.setProperty("--glass-bg-hover", colors.glassBgHover);
+    root.style.setProperty("--glass-border", colors.glassBorder);
+    root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
+
+    document.body.style.background = colors.bodyBg;
+    document.body.style.backgroundColor = colors.bodyBg;
+
+    const settingsRgb =
+      typeof themes.hexToRgb === "function"
+        ? themes.hexToRgb(colors.settingsColor)
+        : hexToRgb(colors.settingsColor);
+
+    if (settingsRgb) {
+      root.style.setProperty(
+        "--settings-shadow",
+        `0 4px 20px rgba(${settingsRgb.r}, ${settingsRgb.g}, ${settingsRgb.b}, 0.45)`,
+      );
+    }
+  }
+
   function syncPopupBlurModalUi() {
     const current = ensurePopupBlurSettings();
-    const palette = current.palette || getDashboardThemePalette();
+    const dashboardPalette = getDashboardThemePalette();
+    const usingCustomColors = current.colorSource === "custom";
+    const palette = usingCustomColors ? current.palette : dashboardPalette;
 
     popupBlurModeButtons.forEach((button) => {
       const isActive = button.dataset.popupBlurMode === current.mode;
@@ -331,6 +542,36 @@ document.addEventListener("DOMContentLoaded", () => {
       popupBlurPowerValue.textContent = `${current.power}%`;
     }
 
+    if (popupUseCustomColorsToggle) {
+      popupUseCustomColorsToggle.checked = usingCustomColors;
+    }
+
+    if (popupColorSourceText) {
+      popupColorSourceText.textContent = usingCustomColors
+        ? "Custom Colors"
+        : "Follow Dashboard";
+    }
+
+    if (popupPaletteFields) {
+      popupPaletteFields.classList.toggle(
+        "popup-palette-disabled",
+        !usingCustomColors,
+      );
+    }
+
+    const paletteControls = [
+      popupBlurPrimaryInput,
+      popupBlurAccentInput,
+      popupBlurBackgroundInput,
+      popupBlurTintInput,
+      ...popupBlurColorResetButtons,
+    ];
+
+    paletteControls.forEach((el) => {
+      if (!el) return;
+      el.disabled = !usingCustomColors;
+    });
+
     if (popupBlurPrimaryInput) {
       popupBlurPrimaryInput.value = palette.primary;
     }
@@ -350,64 +591,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applyPopupBlurStyles() {
     const current = ensurePopupBlurSettings();
-    const palette = current.palette || getDashboardThemePalette();
-    const root = document.documentElement;
-    const modeOff = current.mode === "off";
-    const blurMultiplier = modeOff ? 0 : current.power / 100;
+    const usingCustomColors = current.colorSource === "custom";
+    const colors = usingCustomColors
+      ? buildThemeColorsFromPopupPalette(current.palette)
+      : themes.getThemeColors();
 
-    const primary = normalizeHexColor(
-      palette.primary,
-      popupBlurDefaults.palette.primary,
-    );
-    const accent = normalizeHexColor(
-      palette.accent,
-      popupBlurDefaults.palette.accent,
-    );
-    const background = normalizeHexColor(
-      palette.background,
-      popupBlurDefaults.palette.background,
-    );
-    const glassTint = normalizeHexColor(
-      palette.glassTint,
-      popupBlurDefaults.palette.glassTint,
-    );
+    if (!colors) return;
 
-    root.style.setProperty("--primary-color", primary);
-    root.style.setProperty("--primary-light", adjustHexColor(primary, 20));
-    root.style.setProperty("--primary-dark", adjustHexColor(primary, -28));
-    root.style.setProperty("--accent-gold", accent);
-    root.style.setProperty("--accent-gold-light", adjustHexColor(accent, 18));
+    applyThemeColorsToPopup(colors);
 
-    document.body.style.background = `linear-gradient(150deg, ${adjustHexColor(background, -18)}, ${background})`;
-
-    root.style.setProperty(
-      "--glass-bg",
-      rgbaFromHex(
-        glassTint,
-        modeOff ? 0.92 : 0.34,
-        modeOff ? "rgba(26, 95, 74, 0.92)" : "rgba(26, 95, 74, 0.34)",
-      ),
+    const blurMultiplier =
+      current.mode === "off"
+        ? 0
+        : clampNumber(current.power, 0, 200, 100) / 100;
+    document.documentElement.style.setProperty(
+      "--ui-blur-multiplier",
+      String(blurMultiplier),
     );
-
-    root.style.setProperty(
-      "--glass-bg-hover",
-      rgbaFromHex(
-        glassTint,
-        modeOff ? 0.96 : 0.46,
-        modeOff ? "rgba(26, 95, 74, 0.96)" : "rgba(26, 95, 74, 0.46)",
-      ),
-    );
-
-    root.style.setProperty(
-      "--glass-border",
-      rgbaFromHex(
-        glassTint,
-        modeOff ? 0.38 : 0.42,
-        modeOff ? "rgba(26, 95, 74, 0.38)" : "rgba(26, 95, 74, 0.42)",
-      ),
-    );
-
-    root.style.setProperty("--ui-blur-multiplier", String(blurMultiplier));
 
     syncPopupBlurModalUi();
     syncActionIcons();
@@ -435,24 +635,8 @@ document.addEventListener("DOMContentLoaded", () => {
     popupBlurSettings = {
       mode: next.mode === "off" ? "off" : "on",
       power: clampNumber(next.power, 0, 200, popupBlurDefaults.power),
-      palette: {
-        primary: normalizeHexColor(
-          next.palette?.primary,
-          dashboardPalette.primary,
-        ),
-        accent: normalizeHexColor(
-          next.palette?.accent,
-          dashboardPalette.accent,
-        ),
-        background: normalizeHexColor(
-          next.palette?.background,
-          dashboardPalette.background,
-        ),
-        glassTint: normalizeHexColor(
-          next.palette?.glassTint,
-          dashboardPalette.glassTint,
-        ),
-      },
+      colorSource: next.colorSource === "custom" ? "custom" : "follow",
+      palette: normalizePopupPalette(next.palette, dashboardPalette),
     };
 
     writePopupBlurSettings();
@@ -490,6 +674,7 @@ document.addEventListener("DOMContentLoaded", () => {
       popupBlurSettings = {
         mode: popupBlurDefaults.mode,
         power: popupBlurDefaults.power,
+        colorSource: popupBlurDefaults.colorSource,
         palette: getDashboardThemePalette(),
       };
       writePopupBlurSettings();
@@ -500,6 +685,18 @@ document.addEventListener("DOMContentLoaded", () => {
       button.addEventListener("click", () => {
         updatePopupBlurSettings({ mode: button.dataset.popupBlurMode });
       });
+    });
+
+    popupUseCustomColorsToggle?.addEventListener("change", () => {
+      if (popupUseCustomColorsToggle.checked) {
+        updatePopupBlurSettings({
+          colorSource: "custom",
+          palette: getDashboardThemePalette(),
+        });
+        return;
+      }
+
+      updatePopupBlurSettings({ colorSource: "follow" });
     });
 
     popupBlurPowerSlider?.addEventListener("input", () => {
