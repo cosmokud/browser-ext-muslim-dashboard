@@ -10,6 +10,7 @@ importScripts("praytimes.js");
 const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
 const FASTING_ALARM_NAME = "md_fasting_suhur";
+const BADGE_TICK_ALARM_NAME = "md_badge_tick";
 
 // If a device sleeps, Chrome may deliver missed alarms immediately on wake.
 // Suppress notifications that are *too late* to avoid spamming.
@@ -31,6 +32,18 @@ const PRAYER_DEFS = [
   { key: "midnight", name: "Midnight" },
   { key: "qiyam", name: "Qiyam" },
 ];
+
+const DEFAULT_PRAYER_VISIBILITY = {
+  fajr: true,
+  sunrise: true,
+  duha: false,
+  dhuhr: true,
+  asr: true,
+  maghrib: true,
+  isha: true,
+  midnight: false,
+  qiyam: false,
+};
 
 function storageGet(keys) {
   return new Promise((resolve) => {
@@ -80,6 +93,20 @@ function alarmsCreate(name, alarmInfo) {
   } catch (e) {
     // ignore
   }
+}
+
+function getVisiblePrayerDefs(settings) {
+  const rawVisibility =
+    settings?.prayerVisibility && typeof settings.prayerVisibility === "object"
+      ? settings.prayerVisibility
+      : {};
+
+  const visibility = {
+    ...DEFAULT_PRAYER_VISIBILITY,
+    ...rawVisibility,
+  };
+
+  return PRAYER_DEFS.filter((def) => visibility[def.key] === true);
 }
 
 function clampNumber(value, min, max, fallback) {
@@ -371,13 +398,187 @@ async function schedulePrayerNotifications() {
   }
 }
 
-function getPrayerName(prayerKey) {
+function getPrayerName(prayerKey, referenceDate = new Date()) {
   const baseName =
     PRAYER_DEFS.find((p) => p.key === prayerKey)?.name || prayerKey;
-  if (prayerKey === "dhuhr" && new Date().getDay() === 5) {
+  if (prayerKey === "dhuhr" && referenceDate.getDay() === 5) {
     return "Jumu'ah";
   }
   return baseName;
+}
+
+function formatBadgeCountdown(totalMinutes) {
+  const minutes = clampNumber(totalMinutes, 0, 99999, 0);
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours <= 9) {
+    return `${hours}:${String(remainingMinutes).padStart(2, "0")}`;
+  }
+
+  if (hours <= 99) {
+    return `${hours}h`;
+  }
+
+  return "99+h";
+}
+
+function formatCountdownTitle(totalMinutes) {
+  const minutes = clampNumber(totalMinutes, 0, 99999, 0);
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours <= 0) {
+    return `${remainingMinutes}m`;
+  }
+
+  return `${hours}h ${String(remainingMinutes).padStart(2, "0")}m`;
+}
+
+function clearActionCountdownBadge() {
+  try {
+    chrome.action.setBadgeText({ text: "" });
+  } catch (e) {}
+
+  try {
+    chrome.action.setTitle({ title: "Muslim Dashboard" });
+  } catch (e) {}
+}
+
+function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
+  const visiblePrayers = getVisiblePrayerDefs(settings);
+  if (visiblePrayers.length === 0) return null;
+
+  const prayTimes = new PrayTimes();
+  configurePrayTimes(prayTimes, settings || {});
+
+  const timeFormat = settings?.timeFormat || "24h";
+  const coords = [location.latitude, location.longitude];
+
+  const today = new Date(
+    nowDate.getFullYear(),
+    nowDate.getMonth(),
+    nowDate.getDate()
+  );
+  const todayTimes = prayTimes.getTimes(
+    today,
+    coords,
+    "auto",
+    "auto",
+    timeFormat
+  );
+
+  for (const def of visiblePrayers) {
+    const at = parseTimeToDate(todayTimes[def.key], today);
+    if (!at) continue;
+
+    if (at.getTime() > nowDate.getTime()) {
+      return {
+        key: def.key,
+        name: getPrayerName(def.key, today),
+        at,
+      };
+    }
+  }
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowTimes = prayTimes.getTimes(
+    tomorrow,
+    coords,
+    "auto",
+    "auto",
+    timeFormat
+  );
+
+  for (const def of visiblePrayers) {
+    const at = parseTimeToDate(tomorrowTimes[def.key], tomorrow);
+    if (!at) continue;
+
+    return {
+      key: def.key,
+      name: getPrayerName(def.key, tomorrow),
+      at,
+    };
+  }
+
+  return null;
+}
+
+async function updateActionPrayerCountdownBadge() {
+  try {
+    const {
+      [STORAGE_KEYS.settings]: settingsRaw,
+      [STORAGE_KEYS.lastLocation]: lastLocationRaw,
+    } = await storageGet([STORAGE_KEYS.settings, STORAGE_KEYS.lastLocation]);
+
+    const settings =
+      settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
+    const lastLocation =
+      lastLocationRaw && typeof lastLocationRaw === "object"
+        ? lastLocationRaw
+        : null;
+
+    if (settings?.componentVisibility?.prayerTimes === false) {
+      clearActionCountdownBadge();
+      return;
+    }
+
+    if (getVisiblePrayerDefs(settings).length === 0) {
+      clearActionCountdownBadge();
+      return;
+    }
+
+    const location = pickLocation(settings, lastLocation);
+    const now = new Date();
+    const next = getNextVisiblePrayerInfo(settings, location, now);
+
+    if (!next?.at) {
+      clearActionCountdownBadge();
+      return;
+    }
+
+    const remainingMinutes = Math.max(
+      0,
+      Math.ceil((next.at.getTime() - now.getTime()) / (60 * 1000))
+    );
+
+    const badgeText = formatBadgeCountdown(remainingMinutes);
+
+    try {
+      chrome.action.setBadgeBackgroundColor({ color: "#0d3d2e" });
+    } catch (e) {}
+
+    try {
+      if (typeof chrome.action.setBadgeTextColor === "function") {
+        chrome.action.setBadgeTextColor({ color: "#ffffff" });
+      }
+    } catch (e) {}
+
+    try {
+      chrome.action.setBadgeText({ text: badgeText });
+    } catch (e) {}
+
+    try {
+      chrome.action.setTitle({
+        title: `Next ${next.name} in ${formatCountdownTitle(remainingMinutes)}`,
+      });
+    } catch (e) {}
+  } catch (e) {
+    clearActionCountdownBadge();
+  }
+}
+
+function ensureBadgeTickAlarm() {
+  const now = new Date();
+  const nextMinute = new Date(now);
+  nextMinute.setSeconds(0, 0);
+  nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+
+  alarmsCreate(BADGE_TICK_ALARM_NAME, {
+    when: nextMinute.getTime(),
+    periodInMinutes: 1,
+  });
 }
 
 function formatMinutes(n) {
@@ -764,9 +965,15 @@ async function showFastingNotification() {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   const name = alarm?.name;
+  if (name === BADGE_TICK_ALARM_NAME) {
+    updateActionPrayerCountdownBadge();
+    return;
+  }
+
   if (name === RESCHEDULE_ALARM_NAME) {
     schedulePrayerNotifications();
     scheduleFastingNotifications();
+    updateActionPrayerCountdownBadge();
     return;
   }
 
@@ -791,11 +998,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onInstalled.addListener(() => {
   schedulePrayerNotifications();
   scheduleFastingNotifications();
+  ensureBadgeTickAlarm();
+  updateActionPrayerCountdownBadge();
 });
 
 chrome.runtime.onStartup?.addListener?.(() => {
   schedulePrayerNotifications();
   scheduleFastingNotifications();
+  ensureBadgeTickAlarm();
+  updateActionPrayerCountdownBadge();
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -804,6 +1015,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (changes[STORAGE_KEYS.settings] || changes[STORAGE_KEYS.lastLocation]) {
     schedulePrayerNotifications();
     scheduleFastingNotifications();
+    updateActionPrayerCountdownBadge();
   }
 });
 
@@ -811,5 +1023,13 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 chrome.runtime.onMessage?.addListener?.((message) => {
   if (message?.type === "md_reschedule_fasting") {
     scheduleFastingNotifications();
+    return;
+  }
+
+  if (message?.type === "md_update_prayer_badge") {
+    updateActionPrayerCountdownBadge();
   }
 });
+
+ensureBadgeTickAlarm();
+updateActionPrayerCountdownBadge();
