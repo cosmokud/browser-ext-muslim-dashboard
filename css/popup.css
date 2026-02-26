@@ -167,7 +167,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-card .next-prayer-countdown {
-  margin-left: 0;
+  margin: 0px;
   text-align: right;
   font-size: 1rem;
 }
@@ -184,15 +184,6 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-prayer-card .prayer-time {
   font-size: 1rem;
-}
-
-.popup-prayer-card .prayer-item.next {
-  border: 1px solid var(--glass-border);
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
 }
 
 .popup-hidden-note {
