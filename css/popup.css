@@ -1,17 +1,14 @@
 html,
 body {
   width: 420px;
-  min-height: 560px;
-  max-height: 600px;
   background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
   background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
 }
 
 body.popup-prayer-times {
   margin: 0;
-  padding: 2px;
-  min-height: 560px;
-  overflow: hidden;
+  padding: 9px;
+  overflow: visible;
   background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
   background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
 }
@@ -28,7 +25,6 @@ body.popup-prayer-times .popup-color-reset-btn:hover {
 }
 
 .popup-shell {
-  height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -36,8 +32,6 @@ body.popup-prayer-times .popup-color-reset-btn:hover {
 
 .popup-prayer-card {
   animation: none;
-  flex: 1 1 auto;
-  min-height: 0;
   padding: var(--spacing-md);
 }
 
@@ -148,9 +142,8 @@ body.popup-prayer-times .popup-color-reset-btn:hover {
 }
 
 .popup-prayer-card .prayer-list {
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 2px;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .popup-prayer-card .prayer-item {
