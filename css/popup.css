@@ -45,16 +45,33 @@ body.popup-prayer-times {
   margin-bottom: var(--spacing-md);
 }
 
+.popup-icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1rem;
+}
+
+.popup-icon-btn .icon-theme-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-icon-btn .icon-theme-svg svg {
+  display: block;
+}
+
 .popup-open-settings-btn {
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.82rem;
-  font-weight: 500;
-  white-space: nowrap;
   transition:
     transform var(--transition-fast),
     background var(--transition-fast),
@@ -149,7 +166,7 @@ body.popup-prayer-times {
 .popup-open-dashboard-btn {
   align-self: flex-start;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: linear-gradient(
     135deg,
     var(--primary-color),
@@ -157,7 +174,6 @@ body.popup-prayer-times {
   );
   color: var(--text-primary);
   cursor: pointer;
-  padding: 0.5rem 0.85rem;
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);

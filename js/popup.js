@@ -37,29 +37,81 @@ document.addEventListener("DOMContentLoaded", () => {
       : pathWithQuery;
   }
 
-  function openUrlInNewTab(url) {
-    if (!url) return;
-
+  function closePopup() {
     try {
-      if (typeof chrome !== "undefined" && chrome.tabs?.create) {
-        chrome.tabs.create({ url });
-        window.close();
-        return;
-      }
-    } catch (error) {
-      console.warn("Could not open tab via chrome.tabs:", error);
-    }
-
-    try {
-      window.open(url, "_blank", "noopener,noreferrer");
       window.close();
-    } catch (error) {
-      console.warn("Could not open tab:", error);
+    } catch (e) {
+      // ignore
     }
   }
 
+  function openUrlInCurrentTab(url) {
+    if (!url) return;
+
+    const fallbackNavigate = () => {
+      try {
+        window.location.assign(url);
+      } catch (error) {
+        console.warn("Could not navigate to dashboard URL:", error);
+      }
+    };
+
+    const updateTabAndClose = (tabId = null) => {
+      if (!(typeof chrome !== "undefined" && chrome.tabs?.update)) {
+        fallbackNavigate();
+        return;
+      }
+
+      const onUpdated = () => {
+        const lastError = chrome.runtime?.lastError;
+        if (lastError) {
+          console.warn("Could not update active tab:", lastError.message);
+          fallbackNavigate();
+          return;
+        }
+
+        closePopup();
+      };
+
+      if (typeof tabId === "number") {
+        chrome.tabs.update(tabId, { url }, onUpdated);
+        return;
+      }
+
+      chrome.tabs.update({ url }, onUpdated);
+    };
+
+    try {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.tabs?.query &&
+        chrome.tabs?.update
+      ) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          const queryError = chrome.runtime?.lastError;
+          if (queryError) {
+            console.warn("Could not query active tab:", queryError.message);
+            updateTabAndClose(null);
+            return;
+          }
+
+          const activeTab = Array.isArray(tabs) ? tabs[0] : null;
+          const activeTabId =
+            activeTab && typeof activeTab.id === "number" ? activeTab.id : null;
+
+          updateTabAndClose(activeTabId);
+        });
+        return;
+      }
+    } catch (error) {
+      console.warn("Could not route to dashboard in current tab:", error);
+    }
+
+    fallbackNavigate();
+  }
+
   function openDashboardTab() {
-    openUrlInNewTab(getDashboardUrl("index.html"));
+    openUrlInCurrentTab(getDashboardUrl("index.html"));
   }
 
   function openDashboardSettingsTab(tabName) {
@@ -79,7 +131,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUrl = getDashboardUrl(
       `index.html?settingsTab=${encodeURIComponent(normalizedTab)}`,
     );
-    openUrlInNewTab(targetUrl);
+    openUrlInCurrentTab(targetUrl);
+  }
+
+  function syncActionIcons() {
+    const applyIcon = (element, emoji, size = 16) => {
+      if (!element) return;
+      element.innerHTML = iconThemes.getIcon(emoji, {
+        size,
+        className: "popup-action-icon",
+        inline: true,
+      });
+    };
+
+    applyIcon(openPrayerSettingsButton, "⚙️", 17);
+    applyIcon(openDashboardButton, "⚙️", 18);
+    applyIcon(openLocationSettingsIcon, "📍", 17);
   }
 
   function bindShortcut(element, handler) {
@@ -151,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         }),
       );
+      syncActionIcons();
     } catch (error) {
       console.warn("Popup icon theme sync failed:", error);
     }
