@@ -39,10 +39,25 @@ body.popup-prayer-times {
   font-size: 1.05rem;
 }
 
-.popup-settings-shortcuts {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--spacing-md);
+.popup-prayer-card .card-header {
+  align-items: flex-start;
+}
+
+.popup-card-header-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+  min-width: 0;
+}
+
+.popup-prayer-card .location-display {
+  min-height: 36px;
+}
+
+.popup-card-header-actions {
+  gap: var(--spacing-xs);
+  flex-wrap: nowrap;
 }
 
 .popup-icon-btn {
@@ -82,6 +97,14 @@ body.popup-prayer-times {
   background: var(--glass-bg-hover);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.popup-prayer-card .card-blur-btn {
+  transform: none;
+}
+
+.popup-prayer-card .card-blur-btn:hover {
+  transform: translateY(-1px);
 }
 
 .popup-prayer-card .next-prayer {
@@ -186,4 +209,62 @@ body.popup-prayer-times {
 
 .popup-open-dashboard-btn:active {
   transform: translateY(0);
+}
+
+#popupBlurModal {
+  z-index: 1200;
+}
+
+.popup-blur-modal {
+  max-width: 360px;
+}
+
+.popup-blur-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.popup-blur-modal .theme-palette-mode-toggle {
+  margin-bottom: 0;
+}
+
+.popup-blur-modal .theme-palette-fields {
+  gap: var(--spacing-md);
+}
+
+.popup-blur-modal .blur-power-header {
+  margin-bottom: var(--spacing-xs);
+}
+
+.popup-blur-modal .theme-palette-field {
+  align-items: center;
+}
+
+.popup-color-field-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.popup-color-reset-btn {
+  height: 32px;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.popup-color-reset-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }

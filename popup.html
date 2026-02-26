@@ -18,39 +18,42 @@
             <span class="card-icon">🕌</span>
             Prayer Times
           </h1>
-          <div class="location-display" id="locationDisplay">
-            <span
-              class="location-icon"
-              id="popupOpenLocationSettingsIcon"
-              role="button"
-              tabindex="0"
-              title="Open Location settings"
-              aria-label="Open Location settings"
-              >📍</span
-            >
-            <span class="location-text" id="locationText">Detecting...</span>
-            <button
-              class="location-refresh-btn"
-              id="detectLocationBtn"
-              type="button"
-              title="Refresh Location"
-              aria-label="Refresh Location"
-            >
-              🔄
-            </button>
-          </div>
-        </div>
+          <div class="popup-card-header-controls">
+            <div class="location-display" id="locationDisplay">
+              <span
+                class="location-icon"
+                id="popupOpenLocationSettingsIcon"
+                role="button"
+                tabindex="0"
+                title="Open Location settings"
+                aria-label="Open Location settings"
+                >📍</span
+              >
+              <span class="location-text" id="locationText">Detecting...</span>
+            </div>
 
-        <div class="popup-settings-shortcuts">
-          <button
-            class="popup-open-settings-btn popup-icon-btn"
-            id="popupOpenPrayerSettingsBtn"
-            type="button"
-            title="Open Prayer Times settings"
-            aria-label="Open Prayer Times settings"
-          >
-            ⚙️
-          </button>
+            <div class="card-header-actions popup-card-header-actions">
+              <button
+                class="card-blur-btn popup-icon-btn"
+                id="popupBlurMenuBtn"
+                type="button"
+                title="Popup Blur Settings"
+                aria-label="Popup Blur Settings"
+              >
+                ✨
+              </button>
+
+              <button
+                class="popup-open-settings-btn popup-icon-btn"
+                id="popupOpenPrayerSettingsBtn"
+                type="button"
+                title="Open Prayer Times settings"
+                aria-label="Open Prayer Times settings"
+              >
+                ⚙️
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="next-prayer" id="nextPrayer">
@@ -87,6 +90,173 @@
         </button>
       </section>
     </main>
+
+    <div class="modal-overlay" id="popupBlurModal" aria-hidden="true">
+      <div
+        class="modal modal-small theme-palette-modal popup-blur-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="popupBlurModalTitle"
+      >
+        <div class="modal-header">
+          <h2 class="modal-title blur-popup-title" id="popupBlurModalTitle">
+            <span class="blur-popup-title-icon">✨</span>
+            Popup Blur Mode
+          </h2>
+          <button
+            class="modal-close"
+            id="popupBlurClose"
+            type="button"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div
+            class="theme-palette-mode-toggle"
+            role="tablist"
+            aria-label="Popup blur mode"
+          >
+            <button
+              class="theme-palette-mode-btn active"
+              id="popupBlurModeOn"
+              type="button"
+              data-popup-blur-mode="on"
+            >
+              ✨ On
+            </button>
+            <button
+              class="theme-palette-mode-btn"
+              id="popupBlurModeOff"
+              type="button"
+              data-popup-blur-mode="off"
+            >
+              ⬜ Off
+            </button>
+          </div>
+
+          <div class="blur-setting-section">
+            <div class="blur-power-header">
+              <span class="blur-setting-label">Blur Power</span>
+              <span class="blur-power-value" id="popupBlurPowerValue"
+                >100%</span
+              >
+            </div>
+            <div class="blur-power-slider-wrap" id="popupBlurPowerWrap">
+              <input
+                type="range"
+                class="blur-power-slider"
+                id="popupBlurPowerSlider"
+                min="0"
+                max="200"
+                value="100"
+              />
+            </div>
+          </div>
+
+          <div class="theme-palette-fields">
+            <div class="theme-palette-field">
+              <label class="setting-label" for="popupBlurPrimaryColor"
+                >Primary</label
+              >
+              <div class="popup-color-field-controls">
+                <input
+                  type="color"
+                  id="popupBlurPrimaryColor"
+                  class="theme-palette-color"
+                />
+                <button
+                  class="popup-color-reset-btn"
+                  type="button"
+                  data-popup-reset-color="primary"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div class="theme-palette-field">
+              <label class="setting-label" for="popupBlurAccentColor"
+                >Accent</label
+              >
+              <div class="popup-color-field-controls">
+                <input
+                  type="color"
+                  id="popupBlurAccentColor"
+                  class="theme-palette-color"
+                />
+                <button
+                  class="popup-color-reset-btn"
+                  type="button"
+                  data-popup-reset-color="accent"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div class="theme-palette-field">
+              <label class="setting-label" for="popupBlurBackgroundColor"
+                >Background</label
+              >
+              <div class="popup-color-field-controls">
+                <input
+                  type="color"
+                  id="popupBlurBackgroundColor"
+                  class="theme-palette-color"
+                />
+                <button
+                  class="popup-color-reset-btn"
+                  type="button"
+                  data-popup-reset-color="background"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div class="theme-palette-field">
+              <label class="setting-label" for="popupBlurTintColor"
+                >Glass Tint</label
+              >
+              <div class="popup-color-field-controls">
+                <input
+                  type="color"
+                  id="popupBlurTintColor"
+                  class="theme-palette-color"
+                />
+                <button
+                  class="popup-color-reset-btn"
+                  type="button"
+                  data-popup-reset-color="glassTint"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            class="modal-btn cancel-btn"
+            id="popupBlurResetBtn"
+            type="button"
+          >
+            Reset All
+          </button>
+          <button
+            class="modal-btn save-btn"
+            id="popupBlurDoneBtn"
+            type="button"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script src="js/praytimes.js"></script>
     <script src="js/storage.js"></script>
