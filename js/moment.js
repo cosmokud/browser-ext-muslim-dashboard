@@ -104,7 +104,36 @@ class MomentModeManager {
         getElement: () => document.querySelector(".time-section"),
         slotId: "momentClockSlot",
       },
+      {
+        key: "dateDisplay",
+        getElement: () => document.getElementById("dateDisplay"),
+        slotId: "momentClockSlot",
+      },
     ];
+  }
+
+  placeDateDisplayInClock(dateDisplayEl, clockSlot) {
+    if (!dateDisplayEl || !clockSlot) return;
+
+    const timeSection = clockSlot.querySelector(".time-section");
+    if (!timeSection) {
+      clockSlot.appendChild(dateDisplayEl);
+      return;
+    }
+
+    const timeMainRow = timeSection.querySelector(".time-main-row");
+    const nextPrayer = timeSection.querySelector("#headerNextPrayer");
+
+    if (timeMainRow) {
+      if (nextPrayer && nextPrayer.parentNode === timeSection) {
+        timeSection.insertBefore(dateDisplayEl, nextPrayer);
+      } else {
+        timeMainRow.insertAdjacentElement("afterend", dateDisplayEl);
+      }
+      return;
+    }
+
+    timeSection.appendChild(dateDisplayEl);
   }
 
   captureOriginalPosition(key, element) {
@@ -123,6 +152,12 @@ class MomentModeManager {
       if (!element || !slot) return;
 
       this.captureOriginalPosition(binding.key, element);
+
+      if (binding.key === "dateDisplay") {
+        this.placeDateDisplayInClock(element, slot);
+        return;
+      }
+
       slot.appendChild(element);
     });
   }

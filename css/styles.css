@@ -3270,6 +3270,25 @@ body.moment-mode
   pointer-events: auto;
 }
 
+body.moment-mode #momentPinnedAppsSlot::before,
+body.moment-mode #momentSearchSlot::before {
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+body.moment-mode
+  .moment-mode-column--middle:hover
+  #momentPinnedAppsSlot::before,
+body.moment-mode .moment-mode-column--middle:hover #momentSearchSlot::before,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentPinnedAppsSlot::before,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentSearchSlot::before {
+  opacity: 1;
+}
+
 body.moment-mode #momentQuoteSlot > #quoteSection {
   opacity: 1;
   transform: none;
@@ -3282,6 +3301,11 @@ body.moment-mode #momentQuoteSlot > #quoteSection {
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;
+  }
+
+  body.moment-mode #momentPinnedAppsSlot::before,
+  body.moment-mode #momentSearchSlot::before {
+    opacity: 1 !important;
   }
 }
 
@@ -3317,8 +3341,16 @@ body.moment-mode
   display: block;
   position: absolute;
   z-index: -1;
-  inset: -16px -10px;
-  background-color: rgba(0, 0, 0, 0.3);
+  inset: -34px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 0, 0, 0.32) 0%,
+    rgba(0, 0, 0, 0.24) 28%,
+    rgba(0, 0, 0, 0.16) 52%,
+    rgba(0, 0, 0, 0.08) 72%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  border-radius: 999px;
   -webkit-filter: blur(40px);
   -moz-filter: blur(40px);
   -ms-filter: blur(40px);
@@ -3330,14 +3362,6 @@ body.moment-mode
   -o-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
   pointer-events: none;
-}
-
-body.moment-mode .moment-mode-layout #momentSearchSlot::before {
-  -webkit-filter: blur(10px);
-  -moz-filter: blur(10px);
-  -ms-filter: blur(10px);
-  -o-filter: blur(10px);
-  filter: blur(10px);
 }
 
 body.moment-mode
@@ -3460,8 +3484,15 @@ body.moment-mode #momentClockSlot > .time-section {
   width: auto;
 }
 
-body.moment-mode #momentClockSlot .header-next-prayer {
+body.moment-mode #momentClockSlot > .time-section > #dateDisplay {
   margin-top: var(--spacing-sm);
+  margin-bottom: 0;
+  text-align: right;
+  align-self: flex-end;
+}
+
+body.moment-mode #momentClockSlot .header-next-prayer {
+  display: none !important;
 }
 
 body.moment-mode .moment-mode-exit-btn,
