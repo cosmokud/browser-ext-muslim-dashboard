@@ -3186,7 +3186,7 @@ body.moment-mode .moment-mode-layout {
   flex-direction: column;
   padding: var(--spacing-xl);
   gap: var(--spacing-md);
-  overflow-x: hidden;
+  overflow-x: visible;
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -3276,6 +3276,25 @@ body.moment-mode #momentQuoteSlot > #quoteSection {
   pointer-events: auto;
 }
 
+body.moment-mode #momentPinnedAppsSlot::before,
+body.moment-mode #momentSearchSlot::before {
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+body.moment-mode
+  .moment-mode-column--middle:hover
+  #momentPinnedAppsSlot::before,
+body.moment-mode .moment-mode-column--middle:hover #momentSearchSlot::before,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentPinnedAppsSlot::before,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentSearchSlot::before {
+  opacity: 1;
+}
+
 @media (hover: none) {
   body.moment-mode #momentPinnedAppsSlot > #pinnedAppsSection,
   body.moment-mode #momentSearchSlot > #searchBarSection {
@@ -3283,11 +3302,74 @@ body.moment-mode #momentQuoteSlot > #quoteSection {
     transform: none !important;
     pointer-events: auto !important;
   }
+
+  body.moment-mode #momentPinnedAppsSlot::before,
+  body.moment-mode #momentSearchSlot::before {
+    opacity: 1 !important;
+  }
 }
 
 body.moment-mode .moment-mode-layout {
   --moment-text-shadow:
     0 1px 6px rgba(0, 0, 0, 0.58), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --moment-halo-overscan: 160vmax;
+  isolation: isolate;
+}
+
+body.moment-mode .moment-mode-column {
+  position: relative;
+  z-index: 10;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot
+  ) {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  z-index: 20;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot
+  )::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  z-index: 21;
+  inset: calc(-1 * var(--moment-halo-overscan));
+  background: radial-gradient(
+    ellipse 620px 460px at 50% 50%,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.22) 30%,
+    rgba(0, 0, 0, 0.14) 56%,
+    rgba(0, 0, 0, 0.07) 76%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  border-radius: 99999px;
+  -webkit-filter: blur(40px);
+  -moz-filter: blur(40px);
+  -ms-filter: blur(40px);
+  -o-filter: blur(40px);
+  filter: blur(40px);
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  pointer-events: none;
 }
 
 body.moment-mode
@@ -3300,47 +3382,7 @@ body.moment-mode
     #momentSearchSlot > #searchBarSection
   ) {
   position: relative;
-  isolation: isolate;
-  z-index: 1;
-}
-
-body.moment-mode
-  .moment-mode-layout
-  :is(
-    #momentPrayerSlot > #prayerTimesCard,
-    #momentFastingSlot > #fastingCard,
-    #momentQuoteSlot > #quoteSection,
-    #momentPinnedAppsSlot > #pinnedAppsSection,
-    #momentSearchSlot > #searchBarSection
-  )::before {
-  content: " ";
-  display: block;
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 50%;
-  width: calc(100% + 240px);
-  height: calc(100% + 200px);
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.22) 30%,
-    rgba(0, 0, 0, 0.14) 56%,
-    rgba(0, 0, 0, 0.07) 76%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  border-radius: 999px;
-  -webkit-filter: blur(40px);
-  -moz-filter: blur(40px);
-  -ms-filter: blur(40px);
-  -o-filter: blur(40px);
-  filter: blur(40px);
-  -webkit-transform: translate3d(-50%, -50%, 0);
-  -moz-transform: translate3d(-50%, -50%, 0);
-  -ms-transform: translate3d(-50%, -50%, 0);
-  -o-transform: translate3d(-50%, -50%, 0);
-  transform: translate3d(-50%, -50%, 0);
-  pointer-events: none;
+  z-index: 22;
 }
 
 body.moment-mode
