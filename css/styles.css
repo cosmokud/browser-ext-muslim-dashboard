@@ -3186,8 +3186,8 @@ body.moment-mode .moment-mode-layout {
   flex-direction: column;
   padding: var(--spacing-xl);
   gap: var(--spacing-md);
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-x: visible;
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
@@ -3301,7 +3301,8 @@ body.moment-mode
     #momentFastingSlot,
     #momentQuoteSlot,
     #momentPinnedAppsSlot,
-    #momentSearchSlot
+    #momentSearchSlot,
+    #momentClockSlot
   ) {
   position: relative;
   isolation: isolate;
@@ -3312,11 +3313,43 @@ body.moment-mode
 body.moment-mode
   .moment-mode-layout
   :is(
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot,
+    #momentClockSlot
+  )::before {
+  content: "";
+  position: absolute;
+  z-index: 21;
+  top: 50%;
+  left: 50%;
+  width: 92%;
+  height: 76%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.56) 0%,
+    rgba(0, 0, 0, 0.4) 34%,
+    rgba(0, 0, 0, 0.22) 62%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-filter: blur(calc(32px * var(--ui-blur-multiplier, 1)));
+  filter: blur(calc(32px * var(--ui-blur-multiplier, 1)));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
     #momentPrayerSlot > #prayerTimesCard,
     #momentFastingSlot > #fastingCard,
     #momentQuoteSlot > #quoteSection,
     #momentPinnedAppsSlot > #pinnedAppsSection,
-    #momentSearchSlot > #searchBarSection
+    #momentSearchSlot > #searchBarSection,
+    #momentClockSlot > .time-section
   ) {
   position: relative;
   z-index: 22;
