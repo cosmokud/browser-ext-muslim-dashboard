@@ -3229,7 +3229,45 @@ body.moment-mode #momentFastingSlot > #fastingCard {
 
 body.moment-mode .moment-mode-layout {
   --moment-text-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.82), 0 1px 4px rgba(0, 0, 0, 0.68);
+    0 1px 6px rgba(0, 0, 0, 0.58), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --moment-component-halo: rgba(0, 0, 0, 0.34);
+  --moment-component-halo-blur: 34px;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    #momentPrayerSlot > #prayerTimesCard,
+    #momentFastingSlot > #fastingCard,
+    #momentQuoteSlot > #quoteSection,
+    #momentPinnedAppsSlot > #pinnedAppsSection,
+    #momentSearchSlot > #searchBarSection,
+    #momentClockSlot > .time-section
+  ) {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    #momentPrayerSlot > #prayerTimesCard,
+    #momentFastingSlot > #fastingCard,
+    #momentQuoteSlot > #quoteSection,
+    #momentPinnedAppsSlot > #pinnedAppsSection,
+    #momentSearchSlot > #searchBarSection,
+    #momentClockSlot > .time-section
+  )::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -16px -10px;
+  background: var(--moment-component-halo);
+  filter: blur(var(--moment-component-halo-blur));
+  -webkit-filter: blur(var(--moment-component-halo-blur));
+  transform: translate3d(0, 0, 0);
+  pointer-events: none;
 }
 
 body.moment-mode
