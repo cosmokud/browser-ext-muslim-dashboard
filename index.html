@@ -41,15 +41,9 @@
         aria-label="Left sidebar"
       >
         <div class="sidebar-zone count-0" id="sidebarLeftZone"></div>
-
-        <!-- Moment Mode: Left Panel Container (Prayer Times will be moved here) -->
-        <div class="moment-mode-left" id="momentModeLeft"></div>
       </aside>
 
       <div class="sidebar-middle" id="sidebarMiddle">
-        <!-- Moment Mode: Middle Panel Container (Quote, Pinned Apps, Search will be moved here) -->
-        <div class="moment-mode-middle" id="momentModeMiddle"></div>
-
         <!-- Main Container -->
         <div class="main-container">
           <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
@@ -1933,21 +1927,25 @@
         aria-label="Right sidebar"
       >
         <div class="sidebar-zone count-0" id="sidebarRightZone"></div>
-
-        <!-- Moment Mode: Right Panel (Clock and Date) -->
-        <div class="moment-mode-right" id="momentModeRight">
-          <div class="moment-clock">
-            <span id="momentClockTime">00:00</span>
-            <span class="moment-clock-seconds" id="momentClockSeconds"
-              >:00</span
-            >
-            <span class="moment-clock-ampm" id="momentClockAmPm"></span>
-          </div>
-          <div class="moment-date" id="momentDate">
-            <!-- Date will be dynamically populated -->
-          </div>
-        </div>
       </aside>
+    </div>
+
+    <!-- Moment Mode Layout -->
+    <div class="moment-mode-layout" id="momentModeLayout" aria-hidden="true">
+      <section class="moment-mode-column moment-mode-column--left">
+        <div class="moment-slot" id="momentPrayerSlot"></div>
+        <div class="moment-slot" id="momentFastingSlot"></div>
+      </section>
+
+      <section class="moment-mode-column moment-mode-column--middle">
+        <div class="moment-slot" id="momentQuoteSlot"></div>
+        <div class="moment-slot" id="momentPinnedAppsSlot"></div>
+        <div class="moment-slot" id="momentSearchSlot"></div>
+      </section>
+
+      <section class="moment-mode-column moment-mode-column--right">
+        <div class="moment-slot" id="momentClockSlot"></div>
+      </section>
     </div>
 
     <!-- Moment Mode: Back to Grid Button (Bottom Center) -->
@@ -2147,6 +2145,7 @@
             <button class="settings-tab" data-tab="visibility">
               🧩 Components
             </button>
+            <button class="settings-tab" data-tab="moment">🕰️ Moment</button>
             <button class="settings-tab" data-tab="pinnedApps">
               📌 Pinned Apps
             </button>
@@ -3354,6 +3353,67 @@
                   <span class="visibility-icon">📖</span>
                   <span class="visibility-name">Pocket Quran</span>
                   <input type="checkbox" id="visibilityPocketQuran" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Moment Settings -->
+          <div class="settings-panel" id="momentPanel">
+            <div class="setting-group">
+              <label class="setting-label">Show/Hide Moment Components</label>
+              <p class="setting-hint">
+                These controls are synchronized with Components and Header
+                settings.
+              </p>
+              <div class="visibility-toggle-list">
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🕌</span>
+                  <span class="visibility-name">Prayer Times</span>
+                  <input
+                    type="checkbox"
+                    id="momentVisibilityPrayerTimes"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🥗</span>
+                  <span class="visibility-name">Fasting Times</span>
+                  <input type="checkbox" id="momentVisibilityFasting" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">💬</span>
+                  <span class="visibility-name">Quotes</span>
+                  <input type="checkbox" id="momentVisibilityQuotes" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">📌</span>
+                  <span class="visibility-name">Pinned Apps</span>
+                  <input
+                    type="checkbox"
+                    id="momentVisibilityQuickPins"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🔎</span>
+                  <span class="visibility-name">Search Bar</span>
+                  <input
+                    type="checkbox"
+                    id="momentVisibilitySearchBar"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🕐</span>
+                  <span class="visibility-name">Clock</span>
+                  <input type="checkbox" id="momentVisibilityClock" checked />
                   <span class="toggle-switch"></span>
                 </label>
               </div>
@@ -5934,6 +5994,7 @@
     <script src="js/notes.js"></script>
     <script src="js/pocketquran.js"></script>
     <script src="js/contentsearch.js"></script>
+    <script src="js/moment.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

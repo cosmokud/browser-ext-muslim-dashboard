@@ -326,6 +326,27 @@ class SettingsManager extends BaseManager {
     this.visibilityPocketQuran = document.getElementById(
       "visibilityPocketQuran",
     );
+
+    // Moment tab visibility controls (mirrors shared settings)
+    this.momentVisibilityPrayerTimes = document.getElementById(
+      "momentVisibilityPrayerTimes",
+    );
+    this.momentVisibilityFasting = document.getElementById(
+      "momentVisibilityFasting",
+    );
+    this.momentVisibilityQuotes = document.getElementById(
+      "momentVisibilityQuotes",
+    );
+    this.momentVisibilityQuickPins = document.getElementById(
+      "momentVisibilityQuickPins",
+    );
+    this.momentVisibilitySearchBar = document.getElementById(
+      "momentVisibilitySearchBar",
+    );
+    this.momentVisibilityClock = document.getElementById(
+      "momentVisibilityClock",
+    );
+
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]',
     );
@@ -1118,6 +1139,7 @@ class SettingsManager extends BaseManager {
    */
   loadVisibilitySettings(settings) {
     const visibility = settings.componentVisibility || {};
+    const heading = settings.heading || {};
 
     if (this.visibilityHeader)
       this.visibilityHeader.checked = visibility.header !== false;
@@ -1152,6 +1174,20 @@ class SettingsManager extends BaseManager {
       this.visibilityNotes.checked = visibility.notes !== false;
     if (this.visibilityPocketQuran)
       this.visibilityPocketQuran.checked = visibility.pocketQuran !== false;
+
+    if (this.momentVisibilityPrayerTimes)
+      this.momentVisibilityPrayerTimes.checked =
+        visibility.prayerTimes !== false;
+    if (this.momentVisibilityFasting)
+      this.momentVisibilityFasting.checked = visibility.fasting !== false;
+    if (this.momentVisibilityQuotes)
+      this.momentVisibilityQuotes.checked = visibility.quotes !== false;
+    if (this.momentVisibilityQuickPins)
+      this.momentVisibilityQuickPins.checked = visibility.quickPins !== false;
+    if (this.momentVisibilitySearchBar)
+      this.momentVisibilitySearchBar.checked = visibility.searchBar !== false;
+    if (this.momentVisibilityClock)
+      this.momentVisibilityClock.checked = heading.showClock !== false;
   }
 
   _clearCitySearchResults(container) {
@@ -5152,41 +5188,197 @@ class SettingsManager extends BaseManager {
       });
     }
 
-    // Live preview for top components visibility (Prayer, Hijri, Qibla)
-    const previewHandler = () => {
-      const prayerChecked = this.visibilityPrayerTimes?.checked ?? true;
-      const hijriChecked = this.visibilityHijriCalendar?.checked ?? true;
-      const qiblaChecked = this.visibilityQiblaDirection?.checked ?? true;
+    const applyLiveDashboardVisibility = () => {
+      const setPreviewVisibility = (el, shouldShow) => {
+        if (!el) return;
+        el.style.display = shouldShow ? "" : "none";
+        el.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+      };
 
-      const prayerCard = document.getElementById("prayerTimesCard");
-      const calCard = document.getElementById("calendarCard");
-      const qiblaCard = document.getElementById("qiblaCard");
+      const componentState = {
+        header: this.visibilityHeader?.checked ?? true,
+        quickPins: this.visibilityQuickPins?.checked ?? true,
+        searchBar: this.visibilitySearchBar?.checked ?? true,
+        quotes: this.visibilityQuotes?.checked ?? true,
+        prayerTimes: this.visibilityPrayerTimes?.checked ?? true,
+        hijriCalendar: this.visibilityHijriCalendar?.checked ?? true,
+        qiblaDirection: this.visibilityQiblaDirection?.checked ?? true,
+        weather: this.visibilityWeather?.checked ?? true,
+        lunarPhase: this.visibilityLunarPhase?.checked ?? true,
+        fasting: this.visibilityFasting?.checked ?? true,
+        flashcards: this.visibilityFlashcards?.checked ?? true,
+        adhkar: this.visibilityAdhkar?.checked ?? true,
+        hadith: this.visibilityHadith?.checked ?? true,
+        todoList: this.visibilityTodoList?.checked ?? true,
+        notes: this.visibilityNotes?.checked ?? true,
+        pocketQuran: this.visibilityPocketQuran?.checked ?? true,
+      };
 
-      if (prayerCard) {
-        prayerCard.style.display = prayerChecked ? "" : "none";
-        prayerCard.setAttribute(
-          "aria-hidden",
-          prayerChecked ? "false" : "true",
-        );
+      const showClock =
+        (this.showClock?.checked ?? true) && componentState.header === true;
+
+      setPreviewVisibility(
+        document.querySelector(".header"),
+        componentState.header,
+      );
+      setPreviewVisibility(
+        document.getElementById("pinnedAppsSection"),
+        componentState.quickPins,
+      );
+      setPreviewVisibility(
+        document.getElementById("searchBarSection"),
+        componentState.searchBar,
+      );
+      setPreviewVisibility(
+        document.getElementById("quoteSection"),
+        componentState.quotes,
+      );
+      setPreviewVisibility(
+        document.getElementById("prayerTimesCard"),
+        componentState.prayerTimes,
+      );
+      setPreviewVisibility(
+        document.getElementById("calendarCard"),
+        componentState.hijriCalendar,
+      );
+      setPreviewVisibility(
+        document.getElementById("qiblaCard"),
+        componentState.qiblaDirection,
+      );
+      setPreviewVisibility(
+        document.getElementById("weatherCard"),
+        componentState.weather,
+      );
+      setPreviewVisibility(
+        document.getElementById("lunarPhaseCard"),
+        componentState.lunarPhase,
+      );
+      setPreviewVisibility(
+        document.getElementById("fastingCard"),
+        componentState.fasting,
+      );
+      setPreviewVisibility(
+        document.getElementById("flashcardCard"),
+        componentState.flashcards,
+      );
+      setPreviewVisibility(
+        document.getElementById("adhkarCard"),
+        componentState.adhkar,
+      );
+      setPreviewVisibility(
+        document.getElementById("hadithCard"),
+        componentState.hadith,
+      );
+      setPreviewVisibility(
+        document.getElementById("todoCard"),
+        componentState.todoList,
+      );
+      setPreviewVisibility(
+        document.getElementById("notesCard"),
+        componentState.notes,
+      );
+      setPreviewVisibility(
+        document.getElementById("pocketQuranCard"),
+        componentState.pocketQuran,
+      );
+
+      const timeSection = document.querySelector(".time-section");
+      if (timeSection) {
+        timeSection.style.display = showClock ? "" : "none";
+        timeSection.setAttribute("aria-hidden", showClock ? "false" : "true");
       }
-      if (calCard) {
-        calCard.style.display = hijriChecked ? "" : "none";
-        calCard.setAttribute("aria-hidden", hijriChecked ? "false" : "true");
-      }
-      if (qiblaCard) {
-        qiblaCard.style.display = qiblaChecked ? "" : "none";
-        qiblaCard.setAttribute("aria-hidden", qiblaChecked ? "false" : "true");
-      }
+
+      const setSlotPreview = (slotId, shouldShow) => {
+        const slot = document.getElementById(slotId);
+        if (!slot) return;
+        slot.style.display = shouldShow ? "" : "none";
+        slot.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+      };
+
+      setSlotPreview("momentPrayerSlot", componentState.prayerTimes);
+      setSlotPreview("momentFastingSlot", componentState.fasting);
+      setSlotPreview("momentQuoteSlot", componentState.quotes);
+      setSlotPreview("momentPinnedAppsSlot", componentState.quickPins);
+      setSlotPreview("momentSearchSlot", componentState.searchBar);
+      setSlotPreview("momentClockSlot", showClock);
+
+      try {
+        document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+      } catch (e) {}
     };
 
+    const bindMirroredVisibilityCheckboxes = (
+      primary,
+      mirror,
+      onAfterSync = null,
+    ) => {
+      if (!primary || !mirror) return;
+
+      primary.addEventListener("change", () => {
+        mirror.checked = primary.checked;
+        if (typeof onAfterSync === "function") onAfterSync();
+      });
+
+      mirror.addEventListener("change", () => {
+        primary.checked = mirror.checked;
+        if (typeof onAfterSync === "function") onAfterSync();
+      });
+    };
+
+    bindMirroredVisibilityCheckboxes(
+      this.visibilityPrayerTimes,
+      this.momentVisibilityPrayerTimes,
+      applyLiveDashboardVisibility,
+    );
+    bindMirroredVisibilityCheckboxes(
+      this.visibilityFasting,
+      this.momentVisibilityFasting,
+      applyLiveDashboardVisibility,
+    );
+    bindMirroredVisibilityCheckboxes(
+      this.visibilityQuotes,
+      this.momentVisibilityQuotes,
+      applyLiveDashboardVisibility,
+    );
+    bindMirroredVisibilityCheckboxes(
+      this.visibilityQuickPins,
+      this.momentVisibilityQuickPins,
+      applyLiveDashboardVisibility,
+    );
+    bindMirroredVisibilityCheckboxes(
+      this.visibilitySearchBar,
+      this.momentVisibilitySearchBar,
+      applyLiveDashboardVisibility,
+    );
+    bindMirroredVisibilityCheckboxes(
+      this.showClock,
+      this.momentVisibilityClock,
+      () => {
+        this.toggleClockOptions(this.showClock?.checked === true);
+        applyLiveDashboardVisibility();
+      },
+    );
+
     [
+      this.visibilityHeader,
+      this.visibilityQuickPins,
+      this.visibilitySearchBar,
+      this.visibilityQuotes,
       this.visibilityPrayerTimes,
       this.visibilityHijriCalendar,
       this.visibilityQiblaDirection,
+      this.visibilityWeather,
+      this.visibilityLunarPhase,
+      this.visibilityFasting,
+      this.visibilityFlashcards,
+      this.visibilityAdhkar,
+      this.visibilityHadith,
+      this.visibilityTodoList,
+      this.visibilityNotes,
+      this.visibilityPocketQuran,
     ].forEach((el) => {
-      if (el) {
-        el.addEventListener("change", previewHandler);
-      }
+      if (!el) return;
+      el.addEventListener("change", applyLiveDashboardVisibility);
     });
 
     // Change background now

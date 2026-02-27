@@ -35,6 +35,7 @@ class MuslimDashboard {
     this.fasting = null; // Will be initialized after DOM
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
+    this.momentMode = null; // Will be initialized after DOM
 
     // Unified content search modal (Quotes / Adhkar / Hadith / Notes / Todo)
     this.contentSearch = null;
@@ -47,7 +48,9 @@ class MuslimDashboard {
     // Dashboard mode coordination (ensures modes are mutually exclusive)
     this._setSidebarModeEnabled = null;
     this._setQuranFocusModeEnabled = null;
+    this._setMomentModeEnabled = null;
     this._dashboardModeBeforeFocus = "normal";
+    this._momentModeActive = false;
 
     // Settings will be initialized after other managers
     this.settings = null;
@@ -1895,342 +1898,17 @@ class MuslimDashboard {
   }
 
   /**
-   * Initialize Moment Mode
-   * Minimalist layout with transparent components
-   * Moves actual components (prayerTimesCard, quoteSection, pinnedAppsSection, searchBarSection)
-   * into moment mode containers with transparent styling
+   * Initialize Moment Mode manager
    */
   initMomentMode() {
-    const momentBtn = document.getElementById("momentModeBtn");
-    if (!momentBtn) return;
+    if (typeof window.MomentModeManager !== "function") return;
 
-    this._momentModeActive = false;
-    this._momentModeUpdateInterval = null;
+    this.momentMode = new window.MomentModeManager(this);
+    this.momentMode.init();
 
-    // Store original parent references for restoring components
-    this._momentModeOriginalParents = {};
-
-    const exitBtn = document.getElementById("momentModeExitBtn");
-
-    const updateMomentClock = () => {
-      const now = new Date();
-      const settings = this.storage.getSettings();
-      const headingSettings = settings.heading || {};
-      const clockFormat =
-        headingSettings.clockFormat || settings.timeFormat || "24h";
-      const is24h = clockFormat === "24h";
-      const showAmPm = headingSettings.showAmPm !== false;
-
-      let hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-
-      const clockTime = document.getElementById("momentClockTime");
-      const clockSeconds = document.getElementById("momentClockSeconds");
-      const clockAmPm = document.getElementById("momentClockAmPm");
-
-      if (!is24h) {
-        const suffix = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-        if (clockTime) clockTime.textContent = `${hours}:${minutes}`;
-        if (clockSeconds) clockSeconds.textContent = `:${seconds}`;
-        if (clockAmPm) {
-          clockAmPm.textContent = showAmPm ? suffix : "";
-          clockAmPm.style.display = showAmPm ? "" : "none";
-        }
-      } else {
-        if (clockTime)
-          clockTime.textContent = `${String(hours).padStart(2, "0")}:${minutes}`;
-        if (clockSeconds) clockSeconds.textContent = `:${seconds}`;
-        if (clockAmPm) {
-          clockAmPm.textContent = "";
-          clockAmPm.style.display = "none";
-        }
-      }
-    };
-
-    const updateMomentDate = () => {
-      const now = new Date();
-      const settings = this.storage.getSettings();
-
-      // Format Hijri date
-      const hijriDate = this.hijri.toHijri(now, settings.hijriAdjustment || 0);
-      const hijriText = this.hijri.format(hijriDate, "full", "en");
-
-      // Format Gregorian date
-      const gregorianOptions = {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      };
-      const gregorianText = now.toLocaleDateString("en-US", gregorianOptions);
-
-      const momentDate = document.getElementById("momentDate");
-      if (momentDate) {
-        momentDate.innerHTML = `${hijriText} AH<br>${gregorianText}`;
-      }
-    };
-
-    const moveComponentsToMomentMode = () => {
-      const momentLeft = document.getElementById("momentModeLeft");
-      const momentMiddle = document.getElementById("momentModeMiddle");
-
-      // Components to move
-      const prayerTimesCard = document.getElementById("prayerTimesCard");
-      const quoteSection = document.getElementById("quoteSection");
-      const pinnedAppsSection = document.getElementById("pinnedAppsSection");
-      const searchBarSection = document.getElementById("searchBarSection");
-
-      // Store original parents and next siblings for restoration
-      if (prayerTimesCard) {
-        this._momentModeOriginalParents.prayerTimesCard = {
-          parent: prayerTimesCard.parentElement,
-          nextSibling: prayerTimesCard.nextElementSibling,
-        };
-        if (momentLeft) {
-          momentLeft.appendChild(prayerTimesCard);
-        }
-      }
-
-      if (quoteSection) {
-        this._momentModeOriginalParents.quoteSection = {
-          parent: quoteSection.parentElement,
-          nextSibling: quoteSection.nextElementSibling,
-        };
-        if (momentMiddle) {
-          // Create a wrapper container for the quote section to allow centering
-          // while the quote maintains its own compact width
-          const quoteWrapper = document.createElement("div");
-          quoteWrapper.className = "moment-quote-wrapper";
-          quoteWrapper.id = "momentQuoteWrapper";
-          quoteWrapper.appendChild(quoteSection);
-          momentMiddle.appendChild(quoteWrapper);
-        }
-      }
-
-      if (pinnedAppsSection) {
-        this._momentModeOriginalParents.pinnedAppsSection = {
-          parent: pinnedAppsSection.parentElement,
-          nextSibling: pinnedAppsSection.nextElementSibling,
-        };
-        if (momentMiddle) {
-          momentMiddle.appendChild(pinnedAppsSection);
-        }
-      }
-
-      if (searchBarSection) {
-        this._momentModeOriginalParents.searchBarSection = {
-          parent: searchBarSection.parentElement,
-          nextSibling: searchBarSection.nextElementSibling,
-        };
-        if (momentMiddle) {
-          // Create a wrapper container for the search bar to allow centering
-          // while the search bar maintains its own compact width
-          const searchWrapper = document.createElement("div");
-          searchWrapper.className = "moment-search-wrapper";
-          searchWrapper.id = "momentSearchWrapper";
-          searchWrapper.appendChild(searchBarSection);
-          momentMiddle.appendChild(searchWrapper);
-        }
-      }
-    };
-
-    const restoreComponentsFromMomentMode = () => {
-      // Restore each component to its original location
-      const restoreComponent = (id) => {
-        const component = document.getElementById(id);
-        const original = this._momentModeOriginalParents[id];
-        if (component && original && original.parent) {
-          if (original.nextSibling) {
-            original.parent.insertBefore(component, original.nextSibling);
-          } else {
-            original.parent.appendChild(component);
-          }
-        }
-      };
-
-      // Remove the search bar wrapper before restoring
-      const searchWrapper = document.getElementById("momentSearchWrapper");
-      if (searchWrapper) {
-        searchWrapper.remove();
-      }
-
-      // Remove the quote wrapper before restoring
-      const quoteWrapper = document.getElementById("momentQuoteWrapper");
-      if (quoteWrapper) {
-        quoteWrapper.remove();
-      }
-
-      restoreComponent("prayerTimesCard");
-      restoreComponent("quoteSection");
-      restoreComponent("pinnedAppsSection");
-      restoreComponent("searchBarSection");
-
-      // Clear stored references
-      this._momentModeOriginalParents = {};
-    };
-
-    const enterMomentMode = () => {
-      // Exit other modes first
-      try {
-        if (
-          this._quranFocusModeActive &&
-          typeof this._setQuranFocusModeEnabled === "function"
-        ) {
-          this._setQuranFocusModeEnabled(false);
-        }
-      } catch (e) {}
-
-      try {
-        if (
-          this.sidebarModeEnabled &&
-          typeof this._setSidebarModeEnabled === "function"
-        ) {
-          this._setSidebarModeEnabled(false);
-        }
-      } catch (e) {}
-
-      // Disable and lock layout editing while Moment Mode is active.
-      try {
-        if (
-          this.gridLayout &&
-          typeof this.gridLayout.setEditModeLocked === "function"
-        ) {
-          this.gridLayout.setEditModeLocked(true);
-        } else if (
-          this.gridLayout &&
-          typeof this.gridLayout.disableEditMode === "function"
-        ) {
-          this.gridLayout.disableEditMode();
-        }
-      } catch (e) {}
-
-      this._momentModeActive = true;
-      momentBtn.setAttribute("aria-pressed", "true");
-      momentBtn.classList.add("active");
-      document.body.classList.add("moment-mode");
-
-      // Move actual components to moment mode containers
-      moveComponentsToMomentMode();
-
-      // Initialize clock and date
-      updateMomentClock();
-      updateMomentDate();
-
-      // Start update interval for clock
-      this._momentModeUpdateInterval = setInterval(() => {
-        updateMomentClock();
-      }, 1000);
-
-      // Close FAB menu
-      const fabMenu = document.getElementById("fabMenu");
-      const fabToggle = document.getElementById("fabMenuToggle");
-      const fabItems = document.getElementById("fabMenuItems");
-      if (fabMenu && fabMenu.classList.contains("open")) {
-        fabMenu.classList.remove("open");
-        if (fabToggle) {
-          fabToggle.setAttribute("aria-expanded", "false");
-        }
-        if (fabItems) {
-          fabItems.setAttribute("aria-hidden", "true");
-        }
-      }
-
-      // Save state
-      try {
-        const s = this.storage.getSettings();
-        s.momentModeEnabled = true;
-        s.sidebarModeEnabled = false;
-        s.quranFocusModeEnabled = false;
-        s.lastDashboardMode = "moment";
-        this.storage.saveSettings(s);
-      } catch (e) {}
-    };
-
-    const exitMomentMode = () => {
-      this._momentModeActive = false;
-
-      // Unlock layout editing when Moment Mode exits.
-      try {
-        if (
-          this.gridLayout &&
-          typeof this.gridLayout.setEditModeLocked === "function"
-        ) {
-          this.gridLayout.setEditModeLocked(false);
-        }
-      } catch (e) {}
-
-      momentBtn.setAttribute("aria-pressed", "false");
-      momentBtn.classList.remove("active");
-      document.body.classList.remove("moment-mode");
-
-      // Restore components to original locations
-      restoreComponentsFromMomentMode();
-
-      // Clear update interval
-      if (this._momentModeUpdateInterval) {
-        clearInterval(this._momentModeUpdateInterval);
-        this._momentModeUpdateInterval = null;
-      }
-
-      // Save state
-      try {
-        const s = this.storage.getSettings();
-        s.momentModeEnabled = false;
-        s.lastDashboardMode = "normal";
-        this.storage.saveSettings(s);
-      } catch (e) {}
-
-      // Trigger resize to restore layout
-      try {
-        window.dispatchEvent(new Event("resize"));
-      } catch (e) {}
-    };
-
-    // Expose setter for other modes
-    this._setMomentModeEnabled = (enabled) => {
-      if (enabled) enterMomentMode();
-      else exitMomentMode();
-    };
-
-    const toggleMomentMode = () => {
-      if (this._momentModeActive) {
-        exitMomentMode();
-      } else {
-        enterMomentMode();
-      }
-    };
-
-    momentBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleMomentMode();
-    });
-
-    // Exit button at the bottom center of moment mode
-    if (exitBtn) {
-      exitBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        exitMomentMode();
-      });
+    if (this.momentMode && typeof this.momentMode.isActive === "function") {
+      this._momentModeActive = this.momentMode.isActive();
     }
-
-    // Handle Escape key to exit moment mode
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this._momentModeActive) {
-        exitMomentMode();
-      }
-    });
-
-    // Restore last state from settings
-    try {
-      const s = this.storage.getSettings();
-      if (s.momentModeEnabled === true || s.lastDashboardMode === "moment") {
-        enterMomentMode();
-      }
-    } catch (e) {}
   }
 
   applyPinnedAppsSettings(perRowOverride) {
@@ -2311,7 +1989,9 @@ class MuslimDashboard {
   updateHeaderNextPrayer() {
     const settings = this.storage.getSettings();
     const headingSettings = settings.heading || {};
+    const visibility = settings.componentVisibility || {};
     const shouldShow =
+      visibility.header !== false &&
       headingSettings.showClock !== false &&
       headingSettings.showNextPrayer === true;
 
@@ -2574,6 +2254,13 @@ class MuslimDashboard {
     const pocketQuranCard = document.getElementById("pocketQuranCard");
     setVisibility(pocketQuranCard, visibility.pocketQuran === false);
 
+    if (
+      this.momentMode &&
+      typeof this.momentMode.syncLayoutVisibility === "function"
+    ) {
+      this.momentMode.syncLayoutVisibility();
+    }
+
     // Apply quote layout style
     if (this.quotes && typeof this.quotes.applyLayoutStyle === "function") {
       this.quotes.applyLayoutStyle();
@@ -2606,13 +2293,16 @@ class MuslimDashboard {
   applyHeadingSettings() {
     const settings = this.storage.getSettings();
     const headingSettings = settings.heading || {};
+    const visibility = settings.componentVisibility || {};
     const timeSection = document.querySelector(".time-section");
     const currentSeconds = document.getElementById("currentSeconds");
 
     // Show/hide clock
     if (timeSection) {
       timeSection.style.display =
-        headingSettings.showClock === false ? "none" : "";
+        headingSettings.showClock === false || visibility.header === false
+          ? "none"
+          : "";
     }
 
     // Show/hide seconds
@@ -2634,6 +2324,13 @@ class MuslimDashboard {
     if (this.dateDisplay) {
       this.dateDisplay.style.display =
         headingSettings.showDate === false ? "none" : "";
+    }
+
+    if (
+      this.momentMode &&
+      typeof this.momentMode.syncLayoutVisibility === "function"
+    ) {
+      this.momentMode.syncLayoutVisibility();
     }
 
     this.updateHeaderNextPrayer();
