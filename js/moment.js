@@ -269,26 +269,6 @@ class MomentModeManager {
     } catch (e) {}
   }
 
-  syncInteractionSettings() {
-    const settings = this.storage.getSettings();
-    const moment = settings.moment || {};
-    const hoverAutoHide = moment.hoverAutoHide || {};
-
-    const hoverBySlot = {
-      momentPrayerSlot: hoverAutoHide.prayerTimes !== false,
-      momentFastingSlot: hoverAutoHide.fasting !== false,
-      momentQuoteSlot: hoverAutoHide.quotes !== false,
-      momentPinnedAppsSlot: hoverAutoHide.quickPins !== false,
-      momentSearchSlot: hoverAutoHide.searchBar !== false,
-    };
-
-    Object.entries(hoverBySlot).forEach(([slotId, enabled]) => {
-      const slot = document.getElementById(slotId);
-      if (!slot) return;
-      slot.setAttribute("data-hover-autohide", enabled ? "true" : "false");
-    });
-  }
-
   syncLayoutVisibility() {
     const settings = this.storage.getSettings();
     const visibility = settings.componentVisibility || {};
@@ -310,8 +290,6 @@ class MomentModeManager {
       slot.style.display = shouldShow ? "" : "none";
       slot.setAttribute("aria-hidden", shouldShow ? "false" : "true");
     });
-
-    this.syncInteractionSettings();
   }
 }
 

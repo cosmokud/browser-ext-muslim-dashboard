@@ -347,23 +347,6 @@ class SettingsManager extends BaseManager {
       "momentVisibilityClock",
     );
 
-    // Moment tab hover auto-hide controls (Moment-only behavior)
-    this.momentHoverAutohidePrayerTimes = document.getElementById(
-      "momentHoverAutohidePrayerTimes",
-    );
-    this.momentHoverAutohideFasting = document.getElementById(
-      "momentHoverAutohideFasting",
-    );
-    this.momentHoverAutohideQuotes = document.getElementById(
-      "momentHoverAutohideQuotes",
-    );
-    this.momentHoverAutohideQuickPins = document.getElementById(
-      "momentHoverAutohideQuickPins",
-    );
-    this.momentHoverAutohideSearchBar = document.getElementById(
-      "momentHoverAutohideSearchBar",
-    );
-
     this.weatherUnitRadios = document.querySelectorAll(
       'input[name="weatherUnit"]',
     );
@@ -803,9 +786,6 @@ class SettingsManager extends BaseManager {
     // Load component visibility settings
     this.loadVisibilitySettings(settings);
 
-    // Load Moment-specific settings
-    this.loadMomentSettings(settings);
-
     // Load weather settings
     this.loadWeatherSettings(settings);
 
@@ -1208,33 +1188,6 @@ class SettingsManager extends BaseManager {
       this.momentVisibilitySearchBar.checked = visibility.searchBar !== false;
     if (this.momentVisibilityClock)
       this.momentVisibilityClock.checked = heading.showClock !== false;
-  }
-
-  /**
-   * Load Moment-specific settings
-   */
-  loadMomentSettings(settings) {
-    const moment = settings.moment || {};
-    const hoverAutoHide = moment.hoverAutoHide || {};
-
-    if (this.momentHoverAutohidePrayerTimes) {
-      this.momentHoverAutohidePrayerTimes.checked =
-        hoverAutoHide.prayerTimes !== false;
-    }
-    if (this.momentHoverAutohideFasting) {
-      this.momentHoverAutohideFasting.checked = hoverAutoHide.fasting !== false;
-    }
-    if (this.momentHoverAutohideQuotes) {
-      this.momentHoverAutohideQuotes.checked = hoverAutoHide.quotes !== false;
-    }
-    if (this.momentHoverAutohideQuickPins) {
-      this.momentHoverAutohideQuickPins.checked =
-        hoverAutoHide.quickPins !== false;
-    }
-    if (this.momentHoverAutohideSearchBar) {
-      this.momentHoverAutohideSearchBar.checked =
-        hoverAutoHide.searchBar !== false;
-    }
   }
 
   _clearCitySearchResults(container) {
@@ -3471,9 +3424,6 @@ class SettingsManager extends BaseManager {
     // Save component visibility settings
     this.saveVisibilitySettings(settings);
 
-    // Save Moment-specific settings
-    this.saveMomentSettings(settings);
-
     // Save weather settings
     this.saveWeatherSettings(settings);
 
@@ -3601,27 +3551,6 @@ class SettingsManager extends BaseManager {
       todoList: this.visibilityTodoList?.checked ?? true,
       notes: this.visibilityNotes?.checked ?? true,
       pocketQuran: this.visibilityPocketQuran?.checked ?? true,
-    };
-  }
-
-  /**
-   * Save Moment-specific settings
-   */
-  saveMomentSettings(settings) {
-    const existingMoment =
-      settings.moment && typeof settings.moment === "object"
-        ? settings.moment
-        : {};
-
-    settings.moment = {
-      ...existingMoment,
-      hoverAutoHide: {
-        prayerTimes: this.momentHoverAutohidePrayerTimes?.checked ?? true,
-        fasting: this.momentHoverAutohideFasting?.checked ?? true,
-        quotes: this.momentHoverAutohideQuotes?.checked ?? true,
-        quickPins: this.momentHoverAutohideQuickPins?.checked ?? true,
-        searchBar: this.momentHoverAutohideSearchBar?.checked ?? true,
-      },
     };
   }
 
@@ -5259,35 +5188,6 @@ class SettingsManager extends BaseManager {
       });
     }
 
-    const applyLiveMomentHoverAutoHide = () => {
-      const setSlotAutoHide = (slotId, enabled) => {
-        const slot = document.getElementById(slotId);
-        if (!slot) return;
-        slot.setAttribute("data-hover-autohide", enabled ? "true" : "false");
-      };
-
-      setSlotAutoHide(
-        "momentPrayerSlot",
-        this.momentHoverAutohidePrayerTimes?.checked ?? true,
-      );
-      setSlotAutoHide(
-        "momentFastingSlot",
-        this.momentHoverAutohideFasting?.checked ?? true,
-      );
-      setSlotAutoHide(
-        "momentQuoteSlot",
-        this.momentHoverAutohideQuotes?.checked ?? true,
-      );
-      setSlotAutoHide(
-        "momentPinnedAppsSlot",
-        this.momentHoverAutohideQuickPins?.checked ?? true,
-      );
-      setSlotAutoHide(
-        "momentSearchSlot",
-        this.momentHoverAutohideSearchBar?.checked ?? true,
-      );
-    };
-
     const applyLiveDashboardVisibility = () => {
       const setPreviewVisibility = (el, shouldShow) => {
         if (!el) return;
@@ -5402,8 +5302,6 @@ class SettingsManager extends BaseManager {
       setSlotPreview("momentSearchSlot", componentState.searchBar);
       setSlotPreview("momentClockSlot", showClock);
 
-      applyLiveMomentHoverAutoHide();
-
       try {
         document.dispatchEvent(new CustomEvent("md:visibility-changed"));
       } catch (e) {}
@@ -5482,19 +5380,6 @@ class SettingsManager extends BaseManager {
       if (!el) return;
       el.addEventListener("change", applyLiveDashboardVisibility);
     });
-
-    [
-      this.momentHoverAutohidePrayerTimes,
-      this.momentHoverAutohideFasting,
-      this.momentHoverAutohideQuotes,
-      this.momentHoverAutohideQuickPins,
-      this.momentHoverAutohideSearchBar,
-    ].forEach((el) => {
-      if (!el) return;
-      el.addEventListener("change", applyLiveMomentHoverAutoHide);
-    });
-
-    applyLiveMomentHoverAutoHide();
 
     // Change background now
     if (this.changeBackgroundBtn) {

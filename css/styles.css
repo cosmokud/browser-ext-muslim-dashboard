@@ -3239,7 +3239,8 @@ body.moment-mode #momentSearchSlot > #searchBarSection {
   margin-inline: auto;
 }
 
-body.moment-mode .moment-slot[data-hover-autohide="true"] > * {
+body.moment-mode #momentPinnedAppsSlot > #pinnedAppsSection,
+body.moment-mode #momentSearchSlot > #searchBarSection {
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
@@ -3248,16 +3249,36 @@ body.moment-mode .moment-slot[data-hover-autohide="true"] > * {
     transform 0.24s ease;
 }
 
-body.moment-mode .moment-slot[data-hover-autohide="true"]:hover > *,
-body.moment-mode .moment-slot[data-hover-autohide="true"]:focus-within > *,
-body.moment-mode .moment-slot[data-hover-autohide="true"] > *:focus-within {
+body.moment-mode
+  .moment-mode-column--middle:hover
+  #momentPinnedAppsSlot
+  > #pinnedAppsSection,
+body.moment-mode
+  .moment-mode-column--middle:hover
+  #momentSearchSlot
+  > #searchBarSection,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentPinnedAppsSlot
+  > #pinnedAppsSection,
+body.moment-mode
+  .moment-mode-column--middle:focus-within
+  #momentSearchSlot
+  > #searchBarSection {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+body.moment-mode #momentQuoteSlot > #quoteSection {
   opacity: 1;
   transform: none;
   pointer-events: auto;
 }
 
 @media (hover: none) {
-  body.moment-mode .moment-slot[data-hover-autohide="true"] > * {
+  body.moment-mode #momentPinnedAppsSlot > #pinnedAppsSection,
+  body.moment-mode #momentSearchSlot > #searchBarSection {
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;
@@ -3267,8 +3288,6 @@ body.moment-mode .moment-slot[data-hover-autohide="true"] > *:focus-within {
 body.moment-mode .moment-mode-layout {
   --moment-text-shadow:
     0 1px 6px rgba(0, 0, 0, 0.58), 0 1px 2px rgba(0, 0, 0, 0.4);
-  --moment-component-halo: rgba(0, 0, 0, 0.34);
-  --moment-component-halo-blur: 34px;
 }
 
 body.moment-mode
@@ -3296,15 +3315,34 @@ body.moment-mode
     #momentSearchSlot > #searchBarSection,
     #momentClockSlot > .time-section
   )::before {
-  content: "";
+  content: " ";
+  display: block;
   position: absolute;
   z-index: -1;
   inset: -16px -10px;
-  background: var(--moment-component-halo);
-  filter: blur(var(--moment-component-halo-blur));
-  -webkit-filter: blur(var(--moment-component-halo-blur));
+  background-color: rgba(0, 0, 0, 0.3);
+  -webkit-filter: blur(40px);
+  -moz-filter: blur(40px);
+  -ms-filter: blur(40px);
+  -o-filter: blur(40px);
+  filter: blur(40px);
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
   pointer-events: none;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  #momentSearchSlot
+  > #searchBarSection::before {
+  -webkit-filter: blur(10px);
+  -moz-filter: blur(10px);
+  -ms-filter: blur(10px);
+  -o-filter: blur(10px);
+  filter: blur(10px);
 }
 
 body.moment-mode
