@@ -3186,8 +3186,7 @@ body.moment-mode .moment-mode-layout {
   flex-direction: column;
   padding: var(--spacing-xl);
   gap: var(--spacing-md);
-  overflow-x: visible;
-  overflow-y: auto;
+  overflow: visible;
   scrollbar-width: thin;
 }
 
@@ -3325,19 +3324,17 @@ body.moment-mode
   z-index: 21;
   top: 50%;
   left: 50%;
-  width: 92%;
-  height: 76%;
+  width: 140%;
+  height: 120%;
   border-radius: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0.56) 0%,
-    rgba(0, 0, 0, 0.4) 34%,
-    rgba(0, 0, 0, 0.22) 62%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  -webkit-filter: blur(calc(32px * var(--ui-blur-multiplier, 1)));
-  filter: blur(calc(32px * var(--ui-blur-multiplier, 1)));
-  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.36);
+  -webkit-filter: blur(calc(56px * var(--ui-blur-multiplier, 1)));
+  filter: blur(calc(56px * var(--ui-blur-multiplier, 1)));
+  -webkit-transform: translate3d(-50%, -50%, 0);
+  transform: translate3d(-50%, -50%, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, filter;
   pointer-events: none;
 }
 
