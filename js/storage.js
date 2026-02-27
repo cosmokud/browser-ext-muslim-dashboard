@@ -256,6 +256,17 @@ class StorageManager {
         pocketQuran: true,
       },
 
+      // Moment mode settings (Moment-only behavior)
+      moment: {
+        hoverAutoHide: {
+          prayerTimes: true,
+          fasting: true,
+          quotes: true,
+          quickPins: true,
+          searchBar: true,
+        },
+      },
+
       // Floating mode (detached + draggable + resizable) for select components
       // Stored in pixels relative to viewport (left/top/width/height)
       floating: {

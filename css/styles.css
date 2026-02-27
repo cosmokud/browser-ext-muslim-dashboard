@@ -3172,7 +3172,7 @@ body.moment-mode .moment-mode-layout {
   inset: 0;
   z-index: 300;
   display: grid;
-  grid-template-columns: 20% 60% 20%;
+  grid-template-columns: 15% 70% 15%;
   gap: 0;
   padding: 0;
   overflow: hidden;
@@ -3225,6 +3225,43 @@ body.moment-mode #momentFastingSlot > #fastingCard {
   max-width: 100% !important;
   min-width: 0 !important;
   align-self: stretch !important;
+}
+
+body.moment-mode #momentSearchSlot > #searchBarSection {
+  width: min(
+    100%,
+    calc(
+      var(--pinned-apps-per-row, 10) *
+        (var(--pinned-app-width) + var(--pinned-app-gap)) -
+        var(--pinned-app-gap)
+    )
+  );
+  margin-inline: auto;
+}
+
+body.moment-mode .moment-slot[data-hover-autohide="true"] > * {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 0.24s ease,
+    transform 0.24s ease;
+}
+
+body.moment-mode .moment-slot[data-hover-autohide="true"]:hover > *,
+body.moment-mode .moment-slot[data-hover-autohide="true"]:focus-within > *,
+body.moment-mode .moment-slot[data-hover-autohide="true"] > *:focus-within {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  body.moment-mode .moment-slot[data-hover-autohide="true"] > * {
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
 }
 
 body.moment-mode .moment-mode-layout {
