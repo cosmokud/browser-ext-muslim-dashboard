@@ -3293,12 +3293,11 @@ body.moment-mode .moment-mode-layout {
 body.moment-mode
   .moment-mode-layout
   :is(
-    #momentPrayerSlot > #prayerTimesCard,
-    #momentFastingSlot > #fastingCard,
-    #momentQuoteSlot > #quoteSection,
-    #momentPinnedAppsSlot > #pinnedAppsSection,
-    #momentSearchSlot > #searchBarSection,
-    #momentClockSlot > .time-section
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot
   ) {
   position: relative;
   isolation: isolate;
@@ -3308,12 +3307,11 @@ body.moment-mode
 body.moment-mode
   .moment-mode-layout
   :is(
-    #momentPrayerSlot > #prayerTimesCard,
-    #momentFastingSlot > #fastingCard,
-    #momentQuoteSlot > #quoteSection,
-    #momentPinnedAppsSlot > #pinnedAppsSection,
-    #momentSearchSlot > #searchBarSection,
-    #momentClockSlot > .time-section
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot
   )::before {
   content: " ";
   display: block;
@@ -3334,10 +3332,7 @@ body.moment-mode
   pointer-events: none;
 }
 
-body.moment-mode
-  .moment-mode-layout
-  #momentSearchSlot
-  > #searchBarSection::before {
+body.moment-mode .moment-mode-layout #momentSearchSlot::before {
   -webkit-filter: blur(10px);
   -moz-filter: blur(10px);
   -ms-filter: blur(10px);
