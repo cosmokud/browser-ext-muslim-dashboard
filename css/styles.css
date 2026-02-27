@@ -3227,6 +3227,115 @@ body.moment-mode #momentFastingSlot > #fastingCard {
   align-self: stretch !important;
 }
 
+body.moment-mode .moment-mode-layout {
+  --moment-text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.82), 0 1px 4px rgba(0, 0, 0, 0.68);
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    .card,
+    .quote-container,
+    .search-bar-shell,
+    .search-bar-add-form,
+    .pinned-apps-grid,
+    .pinned-app-icon,
+    .pinned-app-add .add-icon,
+    .prayer-item,
+    .next-prayer,
+    .location-display,
+    .fasting-subtitle,
+    .fasting-bar,
+    .fasting-bar__badge,
+    .fasting-bar__track,
+    .search-bar-engine-tab,
+    .search-bar-engine-arrow,
+    .search-bar-input,
+    .search-bar-btn,
+    .search-bar-add-input,
+    .search-bar-add-action,
+    .quote-nav-btn,
+    .quote-refresh,
+    .header-next-prayer
+  ) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    .card:hover,
+    .quote-container:hover,
+    .search-bar-shell:hover,
+    .pinned-apps-grid:hover,
+    .prayer-item:hover,
+    .prayer-item.active,
+    .next-prayer,
+    .search-bar-btn:hover,
+    .search-bar-engine-tab:hover,
+    .search-bar-engine-tab[aria-selected="true"],
+    .search-bar-engine-arrow:hover,
+    .search-bar-input:focus,
+    .quote-nav-btn:hover,
+    .quote-refresh:hover,
+    .pinned-app-item:hover:not(.dragging) .pinned-app-icon,
+    .pinned-app-item.dragging .pinned-app-icon,
+    .pinned-app-item.drag-over .pinned-app-icon,
+    .pinned-app-add:hover .add-icon
+  ) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+body.moment-mode
+  .moment-mode-layout
+  :is(
+    .current-time,
+    .current-seconds,
+    .current-ampm,
+    .header-next-prayer,
+    .header-next-prayer *,
+    .card-title,
+    .card-title *,
+    .location-display,
+    .location-display *,
+    .prayer-item,
+    .prayer-item *,
+    .next-prayer,
+    .next-prayer *,
+    .quote-icon,
+    .quote-text,
+    .quote-source,
+    .pinned-app-name,
+    .pinned-app-fallback,
+    .pinned-app-add .add-text,
+    .fasting-subtitle,
+    .fasting-bar__title,
+    .fasting-bar__subtitle,
+    .fasting-bar__value,
+    .fasting-bar__badge,
+    .search-bar-engine-arrow,
+    .search-bar-engine-tab,
+    .search-bar-input,
+    .search-bar-btn,
+    .search-bar-add-input,
+    .search-bar-add-action
+  ) {
+  text-shadow: var(--moment-text-shadow);
+}
+
+body.moment-mode .moment-mode-layout .search-bar-input::placeholder,
+body.moment-mode .moment-mode-layout .search-bar-add-input::placeholder {
+  text-shadow: var(--moment-text-shadow);
+}
+
 body.moment-mode #momentPinnedAppsSlot > #pinnedAppsSection .pinned-apps-grid {
   justify-content: center;
 }
@@ -3245,6 +3354,16 @@ body.moment-mode #momentClockSlot > .time-section {
 
 body.moment-mode #momentClockSlot .header-next-prayer {
   margin-top: var(--spacing-sm);
+}
+
+body.moment-mode .moment-mode-exit-btn,
+body.moment-mode .moment-mode-exit-btn:hover,
+body.moment-mode .moment-mode-exit-btn:active {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Moment Mode: Exit button */
