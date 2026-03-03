@@ -4,4 +4,4 @@
 // Set to true for local development/troubleshooting.
 //
 // NOTE: We intentionally attach to globalThis so all scripts can read it.
-globalThis.ENABLE_DEBUG_MODE = true;
+globalThis.ENABLE_DEBUG_MODE = false;
