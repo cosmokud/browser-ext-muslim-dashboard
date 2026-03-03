@@ -16,7 +16,27 @@ class MomentModeManager {
     this.exitBtn = document.getElementById("momentModeExitBtn");
     this.layoutRoot = document.getElementById("momentModeLayout");
 
+    const debugEnabled = globalThis.ENABLE_DEBUG_MODE === true;
+
+    if (this.momentBtn) {
+      this.momentBtn.classList.toggle("hidden", !debugEnabled);
+      this.momentBtn.setAttribute(
+        "aria-hidden",
+        debugEnabled ? "false" : "true",
+      );
+      this.momentBtn.toggleAttribute("disabled", !debugEnabled);
+    }
+
     if (!this.momentBtn || !this.layoutRoot) return;
+
+    if (!debugEnabled) {
+      this.dashboard._momentModeActive = false;
+      this.dashboard._setMomentModeEnabled = null;
+      document.body.classList.remove("moment-mode");
+      this.layoutRoot.setAttribute("aria-hidden", "true");
+      this.saveModeState(false);
+      return;
+    }
 
     this.dashboard._momentModeActive = false;
     this.dashboard._setMomentModeEnabled = (enabled) => {

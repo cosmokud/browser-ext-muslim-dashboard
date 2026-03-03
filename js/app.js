@@ -680,7 +680,8 @@ class MuslimDashboard {
         s.quranFocusModeEnabled === true ||
         s.lastDashboardMode === "quranFocus";
       const momentInitial =
-        s.momentModeEnabled === true || s.lastDashboardMode === "moment";
+        globalThis.ENABLE_DEBUG_MODE === true &&
+        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
       const initial =
         !focusInitial &&
         !momentInitial &&
@@ -1872,7 +1873,8 @@ class MuslimDashboard {
       const s = this.storage.getSettings();
       // Don't restore Quran focus if Moment mode is the last mode
       const momentInitial =
-        s.momentModeEnabled === true || s.lastDashboardMode === "moment";
+        globalThis.ENABLE_DEBUG_MODE === true &&
+        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
       const initial =
         !momentInitial &&
         (s.quranFocusModeEnabled === true ||
