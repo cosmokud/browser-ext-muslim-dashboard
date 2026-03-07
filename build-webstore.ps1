@@ -74,6 +74,24 @@ if ($remoteScriptMatches.Count -gt 0) {
   throw "Packaged extension still contains remote script tags."
 }
 
+$styleFiles = Get-ChildItem -Path $packageRoot -Recurse -File -Include *.html,*.css
+$remoteStyleMatches = @()
+if ($styleFiles) {
+  $remoteStyleMatches = @(
+    Select-String -Path $styleFiles.FullName -Pattern @(
+      '<link[^>]+href=["'']https?://',
+      '@import\s+(url\()?\s*["'']?https?://',
+      'src:\s*url\(["'']?https?://'
+    )
+  )
+}
+
+if ($remoteStyleMatches.Count -gt 0) {
+  Write-Host "Remote stylesheet or font references detected in packaged assets:"
+  Write-MatchList -Matches $remoteStyleMatches
+  throw "Packaged extension still contains remote stylesheet or font references."
+}
+
 $codeFiles = Get-ChildItem -Path $packageRoot -Recurse -File -Include *.js,*.html
 $remoteImportMatches = @()
 if ($codeFiles) {
