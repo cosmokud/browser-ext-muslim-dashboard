@@ -89,6 +89,14 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 5. Select the `browser-ext-muslim-dashboard` folder
 6. Open a new tab to see your Muslim Dashboard!
 
+### Chrome Web Store Package
+
+Use the packaging script instead of zipping the repository root.
+
+1. Run `.\build-webstore.ps1` from the project root in PowerShell
+2. Upload `dist/chrome-webstore.zip` to the Chrome Web Store
+3. The package includes runtime assets only and excludes source-only files such as `sources/hisn.html`
+
 ## 📁 Project Structure
 
 ```
