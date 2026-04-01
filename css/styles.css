@@ -1811,7 +1811,11 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .notes-editor.notes-editor-milkdown .milkdown .crepe-drop-cursor,
 .notes-editor.notes-editor-milkdown .milkdown .milkdown-drop-indicator {
-  max-width: calc(100% - 4px);
+  width: var(--notes-drop-width, auto) !important;
+  max-width: min(
+    var(--notes-drop-max-width, 100%),
+    calc(100% - 4px)
+  ) !important;
   border-radius: var(--radius-full);
   pointer-events: none;
   translate: var(--notes-drop-dx, 0px) calc(var(--notes-drop-dy, 0px) - 1px);
