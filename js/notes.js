@@ -114,6 +114,9 @@ class NotesManager extends BaseManager {
               "code-block": () => {
                 this.toggleLineFormat("code-block");
               },
+              align: (value) => {
+                this.applyAlignFormat(value);
+              },
               image: () => {
                 this.insertImageByUrl();
               },
@@ -471,6 +474,7 @@ class NotesManager extends BaseManager {
       )[formatName];
       const nextValue = !this.isFormatEnabled(currentValue);
       this.editorInstance.format(formatName, nextValue, "user");
+      this.restoreEditorSelection(range);
       this.queueSave();
       return;
     }
@@ -482,6 +486,7 @@ class NotesManager extends BaseManager {
       ];
       const nextValue = !this.isFormatEnabled(currentValue);
       this.editorInstance.format(formatName, nextValue, "user");
+      this.restoreEditorSelection(range);
       this.queueSave();
       return;
     }
@@ -499,7 +504,7 @@ class NotesManager extends BaseManager {
       nextValue,
       "user",
     );
-    this.editorInstance.setSelection(range.index, 0, "silent");
+    this.restoreEditorSelection(range);
     this.queueSave();
   }
 
@@ -535,8 +540,58 @@ class NotesManager extends BaseManager {
       nextValue,
       "user",
     );
-    this.editorInstance.setSelection(range.index, range.length, "silent");
+    this.restoreEditorSelection(range);
     this.queueSave();
+  }
+
+  applyAlignFormat(value) {
+    if (!this.editorInstance) return;
+
+    const range = this.editorInstance.getSelection(true);
+    if (!range) return;
+
+    let formatIndex = range.index;
+    let formatLength = range.length;
+
+    if (formatLength === 0) {
+      const [line, offset] = this.editorInstance.getLine(range.index);
+      if (line) {
+        formatIndex = Math.max(0, range.index - offset);
+        formatLength = Math.max(1, line.length());
+      } else {
+        formatLength = 1;
+      }
+    }
+
+    const alignValue =
+      typeof value === "string" && value.trim() ? value : false;
+
+    this.editorInstance.formatLine(
+      formatIndex,
+      formatLength,
+      "align",
+      alignValue,
+      "user",
+    );
+
+    this.restoreEditorSelection(range);
+    this.queueSave();
+  }
+
+  restoreEditorSelection(range) {
+    if (!this.editorInstance || !range) return;
+
+    const index = Number.isFinite(range.index) ? Math.max(0, range.index) : 0;
+    const length = Number.isFinite(range.length)
+      ? Math.max(0, range.length)
+      : 0;
+
+    try {
+      this.editorInstance.focus();
+      this.editorInstance.setSelection(index, length, "api");
+    } catch (_error) {
+      // Ignore selection restore failures.
+    }
   }
 
   getWordRangeAt(index) {

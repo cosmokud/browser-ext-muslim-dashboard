@@ -2562,7 +2562,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .notes-editor.notes-editor-quill {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   max-height: none;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -2594,7 +2594,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  background: #17232f;
+  background: color-mix(in srgb, var(--primary-dark) 70%, #0f1720 30%);
   color: var(--text-primary);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
   opacity: 1;
@@ -2604,8 +2604,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 [data-theme-mode="light"] .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
-  background: #f4f7fb;
-  border-color: rgba(15, 23, 42, 0.22);
+  background: color-mix(in srgb, var(--primary-color) 12%, #ffffff 88%);
+  border-color: color-mix(in srgb, var(--primary-color) 35%, #cbd5e1 65%);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
 }
 
@@ -2728,7 +2728,64 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   color: var(--text-primary);
   min-height: 320px;
   max-height: 65vh;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip {
+  z-index: 12220;
+  max-width: min(340px, calc(100vw - 24px));
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 40%, #334155 60%);
+  background: color-mix(in srgb, var(--primary-dark) 72%, #0f1720 28%);
+  color: var(--text-primary);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+  opacity: 1;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme-mode="light"]
+  .notes-editor.notes-editor-quill.ql-container.ql-snow
+  .ql-tooltip {
+  background: color-mix(in srgb, var(--primary-color) 10%, #ffffff 90%);
+  border-color: color-mix(in srgb, var(--primary-color) 35%, #cbd5e1 65%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip::before {
+  border-bottom-color: color-mix(in srgb, var(--primary-dark) 72%, #0f1720 28%);
+}
+
+[data-theme-mode="light"]
+  .notes-editor.notes-editor-quill.ql-container.ql-snow
+  .ql-tooltip::before {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--primary-color) 10%,
+    #ffffff 90%
+  );
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow
+  .ql-tooltip
+  input[type="text"] {
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, #334155 65%);
+  background: color-mix(in srgb, var(--primary-dark) 62%, #0f1720 38%);
+  color: var(--text-primary);
+}
+
+[data-theme-mode="light"]
+  .notes-editor.notes-editor-quill.ql-container.ql-snow
+  .ql-tooltip
+  input[type="text"] {
+  border-color: color-mix(in srgb, var(--primary-color) 30%, #cbd5e1 70%);
+  background: color-mix(in srgb, var(--primary-color) 7%, #ffffff 93%);
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip a,
+.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip.ql-editing a {
+  color: var(--accent-gold-light);
 }
 
 .notes-editor.notes-editor-quill .ql-editor {
