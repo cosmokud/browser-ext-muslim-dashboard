@@ -1,8 +1,8 @@
 /**
  * Notes Manager
- * Full-width Notes component with a lightweight WYSIWYG editor.
- * Features: title editing, rich text (B/I/U/S, lists, checklist, H1-H4, P), URL auto-linking,
- * paginated list (10 per page), and local persistence.
+ * Full-width Notes component with a dual-mode markdown editor.
+ * Features: title editing, stackedit-like toolbar, source+preview editing,
+ * paginated note selector, and local persistence.
  */
 
 class NotesManager extends BaseManager {
@@ -29,7 +29,7 @@ class NotesManager extends BaseManager {
 
     this._editorSyncTimer = null;
 
-    // Markdown/raw toggle (raw = textarea editing, markdown = rendered preview)
+    // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
 
     // DOM
@@ -232,28 +232,16 @@ class NotesManager extends BaseManager {
         return;
       }
 
-      // Markdown mode is now WYSIWYG (editable rendered view). Raw mode is view-only.
-      if (!this.isMarkdownPreview) return;
-
-      try {
-        this.editor.focus();
-      } catch (e) {}
-
-      if (block) {
-        this.execFormatBlock(block);
-      } else if (cmd === "checklist") {
-        this.toggleChecklist();
-      } else {
-        this.execCommand(cmd);
-      }
+      this.applyToolbarAction(cmd, block);
 
       // Persist post-command.
       this.queueSave();
     });
 
-    // Raw editor is view-only (no editing).
+    // Source markdown editor (editable).
     this.rawEditor.addEventListener("input", () => {
-      // If something programmatically changes it, still persist.
+      if (this.isMarkdownPreview) return;
+      this.syncPreviewFromRawEditor();
       this.queueSave();
     });
 
@@ -288,16 +276,16 @@ class NotesManager extends BaseManager {
       }
     });
 
-    // WYSIWYG editing in markdown mode.
+    // WYSIWYG editing in preview mode.
     this.editor.addEventListener("input", () => {
       if (!this.isMarkdownPreview) return;
       this.queueSave();
     });
 
     this.editor.addEventListener("blur", () => {
-      this.saveNow({ renderList: false });
       // Sanitize in-place on blur to reduce risk from pasted HTML.
       this.sanitizeEditorInPlace();
+      this.saveNow({ renderList: false });
     });
 
     // Paste handling: sanitize HTML fragments.
@@ -429,7 +417,7 @@ class NotesManager extends BaseManager {
           this.rawEditor.value = nextMd;
         }
       } else {
-        // Raw mode is view-only; use whatever markdown we have.
+        // Source mode uses the markdown textarea as source-of-truth.
         nextMd = String(this.rawEditor.value || note.md || "");
         nextHtml = this.renderMarkdown(nextMd);
       }
@@ -611,38 +599,51 @@ class NotesManager extends BaseManager {
     );
     this.applyEditorMode();
     this.renderActiveMarkdownPreview();
+
+    if (this.isMarkdownPreview) {
+      this.placeCaretAtEnd(this.editor);
+    } else {
+      this.placeCaretAtEndTextArea(this.rawEditor);
+    }
   }
 
   applyEditorMode() {
-    // Markdown mode = WYSIWYG editor; Raw mode = read-only markdown viewer.
+    // Preview mode = editable rendered markdown. Source mode = editable markdown text.
     const isPreview = !!this.isMarkdownPreview;
 
     this.rawEditor.classList.toggle("hidden", isPreview);
     this.editor.classList.toggle("hidden", !isPreview);
 
-    // Raw is view-only.
     try {
-      this.rawEditor.readOnly = true;
-      this.rawEditor.setAttribute("aria-readonly", "true");
+      this.rawEditor.readOnly = false;
+      this.rawEditor.setAttribute("aria-readonly", "false");
     } catch (e) {}
 
-    // Markdown mode is editable.
     this.editor.classList.toggle("notes-md-preview", isPreview);
     this.editor.setAttribute("contenteditable", isPreview ? "true" : "false");
 
-    // Keep toolbar usable in markdown mode; just highlight the MD button.
     try {
-      const buttons = this.toolbar.querySelectorAll("button.notes-tool-btn");
-      buttons.forEach((b) => {
-        const c = b.dataset.cmd;
-        if (c === "toggleMarkdown") {
-          b.classList.toggle("active", isPreview);
-          return;
-        }
+      if (this.card) {
+        this.card.classList.toggle("notes-preview-mode", isPreview);
+        this.card.classList.toggle("notes-source-mode", !isPreview);
+      }
 
-        // Only the markdown (WYSIWYG) mode is editable.
-        b.disabled = !isPreview;
-      });
+      if (this.markdownToggleBtn) {
+        this.markdownToggleBtn.classList.toggle("active", isPreview);
+        this.markdownToggleBtn.dataset.mode = isPreview ? "preview" : "source";
+        this.markdownToggleBtn.setAttribute(
+          "title",
+          isPreview ? "Switch to source mode" : "Switch to preview mode",
+        );
+        this.markdownToggleBtn.setAttribute(
+          "aria-label",
+          isPreview ? "Switch to source mode" : "Switch to preview mode",
+        );
+        this.markdownToggleBtn.setAttribute(
+          "aria-pressed",
+          isPreview ? "true" : "false",
+        );
+      }
     } catch (e) {
       // ignore
     }
@@ -652,14 +653,25 @@ class NotesManager extends BaseManager {
     const note = this.getActiveNote();
     if (!note) return;
 
-    // Keep raw viewer synced from stored markdown.
-    this.rawEditor.value = String(note.md || this.rawEditor.value || "");
+    const markdown = String(note.md || this.rawEditor.value || "");
+    if (String(this.rawEditor.value || "") !== markdown) {
+      this.rawEditor.value = markdown;
+    }
 
-    // Markdown mode shows rendered content (editable).
     const html = this.normalizeMarkdownHtmlForEditor(
-      this.renderMarkdown(String(this.rawEditor.value || "")),
+      this.renderMarkdown(markdown),
     );
-    if (this.isMarkdownPreview) {
+    if (String(this.editor.innerHTML || "") !== html) {
+      this.editor.innerHTML = html;
+    }
+  }
+
+  syncPreviewFromRawEditor() {
+    const markdown = String(this.rawEditor.value || "");
+    const html = this.normalizeMarkdownHtmlForEditor(
+      this.renderMarkdown(markdown),
+    );
+    if (String(this.editor.innerHTML || "") !== html) {
       this.editor.innerHTML = html;
     }
   }
@@ -840,8 +852,15 @@ class NotesManager extends BaseManager {
 
     if (c === "bold") return toggleWrap("**", "**");
     if (c === "italic") return toggleWrap("*", "*");
-    if (c === "underline") return toggleWrap("<u>", "</u>");
     if (c === "strikeThrough") return toggleWrap("~~", "~~");
+    if (c === "inlineCode") return toggleWrap("`", "`");
+
+    if (c === "insertLink") return this.insertMarkdownLink();
+    if (c === "insertImage") return this.insertMarkdownImage();
+    if (c === "codeBlock") return this.insertMarkdownCodeBlock();
+    if (c === "insertTable") return this.insertMarkdownTable();
+    if (c === "insertHr") return this.insertMarkdownHorizontalRule();
+    if (c === "quote") return this.toggleLinePrefix("> ");
 
     // Lists
     if (c === "insertUnorderedList") return this.toggleLinePrefix("- ");
@@ -867,6 +886,104 @@ class NotesManager extends BaseManager {
       if (trimmed.startsWith(prefix)) return noHeading;
       return `${prefix}${noHeading}`;
     });
+  }
+
+  insertMarkdownLink() {
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const selected = value.slice(start, end).trim() || "Link text";
+    const nextHref = window.prompt("Enter link URL", "https://");
+    if (nextHref == null) return;
+
+    const href = String(nextHref || "").trim();
+    if (!href) return;
+
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const token = `[${selected}](${href})`;
+
+    t.value = `${before}${token}${after}`;
+    const nextStart = before.length + 1;
+    const nextEnd = nextStart + selected.length;
+    t.setSelectionRange(nextStart, nextEnd);
+  }
+
+  insertMarkdownImage() {
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const nextSrc = window.prompt("Enter image URL", "https://");
+    if (nextSrc == null) return;
+
+    const src = String(nextSrc || "").trim();
+    if (!src) return;
+
+    const selected = value.slice(start, end).trim();
+    const fallbackAlt = selected || "Image";
+    const nextAlt = window.prompt("Enter image description", fallbackAlt);
+    const alt =
+      String(nextAlt == null ? fallbackAlt : nextAlt).trim() || "Image";
+
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const token = `![${alt}](${src})`;
+
+    t.value = `${before}${token}${after}`;
+    const cursor = before.length + token.length;
+    t.setSelectionRange(cursor, cursor);
+  }
+
+  insertMarkdownCodeBlock() {
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const before = value.slice(0, start);
+    const selected =
+      value.slice(start, end).replace(/^\n+|\n+$/g, "") || "code";
+    const after = value.slice(end);
+
+    const lead = before && !before.endsWith("\n") ? "\n" : "";
+    const trail = after && !after.startsWith("\n") ? "\n" : "";
+    const token = `${lead}\`\`\`\n${selected}\n\`\`\`${trail}`;
+
+    t.value = `${before}${token}${after}`;
+    const contentStart = before.length + lead.length + 4;
+    const contentEnd = contentStart + selected.length;
+    t.setSelectionRange(contentStart, contentEnd);
+  }
+
+  insertMarkdownTable() {
+    this.insertMarkdownBlockSnippet(
+      "| Column 1 | Column 2 |\n| --- | --- |\n| Value 1 | Value 2 |",
+    );
+  }
+
+  insertMarkdownHorizontalRule() {
+    this.insertMarkdownBlockSnippet("---");
+  }
+
+  insertMarkdownBlockSnippet(snippet) {
+    const t = this.rawEditor;
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const lead = before && !before.endsWith("\n") ? "\n" : "";
+    const trail = after && !after.startsWith("\n") ? "\n" : "";
+    const token = `${lead}${snippet}${trail}`;
+
+    t.value = `${before}${token}${after}`;
+    const cursor = before.length + token.length;
+    t.setSelectionRange(cursor, cursor);
   }
 
   toggleLinePrefix(prefix) {
@@ -1018,6 +1135,10 @@ class NotesManager extends BaseManager {
         return `![${alt}](${src})`;
       }
 
+      if (tag === "VIDEO" || tag === "AUDIO" || tag === "IFRAME") {
+        return el.outerHTML;
+      }
+
       return Array.from(el.childNodes).map(toInline).join("");
     };
 
@@ -1031,6 +1152,10 @@ class NotesManager extends BaseManager {
       const tag = el.tagName;
 
       if (tag === "HR") return "---\n\n";
+
+      if (tag === "VIDEO" || tag === "AUDIO" || tag === "IFRAME") {
+        return `${el.outerHTML}\n\n`;
+      }
 
       if (tag === "PRE") {
         const code = el.querySelector(":scope > code") || el;
@@ -1319,11 +1444,16 @@ class NotesManager extends BaseManager {
     const page = this.clampInt(this.currentPage, 1, Math.max(1, totalPages));
     this.currentPage = page;
 
+    const from = this.notes.length
+      ? (page - 1) * NotesManager.ITEMS_PER_PAGE + 1
+      : 0;
+    const to = Math.min(page * NotesManager.ITEMS_PER_PAGE, this.notes.length);
+
     if (this.pageInfoEl) {
-      this.pageInfoEl.textContent = `Page ${page} / ${Math.max(
+      this.pageInfoEl.textContent = `Notes ${from}-${to} of ${this.notes.length} | Page ${page}/${Math.max(
         1,
         totalPages,
-      )} (${this.notes.length})`;
+      )}`;
     }
 
     if (this.prevPageBtn) this.prevPageBtn.disabled = page <= 1;
@@ -1337,6 +1467,189 @@ class NotesManager extends BaseManager {
     );
   }
 
+  applyToolbarAction(cmd, block) {
+    if (this.isMarkdownPreview) {
+      this.applyPreviewToolbarAction(cmd, block);
+      this.sanitizeEditorInPlace();
+      return;
+    }
+
+    this.applySourceToolbarAction(cmd, block);
+    this.syncPreviewFromRawEditor();
+  }
+
+  applySourceToolbarAction(cmd, block) {
+    try {
+      this.rawEditor.focus();
+    } catch (e) {}
+
+    if (block) {
+      this.applyMarkdownBlock(block);
+      return;
+    }
+
+    if (cmd === "checklist") {
+      this.applyMarkdownChecklist();
+      return;
+    }
+
+    this.applyMarkdownCommand(cmd);
+  }
+
+  applyPreviewToolbarAction(cmd, block) {
+    try {
+      this.editor.focus();
+    } catch (e) {}
+
+    if (block) {
+      this.execFormatBlock(block);
+      return;
+    }
+
+    if (cmd === "checklist") {
+      this.toggleChecklist();
+      return;
+    }
+
+    if (cmd === "quote") {
+      this.execFormatBlock("BLOCKQUOTE");
+      return;
+    }
+
+    if (cmd === "inlineCode") {
+      this.insertPreviewInlineCode();
+      return;
+    }
+
+    if (cmd === "codeBlock") {
+      this.insertPreviewCodeBlock();
+      return;
+    }
+
+    if (cmd === "insertLink") {
+      this.insertPreviewLink();
+      return;
+    }
+
+    if (cmd === "insertImage") {
+      this.insertPreviewImage();
+      return;
+    }
+
+    if (cmd === "insertTable") {
+      this.insertPreviewTable();
+      return;
+    }
+
+    if (cmd === "insertHr") {
+      this.execCommand("insertHorizontalRule");
+      return;
+    }
+
+    this.execCommand(cmd);
+  }
+
+  getPreviewSelectionText() {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return "";
+      const range = sel.getRangeAt(0);
+      if (!this.editor.contains(range.commonAncestorContainer)) return "";
+      return String(sel.toString() || "");
+    } catch (e) {
+      return "";
+    }
+  }
+
+  insertHtmlAtCursor(html) {
+    const markup = String(html || "");
+    if (!markup) return;
+
+    try {
+      document.execCommand("insertHTML", false, markup);
+      return;
+    } catch (e) {
+      // fallback below
+    }
+
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      const range = sel.getRangeAt(0);
+      if (!this.editor.contains(range.commonAncestorContainer)) return;
+
+      range.deleteContents();
+      const container = document.createElement("div");
+      container.innerHTML = markup;
+
+      const frag = document.createDocumentFragment();
+      let node;
+      let lastNode = null;
+      while ((node = container.firstChild)) {
+        lastNode = frag.appendChild(node);
+      }
+
+      range.insertNode(frag);
+      if (lastNode) {
+        range.setStartAfter(lastNode);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  insertPreviewInlineCode() {
+    const selected = this.getPreviewSelectionText().trim() || "code";
+    this.insertHtmlAtCursor(`<code>${this.escapeHtml(selected)}</code>`);
+  }
+
+  insertPreviewCodeBlock() {
+    const selected = this.getPreviewSelectionText() || "code";
+    this.insertHtmlAtCursor(
+      `<pre><code>${this.escapeHtml(String(selected).trim())}</code></pre>`,
+    );
+  }
+
+  insertPreviewLink() {
+    const selected = this.getPreviewSelectionText().trim() || "Link text";
+    const nextHref = window.prompt("Enter link URL", "https://");
+    if (nextHref == null) return;
+
+    const href = String(nextHref || "").trim();
+    if (!href) return;
+
+    this.insertHtmlAtCursor(
+      `<a href="${this.escapeHtml(href)}">${this.escapeHtml(selected)}</a>`,
+    );
+  }
+
+  insertPreviewImage() {
+    const nextSrc = window.prompt("Enter image URL", "https://");
+    if (nextSrc == null) return;
+
+    const src = String(nextSrc || "").trim();
+    if (!src) return;
+
+    const fallbackAlt = this.getPreviewSelectionText().trim() || "Image";
+    const nextAlt = window.prompt("Enter image description", fallbackAlt);
+    const alt =
+      String(nextAlt == null ? fallbackAlt : nextAlt).trim() || "Image";
+
+    this.insertHtmlAtCursor(
+      `<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" title="${this.escapeHtml(alt)}" />`,
+    );
+  }
+
+  insertPreviewTable() {
+    this.insertHtmlAtCursor(
+      "<table><thead><tr><th>Column 1</th><th>Column 2</th></tr></thead><tbody><tr><td>Value 1</td><td>Value 2</td></tr></tbody></table>",
+    );
+  }
+
   execCommand(cmd) {
     try {
       document.execCommand(cmd, false, null);
@@ -1347,7 +1660,7 @@ class NotesManager extends BaseManager {
 
   execFormatBlock(blockTag) {
     const t = String(blockTag || "").toUpperCase();
-    const allowed = new Set(["P", "H1", "H2", "H3", "H4"]);
+    const allowed = new Set(["P", "H1", "H2", "H3", "H4", "BLOCKQUOTE"]);
     if (!allowed.has(t)) return;
 
     try {
@@ -1503,6 +1816,10 @@ class NotesManager extends BaseManager {
       "TD",
       "DEL",
       "INPUT",
+      "VIDEO",
+      "AUDIO",
+      "IFRAME",
+      "SOURCE",
     ]);
 
     const sanitizeNode = (node) => {
@@ -1542,6 +1859,46 @@ class NotesManager extends BaseManager {
         if (tag === "INPUT") {
           if (name === "type" || name === "checked" || name === "disabled")
             continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "VIDEO") {
+          if (
+            name === "src" ||
+            name === "controls" ||
+            name === "poster" ||
+            name === "width" ||
+            name === "height"
+          )
+            continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "AUDIO") {
+          if (name === "src" || name === "controls") continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "IFRAME") {
+          if (
+            name === "src" ||
+            name === "title" ||
+            name === "width" ||
+            name === "height" ||
+            name === "allow" ||
+            name === "allowfullscreen" ||
+            name === "loading"
+          )
+            continue;
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (tag === "SOURCE") {
+          if (name === "src" || name === "type") continue;
           el.removeAttribute(attr.name);
           continue;
         }
@@ -1589,6 +1946,31 @@ class NotesManager extends BaseManager {
         }
         el.setAttribute("loading", "lazy");
         el.setAttribute("referrerpolicy", "no-referrer");
+      }
+
+      if (tag === "VIDEO" || tag === "AUDIO" || tag === "IFRAME") {
+        const src = (el.getAttribute("src") || "").trim();
+        if (!this.isSafeHref(src)) {
+          el.remove();
+          return;
+        }
+
+        if (tag === "VIDEO" || tag === "AUDIO") {
+          el.setAttribute("controls", "");
+        }
+
+        if (tag === "IFRAME") {
+          el.setAttribute("loading", "lazy");
+          el.setAttribute("referrerpolicy", "no-referrer");
+        }
+      }
+
+      if (tag === "SOURCE") {
+        const src = (el.getAttribute("src") || "").trim();
+        if (!this.isSafeHref(src)) {
+          el.remove();
+          return;
+        }
       }
 
       if (tag === "INPUT") {

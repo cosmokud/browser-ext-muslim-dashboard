@@ -1408,28 +1408,31 @@
               </div>
 
               <div class="notes-layout">
-                <div class="notes-list-wrap" aria-label="Notes list">
-                  <div class="notes-list" id="notesList" role="list"></div>
+                <div class="notes-selector-wrap" aria-label="Notes selector">
+                  <button
+                    class="notes-page-btn notes-page-btn-nav"
+                    id="notesPrevPageBtn"
+                    type="button"
+                    aria-label="Previous notes page"
+                    title="Previous notes"
+                  >
+                    ❮
+                  </button>
 
-                  <div class="notes-pagination" aria-label="Notes pagination">
-                    <button
-                      class="notes-page-btn"
-                      id="notesPrevPageBtn"
-                      type="button"
-                      aria-label="Previous notes page"
-                    >
-                      ❮
-                    </button>
+                  <div class="notes-selector-center">
+                    <div class="notes-list" id="notesList" role="list"></div>
                     <div class="notes-page-info" id="notesPageInfo"></div>
-                    <button
-                      class="notes-page-btn"
-                      id="notesNextPageBtn"
-                      type="button"
-                      aria-label="Next notes page"
-                    >
-                      ❯
-                    </button>
                   </div>
+
+                  <button
+                    class="notes-page-btn notes-page-btn-nav"
+                    id="notesNextPageBtn"
+                    type="button"
+                    aria-label="Next notes page"
+                    title="Next notes"
+                  >
+                    ❯
+                  </button>
                 </div>
 
                 <div class="notes-editor-wrap" aria-label="Notes editor">
@@ -1442,17 +1445,29 @@
                     aria-label="Note title"
                   />
 
-                  <div class="notes-toolbar" id="notesToolbar" role="toolbar">
+                  <div
+                    class="notes-toolbar"
+                    id="notesToolbar"
+                    role="toolbar"
+                    aria-label="Markdown toolbar"
+                  >
                     <button
-                      class="notes-tool-btn"
+                      class="notes-tool-btn notes-tool-mode"
                       type="button"
                       data-cmd="toggleMarkdown"
-                      aria-label="Toggle Markdown / Raw text"
-                      title="Toggle Markdown / Raw text"
+                      aria-label="Toggle markdown source and live preview"
+                      title="Toggle markdown source and live preview"
                       id="notesMarkdownToggleBtn"
                     >
-                      MD
+                      <span class="notes-mode-label notes-mode-source"
+                        >Source</span
+                      >
+                      <span class="notes-mode-label notes-mode-preview"
+                        >Preview</span
+                      >
                     </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
 
                     <button
                       class="notes-tool-btn"
@@ -1475,20 +1490,77 @@
                     <button
                       class="notes-tool-btn"
                       type="button"
-                      data-cmd="underline"
-                      aria-label="Underline"
-                      title="Underline"
-                    >
-                      <u>U</u>
-                    </button>
-                    <button
-                      class="notes-tool-btn"
-                      type="button"
                       data-cmd="strikeThrough"
                       aria-label="Strikethrough"
                       title="Strikethrough"
                     >
                       <s>S</s>
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="quote"
+                      aria-label="Blockquote"
+                      title="Blockquote"
+                    >
+                      Quote
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="inlineCode"
+                      aria-label="Inline code"
+                      title="Inline code"
+                    >
+                      Code
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="codeBlock"
+                      aria-label="Code block"
+                      title="Code block"
+                    >
+                      Block
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertLink"
+                      aria-label="Insert link"
+                      title="Insert link"
+                    >
+                      Link
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertImage"
+                      aria-label="Insert image"
+                      title="Insert image"
+                    >
+                      Image
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertTable"
+                      aria-label="Insert table"
+                      title="Insert table"
+                    >
+                      Table
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertHr"
+                      aria-label="Insert horizontal line"
+                      title="Insert horizontal line"
+                    >
+                      HR
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1500,7 +1572,7 @@
                       aria-label="Bullet list"
                       title="Bullet list"
                     >
-                      •
+                      UL
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1509,16 +1581,16 @@
                       aria-label="Numbered list"
                       title="Numbered list"
                     >
-                      1.
+                      OL
                     </button>
                     <button
                       class="notes-tool-btn"
                       type="button"
                       data-cmd="checklist"
-                      aria-label="Checkmark list"
-                      title="Checkmark list"
+                      aria-label="Task list"
+                      title="Task list"
                     >
-                      ☑
+                      Task
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1528,7 +1600,7 @@
                       type="button"
                       data-block="H1"
                       aria-label="Heading 1"
-                      title="H1"
+                      title="Heading 1"
                     >
                       H1
                     </button>
@@ -1537,7 +1609,7 @@
                       type="button"
                       data-block="H2"
                       aria-label="Heading 2"
-                      title="H2"
+                      title="Heading 2"
                     >
                       H2
                     </button>
@@ -1546,18 +1618,9 @@
                       type="button"
                       data-block="H3"
                       aria-label="Heading 3"
-                      title="H3"
+                      title="Heading 3"
                     >
                       H3
-                    </button>
-                    <button
-                      class="notes-tool-btn"
-                      type="button"
-                      data-block="H4"
-                      aria-label="Heading 4"
-                      title="H4"
-                    >
-                      H4
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1595,7 +1658,7 @@
                     class="notes-editor hidden"
                     id="notesRawEditor"
                     spellcheck="true"
-                    aria-label="Note raw text"
+                    aria-label="Note markdown source"
                   ></textarea>
 
                   <div
@@ -1603,7 +1666,7 @@
                     id="notesEditor"
                     contenteditable="true"
                     spellcheck="true"
-                    aria-label="Note editor"
+                    aria-label="Note live preview editor"
                   ></div>
                 </div>
               </div>
