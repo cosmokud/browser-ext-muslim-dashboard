@@ -2602,7 +2602,6 @@ class NotesManager extends BaseManager {
     }
 
     if (cmd === "inlineCode") {
-      this.expandPreviewSelectionToWord();
       this.insertPreviewInlineCode();
       return;
     }
@@ -2708,31 +2707,84 @@ class NotesManager extends BaseManager {
     const range = this.getActivePreviewRange();
     if (!range) return;
 
-    const startEl =
-      range.startContainer.nodeType === Node.ELEMENT_NODE
-        ? range.startContainer
-        : range.startContainer.parentElement;
-    const endEl =
-      range.endContainer.nodeType === Node.ELEMENT_NODE
-        ? range.endContainer
-        : range.endContainer.parentElement;
-
-    const startCode = startEl?.closest ? startEl.closest("code") : null;
-    const endCode = endEl?.closest ? endEl.closest("code") : null;
-
-    if (
-      startCode &&
-      endCode &&
-      startCode === endCode &&
-      this.editor.contains(startCode) &&
-      !startCode.closest("pre")
-    ) {
-      this.unwrapPreviewInlineCodeElement(startCode);
+    const activeCode = this.findInlineCodeAtSelection(range);
+    if (activeCode) {
+      this.unwrapPreviewInlineCodeElement(activeCode);
       return;
+    }
+
+    if (range.collapsed) {
+      this.expandPreviewSelectionToWord();
     }
 
     const selected = this.getPreviewSelectionText().trim() || "code";
     this.insertHtmlAtCursor(`<code>${this.escapeHtml(selected)}</code>`);
+  }
+
+  findInlineCodeAtSelection(rangeOverride) {
+    const range = rangeOverride || this.getActivePreviewRange();
+    if (!range || !this.editor) return null;
+
+    const resolveInlineCode = (node) => {
+      if (!node) return null;
+      const el =
+        node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+      if (!el || !el.closest) return null;
+
+      const code = el.closest("code");
+      if (!code) return null;
+      if (!this.editor.contains(code)) return null;
+      if (code.closest("pre")) return null;
+      return code;
+    };
+
+    const startCode = resolveInlineCode(range.startContainer);
+    const endCode = resolveInlineCode(range.endContainer);
+    if (startCode && endCode && startCode === endCode) return startCode;
+    if (startCode) return startCode;
+    if (endCode) return endCode;
+
+    if (!range.collapsed) return null;
+
+    const startNode = range.startContainer;
+    const offset = range.startOffset;
+
+    if (startNode.nodeType === Node.ELEMENT_NODE) {
+      const children = startNode.childNodes || [];
+      if (offset > 0) {
+        const prevCode = resolveInlineCode(children[offset - 1]);
+        if (prevCode) return prevCode;
+      }
+      if (offset < children.length) {
+        const nextCode = resolveInlineCode(children[offset]);
+        if (nextCode) return nextCode;
+      }
+    }
+
+    if (startNode.nodeType === Node.TEXT_NODE) {
+      const textLen = String(startNode.nodeValue || "").length;
+      if (offset === 0) {
+        const prevCode = resolveInlineCode(startNode.previousSibling);
+        if (prevCode) return prevCode;
+      }
+      if (offset === textLen) {
+        const nextCode = resolveInlineCode(startNode.nextSibling);
+        if (nextCode) return nextCode;
+      }
+    }
+
+    const anchorEl =
+      startNode.nodeType === Node.ELEMENT_NODE
+        ? startNode
+        : startNode.parentElement;
+    if (anchorEl) {
+      const prevCode = resolveInlineCode(anchorEl.previousSibling);
+      if (prevCode) return prevCode;
+      const nextCode = resolveInlineCode(anchorEl.nextSibling);
+      if (nextCode) return nextCode;
+    }
+
+    return null;
   }
 
   insertPreviewCodeBlock() {
