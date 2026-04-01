@@ -3129,6 +3129,11 @@ class NotesManager extends BaseManager {
       return;
     }
 
+    if (cmd === "insertUnorderedList" || cmd === "insertOrderedList") {
+      this.togglePreviewListType(cmd);
+      return;
+    }
+
     if (cmd === "quote") {
       this.togglePreviewBlockquote();
       return;
@@ -3176,6 +3181,72 @@ class NotesManager extends BaseManager {
     }
 
     this.execCommand(cmd);
+  }
+
+  getSelectedPreviewList(rangeOverride) {
+    const range = rangeOverride || this.getActivePreviewRange();
+    if (!range || !this.editor) return null;
+
+    const startEl =
+      range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement;
+    const endEl =
+      range.endContainer.nodeType === Node.ELEMENT_NODE
+        ? range.endContainer
+        : range.endContainer.parentElement;
+
+    const startList = startEl?.closest ? startEl.closest("ul,ol") : null;
+    const endList = endEl?.closest ? endEl.closest("ul,ol") : null;
+
+    if (startList && this.editor.contains(startList)) return startList;
+    if (endList && this.editor.contains(endList)) return endList;
+    return null;
+  }
+
+  convertPreviewListTag(list, targetTag) {
+    if (!list || !list.parentNode) return list;
+    const desired = String(targetTag || "").toUpperCase();
+    if (desired !== "UL" && desired !== "OL") return list;
+    if (String(list.tagName || "").toUpperCase() === desired) return list;
+
+    const next = document.createElement(desired.toLowerCase());
+    Array.from(list.attributes).forEach((attr) => {
+      next.setAttribute(attr.name, attr.value);
+    });
+
+    while (list.firstChild) {
+      next.appendChild(list.firstChild);
+    }
+
+    list.parentNode.replaceChild(next, list);
+    return next;
+  }
+
+  clearChecklistStateForDirectItems(list) {
+    if (!list) return;
+    Array.from(list.querySelectorAll(":scope > li")).forEach((li) => {
+      li.removeAttribute("data-checked");
+    });
+  }
+
+  togglePreviewListType(cmd) {
+    const targetTag = cmd === "insertOrderedList" ? "OL" : "UL";
+    const offsets = this.getSelectionOffsets(this.editor);
+    let list = this.getSelectedPreviewList();
+
+    if (!list) {
+      this.execCommand(cmd);
+      list = this.getSelectedPreviewList();
+    }
+
+    if (!list || !this.editor.contains(list)) return;
+
+    list = this.convertPreviewListTag(list, targetTag);
+    list.classList.remove("notes-checklist");
+    this.clearChecklistStateForDirectItems(list);
+
+    if (offsets) this.restoreSelectionOffsets(this.editor, offsets);
   }
 
   getPreviewSelectionText() {
@@ -3563,30 +3634,32 @@ class NotesManager extends BaseManager {
   }
 
   toggleChecklist() {
-    // Start with a normal unordered list command, then toggle class on the nearest UL.
-    this.execCommand("insertUnorderedList");
+    const offsets = this.getSelectionOffsets(this.editor);
+    let list = this.getSelectedPreviewList();
 
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-
-    const range = sel.getRangeAt(0);
-    const node = range.startContainer;
-    const el =
-      node && node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-    if (!el) return;
-
-    const ul = el.closest("ul");
-    if (!ul) return;
-
-    ul.classList.toggle("notes-checklist");
-
-    // Ensure list items have data-checked attribute for styling.
-    if (ul.classList.contains("notes-checklist")) {
-      ul.querySelectorAll("li").forEach((li) => {
-        if (!li.getAttribute("data-checked"))
-          li.setAttribute("data-checked", "false");
-      });
+    if (!list) {
+      this.execCommand("insertUnorderedList");
+      list = this.getSelectedPreviewList();
     }
+
+    if (!list || !this.editor.contains(list)) return;
+
+    list = this.convertPreviewListTag(list, "UL");
+
+    const enableChecklist = !list.classList.contains("notes-checklist");
+    if (enableChecklist) {
+      list.classList.add("notes-checklist");
+      Array.from(list.querySelectorAll(":scope > li")).forEach((li) => {
+        if (!li.getAttribute("data-checked")) {
+          li.setAttribute("data-checked", "false");
+        }
+      });
+    } else {
+      list.classList.remove("notes-checklist");
+      this.clearChecklistStateForDirectItems(list);
+    }
+
+    if (offsets) this.restoreSelectionOffsets(this.editor, offsets);
   }
 
   togglePreviewChecklistItem(li) {
