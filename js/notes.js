@@ -2554,6 +2554,7 @@ class NotesManager extends BaseManager {
 
       const isChecklist = listEl.classList.contains("notes-checklist");
       const isOrdered = listEl.tagName === "OL";
+      const emptyItemPlaceholder = "\u200b";
       let idx = 1;
       const lines = [];
 
@@ -2577,7 +2578,7 @@ class NotesManager extends BaseManager {
         if (ownText) {
           lines.push(`${indent}${prefix}${ownText}`);
         } else {
-          lines.push(`${indent}${prefix}`);
+          lines.push(`${indent}${prefix}${emptyItemPlaceholder}`);
         }
 
         const nestedLists = Array.from(li.querySelectorAll("ul,ol")).filter(
