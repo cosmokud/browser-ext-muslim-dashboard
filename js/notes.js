@@ -889,7 +889,10 @@ class NotesManager extends BaseManager {
             ? this._rawSelection.start
             : 0;
 
-      const boundedCaret = Math.max(0, Math.min(caret, String(t.value || "").length));
+      const boundedCaret = Math.max(
+        0,
+        Math.min(caret, String(t.value || "").length),
+      );
       const before = String(t.value || "").slice(0, boundedCaret);
 
       const lineIndex = Math.max(0, before.split("\n").length - 1);
@@ -944,7 +947,8 @@ class NotesManager extends BaseManager {
 
       if (rect) {
         const containerRect = this.editor.getBoundingClientRect();
-        const absoluteTop = rect.top - containerRect.top + this.editor.scrollTop;
+        const absoluteTop =
+          rect.top - containerRect.top + this.editor.scrollTop;
         const absoluteLeft =
           rect.left - containerRect.left + this.editor.scrollLeft;
 
