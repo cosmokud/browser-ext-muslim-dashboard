@@ -2594,12 +2594,61 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--glass-bg-hover) 92%, transparent 8%);
+  background: #17232f;
   color: var(--text-primary);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  opacity: 1;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   z-index: 12060;
+}
+
+[data-theme-mode="light"] .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
+  background: #f4f7fb;
+  border-color: rgba(15, 23, 42, 0.22);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+.notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip],
+.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip] {
+  position: relative;
+}
+
+.notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip]::after,
+.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip]::after {
+  content: attr(data-notes-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 12120;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(12, 18, 26, 0.97);
+  color: #f5f9ff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip]:hover::after,
+.notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip]:focus-visible::after,
+.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip]:hover::after,
+.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.notes-toolbar.ql-toolbar.ql-snow
+  .ql-picker.ql-expanded
+  .ql-picker-label[data-notes-tooltip]::after {
+  opacity: 0;
 }
 
 .notes-toolbar.ql-toolbar.ql-snow .ql-picker-item {

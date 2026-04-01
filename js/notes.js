@@ -21,6 +21,7 @@ class NotesManager extends BaseManager {
     this.saveTimer = null;
     this.isSettingContent = false;
     this.editorInstance = null;
+    this.toolbarTooltipObserver = null;
 
     this.card = document.getElementById("notesCard");
     this.newBtn = document.getElementById("notesNewBtn");
@@ -92,6 +93,27 @@ class NotesManager extends BaseManager {
               redo: () => {
                 this.editorInstance?.history?.redo();
               },
+              bold: () => {
+                this.applyInlineFormatToWordOrSelection("bold");
+              },
+              italic: () => {
+                this.applyInlineFormatToWordOrSelection("italic");
+              },
+              underline: () => {
+                this.applyInlineFormatToWordOrSelection("underline");
+              },
+              strike: () => {
+                this.applyInlineFormatToWordOrSelection("strike");
+              },
+              code: () => {
+                this.applyInlineFormatToWordOrSelection("code");
+              },
+              blockquote: () => {
+                this.toggleLineFormat("blockquote");
+              },
+              "code-block": () => {
+                this.toggleLineFormat("code-block");
+              },
               image: () => {
                 this.insertImageByUrl();
               },
@@ -107,6 +129,8 @@ class NotesManager extends BaseManager {
       });
 
       this.applyToolbarTooltips();
+      this.startToolbarTooltipObserver();
+      this.bindToolbarTooltipFallbackEvents();
 
       this.editorInstance.on("text-change", (_delta, _oldDelta, source) => {
         if (this.isSettingContent) return;
@@ -434,6 +458,147 @@ class NotesManager extends BaseManager {
     this.insertImageAtCursor(src);
   }
 
+  applyInlineFormatToWordOrSelection(formatName) {
+    if (!this.editorInstance) return;
+
+    const range = this.editorInstance.getSelection(true);
+    if (!range) return;
+
+    if (range.length > 0) {
+      const currentValue = this.editorInstance.getFormat(
+        range.index,
+        range.length,
+      )[formatName];
+      const nextValue = !this.isFormatEnabled(currentValue);
+      this.editorInstance.format(formatName, nextValue, "user");
+      this.queueSave();
+      return;
+    }
+
+    const wordRange = this.getWordRangeAt(range.index);
+    if (!wordRange) {
+      const currentValue = this.editorInstance.getFormat(range.index, 1)[
+        formatName
+      ];
+      const nextValue = !this.isFormatEnabled(currentValue);
+      this.editorInstance.format(formatName, nextValue, "user");
+      this.queueSave();
+      return;
+    }
+
+    const currentValue = this.editorInstance.getFormat(
+      wordRange.index,
+      wordRange.length,
+    )[formatName];
+    const nextValue = !this.isFormatEnabled(currentValue);
+
+    this.editorInstance.formatText(
+      wordRange.index,
+      wordRange.length,
+      formatName,
+      nextValue,
+      "user",
+    );
+    this.editorInstance.setSelection(range.index, 0, "silent");
+    this.queueSave();
+  }
+
+  toggleLineFormat(formatName) {
+    if (!this.editorInstance) return;
+
+    const range = this.editorInstance.getSelection(true);
+    if (!range) return;
+
+    let formatIndex = range.index;
+    let formatLength = range.length;
+
+    if (formatLength === 0) {
+      const [line, offset] = this.editorInstance.getLine(range.index);
+      if (line) {
+        formatIndex = Math.max(0, range.index - offset);
+        formatLength = Math.max(1, line.length());
+      } else {
+        formatLength = 1;
+      }
+    }
+
+    const currentValue = this.editorInstance.getFormat(formatIndex, formatLength)[
+      formatName
+    ];
+    const nextValue = this.isFormatEnabled(currentValue) ? false : true;
+
+    this.editorInstance.formatLine(
+      formatIndex,
+      formatLength,
+      formatName,
+      nextValue,
+      "user",
+    );
+    this.editorInstance.setSelection(range.index, range.length, "silent");
+    this.queueSave();
+  }
+
+  getWordRangeAt(index) {
+    if (!this.editorInstance) return null;
+
+    const text = String(this.editorInstance.getText() || "");
+    if (!text) return null;
+
+    const contentLength = Math.max(0, this.editorInstance.getLength() - 1);
+    if (contentLength <= 0) return null;
+
+    const charAt = (position) => {
+      if (position < 0 || position >= text.length) return "";
+      return text.charAt(position);
+    };
+
+    let cursor = Math.max(0, Math.min(index, contentLength - 1));
+    if (!this.isWordCharacter(charAt(cursor))) {
+      if (cursor > 0 && this.isWordCharacter(charAt(cursor - 1))) {
+        cursor -= 1;
+      } else if (this.isWordCharacter(charAt(cursor + 1))) {
+        cursor += 1;
+      } else {
+        return null;
+      }
+    }
+
+    let start = cursor;
+    let end = cursor + 1;
+
+    while (start > 0 && this.isWordCharacter(charAt(start - 1))) {
+      start -= 1;
+    }
+
+    while (end < text.length && this.isWordCharacter(charAt(end))) {
+      end += 1;
+    }
+
+    const length = end - start;
+    if (length <= 0) return null;
+
+    return {
+      index: start,
+      length,
+    };
+  }
+
+  isWordCharacter(value) {
+    const char = String(value || "");
+    if (!char || /\s/.test(char)) return false;
+
+    try {
+      return /[\p{L}\p{N}_]/u.test(char);
+    } catch (_error) {
+      return /[A-Za-z0-9_]/.test(char);
+    }
+  }
+
+  isFormatEnabled(value) {
+    if (typeof value === "string") return value.trim().length > 0;
+    return Boolean(value);
+  }
+
   applyToolbarTooltips() {
     if (!this.toolbar) return;
 
@@ -444,6 +609,7 @@ class NotesManager extends BaseManager {
 
       element.setAttribute("title", tooltip);
       element.setAttribute("aria-label", tooltip);
+      element.setAttribute("data-notes-tooltip", tooltip);
     });
 
     this.toolbar.querySelectorAll(".ql-picker").forEach((picker) => {
@@ -456,6 +622,7 @@ class NotesManager extends BaseManager {
       if (labelEl instanceof HTMLElement && pickerLabel) {
         labelEl.setAttribute("title", pickerLabel);
         labelEl.setAttribute("aria-label", pickerLabel);
+        labelEl.setAttribute("data-notes-tooltip", pickerLabel);
       }
 
       picker.querySelectorAll(".ql-picker-item").forEach((item) => {
@@ -467,6 +634,58 @@ class NotesManager extends BaseManager {
         item.setAttribute("aria-label", itemLabel);
       });
     });
+  }
+
+  startToolbarTooltipObserver() {
+    if (!this.toolbar || typeof MutationObserver !== "function") return;
+
+    this.toolbarTooltipObserver?.disconnect();
+
+    let queued = false;
+    this.toolbarTooltipObserver = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+
+      window.requestAnimationFrame(() => {
+        queued = false;
+        this.applyToolbarTooltips();
+      });
+    });
+
+    this.toolbarTooltipObserver.observe(this.toolbar, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+  }
+
+  bindToolbarTooltipFallbackEvents() {
+    if (!this.toolbar) return;
+    if (this.toolbar.dataset.notesTooltipBound === "true") return;
+
+    const ensureTooltip = (event) => {
+      const target = event?.target;
+      if (!(target instanceof Element)) return;
+
+      const control = target.closest("button, .ql-picker-label, .ql-picker-item");
+      if (!(control instanceof HTMLElement)) return;
+
+      const tooltip = String(
+        control.getAttribute("data-notes-tooltip") ||
+          control.getAttribute("aria-label") ||
+          "",
+      ).trim();
+
+      if (!tooltip) return;
+      if (!control.getAttribute("title")) {
+        control.setAttribute("title", tooltip);
+      }
+    };
+
+    this.toolbar.addEventListener("mouseover", ensureTooltip);
+    this.toolbar.addEventListener("focusin", ensureTooltip);
+    this.toolbar.dataset.notesTooltipBound = "true";
   }
 
   getButtonTooltip(button) {
