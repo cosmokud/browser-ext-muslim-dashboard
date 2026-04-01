@@ -643,6 +643,17 @@ class NotesManager extends BaseManager {
   }
 
   toggleMarkdownPreview() {
+    let targetRawCaret = null;
+    let targetPreview = null;
+
+    if (this.isMarkdownPreview) {
+      this.capturePreviewSelection();
+      targetRawCaret = this.mapPreviewCursorToRawCaret();
+    } else {
+      this.captureRawSelection();
+      targetPreview = this.preparePreviewFromRawCaret();
+    }
+
     // Persist before switching modes so we don't lose edits.
     this.persistActiveNote({ updateTimestampIfChanged: true });
 
@@ -652,13 +663,47 @@ class NotesManager extends BaseManager {
       this.isMarkdownPreview,
     );
     this.applyEditorMode();
-    this.renderActiveMarkdownPreview();
 
     if (this.isMarkdownPreview) {
-      this.placeCaretAtEnd(this.editor);
+      if (targetPreview && typeof targetPreview.html === "string") {
+        this.editor.innerHTML = targetPreview.html;
+      } else {
+        this.renderActiveMarkdownPreview();
+      }
+
+      if (
+        targetPreview &&
+        typeof targetPreview.offset === "number" &&
+        Number.isFinite(targetPreview.offset)
+      ) {
+        this.restoreSelectionOffsets(this.editor, {
+          start: targetPreview.offset,
+          end: targetPreview.offset,
+        });
+      } else {
+        this.placeCaretAtEnd(this.editor);
+      }
+
       this.capturePreviewSelection();
     } else {
-      this.placeCaretAtEndTextArea(this.rawEditor);
+      this.renderActiveMarkdownPreview();
+
+      if (
+        typeof targetRawCaret === "number" &&
+        Number.isFinite(targetRawCaret)
+      ) {
+        const caret = Math.max(
+          0,
+          Math.min(targetRawCaret, String(this.rawEditor.value || "").length),
+        );
+        try {
+          this.rawEditor.focus();
+          this.rawEditor.setSelectionRange(caret, caret);
+        } catch (e) {}
+      } else {
+        this.placeCaretAtEndTextArea(this.rawEditor);
+      }
+
       this.captureRawSelection();
     }
   }
@@ -720,6 +765,114 @@ class NotesManager extends BaseManager {
     if (String(this.editor.innerHTML || "") !== html) {
       this.editor.innerHTML = html;
     }
+  }
+
+  mapPreviewCursorToRawCaret() {
+    try {
+      const offsets =
+        this.getSelectionOffsets(this.editor) || this._previewSelectionOffsets;
+      if (!offsets) return null;
+
+      const marker = "__NOTES_CURSOR_RAW__";
+      const htmlWithMarker = this.insertTextMarkerAtPreviewOffset(
+        String(this.editor.innerHTML || ""),
+        offsets.end,
+        marker,
+      );
+      const mdWithMarker = this.htmlToMarkdown(htmlWithMarker);
+      const idx = String(mdWithMarker || "").indexOf(marker);
+      if (idx >= 0) return idx;
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const raw = String(this.rawEditor.value || "");
+      const fallback =
+        typeof this._rawSelection?.start === "number"
+          ? this._rawSelection.start
+          : raw.length;
+      return Math.max(0, Math.min(fallback, raw.length));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  preparePreviewFromRawCaret() {
+    try {
+      const raw = String(this.rawEditor.value || "");
+      const caret =
+        typeof this.rawEditor.selectionStart === "number"
+          ? this.rawEditor.selectionStart
+          : typeof this._rawSelection?.start === "number"
+            ? this._rawSelection.start
+            : raw.length;
+
+      const pos = Math.max(0, Math.min(caret, raw.length));
+      const marker = "__NOTES_CURSOR_PREVIEW__";
+      const mdWithMarker = `${raw.slice(0, pos)}${marker}${raw.slice(pos)}`;
+      const htmlWithMarker = this.normalizeMarkdownHtmlForEditor(
+        this.renderMarkdown(mdWithMarker),
+      );
+
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = htmlWithMarker;
+
+      const offset = this.removeTextMarkerAndGetOffset(wrapper, marker);
+      return {
+        html: wrapper.innerHTML,
+        offset: typeof offset === "number" ? offset : null,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  insertTextMarkerAtPreviewOffset(html, offset, marker) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = String(html || "");
+
+    const textOffset = Math.max(0, parseInt(offset, 10) || 0);
+    const pos = this.findTextPosition(wrapper, textOffset);
+
+    if (!pos) {
+      wrapper.appendChild(document.createTextNode(marker));
+      return wrapper.innerHTML;
+    }
+
+    const node = pos.node;
+    const value = String(node.nodeValue || "");
+    const idx = Math.max(0, Math.min(pos.offset, value.length));
+    node.nodeValue = `${value.slice(0, idx)}${marker}${value.slice(idx)}`;
+    return wrapper.innerHTML;
+  }
+
+  removeTextMarkerAndGetOffset(root, marker) {
+    const m = String(marker || "");
+    if (!root || !m) return null;
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const text = String(node.nodeValue || "");
+      const idx = text.indexOf(m);
+      if (idx < 0) continue;
+
+      let offset = null;
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(root);
+        range.setEnd(node, idx);
+        offset = range.toString().length;
+      } catch (e) {
+        offset = null;
+      }
+
+      node.nodeValue = `${text.slice(0, idx)}${text.slice(idx + m.length)}`;
+      return offset;
+    }
+
+    return null;
   }
 
   syncPreviewFromRawEditor() {
@@ -850,6 +1003,7 @@ class NotesManager extends BaseManager {
     const inlineWrapCommands = new Set([
       "bold",
       "italic",
+      "underline",
       "strikeThrough",
       "inlineCode",
     ]);
@@ -927,6 +1081,7 @@ class NotesManager extends BaseManager {
 
     if (c === "bold") return toggleWrap("**", "**");
     if (c === "italic") return toggleWrap("*", "*");
+    if (c === "underline") return toggleWrap("<u>", "</u>");
     if (c === "strikeThrough") return toggleWrap("~~", "~~");
     if (c === "inlineCode") return toggleWrap("`", "`");
 
@@ -1761,7 +1916,12 @@ class NotesManager extends BaseManager {
       return;
     }
 
-    if (cmd === "bold" || cmd === "italic" || cmd === "strikeThrough") {
+    if (
+      cmd === "bold" ||
+      cmd === "italic" ||
+      cmd === "underline" ||
+      cmd === "strikeThrough"
+    ) {
       this.expandPreviewSelectionToWord();
       this.execCommand(cmd);
       return;

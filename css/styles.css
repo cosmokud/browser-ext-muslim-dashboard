@@ -1451,17 +1451,20 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .notes-scale-control {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding-left: var(--spacing-xs);
+  gap: 4px;
+  padding-left: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .notes-scale-label {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
 .notes-scale-range {
-  width: 160px;
+  width: 99px;
+  flex: 0 0 99px;
   height: 32px;
   appearance: none;
   background: transparent;
@@ -1505,9 +1508,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-scale-value {
-  min-width: 4.5ch;
+  min-width: 3.8ch;
   text-align: right;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
 }
 
