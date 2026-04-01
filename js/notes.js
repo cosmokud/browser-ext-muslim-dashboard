@@ -3219,6 +3219,71 @@ class NotesManager extends BaseManager {
   getPreviewListContextFromRange(range) {
     if (!range || !this.editor) return { list: null, item: null };
 
+    const resolveLiAtBoundary = (container, offset) => {
+      if (!container) return null;
+
+      const pickLi = (node) => {
+        if (!node) return null;
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (String(node.tagName || "").toUpperCase() === "LI") return node;
+          const closest = node.closest ? node.closest("li") : null;
+          if (closest && this.editor.contains(closest)) return closest;
+          if (node.querySelector) {
+            const nested = node.querySelector("li");
+            if (nested && this.editor.contains(nested)) return nested;
+          }
+          return null;
+        }
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          const parent = node.parentElement;
+          const closest = parent?.closest ? parent.closest("li") : null;
+          return closest && this.editor.contains(closest) ? closest : null;
+        }
+
+        return null;
+      };
+
+      if (container.nodeType === Node.TEXT_NODE) {
+        return pickLi(container);
+      }
+
+      if (container.nodeType !== Node.ELEMENT_NODE) {
+        return null;
+      }
+
+      const el = container;
+      const tag = String(el.tagName || "").toUpperCase();
+      if (tag === "LI") return el;
+
+      if (tag === "UL" || tag === "OL") {
+        const childEls = Array.from(el.children).filter(
+          (child) => String(child.tagName || "").toUpperCase() === "LI",
+        );
+        if (childEls.length) {
+          const idx = Math.max(
+            0,
+            Math.min(offset > 0 ? offset - 1 : 0, childEls.length - 1),
+          );
+          return childEls[idx];
+        }
+      }
+
+      const nodes = el.childNodes || [];
+      const candidates = [];
+      if (offset < nodes.length) candidates.push(nodes[offset]);
+      if (offset > 0) candidates.push(nodes[offset - 1]);
+
+      for (const candidate of candidates) {
+        const li = pickLi(candidate);
+        if (li) return li;
+      }
+
+      const closest = el.closest ? el.closest("li") : null;
+      return closest && this.editor.contains(closest) ? closest : null;
+    };
+
     const startEl =
       range.startContainer.nodeType === Node.ELEMENT_NODE
         ? range.startContainer
@@ -3228,8 +3293,11 @@ class NotesManager extends BaseManager {
         ? range.endContainer
         : range.endContainer.parentElement;
 
-    const startLi = startEl?.closest ? startEl.closest("li") : null;
-    const endLi = endEl?.closest ? endEl.closest("li") : null;
+    const startLi = resolveLiAtBoundary(
+      range.startContainer,
+      range.startOffset,
+    );
+    const endLi = resolveLiAtBoundary(range.endContainer, range.endOffset);
 
     const li =
       startLi && this.editor.contains(startLi)
