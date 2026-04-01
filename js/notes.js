@@ -98,7 +98,11 @@ class NotesManager extends BaseManager {
       true,
     );
 
-    this.configureMarkdownParser();
+    if (!this.hasMilkdownSupport()) {
+      this.configureMarkdownParser();
+    }
+
+    this.setupMilkdownIntegration();
 
     if (!this.notes.length) {
       const note = this.createNote();
@@ -111,7 +115,6 @@ class NotesManager extends BaseManager {
     }
 
     this.setupEventListeners();
-    this.setupMilkdownIntegration();
   }
 
   configureMarkdownParser() {
@@ -142,6 +145,14 @@ class NotesManager extends BaseManager {
   setupMilkdownIntegration() {
     if (!this.hasMilkdownSupport() || this._milkdownInitPromise) return;
 
+    try {
+      // Clear legacy rendered HTML before Crepe mounts to prevent double-layer overlap.
+      this.editor.innerHTML = "";
+      this.editor.removeAttribute("contenteditable");
+    } catch (e) {
+      // ignore
+    }
+
     const initialMarkdown = this.stripInternalCursorMarkers(
       String(this.rawEditor?.value || ""),
     );
@@ -163,6 +174,9 @@ class NotesManager extends BaseManager {
         );
         this.setMilkdownMarkdown(md, { silent: true });
         this.applyEditorMode();
+
+        requestAnimationFrame(() => this.refreshMilkdownUiPosition());
+        setTimeout(() => this.refreshMilkdownUiPosition(), 80);
       })
       .catch(() => {
         this._milkdown = null;
@@ -173,12 +187,22 @@ class NotesManager extends BaseManager {
   getMilkdownMarkdown() {
     if (!this.isMilkdownEnabled()) return "";
     try {
-      return this.stripInternalCursorMarkers(
+      const raw = this.stripInternalCursorMarkers(
         String(this._milkdown.getMarkdown() || ""),
       );
+      return this.normalizeMilkdownMarkdown(raw);
     } catch (e) {
       return "";
     }
+  }
+
+  normalizeMilkdownMarkdown(markdown) {
+    const source = this.stripInternalCursorMarkers(String(markdown || ""));
+    if (!source) return "";
+    if (this.isRichHtmlDocument(source)) return source;
+
+    // Prevent repeated <br> accumulation from editor serialization.
+    return source.replace(/<br\s*\/?>/gi, "\n");
   }
 
   setMilkdownMarkdown(markdown, { silent } = {}) {
@@ -209,7 +233,7 @@ class NotesManager extends BaseManager {
     if (!this.isMilkdownEnabled()) return;
     if (this._suppressMilkdownChange) return;
 
-    const md = this.stripInternalCursorMarkers(String(markdown || ""));
+    const md = this.normalizeMilkdownMarkdown(markdown);
     if (String(this.rawEditor.value || "") !== md) {
       this.rawEditor.value = md;
     }
@@ -217,7 +241,6 @@ class NotesManager extends BaseManager {
     const note = this.getActiveNote();
     if (note) {
       note.md = md;
-      note.html = this.renderMarkdown(md);
       note.contentMode = "markdown";
     }
 
@@ -250,7 +273,29 @@ class NotesManager extends BaseManager {
     return applied;
   }
 
+  refreshMilkdownUiPosition() {
+    if (!this.isMilkdownEnabled()) return;
+    if (!this.isMarkdownPreview) return;
+
+    try {
+      window.dispatchEvent(new Event("resize"));
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const scrollHost = this.editor?.querySelector(".milkdown .editor");
+      if (scrollHost) {
+        scrollHost.dispatchEvent(new Event("scroll"));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   setupEventListeners() {
+    const useMilkdownEditor = this.hasMilkdownSupport();
+
     if (this.newBtn) {
       this.newBtn.addEventListener("click", () => {
         // Persist current note before creating a new one.
@@ -449,167 +494,173 @@ class NotesManager extends BaseManager {
       }, 0);
     });
 
-    // Preview: Ctrl/Cmd-click links open in new tab; normal click doesn't navigate.
-    this.editor.addEventListener("click", (e) => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      const target =
-        e.target && e.target.nodeType === Node.ELEMENT_NODE
-          ? e.target
-          : e.target?.parentElement;
-      if (!target || !target.closest) return;
+    if (!useMilkdownEditor) {
+      // Preview: Ctrl/Cmd-click links open in new tab; normal click doesn't navigate.
+      this.editor.addEventListener("click", (e) => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        const target =
+          e.target && e.target.nodeType === Node.ELEMENT_NODE
+            ? e.target
+            : e.target?.parentElement;
+        if (!target || !target.closest) return;
 
-      const checklistItem = target.closest("li[data-checked]");
-      if (
-        checklistItem &&
-        this.editor.contains(checklistItem) &&
-        checklistItem.closest("ul.notes-checklist,ol.notes-checklist")
-      ) {
-        const rect = checklistItem.getBoundingClientRect();
-        const markerHitArea = rect.left + 28;
-        if (Number.isFinite(e.clientX) && e.clientX <= markerHitArea) {
-          e.preventDefault();
-          this.togglePreviewChecklistItem(checklistItem);
+        const checklistItem = target.closest("li[data-checked]");
+        if (
+          checklistItem &&
+          this.editor.contains(checklistItem) &&
+          checklistItem.closest("ul.notes-checklist,ol.notes-checklist")
+        ) {
+          const rect = checklistItem.getBoundingClientRect();
+          const markerHitArea = rect.left + 28;
+          if (Number.isFinite(e.clientX) && e.clientX <= markerHitArea) {
+            e.preventDefault();
+            this.togglePreviewChecklistItem(checklistItem);
+            return;
+          }
+        }
+
+        const a = target.closest("a");
+        if (!a) return;
+        try {
+          const href = a.getAttribute("href");
+          if (!href) return;
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            window.open(href, "_blank", "noopener");
+          } else {
+            e.preventDefault();
+          }
+        } catch (err) {
+          // ignore
+        }
+      });
+
+      // WYSIWYG editing in preview mode.
+      this.editor.addEventListener("keydown", (e) => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+
+        if (this.handleEditorShortcuts(e)) {
+          this.capturePreviewSelection();
           return;
         }
-      }
 
-      const a = target.closest("a");
-      if (!a) return;
-      try {
-        const href = a.getAttribute("href");
-        if (!href) return;
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          window.open(href, "_blank", "noopener");
-        } else {
-          e.preventDefault();
-        }
-      } catch (err) {
-        // ignore
-      }
-    });
-
-    // WYSIWYG editing in preview mode.
-    this.editor.addEventListener("keydown", (e) => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-
-      if (this.handleEditorShortcuts(e)) {
-        this.capturePreviewSelection();
-        return;
-      }
-
-      if (e.key !== "Tab") return;
-      e.preventDefault();
-
-      const tabHandled = this.handlePreviewEditorTab(!!e.shiftKey);
-      if (!tabHandled) {
-        this.insertPlainTextAtCursor("    ");
-      }
-
-      this.capturePreviewSelection();
-      this.queueSave();
-    });
-
-    this.editor.addEventListener("input", () => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      this.capturePreviewSelection();
-      this.queueSave();
-    });
-
-    const capturePreviewSelection = () => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      this.capturePreviewSelection();
-    };
-    ["focus", "keyup", "mouseup"].forEach((eventName) => {
-      this.editor.addEventListener(eventName, capturePreviewSelection);
-    });
-
-    this.editor.addEventListener("blur", () => {
-      if (this.isMilkdownEnabled()) return;
-      this.capturePreviewSelection();
-      // Sanitize in-place on blur to reduce risk from pasted HTML.
-      this.sanitizeEditorInPlace();
-      this.saveNow({ renderList: false });
-    });
-
-    // Internal copy: attach markdown fragment so paste inside this app can preserve markdown formatting.
-    this.editor.addEventListener("copy", (e) => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      this.writeInternalMarkdownClipboard(e);
-    });
-
-    this.editor.addEventListener("contextmenu", (e) => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      const cell = e.target.closest("td,th");
-      if (!cell || !this.editor.contains(cell)) return;
-      e.preventDefault();
-      this.showTableContextMenu(e.clientX, e.clientY, cell);
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!this._tableContextMenuEl) return;
-      if (e.target.closest(".notes-table-context-menu")) return;
-      this.hideTableContextMenu();
-    });
-
-    window.addEventListener("resize", () => this.hideTableContextMenu());
-    this.editor.addEventListener("scroll", () => this.hideTableContextMenu(), {
-      passive: true,
-    });
-
-    // Paste handling: sanitize HTML fragments.
-    this.editor.addEventListener("paste", (e) => {
-      if (!this.isMarkdownPreview) return;
-      if (this.isMilkdownEnabled()) return;
-      try {
-        if (!e.clipboardData) return;
+        if (e.key !== "Tab") return;
         e.preventDefault();
 
-        const clipboardHtml = e.clipboardData.getData("text/html") || "";
-        const internalHtml =
-          e.clipboardData.getData("text/x-notes-editor-html") ||
-          this.extractInternalHtmlFromClipboardHtml(clipboardHtml);
-        const internalMarkdown =
-          e.clipboardData.getData("text/x-notes-markdown") || "";
-
-        if (String(internalHtml || "").trim()) {
-          const clean = this.normalizeMarkdownHtmlForEditor(
-            this.sanitizeHtml(internalHtml),
-          );
-          this.insertHtmlAtCursor(clean, { forceRangeInsert: true });
-          this._allowHtmlFallbackOnNextConvert = false;
-          this.queueSave();
-          return;
+        const tabHandled = this.handlePreviewEditorTab(!!e.shiftKey);
+        if (!tabHandled) {
+          this.insertPlainTextAtCursor("    ");
         }
 
-        if (String(internalMarkdown || "").trim()) {
-          if (this.isRichMarkdownFragment(internalMarkdown)) {
-            this.insertMarkdownFragmentAtCursor(internalMarkdown);
-          } else {
-            this.insertPlainTextAtCursor(internalMarkdown);
-          }
-          this._allowHtmlFallbackOnNextConvert = false;
-          this.queueSave();
-          return;
-        }
-
-        const text = e.clipboardData.getData("text/plain") || "";
-        const plain =
-          text || this.extractPlainTextFromClipboardHtml(clipboardHtml);
-
-        this.insertPlainTextAtCursor(plain);
-        this._allowHtmlFallbackOnNextConvert = false;
+        this.capturePreviewSelection();
         this.queueSave();
-      } catch (err) {
-        // ignore
-      }
-    });
+      });
+
+      this.editor.addEventListener("input", () => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        this.capturePreviewSelection();
+        this.queueSave();
+      });
+
+      const capturePreviewSelection = () => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        this.capturePreviewSelection();
+      };
+      ["focus", "keyup", "mouseup"].forEach((eventName) => {
+        this.editor.addEventListener(eventName, capturePreviewSelection);
+      });
+
+      this.editor.addEventListener("blur", () => {
+        if (this.isMilkdownEnabled()) return;
+        this.capturePreviewSelection();
+        // Sanitize in-place on blur to reduce risk from pasted HTML.
+        this.sanitizeEditorInPlace();
+        this.saveNow({ renderList: false });
+      });
+
+      // Internal copy: attach markdown fragment so paste inside this app can preserve markdown formatting.
+      this.editor.addEventListener("copy", (e) => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        this.writeInternalMarkdownClipboard(e);
+      });
+
+      this.editor.addEventListener("contextmenu", (e) => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        const cell = e.target.closest("td,th");
+        if (!cell || !this.editor.contains(cell)) return;
+        e.preventDefault();
+        this.showTableContextMenu(e.clientX, e.clientY, cell);
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!this._tableContextMenuEl) return;
+        if (e.target.closest(".notes-table-context-menu")) return;
+        this.hideTableContextMenu();
+      });
+
+      window.addEventListener("resize", () => this.hideTableContextMenu());
+      this.editor.addEventListener(
+        "scroll",
+        () => this.hideTableContextMenu(),
+        {
+          passive: true,
+        },
+      );
+
+      // Paste handling: sanitize HTML fragments.
+      this.editor.addEventListener("paste", (e) => {
+        if (!this.isMarkdownPreview) return;
+        if (this.isMilkdownEnabled()) return;
+        try {
+          if (!e.clipboardData) return;
+          e.preventDefault();
+
+          const clipboardHtml = e.clipboardData.getData("text/html") || "";
+          const internalHtml =
+            e.clipboardData.getData("text/x-notes-editor-html") ||
+            this.extractInternalHtmlFromClipboardHtml(clipboardHtml);
+          const internalMarkdown =
+            e.clipboardData.getData("text/x-notes-markdown") || "";
+
+          if (String(internalHtml || "").trim()) {
+            const clean = this.normalizeMarkdownHtmlForEditor(
+              this.sanitizeHtml(internalHtml),
+            );
+            this.insertHtmlAtCursor(clean, { forceRangeInsert: true });
+            this._allowHtmlFallbackOnNextConvert = false;
+            this.queueSave();
+            return;
+          }
+
+          if (String(internalMarkdown || "").trim()) {
+            if (this.isRichMarkdownFragment(internalMarkdown)) {
+              this.insertMarkdownFragmentAtCursor(internalMarkdown);
+            } else {
+              this.insertPlainTextAtCursor(internalMarkdown);
+            }
+            this._allowHtmlFallbackOnNextConvert = false;
+            this.queueSave();
+            return;
+          }
+
+          const text = e.clipboardData.getData("text/plain") || "";
+          const plain =
+            text || this.extractPlainTextFromClipboardHtml(clipboardHtml);
+
+          this.insertPlainTextAtCursor(plain);
+          this._allowHtmlFallbackOnNextConvert = false;
+          this.queueSave();
+        } catch (err) {
+          // ignore
+        }
+      });
+    }
   }
 
   writeInternalMarkdownClipboard(event) {
@@ -1359,7 +1410,7 @@ class NotesManager extends BaseManager {
           this._allowHtmlFallbackOnNextConvert = false;
           nextMd = this.getMilkdownMarkdown();
           nextContentMode = "markdown";
-          nextHtml = this.renderMarkdown(nextMd);
+          nextHtml = String(note.html || "");
 
           if (String(this.rawEditor.value || "") !== nextMd) {
             this.rawEditor.value = nextMd;
@@ -1392,7 +1443,9 @@ class NotesManager extends BaseManager {
           String(this.rawEditor.value || note.md || ""),
         );
         nextContentMode = "markdown";
-        nextHtml = this.renderMarkdown(nextMd);
+        nextHtml = this.hasMilkdownSupport()
+          ? String(note.html || "")
+          : this.renderMarkdown(nextMd);
       }
 
       const changed =
@@ -1539,7 +1592,7 @@ class NotesManager extends BaseManager {
         this._allowHtmlFallbackOnNextConvert = false;
         nextMd = this.getMilkdownMarkdown();
         nextContentMode = "markdown";
-        nextHtml = this.renderMarkdown(nextMd);
+        nextHtml = String(current.html || "");
         if (String(this.rawEditor.value || "") !== nextMd) {
           this.rawEditor.value = nextMd;
         }
@@ -1567,7 +1620,9 @@ class NotesManager extends BaseManager {
         String(this.rawEditor.value || ""),
       );
       nextContentMode = "markdown";
-      nextHtml = this.renderMarkdown(nextMd);
+      nextHtml = this.hasMilkdownSupport()
+        ? String(current.html || "")
+        : this.renderMarkdown(nextMd);
     }
 
     const changed =
@@ -1744,6 +1799,9 @@ class NotesManager extends BaseManager {
     if (this.isMilkdownEnabled()) {
       this.editor.removeAttribute("contenteditable");
       this._milkdown.setReadonly(!isPreview);
+      if (isPreview) {
+        requestAnimationFrame(() => this.refreshMilkdownUiPosition());
+      }
     } else {
       this.editor.setAttribute("contenteditable", isPreview ? "true" : "false");
     }
@@ -1789,11 +1847,16 @@ class NotesManager extends BaseManager {
       note.md = markdown;
     }
 
+    if (this.isMilkdownEnabled()) {
+      this.setMilkdownMarkdown(markdown, { silent: true });
+      return;
+    }
+
     const html = this.stripInternalCursorMarkers(
       this.normalizeMarkdownHtmlForEditor(this.renderMarkdown(markdown)),
     );
-    if (this.isMilkdownEnabled()) {
-      this.setMilkdownMarkdown(markdown, { silent: true });
+    if (this._milkdownInitPromise) {
+      // During Crepe startup we avoid injecting legacy HTML into the same root.
     } else if (String(this.editor.innerHTML || "") !== html) {
       this.editor.innerHTML = html;
     }
@@ -2106,6 +2169,8 @@ class NotesManager extends BaseManager {
       this.setMilkdownMarkdown(markdown, { silent: true });
       return;
     }
+
+    if (this._milkdownInitPromise) return;
 
     const html = this.normalizeMarkdownHtmlForEditor(
       this.renderMarkdown(markdown),

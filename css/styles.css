@@ -1665,21 +1665,61 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .notes-editor.notes-editor-milkdown {
   padding: 0;
+  overflow: visible;
+  max-height: none;
+  position: relative;
 }
 
 .notes-editor.notes-editor-milkdown .milkdown {
   min-height: 100%;
   color: inherit;
   background: transparent;
+  position: relative;
+  --crepe-color-background: transparent;
+  --crepe-color-on-background: var(--text-primary);
+  --crepe-color-surface: var(--glass-bg-hover);
+  --crepe-color-surface-low: var(--glass-bg);
+  --crepe-color-on-surface: var(--text-primary);
+  --crepe-color-on-surface-variant: var(--text-secondary);
+  --crepe-color-outline: var(--text-muted);
+  --crepe-color-primary: var(--accent-gold);
+  --crepe-color-secondary: rgba(212, 175, 55, 0.18);
+  --crepe-color-on-secondary: var(--text-primary);
+  --crepe-color-inline-code: var(--accent-gold-light);
+  --crepe-color-hover: rgba(212, 175, 55, 0.12);
+  --crepe-color-selected: rgba(212, 175, 55, 0.2);
+  --crepe-color-inline-area: rgba(212, 175, 55, 0.16);
 }
 
 .notes-editor.notes-editor-milkdown .milkdown .editor {
   min-height: 320px;
+  max-height: 65vh;
+  overflow: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar {
+  width: var(--scrollbar-size-thin);
+  height: var(--scrollbar-size-thin);
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .notes-editor.notes-editor-milkdown .milkdown .ProseMirror {
   min-height: 320px;
   padding: var(--spacing-md);
+  padding-left: calc(var(--spacing-md) + 40px);
   color: inherit;
   line-height: inherit;
   font-size: inherit;
@@ -1688,10 +1728,73 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   white-space: pre-wrap;
 }
 
+@media (max-width: 768px) {
+  .notes-editor.notes-editor-milkdown .milkdown .ProseMirror {
+    padding-left: calc(var(--spacing-md) + 28px);
+  }
+}
+
 .notes-editor.notes-editor-milkdown
   .milkdown
   .ProseMirror[contenteditable="false"] {
   cursor: default;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .milkdown-block-handle,
+.notes-editor.notes-editor-milkdown .milkdown .milkdown-slash-menu {
+  z-index: 120;
+}
+
+.notes-editor.notes-editor-milkdown
+  .milkdown
+  .milkdown-block-handle
+  .operation-item {
+  pointer-events: auto;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown pre {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 var(--spacing-sm) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-bg-hover) 82%, black 18%);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown :not(pre) > code {
+  display: inline-block;
+  padding: 0.08em 0.42em;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--accent-gold-light);
+  line-height: 1.3;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .cm-editor {
+  background: color-mix(in srgb, var(--glass-bg-hover) 86%, black 14%);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .cm-gutters {
+  background: transparent;
+  color: var(--text-muted);
+  border-right: 1px solid var(--glass-border);
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .cm-activeLine,
+.notes-editor.notes-editor-milkdown .milkdown .cm-activeLineGutter {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .cm-selectionBackground {
+  background: rgba(212, 175, 55, 0.24) !important;
 }
 
 #notesEditor,
@@ -1734,11 +1837,15 @@ textarea.notes-editor {
   font-family: Consolas, "Courier New", monospace;
 }
 
-.notes-editor.notes-md-preview[contenteditable="false"] {
+.notes-editor.notes-md-preview:not(
+    .notes-editor-milkdown
+  )[contenteditable="false"] {
   cursor: default;
 }
 
-.notes-editor.notes-md-preview[contenteditable="true"] {
+.notes-editor.notes-md-preview:not(
+    .notes-editor-milkdown
+  )[contenteditable="true"] {
   cursor: text;
 }
 
@@ -1755,7 +1862,7 @@ textarea.notes-editor:focus {
   text-decoration: underline;
 }
 
-.notes-editor.notes-md-preview pre {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) pre {
   width: 100%;
   max-width: 100%;
   margin: 0 0 var(--spacing-sm) 0;
@@ -1768,12 +1875,12 @@ textarea.notes-editor:focus {
   white-space: pre;
 }
 
-.notes-editor.notes-md-preview code {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) code {
   font-family: "Courier New", monospace;
   font-size: 0.95em;
 }
 
-.notes-editor.notes-md-preview pre code {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) pre code {
   display: block;
   min-width: max-content;
   background: transparent;
@@ -1784,12 +1891,12 @@ textarea.notes-editor:focus {
   white-space: inherit;
 }
 
-.notes-editor.notes-md-preview :not(pre) > code,
-.notes-editor.notes-md-preview p code,
-.notes-editor.notes-md-preview li code,
-.notes-editor.notes-md-preview blockquote code,
-.notes-editor.notes-md-preview td code,
-.notes-editor.notes-md-preview th code {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) :not(pre) > code,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) p code,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) li code,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) blockquote code,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) td code,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) th code {
   display: inline-block;
   padding: 0.08em 0.42em;
   border-radius: 8px;
@@ -1799,7 +1906,7 @@ textarea.notes-editor:focus {
   line-height: 1.3;
 }
 
-.notes-editor.notes-md-preview blockquote {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) blockquote {
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-left: 3px solid var(--accent-gold);
@@ -1808,33 +1915,34 @@ textarea.notes-editor:focus {
   color: var(--text-secondary);
 }
 
-.notes-editor.notes-md-preview input[type="checkbox"] {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown)
+  input[type="checkbox"] {
   margin-right: var(--spacing-xs);
 }
 
-.notes-editor.notes-md-preview img,
-.notes-editor.notes-md-preview video,
-.notes-editor.notes-md-preview iframe {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) img,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) video,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) iframe {
   display: block;
   max-width: none;
   height: auto;
   margin: 0 0 var(--spacing-sm) 0;
 }
 
-.notes-editor.notes-md-preview iframe {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) iframe {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
 }
 
-.notes-editor.notes-md-preview table {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) table {
   width: max-content;
   min-width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing-sm);
 }
 
-.notes-editor.notes-md-preview th,
-.notes-editor.notes-md-preview td {
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) th,
+.notes-editor.notes-md-preview:not(.notes-editor-milkdown) td {
   border: 1px solid var(--glass-border);
   padding: 0.35rem 0.5rem;
 }
