@@ -31,6 +31,9 @@ class NotesManager extends BaseManager {
 
     this._rawSelection = { start: 0, end: 0, direction: "none" };
     this._previewSelectionOffsets = null;
+    this._previewSelectionRange = null;
+    this._previewSelectionListEl = null;
+    this._previewSelectionItemEl = null;
     this._allowHtmlFallbackOnNextConvert = false;
     this._cursorRecenterTimer = null;
     this._tableContextMenuEl = null;
@@ -3210,9 +3213,8 @@ class NotesManager extends BaseManager {
     this.execCommand(cmd);
   }
 
-  getSelectedPreviewList(rangeOverride) {
-    const range = rangeOverride || this.getActivePreviewRange();
-    if (!range || !this.editor) return null;
+  getPreviewListContextFromRange(range) {
+    if (!range || !this.editor) return { list: null, item: null };
 
     const startEl =
       range.startContainer.nodeType === Node.ELEMENT_NODE
@@ -3223,11 +3225,63 @@ class NotesManager extends BaseManager {
         ? range.endContainer
         : range.endContainer.parentElement;
 
-    const startList = startEl?.closest ? startEl.closest("ul,ol") : null;
-    const endList = endEl?.closest ? endEl.closest("ul,ol") : null;
+    const startLi = startEl?.closest ? startEl.closest("li") : null;
+    const endLi = endEl?.closest ? endEl.closest("li") : null;
 
-    if (startList && this.editor.contains(startList)) return startList;
-    if (endList && this.editor.contains(endList)) return endList;
+    const li =
+      startLi && this.editor.contains(startLi)
+        ? startLi
+        : endLi && this.editor.contains(endLi)
+          ? endLi
+          : null;
+
+    if (li) {
+      const parent = li.parentElement;
+      if (parent && /^(UL|OL)$/.test(String(parent.tagName || ""))) {
+        return { list: parent, item: li };
+      }
+    }
+
+    const startList = startEl?.closest ? startEl.closest("ul,ol") : null;
+    if (startList && this.editor.contains(startList)) {
+      return { list: startList, item: null };
+    }
+
+    const endList = endEl?.closest ? endEl.closest("ul,ol") : null;
+    if (endList && this.editor.contains(endList)) {
+      return { list: endList, item: null };
+    }
+
+    return { list: null, item: null };
+  }
+
+  getSelectedPreviewList(rangeOverride) {
+    const range = rangeOverride || this.getActivePreviewRange();
+
+    const context = this.getPreviewListContextFromRange(range);
+    if (context.list && this.editor && this.editor.contains(context.list)) {
+      return context.list;
+    }
+
+    if (
+      this._previewSelectionItemEl &&
+      this.editor &&
+      this.editor.contains(this._previewSelectionItemEl)
+    ) {
+      const parent = this._previewSelectionItemEl.parentElement;
+      if (parent && /^(UL|OL)$/.test(String(parent.tagName || ""))) {
+        return parent;
+      }
+    }
+
+    if (
+      this._previewSelectionListEl &&
+      this.editor &&
+      this.editor.contains(this._previewSelectionListEl)
+    ) {
+      return this._previewSelectionListEl;
+    }
+
     return null;
   }
 
@@ -4205,6 +4259,31 @@ class NotesManager extends BaseManager {
 
   capturePreviewSelection() {
     if (!this.editor) return;
+
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        this._previewSelectionRange = null;
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      if (
+        !this.editor.contains(range.startContainer) ||
+        !this.editor.contains(range.endContainer)
+      ) {
+        this._previewSelectionRange = null;
+        return;
+      }
+
+      this._previewSelectionRange = range.cloneRange();
+      const context = this.getPreviewListContextFromRange(range);
+      this._previewSelectionListEl = context.list || null;
+      this._previewSelectionItemEl = context.item || null;
+    } catch (e) {
+      this._previewSelectionRange = null;
+    }
+
     const offsets = this.getSelectionOffsets(this.editor);
     if (offsets) {
       this._previewSelectionOffsets = offsets;
@@ -4212,7 +4291,37 @@ class NotesManager extends BaseManager {
   }
 
   restorePreviewSelection() {
-    if (!this.editor || !this._previewSelectionOffsets) return;
+    if (!this.editor) return;
+
+    const trySetRange = (range) => {
+      if (!range) return false;
+      if (
+        !this.editor.contains(range.startContainer) ||
+        !this.editor.contains(range.endContainer)
+      ) {
+        return false;
+      }
+      try {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range.cloneRange());
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    if (trySetRange(this._previewSelectionRange)) return;
+
+    if (
+      this._previewSelectionItemEl &&
+      this.editor.contains(this._previewSelectionItemEl)
+    ) {
+      this.placeCaretInsideElement(this._previewSelectionItemEl);
+      return;
+    }
+
+    if (!this._previewSelectionOffsets) return;
     this.restoreSelectionOffsets(this.editor, this._previewSelectionOffsets);
   }
 
