@@ -1,6 +1,6 @@
 /**
- * Notes Manager (TipTap rich editor)
- * Implements a broad free-extension toolbar similar to TipTap Simple template.
+ * Notes Manager (Quill rich editor)
+ * CRUD notes with localStorage persistence.
  */
 
 class NotesManager extends BaseManager {
@@ -9,6 +9,7 @@ class NotesManager extends BaseManager {
   static PAGE_KEY = "notes_page";
   static ITEMS_PER_PAGE = 10;
   static DEFAULT_TITLE = "Untitled";
+  static MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
   constructor(storage) {
     super();
@@ -33,12 +34,6 @@ class NotesManager extends BaseManager {
     this.titleInput = document.getElementById("notesTitleInput");
     this.toolbar = document.getElementById("notesToolbar");
     this.editorHost = document.getElementById("notesEditor");
-    this.headingSelect = document.getElementById("notesHeadingSelect");
-    this.textColorInput = document.getElementById("notesTextColorInput");
-    this.highlightColorInput = document.getElementById(
-      "notesHighlightColorInput",
-    );
-    this.linkInput = document.getElementById("notesLinkInput");
     this.imageInput = document.getElementById("notesImageInput");
 
     this.deleteModal = document.getElementById("notesDeleteConfirmModal");
@@ -63,9 +58,7 @@ class NotesManager extends BaseManager {
   init() {
     this.loadNotesFromStorage();
     this.setupEditor();
-    this.migrateLegacyNotes();
     this.bindEvents();
-
     this.ensureAtLeastOneNote();
 
     const preferredId = String(
@@ -81,145 +74,125 @@ class NotesManager extends BaseManager {
   }
 
   setupEditor() {
-    const T = window.TiptapNotesBundle;
-    if (!T || typeof T.Editor !== "function") {
-      this.editorHost.setAttribute("contenteditable", "true");
-      this.editorHost.addEventListener("input", () => this.queueSave());
-      this.editorHost.addEventListener("blur", () =>
-        this.saveNow({ renderList: false }),
-      );
+    const QuillCtor = window.Quill;
+
+    if (typeof QuillCtor === "function") {
+      this.editorHost.removeAttribute("contenteditable");
+      this.editorHost.classList.add("notes-editor-quill");
+
+      this.toolbar.innerHTML = this.createQuillToolbarMarkup();
+      this.imageInput = this.toolbar.querySelector("#notesImageInput");
+
+      this.editorInstance = new QuillCtor(this.editorHost, {
+        theme: "snow",
+        modules: {
+          toolbar: {
+            container: this.toolbar,
+            handlers: {
+              undo: () => {
+                this.editorInstance?.history?.undo();
+              },
+              redo: () => {
+                this.editorInstance?.history?.redo();
+              },
+              image: () => {
+                this.imageInput?.click();
+              },
+              insertImageByUrl: () => {
+                this.insertImageByUrl();
+              },
+            },
+          },
+          history: {
+            delay: 300,
+            maxStack: 200,
+            userOnly: true,
+          },
+        },
+        placeholder: "Start writing your note...",
+      });
+
+      this.editorInstance.on("text-change", (_delta, _oldDelta, source) => {
+        if (this.isSettingContent) return;
+        if (source === "user") {
+          this.queueSave();
+        }
+      });
+
+      this.editorInstance.on("selection-change", (range) => {
+        if (range === null) {
+          this.saveNow({ renderList: false });
+        }
+      });
+
       return;
     }
 
-    const extensions = [];
-    const pushExtension = (extension, options = null) => {
-      if (!extension) return;
-      if (options && typeof extension.configure === "function") {
-        extensions.push(extension.configure(options));
-        return;
-      }
-      extensions.push(extension);
-    };
-
-    pushExtension(T.Document);
-    pushExtension(T.Paragraph);
-    pushExtension(T.Text);
-    pushExtension(T.HardBreak);
-    pushExtension(T.Bold);
-    pushExtension(T.Italic);
-    pushExtension(T.Underline);
-    pushExtension(T.Strike);
-    pushExtension(T.Code);
-    pushExtension(T.Blockquote);
-    pushExtension(T.BulletList);
-    pushExtension(T.OrderedList);
-    pushExtension(T.ListItem);
-    pushExtension(T.TaskList);
-    pushExtension(T.TaskItem, { nested: true });
-    pushExtension(T.Heading, { levels: [1, 2, 3, 4] });
-    pushExtension(T.HorizontalRule);
-    pushExtension(T.CodeBlock);
-    pushExtension(T.TextStyle);
-    pushExtension(T.Color);
-    pushExtension(T.Highlight, { multicolor: true });
-    pushExtension(T.Superscript);
-    pushExtension(T.Subscript);
-    pushExtension(T.Typography);
-    pushExtension(T.TextAlign, { types: ["paragraph", "heading"] });
-    pushExtension(T.Link, {
-      autolink: true,
-      openOnClick: false,
-      HTMLAttributes: {
-        rel: "noopener noreferrer nofollow",
-        target: "_blank",
-      },
-    });
-    pushExtension(T.Image, { allowBase64: true });
-    pushExtension(T.History);
-    pushExtension(T.Dropcursor);
-    pushExtension(T.Gapcursor);
-    pushExtension(T.Placeholder, {
-      placeholder: "Start writing your note...",
-    });
-
-    this.editorHost.classList.add("notes-editor-tiptap");
-
-    this.editorInstance = new T.Editor({
-      element: this.editorHost,
-      extensions,
-      content: this.createEmptyDoc(),
-      injectCSS: false,
-      autofocus: false,
-      onCreate: () => this.updateToolbarState(),
-      onUpdate: () => {
-        if (this.isSettingContent) return;
-        this.updateToolbarState();
-        this.queueSave();
-      },
-      onSelectionUpdate: () => this.updateToolbarState(),
-      onBlur: () => this.saveNow({ renderList: false }),
-    });
+    this.editorHost.setAttribute("contenteditable", "true");
+    this.editorHost.addEventListener("input", () => this.queueSave());
+    this.editorHost.addEventListener("blur", () =>
+      this.saveNow({ renderList: false }),
+    );
   }
 
-  migrateLegacyNotes() {
-    if (!this.editorInstance) return;
-
-    let changed = false;
-
-    this.notes.forEach((note) => {
-      if (this.isDocJson(note.content)) {
-        if (!String(note.html || "").trim() || !String(note.md || "").trim()) {
-          this.isSettingContent = true;
-          try {
-            this.editorInstance.commands.setContent(note.content, false);
-            note.html = this.normalizeHtml(
-              this.sanitizeHtml(this.editorInstance.getHTML()),
-            );
-            note.md = String(
-              this.editorInstance.getText({ blockSeparator: "\n" }) || "",
-            ).trim();
-            changed = true;
-          } catch (error) {
-            note.content = this.createEmptyDoc();
-            note.html = "<p></p>";
-            note.md = "";
-            changed = true;
-          } finally {
-            this.isSettingContent = false;
-          }
-        }
-        return;
-      }
-
-      const source =
-        note.content ||
-        note.html ||
-        this.markdownToHtml(note.md || note.text || "");
-
-      this.isSettingContent = true;
-      try {
-        this.editorInstance.commands.setContent(source, false);
-        note.content = this.cloneContent(this.editorInstance.getJSON());
-        note.html = this.normalizeHtml(
-          this.sanitizeHtml(this.editorInstance.getHTML()),
-        );
-        note.md = String(
-          this.editorInstance.getText({ blockSeparator: "\n" }) || "",
-        ).trim();
-      } catch (error) {
-        note.content = this.createEmptyDoc();
-        note.html = "<p></p>";
-        note.md = "";
-      } finally {
-        this.isSettingContent = false;
-      }
-
-      changed = true;
-    });
-
-    if (changed) {
-      this.writeNotes();
-    }
+  createQuillToolbarMarkup() {
+    return `
+      <span class="ql-formats">
+        <button class="ql-undo" type="button" aria-label="Undo" title="Undo">↺</button>
+        <button class="ql-redo" type="button" aria-label="Redo" title="Redo">↻</button>
+      </span>
+      <span class="ql-formats">
+        <select class="ql-header" aria-label="Heading">
+          <option value=""></option>
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+        </select>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-bold" type="button" aria-label="Bold"></button>
+        <button class="ql-italic" type="button" aria-label="Italic"></button>
+        <button class="ql-underline" type="button" aria-label="Underline"></button>
+        <button class="ql-strike" type="button" aria-label="Strike"></button>
+        <button class="ql-code" type="button" aria-label="Inline code"></button>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-list" value="ordered" type="button" aria-label="Ordered list"></button>
+        <button class="ql-list" value="bullet" type="button" aria-label="Bullet list"></button>
+        <button class="ql-list" value="check" type="button" aria-label="Checklist"></button>
+      </span>
+      <span class="ql-formats">
+        <select class="ql-align" aria-label="Align"></select>
+        <button class="ql-blockquote" type="button" aria-label="Block quote"></button>
+        <button class="ql-code-block" type="button" aria-label="Code block"></button>
+      </span>
+      <span class="ql-formats">
+        <select class="ql-color" aria-label="Text color"></select>
+        <select class="ql-background" aria-label="Highlight color"></select>
+      </span>
+      <span class="ql-formats">
+        <button class="ql-link" type="button" aria-label="Link"></button>
+        <button class="ql-image" type="button" aria-label="Upload image"></button>
+        <input
+          class="notes-tool-file-input"
+          id="notesImageInput"
+          type="file"
+          accept="image/*"
+          aria-label="Upload image"
+          tabindex="-1"
+        />
+        <button
+          class="ql-insertImageByUrl"
+          type="button"
+          aria-label="Insert image by URL"
+          title="Insert image by URL"
+        >
+          URL
+        </button>
+        <button class="ql-clean" type="button" aria-label="Clear formatting"></button>
+      </span>
+    `;
   }
 
   bindEvents() {
@@ -259,28 +232,6 @@ class NotesManager extends BaseManager {
     this.listEl.addEventListener("keydown", (event) =>
       this.handleListKeydown(event),
     );
-
-    this.toolbar.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-
-      const button = target.closest(".notes-tool-btn");
-      if (!button || button.disabled) return;
-
-      const command = String(button.getAttribute("data-cmd") || "").trim();
-      const value = String(button.getAttribute("data-value") || "").trim();
-      this.runToolbarCommand(command, value);
-    });
-
-    this.headingSelect?.addEventListener("change", () =>
-      this.runToolbarCommand("heading", this.headingSelect.value),
-    );
-
-    this.linkInput?.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      event.preventDefault();
-      this.runToolbarCommand("setLink");
-    });
 
     this.imageInput?.addEventListener("change", (event) =>
       this.handleImageUpload(event),
@@ -323,6 +274,7 @@ class NotesManager extends BaseManager {
 
   handleListKeydown(event) {
     if (event.key !== "Enter" && event.key !== " ") return;
+
     const target = event.target;
     if (!(target instanceof Element)) return;
 
@@ -330,385 +282,11 @@ class NotesManager extends BaseManager {
     if (!item) return;
 
     event.preventDefault();
+
     const noteId = String(item.getAttribute("data-note-id") || "").trim();
     if (!noteId) return;
+
     this.selectNote(noteId, { skipSave: false, focusEditor: true });
-  }
-
-  runToolbarCommand(command, value = "") {
-    const cmd = String(command || "").trim();
-    const rawValue = typeof value === "string" ? value.trim() : value;
-    if (!cmd) return;
-
-    if (this.editorInstance) {
-      const chain = this.editorInstance.chain().focus();
-      let ran = false;
-
-      switch (cmd) {
-        case "undo":
-          ran = chain.undo().run();
-          break;
-        case "redo":
-          ran = chain.redo().run();
-          break;
-        case "heading": {
-          const token = String(
-            rawValue || this.headingSelect?.value || "paragraph",
-          ).toLowerCase();
-
-          if (token === "paragraph") {
-            ran = chain.setParagraph().run();
-            break;
-          }
-
-          const match = /^h([1-4])$/.exec(token);
-          if (match) {
-            ran = chain.setHeading({ level: parseInt(match[1], 10) }).run();
-          }
-          break;
-        }
-        case "bold":
-          ran = chain.toggleBold().run();
-          break;
-        case "italic":
-          ran = chain.toggleItalic().run();
-          break;
-        case "underline":
-          ran = chain.toggleUnderline().run();
-          break;
-        case "strike":
-          ran = chain.toggleStrike().run();
-          break;
-        case "code":
-          ran = chain.toggleCode().run();
-          break;
-        case "superscript":
-          ran = chain.toggleSuperscript().run();
-          break;
-        case "subscript":
-          ran = chain.toggleSubscript().run();
-          break;
-        case "bulletList":
-          ran = chain.toggleBulletList().run();
-          break;
-        case "orderedList":
-          ran = chain.toggleOrderedList().run();
-          break;
-        case "taskList":
-          ran = chain.toggleTaskList().run();
-          break;
-        case "align": {
-          const align = String(rawValue || "").toLowerCase();
-          if (["left", "center", "right", "justify"].includes(align)) {
-            ran = chain.setTextAlign(align).run();
-          }
-          break;
-        }
-        case "blockquote":
-          ran = chain.toggleBlockquote().run();
-          break;
-        case "codeBlock":
-          ran = chain.toggleCodeBlock().run();
-          break;
-        case "horizontalRule":
-          ran = chain.setHorizontalRule().run();
-          break;
-        case "setTextColor": {
-          const color = this.normalizeColorHex(
-            rawValue || this.textColorInput?.value || "",
-          );
-          if (color) {
-            ran = chain.setColor(color).run();
-          }
-          break;
-        }
-        case "clearTextColor":
-          ran = chain.unsetColor().run();
-          break;
-        case "setHighlight": {
-          const color = this.normalizeColorHex(
-            rawValue || this.highlightColorInput?.value || "",
-          );
-          if (color) {
-            ran = chain.toggleHighlight({ color }).run();
-          }
-          break;
-        }
-        case "clearHighlight":
-          ran = chain.unsetHighlight().run();
-          break;
-        case "setLink": {
-          const href = this.normalizeLinkUrl(
-            rawValue || this.linkInput?.value || "",
-          );
-          if (!href) break;
-          ran = chain.extendMarkRange("link").setLink({ href }).run();
-          if (ran && this.linkInput) {
-            this.linkInput.value = href;
-          }
-          break;
-        }
-        case "unsetLink":
-          ran = chain.extendMarkRange("link").unsetLink().run();
-          if (ran && this.linkInput) {
-            this.linkInput.value = "";
-          }
-          break;
-        case "imageUpload":
-          if (this.imageInput) {
-            this.imageInput.click();
-          }
-          this.updateToolbarState();
-          return;
-        case "insertImageByUrl": {
-          const prompted = window.prompt("Enter image URL", "https://");
-          const src = this.normalizeImageUrl(prompted || "");
-          if (!src) break;
-          ran = chain.setImage({ src }).run();
-          break;
-        }
-        case "insertImage": {
-          const src = this.normalizeImageUrl(rawValue || "");
-          if (!src) break;
-          ran = chain.setImage({ src }).run();
-          break;
-        }
-        default:
-          break;
-      }
-
-      if (!ran) {
-        this.updateToolbarState();
-        return;
-      }
-
-      this.updateToolbarState();
-      this.queueSave();
-      return;
-    }
-
-    const fallbackExec = {
-      bold: "bold",
-      italic: "italic",
-      underline: "underline",
-      strike: "strikeThrough",
-      bulletList: "insertUnorderedList",
-      orderedList: "insertOrderedList",
-      undo: "undo",
-      redo: "redo",
-    };
-
-    if (!fallbackExec[cmd]) return;
-
-    this.editorHost.focus();
-    try {
-      document.execCommand(fallbackExec[cmd], false);
-    } catch (error) {
-      return;
-    }
-
-    this.updateToolbarState();
-    this.queueSave();
-  }
-
-  updateToolbarState() {
-    const states = {
-      bold: false,
-      italic: false,
-      underline: false,
-      strike: false,
-      code: false,
-      superscript: false,
-      subscript: false,
-      bulletList: false,
-      orderedList: false,
-      taskList: false,
-      blockquote: false,
-      codeBlock: false,
-      link: false,
-      highlight: false,
-      "align:left": false,
-      "align:center": false,
-      "align:right": false,
-      "align:justify": false,
-    };
-
-    let headingValue = "paragraph";
-    let linkHref = "";
-
-    if (this.editorInstance) {
-      states.bold = this.editorInstance.isActive("bold");
-      states.italic = this.editorInstance.isActive("italic");
-      states.underline = this.editorInstance.isActive("underline");
-      states.strike = this.editorInstance.isActive("strike");
-      states.code = this.editorInstance.isActive("code");
-      states.superscript = this.editorInstance.isActive("superscript");
-      states.subscript = this.editorInstance.isActive("subscript");
-      states.bulletList = this.editorInstance.isActive("bulletList");
-      states.orderedList = this.editorInstance.isActive("orderedList");
-      states.taskList = this.editorInstance.isActive("taskList");
-      states.blockquote = this.editorInstance.isActive("blockquote");
-      states.codeBlock = this.editorInstance.isActive("codeBlock");
-      states.link = this.editorInstance.isActive("link");
-      states.highlight = this.editorInstance.isActive("highlight");
-
-      const paragraphAlign = String(
-        this.editorInstance.getAttributes("paragraph")?.textAlign || "",
-      ).toLowerCase();
-      const headingAlign = String(
-        this.editorInstance.getAttributes("heading")?.textAlign || "",
-      ).toLowerCase();
-      const currentAlign =
-        headingAlign || paragraphAlign || (this.editorInstance ? "left" : "");
-
-      states["align:left"] = currentAlign === "left";
-      states["align:center"] = currentAlign === "center";
-      states["align:right"] = currentAlign === "right";
-      states["align:justify"] = currentAlign === "justify";
-
-      for (const level of [1, 2, 3, 4]) {
-        if (this.editorInstance.isActive("heading", { level })) {
-          headingValue = `h${level}`;
-          break;
-        }
-      }
-
-      const textColorAttr =
-        this.editorInstance.getAttributes("textStyle")?.color;
-      if (this.textColorInput) {
-        this.textColorInput.value = this.normalizeColorHex(
-          textColorAttr,
-          this.textColorInput.value || "#f5f5f5",
-        );
-      }
-
-      const highlightColorAttr =
-        this.editorInstance.getAttributes("highlight")?.color;
-      if (this.highlightColorInput) {
-        this.highlightColorInput.value = this.normalizeColorHex(
-          highlightColorAttr,
-          this.highlightColorInput.value || "#ffe066",
-        );
-      }
-
-      linkHref = String(this.editorInstance.getAttributes("link")?.href || "");
-
-      const undoBtn = this.toolbar.querySelector('[data-cmd="undo"]');
-      if (undoBtn) {
-        undoBtn.disabled = !this.editorInstance
-          .can()
-          .chain()
-          .focus()
-          .undo()
-          .run();
-      }
-
-      const redoBtn = this.toolbar.querySelector('[data-cmd="redo"]');
-      if (redoBtn) {
-        redoBtn.disabled = !this.editorInstance
-          .can()
-          .chain()
-          .focus()
-          .redo()
-          .run();
-      }
-    }
-
-    if (this.headingSelect) {
-      this.headingSelect.value = headingValue;
-    }
-
-    if (this.linkInput) {
-      this.linkInput.value = linkHref;
-    }
-
-    this.toolbar
-      .querySelectorAll(".notes-tool-btn[data-cmd]")
-      .forEach((btn) => {
-        const cmd = String(btn.getAttribute("data-cmd") || "").trim();
-        const value = String(btn.getAttribute("data-value") || "")
-          .trim()
-          .toLowerCase();
-
-        let active = false;
-
-        if (cmd === "align") {
-          active = !!states[`align:${value}`];
-        } else if (cmd === "setLink" || cmd === "unsetLink") {
-          active = !!states.link;
-        } else if (cmd === "setHighlight") {
-          active = !!states.highlight;
-        } else {
-          active = !!states[cmd];
-        }
-
-        btn.classList.toggle("active", active);
-      });
-  }
-
-  handleImageUpload(event) {
-    const input = event?.target;
-    if (!(input instanceof HTMLInputElement)) return;
-
-    const file = input.files && input.files[0] ? input.files[0] : null;
-    if (!file) return;
-
-    if (!/^image\//i.test(String(file.type || ""))) {
-      input.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || "").trim();
-      if (result) {
-        this.runToolbarCommand("insertImage", result);
-      }
-      input.value = "";
-    };
-    reader.onerror = () => {
-      input.value = "";
-    };
-    reader.readAsDataURL(file);
-  }
-
-  normalizeLinkUrl(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    if (/^\s*javascript:/i.test(raw)) return "";
-
-    if (/^(https?:|mailto:|tel:)/i.test(raw)) {
-      return raw;
-    }
-
-    return `https://${raw.replace(/^\/+/, "")}`;
-  }
-
-  normalizeImageUrl(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    if (/^\s*javascript:/i.test(raw)) return "";
-
-    if (/^(https?:|data:image\/|blob:)/i.test(raw)) {
-      return raw;
-    }
-
-    return "";
-  }
-
-  normalizeColorHex(value, fallback = "") {
-    const raw = String(value || "").trim();
-    const shortHex = /^#([0-9a-f]{3})$/i.exec(raw);
-    if (shortHex) {
-      const [r, g, b] = shortHex[1].split("");
-      return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
-    }
-
-    if (/^#[0-9a-f]{6}$/i.test(raw)) {
-      return raw.toLowerCase();
-    }
-
-    return fallback || "#f5f5f5";
   }
 
   handleCreateNote() {
@@ -737,34 +315,52 @@ class NotesManager extends BaseManager {
     this.activeNoteId = id;
     this.titleInput.value = String(note.title || NotesManager.DEFAULT_TITLE);
 
-    if (this.editorInstance) {
-      const source = note.content || note.html || this.createEmptyDoc();
-      this.isSettingContent = true;
-      try {
-        this.editorInstance.commands.setContent(source, false);
-      } catch (error) {
-        this.editorInstance.commands.setContent(this.createEmptyDoc(), false);
-      }
-      this.isSettingContent = false;
-    } else {
-      this.editorHost.innerHTML = this.normalizeHtml(
-        this.sanitizeHtml(note.html || this.textToHtml(note.md || "")),
-      );
-    }
+    this.setEditorContent(note);
 
     this.currentPage = this.getPageForNoteId(id);
     this.writeNotes();
     this.renderList();
-    this.updateToolbarState();
 
     if (focusEditor) {
       this.focusEditorAtEnd();
     }
   }
 
+  setEditorContent(note) {
+    if (this.editorInstance) {
+      this.isSettingContent = true;
+      try {
+        if (this.isQuillDelta(note.content)) {
+          this.editorInstance.setContents(
+            this.cloneContent(note.content),
+            "silent",
+          );
+        } else {
+          const html = this.normalizeHtml(
+            this.sanitizeHtml(note.html || this.textToHtml(note.md || "")),
+          );
+
+          const delta = this.editorInstance.clipboard.convert({ html });
+          this.editorInstance.setContents(delta, "silent");
+        }
+      } catch (_error) {
+        this.editorInstance.setText("", "silent");
+      } finally {
+        this.isSettingContent = false;
+      }
+      return;
+    }
+
+    this.editorHost.innerHTML = this.normalizeHtml(
+      this.sanitizeHtml(note.html || this.textToHtml(note.md || "")),
+    );
+  }
+
   focusEditorAtEnd() {
     if (this.editorInstance) {
-      this.editorInstance.chain().focus("end").run();
+      const end = Math.max(0, this.editorInstance.getLength() - 1);
+      this.editorInstance.focus();
+      this.editorInstance.setSelection(end, 0, "silent");
       return;
     }
 
@@ -776,7 +372,7 @@ class NotesManager extends BaseManager {
       range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
-    } catch (error) {
+    } catch (_error) {
       // Ignore selection failures.
     }
   }
@@ -790,7 +386,7 @@ class NotesManager extends BaseManager {
     this.saveTimer = setTimeout(() => {
       this.saveTimer = null;
       this.saveNow();
-    }, 200);
+    }, 220);
   }
 
   saveNow({ renderList = true } = {}) {
@@ -828,18 +424,17 @@ class NotesManager extends BaseManager {
 
     this.writeNotes();
     if (renderList) this.renderList();
+
     return changed;
   }
 
   getEditorSnapshot() {
     if (this.editorInstance) {
-      const content = this.cloneContent(this.editorInstance.getJSON());
+      const content = this.cloneContent(this.editorInstance.getContents());
       const html = this.normalizeHtml(
-        this.sanitizeHtml(this.editorInstance.getHTML()),
+        this.sanitizeHtml(this.editorInstance.root.innerHTML),
       );
-      const md = String(
-        this.editorInstance.getText({ blockSeparator: "\n" }) || "",
-      ).trim();
+      const md = String(this.editorInstance.getText() || "").trim();
       return { content, html, md };
     }
 
@@ -853,8 +448,63 @@ class NotesManager extends BaseManager {
     };
   }
 
+  insertImageByUrl() {
+    if (!this.editorInstance) return;
+
+    const prompted = window.prompt("Enter image URL", "https://");
+    const src = this.normalizeImageUrl(prompted || "");
+    if (!src) return;
+
+    this.insertImageAtCursor(src);
+  }
+
+  handleImageUpload(event) {
+    const input = event?.target;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (!/^image\//i.test(String(file.type || ""))) {
+      input.value = "";
+      return;
+    }
+
+    if (file.size > NotesManager.MAX_IMAGE_SIZE_BYTES) {
+      input.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = this.normalizeImageUrl(String(reader.result || "").trim());
+      if (src) {
+        this.insertImageAtCursor(src);
+      }
+      input.value = "";
+    };
+    reader.onerror = () => {
+      input.value = "";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  insertImageAtCursor(src) {
+    if (!this.editorInstance) return;
+
+    const range = this.editorInstance.getSelection(true) || {
+      index: Math.max(0, this.editorInstance.getLength() - 1),
+      length: 0,
+    };
+
+    this.editorInstance.insertEmbed(range.index, "image", src, "user");
+    this.editorInstance.setSelection(range.index + 1, 0, "silent");
+    this.queueSave();
+  }
+
   loadNotesFromStorage() {
     const seenIds = new Set();
+
     this.notes = this.readNotesFromStorage()
       .map((note, index) => this.normalizeNote(note, index, seenIds))
       .filter(Boolean);
@@ -887,31 +537,23 @@ class NotesManager extends BaseManager {
       120,
     );
 
-    let content = this.createEmptyDoc();
-    if (this.isDocJson(note.content)) {
-      content = this.cloneContent(note.content);
-    } else if (typeof note.content === "string" && note.content.trim()) {
-      content = this.normalizeHtml(this.sanitizeHtml(note.content));
-    } else if (typeof note.html === "string" && note.html.trim()) {
-      content = this.normalizeHtml(this.sanitizeHtml(note.html));
-    } else if (typeof note.md === "string" && note.md.trim()) {
-      content = this.markdownToHtml(note.md);
-    } else if (typeof note.text === "string" && note.text.trim()) {
-      content = this.textToHtml(note.text);
-    }
+    const html = this.extractHtmlFromNote(note);
+    const md =
+      typeof note.md === "string" && note.md.trim()
+        ? String(note.md).trim()
+        : this.htmlToText(html);
 
-    let html =
-      typeof note.html === "string"
-        ? this.normalizeHtml(this.sanitizeHtml(note.html))
-        : "";
-    if (!html && typeof content === "string") {
-      html = this.normalizeHtml(content);
-    }
+    const content = this.isQuillDelta(note.content)
+      ? this.cloneContent(note.content)
+      : this.normalizeHtml(html);
 
-    let md = typeof note.md === "string" ? String(note.md) : "";
-    if (!md) {
-      md = html ? this.htmlToText(html) : this.contentToText(content);
-    }
+    const rawScale =
+      typeof note.scale === "number" || typeof note.scale === "string"
+        ? parseFloat(note.scale)
+        : 1;
+    const scale = Number.isFinite(rawScale)
+      ? Math.max(1, Math.min(5, rawScale))
+      : 1;
 
     const now = Date.now();
     const createdAt =
@@ -930,9 +572,38 @@ class NotesManager extends BaseManager {
       content,
       html,
       md,
+      scale,
       createdAt,
       updatedAt,
     };
+  }
+
+  extractHtmlFromNote(note) {
+    if (typeof note.html === "string" && note.html.trim()) {
+      return this.normalizeHtml(this.sanitizeHtml(note.html));
+    }
+
+    if (typeof note.content === "string" && note.content.trim()) {
+      return this.normalizeHtml(this.sanitizeHtml(note.content));
+    }
+
+    if (this.isQuillDelta(note.content)) {
+      return this.textToHtml(this.deltaToPlainText(note.content));
+    }
+
+    if (note.content && typeof note.content === "object") {
+      return this.textToHtml(this.contentToText(note.content));
+    }
+
+    if (typeof note.md === "string" && note.md.trim()) {
+      return this.markdownToHtml(note.md);
+    }
+
+    if (typeof note.text === "string" && note.text.trim()) {
+      return this.textToHtml(note.text);
+    }
+
+    return "<p><br></p>";
   }
 
   ensureAtLeastOneNote() {
@@ -947,12 +618,14 @@ class NotesManager extends BaseManager {
 
   createNote() {
     const now = Date.now();
+
     return {
       id: this.createId(),
       title: NotesManager.DEFAULT_TITLE,
-      content: this.createEmptyDoc(),
-      html: "<p></p>",
+      content: "<p><br></p>",
+      html: "<p><br></p>",
       md: "",
+      scale: 1,
       createdAt: now,
       updatedAt: now,
     };
@@ -968,6 +641,7 @@ class NotesManager extends BaseManager {
     const id = String(noteId || "").trim();
     const index = this.notes.findIndex((note) => String(note.id) === id);
     if (index < 0) return 1;
+
     return Math.floor(index / NotesManager.ITEMS_PER_PAGE) + 1;
   }
 
@@ -1045,6 +719,7 @@ class NotesManager extends BaseManager {
       (entry) => String(entry.id) === String(this.activeNoteId),
     );
     if (!active) return;
+
     this.showDeleteConfirmationForNoteId(active.id);
   }
 
@@ -1086,6 +761,7 @@ class NotesManager extends BaseManager {
   confirmDelete() {
     const id = String(this.pendingDeleteId || "").trim();
     if (!id) return;
+
     this.deleteNoteById(id);
     this.hideDeleteConfirmation();
   }
@@ -1139,7 +815,7 @@ class NotesManager extends BaseManager {
 
     try {
       this.card.scrollIntoView({ behavior: "smooth", block: "center" });
-    } catch (error) {
+    } catch (_error) {
       // Ignore scroll failures.
     }
   }
@@ -1162,8 +838,12 @@ class NotesManager extends BaseManager {
       id: String(note.id || this.createId()),
       title: String(note.title || NotesManager.DEFAULT_TITLE).slice(0, 120),
       content: this.cloneContent(note.content),
-      html: this.normalizeHtml(this.sanitizeHtml(note.html || "<p></p>")),
+      html: this.normalizeHtml(this.sanitizeHtml(note.html || "<p><br></p>")),
       md: String(note.md || "").trim(),
+      scale:
+        typeof note.scale === "number"
+          ? Math.max(1, Math.min(5, note.scale))
+          : 1,
       createdAt: Number(note.createdAt) || Date.now(),
       updatedAt: Number(note.updatedAt) || Date.now(),
     }));
@@ -1183,27 +863,42 @@ class NotesManager extends BaseManager {
     this.storage.set(NotesManager.PAGE_KEY, this.currentPage);
   }
 
-  createEmptyDoc() {
-    return {
-      type: "doc",
-      content: [{ type: "paragraph" }],
-    };
+  normalizeLinkUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\s*javascript:/i.test(raw)) return "";
+
+    if (/^(https?:|mailto:|tel:)/i.test(raw)) {
+      return raw;
+    }
+
+    return `https://${raw.replace(/^\/+/, "")}`;
   }
 
-  isDocJson(value) {
-    return (
-      !!value && typeof value === "object" && String(value.type || "") === "doc"
-    );
+  normalizeImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\s*javascript:/i.test(raw)) return "";
+
+    if (/^(https?:|data:image\/|blob:)/i.test(raw)) {
+      return raw;
+    }
+
+    return "";
+  }
+
+  isQuillDelta(value) {
+    return !!value && typeof value === "object" && Array.isArray(value.ops);
   }
 
   cloneContent(content) {
     if (typeof content === "string") return String(content);
-    if (!content || typeof content !== "object") return this.createEmptyDoc();
+    if (!content || typeof content !== "object") return "<p><br></p>";
 
     try {
       return JSON.parse(JSON.stringify(content));
-    } catch (error) {
-      return this.createEmptyDoc();
+    } catch (_error) {
+      return "<p><br></p>";
     }
   }
 
@@ -1214,9 +909,21 @@ class NotesManager extends BaseManager {
 
     try {
       return JSON.stringify(a || null) === JSON.stringify(b || null);
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
+  }
+
+  deltaToPlainText(delta) {
+    if (!this.isQuillDelta(delta)) return "";
+
+    return delta.ops
+      .map((op) => {
+        if (typeof op?.insert === "string") return op.insert;
+        return "\n";
+      })
+      .join("")
+      .trim();
   }
 
   contentToText(content) {
@@ -1224,6 +931,10 @@ class NotesManager extends BaseManager {
 
     if (typeof content === "string") {
       return this.htmlToText(content);
+    }
+
+    if (this.isQuillDelta(content)) {
+      return this.deltaToPlainText(content);
     }
 
     if (typeof content !== "object") return "";
@@ -1246,6 +957,7 @@ class NotesManager extends BaseManager {
     };
 
     walk(content);
+
     return parts
       .join(" ")
       .replace(/\s+\n/g, "\n")
@@ -1268,7 +980,7 @@ class NotesManager extends BaseManager {
 
   normalizeHtml(value) {
     const html = String(value || "").trim();
-    return html || "<p></p>";
+    return html || "<p><br></p>";
   }
 
   sanitizeHtml(input) {
@@ -1306,7 +1018,7 @@ class NotesManager extends BaseManager {
 
   textToHtml(value) {
     const text = String(value || "").trim();
-    if (!text) return "<p></p>";
+    if (!text) return "<p><br></p>";
 
     const escaped = this.escapeHtml(text).replace(/\r\n?/g, "\n");
     return `<p>${escaped.replace(/\n/g, "<br>")}</p>`;
@@ -1314,7 +1026,7 @@ class NotesManager extends BaseManager {
 
   markdownToHtml(value) {
     const markdown = String(value || "").trim();
-    if (!markdown) return "<p></p>";
+    if (!markdown) return "<p><br></p>";
 
     try {
       if (window.marked && typeof window.marked.parse === "function") {
@@ -1322,7 +1034,7 @@ class NotesManager extends BaseManager {
           this.sanitizeHtml(window.marked.parse(markdown)),
         );
       }
-    } catch (error) {
+    } catch (_error) {
       // Fall back to plain text HTML when markdown parsing fails.
     }
 
@@ -1337,7 +1049,7 @@ class NotesManager extends BaseManager {
       const host = document.createElement("div");
       host.innerHTML = html;
       return String(host.textContent || host.innerText || "").trim();
-    } catch (error) {
+    } catch (_error) {
       return html;
     }
   }
