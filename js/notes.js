@@ -175,6 +175,13 @@ class NotesManager extends BaseManager {
 
     // List click (select note)
     this.listEl.addEventListener("click", (e) => {
+      const del = e.target.closest(".notes-list-item-delete");
+      if (del) {
+        const delId = String(del.dataset.noteId || "").trim();
+        if (delId) this.showDeleteConfirmationForNoteId(delId);
+        return;
+      }
+
       const item = e.target.closest(".notes-list-item");
       if (!item) return;
       const id = item.dataset.noteId;
@@ -1207,6 +1214,23 @@ class NotesManager extends BaseManager {
 
       const el = node;
       const tag = el.tagName;
+      const blockTags = new Set([
+        "P",
+        "DIV",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "UL",
+        "OL",
+        "PRE",
+        "BLOCKQUOTE",
+        "TABLE",
+        "HR",
+        "VIDEO",
+        "AUDIO",
+        "IFRAME",
+      ]);
 
       if (tag === "HR") return "---\n\n";
 
@@ -1234,7 +1258,29 @@ class NotesManager extends BaseManager {
         return `${quoted}\n\n`;
       }
 
-      if (tag === "P" || tag === "DIV") {
+      if (tag === "P") {
+        const txt = Array.from(el.childNodes).map(toInline).join("").trim();
+        return txt ? `${txt}\n\n` : "";
+      }
+
+      if (tag === "DIV") {
+        const hasNestedBlocks = Array.from(el.children).some((child) =>
+          blockTags.has(child.tagName),
+        );
+
+        if (hasNestedBlocks) {
+          let out = "";
+          Array.from(el.childNodes).forEach((child) => {
+            if (child.nodeType === Node.TEXT_NODE) {
+              const txt = String(child.nodeValue || "").trim();
+              if (txt) out += `${txt}\n\n`;
+              return;
+            }
+            out += toBlock(child);
+          });
+          return out;
+        }
+
         const txt = Array.from(el.childNodes).map(toInline).join("").trim();
         return txt ? `${txt}\n\n` : "";
       }
@@ -1328,7 +1374,104 @@ class NotesManager extends BaseManager {
       out += toBlock(child);
     });
 
-    return out.replace(/\n{3,}/g, "\n\n").trim();
+    const markdown = out.replace(/\n{3,}/g, "\n\n").trim();
+    if (!markdown) return "";
+
+    // Complex pasted HTML (like email content) can degrade during md conversion.
+    // If round-trip stability fails, store sanitized HTML directly in markdown so
+    // switching modes preserves visual structure.
+    if (!this.isMarkdownRoundTripStable(raw, markdown)) {
+      return this.sanitizeHtml(raw).trim();
+    }
+
+    return markdown;
+  }
+
+  isMarkdownRoundTripStable(sourceHtml, markdown) {
+    try {
+      const source = this.extractComparableTextFromHtml(
+        this.sanitizeHtml(sourceHtml),
+      );
+      const rendered = this.extractComparableTextFromHtml(
+        this.renderMarkdown(markdown),
+      );
+
+      if (!source && !rendered) return true;
+      if (!source || !rendered) return false;
+      if (source === rendered) return true;
+
+      const sourceLen = source.length;
+      const renderedLen = rendered.length;
+      const ratio = renderedLen / sourceLen;
+
+      if (ratio < 0.75 || ratio > 1.35) return false;
+
+      const prefixLen = Math.max(60, Math.min(220, sourceLen, renderedLen));
+      return source.slice(0, prefixLen) === rendered.slice(0, prefixLen);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  extractComparableTextFromHtml(html) {
+    const host = document.createElement("div");
+    host.innerHTML = String(html || "");
+
+    const blockTags = new Set([
+      "P",
+      "DIV",
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "UL",
+      "OL",
+      "LI",
+      "PRE",
+      "BLOCKQUOTE",
+      "TABLE",
+      "TR",
+      "TD",
+      "TH",
+      "HR",
+      "VIDEO",
+      "AUDIO",
+      "IFRAME",
+    ]);
+
+    const walk = (node) => {
+      if (!node) return "";
+      if (node.nodeType === Node.TEXT_NODE) return String(node.nodeValue || "");
+      if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+      const tag = node.tagName;
+      if (tag === "BR") return "\n";
+
+      let out = "";
+      if (blockTags.has(tag)) out += "\n";
+
+      Array.from(node.childNodes).forEach((child) => {
+        out += walk(child);
+      });
+
+      if (blockTags.has(tag)) out += "\n";
+      return out;
+    };
+
+    const raw = Array.from(host.childNodes)
+      .map((child) => walk(child))
+      .join("\n");
+
+    return this.normalizeComparableText(raw);
+  }
+
+  normalizeComparableText(text) {
+    return String(text || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/[ \t\f\v]+/g, " ")
+      .replace(/\s*\n\s*/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   updateScaleUi(scale) {
@@ -1371,7 +1514,16 @@ class NotesManager extends BaseManager {
 
   showDeleteConfirmation() {
     const note = this.getActiveNote();
-    if (!note || !this.deleteModal) return;
+    if (!note) return;
+    this.showDeleteConfirmationForNoteId(note.id);
+  }
+
+  showDeleteConfirmationForNoteId(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id || !this.deleteModal) return;
+
+    const note = this.notes.find((n) => String(n.id) === id);
+    if (!note) return;
 
     this.pendingDeleteId = note.id;
     if (this.deleteNameEl) {
@@ -1447,6 +1599,9 @@ class NotesManager extends BaseManager {
     const frag = document.createDocumentFragment();
 
     this.notes.forEach((note) => {
+      const row = document.createElement("div");
+      row.className = "notes-list-row";
+
       const item = document.createElement("button");
       item.type = "button";
       item.className = "notes-list-item";
@@ -1464,7 +1619,21 @@ class NotesManager extends BaseManager {
 
       item.appendChild(title);
       item.appendChild(meta);
-      frag.appendChild(item);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "notes-list-item-delete";
+      delBtn.dataset.noteId = note.id;
+      delBtn.setAttribute(
+        "aria-label",
+        `Delete note: ${note.title || "Untitled"}`,
+      );
+      delBtn.setAttribute("title", "Delete note");
+      delBtn.textContent = "🗑";
+
+      row.appendChild(item);
+      row.appendChild(delBtn);
+      frag.appendChild(row);
     });
 
     this.listEl.innerHTML = "";

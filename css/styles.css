@@ -1280,9 +1280,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .notes-list-item {
   text-align: left;
-  flex: 0 0 clamp(180px, 23vw, 240px);
+  width: 100%;
+  min-width: 0;
   min-height: 68px;
-  max-width: 240px;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-primary);
@@ -1291,7 +1291,40 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   cursor: pointer;
   transition: all var(--transition-fast);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.notes-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: stretch;
+  flex: 0 0 clamp(210px, 30vw, 290px);
+  max-width: 290px;
   scroll-snap-align: start;
+}
+
+.notes-list-item-delete {
+  width: 34px;
+  min-width: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #bc4747 0%, #8a3333 100%);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notes-list-item-delete:hover {
+  background: linear-gradient(135deg, #cf5454 0%, #9b3a3a 100%);
+  transform: translateY(-1px);
+}
+
+.notes-list-item-delete:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
 }
 
 .notes-list-item:hover {
@@ -1696,8 +1729,9 @@ textarea.notes-editor:focus {
     height: 38px;
   }
 
-  .notes-list-item {
+  .notes-list-row {
     flex-basis: clamp(150px, 62vw, 210px);
+    max-width: 210px;
   }
 
   .notes-page-info {
@@ -4058,6 +4092,13 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   -webkit-overflow-scrolling: touch;
 }
 
+.content-search-result-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--spacing-xs);
+  align-items: stretch;
+}
+
 .content-search-result {
   width: 100%;
   box-sizing: border-box;
@@ -4080,6 +4121,30 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .content-search-result:hover {
   background: var(--glass-bg-hover);
   transform: translateX(4px);
+}
+
+.content-search-result-delete {
+  width: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #bc4747 0%, #8a3333 100%);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-search-result-delete:hover {
+  background: linear-gradient(135deg, #cf5454 0%, #9b3a3a 100%);
+  transform: translateY(-1px);
+}
+
+.content-search-result-delete:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
 }
 
 .content-search-result-title {

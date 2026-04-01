@@ -510,6 +510,9 @@ class ContentSearchManager extends BaseManager {
     }
 
     for (const it of items) {
+      const row = document.createElement("div");
+      row.className = "content-search-result-row";
+
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "content-search-result";
@@ -547,7 +550,40 @@ class ContentSearchManager extends BaseManager {
         this.selectResult(it);
       });
 
-      this.resultsEl.appendChild(btn);
+      row.appendChild(btn);
+
+      if (it._context === "notes") {
+        const noteId = String(it?._raw?.id || "").trim();
+        if (noteId) {
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "content-search-result-delete";
+          delBtn.textContent = "🗑";
+          delBtn.setAttribute(
+            "aria-label",
+            `Delete note: ${String(it.title || "Untitled")}`,
+          );
+          delBtn.setAttribute("title", "Delete note");
+
+          delBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+              if (this.notes?.showDeleteConfirmationForNoteId) {
+                this.close();
+                this.notes.showDeleteConfirmationForNoteId(noteId);
+              }
+            } catch (err) {
+              // ignore
+            }
+          });
+
+          row.appendChild(delBtn);
+        }
+      }
+
+      this.resultsEl.appendChild(row);
     }
   }
 
