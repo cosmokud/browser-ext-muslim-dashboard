@@ -759,19 +759,20 @@ class NotesManager extends BaseManager {
         ? view
         : "split";
 
-    if (!this.isMilkdownEnabled() && requested !== "markdown") {
-      this.viewMode = "markdown";
-    } else {
-      this.viewMode = requested;
-    }
+    const effectiveMode =
+      !this.isMilkdownEnabled() && requested !== "markdown"
+        ? "markdown"
+        : requested;
+
+    this.viewMode = requested;
 
     if (this.editorBody) {
-      this.editorBody.setAttribute("data-view", this.viewMode);
+      this.editorBody.setAttribute("data-view", effectiveMode);
     }
 
     this.viewBtns.forEach((btn) => {
       const mode = String(btn.getAttribute("data-view") || "split");
-      const active = mode === this.viewMode;
+      const active = mode === effectiveMode;
       btn.classList.toggle("active", active);
       btn.setAttribute("aria-pressed", active ? "true" : "false");
       if (mode !== "markdown") {
@@ -779,7 +780,7 @@ class NotesManager extends BaseManager {
       }
     });
 
-    if (this.viewMode === "markdown") {
+    if (effectiveMode === "markdown") {
       if (this.isMilkdownEnabled()) {
         this.syncSourceFromMilkdown();
       }
@@ -930,6 +931,15 @@ class NotesManager extends BaseManager {
     this.scheduleMilkdownUiSync();
   }
 
+  getMilkdownScrollHost() {
+    const proseMirror = this.wysiwygHost?.querySelector(
+      ".milkdown .ProseMirror",
+    );
+    if (proseMirror) return proseMirror;
+
+    return this.wysiwygHost?.querySelector(".milkdown .editor") || null;
+  }
+
   refreshMilkdownUiPosition() {
     if (!this.isMilkdownEnabled()) return;
     if (this.viewMode === "markdown") return;
@@ -939,7 +949,7 @@ class NotesManager extends BaseManager {
     } catch (error) {}
 
     try {
-      const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+      const scrollHost = this.getMilkdownScrollHost();
       if (scrollHost) {
         scrollHost.dispatchEvent(new Event("scroll"));
       }
@@ -951,7 +961,7 @@ class NotesManager extends BaseManager {
   installMilkdownUiSync() {
     if (!this.isMilkdownEnabled()) return;
 
-    const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+    const scrollHost = this.getMilkdownScrollHost();
     if (!scrollHost) return;
 
     if (
@@ -1025,7 +1035,7 @@ class NotesManager extends BaseManager {
   syncMilkdownFloatingUi() {
     if (!this.isMilkdownEnabled() || this.viewMode === "markdown") return;
 
-    const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+    const scrollHost = this.getMilkdownScrollHost();
     const handle = this.wysiwygHost?.querySelector(
       ".milkdown .milkdown-block-handle",
     );

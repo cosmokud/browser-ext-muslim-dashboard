@@ -1661,19 +1661,46 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .editor {
   min-height: 320px;
-  max-height: 66vh;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   direction: ltr;
   position: relative;
-  overflow-x: visible;
-  overflow-y: auto;
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
   min-height: 320px;
   padding: 18px 12px 12px;
   line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   direction: ltr;
+  max-height: 66vh;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror::-webkit-scrollbar {
+  width: var(--scrollbar-size-thin);
+  height: var(--scrollbar-size-thin);
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .ProseMirror::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .ProseMirror::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 #notesCard .mdnotes-footer {
@@ -1703,6 +1730,11 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   z-index: 1600 !important;
   max-height: min(56vh, 420px);
   overflow: auto;
+  background: color-mix(in srgb, var(--body-bg) 96%, #111 4%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
