@@ -379,6 +379,11 @@ class NotesManager extends BaseManager {
   syncMilkdownFloatingUi() {
     if (!this.isMilkdownEnabled() || !this.isMarkdownPreview) return;
 
+    const editorRect = this.editor?.getBoundingClientRect();
+    if (editorRect) {
+      this.syncMilkdownDropIndicatorBounds(editorRect);
+    }
+
     const scrollHost = this.editor?.querySelector(".milkdown .editor");
     const handle = this.editor?.querySelector(
       ".milkdown .milkdown-block-handle",
@@ -401,6 +406,50 @@ class NotesManager extends BaseManager {
       handleCenterY > hostRect.bottom - 2;
 
     handle.dataset.notesHidden = hidden ? "true" : "false";
+  }
+
+  syncMilkdownDropIndicatorBounds(editorRect) {
+    if (!editorRect) return;
+
+    const indicators = this.editor?.querySelectorAll(
+      ".milkdown .crepe-drop-cursor, .milkdown .milkdown-drop-indicator",
+    );
+    if (!indicators || !indicators.length) return;
+
+    const minLeft = editorRect.left + 2;
+    const maxRight = editorRect.right - 2;
+    const minTop = editorRect.top + 2;
+    const maxBottom = editorRect.bottom - 2;
+
+    indicators.forEach((indicator) => {
+      if (!(indicator instanceof HTMLElement)) return;
+
+      const rect = indicator.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        indicator.style.removeProperty("--notes-drop-dx");
+        indicator.style.removeProperty("--notes-drop-dy");
+        return;
+      }
+
+      let dx = 0;
+      let dy = 0;
+
+      if (rect.left < minLeft) {
+        dx += minLeft - rect.left;
+      }
+      if (rect.right > maxRight) {
+        dx -= rect.right - maxRight;
+      }
+      if (rect.top < minTop) {
+        dy += minTop - rect.top;
+      }
+      if (rect.bottom > maxBottom) {
+        dy -= rect.bottom - maxBottom;
+      }
+
+      indicator.style.setProperty("--notes-drop-dx", `${Math.round(dx)}px`);
+      indicator.style.setProperty("--notes-drop-dy", `${Math.round(dy)}px`);
+    });
   }
 
   setupEventListeners() {
