@@ -10,15 +10,7 @@ class NotesManager extends BaseManager {
   static VIEW_MODE_LOCAL_KEY = "mdnotes_view_mode";
   static DEFAULT_TITLE = "Untitled";
 
-  static DEFAULT_MARKDOWN = [
-    "# Notes",
-    "",
-    "Welcome to your markdown workspace.",
-    "",
-    "- Switch between Split / WYSIWYG / Markdown",
-    "- Use toolbar actions for rich markdown editing",
-    "- Notes save automatically",
-  ].join("\n");
+  static DEFAULT_MARKDOWN = "";
 
   constructor(storage) {
     super();
@@ -285,14 +277,24 @@ class NotesManager extends BaseManager {
             ${this.buildToolbarMarkup()}
           </div>
 
+          <div class="mdnotes-pane-label" id="mdnotesPaneLabel">
+            <span class="mdnotes-pane-label-text" id="mdnotesPaneModeLabel">
+              Split
+            </span>
+            <span class="mdnotes-pane-label-sep" aria-hidden="true"></span>
+            <div class="mdnotes-footer">
+              <span id="mdnotesStatus" class="mdnotes-status" data-state="loading">Loading editor...</span>
+              <span id="mdnotesUpdated" class="mdnotes-updated"></span>
+              <span id="mdnotesCounter" class="mdnotes-counter"></span>
+            </div>
+          </div>
+
           <div class="mdnotes-editor-body" id="mdnotesEditorBody" data-view="split">
             <div class="mdnotes-pane mdnotes-pane-wysiwyg">
-              <div class="mdnotes-pane-label">WYSIWYG</div>
               <div id="mdnotesWysiwyg" class="mdnotes-wysiwyg-host"></div>
             </div>
 
             <div class="mdnotes-pane mdnotes-pane-source">
-              <div class="mdnotes-pane-label">Markdown</div>
               <textarea
                 id="mdnotesSource"
                 class="mdnotes-source"
@@ -300,12 +302,6 @@ class NotesManager extends BaseManager {
                 aria-label="Markdown source"
               ></textarea>
             </div>
-          </div>
-
-          <div class="mdnotes-footer">
-            <span id="mdnotesStatus" class="mdnotes-status" data-state="loading">Loading editor...</span>
-            <span id="mdnotesUpdated" class="mdnotes-updated"></span>
-            <span id="mdnotesCounter" class="mdnotes-counter"></span>
           </div>
         </section>
       </div>
@@ -493,6 +489,8 @@ class NotesManager extends BaseManager {
     this.listEl = this.card.querySelector("#mdnotesList");
     this.titleInput = this.card.querySelector("#mdnotesTitleInput");
     this.toolbar = this.card.querySelector("#mdnotesToolbar");
+    this.paneLabel = this.card.querySelector("#mdnotesPaneLabel");
+    this.paneModeLabel = this.card.querySelector("#mdnotesPaneModeLabel");
 
     this.viewBtns = Array.from(
       this.card.querySelectorAll(".mdnotes-view-btn[data-view]"),
@@ -721,6 +719,14 @@ class NotesManager extends BaseManager {
       : "";
   }
 
+  getViewModeLabel(mode = this.viewMode) {
+    const normalized = this.normalizeViewMode(mode) || "split";
+
+    if (normalized === "wysiwyg") return "WYSIWYG";
+    if (normalized === "markdown") return "Markdown";
+    return "Split";
+  }
+
   readViewMode() {
     const fallback = "split";
 
@@ -768,6 +774,14 @@ class NotesManager extends BaseManager {
 
     if (this.editorBody) {
       this.editorBody.setAttribute("data-view", effectiveMode);
+    }
+
+    if (this.paneLabel) {
+      this.paneLabel.setAttribute("data-view", effectiveMode);
+    }
+
+    if (this.paneModeLabel) {
+      this.paneModeLabel.textContent = this.getViewModeLabel(effectiveMode);
     }
 
     this.viewBtns.forEach((btn) => {
@@ -1159,11 +1173,12 @@ class NotesManager extends BaseManager {
 
   buildNewNote() {
     const now = Date.now();
+    const markdown = String(NotesManager.DEFAULT_MARKDOWN || "");
     return {
       id: this.createNoteId(),
       title: NotesManager.DEFAULT_TITLE,
-      md: NotesManager.DEFAULT_MARKDOWN,
-      html: this.markdownToHtml(NotesManager.DEFAULT_MARKDOWN),
+      md: markdown,
+      html: this.markdownToHtml(markdown),
       createdAt: now,
       updatedAt: now,
     };

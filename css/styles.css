@@ -1526,6 +1526,43 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg);
 }
 
+#notesCard .mdnotes-pane-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--spacing-sm);
+  padding: 8px 11px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+#notesCard .mdnotes-pane-label-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#notesCard .mdnotes-pane-label-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--glass-border);
+  flex: 0 0 auto;
+}
+
+#notesCard .mdnotes-pane-label .mdnotes-footer {
+  margin-left: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 #notesCard .mdnotes-tool-btn {
   width: 32px;
   height: 32px;
@@ -1601,16 +1638,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-pane-source {
   overflow: hidden;
-}
-
-#notesCard .mdnotes-pane-label {
-  padding: 8px 11px;
-  border-bottom: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 #notesCard .mdnotes-source {
@@ -1711,6 +1738,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   color: var(--text-muted);
   font-size: 0.76rem;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 #notesCard .mdnotes-status[data-state="error"] {
