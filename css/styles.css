@@ -1206,7 +1206,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  min-height: 560px;
+  min-height: 600px;
 }
 
 #notesCard .mdnotes-shell-header {
@@ -1244,15 +1244,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 34px;
   height: 34px;
-  padding: 0 0.85rem;
+  padding: 0;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-primary);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
   cursor: pointer;
   transition:
     transform var(--transition-fast),
@@ -1277,14 +1275,25 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border-color: rgba(220, 90, 90, 0.6);
 }
 
-#notesCard .mdnotes-layout {
-  display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-  gap: var(--spacing-md);
-  min-height: 0;
+#notesCard .mdnotes-ui-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-#notesCard .mdnotes-sidebar {
+#notesCard .mdnotes-selector-wrap {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+#notesCard .mdnotes-selector-center {
+  min-width: 0;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   background: linear-gradient(
@@ -1293,25 +1302,54 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
     color-mix(in srgb, var(--glass-bg-hover) 84%, transparent 16%)
   );
   overflow: hidden;
-  min-height: 0;
+}
+
+#notesCard .mdnotes-page-btn-nav {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+#notesCard .mdnotes-page-btn-nav:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--glass-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+#notesCard .mdnotes-page-btn-nav:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 #notesCard .mdnotes-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 6px;
-  max-height: 62vh;
-  overflow-y: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 8px;
+  scrollbar-width: thin;
 }
 
 #notesCard .mdnotes-list-item {
   position: relative;
+  min-width: clamp(180px, 26vw, 260px);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.04);
   padding: 9px 36px 9px 10px;
   cursor: pointer;
+  scroll-snap-align: start;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -1373,12 +1411,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 #notesCard .mdnotes-title-input {
   flex: 1;
-  min-width: 220px;
+  min-width: 180px;
   height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
@@ -1399,24 +1437,25 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px;
+  padding: 3px;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-full);
   background: var(--glass-bg);
 }
 
 #notesCard .mdnotes-view-btn {
-  height: 30px;
-  min-width: 82px;
-  padding: 0 0.75rem;
+  width: 31px;
+  height: 31px;
+  padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
   cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 #notesCard .mdnotes-view-btn.active {
@@ -1442,29 +1481,39 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 #notesCard .mdnotes-tool-btn {
+  width: 32px;
   height: 32px;
-  min-width: 32px;
-  padding: 0 0.55rem;
+  padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.76rem;
-  font-weight: 700;
   cursor: pointer;
-}
-
-#notesCard .mdnotes-tool-btn .u {
-  text-decoration: underline;
-}
-
-#notesCard .mdnotes-tool-btn .s {
-  text-decoration: line-through;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 #notesCard .mdnotes-tool-btn:hover {
   background: var(--glass-bg-hover);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+#notesCard .mdnotes-tool-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#notesCard .mdnotes-tool-text {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 #notesCard .mdnotes-tool-sep {
@@ -1557,7 +1606,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .editor {
   min-height: 320px;
-  max-height: 62vh;
+  max-height: 66vh;
   overflow: auto;
 }
 
@@ -1585,19 +1634,108 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   color: #ffd598;
 }
 
+#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle,
+#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-slash-menu {
+  z-index: 260;
+}
+
+#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
+  margin-left: -14px;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .milkdown-block-handle[data-notes-hidden="true"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .milkdown-block-handle[data-notes-hidden="false"] {
+  opacity: 1 !important;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .milkdown-block-handle
+  .operation-item {
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .milkdown-block-handle
+  .operation-item
+  svg {
+  width: 20px;
+  height: 20px;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .milkdown-block-handle
+  .operation-item:hover {
+  background: var(--glass-bg-hover);
+}
+
 @media (max-width: 1024px) {
-  #notesCard .mdnotes-layout {
-    grid-template-columns: minmax(0, 1fr);
+  #notesCard .mdnotes-list-item {
+    min-width: 160px;
   }
 
-  #notesCard .mdnotes-list {
-    max-height: 220px;
+  #notesCard .mdnotes-main-head {
+    flex-wrap: wrap;
+  }
+
+  #notesCard .mdnotes-view-switch {
+    margin-left: auto;
   }
 }
 
 @media (max-width: 800px) {
+  #notesCard .mdnotes-shell-header {
+    align-items: stretch;
+  }
+
+  #notesCard .mdnotes-title-wrap {
+    width: 100%;
+  }
+
+  #notesCard .mdnotes-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  #notesCard .mdnotes-list-item {
+    min-width: 145px;
+  }
+
   #notesCard .mdnotes-editor-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
+    margin-left: -8px;
   }
 }
 
@@ -2657,7 +2795,7 @@ textarea.notes-editor:focus {
 }
 
 #notesCard .mdnotes-shell,
-#notesCard .mdnotes-layout,
+#notesCard .mdnotes-selector-wrap,
 #notesCard .mdnotes-main,
 #notesCard .mdnotes-editor-body,
 #notesCard .mdnotes-pane,

@@ -30,6 +30,10 @@ class NotesManager extends BaseManager {
     this._milkdownReady = false;
     this._suppressMilkdownChange = false;
     this._saveTimer = null;
+    this._milkdownUiSyncRaf = null;
+    this._milkdownUiSyncInstalled = false;
+    this._milkdownUiSyncHandler = null;
+    this._milkdownUiSyncScrollHost = null;
 
     this.viewMode = this.readViewMode();
 
@@ -64,105 +68,333 @@ class NotesManager extends BaseManager {
             <p class="mdnotes-subtitle">Milkdown WYSIWYG + Markdown source with auto-save</p>
           </div>
 
-          <div class="mdnotes-header-actions">
-            <button type="button" id="mdnotesNewBtn" class="mdnotes-pill-btn">New</button>
-            <button type="button" id="mdnotesDeleteBtn" class="mdnotes-pill-btn danger">Delete</button>
+          <div class="mdnotes-header-actions card-header-actions">
+            <button
+              type="button"
+              id="mdnotesSearchBtn"
+              class="mdnotes-pill-btn mdnotes-pill-icon content-search-btn-notes"
+              aria-label="Search notes"
+              title="Search notes"
+            >
+              <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-3.4-3.4"></path>
+              </svg>
+            </button>
+            <button
+              type="button"
+              id="mdnotesNewBtn"
+              class="mdnotes-pill-btn mdnotes-pill-icon"
+              aria-label="Create new note"
+              title="New note"
+            >
+              <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              id="mdnotesDeleteBtn"
+              class="mdnotes-pill-btn mdnotes-pill-icon danger"
+              aria-label="Delete current note"
+              title="Delete note"
+            >
+              <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M4 7h16"></path>
+                <path d="M9 7V5h6v2"></path>
+                <path d="M8 7v12"></path>
+                <path d="M16 7v12"></path>
+                <path d="M6 7l1 13h10l1-13"></path>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div class="mdnotes-layout">
-          <aside class="mdnotes-sidebar" aria-label="Notes list">
+        <div class="mdnotes-selector-wrap" aria-label="Notes selector">
+          <button
+            class="mdnotes-page-btn mdnotes-page-btn-nav"
+            id="mdnotesPrevPageBtn"
+            type="button"
+            aria-label="Scroll notes left"
+            title="Previous notes"
+          >
+            &lt;
+          </button>
+
+          <div class="mdnotes-selector-center">
             <div class="mdnotes-list" id="mdnotesList" role="list"></div>
-          </aside>
+          </div>
 
-          <section class="mdnotes-main" aria-label="Active note editor">
-            <div class="mdnotes-main-head">
-              <input
-                id="mdnotesTitleInput"
-                class="mdnotes-title-input"
-                type="text"
-                maxlength="120"
-                placeholder="Note title"
-                aria-label="Note title"
-              />
-
-              <div class="mdnotes-view-switch" role="group" aria-label="Editor view mode">
-                <button type="button" class="mdnotes-view-btn" data-view="split">Split</button>
-                <button type="button" class="mdnotes-view-btn" data-view="wysiwyg">WYSIWYG</button>
-                <button type="button" class="mdnotes-view-btn" data-view="markdown">Markdown</button>
-              </div>
-            </div>
-
-            <div class="mdnotes-toolbar" id="mdnotesToolbar" role="toolbar" aria-label="Markdown toolbar">
-              ${this.buildToolbarMarkup()}
-            </div>
-
-            <div class="mdnotes-editor-body" id="mdnotesEditorBody" data-view="split">
-              <div class="mdnotes-pane mdnotes-pane-wysiwyg">
-                <div class="mdnotes-pane-label">WYSIWYG</div>
-                <div id="mdnotesWysiwyg" class="mdnotes-wysiwyg-host"></div>
-              </div>
-
-              <div class="mdnotes-pane mdnotes-pane-source">
-                <div class="mdnotes-pane-label">Markdown</div>
-                <textarea
-                  id="mdnotesSource"
-                  class="mdnotes-source"
-                  spellcheck="true"
-                  aria-label="Markdown source"
-                ></textarea>
-              </div>
-            </div>
-
-            <div class="mdnotes-footer">
-              <span id="mdnotesStatus" class="mdnotes-status" data-state="loading">Loading editor...</span>
-              <span id="mdnotesUpdated" class="mdnotes-updated"></span>
-              <span id="mdnotesCounter" class="mdnotes-counter"></span>
-            </div>
-          </section>
+          <button
+            class="mdnotes-page-btn mdnotes-page-btn-nav"
+            id="mdnotesNextPageBtn"
+            type="button"
+            aria-label="Scroll notes right"
+            title="Next notes"
+          >
+            &gt;
+          </button>
         </div>
+
+        <section class="mdnotes-main" aria-label="Active note editor">
+          <div class="mdnotes-main-head">
+            <input
+              id="mdnotesTitleInput"
+              class="mdnotes-title-input"
+              type="text"
+              maxlength="120"
+              placeholder="Note title"
+              aria-label="Note title"
+            />
+
+            <div class="mdnotes-view-switch" role="group" aria-label="Editor view mode">
+              <button
+                type="button"
+                class="mdnotes-view-btn"
+                data-view="split"
+                aria-label="Split mode"
+                title="Split mode"
+              >
+                <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                  <path d="M12 5v14"></path>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="mdnotes-view-btn"
+                data-view="wysiwyg"
+                aria-label="WYSIWYG mode"
+                title="WYSIWYG mode"
+              >
+                <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <path d="M3 5h18"></path>
+                  <path d="M3 12h18"></path>
+                  <path d="M3 19h18"></path>
+                  <path d="M8 5v14"></path>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="mdnotes-view-btn"
+                data-view="markdown"
+                aria-label="Markdown mode"
+                title="Markdown mode"
+              >
+                <svg class="mdnotes-ui-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <path d="M4 6h16v12H4z"></path>
+                  <path d="M8 10v4"></path>
+                  <path d="m8 14 2-2 2 2"></path>
+                  <path d="m14 10 2 2-2 2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="mdnotes-toolbar" id="mdnotesToolbar" role="toolbar" aria-label="Markdown toolbar">
+            ${this.buildToolbarMarkup()}
+          </div>
+
+          <div class="mdnotes-editor-body" id="mdnotesEditorBody" data-view="split">
+            <div class="mdnotes-pane mdnotes-pane-wysiwyg">
+              <div class="mdnotes-pane-label">WYSIWYG</div>
+              <div id="mdnotesWysiwyg" class="mdnotes-wysiwyg-host"></div>
+            </div>
+
+            <div class="mdnotes-pane mdnotes-pane-source">
+              <div class="mdnotes-pane-label">Markdown</div>
+              <textarea
+                id="mdnotesSource"
+                class="mdnotes-source"
+                spellcheck="true"
+                aria-label="Markdown source"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="mdnotes-footer">
+            <span id="mdnotesStatus" class="mdnotes-status" data-state="loading">Loading editor...</span>
+            <span id="mdnotesUpdated" class="mdnotes-updated"></span>
+            <span id="mdnotesCounter" class="mdnotes-counter"></span>
+          </div>
+        </section>
       </div>
     `;
   }
 
   buildToolbarMarkup() {
     return `
-      <button type="button" class="mdnotes-tool-btn" data-cmd="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="italic" aria-label="Italic" title="Italic"><em>I</em></button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="underline" aria-label="Underline" title="Underline"><span class="u">U</span></button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="strikeThrough" aria-label="Strikethrough" title="Strikethrough"><span class="s">S</span></button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="inlineCode" aria-label="Inline code" title="Inline code">&lt;/&gt;</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="codeBlock" aria-label="Code block" title="Code block">Code</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="quote" aria-label="Block quote" title="Block quote">❝</button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="bold" aria-label="Bold" title="Bold">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M7 4h7a4 4 0 0 1 0 8H7z"></path>
+          <path d="M7 12h8a4 4 0 0 1 0 8H7z"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="italic" aria-label="Italic" title="Italic">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M11 4h8"></path>
+          <path d="M5 20h8"></path>
+          <path d="M14 4 10 20"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="underline" aria-label="Underline" title="Underline">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M7 4v7a5 5 0 0 0 10 0V4"></path>
+          <path d="M5 20h14"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="strikeThrough" aria-label="Strikethrough" title="Strikethrough">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M4 12h16"></path>
+          <path d="M7 6a3 3 0 0 1 3-2h3a3 3 0 0 1 3 3"></path>
+          <path d="M7 18a3 3 0 0 0 3 2h3a3 3 0 0 0 3-3"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="inlineCode" aria-label="Inline code" title="Inline code">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="m8 16-4-4 4-4"></path>
+          <path d="m16 8 4 4-4 4"></path>
+          <path d="m14 4-4 16"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="codeBlock" aria-label="Code block" title="Code block">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <path d="m9 10-2 2 2 2"></path>
+          <path d="m15 10 2 2-2 2"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="quote" aria-label="Block quote" title="Block quote">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M6 8h5v5H6z"></path>
+          <path d="M6 13c0 2.5-1.6 4.7-4 6"></path>
+          <path d="M14 8h5v5h-5z"></path>
+          <path d="M14 13c0 2.5-1.6 4.7-4 6"></path>
+        </svg>
+      </button>
 
       <span class="mdnotes-tool-sep" aria-hidden="true"></span>
 
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertUnorderedList" aria-label="Bullet list" title="Bullet list">• List</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertOrderedList" aria-label="Numbered list" title="Numbered list">1. List</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="checklist" aria-label="Task list" title="Task list">☑ Tasks</button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertUnorderedList" aria-label="Bullet list" title="Bullet list">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M9 7h11"></path>
+          <path d="M9 12h11"></path>
+          <path d="M9 17h11"></path>
+          <circle cx="5" cy="7" r="1.2"></circle>
+          <circle cx="5" cy="12" r="1.2"></circle>
+          <circle cx="5" cy="17" r="1.2"></circle>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertOrderedList" aria-label="Numbered list" title="Numbered list">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M10 7h10"></path>
+          <path d="M10 12h10"></path>
+          <path d="M10 17h10"></path>
+          <path d="M4 6h2v2H4z"></path>
+          <path d="M4 11h2v2H4z"></path>
+          <path d="M4 16h2v2H4z"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="checklist" aria-label="Task list" title="Task list">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <rect x="4" y="5" width="4" height="4" rx="1"></rect>
+          <rect x="4" y="10" width="4" height="4" rx="1"></rect>
+          <path d="m5 12 1 1 2-2"></path>
+          <path d="M10 7h10"></path>
+          <path d="M10 12h10"></path>
+          <path d="M10 17h10"></path>
+        </svg>
+      </button>
 
       <span class="mdnotes-tool-sep" aria-hidden="true"></span>
 
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertLink" aria-label="Insert link" title="Insert link">Link</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertImage" aria-label="Insert image" title="Insert image">Image</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertTable" aria-label="Insert table" title="Insert table">Table</button>
-      <button type="button" class="mdnotes-tool-btn" data-cmd="insertHr" aria-label="Insert horizontal rule" title="Insert horizontal rule">HR</button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertLink" aria-label="Insert link" title="Insert link">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 1 0-7.07-7.07L10 6"></path>
+          <path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.41a5 5 0 0 0 7.07 7.07L14 18"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertImage" aria-label="Insert image" title="Insert image">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+          <circle cx="9" cy="10" r="1.5"></circle>
+          <path d="m21 16-5-5-4 4-2-2-5 5"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertTable" aria-label="Insert table" title="Insert table">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+          <path d="M3 10h18"></path>
+          <path d="M9 5v14"></path>
+          <path d="M15 5v14"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-cmd="insertHr" aria-label="Insert horizontal rule" title="Insert horizontal rule">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M3 12h18"></path>
+          <path d="M6 8h1"></path>
+          <path d="M17 16h1"></path>
+        </svg>
+      </button>
 
       <span class="mdnotes-tool-sep" aria-hidden="true"></span>
 
-      <button type="button" class="mdnotes-tool-btn" data-block="H1" aria-label="Heading 1" title="Heading 1">H1</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H2" aria-label="Heading 2" title="Heading 2">H2</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H3" aria-label="Heading 3" title="Heading 3">H3</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H4" aria-label="Heading 4" title="Heading 4">H4</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H5" aria-label="Heading 5" title="Heading 5">H5</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H6" aria-label="Heading 6" title="Heading 6">H6</button>
-      <button type="button" class="mdnotes-tool-btn" data-block="P" aria-label="Paragraph" title="Paragraph">P</button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H1" aria-label="Heading 1" title="Heading 1">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M4 5v14"></path>
+          <path d="M10 5v14"></path>
+          <path d="M4 12h6"></path>
+          <path d="M17 8v8"></path>
+          <path d="M15 10h2"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H2" aria-label="Heading 2" title="Heading 2">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M4 5v14"></path>
+          <path d="M10 5v14"></path>
+          <path d="M4 12h6"></path>
+          <path d="M15 10a2 2 0 0 1 4 0c0 2.2-2.4 3.2-3.6 4.8-.5.6-.4 1.2-.4 1.2H19"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H3" aria-label="Heading 3" title="Heading 3">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M4 5v14"></path>
+          <path d="M10 5v14"></path>
+          <path d="M4 12h6"></path>
+          <path d="M15 9h4"></path>
+          <path d="M15 15h4"></path>
+          <path d="M17.5 9a2 2 0 1 1 0 6"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H4" aria-label="Heading 4" title="Heading 4">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M4 5v14"></path>
+          <path d="M10 5v14"></path>
+          <path d="M4 12h6"></path>
+          <path d="M15 9v6"></path>
+          <path d="M19 9v6"></path>
+          <path d="M15 12h4"></path>
+        </svg>
+      </button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H5" aria-label="Heading 5" title="Heading 5"><span class="mdnotes-tool-text">H5</span></button>
+      <button type="button" class="mdnotes-tool-btn" data-block="H6" aria-label="Heading 6" title="Heading 6"><span class="mdnotes-tool-text">H6</span></button>
+      <button type="button" class="mdnotes-tool-btn" data-block="P" aria-label="Paragraph" title="Paragraph">
+        <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M13 4v16"></path>
+          <path d="M17 4v16"></path>
+          <path d="M9 4a4 4 0 0 0 0 8h8"></path>
+        </svg>
+      </button>
     `;
   }
 
   cacheElements() {
+    this.searchBtn = this.card.querySelector("#mdnotesSearchBtn");
     this.newBtn = this.card.querySelector("#mdnotesNewBtn");
     this.deleteBtn = this.card.querySelector("#mdnotesDeleteBtn");
+    this.prevPageBtn = this.card.querySelector("#mdnotesPrevPageBtn");
+    this.nextPageBtn = this.card.querySelector("#mdnotesNextPageBtn");
 
     this.listEl = this.card.querySelector("#mdnotesList");
     this.titleInput = this.card.querySelector("#mdnotesTitleInput");
@@ -182,6 +414,13 @@ class NotesManager extends BaseManager {
   }
 
   bindEvents() {
+    if (this.searchBtn) {
+      this.searchBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.openNotesSearchModal();
+      });
+    }
+
     if (this.newBtn) {
       this.newBtn.addEventListener("click", () => {
         this.persistActiveNote({ markUpdated: true });
@@ -200,6 +439,14 @@ class NotesManager extends BaseManager {
     }
 
     if (this.listEl) {
+      this.listEl.addEventListener(
+        "scroll",
+        () => this.updateSelectorNavState(),
+        {
+          passive: true,
+        },
+      );
+
       this.listEl.addEventListener("click", (event) => {
         const target = event.target;
         if (!(target instanceof Element)) return;
@@ -221,6 +468,18 @@ class NotesManager extends BaseManager {
         if (!noteId) return;
         this.selectNote(noteId, { focus: true });
       });
+    }
+
+    if (this.prevPageBtn) {
+      this.prevPageBtn.addEventListener("click", () =>
+        this.scrollSelectorBy(-1),
+      );
+    }
+
+    if (this.nextPageBtn) {
+      this.nextPageBtn.addEventListener("click", () =>
+        this.scrollSelectorBy(1),
+      );
     }
 
     if (this.titleInput) {
@@ -277,6 +536,31 @@ class NotesManager extends BaseManager {
         this.applyViewMode(view, { persist: true, focus: true });
       });
     });
+
+    window.addEventListener("resize", () => this.updateSelectorNavState());
+  }
+
+  openNotesSearchModal() {
+    try {
+      if (window.dashboard?.contentSearch?.open) {
+        window.dashboard.contentSearch.open("notes");
+        return;
+      }
+    } catch (error) {
+      // continue to fallback
+    }
+
+    try {
+      const modal = document.getElementById("contentSearchModal");
+      const input = document.getElementById("contentSearchInput");
+      if (modal) {
+        modal.classList.add("active");
+        modal.setAttribute("aria-hidden", "false");
+      }
+      if (input) {
+        input.focus();
+      }
+    } catch (error) {}
   }
 
   readViewMode() {
@@ -333,6 +617,7 @@ class NotesManager extends BaseManager {
       if (focus) this.sourceEl?.focus();
     } else if (this.isMilkdownEnabled()) {
       this.syncMilkdownFromSource();
+      this.refreshMilkdownUiPosition();
       if (focus) this._milkdown?.focus?.();
     }
 
@@ -368,6 +653,7 @@ class NotesManager extends BaseManager {
     ) {
       this._milkdown = null;
       this._milkdownReady = false;
+      this.teardownMilkdownUiSync();
       this.updateStatus(
         "Milkdown adapter not available. Markdown mode active.",
         "error",
@@ -393,13 +679,17 @@ class NotesManager extends BaseManager {
 
         this.updateStatus("Ready", "ok");
 
+        this.installMilkdownUiSync();
         this.setMilkdownMarkdown(seed, { silent: true });
         this.applyViewMode(this.viewMode, { persist: false, focus: false });
+        this.refreshMilkdownUiPosition();
+        setTimeout(() => this.refreshMilkdownUiPosition(), 90);
       })
       .catch((error) => {
         console.warn("Milkdown initialization failed:", error);
         this._milkdown = null;
         this._milkdownReady = false;
+        this.teardownMilkdownUiSync();
 
         this.updateStatus(
           "Milkdown failed to initialize. Markdown mode active.",
@@ -419,6 +709,7 @@ class NotesManager extends BaseManager {
 
     const next = String(markdown || "");
     this.setActiveNoteMarkdown(next, { markUpdated: true, syncSource: true });
+    this.scheduleMilkdownUiSync();
     this.queueSave();
   }
 
@@ -443,6 +734,7 @@ class NotesManager extends BaseManager {
 
     try {
       this._milkdown.setMarkdown(next, { silent: !!silent });
+      this.scheduleMilkdownUiSync();
     } catch (error) {
       // Keep source editor operational even if visual sync fails.
     } finally {
@@ -466,6 +758,127 @@ class NotesManager extends BaseManager {
   syncMilkdownFromSource() {
     if (!this.sourceEl) return;
     this.setMilkdownMarkdown(this.sourceEl.value || "", { silent: true });
+    this.scheduleMilkdownUiSync();
+  }
+
+  refreshMilkdownUiPosition() {
+    if (!this.isMilkdownEnabled()) return;
+    if (this.viewMode === "markdown") return;
+
+    try {
+      window.dispatchEvent(new Event("resize"));
+    } catch (error) {}
+
+    try {
+      const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+      if (scrollHost) {
+        scrollHost.dispatchEvent(new Event("scroll"));
+      }
+    } catch (error) {}
+
+    this.scheduleMilkdownUiSync();
+  }
+
+  installMilkdownUiSync() {
+    if (!this.isMilkdownEnabled()) return;
+
+    const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+    if (!scrollHost) return;
+
+    if (
+      this._milkdownUiSyncInstalled &&
+      this._milkdownUiSyncScrollHost === scrollHost
+    ) {
+      this.scheduleMilkdownUiSync();
+      return;
+    }
+
+    this.teardownMilkdownUiSync();
+
+    const schedule = () => this.scheduleMilkdownUiSync();
+    this._milkdownUiSyncHandler = schedule;
+    this._milkdownUiSyncScrollHost = scrollHost;
+
+    scrollHost.addEventListener("scroll", schedule, { passive: true });
+    this.wysiwygHost?.addEventListener("pointerup", schedule, true);
+    this.wysiwygHost?.addEventListener("keyup", schedule, true);
+    document.addEventListener("selectionchange", schedule, true);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, true);
+
+    this._milkdownUiSyncInstalled = true;
+    this.scheduleMilkdownUiSync();
+  }
+
+  teardownMilkdownUiSync() {
+    if (!this._milkdownUiSyncInstalled || !this._milkdownUiSyncHandler) return;
+
+    try {
+      this._milkdownUiSyncScrollHost?.removeEventListener(
+        "scroll",
+        this._milkdownUiSyncHandler,
+      );
+      this.wysiwygHost?.removeEventListener(
+        "pointerup",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      this.wysiwygHost?.removeEventListener(
+        "keyup",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      document.removeEventListener(
+        "selectionchange",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      window.removeEventListener("resize", this._milkdownUiSyncHandler);
+      window.removeEventListener("scroll", this._milkdownUiSyncHandler, true);
+    } catch (error) {}
+
+    this._milkdownUiSyncInstalled = false;
+    this._milkdownUiSyncHandler = null;
+    this._milkdownUiSyncScrollHost = null;
+  }
+
+  scheduleMilkdownUiSync() {
+    if (this._milkdownUiSyncRaf) {
+      cancelAnimationFrame(this._milkdownUiSyncRaf);
+    }
+
+    this._milkdownUiSyncRaf = requestAnimationFrame(() => {
+      this._milkdownUiSyncRaf = null;
+      this.syncMilkdownFloatingUi();
+    });
+  }
+
+  syncMilkdownFloatingUi() {
+    if (!this.isMilkdownEnabled() || this.viewMode === "markdown") return;
+
+    const scrollHost = this.wysiwygHost?.querySelector(".milkdown .editor");
+    const handle = this.wysiwygHost?.querySelector(
+      ".milkdown .milkdown-block-handle",
+    );
+
+    if (!scrollHost || !handle) return;
+
+    if (handle.getAttribute("data-show") === "false") {
+      handle.dataset.notesHidden = "false";
+      return;
+    }
+
+    const hostRect = scrollHost.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+    const handleCenterY = handleRect.top + handleRect.height / 2;
+
+    const hidden =
+      handleRect.width < 6 ||
+      handleRect.height < 6 ||
+      handleCenterY < hostRect.top + 2 ||
+      handleCenterY > hostRect.bottom - 2;
+
+    handle.dataset.notesHidden = hidden ? "true" : "false";
   }
 
   readNotesFromStorage() {
@@ -666,6 +1079,7 @@ class NotesManager extends BaseManager {
     this.activeNoteId = noteId;
     this.renderActiveNote();
     this.renderList();
+    this.ensureActiveVisible();
 
     if (focus) {
       this.focusEditor();
@@ -707,6 +1121,7 @@ class NotesManager extends BaseManager {
 
     if (this.isMilkdownEnabled()) {
       this.setMilkdownMarkdown(String(note.md || ""), { silent: true });
+      this.scheduleMilkdownUiSync();
     }
 
     this.updateMeta(note);
@@ -720,7 +1135,7 @@ class NotesManager extends BaseManager {
   renderList() {
     if (!this.listEl) return;
 
-    const prevScrollTop = this.listEl.scrollTop;
+    const prevScrollLeft = this.listEl.scrollLeft;
     this.listEl.innerHTML = "";
 
     this.notes.forEach((note) => {
@@ -766,7 +1181,55 @@ class NotesManager extends BaseManager {
       this.listEl.appendChild(item);
     });
 
-    this.listEl.scrollTop = prevScrollTop;
+    this.listEl.scrollLeft = prevScrollLeft;
+    this.updateSelectorNavState();
+  }
+
+  updateSelectorNavState() {
+    if (!this.listEl) return;
+
+    const maxLeft = Math.max(
+      0,
+      this.listEl.scrollWidth - this.listEl.clientWidth,
+    );
+    const left = this.listEl.scrollLeft;
+    const epsilon = 2;
+
+    if (this.prevPageBtn) this.prevPageBtn.disabled = left <= epsilon;
+    if (this.nextPageBtn) this.nextPageBtn.disabled = left >= maxLeft - epsilon;
+  }
+
+  scrollSelectorBy(direction) {
+    if (!this.listEl) return;
+
+    const dir = direction < 0 ? -1 : 1;
+    const step = Math.max(180, Math.floor(this.listEl.clientWidth * 0.82));
+
+    try {
+      this.listEl.scrollBy({ left: step * dir, behavior: "smooth" });
+    } catch (error) {
+      this.listEl.scrollLeft += step * dir;
+    }
+
+    setTimeout(() => this.updateSelectorNavState(), 220);
+  }
+
+  ensureActiveVisible() {
+    if (!this.listEl || !this.activeNoteId) return;
+
+    const item = this.listEl.querySelector(
+      `.mdnotes-list-item[data-note-id="${String(this.activeNoteId)}"]`,
+    );
+
+    if (!item || typeof item.scrollIntoView !== "function") return;
+
+    try {
+      item.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    } catch (error) {}
   }
 
   formatUpdatedDate(updatedAt) {
@@ -1089,18 +1552,7 @@ class NotesManager extends BaseManager {
     if (!exists) return;
 
     this.selectNote(noteId, { focus: true });
-
-    const item = this.listEl?.querySelector(
-      `.mdnotes-list-item[data-note-id="${noteId}"]`,
-    );
-
-    if (item && typeof item.scrollIntoView === "function") {
-      item.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
-    }
+    this.ensureActiveVisible();
   }
 
   reloadFromStorage() {
