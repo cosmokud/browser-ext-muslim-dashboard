@@ -321,14 +321,9 @@ class NotesManager extends BaseManager {
     this._milkdownUiSyncScrollHost = scrollHost;
 
     scrollHost.addEventListener("scroll", schedule, { passive: true });
-    this.editor?.addEventListener("pointerdown", schedule, true);
-    this.editor?.addEventListener("pointermove", schedule, true);
     this.editor?.addEventListener("pointerup", schedule, true);
-    this.editor?.addEventListener("dragover", schedule, true);
     this.editor?.addEventListener("keyup", schedule, true);
     document.addEventListener("selectionchange", schedule, true);
-    window.addEventListener("pointermove", schedule, true);
-    window.addEventListener("dragover", schedule, true);
     window.addEventListener("resize", schedule);
     window.addEventListener("scroll", schedule, true);
 
@@ -345,22 +340,7 @@ class NotesManager extends BaseManager {
         this._milkdownUiSyncHandler,
       );
       this.editor?.removeEventListener(
-        "pointerdown",
-        this._milkdownUiSyncHandler,
-        true,
-      );
-      this.editor?.removeEventListener(
-        "pointermove",
-        this._milkdownUiSyncHandler,
-        true,
-      );
-      this.editor?.removeEventListener(
         "pointerup",
-        this._milkdownUiSyncHandler,
-        true,
-      );
-      this.editor?.removeEventListener(
-        "dragover",
         this._milkdownUiSyncHandler,
         true,
       );
@@ -374,12 +354,6 @@ class NotesManager extends BaseManager {
         this._milkdownUiSyncHandler,
         true,
       );
-      window.removeEventListener(
-        "pointermove",
-        this._milkdownUiSyncHandler,
-        true,
-      );
-      window.removeEventListener("dragover", this._milkdownUiSyncHandler, true);
       window.removeEventListener("resize", this._milkdownUiSyncHandler);
       window.removeEventListener("scroll", this._milkdownUiSyncHandler, true);
     } catch (e) {
@@ -405,11 +379,6 @@ class NotesManager extends BaseManager {
   syncMilkdownFloatingUi() {
     if (!this.isMilkdownEnabled() || !this.isMarkdownPreview) return;
 
-    const editorRect = this.editor?.getBoundingClientRect();
-    if (editorRect) {
-      this.syncMilkdownDropIndicatorBounds(editorRect);
-    }
-
     const scrollHost = this.editor?.querySelector(".milkdown .editor");
     const handle = this.editor?.querySelector(
       ".milkdown .milkdown-block-handle",
@@ -432,62 +401,6 @@ class NotesManager extends BaseManager {
       handleCenterY > hostRect.bottom - 2;
 
     handle.dataset.notesHidden = hidden ? "true" : "false";
-  }
-
-  syncMilkdownDropIndicatorBounds(editorRect) {
-    if (!editorRect) return;
-
-    const indicators = this.editor?.querySelectorAll(
-      ".milkdown .crepe-drop-cursor, .milkdown .milkdown-drop-indicator",
-    );
-    if (!indicators || !indicators.length) return;
-
-    const minLeft = editorRect.left + 2;
-    const maxRight = editorRect.right - 2;
-    const minTop = editorRect.top + 2;
-    const maxBottom = editorRect.bottom - 2;
-    const maxWidth = Math.max(24, Math.floor(editorRect.width - 4));
-
-    indicators.forEach((indicator) => {
-      if (!(indicator instanceof HTMLElement)) return;
-
-      const rect = indicator.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        indicator.style.removeProperty("--notes-drop-width");
-        indicator.style.removeProperty("--notes-drop-max-width");
-        indicator.style.removeProperty("--notes-drop-dx");
-        indicator.style.removeProperty("--notes-drop-dy");
-        return;
-      }
-
-      indicator.style.setProperty("--notes-drop-max-width", `${maxWidth}px`);
-      if (rect.width > maxWidth + 1) {
-        indicator.style.setProperty("--notes-drop-width", `${maxWidth}px`);
-      } else {
-        indicator.style.removeProperty("--notes-drop-width");
-      }
-
-      const clampedRect = indicator.getBoundingClientRect();
-
-      let dx = 0;
-      let dy = 0;
-
-      if (clampedRect.left < minLeft) {
-        dx += minLeft - clampedRect.left;
-      }
-      if (clampedRect.right > maxRight) {
-        dx -= clampedRect.right - maxRight;
-      }
-      if (clampedRect.top < minTop) {
-        dy += minTop - clampedRect.top;
-      }
-      if (clampedRect.bottom > maxBottom) {
-        dy -= clampedRect.bottom - maxBottom;
-      }
-
-      indicator.style.setProperty("--notes-drop-dx", `${Math.round(dx)}px`);
-      indicator.style.setProperty("--notes-drop-dy", `${Math.round(dy)}px`);
-    });
   }
 
   setupEventListeners() {

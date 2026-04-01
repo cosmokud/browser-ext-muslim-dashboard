@@ -1809,18 +1809,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg-hover);
 }
 
-.notes-editor.notes-editor-milkdown .milkdown .crepe-drop-cursor,
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-drop-indicator {
-  width: var(--notes-drop-width, auto) !important;
-  max-width: min(
-    var(--notes-drop-max-width, 100%),
-    calc(100% - 4px)
-  ) !important;
-  border-radius: var(--radius-full);
-  pointer-events: none;
-  translate: var(--notes-drop-dx, 0px) calc(var(--notes-drop-dy, 0px) - 1px);
-}
-
 .notes-editor.notes-editor-milkdown
   .milkdown
   .milkdown-block-handle
@@ -2245,6 +2233,21 @@ textarea.notes-editor:focus {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Milkdown drop indicator uses fixed positioning; transformed ancestors
+   skew its coordinates. Keep notes card transform-free to match playground behavior. */
+#notesCard.card,
+#notesCard.card:hover,
+#notesCard.floating-card,
+#notesCard.floating-card:hover {
+  transform: none !important;
+}
+
+#notesCard.card {
+  animation: none;
+  will-change: auto;
+  backface-visibility: visible;
 }
 
 /* ========================================
