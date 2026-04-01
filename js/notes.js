@@ -340,6 +340,12 @@ class NotesManager extends BaseManager {
       this.saveNow({ renderList: false });
     });
 
+    // Internal copy: attach markdown fragment so paste inside this app can preserve markdown formatting.
+    this.editor.addEventListener("copy", (e) => {
+      if (!this.isMarkdownPreview) return;
+      this.writeInternalMarkdownClipboard(e);
+    });
+
     // Paste handling: sanitize HTML fragments.
     this.editor.addEventListener("paste", (e) => {
       if (!this.isMarkdownPreview) return;
@@ -347,32 +353,124 @@ class NotesManager extends BaseManager {
         if (!e.clipboardData) return;
         e.preventDefault();
 
-        const html = e.clipboardData.getData("text/html") || "";
-        const text = e.clipboardData.getData("text/plain") || "";
-        let allowHtmlFallback = false;
+        const internalMarkdown =
+          e.clipboardData.getData("text/x-notes-markdown") || "";
 
-        if (html.trim()) {
-          allowHtmlFallback = true;
-          const clean = this.sanitizeHtml(String(html), {
-            preserveFormatting: true,
-          });
-          try {
-            document.execCommand("insertHTML", false, clean);
-          } catch (err) {
-            const safeText = this.escapeHtml(text).replace(/\n/g, "<br>");
-            document.execCommand("insertHTML", false, safeText);
+        if (String(internalMarkdown || "").trim()) {
+          if (this.isRichMarkdownFragment(internalMarkdown)) {
+            this.insertMarkdownFragmentAtCursor(internalMarkdown);
+          } else {
+            this.insertPlainTextAtCursor(internalMarkdown);
           }
-        } else {
-          const safeText = this.escapeHtml(text).replace(/\n/g, "<br>");
-          document.execCommand("insertHTML", false, safeText);
+          this._allowHtmlFallbackOnNextConvert = false;
+          this.queueSave();
+          return;
         }
 
-        this._allowHtmlFallbackOnNextConvert = allowHtmlFallback;
+        const text = e.clipboardData.getData("text/plain") || "";
+        const html = e.clipboardData.getData("text/html") || "";
+        const plain = text || this.extractPlainTextFromClipboardHtml(html);
+
+        this.insertPlainTextAtCursor(plain);
+        this._allowHtmlFallbackOnNextConvert = false;
         this.queueSave();
       } catch (err) {
         // ignore
       }
     });
+  }
+
+  writeInternalMarkdownClipboard(event) {
+    try {
+      if (!event || !event.clipboardData || !this.editor) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount < 1 || sel.isCollapsed) return;
+
+      const range = sel.getRangeAt(0);
+      const root =
+        range.commonAncestorContainer?.nodeType === Node.TEXT_NODE
+          ? range.commonAncestorContainer.parentNode
+          : range.commonAncestorContainer;
+
+      if (!root || !this.editor.contains(root)) return;
+
+      const holder = document.createElement("div");
+      holder.appendChild(range.cloneContents());
+
+      const fragmentHtml = this.sanitizeHtml(holder.innerHTML || "");
+      const markdown = this.stripInternalCursorMarkers(
+        this.htmlToMarkdown(fragmentHtml),
+      );
+      const plain = String(sel.toString() || "");
+
+      event.preventDefault();
+      event.clipboardData.setData("text/plain", plain);
+      if (String(markdown || "").trim()) {
+        event.clipboardData.setData("text/x-notes-markdown", markdown);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  insertPlainTextAtCursor(text) {
+    const plain = String(text || "").replace(/\r\n?/g, "\n");
+    if (!plain) return;
+
+    try {
+      if (document.execCommand("insertText", false, plain)) return;
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const safeText = this.escapeHtml(plain).replace(/\n/g, "<br>");
+      document.execCommand("insertHTML", false, safeText);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  insertMarkdownFragmentAtCursor(markdown) {
+    const md = this.stripInternalCursorMarkers(String(markdown || ""));
+    if (!md.trim()) return;
+
+    const html = this.normalizeMarkdownHtmlForEditor(this.renderMarkdown(md));
+    try {
+      if (document.execCommand("insertHTML", false, html)) return;
+    } catch (e) {
+      // ignore
+    }
+
+    this.insertPlainTextAtCursor(md);
+  }
+
+  extractPlainTextFromClipboardHtml(html) {
+    const host = document.createElement("div");
+    host.innerHTML = String(html || "");
+    return String(host.textContent || host.innerText || "").replace(
+      /\r\n?/g,
+      "\n",
+    );
+  }
+
+  isRichMarkdownFragment(markdown) {
+    const md = String(markdown || "").trim();
+    if (!md) return false;
+
+    // Treat as rich only when explicit markdown structure/tokens exist.
+    if (/^#{1,6}\s+/m.test(md)) return true;
+    if (/^\s*([*+-]|\d+\.)\s+/m.test(md)) return true;
+    if (/```|`[^`]+`/.test(md)) return true;
+    if (/\*\*[^*]+\*\*|__[^_]+__/.test(md)) return true;
+    if (/\*[^*]+\*|_[^_]+_/.test(md)) return true;
+    if (/~~[^~]+~~/.test(md)) return true;
+    if (/!\[[^\]]*\]\([^\)]+\)/.test(md)) return true;
+    if (/\[[^\]]+\]\([^\)]+\)/.test(md)) return true;
+    if (/^>\s+/m.test(md)) return true;
+    if (/^\|.*\|/m.test(md)) return true;
+
+    return false;
   }
 
   reloadFromStorage() {
@@ -488,12 +586,7 @@ class NotesManager extends BaseManager {
 
       if (this.isMarkdownPreview) {
         // Markdown mode: editable rendered view is the source-of-truth.
-        const currentMode = this.normalizeContentMode(
-          note.contentMode,
-          note.md,
-        );
-        const keepHtml =
-          this._allowHtmlFallbackOnNextConvert || currentMode === "html";
+        const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
         const rawHtml = String(this.editor.innerHTML || "");
         const sanitized = keepHtml
           ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
@@ -517,11 +610,8 @@ class NotesManager extends BaseManager {
         nextMd = this.stripInternalCursorMarkers(
           String(this.rawEditor.value || note.md || ""),
         );
-        nextContentMode = this.isRichHtmlDocument(nextMd) ? "html" : "markdown";
-        nextHtml =
-          nextContentMode === "html"
-            ? this.sanitizeHtml(nextMd, { preserveFormatting: true })
-            : this.renderMarkdown(nextMd);
+        nextContentMode = "markdown";
+        nextHtml = this.renderMarkdown(nextMd);
       }
 
       const changed =
@@ -659,12 +749,7 @@ class NotesManager extends BaseManager {
     let nextContentMode = "markdown";
 
     if (this.isMarkdownPreview) {
-      const currentMode = this.normalizeContentMode(
-        current.contentMode,
-        current.md,
-      );
-      const keepHtml =
-        this._allowHtmlFallbackOnNextConvert || currentMode === "html";
+      const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
       const rawHtml = String(this.editor.innerHTML || "");
       const sanitized = keepHtml
         ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
@@ -685,11 +770,8 @@ class NotesManager extends BaseManager {
       nextMd = this.stripInternalCursorMarkers(
         String(this.rawEditor.value || ""),
       );
-      nextContentMode = this.isRichHtmlDocument(nextMd) ? "html" : "markdown";
-      nextHtml =
-        nextContentMode === "html"
-          ? this.sanitizeHtml(nextMd, { preserveFormatting: true })
-          : this.renderMarkdown(nextMd);
+      nextContentMode = "markdown";
+      nextHtml = this.renderMarkdown(nextMd);
     }
 
     const changed =
@@ -1180,13 +1262,7 @@ class NotesManager extends BaseManager {
     if (!this.isMarkdownPreview) return;
     try {
       const offsets = this.getSelectionOffsets(this.editor);
-      const active = this.getActiveNote();
-      const activeMode = this.normalizeContentMode(
-        active?.contentMode,
-        active?.md,
-      );
-      const keepHtml =
-        this._allowHtmlFallbackOnNextConvert || activeMode === "html";
+      const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
       const cleanedRaw = this.sanitizeHtml(
         String(this.editor.innerHTML || ""),
         {
