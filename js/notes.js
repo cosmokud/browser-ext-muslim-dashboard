@@ -469,9 +469,11 @@ class NotesManager extends BaseManager {
           this.sanitizeHtml(rawHtml),
         );
         nextHtml = this.stripInternalCursorMarkers(sanitized);
-        nextMd = this.stripInternalCursorMarkers(this.htmlToMarkdown(nextHtml, {
-          allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
-        }));
+        nextMd = this.stripInternalCursorMarkers(
+          this.htmlToMarkdown(nextHtml, {
+            allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+          }),
+        );
         this._allowHtmlFallbackOnNextConvert = false;
 
         // Keep raw viewer in sync.
@@ -622,9 +624,11 @@ class NotesManager extends BaseManager {
         this.sanitizeHtml(rawHtml),
       );
       nextHtml = this.stripInternalCursorMarkers(sanitized);
-      nextMd = this.stripInternalCursorMarkers(this.htmlToMarkdown(nextHtml, {
-        allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
-      }));
+      nextMd = this.stripInternalCursorMarkers(
+        this.htmlToMarkdown(nextHtml, {
+          allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+        }),
+      );
       this._allowHtmlFallbackOnNextConvert = false;
       if (String(this.rawEditor.value || "") !== nextMd) {
         this.rawEditor.value = nextMd;
@@ -958,8 +962,7 @@ class NotesManager extends BaseManager {
       const boundedCaret = Math.max(0, Math.min(caret, raw.length));
       const caretPixel = this.getTextareaCaretPixelPosition(t, boundedCaret);
       const lineHeight = Math.max(12, caretPixel.lineHeight || 20);
-      const targetTop =
-        caretPixel.top - (t.clientHeight - lineHeight) / 2;
+      const targetTop = caretPixel.top - (t.clientHeight - lineHeight) / 2;
       const targetLeft = caretPixel.left - t.clientWidth / 2;
 
       const maxTop = Math.max(0, t.scrollHeight - t.clientHeight);
