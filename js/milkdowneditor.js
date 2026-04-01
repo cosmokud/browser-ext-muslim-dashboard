@@ -28,6 +28,7 @@ class NotesManager extends BaseManager {
     this._milkdownUiSyncInstalled = false;
     this._milkdownUiSyncHandler = null;
     this._milkdownUiSyncScrollHost = null;
+    this._milkdownSelection = null;
 
     this.viewMode = this.readViewMode();
 
@@ -462,8 +463,6 @@ class NotesManager extends BaseManager {
           <path d="M15 12h4"></path>
         </svg>
       </button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H5" aria-label="Heading 5" title="Heading 5"><span class="mdnotes-tool-text">H5</span></button>
-      <button type="button" class="mdnotes-tool-btn" data-block="H6" aria-label="Heading 6" title="Heading 6"><span class="mdnotes-tool-text">H6</span></button>
       <button type="button" class="mdnotes-tool-btn" data-block="P" aria-label="Paragraph" title="Paragraph">
         <svg class="mdnotes-tool-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
           <path d="M13 4v16"></path>
@@ -549,8 +548,27 @@ class NotesManager extends BaseManager {
     );
 
     document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
-      this.hideDeleteConfirmation();
+      if (event.key === "Escape") {
+        this.hideDeleteConfirmation();
+        return;
+      }
+
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      if (!this.isEventInNotesContext(event)) return;
+
+      const key = String(event.key || "").toLowerCase();
+      let cmd = "";
+
+      if (key === "b") cmd = "bold";
+      if (key === "i") cmd = "italic";
+      if (key === "u") cmd = "underline";
+      if (key === "x" && event.shiftKey) cmd = "strikeThrough";
+
+      if (!cmd) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      this.applyToolbarAction(cmd, "");
     });
 
     if (this.listEl) {
@@ -606,7 +624,14 @@ class NotesManager extends BaseManager {
           NotesManager.DEFAULT_TITLE;
         note.updatedAt = Date.now();
 
-        this.renderList();
+        if (
+          !this.updateListItemContent(note.id, {
+            title: note.title,
+            updatedAt: note.updatedAt,
+          })
+        ) {
+          this.renderList();
+        }
         this.updateMeta(note);
         this.queueSave();
       });
@@ -614,7 +639,7 @@ class NotesManager extends BaseManager {
 
     if (this.sourceEl) {
       this.sourceEl.addEventListener("input", () => {
-        const markdown = String(this.sourceEl.value || "");
+        const markdown = this.normalizeMarkdownText(this.sourceEl.value);
         this.setActiveNoteMarkdown(markdown, {
           markUpdated: true,
           syncSource: false,
@@ -652,6 +677,17 @@ class NotesManager extends BaseManager {
     });
 
     window.addEventListener("resize", () => this.updateSelectorNavState());
+  }
+
+  isEventInNotesContext() {
+    const active = document.activeElement;
+    if (active instanceof Element && this.card?.contains(active)) return true;
+
+    const selection = window.getSelection?.();
+    const anchorNode = selection?.anchorNode;
+    if (!anchorNode || !this.wysiwygHost) return false;
+
+    return this.wysiwygHost.contains(anchorNode);
   }
 
   openNotesSearchModal() {
@@ -761,14 +797,18 @@ class NotesManager extends BaseManager {
       }
     });
 
+    const sourceSelection = this.captureSourceSelection();
+
     if (effectiveMode === "markdown") {
       if (this.isMilkdownEnabled()) {
         this.syncSourceFromMilkdown();
       }
+      this.restoreSourceSelection(sourceSelection);
       if (focus) this.sourceEl?.focus();
     } else if (this.isMilkdownEnabled()) {
       this.syncMilkdownFromSource();
       this.refreshMilkdownUiPosition();
+      this.scheduleMilkdownUiSync();
       if (focus) this._milkdown?.focus?.();
     }
 
@@ -823,6 +863,8 @@ class NotesManager extends BaseManager {
       defaultMarkdown: seed,
       onMarkdownChange: (markdown) => this.onMilkdownChange(markdown),
       onBlur: () => this.queueSave({ immediate: true }),
+      onSelectionChange: (selection) =>
+        this.onMilkdownSelectionChange(selection),
     })
       .then((adapter) => {
         this._milkdown = adapter;
@@ -858,8 +900,9 @@ class NotesManager extends BaseManager {
     if (!this.isMilkdownEnabled()) return;
     if (this._suppressMilkdownChange) return;
 
-    const next = String(markdown || "");
+    const next = this.normalizeMarkdownText(markdown);
     this.setActiveNoteMarkdown(next, { markUpdated: true, syncSource: true });
+    this.restoreSourceSelectionFromMilkdown();
     this.scheduleMilkdownUiSync();
     this.queueSave();
   }
@@ -877,7 +920,7 @@ class NotesManager extends BaseManager {
   setMilkdownMarkdown(markdown, { silent = true } = {}) {
     if (!this.isMilkdownEnabled()) return;
 
-    const next = String(markdown || "");
+    const next = this.normalizeMarkdownText(markdown);
     const current = this.getMilkdownMarkdown();
     if (current === next) return;
 
@@ -900,16 +943,91 @@ class NotesManager extends BaseManager {
   }
 
   syncSourceFromMilkdown() {
-    const markdown = this.getMilkdownMarkdown();
+    const markdown = this.normalizeMarkdownText(this.getMilkdownMarkdown());
     if (!this.sourceEl) return;
     if (this.sourceEl.value === markdown) return;
     this.sourceEl.value = markdown;
+    this.restoreSourceSelectionFromMilkdown();
   }
 
   syncMilkdownFromSource() {
     if (!this.sourceEl) return;
-    this.setMilkdownMarkdown(this.sourceEl.value || "", { silent: true });
+    this.setMilkdownMarkdown(this.normalizeMarkdownText(this.sourceEl.value), {
+      silent: true,
+    });
     this.scheduleMilkdownUiSync();
+  }
+
+  normalizeMarkdownText(markdown) {
+    return String(markdown || "")
+      .replace(/<br\s*\/?>(\r?\n)?/gi, "\n")
+      .replace(/\r\n/g, "\n");
+  }
+
+  captureSourceSelection() {
+    if (!this.sourceEl) return null;
+
+    return {
+      start: this.sourceEl.selectionStart || 0,
+      end: this.sourceEl.selectionEnd || 0,
+      direction: this.sourceEl.selectionDirection || "none",
+    };
+  }
+
+  restoreSourceSelection(selection) {
+    if (!this.sourceEl || !selection) return;
+
+    const length = this.sourceEl.value.length;
+    const start = Math.max(0, Math.min(length, Number(selection.start) || 0));
+    const end = Math.max(start, Math.min(length, Number(selection.end) || 0));
+
+    try {
+      this.sourceEl.setSelectionRange(
+        start,
+        end,
+        selection.direction || "none",
+      );
+    } catch (error) {
+      this.sourceEl.setSelectionRange(start, end);
+    }
+  }
+
+  onMilkdownSelectionChange(selection) {
+    if (!selection || typeof selection !== "object") return;
+
+    const from = Number(selection.from);
+    const to = Number(selection.to);
+    const docSize = Number(selection.docSize);
+
+    if (!Number.isFinite(from) || !Number.isFinite(to)) return;
+
+    this._milkdownSelection = {
+      from,
+      to,
+      docSize: Number.isFinite(docSize) ? docSize : null,
+    };
+
+    this.restoreSourceSelectionFromMilkdown();
+  }
+
+  restoreSourceSelectionFromMilkdown() {
+    if (!this.sourceEl || !this._milkdownSelection) return;
+
+    const sourceLength = this.sourceEl.value.length;
+    const docSize = Number(this._milkdownSelection.docSize || 0);
+    const maxPos = docSize > 2 ? docSize - 2 : 1;
+
+    const normalizePos = (pos) => {
+      const safePos = Math.max(1, Math.min(maxPos, Number(pos) || 1));
+      return maxPos <= 1
+        ? sourceLength
+        : Math.round(((safePos - 1) / maxPos) * sourceLength);
+    };
+
+    const start = normalizePos(this._milkdownSelection.from);
+    const end = Math.max(start, normalizePos(this._milkdownSelection.to));
+
+    this.sourceEl.setSelectionRange(start, end);
   }
 
   getMilkdownScrollHost() {
@@ -1035,6 +1153,16 @@ class NotesManager extends BaseManager {
     if (slashMenu) {
       slashMenu.style.zIndex = "1600";
       slashMenu.style.maxHeight = "56vh";
+
+      slashMenu.querySelectorAll("li").forEach((item) => {
+        const label = String(item.textContent || "")
+          .trim()
+          .toLowerCase();
+        if (label === "heading 5" || label === "heading 6") {
+          item.style.display = "none";
+          item.setAttribute("aria-hidden", "true");
+        }
+      });
     }
 
     if (handle.getAttribute("data-show") === "false") {
@@ -1193,7 +1321,7 @@ class NotesManager extends BaseManager {
     const note = this.getActiveNote();
     if (!note) return;
 
-    const next = String(markdown || "");
+    const next = this.normalizeMarkdownText(markdown);
     if (String(note.md || "") === next && !markUpdated) {
       if (syncSource && this.sourceEl && this.sourceEl.value !== next) {
         this.sourceEl.value = next;
@@ -1216,7 +1344,12 @@ class NotesManager extends BaseManager {
 
     this.updateCounter(next);
     this.updateWysiwygEmptyState(next);
-    this.renderList();
+
+    if (markUpdated) {
+      if (!this.updateListItemContent(note.id, { updatedAt: note.updatedAt })) {
+        this.renderList();
+      }
+    }
   }
 
   persistActiveNote({ markUpdated = false } = {}) {
@@ -1231,13 +1364,15 @@ class NotesManager extends BaseManager {
         ? String(this.sourceEl?.value || "")
         : this.getMilkdownMarkdown();
 
+    const normalizedMarkdown = this.normalizeMarkdownText(nextMarkdown);
+
     const changed =
       String(note.title || "") !== nextTitle ||
-      String(note.md || "") !== nextMarkdown;
+      String(note.md || "") !== normalizedMarkdown;
 
     note.title = nextTitle;
-    note.md = nextMarkdown;
-    note.html = this.markdownToHtml(nextMarkdown);
+    note.md = normalizedMarkdown;
+    note.html = this.markdownToHtml(normalizedMarkdown);
 
     if (changed && markUpdated) {
       note.updatedAt = Date.now();
@@ -1433,6 +1568,7 @@ class NotesManager extends BaseManager {
 
     this.markListItemActive(id);
     this.selectNote(id, {
+      skipPersistCurrent: true,
       focus: false,
       scrollBehavior: "auto",
       promote: true,
@@ -1447,6 +1583,50 @@ class NotesManager extends BaseManager {
       .replace(/\u200b/g, "")
       .trim();
     this.wysiwygHost.classList.toggle("mdnotes-empty", text.length === 0);
+  }
+
+  getListItemByNoteId(noteId) {
+    if (!this.listEl) return null;
+
+    const id = String(noteId || "").trim();
+    if (!id) return null;
+
+    const escapedId =
+      typeof CSS !== "undefined" && typeof CSS.escape === "function"
+        ? CSS.escape(id)
+        : id.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+    return this.listEl.querySelector(
+      `.mdnotes-list-item[data-note-id="${escapedId}"]`,
+    );
+  }
+
+  updateListItemContent(noteId, { title, updatedAt } = {}) {
+    const item = this.getListItemByNoteId(noteId);
+    if (!item) return false;
+
+    if (typeof title === "string") {
+      const resolvedTitle = title || NotesManager.DEFAULT_TITLE;
+
+      const titleEl = item.querySelector(".mdnotes-list-title");
+      if (titleEl) {
+        titleEl.textContent = resolvedTitle;
+      }
+
+      const deleteBtn = item.querySelector(".mdnotes-list-delete");
+      if (deleteBtn) {
+        deleteBtn.setAttribute("aria-label", `Delete note ${resolvedTitle}`);
+      }
+    }
+
+    if (updatedAt !== undefined) {
+      const metaEl = item.querySelector(".mdnotes-list-meta");
+      if (metaEl) {
+        metaEl.textContent = this.formatUpdatedDate(updatedAt);
+      }
+    }
+
+    return true;
   }
 
   markListItemActive(noteId) {
@@ -1734,62 +1914,64 @@ class NotesManager extends BaseManager {
     this.sourceEl.focus();
 
     if (block) {
-      const headingMatch = /^H([1-6])$/i.exec(block);
+      const headingMatch = /^H([1-4])$/i.exec(block);
       if (headingMatch) {
         const level = Number.parseInt(headingMatch[1], 10);
-        this.prefixSelectedLines("#".repeat(level) + " ", {
-          normalizeHeading: true,
-        });
+        this.toggleHeadingLines(level);
         return;
       }
 
       if (String(block).toUpperCase() === "P") {
-        this.prefixSelectedLines("", { removeHeadingOnly: true });
+        this.convertLinesToParagraph();
       }
       return;
     }
 
     switch (cmd) {
       case "bold":
-        this.wrapRawSelection("**", "**", "bold text");
+        this.toggleInlineWrap("**", "**", "bold text");
         break;
       case "italic":
-        this.wrapRawSelection("*", "*", "italic text");
+        this.toggleInlineWrap("*", "*", "italic text");
         break;
       case "underline":
-        this.wrapRawSelection("<u>", "</u>", "underlined text");
+        this.toggleInlineWrap("<u>", "</u>", "underlined text");
         break;
       case "strikeThrough":
-        this.wrapRawSelection("~~", "~~", "strikethrough");
+        this.toggleInlineWrap("~~", "~~", "strikethrough");
         break;
       case "inlineCode":
-        this.wrapRawSelection("`", "`", "code");
+        this.toggleInlineWrap("`", "`", "code");
         break;
       case "quote":
-        this.prefixSelectedLines("> ");
+        this.toggleLinePrefix("> ", { removeRegex: /^\s{0,3}>\s?/ });
         break;
       case "insertUnorderedList":
-        this.prefixSelectedLines("- ");
+        this.toggleLinePrefix("- ", { removeRegex: /^\s*[-*+]\s+/ });
         break;
       case "insertOrderedList":
-        this.prefixSelectedLines("1. ");
+        this.toggleLinePrefix("1. ", { removeRegex: /^\s*\d+[.)]\s+/ });
         break;
       case "checklist":
-        this.prefixSelectedLines("- [ ] ");
+        this.toggleLinePrefix("- [ ] ", {
+          removeRegex: /^\s*[-*+]\s+\[(?: |x|X)]\s+/,
+        });
         break;
       case "codeBlock":
-        this.wrapRawSelection("```\n", "\n```", "code block");
+        this.toggleCodeBlockLines();
         break;
       case "insertHr":
         this.insertRawText("\n---\n");
         break;
       case "insertLink": {
-        const selected = this.getRawSelectedText() || "link text";
+        const selected = this.getRawSelectedTextTrimmed() || "link text";
         const href = window.prompt("Enter link URL", "https://");
         if (href == null) return;
         const nextHref = String(href || "").trim();
         if (!nextHref) return;
-        this.insertRawText(`[${selected}](${nextHref})`);
+        this.insertRawTextAtCurrentSelection(`[${selected}](${nextHref})`, {
+          trimSelection: true,
+        });
         break;
       }
       case "insertImage": {
@@ -1823,6 +2005,21 @@ class NotesManager extends BaseManager {
     return String(this.sourceEl.value || "").slice(start, end);
   }
 
+  getRawSelectedTextTrimmed() {
+    return this.getRawSelectedText().trim();
+  }
+
+  getWordBoundsAtCaret(value, caret) {
+    const text = String(value || "");
+    let start = Math.max(0, Math.min(text.length, caret));
+    let end = start;
+
+    while (start > 0 && /[^\s]/.test(text[start - 1])) start -= 1;
+    while (end < text.length && /[^\s]/.test(text[end])) end += 1;
+
+    return { start, end };
+  }
+
   wrapRawSelection(prefix, suffix, fallbackText) {
     if (!this.sourceEl) return;
 
@@ -1844,6 +2041,53 @@ class NotesManager extends BaseManager {
     textarea.focus();
   }
 
+  toggleInlineWrap(prefix, suffix, fallbackText) {
+    if (!this.sourceEl) return;
+
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    let start = textarea.selectionStart || 0;
+    let end = textarea.selectionEnd || 0;
+
+    if (start === end) {
+      const bounds = this.getWordBoundsAtCaret(value, start);
+      start = bounds.start;
+      end = bounds.end;
+    }
+
+    let selected = value.slice(start, end);
+    if (!selected) {
+      selected = String(fallbackText || "");
+    }
+
+    const before = value.slice(Math.max(0, start - prefix.length), start);
+    const after = value.slice(end, end + suffix.length);
+    const selectedInner = value.slice(start, end);
+
+    if (before === prefix && after === suffix && selectedInner) {
+      const newValue =
+        value.slice(0, start - prefix.length) +
+        selectedInner +
+        value.slice(end + suffix.length);
+
+      textarea.value = newValue;
+      const selStart = start - prefix.length;
+      const selEnd = selStart + selectedInner.length;
+      textarea.setSelectionRange(selStart, selEnd);
+      textarea.focus();
+      return;
+    }
+
+    const wrapped = `${prefix}${selected}${suffix}`;
+    textarea.value = value.slice(0, start) + wrapped + value.slice(end);
+
+    const selStart = start + prefix.length;
+    const selEnd = selStart + selected.length;
+    textarea.setSelectionRange(selStart, selEnd);
+    textarea.focus();
+  }
+
   insertRawText(text) {
     if (!this.sourceEl) return;
 
@@ -1852,6 +2096,27 @@ class NotesManager extends BaseManager {
 
     const start = textarea.selectionStart || 0;
     const end = textarea.selectionEnd || 0;
+
+    textarea.value = value.slice(0, start) + text + value.slice(end);
+
+    const nextPos = start + String(text).length;
+    textarea.setSelectionRange(nextPos, nextPos);
+    textarea.focus();
+  }
+
+  insertRawTextAtCurrentSelection(text, { trimSelection = false } = {}) {
+    if (!this.sourceEl) return;
+
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    let start = textarea.selectionStart || 0;
+    let end = textarea.selectionEnd || 0;
+
+    if (trimSelection && start < end) {
+      while (start < end && /\s/.test(value[start])) start += 1;
+      while (end > start && /\s/.test(value[end - 1])) end -= 1;
+    }
 
     textarea.value = value.slice(0, start) + text + value.slice(end);
 
@@ -1891,6 +2156,157 @@ class NotesManager extends BaseManager {
     const nextStart = lineStart;
     const nextEnd = lineStart + nextSegment.length;
     textarea.setSelectionRange(nextStart, nextEnd);
+    textarea.focus();
+  }
+
+  toggleLinePrefix(prefix, { removeRegex = null } = {}) {
+    if (!this.sourceEl) return;
+
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEndIdx = value.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const segment = value.slice(lineStart, lineEnd);
+    const lines = segment.split("\n");
+
+    const allPrefixed = lines.every((line) => {
+      if (!line.trim()) return true;
+      if (removeRegex) return removeRegex.test(line);
+      return line.startsWith(prefix);
+    });
+
+    const normalized = lines.map((line) => {
+      if (!line.trim()) return line;
+
+      if (allPrefixed) {
+        if (removeRegex) return line.replace(removeRegex, "");
+        return line.startsWith(prefix) ? line.slice(prefix.length) : line;
+      }
+
+      return prefix + line;
+    });
+
+    const nextSegment = normalized.join("\n");
+    textarea.value =
+      value.slice(0, lineStart) + nextSegment + value.slice(lineEnd);
+
+    const nextStart = lineStart;
+    const nextEnd = lineStart + nextSegment.length;
+    textarea.setSelectionRange(nextStart, nextEnd);
+    textarea.focus();
+  }
+
+  toggleHeadingLines(level) {
+    if (!this.sourceEl) return;
+
+    const prefix = `${"#".repeat(level)} `;
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEndIdx = value.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const segment = value.slice(lineStart, lineEnd);
+    const lines = segment.split("\n");
+    const sameLevel = new RegExp(`^\\s{0,3}#{${level}}\\s+`);
+
+    const allSameLevel = lines.every((line) => {
+      if (!line.trim()) return true;
+      return sameLevel.test(line);
+    });
+
+    const normalized = lines.map((line) => {
+      if (!line.trim()) return line;
+
+      const noHeading = line.replace(/^\s{0,3}#{1,6}\s+/, "");
+      return allSameLevel ? noHeading : prefix + noHeading;
+    });
+
+    const nextSegment = normalized.join("\n");
+    textarea.value =
+      value.slice(0, lineStart) + nextSegment + value.slice(lineEnd);
+
+    textarea.setSelectionRange(lineStart, lineStart + nextSegment.length);
+    textarea.focus();
+  }
+
+  convertLinesToParagraph() {
+    if (!this.sourceEl) return;
+
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEndIdx = value.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const segment = value.slice(lineStart, lineEnd);
+    const lines = segment.split("\n");
+
+    const normalized = lines.map((line) => {
+      if (!line.trim()) return line;
+
+      if (/^```/.test(line.trim())) return "";
+
+      return line
+        .replace(/^\s{0,3}#{1,6}\s+/, "")
+        .replace(/^\s{0,3}>\s?/, "")
+        .replace(/^\s*[-*+]\s+\[(?: |x|X)]\s+/, "")
+        .replace(/^\s*\d+[.)]\s+/, "")
+        .replace(/^\s*[-*+]\s+/, "");
+    });
+
+    const nextSegment = normalized.join("\n");
+    textarea.value =
+      value.slice(0, lineStart) + nextSegment + value.slice(lineEnd);
+
+    textarea.setSelectionRange(lineStart, lineStart + nextSegment.length);
+    textarea.focus();
+  }
+
+  toggleCodeBlockLines() {
+    if (!this.sourceEl) return;
+
+    const textarea = this.sourceEl;
+    const value = String(textarea.value || "");
+
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const lineEndIdx = value.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+    const segment = value.slice(lineStart, lineEnd);
+    const trimmed = segment.trim();
+
+    let nextSegment;
+    if (/^```[\s\S]*```$/.test(trimmed)) {
+      nextSegment = segment
+        .replace(/^\s*```[^\n]*\n?/, "")
+        .replace(/\n?```\s*$/, "");
+    } else {
+      const body = segment || "code";
+      nextSegment = `\`\`\`\n${body}\n\`\`\``;
+    }
+
+    textarea.value =
+      value.slice(0, lineStart) + nextSegment + value.slice(lineEnd);
+
+    textarea.setSelectionRange(lineStart, lineStart + nextSegment.length);
     textarea.focus();
   }
 

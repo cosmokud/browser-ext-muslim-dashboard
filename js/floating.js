@@ -87,12 +87,12 @@ class FloatingModeManager {
     if (!componentId) return null;
 
     const rowIndex = rows.findIndex(
-      (row) => Array.isArray(row) && row.includes(componentId)
+      (row) => Array.isArray(row) && row.includes(componentId),
     );
     if (rowIndex < 0) return null;
 
     const rowWrapper = contentGrid.querySelector(
-      `.grid-flex-row[data-row-index="${rowIndex}"]`
+      `.grid-flex-row[data-row-index="${rowIndex}"]`,
     );
     if (!rowWrapper) return null;
 
@@ -255,7 +255,7 @@ class FloatingModeManager {
       try {
         proxy
           .querySelectorAll(
-            ".floating-collapse-btn, button, a, input, textarea, select"
+            ".floating-collapse-btn, button, a, input, textarea, select",
           )
           .forEach((el) => {
             try {
@@ -274,7 +274,7 @@ class FloatingModeManager {
       proxy.style.margin = "0";
       proxy.style.pointerEvents = "none";
       proxy.style.zIndex = String(
-        Math.max(999, parseInt(card.style.zIndex || "50", 10) + 50)
+        Math.max(999, parseInt(card.style.zIndex || "50", 10) + 50),
       );
 
       document.body.appendChild(proxy);
@@ -567,12 +567,12 @@ class FloatingModeManager {
         "title",
         desired
           ? "Floating will activate when screen is wider"
-          : "Floating is unavailable on small screens"
+          : "Floating is unavailable on small screens",
       );
     } else if (desired && st.spaceSuspended) {
       st.button.setAttribute(
         "title",
-        "Not enough space for Floating Mode at this viewport width"
+        "Not enough space for Floating Mode at this viewport width",
       );
     } else {
       st.button.setAttribute("title", "Toggle Floating Mode");
@@ -697,7 +697,7 @@ class FloatingModeManager {
 
     // Native resizing
     card.style.resize = "both";
-    card.style.overflow = "hidden";
+    card.style.overflow = key === "notesCard" ? "visible" : "hidden";
 
     // Prevent resizing below content (no scrollbars). Will be refined dynamically.
     card.style.minWidth = "280px";
@@ -874,7 +874,7 @@ class FloatingModeManager {
       if (st._floatingHandle && st._onPointerDown) {
         st._floatingHandle.removeEventListener(
           "pointerdown",
-          st._onPointerDown
+          st._onPointerDown,
         );
       }
     } catch (e) {}
@@ -883,7 +883,7 @@ class FloatingModeManager {
       if (st.card && st._onCardPointerDownForResize) {
         st.card.removeEventListener(
           "pointerdown",
-          st._onCardPointerDownForResize
+          st._onCardPointerDownForResize,
         );
       }
     } catch (e) {}
@@ -892,11 +892,11 @@ class FloatingModeManager {
       if (st._onAnyPointerUpClearResize) {
         document.removeEventListener(
           "pointerup",
-          st._onAnyPointerUpClearResize
+          st._onAnyPointerUpClearResize,
         );
         document.removeEventListener(
           "pointercancel",
-          st._onAnyPointerUpClearResize
+          st._onAnyPointerUpClearResize,
         );
       }
     } catch (e) {}
@@ -999,7 +999,7 @@ class FloatingModeManager {
             const gridOrder = this._getGridPositionOrder(key);
             const insertRef = this._findInsertReferenceByOrder(
               st.originalParent,
-              gridOrder
+              gridOrder,
             );
             if (insertRef) {
               st.originalParent.insertBefore(card, insertRef);
@@ -1021,7 +1021,7 @@ class FloatingModeManager {
             const gridOrder = this._getGridPositionOrder(key);
             const insertRef = this._findInsertReferenceByOrder(
               contentGrid,
-              gridOrder
+              gridOrder,
             );
             if (insertRef) {
               contentGrid.insertBefore(card, insertRef);
@@ -1463,7 +1463,7 @@ class FloatingModeManager {
         if (!st2) return;
         st2.persistenceSuppressed = Math.max(
           0,
-          (st2.persistenceSuppressed || 0) - 1
+          (st2.persistenceSuppressed || 0) - 1,
         );
       });
     }
