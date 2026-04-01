@@ -29,6 +29,9 @@ class NotesManager extends BaseManager {
 
     this._editorSyncTimer = null;
 
+    this._rawSelection = { start: 0, end: 0, direction: "none" };
+    this._previewSelectionOffsets = null;
+
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
 
@@ -216,6 +219,20 @@ class NotesManager extends BaseManager {
       this.scaleRange.addEventListener("change", onScaleInput);
     }
 
+    this.toolbar.addEventListener("mousedown", (e) => {
+      const btn = e.target.closest("button.notes-tool-btn");
+      if (!btn) return;
+      if (btn.dataset.cmd === "toggleMarkdown") return;
+
+      // Keep the selection in the active editor instead of moving focus to toolbar button.
+      e.preventDefault();
+      if (this.isMarkdownPreview) {
+        this.restorePreviewSelection();
+      } else {
+        this.restoreRawSelection();
+      }
+    });
+
     // Toolbar
     this.toolbar.addEventListener("click", (e) => {
       const btn = e.target.closest("button");
@@ -238,10 +255,16 @@ class NotesManager extends BaseManager {
       this.queueSave();
     });
 
+    const captureRawSelection = () => this.captureRawSelection();
+    ["focus", "keyup", "click", "select"].forEach((eventName) => {
+      this.rawEditor.addEventListener(eventName, captureRawSelection);
+    });
+
     // Source markdown editor (editable).
     this.rawEditor.addEventListener("input", () => {
       if (this.isMarkdownPreview) return;
       this.syncPreviewFromRawEditor();
+      this.captureRawSelection();
       this.queueSave();
     });
 
@@ -279,10 +302,20 @@ class NotesManager extends BaseManager {
     // WYSIWYG editing in preview mode.
     this.editor.addEventListener("input", () => {
       if (!this.isMarkdownPreview) return;
+      this.capturePreviewSelection();
       this.queueSave();
     });
 
+    const capturePreviewSelection = () => {
+      if (!this.isMarkdownPreview) return;
+      this.capturePreviewSelection();
+    };
+    ["focus", "keyup", "mouseup"].forEach((eventName) => {
+      this.editor.addEventListener(eventName, capturePreviewSelection);
+    });
+
     this.editor.addEventListener("blur", () => {
+      this.capturePreviewSelection();
       // Sanitize in-place on blur to reduce risk from pasted HTML.
       this.sanitizeEditorInPlace();
       this.saveNow({ renderList: false });
@@ -529,6 +562,10 @@ class NotesManager extends BaseManager {
 
     if (this.isMarkdownPreview) {
       this.placeCaretAtEnd(this.editor);
+      this.capturePreviewSelection();
+    } else {
+      this.placeCaretAtEndTextArea(this.rawEditor);
+      this.captureRawSelection();
     }
 
     this.currentPage = this.getPageForNoteId(id);
@@ -602,8 +639,10 @@ class NotesManager extends BaseManager {
 
     if (this.isMarkdownPreview) {
       this.placeCaretAtEnd(this.editor);
+      this.capturePreviewSelection();
     } else {
       this.placeCaretAtEndTextArea(this.rawEditor);
+      this.captureRawSelection();
     }
   }
 
@@ -791,17 +830,36 @@ class NotesManager extends BaseManager {
   applyMarkdownCommand(cmd) {
     const c = String(cmd || "");
     const t = this.rawEditor;
-    const value = String(t.value || "");
-    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
-    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+    const inlineWrapCommands = new Set([
+      "bold",
+      "italic",
+      "strikeThrough",
+      "inlineCode",
+    ]);
 
-    const before = value.slice(0, start);
-    const selected = value.slice(start, end);
-    const after = value.slice(end);
+    let value = String(t.value || "");
+    let start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    let end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+
+    if (start === end && inlineWrapCommands.has(c)) {
+      const bounds = this.getWordBoundsAt(value, start);
+      if (bounds) {
+        start = bounds.start;
+        end = bounds.end;
+        try {
+          t.setSelectionRange(start, end);
+        } catch (e) {}
+      }
+    }
 
     const toggleWrap = (left, right = left) => {
       const l = String(left);
       const r = String(right);
+
+      value = String(t.value || "");
+      const before = value.slice(0, start);
+      const selected = value.slice(start, end);
+      const after = value.slice(end);
 
       // Selection: unwrap if already wrapped, else wrap.
       if (start !== end) {
@@ -1469,18 +1527,23 @@ class NotesManager extends BaseManager {
 
   applyToolbarAction(cmd, block) {
     if (this.isMarkdownPreview) {
+      this.restorePreviewSelection();
       this.applyPreviewToolbarAction(cmd, block);
       this.sanitizeEditorInPlace();
+      this.capturePreviewSelection();
       return;
     }
 
+    this.restoreRawSelection();
     this.applySourceToolbarAction(cmd, block);
+    this.captureRawSelection();
     this.syncPreviewFromRawEditor();
   }
 
   applySourceToolbarAction(cmd, block) {
     try {
       this.rawEditor.focus();
+      this.restoreRawSelection();
     } catch (e) {}
 
     if (block) {
@@ -1499,6 +1562,7 @@ class NotesManager extends BaseManager {
   applyPreviewToolbarAction(cmd, block) {
     try {
       this.editor.focus();
+      this.restorePreviewSelection();
     } catch (e) {}
 
     if (block) {
@@ -1516,7 +1580,14 @@ class NotesManager extends BaseManager {
       return;
     }
 
+    if (cmd === "bold" || cmd === "italic" || cmd === "strikeThrough") {
+      this.expandPreviewSelectionToWord();
+      this.execCommand(cmd);
+      return;
+    }
+
     if (cmd === "inlineCode") {
+      this.expandPreviewSelectionToWord();
       this.insertPreviewInlineCode();
       return;
     }
@@ -1615,6 +1686,8 @@ class NotesManager extends BaseManager {
   }
 
   insertPreviewLink() {
+    const offsets =
+      this.getSelectionOffsets(this.editor) || this._previewSelectionOffsets;
     const selected = this.getPreviewSelectionText().trim() || "Link text";
     const nextHref = window.prompt("Enter link URL", "https://");
     if (nextHref == null) return;
@@ -1622,12 +1695,18 @@ class NotesManager extends BaseManager {
     const href = String(nextHref || "").trim();
     if (!href) return;
 
+    if (offsets) {
+      this.restoreSelectionOffsets(this.editor, offsets);
+    }
+
     this.insertHtmlAtCursor(
       `<a href="${this.escapeHtml(href)}">${this.escapeHtml(selected)}</a>`,
     );
   }
 
   insertPreviewImage() {
+    const offsets =
+      this.getSelectionOffsets(this.editor) || this._previewSelectionOffsets;
     const nextSrc = window.prompt("Enter image URL", "https://");
     if (nextSrc == null) return;
 
@@ -1638,6 +1717,10 @@ class NotesManager extends BaseManager {
     const nextAlt = window.prompt("Enter image description", fallbackAlt);
     const alt =
       String(nextAlt == null ? fallbackAlt : nextAlt).trim() || "Image";
+
+    if (offsets) {
+      this.restoreSelectionOffsets(this.editor, offsets);
+    }
 
     this.insertHtmlAtCursor(
       `<img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" title="${this.escapeHtml(alt)}" />`,
@@ -2053,6 +2136,133 @@ class NotesManager extends BaseManager {
     const n = typeof value === "number" ? value : parseFloat(value);
     if (Number.isNaN(n)) return min;
     return Math.max(min, Math.min(max, n));
+  }
+
+  captureRawSelection() {
+    if (!this.rawEditor) return;
+    try {
+      this._rawSelection = {
+        start:
+          typeof this.rawEditor.selectionStart === "number"
+            ? this.rawEditor.selectionStart
+            : 0,
+        end:
+          typeof this.rawEditor.selectionEnd === "number"
+            ? this.rawEditor.selectionEnd
+            : 0,
+        direction: this.rawEditor.selectionDirection || "none",
+      };
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  restoreRawSelection() {
+    if (!this.rawEditor || !this._rawSelection) return;
+    try {
+      const start = Math.max(0, parseInt(this._rawSelection.start, 10) || 0);
+      const end = Math.max(
+        start,
+        parseInt(this._rawSelection.end, 10) || start,
+      );
+      this.rawEditor.setSelectionRange(
+        start,
+        end,
+        this._rawSelection.direction || "none",
+      );
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  capturePreviewSelection() {
+    if (!this.editor) return;
+    const offsets = this.getSelectionOffsets(this.editor);
+    if (offsets) {
+      this._previewSelectionOffsets = offsets;
+    }
+  }
+
+  restorePreviewSelection() {
+    if (!this.editor || !this._previewSelectionOffsets) return;
+    this.restoreSelectionOffsets(this.editor, this._previewSelectionOffsets);
+  }
+
+  getWordBoundsAt(text, caretIndex) {
+    const value = String(text || "");
+    const len = value.length;
+    if (!len) return null;
+
+    const isWordChar = (ch) => {
+      if (!ch) return false;
+      try {
+        return /[\p{L}\p{N}_-]/u.test(ch);
+      } catch (e) {
+        return /[A-Za-z0-9_-]/.test(ch);
+      }
+    };
+
+    let idx = Number.isFinite(caretIndex) ? Math.trunc(caretIndex) : 0;
+    idx = Math.max(0, Math.min(len, idx));
+    if (idx === len) idx = len - 1;
+
+    if (!isWordChar(value[idx])) {
+      if (idx > 0 && isWordChar(value[idx - 1])) {
+        idx -= 1;
+      } else if (idx + 1 < len && isWordChar(value[idx + 1])) {
+        idx += 1;
+      } else {
+        return null;
+      }
+    }
+
+    let start = idx;
+    while (start > 0 && isWordChar(value[start - 1])) {
+      start -= 1;
+    }
+
+    let end = idx + 1;
+    while (end < len && isWordChar(value[end])) {
+      end += 1;
+    }
+
+    if (start >= end) return null;
+    return { start, end };
+  }
+
+  expandPreviewSelectionToWord() {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return false;
+
+      const currentRange = sel.getRangeAt(0);
+      if (!this.editor.contains(currentRange.startContainer)) return false;
+      if (!currentRange.collapsed) return true;
+
+      const offsets = this.getSelectionOffsets(this.editor);
+      if (!offsets) return false;
+
+      const bounds = this.getWordBoundsAt(
+        this.editor.textContent || "",
+        offsets.start,
+      );
+      if (!bounds) return false;
+
+      const startPos = this.findTextPosition(this.editor, bounds.start);
+      const endPos = this.findTextPosition(this.editor, bounds.end);
+      if (!startPos || !endPos) return false;
+
+      const nextRange = document.createRange();
+      nextRange.setStart(startPos.node, startPos.offset);
+      nextRange.setEnd(endPos.node, endPos.offset);
+
+      sel.removeAllRanges();
+      sel.addRange(nextRange);
+      this._previewSelectionOffsets = { start: bounds.start, end: bounds.end };
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   placeCaretAtEnd(el) {

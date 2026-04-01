@@ -1459,12 +1459,38 @@
                       title="Toggle markdown source and live preview"
                       id="notesMarkdownToggleBtn"
                     >
-                      <span class="notes-mode-label notes-mode-source"
-                        >Source</span
+                      <span
+                        class="notes-mode-chip notes-mode-source"
+                        aria-hidden="true"
                       >
-                      <span class="notes-mode-label notes-mode-preview"
-                        >Preview</span
+                        <svg
+                          class="notes-tool-icon"
+                          viewBox="0 0 24 24"
+                          focusable="false"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="m4 20 4-.8 9.6-9.6a2 2 0 0 0-2.8-2.8L5.2 16.4 4 20z"
+                          ></path>
+                          <path d="m13.5 8.5 2.8 2.8"></path>
+                        </svg>
+                      </span>
+                      <span
+                        class="notes-mode-chip notes-mode-preview"
+                        aria-hidden="true"
                       >
+                        <svg
+                          class="notes-tool-icon"
+                          viewBox="0 0 24 24"
+                          focusable="false"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"
+                          ></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </span>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1476,7 +1502,15 @@
                       aria-label="Bold"
                       title="Bold"
                     >
-                      <b>B</b>
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 4h7a4 4 0 0 1 0 8H7z"></path>
+                        <path d="M7 12h8a4 4 0 0 1 0 8H7z"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1485,7 +1519,16 @@
                       aria-label="Italic"
                       title="Italic"
                     >
-                      <i>I</i>
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M11 4h8"></path>
+                        <path d="M5 20h8"></path>
+                        <path d="M14 4 10 20"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1494,7 +1537,16 @@
                       aria-label="Strikethrough"
                       title="Strikethrough"
                     >
-                      <s>S</s>
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 12h16"></path>
+                        <path d="M7 6a3 3 0 0 1 3-2h3a3 3 0 0 1 3 3"></path>
+                        <path d="M7 18a3 3 0 0 0 3 2h3a3 3 0 0 0 3-3"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1503,7 +1555,17 @@
                       aria-label="Blockquote"
                       title="Blockquote"
                     >
-                      Quote
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M6 8h5v5H6z"></path>
+                        <path d="M6 13c0 2.5-1.6 4.7-4 6"></path>
+                        <path d="M14 8h5v5h-5z"></path>
+                        <path d="M14 13c0 2.5-1.6 4.7-4 6"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1512,7 +1574,16 @@
                       aria-label="Inline code"
                       title="Inline code"
                     >
-                      Code
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="m8 16-4-4 4-4"></path>
+                        <path d="m16 8 4 4-4 4"></path>
+                        <path d="m14 4-4 16"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1521,7 +1592,16 @@
                       aria-label="Code block"
                       title="Code block"
                     >
-                      Block
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                        <path d="m9 10-2 2 2 2"></path>
+                        <path d="m15 10 2 2-2 2"></path>
+                      </svg>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1533,7 +1613,19 @@
                       aria-label="Insert link"
                       title="Insert link"
                     >
-                      Link
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 1 0-7.07-7.07L10 6"
+                        ></path>
+                        <path
+                          d="M14 11a5 5 0 0 0-7.07 0L5.5 12.41a5 5 0 0 0 7.07 7.07L14 18"
+                        ></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1542,7 +1634,16 @@
                       aria-label="Insert image"
                       title="Insert image"
                     >
-                      Image
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                        <circle cx="9" cy="10" r="1.5"></circle>
+                        <path d="m21 16-5-5-4 4-2-2-5 5"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1551,7 +1652,17 @@
                       aria-label="Insert table"
                       title="Insert table"
                     >
-                      Table
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                        <path d="M3 10h18"></path>
+                        <path d="M9 5v14"></path>
+                        <path d="M15 5v14"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1560,7 +1671,16 @@
                       aria-label="Insert horizontal line"
                       title="Insert horizontal line"
                     >
-                      HR
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 12h18"></path>
+                        <path d="M6 8h1"></path>
+                        <path d="M17 16h1"></path>
+                      </svg>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1572,7 +1692,19 @@
                       aria-label="Bullet list"
                       title="Bullet list"
                     >
-                      UL
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 7h11"></path>
+                        <path d="M9 12h11"></path>
+                        <path d="M9 17h11"></path>
+                        <circle cx="5" cy="7" r="1.2"></circle>
+                        <circle cx="5" cy="12" r="1.2"></circle>
+                        <circle cx="5" cy="17" r="1.2"></circle>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1581,7 +1713,19 @@
                       aria-label="Numbered list"
                       title="Numbered list"
                     >
-                      OL
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M10 7h10"></path>
+                        <path d="M10 12h10"></path>
+                        <path d="M10 17h10"></path>
+                        <path d="M4 6h2v2H4z"></path>
+                        <path d="M4 11h2v2H4z"></path>
+                        <path d="M4 16h2v2H4z"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1590,7 +1734,19 @@
                       aria-label="Task list"
                       title="Task list"
                     >
-                      Task
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <rect x="4" y="5" width="4" height="4" rx="1"></rect>
+                        <rect x="4" y="10" width="4" height="4" rx="1"></rect>
+                        <path d="m5 12 1 1 2-2"></path>
+                        <path d="M10 7h10"></path>
+                        <path d="M10 12h10"></path>
+                        <path d="M10 17h10"></path>
+                      </svg>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>
@@ -1602,7 +1758,18 @@
                       aria-label="Heading 1"
                       title="Heading 1"
                     >
-                      H1
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 5v14"></path>
+                        <path d="M10 5v14"></path>
+                        <path d="M4 12h6"></path>
+                        <path d="M17 8v8"></path>
+                        <path d="M15 10h2"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1611,7 +1778,19 @@
                       aria-label="Heading 2"
                       title="Heading 2"
                     >
-                      H2
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 5v14"></path>
+                        <path d="M10 5v14"></path>
+                        <path d="M4 12h6"></path>
+                        <path
+                          d="M15 10a2 2 0 0 1 4 0c0 2.2-2.4 3.2-3.6 4.8-.5.6-.4 1.2-.4 1.2H19"
+                        ></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1620,7 +1799,19 @@
                       aria-label="Heading 3"
                       title="Heading 3"
                     >
-                      H3
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 5v14"></path>
+                        <path d="M10 5v14"></path>
+                        <path d="M4 12h6"></path>
+                        <path d="M15 9h4"></path>
+                        <path d="M15 15h4"></path>
+                        <path d="M17.5 9a2 2 0 1 1 0 6"></path>
+                      </svg>
                     </button>
                     <button
                       class="notes-tool-btn"
@@ -1629,7 +1820,16 @@
                       aria-label="Paragraph"
                       title="Paragraph"
                     >
-                      P
+                      <svg
+                        class="notes-tool-icon"
+                        viewBox="0 0 24 24"
+                        focusable="false"
+                        aria-hidden="true"
+                      >
+                        <path d="M13 4v16"></path>
+                        <path d="M17 4v16"></path>
+                        <path d="M9 4a4 4 0 0 0 0 8h8"></path>
+                      </svg>
                     </button>
 
                     <span class="notes-tool-divider" aria-hidden="true"></span>

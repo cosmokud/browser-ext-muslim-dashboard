@@ -1470,6 +1470,22 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   letter-spacing: 0.03em;
 }
 
+.notes-tool-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.notes-tool-btn[data-cmd="insertUnorderedList"] .notes-tool-icon circle {
+  fill: currentColor;
+  stroke: none;
+}
+
 .notes-tool-btn:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border);
@@ -1481,23 +1497,33 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-tool-mode {
-  min-width: 124px;
+  min-width: 98px;
   justify-content: space-between;
-  gap: var(--spacing-sm);
+  gap: 4px;
+  padding: 0 0.4rem;
   border-color: var(--glass-border);
   background: rgba(255, 255, 255, 0.06);
 }
 
-.notes-tool-mode .notes-mode-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.6;
+.notes-mode-chip {
+  width: 28px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
 }
 
 .notes-tool-mode[data-mode="source"] .notes-mode-source,
 .notes-tool-mode[data-mode="preview"] .notes-mode-preview {
-  opacity: 1;
+  color: var(--text-primary);
+  background: rgba(212, 175, 55, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.4);
+}
+
+.notes-tool-mode.active .notes-tool-icon {
   color: var(--accent-gold-light);
 }
 
@@ -1531,7 +1557,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 textarea.notes-editor {
   resize: vertical;
   overflow: auto;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   color: var(--text-primary);
   font-family: Consolas, "Courier New", monospace;
 }
