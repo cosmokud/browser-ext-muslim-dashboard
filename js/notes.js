@@ -22,6 +22,7 @@ class NotesManager extends BaseManager {
     this.isSettingContent = false;
     this.editorInstance = null;
     this.toolbarTooltipObserver = null;
+    this.lastSelectionRange = null;
 
     this.card = document.getElementById("notesCard");
     this.newBtn = document.getElementById("notesNewBtn");
@@ -143,6 +144,17 @@ class NotesManager extends BaseManager {
       });
 
       this.editorInstance.on("selection-change", (range) => {
+        if (
+          range &&
+          Number.isFinite(range.index) &&
+          Number.isFinite(range.length)
+        ) {
+          this.lastSelectionRange = {
+            index: Math.max(0, range.index),
+            length: Math.max(0, range.length),
+          };
+        }
+
         if (range === null) {
           this.saveNow({ renderList: false });
         }
@@ -186,7 +198,12 @@ class NotesManager extends BaseManager {
         <button class="ql-list" value="check" type="button" aria-label="Checklist" title="Checklist"></button>
       </span>
       <span class="ql-formats">
-        <select class="ql-align" aria-label="Text alignment" title="Text alignment"></select>
+        <select class="ql-align" aria-label="Text alignment" title="Text alignment">
+          <option selected></option>
+          <option value="center"></option>
+          <option value="right"></option>
+          <option value="justify"></option>
+        </select>
         <button class="ql-blockquote" type="button" aria-label="Block quote" title="Block quote"></button>
         <button class="ql-code-block" type="button" aria-label="Code block" title="Code block"></button>
       </span>
@@ -464,7 +481,7 @@ class NotesManager extends BaseManager {
   applyInlineFormatToWordOrSelection(formatName) {
     if (!this.editorInstance) return;
 
-    const range = this.editorInstance.getSelection(true);
+    const range = this.getActiveSelectionRange();
     if (!range) return;
 
     if (range.length > 0) {
@@ -511,7 +528,7 @@ class NotesManager extends BaseManager {
   toggleLineFormat(formatName) {
     if (!this.editorInstance) return;
 
-    const range = this.editorInstance.getSelection(true);
+    const range = this.getActiveSelectionRange();
     if (!range) return;
 
     let formatIndex = range.index;
@@ -547,8 +564,14 @@ class NotesManager extends BaseManager {
   applyAlignFormat(value) {
     if (!this.editorInstance) return;
 
-    const range = this.editorInstance.getSelection(true);
+    const range = this.getActiveSelectionRange();
     if (!range) return;
+
+    // Clicking the align picker label can invoke the handler without a value.
+    if (typeof value === "undefined") {
+      this.restoreEditorSelection(range, { defer: true });
+      return;
+    }
 
     let formatIndex = range.index;
     let formatLength = range.length;
@@ -563,8 +586,11 @@ class NotesManager extends BaseManager {
       }
     }
 
-    const alignValue =
-      typeof value === "string" && value.trim() ? value : false;
+    const alignValue = this.normalizeAlignValue(value);
+    if (alignValue === null) {
+      this.restoreEditorSelection(range, { defer: true });
+      return;
+    }
 
     this.editorInstance.formatLine(
       formatIndex,
@@ -574,11 +600,68 @@ class NotesManager extends BaseManager {
       "user",
     );
 
-    this.restoreEditorSelection(range);
+    this.restoreEditorSelection(range, { defer: true });
     this.queueSave();
   }
 
-  restoreEditorSelection(range) {
+  normalizeAlignValue(value) {
+    if (value === false || value === null || value === "") {
+      return false;
+    }
+
+    if (typeof value !== "string") {
+      return null;
+    }
+
+    const next = value.trim().toLowerCase();
+    if (!next || next === "left") {
+      return false;
+    }
+
+    if (next === "center" || next === "right" || next === "justify") {
+      return next;
+    }
+
+    return null;
+  }
+
+  getActiveSelectionRange() {
+    if (!this.editorInstance) return null;
+
+    const current = this.editorInstance.getSelection();
+    if (
+      current &&
+      Number.isFinite(current.index) &&
+      Number.isFinite(current.length)
+    ) {
+      this.lastSelectionRange = {
+        index: Math.max(0, current.index),
+        length: Math.max(0, current.length),
+      };
+      return { ...this.lastSelectionRange };
+    }
+
+    if (this.lastSelectionRange) {
+      return { ...this.lastSelectionRange };
+    }
+
+    const fallback = this.editorInstance.getSelection(true);
+    if (
+      fallback &&
+      Number.isFinite(fallback.index) &&
+      Number.isFinite(fallback.length)
+    ) {
+      this.lastSelectionRange = {
+        index: Math.max(0, fallback.index),
+        length: Math.max(0, fallback.length),
+      };
+      return { ...this.lastSelectionRange };
+    }
+
+    return null;
+  }
+
+  restoreEditorSelection(range, { defer = false } = {}) {
     if (!this.editorInstance || !range) return;
 
     const index = Number.isFinite(range.index) ? Math.max(0, range.index) : 0;
@@ -586,12 +669,26 @@ class NotesManager extends BaseManager {
       ? Math.max(0, range.length)
       : 0;
 
-    try {
-      this.editorInstance.focus();
-      this.editorInstance.setSelection(index, length, "api");
-    } catch (_error) {
-      // Ignore selection restore failures.
+    const applySelection = () => {
+      try {
+        this.editorInstance.focus();
+        this.editorInstance.setSelection(index, length, "silent");
+        this.lastSelectionRange = { index, length };
+      } catch (_error) {
+        // Ignore selection restore failures.
+      }
+    };
+
+    if (defer && typeof window !== "undefined") {
+      const scheduler =
+        typeof window.requestAnimationFrame === "function"
+          ? window.requestAnimationFrame.bind(window)
+          : (cb) => window.setTimeout(cb, 0);
+      scheduler(() => applySelection());
+      return;
     }
+
+    applySelection();
   }
 
   getWordRangeAt(index) {
