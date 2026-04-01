@@ -1198,6 +1198,409 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   grid-column: span 3;
 }
 
+/* ========================================
+   Notes Studio (New Component)
+   ======================================== */
+
+#notesCard .mdnotes-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-height: 560px;
+}
+
+#notesCard .mdnotes-shell-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+#notesCard .mdnotes-title-wrap {
+  min-width: 0;
+}
+
+#notesCard .mdnotes-title {
+  margin: 0;
+  font-size: clamp(1.02rem, 1.6vw, 1.24rem);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#notesCard .mdnotes-subtitle {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+#notesCard .mdnotes-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+#notesCard .mdnotes-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+#notesCard .mdnotes-pill-btn:hover {
+  transform: translateY(-1px);
+  background: var(--glass-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+#notesCard .mdnotes-pill-btn.danger {
+  border-color: rgba(220, 90, 90, 0.45);
+  background: rgba(220, 90, 90, 0.13);
+}
+
+#notesCard .mdnotes-pill-btn.danger:hover {
+  background: rgba(220, 90, 90, 0.22);
+  border-color: rgba(220, 90, 90, 0.6);
+}
+
+#notesCard .mdnotes-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: var(--spacing-md);
+  min-height: 0;
+}
+
+#notesCard .mdnotes-sidebar {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--glass-bg) 88%, transparent 12%),
+    color-mix(in srgb, var(--glass-bg-hover) 84%, transparent 16%)
+  );
+  overflow: hidden;
+  min-height: 0;
+}
+
+#notesCard .mdnotes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+#notesCard .mdnotes-list-item {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 9px 36px 9px 10px;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+#notesCard .mdnotes-list-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+#notesCard .mdnotes-list-item.active {
+  background: rgba(212, 175, 55, 0.16);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+#notesCard .mdnotes-list-title {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#notesCard .mdnotes-list-meta {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.73rem;
+}
+
+#notesCard .mdnotes-list-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(220, 90, 90, 0.45);
+  background: rgba(220, 90, 90, 0.18);
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+#notesCard .mdnotes-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+#notesCard .mdnotes-main-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+#notesCard .mdnotes-title-input {
+  flex: 1;
+  min-width: 220px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  padding: 0 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+#notesCard .mdnotes-title-input:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.55);
+  background: var(--glass-bg-hover);
+}
+
+#notesCard .mdnotes-view-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+}
+
+#notesCard .mdnotes-view-btn {
+  height: 30px;
+  min-width: 82px;
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+#notesCard .mdnotes-view-btn.active {
+  color: var(--text-primary);
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.42);
+}
+
+#notesCard .mdnotes-view-btn:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+#notesCard .mdnotes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+}
+
+#notesCard .mdnotes-tool-btn {
+  height: 32px;
+  min-width: 32px;
+  padding: 0 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#notesCard .mdnotes-tool-btn .u {
+  text-decoration: underline;
+}
+
+#notesCard .mdnotes-tool-btn .s {
+  text-decoration: line-through;
+}
+
+#notesCard .mdnotes-tool-btn:hover {
+  background: var(--glass-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+#notesCard .mdnotes-tool-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--glass-border);
+  margin: 0 2px;
+}
+
+#notesCard .mdnotes-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  min-height: 0;
+}
+
+#notesCard .mdnotes-editor-body[data-view="wysiwyg"],
+#notesCard .mdnotes-editor-body[data-view="markdown"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#notesCard .mdnotes-editor-body[data-view="wysiwyg"] .mdnotes-pane-source {
+  display: none;
+}
+
+#notesCard .mdnotes-editor-body[data-view="markdown"] .mdnotes-pane-wysiwyg {
+  display: none;
+}
+
+#notesCard .mdnotes-pane {
+  min-height: 360px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#notesCard .mdnotes-pane-label {
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#notesCard .mdnotes-source {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+  min-height: 320px;
+  padding: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font:
+    500 0.9rem/1.6 "Cascadia Code",
+    "JetBrains Mono",
+    Consolas,
+    monospace;
+}
+
+#notesCard .mdnotes-wysiwyg-host {
+  min-height: 320px;
+  flex: 1;
+}
+
+#notesCard .mdnotes-wysiwyg-host .milkdown {
+  min-height: 100%;
+  background: transparent;
+  color: var(--text-primary);
+  --crepe-color-background: transparent;
+  --crepe-color-on-background: var(--text-primary);
+  --crepe-color-surface: var(--glass-bg-hover);
+  --crepe-color-surface-low: var(--glass-bg);
+  --crepe-color-on-surface: var(--text-primary);
+  --crepe-color-on-surface-variant: var(--text-secondary);
+  --crepe-color-outline: var(--text-muted);
+  --crepe-color-primary: var(--accent-gold);
+  --crepe-color-secondary: rgba(212, 175, 55, 0.2);
+  --crepe-color-on-secondary: var(--text-primary);
+  --crepe-color-inline-code: var(--accent-gold-light);
+  --crepe-color-hover: rgba(212, 175, 55, 0.12);
+  --crepe-color-selected: rgba(212, 175, 55, 0.2);
+  --crepe-color-inline-area: rgba(212, 175, 55, 0.15);
+}
+
+#notesCard .mdnotes-wysiwyg-host .milkdown .editor {
+  min-height: 320px;
+  max-height: 62vh;
+  overflow: auto;
+}
+
+#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
+  min-height: 320px;
+  padding: 12px;
+  line-height: 1.65;
+}
+
+#notesCard .mdnotes-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  flex-wrap: wrap;
+}
+
+#notesCard .mdnotes-status[data-state="error"] {
+  color: #ff9a9a;
+}
+
+#notesCard .mdnotes-status[data-state="loading"] {
+  color: #ffd598;
+}
+
+@media (max-width: 1024px) {
+  #notesCard .mdnotes-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #notesCard .mdnotes-list {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 800px) {
+  #notesCard .mdnotes-editor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .notes-header-actions {
   display: inline-flex;
   align-items: center;
@@ -2248,6 +2651,30 @@ textarea.notes-editor:focus {
   animation: none;
   will-change: auto;
   backface-visibility: visible;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: auto;
+}
+
+#notesCard .mdnotes-shell,
+#notesCard .mdnotes-layout,
+#notesCard .mdnotes-main,
+#notesCard .mdnotes-editor-body,
+#notesCard .mdnotes-pane,
+#notesCard .mdnotes-wysiwyg-host,
+#notesCard .mdnotes-wysiwyg-host .milkdown,
+#notesCard .mdnotes-wysiwyg-host .milkdown .editor {
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  will-change: auto !important;
+  contain: none !important;
+}
+
+#notesCard .milkdown-drop-indicator,
+#notesCard .crepe-drop-cursor {
+  z-index: 240;
 }
 
 /* ========================================
