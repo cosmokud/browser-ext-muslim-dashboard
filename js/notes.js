@@ -135,6 +135,7 @@ class NotesManager extends BaseManager {
       this.applyToolbarTooltips();
       this.startToolbarTooltipObserver();
       this.bindToolbarTooltipFallbackEvents();
+      this.bindToolbarFocusRetention();
 
       this.editorInstance.on("text-change", (_delta, _oldDelta, source) => {
         if (this.isSettingContent) return;
@@ -841,6 +842,41 @@ class NotesManager extends BaseManager {
     this.toolbar.addEventListener("mouseover", ensureTooltip);
     this.toolbar.addEventListener("focusin", ensureTooltip);
     this.toolbar.dataset.notesTooltipBound = "true";
+  }
+
+  bindToolbarFocusRetention() {
+    if (!this.toolbar || !this.editorInstance) return;
+    if (this.toolbar.dataset.notesFocusRetentionBound === "true") return;
+
+    this.toolbar.addEventListener("mousedown", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      // Keep normal focus behavior for true form inputs and editable regions.
+      if (
+        target.closest(
+          "input, textarea, select, [contenteditable='true'], [contenteditable='plaintext-only']",
+        )
+      ) {
+        return;
+      }
+
+      const toolbarControl = target.closest(
+        "button, .ql-picker-label, .ql-picker-item",
+      );
+      if (!toolbarControl) return;
+
+      event.preventDefault();
+
+      const range = this.getActiveSelectionRange();
+      if (range) {
+        this.restoreEditorSelection(range, { defer: true });
+      } else {
+        this.editorInstance.focus();
+      }
+    });
+
+    this.toolbar.dataset.notesFocusRetentionBound = "true";
   }
 
   getButtonTooltip(button) {
