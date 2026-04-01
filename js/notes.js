@@ -374,7 +374,7 @@ class NotesManager extends BaseManager {
 
       const tabHandled = this.handlePreviewEditorTab(!!e.shiftKey);
       if (!tabHandled) {
-        this.insertPlainTextAtCursor("  ");
+        this.insertPlainTextAtCursor("    ");
       }
 
       this.capturePreviewSelection();
@@ -706,7 +706,7 @@ class NotesManager extends BaseManager {
     const value = String(t.value || "");
     const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
     const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
-    const indentToken = "  ";
+    const indentToken = "    ";
 
     if (start === end) {
       if (!isOutdent) {
@@ -722,8 +722,14 @@ class NotesManager extends BaseManager {
 
       let removeCount = 0;
       if (/\t$/.test(linePrefix)) removeCount = 1;
-      else if (/ {1,2}$/.test(linePrefix)) {
-        removeCount = linePrefix.endsWith("  ") ? 2 : 1;
+      else if (/ {1,4}$/.test(linePrefix)) {
+        removeCount = linePrefix.endsWith("    ")
+          ? 4
+          : linePrefix.endsWith("   ")
+            ? 3
+            : linePrefix.endsWith("  ")
+              ? 2
+              : 1;
       }
 
       if (removeCount > 0) {
@@ -748,7 +754,7 @@ class NotesManager extends BaseManager {
     const lines = block.split("\n");
     const nextLines = lines.map((line) => {
       if (isOutdent) {
-        return String(line || "").replace(/^(?:\t| {1,2})/, "");
+        return String(line || "").replace(/^(?:\t| {1,4})/, "");
       }
       return `${indentToken}${line}`;
     });
@@ -2536,7 +2542,7 @@ class NotesManager extends BaseManager {
           : isOrdered
             ? `${idx}. `
             : "- ";
-        const indent = "  ".repeat(Math.max(0, depth));
+        const indent = "    ".repeat(Math.max(0, depth));
 
         if (ownText) {
           lines.push(`${indent}${prefix}${ownText}`);
