@@ -323,7 +323,28 @@ class NotesManager extends BaseManager {
     // Preview: Ctrl/Cmd-click links open in new tab; normal click doesn't navigate.
     this.editor.addEventListener("click", (e) => {
       if (!this.isMarkdownPreview) return;
-      const a = e.target.closest("a");
+      const target =
+        e.target && e.target.nodeType === Node.ELEMENT_NODE
+          ? e.target
+          : e.target?.parentElement;
+      if (!target || !target.closest) return;
+
+      const checklistItem = target.closest("li[data-checked]");
+      if (
+        checklistItem &&
+        this.editor.contains(checklistItem) &&
+        checklistItem.closest("ul.notes-checklist,ol.notes-checklist")
+      ) {
+        const rect = checklistItem.getBoundingClientRect();
+        const markerHitArea = rect.left + 28;
+        if (Number.isFinite(e.clientX) && e.clientX <= markerHitArea) {
+          e.preventDefault();
+          this.togglePreviewChecklistItem(checklistItem);
+          return;
+        }
+      }
+
+      const a = target.closest("a");
       if (!a) return;
       try {
         const href = a.getAttribute("href");
@@ -2492,6 +2513,51 @@ class NotesManager extends BaseManager {
       return Array.from(el.childNodes).map(toInline).join("");
     };
 
+    const listToMarkdown = (listEl, depth = 0) => {
+      if (!listEl) return "";
+
+      const isChecklist = listEl.classList.contains("notes-checklist");
+      const isOrdered = listEl.tagName === "OL";
+      let idx = 1;
+      const lines = [];
+
+      Array.from(listEl.querySelectorAll(":scope > li")).forEach((li) => {
+        const clone = li.cloneNode(true);
+        clone.querySelectorAll("ul,ol").forEach((nested) => nested.remove());
+        const ownText = Array.from(clone.childNodes)
+          .map(toInline)
+          .join("")
+          .trim();
+
+        const checked =
+          String(li.getAttribute("data-checked") || "false") === "true";
+        const prefix = isChecklist
+          ? `- [${checked ? "x" : " "}] `
+          : isOrdered
+            ? `${idx}. `
+            : "- ";
+        const indent = "  ".repeat(Math.max(0, depth));
+
+        if (ownText) {
+          lines.push(`${indent}${prefix}${ownText}`);
+        } else {
+          lines.push(`${indent}${prefix}`.trimEnd());
+        }
+
+        const nestedLists = Array.from(li.querySelectorAll("ul,ol")).filter(
+          (nested) => nested.closest("li") === li,
+        );
+        nestedLists.forEach((nested) => {
+          const nestedMd = listToMarkdown(nested, depth + 1);
+          if (nestedMd) lines.push(nestedMd);
+        });
+
+        idx += 1;
+      });
+
+      return lines.join("\n");
+    };
+
     const toBlock = (node) => {
       if (!node) return "";
       if (node.nodeType === Node.TEXT_NODE)
@@ -2513,12 +2579,18 @@ class NotesManager extends BaseManager {
         "BLOCKQUOTE",
         "TABLE",
         "HR",
+        "IMG",
         "VIDEO",
         "AUDIO",
         "IFRAME",
       ]);
 
       if (tag === "HR") return "---\n\n";
+
+      if (tag === "IMG") {
+        const md = toInline(el).trim();
+        return md ? `${md}\n\n` : "";
+      }
 
       if (tag === "VIDEO" || tag === "AUDIO" || tag === "IFRAME") {
         return `${el.outerHTML}\n\n`;
@@ -2579,36 +2651,8 @@ class NotesManager extends BaseManager {
       }
 
       if (tag === "UL" || tag === "OL") {
-        const isChecklist = el.classList.contains("notes-checklist");
-        const isOrdered = tag === "OL";
-        let idx = 1;
-        const lines = [];
-        el.querySelectorAll(":scope > li").forEach((li) => {
-          const txt = Array.from(li.childNodes)
-            .filter(
-              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "UL",
-            )
-            .filter(
-              (n) => n.nodeType !== Node.ELEMENT_NODE || n.tagName !== "OL",
-            )
-            .map(toInline)
-            .join("")
-            .trim();
-
-          const checked =
-            String(li.getAttribute("data-checked") || "false") === "true";
-
-          const prefix = isChecklist
-            ? `- [${checked ? "x" : " "}] `
-            : isOrdered
-              ? `${idx}. `
-              : "- ";
-
-          if (txt) lines.push(`${prefix}${txt}`);
-          idx += 1;
-        });
-
-        return lines.length ? `${lines.join("\n")}\n\n` : "";
+        const lines = listToMarkdown(el, 0);
+        return lines ? `${lines}\n\n` : "";
       }
 
       if (tag === "TABLE") {
@@ -3537,6 +3581,20 @@ class NotesManager extends BaseManager {
           li.setAttribute("data-checked", "false");
       });
     }
+  }
+
+  togglePreviewChecklistItem(li) {
+    if (!li || !this.editor) return;
+
+    const list = li.closest("ul.notes-checklist,ol.notes-checklist");
+    if (!list || !this.editor.contains(list)) return;
+
+    const checked =
+      String(li.getAttribute("data-checked") || "false") === "true";
+    li.setAttribute("data-checked", checked ? "false" : "true");
+
+    this.capturePreviewSelection();
+    this.queueSave();
   }
 
   normalizeNow() {

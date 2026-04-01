@@ -1725,14 +1725,16 @@ textarea.notes-editor:focus {
 }
 
 .notes-editor.notes-md-preview pre {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
 }
 
 .notes-editor.notes-md-preview code {
@@ -1741,11 +1743,14 @@ textarea.notes-editor:focus {
 }
 
 .notes-editor.notes-md-preview pre code {
+  display: block;
+  min-width: max-content;
   background: transparent;
   border: none;
   border-radius: 0;
   padding: 0;
   color: inherit;
+  white-space: inherit;
 }
 
 .notes-editor.notes-md-preview :not(pre) > code,
