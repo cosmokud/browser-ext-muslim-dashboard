@@ -353,8 +353,10 @@ class NotesManager extends BaseManager {
         if (!e.clipboardData) return;
         e.preventDefault();
 
+        const clipboardHtml = e.clipboardData.getData("text/html") || "";
         const internalHtml =
-          e.clipboardData.getData("text/x-notes-editor-html") || "";
+          e.clipboardData.getData("text/x-notes-editor-html") ||
+          this.extractInternalHtmlFromClipboardHtml(clipboardHtml);
         const internalMarkdown =
           e.clipboardData.getData("text/x-notes-markdown") || "";
 
@@ -380,8 +382,8 @@ class NotesManager extends BaseManager {
         }
 
         const text = e.clipboardData.getData("text/plain") || "";
-        const html = e.clipboardData.getData("text/html") || "";
-        const plain = text || this.extractPlainTextFromClipboardHtml(html);
+        const plain =
+          text || this.extractPlainTextFromClipboardHtml(clipboardHtml);
 
         this.insertPlainTextAtCursor(plain);
         this._allowHtmlFallbackOnNextConvert = false;
@@ -421,6 +423,12 @@ class NotesManager extends BaseManager {
 
       event.preventDefault();
       event.clipboardData.setData("text/plain", plain);
+      if (String(withContext || "").trim()) {
+        event.clipboardData.setData(
+          "text/html",
+          `<div data-notes-internal="1">${withContext}</div>`,
+        );
+      }
       if (String(withContext || "").trim()) {
         event.clipboardData.setData("text/x-notes-editor-html", withContext);
       }
@@ -545,6 +553,17 @@ class NotesManager extends BaseManager {
       /\r\n?/g,
       "\n",
     );
+  }
+
+  extractInternalHtmlFromClipboardHtml(html) {
+    try {
+      const host = document.createElement("div");
+      host.innerHTML = String(html || "");
+      const marker = host.querySelector("[data-notes-internal='1']");
+      return marker ? String(marker.innerHTML || "") : "";
+    } catch (e) {
+      return "";
+    }
   }
 
   isRichMarkdownFragment(markdown) {
@@ -1642,19 +1661,147 @@ class NotesManager extends BaseManager {
     const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
     const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
 
-    const before = value.slice(0, start);
-    const selected =
-      value.slice(start, end).replace(/^\n+|\n+$/g, "") || "code";
-    const after = value.slice(end);
+    const getLineStarts = (lines) => {
+      const starts = [];
+      let pos = 0;
+      lines.forEach((line) => {
+        starts.push(pos);
+        pos += String(line || "").length + 1;
+      });
+      return starts;
+    };
 
-    const lead = before && !before.endsWith("\n") ? "\n" : "";
-    const trail = after && !after.startsWith("\n") ? "\n" : "";
-    const token = `${lead}\`\`\`\n${selected}\n\`\`\`${trail}`;
+    const getLineIndexForOffset = (lineStarts, offset, textLength) => {
+      const bounded = Math.max(0, Math.min(offset, textLength));
+      for (let i = lineStarts.length - 1; i >= 0; i -= 1) {
+        if (bounded >= lineStarts[i]) return i;
+      }
+      return 0;
+    };
 
-    t.value = `${before}${token}${after}`;
-    const contentStart = before.length + lead.length + 4;
-    const contentEnd = contentStart + selected.length;
-    t.setSelectionRange(contentStart, contentEnd);
+    const isFenceLine = (line) =>
+      /^\s*```(?:\S.*)?\s*$/.test(String(line || ""));
+
+    const applyLines = (
+      lines,
+      selStartOffset,
+      selEndOffset = selStartOffset,
+    ) => {
+      const nextValue = lines.join("\n");
+      t.value = nextValue;
+      const max = nextValue.length;
+      const s = Math.max(0, Math.min(selStartOffset, max));
+      const e = Math.max(s, Math.min(selEndOffset, max));
+      t.setSelectionRange(s, e);
+    };
+
+    const lines = value.split("\n");
+    const lineStarts = getLineStarts(lines);
+
+    const selStart = Math.min(start, end);
+    const selEnd = Math.max(start, end);
+    const startLine = getLineIndexForOffset(lineStarts, selStart, value.length);
+    const endProbe =
+      selEnd > selStart ? Math.max(selStart, selEnd - 1) : selStart;
+    const endLine = getLineIndexForOffset(lineStarts, endProbe, value.length);
+
+    // Toggle off when cursor/selection is already inside a fenced code block.
+    let open = -1;
+    for (let i = startLine; i >= 0; i -= 1) {
+      if (isFenceLine(lines[i])) {
+        open = i;
+        break;
+      }
+    }
+    if (open >= 0) {
+      let close = -1;
+      for (let j = open + 1; j < lines.length; j += 1) {
+        if (isFenceLine(lines[j])) {
+          close = j;
+          break;
+        }
+      }
+
+      if (close > open && startLine <= close && endLine >= open) {
+        const nextLines = lines
+          .slice(0, open)
+          .concat(lines.slice(open + 1, close), lines.slice(close + 1));
+        const contentCount = Math.max(0, close - open - 1);
+
+        if (!nextLines.length) {
+          applyLines([""], 0, 0);
+          return;
+        }
+
+        const nextStarts = getLineStarts(nextLines);
+        if (contentCount > 0) {
+          const fromLine = open;
+          const toLine = open + contentCount - 1;
+          const from = nextStarts[Math.min(fromLine, nextStarts.length - 1)];
+          const safeToLine = Math.min(toLine, nextLines.length - 1);
+          const to =
+            nextStarts[safeToLine] + String(nextLines[safeToLine] || "").length;
+          applyLines(nextLines, from, to);
+        } else {
+          const caretLine = Math.min(open, nextLines.length - 1);
+          const caret = nextStarts[Math.max(0, caretLine)] || 0;
+          applyLines(nextLines, caret, caret);
+        }
+        return;
+      }
+    }
+
+    // Toggle off when selection is directly wrapped by fence lines.
+    if (
+      startLine > 0 &&
+      endLine + 1 < lines.length &&
+      isFenceLine(lines[startLine - 1]) &&
+      isFenceLine(lines[endLine + 1])
+    ) {
+      const openLine = startLine - 1;
+      const closeLine = endLine + 1;
+      const nextLines = lines
+        .slice(0, openLine)
+        .concat(
+          lines.slice(openLine + 1, closeLine),
+          lines.slice(closeLine + 1),
+        );
+
+      if (!nextLines.length) {
+        applyLines([""], 0, 0);
+        return;
+      }
+
+      const nextStarts = getLineStarts(nextLines);
+      const contentCount = endLine - startLine + 1;
+      const fromLine = openLine;
+      const toLine = openLine + contentCount - 1;
+      const from = nextStarts[Math.min(fromLine, nextStarts.length - 1)];
+      const safeToLine = Math.min(toLine, nextLines.length - 1);
+      const to =
+        nextStarts[safeToLine] + String(nextLines[safeToLine] || "").length;
+      applyLines(nextLines, from, to);
+      return;
+    }
+
+    // Insert fences around selected lines; with no selection this wraps the current line.
+    const nextLines = lines
+      .slice(0, startLine)
+      .concat(
+        ["```"],
+        lines.slice(startLine, endLine + 1),
+        ["```"],
+        lines.slice(endLine + 1),
+      );
+
+    const nextStarts = getLineStarts(nextLines);
+    const fromLine = startLine + 1;
+    const toLine = endLine + 1;
+    const from = nextStarts[Math.min(fromLine, nextStarts.length - 1)];
+    const safeToLine = Math.min(toLine, nextLines.length - 1);
+    const to =
+      nextStarts[safeToLine] + String(nextLines[safeToLine] || "").length;
+    applyLines(nextLines, from, to);
   }
 
   insertMarkdownTable() {
@@ -2439,7 +2586,7 @@ class NotesManager extends BaseManager {
     }
 
     if (cmd === "quote") {
-      this.execFormatBlock("BLOCKQUOTE");
+      this.togglePreviewBlockquote();
       return;
     }
 
@@ -2614,11 +2761,93 @@ class NotesManager extends BaseManager {
       return;
     }
 
-    const selected = this.getPreviewSelectionText() || "code";
-    this.insertHtmlAtCursor(
-      `<pre><code>${this.escapeHtml(String(selected).trim() || "code")}</code></pre>`,
-      { forceRangeInsert: true },
-    );
+    const selected = this.getPreviewSelectionText();
+    const selectedTrimmed = String(selected || "").trim();
+    if (selectedTrimmed) {
+      this.insertHtmlAtCursor(
+        `<pre><code>${this.escapeHtml(selectedTrimmed)}</code></pre>`,
+        { forceRangeInsert: true },
+      );
+      return;
+    }
+
+    const block = this.findClosestPreviewBlock(startEl);
+    if (block && this.editor.contains(block) && block.tagName !== "PRE") {
+      const raw = String(block.textContent || "").replace(/\r\n?/g, "\n");
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.textContent = raw;
+      pre.appendChild(code);
+
+      try {
+        block.parentNode.replaceChild(pre, block);
+        const sel = window.getSelection();
+        if (sel) {
+          const r = document.createRange();
+          r.selectNodeContents(code);
+          r.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+
+    this.insertHtmlAtCursor("<pre><code></code></pre>", {
+      forceRangeInsert: true,
+    });
+  }
+
+  togglePreviewBlockquote() {
+    const range = this.getActivePreviewRange();
+    if (!range) return;
+
+    const startEl =
+      range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement;
+    const endEl =
+      range.endContainer.nodeType === Node.ELEMENT_NODE
+        ? range.endContainer
+        : range.endContainer.parentElement;
+
+    const startQuote = startEl?.closest ? startEl.closest("blockquote") : null;
+    const endQuote = endEl?.closest ? endEl.closest("blockquote") : null;
+
+    if (
+      startQuote &&
+      endQuote &&
+      startQuote === endQuote &&
+      this.editor.contains(startQuote)
+    ) {
+      this.unwrapPreviewBlockquoteElement(startQuote);
+      return;
+    }
+
+    this.execFormatBlock("BLOCKQUOTE");
+  }
+
+  unwrapPreviewBlockquoteElement(blockquoteEl) {
+    if (!blockquoteEl || !blockquoteEl.parentNode) return;
+
+    try {
+      const p = document.createElement("p");
+      p.innerHTML = blockquoteEl.innerHTML || "<br>";
+      blockquoteEl.parentNode.replaceChild(p, blockquoteEl);
+
+      const sel = window.getSelection();
+      if (sel) {
+        const r = document.createRange();
+        r.selectNodeContents(p);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   unwrapPreviewInlineCodeElement(codeEl) {
