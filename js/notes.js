@@ -42,6 +42,10 @@ class NotesManager extends BaseManager {
     this._milkdownInitPromise = null;
     this._milkdownReady = false;
     this._suppressMilkdownChange = false;
+    this._milkdownUiSyncRaf = null;
+    this._milkdownUiSyncInstalled = false;
+    this._milkdownUiSyncHandler = null;
+    this._milkdownUiSyncScrollHost = null;
 
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
@@ -167,6 +171,7 @@ class NotesManager extends BaseManager {
         this._milkdown = adapter;
         this._milkdownReady = true;
         this.editor.classList.add("notes-editor-milkdown");
+        this.installMilkdownUiSync();
 
         const active = this.getActiveNote();
         const md = this.stripInternalCursorMarkers(
@@ -291,6 +296,112 @@ class NotesManager extends BaseManager {
     } catch (e) {
       // ignore
     }
+
+    this.scheduleMilkdownUiSync();
+  }
+
+  installMilkdownUiSync() {
+    if (!this.isMilkdownEnabled()) return;
+
+    const scrollHost = this.editor?.querySelector(".milkdown .editor");
+    if (!scrollHost) return;
+
+    if (
+      this._milkdownUiSyncInstalled &&
+      this._milkdownUiSyncScrollHost === scrollHost
+    ) {
+      this.scheduleMilkdownUiSync();
+      return;
+    }
+
+    this.teardownMilkdownUiSync();
+
+    const schedule = () => this.scheduleMilkdownUiSync();
+    this._milkdownUiSyncHandler = schedule;
+    this._milkdownUiSyncScrollHost = scrollHost;
+
+    scrollHost.addEventListener("scroll", schedule, { passive: true });
+    this.editor?.addEventListener("pointerup", schedule, true);
+    this.editor?.addEventListener("keyup", schedule, true);
+    document.addEventListener("selectionchange", schedule, true);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, true);
+
+    this._milkdownUiSyncInstalled = true;
+    this.scheduleMilkdownUiSync();
+  }
+
+  teardownMilkdownUiSync() {
+    if (!this._milkdownUiSyncInstalled || !this._milkdownUiSyncHandler) return;
+
+    try {
+      this._milkdownUiSyncScrollHost?.removeEventListener(
+        "scroll",
+        this._milkdownUiSyncHandler,
+      );
+      this.editor?.removeEventListener(
+        "pointerup",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      this.editor?.removeEventListener(
+        "keyup",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      document.removeEventListener(
+        "selectionchange",
+        this._milkdownUiSyncHandler,
+        true,
+      );
+      window.removeEventListener("resize", this._milkdownUiSyncHandler);
+      window.removeEventListener("scroll", this._milkdownUiSyncHandler, true);
+    } catch (e) {
+      // ignore
+    }
+
+    this._milkdownUiSyncInstalled = false;
+    this._milkdownUiSyncHandler = null;
+    this._milkdownUiSyncScrollHost = null;
+  }
+
+  scheduleMilkdownUiSync() {
+    if (this._milkdownUiSyncRaf) {
+      cancelAnimationFrame(this._milkdownUiSyncRaf);
+    }
+
+    this._milkdownUiSyncRaf = requestAnimationFrame(() => {
+      this._milkdownUiSyncRaf = null;
+      this.syncMilkdownFloatingUi();
+    });
+  }
+
+  syncMilkdownFloatingUi() {
+    if (!this.isMilkdownEnabled() || !this.isMarkdownPreview) return;
+
+    const scrollHost = this.editor?.querySelector(".milkdown .editor");
+    const handle = this.editor?.querySelector(
+      ".milkdown .milkdown-block-handle",
+    );
+    if (!scrollHost || !handle) return;
+
+    if (handle.getAttribute("data-show") === "false") {
+      handle.dataset.notesHidden = "false";
+      return;
+    }
+
+    const hostRect = scrollHost.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+
+    const hidden =
+      handleRect.width < 6 ||
+      handleRect.height < 6 ||
+      handleRect.top < hostRect.top + 4 ||
+      handleRect.bottom > hostRect.bottom - 4 ||
+      handleRect.left < hostRect.left - 2 ||
+      handleRect.right > hostRect.right + 2;
+
+    handle.dataset.notesHidden = hidden ? "true" : "false";
   }
 
   setupEventListeners() {
