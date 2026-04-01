@@ -1259,6 +1259,17 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   gap: var(--spacing-xs);
 }
 
+#notesCard .mdnotes-header-actions .card-blur-menu {
+  display: inline-flex;
+  align-items: center;
+}
+
+#notesCard .mdnotes-header-actions .card-blur-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+}
+
 #notesCard .mdnotes-pill-btn {
   display: inline-flex;
   align-items: center;
@@ -1455,32 +1466,48 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 #notesCard .mdnotes-view-switch {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px;
+  gap: 3px;
+  padding: 4px;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  background: var(--glass-bg);
+  border-radius: 999px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--glass-bg) 88%, transparent 12%),
+    color-mix(in srgb, var(--glass-bg-hover) 84%, transparent 16%)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 #notesCard .mdnotes-view-btn {
-  width: 31px;
-  height: 31px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   transition:
+    transform var(--transition-fast),
     color var(--transition-fast),
     border-color var(--transition-fast),
-    background var(--transition-fast);
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+#notesCard .mdnotes-view-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--glass-bg-hover) 90%, transparent 10%);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 #notesCard .mdnotes-view-btn.active {
   color: var(--text-primary);
-  background: rgba(212, 175, 55, 0.2);
-  border-color: rgba(212, 175, 55, 0.42);
+  background: color-mix(in srgb, var(--accent-gold) 24%, transparent 76%);
+  border-color: color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 5px 12px rgba(0, 0, 0, 0.18);
 }
 
 #notesCard .mdnotes-view-btn:disabled {
@@ -1658,7 +1685,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle,
 #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-slash-menu {
-  z-index: 260;
+  z-index: 1400 !important;
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
@@ -1667,8 +1694,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   inset-inline-start: 0 !important;
   inset-inline-end: auto !important;
   margin-left: -14px;
-  padding: 2px;
-  border-radius: var(--radius-full);
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 5px;
+  border-radius: 999px;
   border: 1px solid var(--glass-border);
   background: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
@@ -1696,10 +1727,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   .milkdown
   .milkdown-block-handle
   .operation-item {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 2px;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1712,8 +1743,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   .milkdown-block-handle
   .operation-item
   svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 #notesCard

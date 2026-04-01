@@ -7,6 +7,7 @@ class NotesManager extends BaseManager {
   static STORAGE_KEY = "notes";
   static ACTIVE_NOTE_KEY = "notes_active";
   static VIEW_MODE_KEY = "notes_view_mode";
+  static VIEW_MODE_LOCAL_KEY = "mdnotes_view_mode";
   static DEFAULT_TITLE = "Untitled";
 
   static DEFAULT_MARKDOWN = [
@@ -111,6 +112,91 @@ class NotesManager extends BaseManager {
                 <path d="M6 7l1 13h10l1-13"></path>
               </svg>
             </button>
+
+            <div
+              class="card-blur-menu"
+              aria-label="Notes blur menu"
+              data-card-id="notesCard"
+            >
+              <button
+                class="card-blur-btn"
+                id="notesBlurMenuBtn"
+                type="button"
+                aria-label="Open blur settings"
+                title="Blur and Glass Settings"
+              >
+                ✨
+              </button>
+              <div class="blur-settings-popup">
+                <div class="blur-popup-header">
+                  <span class="blur-popup-title">
+                    <span class="blur-popup-title-icon">✨</span>
+                    Glass Settings
+                  </span>
+                  <button
+                    class="blur-popup-close"
+                    type="button"
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div class="blur-setting-section">
+                  <span class="blur-setting-label">Glass Effect</span>
+                  <div class="blur-glass-toggle">
+                    <button
+                      class="blur-glass-option"
+                      data-glass-value="off"
+                      type="button"
+                    >
+                      <span class="blur-glass-option-icon">⬜</span>
+                      <span class="blur-glass-option-label">Off</span>
+                    </button>
+
+                    <button
+                      class="blur-glass-option active"
+                      data-glass-value="dashboard"
+                      type="button"
+                    >
+                      <span class="blur-glass-option-icon">🔗</span>
+                      <span class="blur-glass-option-label">Dash</span>
+                    </button>
+
+                    <button
+                      class="blur-glass-option"
+                      data-glass-value="on"
+                      type="button"
+                    >
+                      <span class="blur-glass-option-icon">✨</span>
+                      <span class="blur-glass-option-label">On</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="blur-setting-section">
+                  <div class="blur-power-header">
+                    <span class="blur-setting-label">Blur Power</span>
+                    <label class="blur-power-toggle">
+                      <input type="checkbox" class="blur-power-checkbox" />
+                      <span class="blur-power-switch"></span>
+                      <span class="blur-power-toggle-label">Custom</span>
+                    </label>
+                  </div>
+
+                  <div class="blur-power-slider-wrap disabled">
+                    <input
+                      type="range"
+                      class="blur-power-slider"
+                      min="0"
+                      max="200"
+                      value="100"
+                    />
+                    <span class="blur-power-value">100%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -470,6 +556,30 @@ class NotesManager extends BaseManager {
     });
 
     if (this.listEl) {
+      this.listEl.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        if (event.pointerType === "touch") return;
+
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (target.closest(".mdnotes-list-delete")) return;
+
+        const item = target.closest(".mdnotes-list-item");
+        if (!item) return;
+
+        const noteId = String(item.getAttribute("data-note-id") || "").trim();
+        if (!noteId) return;
+        if (String(this.activeNoteId) === noteId) return;
+
+        this.markListItemActive(noteId);
+        this.selectNote(noteId, {
+          focus: false,
+          scrollBehavior: "auto",
+          promote: true,
+          animateMove: true,
+        });
+      });
+
       this.listEl.addEventListener(
         "scroll",
         () => this.updateSelectorNavState(),
@@ -497,7 +607,15 @@ class NotesManager extends BaseManager {
         if (!item) return;
         const noteId = String(item.getAttribute("data-note-id") || "").trim();
         if (!noteId) return;
-        this.selectNote(noteId, { focus: false, scrollBehavior: "auto" });
+        if (String(this.activeNoteId) === noteId) return;
+
+        this.markListItemActive(noteId);
+        this.selectNote(noteId, {
+          focus: false,
+          scrollBehavior: "auto",
+          promote: true,
+          animateMove: true,
+        });
       });
     }
 
@@ -594,24 +712,44 @@ class NotesManager extends BaseManager {
     } catch (error) {}
   }
 
+  normalizeViewMode(value) {
+    const mode = String(value || "")
+      .trim()
+      .toLowerCase();
+    return mode === "split" || mode === "wysiwyg" || mode === "markdown"
+      ? mode
+      : "";
+  }
+
   readViewMode() {
     const fallback = "split";
 
     try {
-      const value = String(
-        this.storage?.get?.(NotesManager.VIEW_MODE_KEY, fallback) || fallback,
+      const storageValue = this.storage?.get?.(NotesManager.VIEW_MODE_KEY, "");
+      const normalizedStorage = this.normalizeViewMode(storageValue);
+      if (normalizedStorage) return normalizedStorage;
+    } catch (error) {}
+
+    try {
+      const localValue = window.localStorage?.getItem(
+        NotesManager.VIEW_MODE_LOCAL_KEY,
       );
-      if (value === "split" || value === "wysiwyg" || value === "markdown") {
-        return value;
-      }
+      const normalizedLocal = this.normalizeViewMode(localValue);
+      if (normalizedLocal) return normalizedLocal;
     } catch (error) {}
 
     return fallback;
   }
 
   writeViewMode() {
+    const mode = this.normalizeViewMode(this.viewMode) || "split";
+
     try {
-      this.storage?.set?.(NotesManager.VIEW_MODE_KEY, this.viewMode);
+      this.storage?.set?.(NotesManager.VIEW_MODE_KEY, mode);
+    } catch (error) {}
+
+    try {
+      window.localStorage?.setItem(NotesManager.VIEW_MODE_LOCAL_KEY, mode);
     } catch (error) {}
   }
 
@@ -894,17 +1032,11 @@ class NotesManager extends BaseManager {
 
     if (!scrollHost || !handle) return;
 
-    const hostRect = scrollHost.getBoundingClientRect();
-    const handleRect = handle.getBoundingClientRect();
-    const appearsOnRight =
-      handleRect.left > hostRect.left + Math.max(120, hostRect.width * 0.5);
-
-    if (appearsOnRight) {
-      handle.style.left = "0px";
-      handle.style.right = "auto";
-      handle.style.insetInlineStart = "0px";
-      handle.style.insetInlineEnd = "auto";
-    }
+    handle.style.left = "0px";
+    handle.style.right = "auto";
+    handle.style.insetInlineStart = "0px";
+    handle.style.insetInlineEnd = "auto";
+    handle.style.zIndex = "1400";
 
     if (handle.getAttribute("data-show") === "false") {
       handle.dataset.notesHidden = "true";
@@ -1104,7 +1236,13 @@ class NotesManager extends BaseManager {
 
   selectNote(
     id,
-    { skipPersistCurrent = false, focus = false, scrollBehavior = "auto" } = {},
+    {
+      skipPersistCurrent = false,
+      focus = false,
+      scrollBehavior = "auto",
+      promote = false,
+      animateMove = false,
+    } = {},
   ) {
     const noteId = String(id || "").trim();
     if (!noteId) return;
@@ -1117,9 +1255,17 @@ class NotesManager extends BaseManager {
       changed = this.persistActiveNote({ markUpdated: true });
     }
 
+    const promoted = promote ? this.promoteNoteToFront(noteId) : false;
+
     this.activeNoteId = noteId;
     this.renderActiveNote();
-    this.renderList();
+
+    if (changed || promoted) {
+      this.renderList({ animate: animateMove && promoted });
+    } else {
+      this.markListItemActive(noteId);
+    }
+
     this.ensureActiveVisible(scrollBehavior);
 
     if (this.isMilkdownEnabled() && this.viewMode !== "markdown") {
@@ -1131,11 +1277,27 @@ class NotesManager extends BaseManager {
       this.focusEditor();
     }
 
-    if (changed) {
+    if (changed || promoted) {
       this.writeNotes();
     } else {
       this.writeActiveNoteId();
     }
+  }
+
+  promoteNoteToFront(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id) return false;
+
+    const index = this.notes.findIndex((entry) => String(entry.id) === id);
+    if (index < 0) return false;
+    if (index === 0) return false;
+
+    const [note] = this.notes.splice(index, 1);
+    if (!note) return false;
+
+    note.updatedAt = Date.now();
+    this.notes.unshift(note);
+    return true;
   }
 
   focusEditor() {
@@ -1182,10 +1344,20 @@ class NotesManager extends BaseManager {
     }
   }
 
-  renderList() {
+  renderList({ animate = false } = {}) {
     if (!this.listEl) return;
 
     const prevScrollLeft = this.listEl.scrollLeft;
+    const prevRects = new Map();
+
+    if (animate) {
+      this.listEl.querySelectorAll(".mdnotes-list-item").forEach((item) => {
+        const id = String(item.getAttribute("data-note-id") || "").trim();
+        if (!id) return;
+        prevRects.set(id, item.getBoundingClientRect());
+      });
+    }
+
     this.listEl.innerHTML = "";
 
     this.notes.forEach((note) => {
@@ -1228,6 +1400,8 @@ class NotesManager extends BaseManager {
         this.selectNote(String(note.id), {
           focus: false,
           scrollBehavior: "auto",
+          promote: true,
+          animateMove: true,
         });
       });
 
@@ -1236,6 +1410,62 @@ class NotesManager extends BaseManager {
 
     this.listEl.scrollLeft = prevScrollLeft;
     this.updateSelectorNavState();
+
+    if (animate && prevRects.size) {
+      this.animateSelectorReorder(prevRects);
+    }
+  }
+
+  markListItemActive(noteId) {
+    if (!this.listEl) return;
+
+    const activeId = String(noteId || "").trim();
+
+    this.listEl.querySelectorAll(".mdnotes-list-item").forEach((item) => {
+      const itemId = String(item.getAttribute("data-note-id") || "").trim();
+      item.classList.toggle("active", itemId === activeId);
+    });
+  }
+
+  animateSelectorReorder(prevRects) {
+    if (!this.listEl || !prevRects || !prevRects.size) return;
+
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) return;
+
+    this.listEl.querySelectorAll(".mdnotes-list-item").forEach((item) => {
+      const id = String(item.getAttribute("data-note-id") || "").trim();
+      if (!id) return;
+
+      const previousRect = prevRects.get(id);
+      if (!previousRect) return;
+
+      const nextRect = item.getBoundingClientRect();
+      const dx = previousRect.left - nextRect.left;
+      const dy = previousRect.top - nextRect.top;
+
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+      item.animate(
+        [
+          {
+            transform: `translate(${dx}px, ${dy}px) scale(0.98)`,
+            opacity: 0.82,
+          },
+          {
+            transform: "translate(0, 0) scale(1)",
+            opacity: 1,
+          },
+        ],
+        {
+          duration: 360,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        },
+      );
+    });
   }
 
   updateSelectorNavState() {
@@ -1642,7 +1872,12 @@ class NotesManager extends BaseManager {
     const exists = this.notes.some((note) => String(note.id) === noteId);
     if (!exists) return;
 
-    this.selectNote(noteId, { focus: true, scrollBehavior: "smooth" });
+    this.selectNote(noteId, {
+      focus: true,
+      scrollBehavior: "smooth",
+      promote: true,
+      animateMove: true,
+    });
     this.ensureActiveVisible("smooth");
   }
 
