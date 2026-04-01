@@ -32,6 +32,7 @@ class NotesManager extends BaseManager {
     this._rawSelection = { start: 0, end: 0, direction: "none" };
     this._previewSelectionOffsets = null;
     this._allowHtmlFallbackOnNextConvert = false;
+    this._cursorRecenterTimer = null;
 
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
@@ -351,7 +352,7 @@ class NotesManager extends BaseManager {
         let allowHtmlFallback = false;
 
         if (html.trim()) {
-          allowHtmlFallback = this.shouldUseHtmlFallbackForPaste(html, text);
+          allowHtmlFallback = true;
           const clean = this.normalizeMarkdownHtmlForEditor(
             this.sanitizeHtml(String(html)),
           );
@@ -401,14 +402,18 @@ class NotesManager extends BaseManager {
       .map((n) => {
         const id = String(n.id || "").trim() || this.generateId();
         const title = String(n.title || "Untitled").slice(0, 120);
-        const html = typeof n.html === "string" ? n.html : "";
+        const html = this.stripInternalCursorMarkers(
+          typeof n.html === "string" ? n.html : "",
+        );
         const mdRaw =
           typeof n.md === "string"
             ? n.md
             : typeof n.markdown === "string"
               ? n.markdown
               : "";
-        const md = mdRaw || this.htmlToMarkdown(html);
+        const md = this.stripInternalCursorMarkers(
+          mdRaw || this.htmlToMarkdown(html),
+        );
         const rawScale =
           typeof n.scale === "number" || typeof n.scale === "string"
             ? parseFloat(n.scale)
@@ -463,10 +468,10 @@ class NotesManager extends BaseManager {
         const sanitized = this.normalizeMarkdownHtmlForEditor(
           this.sanitizeHtml(rawHtml),
         );
-        nextHtml = sanitized;
-        nextMd = this.htmlToMarkdown(sanitized, {
+        nextHtml = this.stripInternalCursorMarkers(sanitized);
+        nextMd = this.stripInternalCursorMarkers(this.htmlToMarkdown(nextHtml, {
           allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
-        });
+        }));
         this._allowHtmlFallbackOnNextConvert = false;
 
         // Keep raw viewer in sync.
@@ -476,7 +481,9 @@ class NotesManager extends BaseManager {
       } else {
         // Source mode uses the markdown textarea as source-of-truth.
         this._allowHtmlFallbackOnNextConvert = false;
-        nextMd = String(this.rawEditor.value || note.md || "");
+        nextMd = this.stripInternalCursorMarkers(
+          String(this.rawEditor.value || note.md || ""),
+        );
         nextHtml = this.renderMarkdown(nextMd);
       }
 
@@ -614,17 +621,19 @@ class NotesManager extends BaseManager {
       const sanitized = this.normalizeMarkdownHtmlForEditor(
         this.sanitizeHtml(rawHtml),
       );
-      nextHtml = sanitized;
-      nextMd = this.htmlToMarkdown(sanitized, {
+      nextHtml = this.stripInternalCursorMarkers(sanitized);
+      nextMd = this.stripInternalCursorMarkers(this.htmlToMarkdown(nextHtml, {
         allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
-      });
+      }));
       this._allowHtmlFallbackOnNextConvert = false;
       if (String(this.rawEditor.value || "") !== nextMd) {
         this.rawEditor.value = nextMd;
       }
     } else {
       this._allowHtmlFallbackOnNextConvert = false;
-      nextMd = String(this.rawEditor.value || "");
+      nextMd = this.stripInternalCursorMarkers(
+        String(this.rawEditor.value || ""),
+      );
       nextHtml = this.renderMarkdown(nextMd);
     }
 
@@ -683,6 +692,12 @@ class NotesManager extends BaseManager {
         this.renderActiveMarkdownPreview();
       }
 
+      try {
+        this.editor.focus();
+      } catch (e) {
+        // ignore
+      }
+
       if (
         targetPreview &&
         typeof targetPreview.offset === "number" &&
@@ -696,8 +711,7 @@ class NotesManager extends BaseManager {
         this.placeCaretAtEnd(this.editor);
       }
 
-      this.scrollPreviewSelectionIntoView();
-      this.capturePreviewSelection();
+      this.scheduleModeSwitchRecenter("preview");
     } else {
       this.renderActiveMarkdownPreview();
 
@@ -717,8 +731,7 @@ class NotesManager extends BaseManager {
         this.placeCaretAtEndTextArea(this.rawEditor);
       }
 
-      this.scrollRawSelectionIntoView();
-      this.captureRawSelection();
+      this.scheduleModeSwitchRecenter("source");
     }
   }
 
@@ -768,16 +781,24 @@ class NotesManager extends BaseManager {
     const note = this.getActiveNote();
     if (!note) return;
 
-    const markdown = String(note.md || this.rawEditor.value || "");
+    const markdown = this.stripInternalCursorMarkers(
+      String(note.md || this.rawEditor.value || ""),
+    );
     if (String(this.rawEditor.value || "") !== markdown) {
       this.rawEditor.value = markdown;
     }
+    if (String(note.md || "") !== markdown) {
+      note.md = markdown;
+    }
 
-    const html = this.normalizeMarkdownHtmlForEditor(
-      this.renderMarkdown(markdown),
+    const html = this.stripInternalCursorMarkers(
+      this.normalizeMarkdownHtmlForEditor(this.renderMarkdown(markdown)),
     );
     if (String(this.editor.innerHTML || "") !== html) {
       this.editor.innerHTML = html;
+    }
+    if (String(note.html || "") !== html) {
+      note.html = html;
     }
   }
 
@@ -787,13 +808,19 @@ class NotesManager extends BaseManager {
         this.getSelectionOffsets(this.editor) || this._previewSelectionOffsets;
       if (!offsets) return null;
 
-      const marker = "__NOTES_CURSOR_RAW__";
+      const rawSource = String(this.rawEditor.value || "");
+      const treatRawAsHtml = this.isLikelyHtmlSource(rawSource);
+
+      const marker = "NOTESCURSORRAWTOKENA9F3";
       const htmlWithMarker = this.insertTextMarkerAtPreviewOffset(
         String(this.editor.innerHTML || ""),
         offsets.end,
         marker,
       );
-      const mdWithMarker = this.htmlToMarkdown(htmlWithMarker);
+      const mdWithMarker = this.htmlToMarkdown(htmlWithMarker, {
+        allowFallbackHtml: treatRawAsHtml,
+        preserveCursorMarker: true,
+      });
       const idx = String(mdWithMarker || "").indexOf(marker);
       if (idx >= 0) return idx;
     } catch (e) {
@@ -823,7 +850,7 @@ class NotesManager extends BaseManager {
             : raw.length;
 
       const pos = Math.max(0, Math.min(caret, raw.length));
-      const marker = "__NOTES_CURSOR_PREVIEW__";
+      const marker = "NOTESCURSORPREVIEWTOKENA9F3";
       const mdWithMarker = `${raw.slice(0, pos)}${marker}${raw.slice(pos)}`;
       const htmlWithMarker = this.normalizeMarkdownHtmlForEditor(
         this.renderMarkdown(mdWithMarker),
@@ -889,6 +916,32 @@ class NotesManager extends BaseManager {
     return null;
   }
 
+  scheduleModeSwitchRecenter(mode) {
+    if (this._cursorRecenterTimer) {
+      clearTimeout(this._cursorRecenterTimer);
+      this._cursorRecenterTimer = null;
+    }
+
+    const run = () => {
+      const wantsPreview = mode === "preview";
+      if (wantsPreview !== !!this.isMarkdownPreview) return;
+
+      if (wantsPreview) {
+        this.scrollPreviewSelectionIntoView();
+        this.capturePreviewSelection();
+      } else {
+        this.scrollRawSelectionIntoView();
+        this.captureRawSelection();
+      }
+    };
+
+    run();
+    requestAnimationFrame(() => {
+      run();
+      this._cursorRecenterTimer = setTimeout(() => run(), 90);
+    });
+  }
+
   scrollRawSelectionIntoView() {
     if (!this.rawEditor) return;
 
@@ -903,36 +956,11 @@ class NotesManager extends BaseManager {
             : 0;
 
       const boundedCaret = Math.max(0, Math.min(caret, raw.length));
-      const before = raw.slice(0, boundedCaret);
-
-      const lineIndex = Math.max(0, before.split("\n").length - 1);
-      const lineStart = before.lastIndexOf("\n") + 1;
-      const linePrefix = before.slice(lineStart).replace(/\t/g, "    ");
-
-      const styles = window.getComputedStyle(t);
-      const fontSize = parseFloat(styles.fontSize) || 16;
-      const parsedLineHeight = parseFloat(styles.lineHeight);
-      const lineHeight = Number.isFinite(parsedLineHeight)
-        ? parsedLineHeight
-        : fontSize * 1.5;
-
-      let lineWidth = linePrefix.length * fontSize * 0.56;
-      try {
-        if (!this._textMeasureCanvas) {
-          this._textMeasureCanvas = document.createElement("canvas");
-        }
-        const ctx = this._textMeasureCanvas.getContext("2d");
-        if (ctx) {
-          ctx.font = `${styles.fontStyle} ${styles.fontVariant} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-          lineWidth = ctx.measureText(linePrefix).width;
-        }
-      } catch (e) {
-        // ignore
-      }
-
+      const caretPixel = this.getTextareaCaretPixelPosition(t, boundedCaret);
+      const lineHeight = Math.max(12, caretPixel.lineHeight || 20);
       const targetTop =
-        lineIndex * lineHeight - (t.clientHeight - lineHeight) / 2;
-      const targetLeft = lineWidth - t.clientWidth / 2;
+        caretPixel.top - (t.clientHeight - lineHeight) / 2;
+      const targetLeft = caretPixel.left - t.clientWidth / 2;
 
       const maxTop = Math.max(0, t.scrollHeight - t.clientHeight);
       const maxLeft = Math.max(0, t.scrollWidth - t.clientWidth);
@@ -941,6 +969,69 @@ class NotesManager extends BaseManager {
       t.scrollLeft = Math.max(0, Math.min(targetLeft, maxLeft));
     } catch (e) {
       // ignore
+    }
+  }
+
+  getTextareaCaretPixelPosition(textarea, caretIndex) {
+    const t = textarea;
+    const value = String(t?.value || "");
+    const index = Math.max(0, Math.min(caretIndex, value.length));
+
+    const styles = window.getComputedStyle(t);
+    const fallbackLineHeight =
+      parseFloat(styles.lineHeight) || parseFloat(styles.fontSize) || 16;
+
+    let mirror = null;
+    try {
+      mirror = document.createElement("div");
+      mirror.setAttribute("aria-hidden", "true");
+      mirror.style.position = "absolute";
+      mirror.style.left = "-99999px";
+      mirror.style.top = "0";
+      mirror.style.visibility = "hidden";
+      mirror.style.pointerEvents = "none";
+      mirror.style.whiteSpace = "pre-wrap";
+      mirror.style.wordBreak = "break-word";
+      mirror.style.overflowWrap = "anywhere";
+
+      mirror.style.boxSizing = styles.boxSizing;
+      mirror.style.width = `${t.offsetWidth}px`;
+      mirror.style.height = styles.height;
+      mirror.style.padding = styles.padding;
+      mirror.style.border = styles.border;
+      mirror.style.font = styles.font;
+      mirror.style.lineHeight = styles.lineHeight;
+      mirror.style.letterSpacing = styles.letterSpacing;
+      mirror.style.tabSize = styles.tabSize;
+      mirror.style.textTransform = styles.textTransform;
+      mirror.style.textIndent = styles.textIndent;
+
+      mirror.textContent = value.slice(0, index);
+
+      const marker = document.createElement("span");
+      marker.textContent = "\u200b";
+      marker.style.display = "inline-block";
+      marker.style.width = "1px";
+      marker.style.height = "1em";
+      mirror.appendChild(marker);
+
+      document.body.appendChild(mirror);
+
+      return {
+        top: marker.offsetTop,
+        left: marker.offsetLeft,
+        lineHeight: fallbackLineHeight,
+      };
+    } catch (e) {
+      return {
+        top: 0,
+        left: 0,
+        lineHeight: fallbackLineHeight,
+      };
+    } finally {
+      if (mirror && mirror.parentNode) {
+        mirror.parentNode.removeChild(mirror);
+      }
     }
   }
 
@@ -1002,7 +1093,12 @@ class NotesManager extends BaseManager {
   }
 
   syncPreviewFromRawEditor() {
-    const markdown = String(this.rawEditor.value || "");
+    const markdown = this.stripInternalCursorMarkers(
+      String(this.rawEditor.value || ""),
+    );
+    if (String(this.rawEditor.value || "") !== markdown) {
+      this.rawEditor.value = markdown;
+    }
     const html = this.normalizeMarkdownHtmlForEditor(
       this.renderMarkdown(markdown),
     );
@@ -1453,6 +1549,13 @@ class NotesManager extends BaseManager {
     if (!raw.trim()) return "";
 
     const allowFallbackHtml = !!options.allowFallbackHtml;
+    const preserveCursorMarker = !!options.preserveCursorMarker;
+    if (allowFallbackHtml) {
+      const sanitized = this.sanitizeHtml(raw).trim();
+      return preserveCursorMarker
+        ? sanitized
+        : this.stripInternalCursorMarkers(sanitized);
+    }
 
     // Use our own sanitizer first to avoid weird nodes.
     const wrapper = document.createElement("div");
@@ -1671,13 +1774,6 @@ class NotesManager extends BaseManager {
     const markdown = out.replace(/\n{3,}/g, "\n\n").trim();
     if (!markdown) return "";
 
-    // Complex pasted HTML (like email content) can degrade during md conversion.
-    // If round-trip stability fails, store sanitized HTML directly in markdown so
-    // switching modes preserves visual structure.
-    if (allowFallbackHtml && !this.isMarkdownRoundTripStable(raw, markdown)) {
-      return this.sanitizeHtml(raw).trim();
-    }
-
     return markdown;
   }
 
@@ -1768,31 +1864,18 @@ class NotesManager extends BaseManager {
       .trim();
   }
 
-  shouldUseHtmlFallbackForPaste(html, text) {
-    const rawHtml = String(html || "").trim();
-    if (!rawHtml) return false;
+  stripInternalCursorMarkers(text) {
+    return String(text || "")
+      .replace(/__NOTES_CURSOR_(PREVIEW|RAW)__/gi, "")
+      .replace(/\*\*NOTES_CURSOR_(PREVIEW|RAW)\*\*/gi, "")
+      .replace(/NOTES_CURSOR_(PREVIEW|RAW)/gi, "")
+      .replace(/NOTESCURSOR(PREVIEW|RAW)TOKEN[A-Z0-9]*/gi, "");
+  }
 
-    const hasComplexElements =
-      /<(table|iframe|video|audio|img|pre|blockquote|div|span|font)\b/i.test(
-        rawHtml,
-      );
-    const hasStyledMarkup =
-      /\sstyle\s*=|\sclass\s*=|<o:p\b|mso-|<meta\b|<xml\b/i.test(rawHtml);
-
-    if (hasStyledMarkup) return true;
-    if (!hasComplexElements) return false;
-
-    const htmlText = this.normalizeComparableText(
-      this.extractComparableTextFromHtml(rawHtml),
-    );
-    const plain = this.normalizeComparableText(String(text || ""));
-
-    if (!plain) return true;
-
-    const ratio = htmlText.length / Math.max(1, plain.length);
-    if (ratio < 0.75 || ratio > 1.35) return true;
-
-    return htmlText.slice(0, 180) !== plain.slice(0, 180);
+  isLikelyHtmlSource(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return false;
+    return /<\/?[a-z][^>]*>/i.test(raw);
   }
 
   updateScaleUi(scale) {
