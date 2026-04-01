@@ -125,6 +125,20 @@
 
   /* UI effects */
   --ui-blur-multiplier: 1;
+
+  /* Scrollbar theme */
+  --scrollbar-size: 10px;
+  --scrollbar-size-thin: 8px;
+  --scrollbar-track: rgba(255, 255, 255, 0.08);
+  --scrollbar-track: color-mix(in srgb, var(--glass-bg) 68%, transparent 32%);
+  --scrollbar-track-strong: rgba(255, 255, 255, 0.14);
+  --scrollbar-track-strong: color-mix(
+    in srgb,
+    var(--glass-bg-hover) 76%,
+    transparent 24%
+  );
+  --scrollbar-thumb: var(--primary-light);
+  --scrollbar-thumb-hover: var(--primary-color);
 }
 
 /* Reset & Base */
@@ -148,6 +162,38 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
+}
+
+/* App-wide theme-aware scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size-thin);
+  height: var(--scrollbar-size-thin);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 24px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Background Layer */
@@ -1255,27 +1301,28 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow-y: hidden;
   scroll-snap-type: x proximity;
   padding: 6px 2px 10px;
-  scrollbar-width: auto;
-  scrollbar-color: rgba(205, 205, 205, 0.8) rgba(120, 120, 120, 0.28);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track-strong);
 }
 
 .notes-list::-webkit-scrollbar {
-  height: 12px;
+  height: var(--scrollbar-size);
 }
 
 .notes-list::-webkit-scrollbar-track {
-  background: rgba(120, 120, 120, 0.28);
-  border-radius: 8px;
+  background: var(--scrollbar-track-strong);
+  border-radius: 999px;
 }
 
 .notes-list::-webkit-scrollbar-thumb {
-  background: rgba(210, 210, 210, 0.82);
-  border-radius: 8px;
-  border: 2px solid rgba(120, 120, 120, 0.2);
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .notes-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(230, 230, 230, 0.94);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .notes-list-item {
@@ -1614,6 +1661,36 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   line-height: 1.7;
   font-size: calc(1rem * var(--notes-scale));
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+#notesEditor,
+.notes-editor {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+#notesEditor::-webkit-scrollbar,
+.notes-editor::-webkit-scrollbar {
+  width: var(--scrollbar-size-thin);
+  height: var(--scrollbar-size-thin);
+}
+
+#notesEditor::-webkit-scrollbar-track,
+.notes-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#notesEditor::-webkit-scrollbar-thumb,
+.notes-editor::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#notesEditor::-webkit-scrollbar-thumb:hover,
+.notes-editor::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 textarea.notes-editor {
@@ -2444,18 +2521,25 @@ textarea.notes-editor:focus {
   user-select: none;
 }
 
+.todo-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
 .todo-list::-webkit-scrollbar {
-  width: 6px;
+  width: var(--scrollbar-size-thin);
 }
 
 .todo-list::-webkit-scrollbar-track {
-  background: var(--glass-bg);
-  border-radius: 3px;
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 .todo-list::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 3px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .todo-item {
@@ -3260,7 +3344,7 @@ body.quran-focus-mode #pocketQuranCard .pq-virtual-container {
 body.quran-focus-mode
   #pocketQuranCard
   .pocket-quran-content::-webkit-scrollbar {
-  width: 6px;
+  width: var(--scrollbar-size-thin);
 }
 
 body.quran-focus-mode
@@ -3272,14 +3356,16 @@ body.quran-focus-mode
 body.quran-focus-mode
   #pocketQuranCard
   .pocket-quran-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 body.quran-focus-mode
   #pocketQuranCard
   .pocket-quran-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Ensure grid layout wrapper containing pocketQuranCard fills viewport */
@@ -4233,28 +4319,28 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 /* Settings modal scrollbar (use theme primary) */
 #settingsModal .modal-body {
   scrollbar-width: thin;
-  scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.08);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   scrollbar-gutter: stable;
 }
 
 #settingsModal .modal-body::-webkit-scrollbar {
-  width: 10px;
+  width: var(--scrollbar-size);
 }
 
 #settingsModal .modal-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--scrollbar-track);
   border-radius: 999px;
 }
 
 #settingsModal .modal-body::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.06);
+  border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 #settingsModal .modal-body::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-light);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .modal-footer {
@@ -7400,29 +7486,32 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 /* Custom scrollbars */
 .flashcard-editor-body::-webkit-scrollbar,
 .flashcard-face-content::-webkit-scrollbar {
-  width: 8px;
+  width: var(--scrollbar-size-thin);
 }
 
 .flashcard-editor-body::-webkit-scrollbar-track,
 .flashcard-face-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 .flashcard-editor-body::-webkit-scrollbar-thumb,
 .flashcard-face-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .flashcard-editor-body::-webkit-scrollbar-thumb:hover,
 .flashcard-face-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.32);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .flashcard-editor-body,
 .flashcard-face-content {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 @media (max-width: 560px) {
@@ -8286,21 +8375,23 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 /* Custom scrollbar for note content */
 .sticky-note-content::-webkit-scrollbar {
-  width: 6px;
+  width: var(--scrollbar-size-thin);
 }
 
 .sticky-note-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 .sticky-note-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .sticky-note-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* WYSIWYG Toolbar */
@@ -11161,11 +11252,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-lg);
   /* Custom scrollbar styling */
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-gold-light) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .pq-virtual-container::-webkit-scrollbar {
-  width: 8px;
+  width: var(--scrollbar-size-thin);
 }
 
 .pq-virtual-container::-webkit-scrollbar-track {
@@ -11173,14 +11264,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb {
-  background: var(--primary-light);
+  background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
+  background: var(--scrollbar-thumb-hover);
   background-clip: padding-box;
 }
 
@@ -12867,25 +12958,28 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Custom scrollbars */
 .adhkar-editor-body::-webkit-scrollbar {
-  width: 8px;
+  width: var(--scrollbar-size-thin);
 }
 
 .adhkar-editor-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 .adhkar-editor-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .adhkar-editor-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.32);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .adhkar-editor-body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* Set selector button + modal (mirror Flashcards UI) */
@@ -13465,26 +13559,28 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Scrollbar for editor table */
 .adhkar-editor-table-wrap::-webkit-scrollbar {
-  height: 8px;
+  height: var(--scrollbar-size-thin);
 }
 
 .adhkar-editor-table-wrap::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 .adhkar-editor-table-wrap::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 4px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .adhkar-editor-table-wrap::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.32);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .adhkar-editor-table-wrap {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.28) rgba(255, 255, 255, 0.06);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* ========================================
