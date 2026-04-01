@@ -31,6 +31,7 @@ class NotesManager extends BaseManager {
 
     this._rawSelection = { start: 0, end: 0, direction: "none" };
     this._previewSelectionOffsets = null;
+    this._allowHtmlFallbackOnNextConvert = false;
 
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
@@ -347,8 +348,10 @@ class NotesManager extends BaseManager {
 
         const html = e.clipboardData.getData("text/html") || "";
         const text = e.clipboardData.getData("text/plain") || "";
+        let allowHtmlFallback = false;
 
         if (html.trim()) {
+          allowHtmlFallback = this.shouldUseHtmlFallbackForPaste(html, text);
           const clean = this.normalizeMarkdownHtmlForEditor(
             this.sanitizeHtml(String(html)),
           );
@@ -363,6 +366,7 @@ class NotesManager extends BaseManager {
           document.execCommand("insertHTML", false, safeText);
         }
 
+        this._allowHtmlFallbackOnNextConvert = allowHtmlFallback;
         this.queueSave();
       } catch (err) {
         // ignore
@@ -460,7 +464,10 @@ class NotesManager extends BaseManager {
           this.sanitizeHtml(rawHtml),
         );
         nextHtml = sanitized;
-        nextMd = this.htmlToMarkdown(sanitized);
+        nextMd = this.htmlToMarkdown(sanitized, {
+          allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+        });
+        this._allowHtmlFallbackOnNextConvert = false;
 
         // Keep raw viewer in sync.
         if (String(this.rawEditor.value || "") !== nextMd) {
@@ -468,6 +475,7 @@ class NotesManager extends BaseManager {
         }
       } else {
         // Source mode uses the markdown textarea as source-of-truth.
+        this._allowHtmlFallbackOnNextConvert = false;
         nextMd = String(this.rawEditor.value || note.md || "");
         nextHtml = this.renderMarkdown(nextMd);
       }
@@ -607,11 +615,15 @@ class NotesManager extends BaseManager {
         this.sanitizeHtml(rawHtml),
       );
       nextHtml = sanitized;
-      nextMd = this.htmlToMarkdown(sanitized);
+      nextMd = this.htmlToMarkdown(sanitized, {
+        allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+      });
+      this._allowHtmlFallbackOnNextConvert = false;
       if (String(this.rawEditor.value || "") !== nextMd) {
         this.rawEditor.value = nextMd;
       }
     } else {
+      this._allowHtmlFallbackOnNextConvert = false;
       nextMd = String(this.rawEditor.value || "");
       nextHtml = this.renderMarkdown(nextMd);
     }
@@ -882,6 +894,7 @@ class NotesManager extends BaseManager {
 
     try {
       const t = this.rawEditor;
+      const raw = String(t.value || "");
       const caret =
         typeof t.selectionStart === "number"
           ? t.selectionStart
@@ -889,15 +902,12 @@ class NotesManager extends BaseManager {
             ? this._rawSelection.start
             : 0;
 
-      const boundedCaret = Math.max(
-        0,
-        Math.min(caret, String(t.value || "").length),
-      );
-      const before = String(t.value || "").slice(0, boundedCaret);
+      const boundedCaret = Math.max(0, Math.min(caret, raw.length));
+      const before = raw.slice(0, boundedCaret);
 
       const lineIndex = Math.max(0, before.split("\n").length - 1);
       const lineStart = before.lastIndexOf("\n") + 1;
-      const colIndex = Math.max(0, before.length - lineStart);
+      const linePrefix = before.slice(lineStart).replace(/\t/g, "    ");
 
       const styles = window.getComputedStyle(t);
       const fontSize = parseFloat(styles.fontSize) || 16;
@@ -905,13 +915,30 @@ class NotesManager extends BaseManager {
       const lineHeight = Number.isFinite(parsedLineHeight)
         ? parsedLineHeight
         : fontSize * 1.5;
-      const charWidth = fontSize * 0.62;
 
-      const targetTop = lineIndex * lineHeight - t.clientHeight * 0.42;
-      const targetLeft = colIndex * charWidth - t.clientWidth * 0.35;
+      let lineWidth = linePrefix.length * fontSize * 0.56;
+      try {
+        if (!this._textMeasureCanvas) {
+          this._textMeasureCanvas = document.createElement("canvas");
+        }
+        const ctx = this._textMeasureCanvas.getContext("2d");
+        if (ctx) {
+          ctx.font = `${styles.fontStyle} ${styles.fontVariant} ${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
+          lineWidth = ctx.measureText(linePrefix).width;
+        }
+      } catch (e) {
+        // ignore
+      }
 
-      t.scrollTop = Math.max(0, targetTop);
-      t.scrollLeft = Math.max(0, targetLeft);
+      const targetTop =
+        lineIndex * lineHeight - (t.clientHeight - lineHeight) / 2;
+      const targetLeft = lineWidth - t.clientWidth / 2;
+
+      const maxTop = Math.max(0, t.scrollHeight - t.clientHeight);
+      const maxLeft = Math.max(0, t.scrollWidth - t.clientWidth);
+
+      t.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
+      t.scrollLeft = Math.max(0, Math.min(targetLeft, maxLeft));
     } catch (e) {
       // ignore
     }
@@ -921,7 +948,8 @@ class NotesManager extends BaseManager {
     if (!this.editor) return;
 
     try {
-      const offsets = this.getSelectionOffsets(this.editor);
+      const offsets =
+        this.getSelectionOffsets(this.editor) || this._previewSelectionOffsets;
       if (!offsets) return;
 
       const pos = this.findTextPosition(this.editor, offsets.end);
@@ -931,38 +959,42 @@ class NotesManager extends BaseManager {
       range.setStart(pos.node, pos.offset);
       range.collapse(true);
 
-      let rect = null;
-      const rects = range.getClientRects();
-      if (rects && rects.length) rect = rects[0];
+      const marker = document.createElement("span");
+      marker.setAttribute("aria-hidden", "true");
+      marker.textContent = "\u200b";
+      marker.style.cssText =
+        "display:inline-block;width:1px;height:1em;opacity:0;pointer-events:none;";
+      range.insertNode(marker);
 
-      let marker = null;
-      if (!rect || (!rect.width && !rect.height)) {
-        marker = document.createElement("span");
-        marker.setAttribute("aria-hidden", "true");
-        marker.style.cssText =
-          "display:inline-block;width:1px;height:1em;opacity:0;pointer-events:none;";
-        range.insertNode(marker);
-        rect = marker.getBoundingClientRect();
-      }
+      const markerRect = marker.getBoundingClientRect();
+      const containerRect = this.editor.getBoundingClientRect();
+      const absoluteTop =
+        markerRect.top -
+        containerRect.top +
+        this.editor.scrollTop +
+        markerRect.height / 2;
+      const absoluteLeft =
+        markerRect.left -
+        containerRect.left +
+        this.editor.scrollLeft +
+        markerRect.width / 2;
 
-      if (rect) {
-        const containerRect = this.editor.getBoundingClientRect();
-        const absoluteTop =
-          rect.top - containerRect.top + this.editor.scrollTop;
-        const absoluteLeft =
-          rect.left - containerRect.left + this.editor.scrollLeft;
+      const targetTop = absoluteTop - this.editor.clientHeight / 2;
+      const targetLeft = absoluteLeft - this.editor.clientWidth / 2;
 
-        this.editor.scrollTop = Math.max(
-          0,
-          absoluteTop - this.editor.clientHeight * 0.42,
-        );
-        this.editor.scrollLeft = Math.max(
-          0,
-          absoluteLeft - this.editor.clientWidth * 0.35,
-        );
-      }
+      const maxTop = Math.max(
+        0,
+        this.editor.scrollHeight - this.editor.clientHeight,
+      );
+      const maxLeft = Math.max(
+        0,
+        this.editor.scrollWidth - this.editor.clientWidth,
+      );
 
-      if (marker && marker.parentNode) marker.parentNode.removeChild(marker);
+      this.editor.scrollTop = Math.max(0, Math.min(targetTop, maxTop));
+      this.editor.scrollLeft = Math.max(0, Math.min(targetLeft, maxLeft));
+
+      if (marker.parentNode) marker.parentNode.removeChild(marker);
       this.restoreSelectionOffsets(this.editor, offsets);
     } catch (e) {
       // ignore
@@ -1416,9 +1448,11 @@ class NotesManager extends BaseManager {
     return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  htmlToMarkdown(html) {
+  htmlToMarkdown(html, options = {}) {
     const raw = typeof html === "string" ? html : "";
     if (!raw.trim()) return "";
+
+    const allowFallbackHtml = !!options.allowFallbackHtml;
 
     // Use our own sanitizer first to avoid weird nodes.
     const wrapper = document.createElement("div");
@@ -1640,7 +1674,7 @@ class NotesManager extends BaseManager {
     // Complex pasted HTML (like email content) can degrade during md conversion.
     // If round-trip stability fails, store sanitized HTML directly in markdown so
     // switching modes preserves visual structure.
-    if (!this.isMarkdownRoundTripStable(raw, markdown)) {
+    if (allowFallbackHtml && !this.isMarkdownRoundTripStable(raw, markdown)) {
       return this.sanitizeHtml(raw).trim();
     }
 
@@ -1732,6 +1766,33 @@ class NotesManager extends BaseManager {
       .replace(/\s*\n\s*/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
+  }
+
+  shouldUseHtmlFallbackForPaste(html, text) {
+    const rawHtml = String(html || "").trim();
+    if (!rawHtml) return false;
+
+    const hasComplexElements =
+      /<(table|iframe|video|audio|img|pre|blockquote|div|span|font)\b/i.test(
+        rawHtml,
+      );
+    const hasStyledMarkup =
+      /\sstyle\s*=|\sclass\s*=|<o:p\b|mso-|<meta\b|<xml\b/i.test(rawHtml);
+
+    if (hasStyledMarkup) return true;
+    if (!hasComplexElements) return false;
+
+    const htmlText = this.normalizeComparableText(
+      this.extractComparableTextFromHtml(rawHtml),
+    );
+    const plain = this.normalizeComparableText(String(text || ""));
+
+    if (!plain) return true;
+
+    const ratio = htmlText.length / Math.max(1, plain.length);
+    if (ratio < 0.75 || ratio > 1.35) return true;
+
+    return htmlText.slice(0, 180) !== plain.slice(0, 180);
   }
 
   updateScaleUi(scale) {
