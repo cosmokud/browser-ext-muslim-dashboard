@@ -1222,10 +1222,29 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 #notesCard .mdnotes-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   font-size: clamp(1.02rem, 1.6vw, 1.24rem);
   font-weight: 700;
   color: var(--text-primary);
+}
+
+#notesCard .mdnotes-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1.02em;
+}
+
+#notesCard .mdnotes-title-icon .icon-theme-svg {
+  display: inline-flex;
+}
+
+#notesCard .mdnotes-title-text {
+  display: inline-block;
 }
 
 #notesCard .mdnotes-subtitle {
@@ -1588,6 +1607,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   min-height: 100%;
   background: transparent;
   color: var(--text-primary);
+  direction: ltr;
   --crepe-color-background: transparent;
   --crepe-color-on-background: var(--text-primary);
   --crepe-color-surface: var(--glass-bg-hover);
@@ -1608,12 +1628,14 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   min-height: 320px;
   max-height: 66vh;
   overflow: auto;
+  direction: ltr;
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
   min-height: 320px;
   padding: 12px;
   line-height: 1.65;
+  direction: ltr;
 }
 
 #notesCard .mdnotes-footer {
@@ -1640,6 +1662,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
+  left: 0 !important;
+  right: auto !important;
+  inset-inline-start: 0 !important;
+  inset-inline-end: auto !important;
   margin-left: -14px;
   padding: 2px;
   border-radius: var(--radius-full);

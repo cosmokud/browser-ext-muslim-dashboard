@@ -1,5 +1,5 @@
 /**
- * Notes Studio (Milkdown + Markdown)
+ * Notes (Milkdown + Markdown)
  * A standalone, theme-aware notes component with CRUD and full markdown toolbar.
  */
 
@@ -10,7 +10,7 @@ class NotesManager extends BaseManager {
   static DEFAULT_TITLE = "Untitled";
 
   static DEFAULT_MARKDOWN = [
-    "# Notes Studio",
+    "# Notes",
     "",
     "Welcome to your markdown workspace.",
     "",
@@ -25,6 +25,7 @@ class NotesManager extends BaseManager {
 
     this.notes = [];
     this.activeNoteId = null;
+    this.pendingDeleteId = null;
 
     this._milkdown = null;
     this._milkdownReady = false;
@@ -64,8 +65,10 @@ class NotesManager extends BaseManager {
       <div class="mdnotes-shell">
         <div class="mdnotes-shell-header">
           <div class="mdnotes-title-wrap">
-            <h2 class="mdnotes-title">Notes Studio</h2>
-            <p class="mdnotes-subtitle">Milkdown WYSIWYG + Markdown source with auto-save</p>
+            <h2 class="mdnotes-title">
+              <span class="card-icon mdnotes-title-icon" aria-hidden="true">📝</span>
+              <span class="mdnotes-title-text">Notes</span>
+            </h2>
           </div>
 
           <div class="mdnotes-header-actions card-header-actions">
@@ -396,6 +399,11 @@ class NotesManager extends BaseManager {
     this.prevPageBtn = this.card.querySelector("#mdnotesPrevPageBtn");
     this.nextPageBtn = this.card.querySelector("#mdnotesNextPageBtn");
 
+    this.deleteModal = document.getElementById("notesDeleteConfirmModal");
+    this.deleteNameEl = document.getElementById("notesDeleteName");
+    this.confirmDeleteBtn = document.getElementById("confirmNotesDeleteBtn");
+    this.cancelDeleteBtn = document.getElementById("cancelNotesDeleteBtn");
+
     this.listEl = this.card.querySelector("#mdnotesList");
     this.titleInput = this.card.querySelector("#mdnotesTitleInput");
     this.toolbar = this.card.querySelector("#mdnotesToolbar");
@@ -427,6 +435,8 @@ class NotesManager extends BaseManager {
         const note = this.createNote();
         this.selectNote(note.id, { skipPersistCurrent: true, focus: true });
         this.saveNow();
+        this.refreshMilkdownUiPosition();
+        setTimeout(() => this.refreshMilkdownUiPosition(), 100);
       });
     }
 
@@ -437,6 +447,27 @@ class NotesManager extends BaseManager {
         this.showDeleteConfirmationForNoteId(active.id);
       });
     }
+
+    if (this.cancelDeleteBtn) {
+      this.cancelDeleteBtn.addEventListener("click", () =>
+        this.hideDeleteConfirmation(),
+      );
+    }
+
+    if (this.confirmDeleteBtn) {
+      this.confirmDeleteBtn.addEventListener("click", () =>
+        this.confirmDelete(),
+      );
+    }
+
+    this._bindOverlayCloseBehavior(this.deleteModal, () =>
+      this.hideDeleteConfirmation(),
+    );
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      this.hideDeleteConfirmation();
+    });
 
     if (this.listEl) {
       this.listEl.addEventListener(
@@ -466,7 +497,7 @@ class NotesManager extends BaseManager {
         if (!item) return;
         const noteId = String(item.getAttribute("data-note-id") || "").trim();
         if (!noteId) return;
-        this.selectNote(noteId, { focus: true });
+        this.selectNote(noteId, { focus: false, scrollBehavior: "auto" });
       });
     }
 
@@ -863,22 +894,24 @@ class NotesManager extends BaseManager {
 
     if (!scrollHost || !handle) return;
 
+    const hostRect = scrollHost.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+    const appearsOnRight =
+      handleRect.left > hostRect.left + Math.max(120, hostRect.width * 0.5);
+
+    if (appearsOnRight) {
+      handle.style.left = "0px";
+      handle.style.right = "auto";
+      handle.style.insetInlineStart = "0px";
+      handle.style.insetInlineEnd = "auto";
+    }
+
     if (handle.getAttribute("data-show") === "false") {
-      handle.dataset.notesHidden = "false";
+      handle.dataset.notesHidden = "true";
       return;
     }
 
-    const hostRect = scrollHost.getBoundingClientRect();
-    const handleRect = handle.getBoundingClientRect();
-    const handleCenterY = handleRect.top + handleRect.height / 2;
-
-    const hidden =
-      handleRect.width < 6 ||
-      handleRect.height < 6 ||
-      handleCenterY < hostRect.top + 2 ||
-      handleCenterY > hostRect.bottom - 2;
-
-    handle.dataset.notesHidden = hidden ? "true" : "false";
+    handle.dataset.notesHidden = "false";
   }
 
   readNotesFromStorage() {
@@ -962,6 +995,10 @@ class NotesManager extends BaseManager {
       this.storage.set(NotesManager.STORAGE_KEY, payload);
     }
 
+    this.writeActiveNoteId();
+  }
+
+  writeActiveNoteId() {
     try {
       this.storage?.set?.(
         NotesManager.ACTIVE_NOTE_KEY,
@@ -1065,27 +1102,40 @@ class NotesManager extends BaseManager {
     return changed;
   }
 
-  selectNote(id, { skipPersistCurrent = false, focus = false } = {}) {
+  selectNote(
+    id,
+    { skipPersistCurrent = false, focus = false, scrollBehavior = "auto" } = {},
+  ) {
     const noteId = String(id || "").trim();
     if (!noteId) return;
 
     const next = this.notes.find((entry) => String(entry.id) === noteId);
     if (!next) return;
 
+    let changed = false;
     if (!skipPersistCurrent) {
-      this.persistActiveNote({ markUpdated: true });
+      changed = this.persistActiveNote({ markUpdated: true });
     }
 
     this.activeNoteId = noteId;
     this.renderActiveNote();
     this.renderList();
-    this.ensureActiveVisible();
+    this.ensureActiveVisible(scrollBehavior);
+
+    if (this.isMilkdownEnabled() && this.viewMode !== "markdown") {
+      this.refreshMilkdownUiPosition();
+      setTimeout(() => this.refreshMilkdownUiPosition(), 90);
+    }
 
     if (focus) {
       this.focusEditor();
     }
 
-    this.writeNotes();
+    if (changed) {
+      this.writeNotes();
+    } else {
+      this.writeActiveNoteId();
+    }
   }
 
   focusEditor() {
@@ -1166,7 +1216,7 @@ class NotesManager extends BaseManager {
         `Delete note ${String(note.title || NotesManager.DEFAULT_TITLE)}`,
       );
       delBtn.title = "Delete note";
-      delBtn.textContent = "🗑";
+      delBtn.innerHTML = this._getIcon("🗑", { size: 14, inline: true });
 
       item.appendChild(title);
       item.appendChild(meta);
@@ -1175,7 +1225,10 @@ class NotesManager extends BaseManager {
       item.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        this.selectNote(String(note.id), { focus: true });
+        this.selectNote(String(note.id), {
+          focus: false,
+          scrollBehavior: "auto",
+        });
       });
 
       this.listEl.appendChild(item);
@@ -1214,7 +1267,7 @@ class NotesManager extends BaseManager {
     setTimeout(() => this.updateSelectorNavState(), 220);
   }
 
-  ensureActiveVisible() {
+  ensureActiveVisible(behavior = "auto") {
     if (!this.listEl || !this.activeNoteId) return;
 
     const item = this.listEl.querySelector(
@@ -1225,7 +1278,7 @@ class NotesManager extends BaseManager {
 
     try {
       item.scrollIntoView({
-        behavior: "smooth",
+        behavior,
         block: "nearest",
         inline: "nearest",
       });
@@ -1322,6 +1375,12 @@ class NotesManager extends BaseManager {
     this.saveNow();
   }
 
+  showDeleteConfirmation() {
+    const active = this.getActiveNote();
+    if (!active) return;
+    this.showDeleteConfirmationForNoteId(active.id);
+  }
+
   showDeleteConfirmationForNoteId(noteId) {
     const id = String(noteId || "").trim();
     if (!id) return;
@@ -1329,12 +1388,44 @@ class NotesManager extends BaseManager {
     const note = this.notes.find((entry) => String(entry.id) === id);
     if (!note) return;
 
-    const ok = window.confirm(
-      `Delete note \"${String(note.title || NotesManager.DEFAULT_TITLE)}\"?`,
-    );
-    if (!ok) return;
+    if (!this.deleteModal || !this.confirmDeleteBtn || !this.cancelDeleteBtn) {
+      const ok = window.confirm(
+        `Delete note \"${String(note.title || NotesManager.DEFAULT_TITLE)}\"?`,
+      );
+      if (!ok) return;
+      this.deleteNoteById(id);
+      return;
+    }
 
-    this.deleteNoteById(id);
+    this.pendingDeleteId = id;
+
+    if (this.deleteNameEl) {
+      this.deleteNameEl.textContent = String(
+        note.title || NotesManager.DEFAULT_TITLE,
+      );
+    }
+
+    if (this.deleteModal) {
+      this.deleteModal.classList.add("active");
+      this.deleteModal.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  hideDeleteConfirmation() {
+    if (this.deleteModal) {
+      this.deleteModal.classList.remove("active");
+      this.deleteModal.setAttribute("aria-hidden", "true");
+    }
+
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete() {
+    const pendingId = String(this.pendingDeleteId || "").trim();
+    if (!pendingId) return;
+
+    this.deleteNoteById(pendingId);
+    this.hideDeleteConfirmation();
   }
 
   applyToolbarAction(cmd, block) {
@@ -1551,8 +1642,8 @@ class NotesManager extends BaseManager {
     const exists = this.notes.some((note) => String(note.id) === noteId);
     if (!exists) return;
 
-    this.selectNote(noteId, { focus: true });
-    this.ensureActiveVisible();
+    this.selectNote(noteId, { focus: true, scrollBehavior: "smooth" });
+    this.ensureActiveVisible("smooth");
   }
 
   reloadFromStorage() {
