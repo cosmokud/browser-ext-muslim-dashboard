@@ -155,23 +155,22 @@ class NotesManager extends BaseManager {
 
     if (this.prevPageBtn) {
       this.prevPageBtn.addEventListener("click", () => {
-        if (this.currentPage > 1) {
-          this.currentPage -= 1;
-          this.renderList();
-          this.updatePaginationUI();
-        }
+        this.scrollNotesListBy(-1);
       });
     }
 
     if (this.nextPageBtn) {
       this.nextPageBtn.addEventListener("click", () => {
-        const totalPages = this.getTotalPages();
-        if (this.currentPage < totalPages) {
-          this.currentPage += 1;
-          this.renderList();
-          this.updatePaginationUI();
-        }
+        this.scrollNotesListBy(1);
       });
+    }
+
+    if (this.listEl) {
+      this.listEl.addEventListener("scroll", () => this.updatePaginationUI(), {
+        passive: true,
+      });
+
+      window.addEventListener("resize", () => this.updatePaginationUI());
     }
 
     // List click (select note)
@@ -1445,20 +1444,9 @@ class NotesManager extends BaseManager {
   }
 
   renderList() {
-    const totalPages = this.getTotalPages();
-    this.currentPage = this.clampInt(
-      this.currentPage,
-      1,
-      Math.max(1, totalPages),
-    );
-
-    const start = (this.currentPage - 1) * NotesManager.ITEMS_PER_PAGE;
-    const end = start + NotesManager.ITEMS_PER_PAGE;
-    const pageNotes = this.notes.slice(start, end);
-
     const frag = document.createDocumentFragment();
 
-    pageNotes.forEach((note) => {
+    this.notes.forEach((note) => {
       const item = document.createElement("button");
       item.type = "button";
       item.className = "notes-list-item";
@@ -1486,36 +1474,52 @@ class NotesManager extends BaseManager {
   }
 
   ensureActiveVisible() {
-    const idx = this.notes.findIndex((n) => n.id === this.activeNoteId);
-    if (idx < 0) return;
+    if (!this.listEl || !this.activeNoteId) return;
 
-    const page = Math.floor(idx / NotesManager.ITEMS_PER_PAGE) + 1;
-    if (page !== this.currentPage) {
-      this.currentPage = page;
-      this.storage.set("notes_page", page);
-      this.renderList();
-    }
+    const item = Array.from(
+      this.listEl.querySelectorAll(".notes-list-item"),
+    ).find(
+      (el) => String(el.dataset.noteId || "") === String(this.activeNoteId),
+    );
+    if (!item) return;
+
+    try {
+      item.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    } catch (e) {}
   }
 
   updatePaginationUI() {
-    const totalPages = this.getTotalPages();
-    const page = this.clampInt(this.currentPage, 1, Math.max(1, totalPages));
-    this.currentPage = page;
+    if (!this.listEl) return;
 
-    const from = this.notes.length
-      ? (page - 1) * NotesManager.ITEMS_PER_PAGE + 1
-      : 0;
-    const to = Math.min(page * NotesManager.ITEMS_PER_PAGE, this.notes.length);
+    const maxLeft = Math.max(
+      0,
+      this.listEl.scrollWidth - this.listEl.clientWidth,
+    );
+    const left = this.listEl.scrollLeft;
+    const epsilon = 2;
 
-    if (this.pageInfoEl) {
-      this.pageInfoEl.textContent = `Notes ${from}-${to} of ${this.notes.length} | Page ${page}/${Math.max(
-        1,
-        totalPages,
-      )}`;
+    if (this.prevPageBtn) this.prevPageBtn.disabled = left <= epsilon;
+    if (this.nextPageBtn) this.nextPageBtn.disabled = left >= maxLeft - epsilon;
+  }
+
+  scrollNotesListBy(direction) {
+    if (!this.listEl) return;
+
+    const dir = direction < 0 ? -1 : 1;
+    const step = Math.max(160, Math.floor(this.listEl.clientWidth * 0.82));
+
+    try {
+      this.listEl.scrollBy({ left: step * dir, behavior: "smooth" });
+    } catch (e) {
+      this.listEl.scrollLeft += step * dir;
     }
 
-    if (this.prevPageBtn) this.prevPageBtn.disabled = page <= 1;
-    if (this.nextPageBtn) this.nextPageBtn.disabled = page >= totalPages;
+    // Update disabled state after smooth scrolling settles.
+    setTimeout(() => this.updatePaginationUI(), 220);
   }
 
   getTotalPages() {

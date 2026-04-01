@@ -1254,20 +1254,28 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  padding-bottom: 4px;
+  padding-bottom: 0;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(205, 205, 205, 0.8) rgba(120, 120, 120, 0.28);
 }
 
 .notes-list::-webkit-scrollbar {
-  height: 8px;
+  height: 12px;
 }
 
 .notes-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(120, 120, 120, 0.28);
+  border-radius: 8px;
 }
 
 .notes-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-full);
+  background: rgba(210, 210, 210, 0.82);
+  border-radius: 8px;
+  border: 2px solid rgba(120, 120, 120, 0.2);
+}
+
+.notes-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 230, 230, 0.94);
 }
 
 .notes-list-item {
