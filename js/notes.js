@@ -353,9 +353,9 @@ class NotesManager extends BaseManager {
 
         if (html.trim()) {
           allowHtmlFallback = true;
-          const clean = this.normalizeMarkdownHtmlForEditor(
-            this.sanitizeHtml(String(html)),
-          );
+          const clean = this.sanitizeHtml(String(html), {
+            preserveFormatting: true,
+          });
           try {
             document.execCommand("insertHTML", false, clean);
           } catch (err) {
@@ -402,7 +402,7 @@ class NotesManager extends BaseManager {
       .map((n) => {
         const id = String(n.id || "").trim() || this.generateId();
         const title = String(n.title || "Untitled").slice(0, 120);
-        const html = this.stripInternalCursorMarkers(
+        const rawHtml = this.stripInternalCursorMarkers(
           typeof n.html === "string" ? n.html : "",
         );
         const mdRaw =
@@ -411,8 +411,22 @@ class NotesManager extends BaseManager {
             : typeof n.markdown === "string"
               ? n.markdown
               : "";
+        const contentMode = this.normalizeContentMode(
+          n.contentMode,
+          `${mdRaw}\n${rawHtml}`,
+        );
+        const html = rawHtml
+          ? this.stripInternalCursorMarkers(
+              this.sanitizeHtml(rawHtml, {
+                preserveFormatting: contentMode === "html",
+              }),
+            )
+          : "";
         const md = this.stripInternalCursorMarkers(
-          mdRaw || this.htmlToMarkdown(html),
+          mdRaw ||
+            (contentMode === "html"
+              ? this.sanitizeHtml(html, { preserveFormatting: true })
+              : this.htmlToMarkdown(html)),
         );
         const rawScale =
           typeof n.scale === "number" || typeof n.scale === "string"
@@ -428,7 +442,16 @@ class NotesManager extends BaseManager {
           typeof n.createdAt === "number" ? n.createdAt : Date.now();
         const updatedAt =
           typeof n.updatedAt === "number" ? n.updatedAt : createdAt;
-        return { id, title, md, html, scale, createdAt, updatedAt };
+        return {
+          id,
+          title,
+          md,
+          html,
+          contentMode,
+          scale,
+          createdAt,
+          updatedAt,
+        };
       })
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
@@ -461,19 +484,27 @@ class NotesManager extends BaseManager {
       const nextTitle = String(this.titleInput.value || "").slice(0, 120);
       let nextMd = "";
       let nextHtml = "";
+      let nextContentMode = "markdown";
 
       if (this.isMarkdownPreview) {
         // Markdown mode: editable rendered view is the source-of-truth.
-        const rawHtml = String(this.editor.innerHTML || "");
-        const sanitized = this.normalizeMarkdownHtmlForEditor(
-          this.sanitizeHtml(rawHtml),
+        const currentMode = this.normalizeContentMode(
+          note.contentMode,
+          note.md,
         );
+        const keepHtml =
+          this._allowHtmlFallbackOnNextConvert || currentMode === "html";
+        const rawHtml = String(this.editor.innerHTML || "");
+        const sanitized = keepHtml
+          ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
+          : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
         nextHtml = this.stripInternalCursorMarkers(sanitized);
         nextMd = this.stripInternalCursorMarkers(
           this.htmlToMarkdown(nextHtml, {
-            allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+            allowFallbackHtml: keepHtml,
           }),
         );
+        nextContentMode = keepHtml ? "html" : "markdown";
         this._allowHtmlFallbackOnNextConvert = false;
 
         // Keep raw viewer in sync.
@@ -486,17 +517,24 @@ class NotesManager extends BaseManager {
         nextMd = this.stripInternalCursorMarkers(
           String(this.rawEditor.value || note.md || ""),
         );
-        nextHtml = this.renderMarkdown(nextMd);
+        nextContentMode = this.isRichHtmlDocument(nextMd) ? "html" : "markdown";
+        nextHtml =
+          nextContentMode === "html"
+            ? this.sanitizeHtml(nextMd, { preserveFormatting: true })
+            : this.renderMarkdown(nextMd);
       }
 
       const changed =
         nextTitle !== String(note.title || "") ||
         nextMd !== String(note.md || "") ||
-        nextHtml !== String(note.html || "");
+        nextHtml !== String(note.html || "") ||
+        nextContentMode !==
+          this.normalizeContentMode(note.contentMode, note.md);
 
       note.title = nextTitle;
       note.md = nextMd;
       note.html = nextHtml;
+      note.contentMode = nextContentMode;
       if (changed) note.updatedAt = Date.now();
     }
 
@@ -536,6 +574,7 @@ class NotesManager extends BaseManager {
       title: "Untitled",
       md: "",
       html: "<p></p>",
+      contentMode: "markdown",
       scale: NotesManager.SCALE_MIN,
       createdAt: now,
       updatedAt: now,
@@ -617,18 +656,26 @@ class NotesManager extends BaseManager {
     const nextTitle = String(this.titleInput.value || "").slice(0, 120);
     let nextMd = "";
     let nextHtml = "";
+    let nextContentMode = "markdown";
 
     if (this.isMarkdownPreview) {
-      const rawHtml = String(this.editor.innerHTML || "");
-      const sanitized = this.normalizeMarkdownHtmlForEditor(
-        this.sanitizeHtml(rawHtml),
+      const currentMode = this.normalizeContentMode(
+        current.contentMode,
+        current.md,
       );
+      const keepHtml =
+        this._allowHtmlFallbackOnNextConvert || currentMode === "html";
+      const rawHtml = String(this.editor.innerHTML || "");
+      const sanitized = keepHtml
+        ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
+        : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
       nextHtml = this.stripInternalCursorMarkers(sanitized);
       nextMd = this.stripInternalCursorMarkers(
         this.htmlToMarkdown(nextHtml, {
-          allowFallbackHtml: this._allowHtmlFallbackOnNextConvert,
+          allowFallbackHtml: keepHtml,
         }),
       );
+      nextContentMode = keepHtml ? "html" : "markdown";
       this._allowHtmlFallbackOnNextConvert = false;
       if (String(this.rawEditor.value || "") !== nextMd) {
         this.rawEditor.value = nextMd;
@@ -638,17 +685,24 @@ class NotesManager extends BaseManager {
       nextMd = this.stripInternalCursorMarkers(
         String(this.rawEditor.value || ""),
       );
-      nextHtml = this.renderMarkdown(nextMd);
+      nextContentMode = this.isRichHtmlDocument(nextMd) ? "html" : "markdown";
+      nextHtml =
+        nextContentMode === "html"
+          ? this.sanitizeHtml(nextMd, { preserveFormatting: true })
+          : this.renderMarkdown(nextMd);
     }
 
     const changed =
       nextTitle !== String(current.title || "") ||
       nextMd !== String(current.md || "") ||
-      nextHtml !== current.html;
+      nextHtml !== current.html ||
+      nextContentMode !==
+        this.normalizeContentMode(current.contentMode, current.md);
 
     current.title = nextTitle;
     current.md = nextMd;
     current.html = nextHtml;
+    current.contentMode = nextContentMode;
     if (changed && updateTimestampIfChanged) current.updatedAt = Date.now();
     return changed;
   }
@@ -813,7 +867,10 @@ class NotesManager extends BaseManager {
       if (!offsets) return null;
 
       const rawSource = String(this.rawEditor.value || "");
-      const treatRawAsHtml = this.isLikelyHtmlSource(rawSource);
+      const active = this.getActiveNote();
+      const mode = this.normalizeContentMode(active?.contentMode, rawSource);
+      const treatRawAsHtml =
+        mode === "html" || this.isRichHtmlDocument(rawSource);
 
       const marker = "NOTESCURSORRAWTOKENA9F3";
       const htmlWithMarker = this.insertTextMarkerAtPreviewOffset(
@@ -1123,9 +1180,22 @@ class NotesManager extends BaseManager {
     if (!this.isMarkdownPreview) return;
     try {
       const offsets = this.getSelectionOffsets(this.editor);
-      const cleaned = this.normalizeMarkdownHtmlForEditor(
-        this.sanitizeHtml(String(this.editor.innerHTML || "")),
+      const active = this.getActiveNote();
+      const activeMode = this.normalizeContentMode(
+        active?.contentMode,
+        active?.md,
       );
+      const keepHtml =
+        this._allowHtmlFallbackOnNextConvert || activeMode === "html";
+      const cleanedRaw = this.sanitizeHtml(
+        String(this.editor.innerHTML || ""),
+        {
+          preserveFormatting: keepHtml,
+        },
+      );
+      const cleaned = keepHtml
+        ? cleanedRaw
+        : this.normalizeMarkdownHtmlForEditor(cleanedRaw);
       if (String(this.editor.innerHTML || "") !== cleaned) {
         this.editor.innerHTML = cleaned;
         this.restoreSelectionOffsets(this.editor, offsets);
@@ -1197,6 +1267,10 @@ class NotesManager extends BaseManager {
 
   renderMarkdown(markdown) {
     const md = String(markdown || "");
+
+    if (this.isRichHtmlDocument(md)) {
+      return this.sanitizeHtml(md, { preserveFormatting: true });
+    }
 
     let html = "";
     try {
@@ -1554,7 +1628,9 @@ class NotesManager extends BaseManager {
     const allowFallbackHtml = !!options.allowFallbackHtml;
     const preserveCursorMarker = !!options.preserveCursorMarker;
     if (allowFallbackHtml) {
-      const sanitized = this.sanitizeHtml(raw).trim();
+      const sanitized = this.sanitizeHtml(raw, {
+        preserveFormatting: true,
+      }).trim();
       return preserveCursorMarker
         ? sanitized
         : this.stripInternalCursorMarkers(sanitized);
@@ -1875,10 +1951,51 @@ class NotesManager extends BaseManager {
       .replace(/NOTESCURSOR(PREVIEW|RAW)TOKEN[A-Z0-9]*/gi, "");
   }
 
-  isLikelyHtmlSource(text) {
+  sanitizeInlineStyle(styleText) {
+    const raw = String(styleText || "");
+    if (!raw) return "";
+
+    return raw
+      .split(";")
+      .map((rule) => rule.trim())
+      .filter((rule) => rule.includes(":"))
+      .filter(
+        (rule) =>
+          !/(expression\s*\(|javascript:|vbscript:|@import|behavior\s*:)/i.test(
+            rule,
+          ),
+      )
+      .slice(0, 80)
+      .join("; ");
+  }
+
+  isRichHtmlDocument(text) {
     const raw = String(text || "").trim();
     if (!raw) return false;
-    return /<\/?[a-z][^>]*>/i.test(raw);
+
+    if (!/<\/?[a-z][^>]*>/i.test(raw)) return false;
+
+    if (
+      /<(table|thead|tbody|tfoot|tr|td|th|colgroup|col|caption|img|video|audio|iframe|font)\b/i.test(
+        raw,
+      )
+    )
+      return true;
+
+    if (
+      /\s(style|class|colspan|rowspan|cellpadding|cellspacing|bgcolor|align|valign|width|height|srcset|sizes)\s*=/i.test(
+        raw,
+      )
+    )
+      return true;
+
+    return false;
+  }
+
+  normalizeContentMode(mode, sampleText) {
+    const rawMode = String(mode || "").toLowerCase();
+    if (rawMode === "html" || rawMode === "markdown") return rawMode;
+    return this.isRichHtmlDocument(sampleText) ? "html" : "markdown";
   }
 
   updateScaleUi(scale) {
@@ -2441,7 +2558,8 @@ class NotesManager extends BaseManager {
     return wrapper.innerHTML;
   }
 
-  sanitizeHtml(html) {
+  sanitizeHtml(html, options = {}) {
+    const preserveFormatting = !!options.preserveFormatting;
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html || "";
 
@@ -2476,15 +2594,22 @@ class NotesManager extends BaseManager {
       "TABLE",
       "THEAD",
       "TBODY",
+      "TFOOT",
       "TR",
       "TH",
       "TD",
+      "COLGROUP",
+      "COL",
+      "CAPTION",
       "DEL",
       "INPUT",
       "VIDEO",
       "AUDIO",
       "IFRAME",
       "SOURCE",
+      "FONT",
+      "SUP",
+      "SUB",
     ]);
 
     const sanitizeNode = (node) => {
@@ -2509,14 +2634,39 @@ class NotesManager extends BaseManager {
       const attrs = Array.from(el.attributes);
       for (const attr of attrs) {
         const name = attr.name.toLowerCase();
+
+        if (name.startsWith("on")) {
+          el.removeAttribute(attr.name);
+          continue;
+        }
+
         if (tag === "A") {
-          if (name === "href" || name === "target" || name === "rel") continue;
+          if (
+            name === "href" ||
+            name === "target" ||
+            name === "rel" ||
+            (preserveFormatting &&
+              (name === "style" || name === "class" || name === "title"))
+          )
+            continue;
           el.removeAttribute(attr.name);
           continue;
         }
 
         if (tag === "IMG") {
-          if (name === "src" || name === "alt" || name === "title") continue;
+          if (
+            name === "src" ||
+            name === "alt" ||
+            name === "title" ||
+            (preserveFormatting &&
+              (name === "style" ||
+                name === "class" ||
+                name === "width" ||
+                name === "height" ||
+                name === "srcset" ||
+                name === "sizes"))
+          )
+            continue;
           el.removeAttribute(attr.name);
           continue;
         }
@@ -2534,7 +2684,9 @@ class NotesManager extends BaseManager {
             name === "controls" ||
             name === "poster" ||
             name === "width" ||
-            name === "height"
+            name === "height" ||
+            (preserveFormatting &&
+              (name === "style" || name === "class" || name === "title"))
           )
             continue;
           el.removeAttribute(attr.name);
@@ -2542,7 +2694,13 @@ class NotesManager extends BaseManager {
         }
 
         if (tag === "AUDIO") {
-          if (name === "src" || name === "controls") continue;
+          if (
+            name === "src" ||
+            name === "controls" ||
+            (preserveFormatting &&
+              (name === "style" || name === "class" || name === "title"))
+          )
+            continue;
           el.removeAttribute(attr.name);
           continue;
         }
@@ -2555,7 +2713,9 @@ class NotesManager extends BaseManager {
             name === "height" ||
             name === "allow" ||
             name === "allowfullscreen" ||
-            name === "loading"
+            name === "loading" ||
+            (preserveFormatting &&
+              (name === "style" || name === "class" || name === "frameborder"))
           )
             continue;
           el.removeAttribute(attr.name);
@@ -2563,17 +2723,41 @@ class NotesManager extends BaseManager {
         }
 
         if (tag === "SOURCE") {
-          if (name === "src" || name === "type") continue;
+          if (
+            name === "src" ||
+            name === "type" ||
+            (preserveFormatting &&
+              (name === "srcset" || name === "sizes" || name === "media"))
+          )
+            continue;
           el.removeAttribute(attr.name);
           continue;
         }
 
         if (tag === "UL") {
           if (name === "class") {
-            const keep = el.classList.contains("notes-checklist")
-              ? "notes-checklist"
+            const hasChecklist = el.classList.contains("notes-checklist");
+            const safeClass = preserveFormatting
+              ? String(el.getAttribute("class") || "")
+                  .replace(/[^a-zA-Z0-9_\-\s]/g, " ")
+                  .replace(/\s+/g, " ")
+                  .trim()
               : "";
-            el.className = keep;
+            const merged = hasChecklist
+              ? ["notes-checklist", safeClass].join(" ").trim()
+              : safeClass;
+            el.className = merged;
+            if (hasChecklist && !el.classList.contains("notes-checklist")) {
+              el.classList.add("notes-checklist");
+            }
+            continue;
+          }
+          if (preserveFormatting && name === "style") {
+            const safeStyle = this.sanitizeInlineStyle(
+              String(el.getAttribute("style") || ""),
+            );
+            if (safeStyle) el.setAttribute("style", safeStyle);
+            else el.removeAttribute("style");
             continue;
           }
           el.removeAttribute(attr.name);
@@ -2581,8 +2765,46 @@ class NotesManager extends BaseManager {
         }
 
         if (tag === "LI") {
-          if (name === "data-checked") continue;
+          if (
+            name === "data-checked" ||
+            (preserveFormatting &&
+              (name === "style" || name === "class" || name === "value"))
+          )
+            continue;
           el.removeAttribute(attr.name);
+          continue;
+        }
+
+        if (
+          preserveFormatting &&
+          (name === "style" ||
+            name === "class" ||
+            name === "align" ||
+            name === "valign" ||
+            name === "width" ||
+            name === "height" ||
+            name === "bgcolor" ||
+            name === "border" ||
+            name === "cellpadding" ||
+            name === "cellspacing" ||
+            name === "colspan" ||
+            name === "rowspan")
+        ) {
+          if (name === "style") {
+            const safeStyle = this.sanitizeInlineStyle(
+              String(el.getAttribute("style") || ""),
+            );
+            if (safeStyle) el.setAttribute("style", safeStyle);
+            else el.removeAttribute("style");
+          }
+          if (name === "class") {
+            const safeClass = String(el.getAttribute("class") || "")
+              .replace(/[^a-zA-Z0-9_\-\s]/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            if (safeClass) el.setAttribute("class", safeClass);
+            else el.removeAttribute("class");
+          }
           continue;
         }
 
