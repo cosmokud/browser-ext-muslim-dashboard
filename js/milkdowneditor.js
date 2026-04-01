@@ -1029,6 +1029,9 @@ class NotesManager extends BaseManager {
     const handle = this.wysiwygHost?.querySelector(
       ".milkdown .milkdown-block-handle",
     );
+    const slashMenu = this.wysiwygHost?.querySelector(
+      ".milkdown .milkdown-slash-menu",
+    );
 
     if (!scrollHost || !handle) return;
 
@@ -1037,6 +1040,11 @@ class NotesManager extends BaseManager {
     handle.style.insetInlineStart = "0px";
     handle.style.insetInlineEnd = "auto";
     handle.style.zIndex = "1400";
+
+    if (slashMenu) {
+      slashMenu.style.zIndex = "1600";
+      slashMenu.style.maxHeight = "56vh";
+    }
 
     if (handle.getAttribute("data-show") === "false") {
       handle.dataset.notesHidden = "true";
