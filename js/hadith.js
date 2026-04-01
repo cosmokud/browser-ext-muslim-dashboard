@@ -702,6 +702,23 @@ class HadithManager extends BaseManager {
       this.jumpSliderEl.max = String(Math.max(1, totalSafe || 1));
       this.jumpSliderEl.value = String(Math.max(1, currentOneBased || 1));
       this.jumpSliderEl.disabled = totalSafe <= 1;
+
+      const min = parseInt(this.jumpSliderEl.min, 10);
+      const max = parseInt(this.jumpSliderEl.max, 10);
+      const value = parseInt(this.jumpSliderEl.value, 10);
+
+      const safeMin = Number.isFinite(min) ? min : 1;
+      const safeMax = Number.isFinite(max) ? max : safeMin + 1;
+      const safeValue = Number.isFinite(value) ? value : safeMin;
+
+      const range = Math.max(1, safeMax - safeMin);
+      const progress = ((safeValue - safeMin) / range) * 100;
+      const clampedProgress = Math.max(0, Math.min(100, progress));
+
+      this.jumpSliderEl.style.setProperty(
+        "--jump-progress",
+        `${clampedProgress}%`,
+      );
     }
 
     if (this.jumpInputEl) {

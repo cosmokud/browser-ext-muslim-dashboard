@@ -943,6 +943,24 @@ class FlashcardManager extends BaseManager {
 
     const activeSet = this.getActiveSet();
     const cards = activeSet?.cards || [];
+    const updateSliderProgress = () => {
+      const min = parseInt(this.jumpSliderEl.min, 10);
+      const max = parseInt(this.jumpSliderEl.max, 10);
+      const value = parseInt(this.jumpSliderEl.value, 10);
+
+      const safeMin = Number.isFinite(min) ? min : 1;
+      const safeMax = Number.isFinite(max) ? max : safeMin + 1;
+      const safeValue = Number.isFinite(value) ? value : safeMin;
+
+      const range = Math.max(1, safeMax - safeMin);
+      const progress = ((safeValue - safeMin) / range) * 100;
+      const clampedProgress = Math.max(0, Math.min(100, progress));
+
+      this.jumpSliderEl.style.setProperty(
+        "--jump-progress",
+        `${clampedProgress}%`,
+      );
+    };
 
     if (!cards.length) {
       this.jumpLabelEl.textContent = "0 / 0";
@@ -955,6 +973,7 @@ class FlashcardManager extends BaseManager {
       this.jumpInputEl.max = "1";
       this.jumpInputEl.value = "1";
       this.jumpInputEl.disabled = true;
+      updateSliderProgress();
       return;
     }
 
@@ -971,6 +990,7 @@ class FlashcardManager extends BaseManager {
     this.jumpInputEl.min = "1";
     this.jumpInputEl.max = String(cards.length);
     this.jumpInputEl.value = String(oneBased);
+    updateSliderProgress();
   }
 
   gotoNextCard() {
