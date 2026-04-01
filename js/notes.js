@@ -1459,10 +1459,41 @@ class NotesManager extends BaseManager {
     this.applyEditorMode();
 
     if (this.isMarkdownPreview) {
+      let canRestorePreviewOffset =
+        targetPreview &&
+        typeof targetPreview.offset === "number" &&
+        Number.isFinite(targetPreview.offset);
+
       if (targetPreview && typeof targetPreview.html === "string") {
         this.editor.innerHTML = targetPreview.html;
       } else {
         this.renderActiveMarkdownPreview();
+        canRestorePreviewOffset = false;
+      }
+
+      // Force one authoritative render from the current raw markdown so first switch
+      // from source->preview never shows stale HTML.
+      const latestMarkdown = this.stripInternalCursorMarkers(
+        String(this.rawEditor.value || ""),
+      );
+      const latestHtml = this.stripInternalCursorMarkers(
+        this.normalizeMarkdownHtmlForEditor(
+          this.renderMarkdown(latestMarkdown),
+        ),
+      );
+      if (String(this.editor.innerHTML || "") !== latestHtml) {
+        this.editor.innerHTML = latestHtml;
+        canRestorePreviewOffset = false;
+      }
+
+      const active = this.getActiveNote();
+      if (active) {
+        if (String(active.md || "") !== latestMarkdown) {
+          active.md = latestMarkdown;
+        }
+        if (String(active.html || "") !== latestHtml) {
+          active.html = latestHtml;
+        }
       }
 
       try {
@@ -1471,11 +1502,7 @@ class NotesManager extends BaseManager {
         // ignore
       }
 
-      if (
-        targetPreview &&
-        typeof targetPreview.offset === "number" &&
-        Number.isFinite(targetPreview.offset)
-      ) {
+      if (canRestorePreviewOffset) {
         this.restoreSelectionOffsets(this.editor, {
           start: targetPreview.offset,
           end: targetPreview.offset,
@@ -1953,7 +1980,7 @@ class NotesManager extends BaseManager {
     lists.forEach((list) => {
       try {
         list.classList.add("notes-checklist");
-        list.querySelectorAll("li").forEach((li) => {
+        list.querySelectorAll(":scope > li").forEach((li) => {
           if (!li.getAttribute("data-checked"))
             li.setAttribute("data-checked", "false");
         });
@@ -4074,7 +4101,7 @@ class NotesManager extends BaseManager {
 
       // Normalize checklist LIs
       if (tag === "UL" && el.classList.contains("notes-checklist")) {
-        el.querySelectorAll("li").forEach((li) => {
+        el.querySelectorAll(":scope > li").forEach((li) => {
           if (!li.getAttribute("data-checked"))
             li.setAttribute("data-checked", "false");
         });

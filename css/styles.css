@@ -1866,23 +1866,23 @@ textarea.notes-editor:focus {
   padding-left: 0;
 }
 
-.notes-editor .notes-checklist li {
+.notes-editor .notes-checklist > li {
   position: relative;
   padding-left: 1.6rem;
 }
 
-.notes-editor .notes-checklist li::before {
+.notes-editor .notes-checklist > li::before {
   content: "☐";
   position: absolute;
   left: 0;
   top: 0;
 }
 
-.notes-editor .notes-checklist li[data-checked="true"]::before {
+.notes-editor .notes-checklist > li[data-checked="true"]::before {
   content: "☑";
 }
 
-.notes-editor .notes-checklist li[data-checked="true"] {
+.notes-editor .notes-checklist > li[data-checked="true"] {
   text-decoration: line-through;
   opacity: 0.9;
 }
