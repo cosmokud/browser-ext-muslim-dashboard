@@ -38,6 +38,10 @@ class NotesManager extends BaseManager {
     this._cursorRecenterTimer = null;
     this._tableContextMenuEl = null;
     this._tableContextTargetCell = null;
+    this._milkdown = null;
+    this._milkdownInitPromise = null;
+    this._milkdownReady = false;
+    this._suppressMilkdownChange = false;
 
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
@@ -107,6 +111,7 @@ class NotesManager extends BaseManager {
     }
 
     this.setupEventListeners();
+    this.setupMilkdownIntegration();
   }
 
   configureMarkdownParser() {
@@ -122,6 +127,127 @@ class NotesManager extends BaseManager {
     } catch (e) {
       // ignore
     }
+  }
+
+  hasMilkdownSupport() {
+    return !!(
+      window.NotesMilkdown && typeof window.NotesMilkdown.create === "function"
+    );
+  }
+
+  isMilkdownEnabled() {
+    return !!(this._milkdownReady && this._milkdown);
+  }
+
+  setupMilkdownIntegration() {
+    if (!this.hasMilkdownSupport() || this._milkdownInitPromise) return;
+
+    const initialMarkdown = this.stripInternalCursorMarkers(
+      String(this.rawEditor?.value || ""),
+    );
+
+    this._milkdownInitPromise = window.NotesMilkdown.create({
+      root: this.editor,
+      defaultMarkdown: initialMarkdown,
+      onMarkdownChange: (markdown) => this.onMilkdownMarkdownChange(markdown),
+      onBlur: () => this.saveNow({ renderList: false }),
+    })
+      .then((adapter) => {
+        this._milkdown = adapter;
+        this._milkdownReady = true;
+        this.editor.classList.add("notes-editor-milkdown");
+
+        const active = this.getActiveNote();
+        const md = this.stripInternalCursorMarkers(
+          String(active?.md || this.rawEditor?.value || ""),
+        );
+        this.setMilkdownMarkdown(md, { silent: true });
+        this.applyEditorMode();
+      })
+      .catch(() => {
+        this._milkdown = null;
+        this._milkdownReady = false;
+      });
+  }
+
+  getMilkdownMarkdown() {
+    if (!this.isMilkdownEnabled()) return "";
+    try {
+      return this.stripInternalCursorMarkers(
+        String(this._milkdown.getMarkdown() || ""),
+      );
+    } catch (e) {
+      return "";
+    }
+  }
+
+  setMilkdownMarkdown(markdown, { silent } = {}) {
+    if (!this.isMilkdownEnabled()) return;
+
+    const next = this.stripInternalCursorMarkers(String(markdown || ""));
+    const current = this.getMilkdownMarkdown();
+    if (next === current) return;
+
+    this._suppressMilkdownChange = !!silent;
+    try {
+      this._milkdown.setMarkdown(next, { silent: !!silent });
+    } catch (e) {
+      this._suppressMilkdownChange = false;
+      return;
+    }
+
+    if (!silent) {
+      this._suppressMilkdownChange = false;
+    } else {
+      setTimeout(() => {
+        this._suppressMilkdownChange = false;
+      }, 0);
+    }
+  }
+
+  onMilkdownMarkdownChange(markdown) {
+    if (!this.isMilkdownEnabled()) return;
+    if (this._suppressMilkdownChange) return;
+
+    const md = this.stripInternalCursorMarkers(String(markdown || ""));
+    if (String(this.rawEditor.value || "") !== md) {
+      this.rawEditor.value = md;
+    }
+
+    const note = this.getActiveNote();
+    if (note) {
+      note.md = md;
+      note.html = this.renderMarkdown(md);
+      note.contentMode = "markdown";
+    }
+
+    this.queueSave();
+  }
+
+  applyMilkdownToolbarAction(cmd, block) {
+    if (!this.isMilkdownEnabled()) return false;
+
+    try {
+      this._milkdown.focus();
+    } catch (e) {
+      // ignore
+    }
+
+    let applied = false;
+    try {
+      applied = !!this._milkdown.runToolbarAction(cmd, block);
+    } catch (e) {
+      applied = false;
+    }
+
+    if (applied) {
+      const md = this.getMilkdownMarkdown();
+      if (String(this.rawEditor.value || "") !== md) {
+        this.rawEditor.value = md;
+      }
+    }
+
+    return applied;
   }
 
   setupEventListeners() {
@@ -326,6 +452,7 @@ class NotesManager extends BaseManager {
     // Preview: Ctrl/Cmd-click links open in new tab; normal click doesn't navigate.
     this.editor.addEventListener("click", (e) => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       const target =
         e.target && e.target.nodeType === Node.ELEMENT_NODE
           ? e.target
@@ -366,6 +493,7 @@ class NotesManager extends BaseManager {
     // WYSIWYG editing in preview mode.
     this.editor.addEventListener("keydown", (e) => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
 
       if (this.handleEditorShortcuts(e)) {
         this.capturePreviewSelection();
@@ -386,12 +514,14 @@ class NotesManager extends BaseManager {
 
     this.editor.addEventListener("input", () => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       this.capturePreviewSelection();
       this.queueSave();
     });
 
     const capturePreviewSelection = () => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       this.capturePreviewSelection();
     };
     ["focus", "keyup", "mouseup"].forEach((eventName) => {
@@ -399,6 +529,7 @@ class NotesManager extends BaseManager {
     });
 
     this.editor.addEventListener("blur", () => {
+      if (this.isMilkdownEnabled()) return;
       this.capturePreviewSelection();
       // Sanitize in-place on blur to reduce risk from pasted HTML.
       this.sanitizeEditorInPlace();
@@ -408,11 +539,13 @@ class NotesManager extends BaseManager {
     // Internal copy: attach markdown fragment so paste inside this app can preserve markdown formatting.
     this.editor.addEventListener("copy", (e) => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       this.writeInternalMarkdownClipboard(e);
     });
 
     this.editor.addEventListener("contextmenu", (e) => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       const cell = e.target.closest("td,th");
       if (!cell || !this.editor.contains(cell)) return;
       e.preventDefault();
@@ -433,6 +566,7 @@ class NotesManager extends BaseManager {
     // Paste handling: sanitize HTML fragments.
     this.editor.addEventListener("paste", (e) => {
       if (!this.isMarkdownPreview) return;
+      if (this.isMilkdownEnabled()) return;
       try {
         if (!e.clipboardData) return;
         e.preventDefault();
@@ -1221,24 +1355,35 @@ class NotesManager extends BaseManager {
       let nextContentMode = "markdown";
 
       if (this.isMarkdownPreview) {
-        // Markdown mode: editable rendered view is the source-of-truth.
-        const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
-        const rawHtml = String(this.editor.innerHTML || "");
-        const sanitized = keepHtml
-          ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
-          : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
-        nextHtml = this.stripInternalCursorMarkers(sanitized);
-        nextMd = this.stripInternalCursorMarkers(
-          this.htmlToMarkdown(nextHtml, {
-            allowFallbackHtml: keepHtml,
-          }),
-        );
-        nextContentMode = keepHtml ? "html" : "markdown";
-        this._allowHtmlFallbackOnNextConvert = false;
+        if (this.isMilkdownEnabled()) {
+          this._allowHtmlFallbackOnNextConvert = false;
+          nextMd = this.getMilkdownMarkdown();
+          nextContentMode = "markdown";
+          nextHtml = this.renderMarkdown(nextMd);
 
-        // Keep raw viewer in sync.
-        if (String(this.rawEditor.value || "") !== nextMd) {
-          this.rawEditor.value = nextMd;
+          if (String(this.rawEditor.value || "") !== nextMd) {
+            this.rawEditor.value = nextMd;
+          }
+        } else {
+          // Markdown mode: editable rendered view is the source-of-truth.
+          const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
+          const rawHtml = String(this.editor.innerHTML || "");
+          const sanitized = keepHtml
+            ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
+            : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
+          nextHtml = this.stripInternalCursorMarkers(sanitized);
+          nextMd = this.stripInternalCursorMarkers(
+            this.htmlToMarkdown(nextHtml, {
+              allowFallbackHtml: keepHtml,
+            }),
+          );
+          nextContentMode = keepHtml ? "html" : "markdown";
+          this._allowHtmlFallbackOnNextConvert = false;
+
+          // Keep raw viewer in sync.
+          if (String(this.rawEditor.value || "") !== nextMd) {
+            this.rawEditor.value = nextMd;
+          }
         }
       } else {
         // Source mode uses the markdown textarea as source-of-truth.
@@ -1360,8 +1505,13 @@ class NotesManager extends BaseManager {
     if (this.deleteBtn) this.deleteBtn.disabled = false;
 
     if (this.isMarkdownPreview) {
-      this.placeCaretAtEnd(this.editor);
-      this.capturePreviewSelection();
+      if (this.isMilkdownEnabled()) {
+        this.setMilkdownMarkdown(String(note.md || ""), { silent: true });
+        this._milkdown.focus();
+      } else {
+        this.placeCaretAtEnd(this.editor);
+        this.capturePreviewSelection();
+      }
     } else {
       this.placeCaretAtEndTextArea(this.rawEditor);
       this.captureRawSelection();
@@ -1385,21 +1535,31 @@ class NotesManager extends BaseManager {
     let nextContentMode = "markdown";
 
     if (this.isMarkdownPreview) {
-      const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
-      const rawHtml = String(this.editor.innerHTML || "");
-      const sanitized = keepHtml
-        ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
-        : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
-      nextHtml = this.stripInternalCursorMarkers(sanitized);
-      nextMd = this.stripInternalCursorMarkers(
-        this.htmlToMarkdown(nextHtml, {
-          allowFallbackHtml: keepHtml,
-        }),
-      );
-      nextContentMode = keepHtml ? "html" : "markdown";
-      this._allowHtmlFallbackOnNextConvert = false;
-      if (String(this.rawEditor.value || "") !== nextMd) {
-        this.rawEditor.value = nextMd;
+      if (this.isMilkdownEnabled()) {
+        this._allowHtmlFallbackOnNextConvert = false;
+        nextMd = this.getMilkdownMarkdown();
+        nextContentMode = "markdown";
+        nextHtml = this.renderMarkdown(nextMd);
+        if (String(this.rawEditor.value || "") !== nextMd) {
+          this.rawEditor.value = nextMd;
+        }
+      } else {
+        const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
+        const rawHtml = String(this.editor.innerHTML || "");
+        const sanitized = keepHtml
+          ? this.sanitizeHtml(rawHtml, { preserveFormatting: true })
+          : this.normalizeMarkdownHtmlForEditor(this.sanitizeHtml(rawHtml));
+        nextHtml = this.stripInternalCursorMarkers(sanitized);
+        nextMd = this.stripInternalCursorMarkers(
+          this.htmlToMarkdown(nextHtml, {
+            allowFallbackHtml: keepHtml,
+          }),
+        );
+        nextContentMode = keepHtml ? "html" : "markdown";
+        this._allowHtmlFallbackOnNextConvert = false;
+        if (String(this.rawEditor.value || "") !== nextMd) {
+          this.rawEditor.value = nextMd;
+        }
       }
     } else {
       this._allowHtmlFallbackOnNextConvert = false;
@@ -1440,6 +1600,36 @@ class NotesManager extends BaseManager {
   }
 
   toggleMarkdownPreview() {
+    if (this.isMilkdownEnabled()) {
+      if (this.isMarkdownPreview) {
+        const nextMd = this.getMilkdownMarkdown();
+        if (String(this.rawEditor.value || "") !== nextMd) {
+          this.rawEditor.value = nextMd;
+        }
+      } else {
+        this.captureRawSelection();
+        this.syncPreviewFromRawEditor();
+      }
+
+      this.persistActiveNote({ updateTimestampIfChanged: true });
+
+      this.isMarkdownPreview = !this.isMarkdownPreview;
+      this.storage.set(
+        NotesManager.MARKDOWN_PREVIEW_STORAGE_KEY,
+        this.isMarkdownPreview,
+      );
+      this.applyEditorMode();
+
+      if (this.isMarkdownPreview) {
+        this._milkdown.focus();
+        this.scheduleModeSwitchRecenter("preview");
+      } else {
+        this.placeCaretAtEndTextArea(this.rawEditor);
+        this.scheduleModeSwitchRecenter("source");
+      }
+      return;
+    }
+
     let targetRawCaret = null;
     let targetPreview = null;
 
@@ -1551,7 +1741,12 @@ class NotesManager extends BaseManager {
     } catch (e) {}
 
     this.editor.classList.toggle("notes-md-preview", isPreview);
-    this.editor.setAttribute("contenteditable", isPreview ? "true" : "false");
+    if (this.isMilkdownEnabled()) {
+      this.editor.removeAttribute("contenteditable");
+      this._milkdown.setReadonly(!isPreview);
+    } else {
+      this.editor.setAttribute("contenteditable", isPreview ? "true" : "false");
+    }
 
     try {
       if (this.card) {
@@ -1597,7 +1792,9 @@ class NotesManager extends BaseManager {
     const html = this.stripInternalCursorMarkers(
       this.normalizeMarkdownHtmlForEditor(this.renderMarkdown(markdown)),
     );
-    if (String(this.editor.innerHTML || "") !== html) {
+    if (this.isMilkdownEnabled()) {
+      this.setMilkdownMarkdown(markdown, { silent: true });
+    } else if (String(this.editor.innerHTML || "") !== html) {
       this.editor.innerHTML = html;
     }
     if (String(note.html || "") !== html) {
@@ -1904,6 +2101,12 @@ class NotesManager extends BaseManager {
     if (String(this.rawEditor.value || "") !== markdown) {
       this.rawEditor.value = markdown;
     }
+
+    if (this.isMilkdownEnabled()) {
+      this.setMilkdownMarkdown(markdown, { silent: true });
+      return;
+    }
+
     const html = this.normalizeMarkdownHtmlForEditor(
       this.renderMarkdown(markdown),
     );
@@ -1923,6 +2126,7 @@ class NotesManager extends BaseManager {
 
   sanitizeEditorInPlace() {
     if (!this.isMarkdownPreview) return;
+    if (this.isMilkdownEnabled()) return;
     try {
       const offsets = this.getSelectionOffsets(this.editor);
       const keepHtml = !!this._allowHtmlFallbackOnNextConvert;
@@ -3115,6 +3319,11 @@ class NotesManager extends BaseManager {
 
   applyToolbarAction(cmd, block) {
     if (this.isMarkdownPreview) {
+      if (this.isMilkdownEnabled()) {
+        this.applyMilkdownToolbarAction(cmd, block);
+        return;
+      }
+
       this.restorePreviewSelection();
       this.applyPreviewToolbarAction(cmd, block);
       this.sanitizeEditorInPlace();
@@ -4331,6 +4540,7 @@ class NotesManager extends BaseManager {
 
   capturePreviewSelection() {
     if (!this.editor) return;
+    if (this.isMilkdownEnabled()) return;
 
     try {
       const sel = window.getSelection();
@@ -4364,6 +4574,14 @@ class NotesManager extends BaseManager {
 
   restorePreviewSelection() {
     if (!this.editor) return;
+    if (this.isMilkdownEnabled()) {
+      try {
+        this._milkdown.focus();
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
 
     const trySetRange = (range) => {
       if (!range) return false;

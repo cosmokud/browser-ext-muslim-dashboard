@@ -1663,6 +1663,37 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
+.notes-editor.notes-editor-milkdown {
+  padding: 0;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown {
+  min-height: 100%;
+  color: inherit;
+  background: transparent;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .editor {
+  min-height: 320px;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .ProseMirror {
+  min-height: 320px;
+  padding: var(--spacing-md);
+  color: inherit;
+  line-height: inherit;
+  font-size: inherit;
+  outline: none;
+  background: transparent;
+  white-space: pre-wrap;
+}
+
+.notes-editor.notes-editor-milkdown
+  .milkdown
+  .ProseMirror[contenteditable="false"] {
+  cursor: default;
+}
+
 #notesEditor,
 .notes-editor {
   scrollbar-width: thin;
