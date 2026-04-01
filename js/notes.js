@@ -9,7 +9,6 @@ class NotesManager extends BaseManager {
   static PAGE_KEY = "notes_page";
   static ITEMS_PER_PAGE = 10;
   static DEFAULT_TITLE = "Untitled";
-  static MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
   constructor(storage) {
     super();
@@ -34,7 +33,6 @@ class NotesManager extends BaseManager {
     this.titleInput = document.getElementById("notesTitleInput");
     this.toolbar = document.getElementById("notesToolbar");
     this.editorHost = document.getElementById("notesEditor");
-    this.imageInput = document.getElementById("notesImageInput");
 
     this.deleteModal = document.getElementById("notesDeleteConfirmModal");
     this.deleteNameEl = document.getElementById("notesDeleteName");
@@ -81,7 +79,6 @@ class NotesManager extends BaseManager {
       this.editorHost.classList.add("notes-editor-quill");
 
       this.toolbar.innerHTML = this.createQuillToolbarMarkup();
-      this.imageInput = this.toolbar.querySelector("#notesImageInput");
 
       this.editorInstance = new QuillCtor(this.editorHost, {
         theme: "snow",
@@ -96,9 +93,6 @@ class NotesManager extends BaseManager {
                 this.editorInstance?.history?.redo();
               },
               image: () => {
-                this.imageInput?.click();
-              },
-              insertImageByUrl: () => {
                 this.insertImageByUrl();
               },
             },
@@ -111,6 +105,8 @@ class NotesManager extends BaseManager {
         },
         placeholder: "Start writing your note...",
       });
+
+      this.applyToolbarTooltips();
 
       this.editorInstance.on("text-change", (_delta, _oldDelta, source) => {
         if (this.isSettingContent) return;
@@ -142,7 +138,7 @@ class NotesManager extends BaseManager {
         <button class="ql-redo" type="button" aria-label="Redo" title="Redo">↻</button>
       </span>
       <span class="ql-formats">
-        <select class="ql-header" aria-label="Heading">
+        <select class="ql-header" aria-label="Heading" title="Heading style">
           <option value=""></option>
           <option value="1"></option>
           <option value="2"></option>
@@ -151,46 +147,30 @@ class NotesManager extends BaseManager {
         </select>
       </span>
       <span class="ql-formats">
-        <button class="ql-bold" type="button" aria-label="Bold"></button>
-        <button class="ql-italic" type="button" aria-label="Italic"></button>
-        <button class="ql-underline" type="button" aria-label="Underline"></button>
-        <button class="ql-strike" type="button" aria-label="Strike"></button>
-        <button class="ql-code" type="button" aria-label="Inline code"></button>
+        <button class="ql-bold" type="button" aria-label="Bold" title="Bold"></button>
+        <button class="ql-italic" type="button" aria-label="Italic" title="Italic"></button>
+        <button class="ql-underline" type="button" aria-label="Underline" title="Underline"></button>
+        <button class="ql-strike" type="button" aria-label="Strikethrough" title="Strikethrough"></button>
+        <button class="ql-code" type="button" aria-label="Inline code" title="Inline code"></button>
       </span>
       <span class="ql-formats">
-        <button class="ql-list" value="ordered" type="button" aria-label="Ordered list"></button>
-        <button class="ql-list" value="bullet" type="button" aria-label="Bullet list"></button>
-        <button class="ql-list" value="check" type="button" aria-label="Checklist"></button>
+        <button class="ql-list" value="ordered" type="button" aria-label="Ordered list" title="Ordered list"></button>
+        <button class="ql-list" value="bullet" type="button" aria-label="Bullet list" title="Bullet list"></button>
+        <button class="ql-list" value="check" type="button" aria-label="Checklist" title="Checklist"></button>
       </span>
       <span class="ql-formats">
-        <select class="ql-align" aria-label="Align"></select>
-        <button class="ql-blockquote" type="button" aria-label="Block quote"></button>
-        <button class="ql-code-block" type="button" aria-label="Code block"></button>
+        <select class="ql-align" aria-label="Text alignment" title="Text alignment"></select>
+        <button class="ql-blockquote" type="button" aria-label="Block quote" title="Block quote"></button>
+        <button class="ql-code-block" type="button" aria-label="Code block" title="Code block"></button>
       </span>
       <span class="ql-formats">
-        <select class="ql-color" aria-label="Text color"></select>
-        <select class="ql-background" aria-label="Highlight color"></select>
+        <select class="ql-color" aria-label="Text color" title="Text color"></select>
+        <select class="ql-background" aria-label="Highlight color" title="Highlight color"></select>
       </span>
       <span class="ql-formats">
-        <button class="ql-link" type="button" aria-label="Link"></button>
-        <button class="ql-image" type="button" aria-label="Upload image"></button>
-        <input
-          class="notes-tool-file-input"
-          id="notesImageInput"
-          type="file"
-          accept="image/*"
-          aria-label="Upload image"
-          tabindex="-1"
-        />
-        <button
-          class="ql-insertImageByUrl"
-          type="button"
-          aria-label="Insert image by URL"
-          title="Insert image by URL"
-        >
-          URL
-        </button>
-        <button class="ql-clean" type="button" aria-label="Clear formatting"></button>
+        <button class="ql-link" type="button" aria-label="Insert link" title="Insert link"></button>
+        <button class="ql-image" type="button" aria-label="Insert image by URL" title="Insert image by URL"></button>
+        <button class="ql-clean" type="button" aria-label="Clear formatting" title="Clear formatting"></button>
       </span>
     `;
   }
@@ -231,10 +211,6 @@ class NotesManager extends BaseManager {
     );
     this.listEl.addEventListener("keydown", (event) =>
       this.handleListKeydown(event),
-    );
-
-    this.imageInput?.addEventListener("change", (event) =>
-      this.handleImageUpload(event),
     );
 
     this.confirmDeleteBtn?.addEventListener("click", () =>
@@ -458,35 +434,106 @@ class NotesManager extends BaseManager {
     this.insertImageAtCursor(src);
   }
 
-  handleImageUpload(event) {
-    const input = event?.target;
-    if (!(input instanceof HTMLInputElement)) return;
+  applyToolbarTooltips() {
+    if (!this.toolbar) return;
 
-    const file = input.files && input.files[0] ? input.files[0] : null;
-    if (!file) return;
+    this.toolbar.querySelectorAll("button").forEach((element) => {
+      if (!(element instanceof HTMLElement)) return;
+      const tooltip = this.getButtonTooltip(element);
+      if (!tooltip) return;
 
-    if (!/^image\//i.test(String(file.type || ""))) {
-      input.value = "";
-      return;
-    }
+      element.setAttribute("title", tooltip);
+      element.setAttribute("aria-label", tooltip);
+    });
 
-    if (file.size > NotesManager.MAX_IMAGE_SIZE_BYTES) {
-      input.value = "";
-      return;
-    }
+    this.toolbar.querySelectorAll(".ql-picker").forEach((picker) => {
+      if (!(picker instanceof HTMLElement)) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const src = this.normalizeImageUrl(String(reader.result || "").trim());
-      if (src) {
-        this.insertImageAtCursor(src);
+      const pickerType = this.getPickerType(picker);
+      const pickerLabel = this.getPickerLabelTooltip(pickerType);
+      const labelEl = picker.querySelector(".ql-picker-label");
+
+      if (labelEl instanceof HTMLElement && pickerLabel) {
+        labelEl.setAttribute("title", pickerLabel);
+        labelEl.setAttribute("aria-label", pickerLabel);
       }
-      input.value = "";
-    };
-    reader.onerror = () => {
-      input.value = "";
-    };
-    reader.readAsDataURL(file);
+
+      picker.querySelectorAll(".ql-picker-item").forEach((item) => {
+        if (!(item instanceof HTMLElement)) return;
+        const itemLabel = this.getPickerItemTooltip(pickerType, item);
+        if (!itemLabel) return;
+
+        item.setAttribute("title", itemLabel);
+        item.setAttribute("aria-label", itemLabel);
+      });
+    });
+  }
+
+  getButtonTooltip(button) {
+    if (button.classList.contains("ql-undo")) return "Undo";
+    if (button.classList.contains("ql-redo")) return "Redo";
+    if (button.classList.contains("ql-bold")) return "Bold";
+    if (button.classList.contains("ql-italic")) return "Italic";
+    if (button.classList.contains("ql-underline")) return "Underline";
+    if (button.classList.contains("ql-strike")) return "Strikethrough";
+    if (button.classList.contains("ql-code")) return "Inline code";
+    if (button.classList.contains("ql-list")) {
+      const listType = String(button.getAttribute("value") || "").trim();
+      if (listType === "ordered") return "Ordered list";
+      if (listType === "bullet") return "Bullet list";
+      if (listType === "check") return "Checklist";
+    }
+    if (button.classList.contains("ql-blockquote")) return "Block quote";
+    if (button.classList.contains("ql-code-block")) return "Code block";
+    if (button.classList.contains("ql-link")) return "Insert link";
+    if (button.classList.contains("ql-image")) return "Insert image by URL";
+    if (button.classList.contains("ql-clean")) return "Clear formatting";
+
+    return "";
+  }
+
+  getPickerType(picker) {
+    if (picker.classList.contains("ql-header")) return "header";
+    if (picker.classList.contains("ql-align")) return "align";
+    if (picker.classList.contains("ql-color")) return "color";
+    if (picker.classList.contains("ql-background")) return "background";
+    return "";
+  }
+
+  getPickerLabelTooltip(type) {
+    if (type === "header") return "Heading style";
+    if (type === "align") return "Text alignment";
+    if (type === "color") return "Text color";
+    if (type === "background") return "Highlight color";
+    return "";
+  }
+
+  getPickerItemTooltip(type, item) {
+    const value = String(item.getAttribute("data-value") || "").trim();
+
+    if (type === "header") {
+      return value ? `Heading ${value}` : "Paragraph";
+    }
+
+    if (type === "align") {
+      if (!value) return "Align left";
+      if (value === "center") return "Align center";
+      if (value === "right") return "Align right";
+      if (value === "justify") return "Align justify";
+      return "Text alignment";
+    }
+
+    if (type === "color") {
+      return value ? `Text color ${value.toUpperCase()}` : "Default text color";
+    }
+
+    if (type === "background") {
+      return value
+        ? `Highlight color ${value.toUpperCase()}`
+        : "Clear highlight color";
+    }
+
+    return "";
   }
 
   insertImageAtCursor(src) {
