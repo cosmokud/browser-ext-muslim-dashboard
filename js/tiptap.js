@@ -1,6 +1,6 @@
 /**
- * Notes Manager (hard reset)
- * Minimal TipTap editor with only bold, italic, underline.
+ * Notes Manager (TipTap rich editor)
+ * Implements a broad free-extension toolbar similar to TipTap Simple template.
  */
 
 class NotesManager extends BaseManager {
@@ -33,6 +33,13 @@ class NotesManager extends BaseManager {
     this.titleInput = document.getElementById("notesTitleInput");
     this.toolbar = document.getElementById("notesToolbar");
     this.editorHost = document.getElementById("notesEditor");
+    this.headingSelect = document.getElementById("notesHeadingSelect");
+    this.textColorInput = document.getElementById("notesTextColorInput");
+    this.highlightColorInput = document.getElementById(
+      "notesHighlightColorInput",
+    );
+    this.linkInput = document.getElementById("notesLinkInput");
+    this.imageInput = document.getElementById("notesImageInput");
 
     this.deleteModal = document.getElementById("notesDeleteConfirmModal");
     this.deleteNameEl = document.getElementById("notesDeleteName");
@@ -84,21 +91,66 @@ class NotesManager extends BaseManager {
       return;
     }
 
+    const extensions = [];
+    const pushExtension = (extension, options = null) => {
+      if (!extension) return;
+      if (options && typeof extension.configure === "function") {
+        extensions.push(extension.configure(options));
+        return;
+      }
+      extensions.push(extension);
+    };
+
+    pushExtension(T.Document);
+    pushExtension(T.Paragraph);
+    pushExtension(T.Text);
+    pushExtension(T.HardBreak);
+    pushExtension(T.Bold);
+    pushExtension(T.Italic);
+    pushExtension(T.Underline);
+    pushExtension(T.Strike);
+    pushExtension(T.Code);
+    pushExtension(T.Blockquote);
+    pushExtension(T.BulletList);
+    pushExtension(T.OrderedList);
+    pushExtension(T.ListItem);
+    pushExtension(T.TaskList);
+    pushExtension(T.TaskItem, { nested: true });
+    pushExtension(T.Heading, { levels: [1, 2, 3, 4] });
+    pushExtension(T.HorizontalRule);
+    pushExtension(T.CodeBlock);
+    pushExtension(T.TextStyle);
+    pushExtension(T.Color);
+    pushExtension(T.Highlight, { multicolor: true });
+    pushExtension(T.Superscript);
+    pushExtension(T.Subscript);
+    pushExtension(T.Typography);
+    pushExtension(T.TextAlign, { types: ["paragraph", "heading"] });
+    pushExtension(T.Link, {
+      autolink: true,
+      openOnClick: false,
+      HTMLAttributes: {
+        rel: "noopener noreferrer nofollow",
+        target: "_blank",
+      },
+    });
+    pushExtension(T.Image, { allowBase64: true });
+    pushExtension(T.History);
+    pushExtension(T.Dropcursor);
+    pushExtension(T.Gapcursor);
+    pushExtension(T.Placeholder, {
+      placeholder: "Start writing your note...",
+    });
+
     this.editorHost.classList.add("notes-editor-tiptap");
 
     this.editorInstance = new T.Editor({
       element: this.editorHost,
-      extensions: [
-        T.Document,
-        T.Paragraph,
-        T.Text,
-        T.Bold,
-        T.Italic,
-        T.Underline,
-      ],
+      extensions,
       content: this.createEmptyDoc(),
       injectCSS: false,
       autofocus: false,
+      onCreate: () => this.updateToolbarState(),
       onUpdate: () => {
         if (this.isSettingContent) return;
         this.updateToolbarState();
@@ -216,8 +268,23 @@ class NotesManager extends BaseManager {
       if (!button || button.disabled) return;
 
       const command = String(button.getAttribute("data-cmd") || "").trim();
-      this.runToolbarCommand(command);
+      const value = String(button.getAttribute("data-value") || "").trim();
+      this.runToolbarCommand(command, value);
     });
+
+    this.headingSelect?.addEventListener("change", () =>
+      this.runToolbarCommand("heading", this.headingSelect.value),
+    );
+
+    this.linkInput?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      this.runToolbarCommand("setLink");
+    });
+
+    this.imageInput?.addEventListener("change", (event) =>
+      this.handleImageUpload(event),
+    );
 
     this.confirmDeleteBtn?.addEventListener("click", () =>
       this.confirmDelete(),
@@ -268,26 +335,176 @@ class NotesManager extends BaseManager {
     this.selectNote(noteId, { skipSave: false, focusEditor: true });
   }
 
-  runToolbarCommand(command) {
-    const allowed = new Set(["bold", "italic", "underline"]);
-    if (!allowed.has(command)) return;
+  runToolbarCommand(command, value = "") {
+    const cmd = String(command || "").trim();
+    const rawValue = typeof value === "string" ? value.trim() : value;
+    if (!cmd) return;
 
     if (this.editorInstance) {
       const chain = this.editorInstance.chain().focus();
       let ran = false;
 
-      if (command === "bold") ran = chain.toggleBold().run();
-      if (command === "italic") ran = chain.toggleItalic().run();
-      if (command === "underline") ran = chain.toggleUnderline().run();
+      switch (cmd) {
+        case "undo":
+          ran = chain.undo().run();
+          break;
+        case "redo":
+          ran = chain.redo().run();
+          break;
+        case "heading": {
+          const token = String(
+            rawValue || this.headingSelect?.value || "paragraph",
+          ).toLowerCase();
 
-      if (!ran) return;
-    } else {
-      this.editorHost.focus();
-      try {
-        document.execCommand(command, false);
-      } catch (error) {
+          if (token === "paragraph") {
+            ran = chain.setParagraph().run();
+            break;
+          }
+
+          const match = /^h([1-4])$/.exec(token);
+          if (match) {
+            ran = chain.setHeading({ level: parseInt(match[1], 10) }).run();
+          }
+          break;
+        }
+        case "bold":
+          ran = chain.toggleBold().run();
+          break;
+        case "italic":
+          ran = chain.toggleItalic().run();
+          break;
+        case "underline":
+          ran = chain.toggleUnderline().run();
+          break;
+        case "strike":
+          ran = chain.toggleStrike().run();
+          break;
+        case "code":
+          ran = chain.toggleCode().run();
+          break;
+        case "superscript":
+          ran = chain.toggleSuperscript().run();
+          break;
+        case "subscript":
+          ran = chain.toggleSubscript().run();
+          break;
+        case "bulletList":
+          ran = chain.toggleBulletList().run();
+          break;
+        case "orderedList":
+          ran = chain.toggleOrderedList().run();
+          break;
+        case "taskList":
+          ran = chain.toggleTaskList().run();
+          break;
+        case "align": {
+          const align = String(rawValue || "").toLowerCase();
+          if (["left", "center", "right", "justify"].includes(align)) {
+            ran = chain.setTextAlign(align).run();
+          }
+          break;
+        }
+        case "blockquote":
+          ran = chain.toggleBlockquote().run();
+          break;
+        case "codeBlock":
+          ran = chain.toggleCodeBlock().run();
+          break;
+        case "horizontalRule":
+          ran = chain.setHorizontalRule().run();
+          break;
+        case "setTextColor": {
+          const color = this.normalizeColorHex(
+            rawValue || this.textColorInput?.value || "",
+          );
+          if (color) {
+            ran = chain.setColor(color).run();
+          }
+          break;
+        }
+        case "clearTextColor":
+          ran = chain.unsetColor().run();
+          break;
+        case "setHighlight": {
+          const color = this.normalizeColorHex(
+            rawValue || this.highlightColorInput?.value || "",
+          );
+          if (color) {
+            ran = chain.toggleHighlight({ color }).run();
+          }
+          break;
+        }
+        case "clearHighlight":
+          ran = chain.unsetHighlight().run();
+          break;
+        case "setLink": {
+          const href = this.normalizeLinkUrl(
+            rawValue || this.linkInput?.value || "",
+          );
+          if (!href) break;
+          ran = chain.extendMarkRange("link").setLink({ href }).run();
+          if (ran && this.linkInput) {
+            this.linkInput.value = href;
+          }
+          break;
+        }
+        case "unsetLink":
+          ran = chain.extendMarkRange("link").unsetLink().run();
+          if (ran && this.linkInput) {
+            this.linkInput.value = "";
+          }
+          break;
+        case "imageUpload":
+          if (this.imageInput) {
+            this.imageInput.click();
+          }
+          this.updateToolbarState();
+          return;
+        case "insertImageByUrl": {
+          const prompted = window.prompt("Enter image URL", "https://");
+          const src = this.normalizeImageUrl(prompted || "");
+          if (!src) break;
+          ran = chain.setImage({ src }).run();
+          break;
+        }
+        case "insertImage": {
+          const src = this.normalizeImageUrl(rawValue || "");
+          if (!src) break;
+          ran = chain.setImage({ src }).run();
+          break;
+        }
+        default:
+          break;
+      }
+
+      if (!ran) {
+        this.updateToolbarState();
         return;
       }
+
+      this.updateToolbarState();
+      this.queueSave();
+      return;
+    }
+
+    const fallbackExec = {
+      bold: "bold",
+      italic: "italic",
+      underline: "underline",
+      strike: "strikeThrough",
+      bulletList: "insertUnorderedList",
+      orderedList: "insertOrderedList",
+      undo: "undo",
+      redo: "redo",
+    };
+
+    if (!fallbackExec[cmd]) return;
+
+    this.editorHost.focus();
+    try {
+      document.execCommand(fallbackExec[cmd], false);
+    } catch (error) {
+      return;
     }
 
     this.updateToolbarState();
@@ -299,19 +516,199 @@ class NotesManager extends BaseManager {
       bold: false,
       italic: false,
       underline: false,
+      strike: false,
+      code: false,
+      superscript: false,
+      subscript: false,
+      bulletList: false,
+      orderedList: false,
+      taskList: false,
+      blockquote: false,
+      codeBlock: false,
+      link: false,
+      highlight: false,
+      "align:left": false,
+      "align:center": false,
+      "align:right": false,
+      "align:justify": false,
     };
+
+    let headingValue = "paragraph";
+    let linkHref = "";
 
     if (this.editorInstance) {
       states.bold = this.editorInstance.isActive("bold");
       states.italic = this.editorInstance.isActive("italic");
       states.underline = this.editorInstance.isActive("underline");
+      states.strike = this.editorInstance.isActive("strike");
+      states.code = this.editorInstance.isActive("code");
+      states.superscript = this.editorInstance.isActive("superscript");
+      states.subscript = this.editorInstance.isActive("subscript");
+      states.bulletList = this.editorInstance.isActive("bulletList");
+      states.orderedList = this.editorInstance.isActive("orderedList");
+      states.taskList = this.editorInstance.isActive("taskList");
+      states.blockquote = this.editorInstance.isActive("blockquote");
+      states.codeBlock = this.editorInstance.isActive("codeBlock");
+      states.link = this.editorInstance.isActive("link");
+      states.highlight = this.editorInstance.isActive("highlight");
+
+      const paragraphAlign = String(
+        this.editorInstance.getAttributes("paragraph")?.textAlign || "",
+      ).toLowerCase();
+      const headingAlign = String(
+        this.editorInstance.getAttributes("heading")?.textAlign || "",
+      ).toLowerCase();
+      const currentAlign =
+        headingAlign || paragraphAlign || (this.editorInstance ? "left" : "");
+
+      states["align:left"] = currentAlign === "left";
+      states["align:center"] = currentAlign === "center";
+      states["align:right"] = currentAlign === "right";
+      states["align:justify"] = currentAlign === "justify";
+
+      for (const level of [1, 2, 3, 4]) {
+        if (this.editorInstance.isActive("heading", { level })) {
+          headingValue = `h${level}`;
+          break;
+        }
+      }
+
+      const textColorAttr =
+        this.editorInstance.getAttributes("textStyle")?.color;
+      if (this.textColorInput) {
+        this.textColorInput.value = this.normalizeColorHex(
+          textColorAttr,
+          this.textColorInput.value || "#f5f5f5",
+        );
+      }
+
+      const highlightColorAttr =
+        this.editorInstance.getAttributes("highlight")?.color;
+      if (this.highlightColorInput) {
+        this.highlightColorInput.value = this.normalizeColorHex(
+          highlightColorAttr,
+          this.highlightColorInput.value || "#ffe066",
+        );
+      }
+
+      linkHref = String(this.editorInstance.getAttributes("link")?.href || "");
+
+      const undoBtn = this.toolbar.querySelector('[data-cmd="undo"]');
+      if (undoBtn) {
+        undoBtn.disabled = !this.editorInstance
+          .can()
+          .chain()
+          .focus()
+          .undo()
+          .run();
+      }
+
+      const redoBtn = this.toolbar.querySelector('[data-cmd="redo"]');
+      if (redoBtn) {
+        redoBtn.disabled = !this.editorInstance
+          .can()
+          .chain()
+          .focus()
+          .redo()
+          .run();
+      }
     }
 
-    Object.keys(states).forEach((cmd) => {
-      const button = this.toolbar.querySelector(`[data-cmd="${cmd}"]`);
-      if (!button) return;
-      button.classList.toggle("active", !!states[cmd]);
-    });
+    if (this.headingSelect) {
+      this.headingSelect.value = headingValue;
+    }
+
+    if (this.linkInput) {
+      this.linkInput.value = linkHref;
+    }
+
+    this.toolbar
+      .querySelectorAll(".notes-tool-btn[data-cmd]")
+      .forEach((btn) => {
+        const cmd = String(btn.getAttribute("data-cmd") || "").trim();
+        const value = String(btn.getAttribute("data-value") || "")
+          .trim()
+          .toLowerCase();
+
+        let active = false;
+
+        if (cmd === "align") {
+          active = !!states[`align:${value}`];
+        } else if (cmd === "setLink" || cmd === "unsetLink") {
+          active = !!states.link;
+        } else if (cmd === "setHighlight") {
+          active = !!states.highlight;
+        } else {
+          active = !!states[cmd];
+        }
+
+        btn.classList.toggle("active", active);
+      });
+  }
+
+  handleImageUpload(event) {
+    const input = event?.target;
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (!/^image\//i.test(String(file.type || ""))) {
+      input.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "").trim();
+      if (result) {
+        this.runToolbarCommand("insertImage", result);
+      }
+      input.value = "";
+    };
+    reader.onerror = () => {
+      input.value = "";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  normalizeLinkUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\s*javascript:/i.test(raw)) return "";
+
+    if (/^(https?:|mailto:|tel:)/i.test(raw)) {
+      return raw;
+    }
+
+    return `https://${raw.replace(/^\/+/, "")}`;
+  }
+
+  normalizeImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\s*javascript:/i.test(raw)) return "";
+
+    if (/^(https?:|data:image\/|blob:)/i.test(raw)) {
+      return raw;
+    }
+
+    return "";
+  }
+
+  normalizeColorHex(value, fallback = "") {
+    const raw = String(value || "").trim();
+    const shortHex = /^#([0-9a-f]{3})$/i.exec(raw);
+    if (shortHex) {
+      const [r, g, b] = shortHex[1].split("");
+      return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+    }
+
+    if (/^#[0-9a-f]{6}$/i.test(raw)) {
+      return raw.toLowerCase();
+    }
+
+    return fallback || "#f5f5f5";
   }
 
   handleCreateNote() {

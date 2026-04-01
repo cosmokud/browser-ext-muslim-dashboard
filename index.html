@@ -1448,8 +1448,45 @@
                     class="notes-toolbar"
                     id="notesToolbar"
                     role="toolbar"
-                    aria-label="Simple text toolbar"
+                    aria-label="Rich text toolbar"
                   >
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="undo"
+                      aria-label="Undo"
+                      title="Undo"
+                    >
+                      Undo
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="redo"
+                      aria-label="Redo"
+                      title="Redo"
+                    >
+                      Redo
+                    </button>
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <label class="notes-tool-label" for="notesHeadingSelect"
+                      >Style</label
+                    >
+                    <select
+                      class="notes-tool-select"
+                      id="notesHeadingSelect"
+                      aria-label="Text style"
+                    >
+                      <option value="paragraph">Paragraph</option>
+                      <option value="h1">Heading 1</option>
+                      <option value="h2">Heading 2</option>
+                      <option value="h3">Heading 3</option>
+                      <option value="h4">Heading 4</option>
+                    </select>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
                     <button
                       class="notes-tool-btn"
                       type="button"
@@ -1476,6 +1513,264 @@
                       title="Underline"
                     >
                       U
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="strike"
+                      aria-label="Strike"
+                      title="Strike"
+                    >
+                      S
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="code"
+                      aria-label="Inline code"
+                      title="Inline code"
+                    >
+                      Code
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="superscript"
+                      aria-label="Superscript"
+                      title="Superscript"
+                    >
+                      x2
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="subscript"
+                      aria-label="Subscript"
+                      title="Subscript"
+                    >
+                      H2O
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="bulletList"
+                      aria-label="Bullet list"
+                      title="Bullet list"
+                    >
+                      Bullets
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="orderedList"
+                      aria-label="Ordered list"
+                      title="Ordered list"
+                    >
+                      Numbers
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="taskList"
+                      aria-label="Task list"
+                      title="Task list"
+                    >
+                      Tasks
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="align"
+                      data-value="left"
+                      aria-label="Align left"
+                      title="Align left"
+                    >
+                      Left
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="align"
+                      data-value="center"
+                      aria-label="Align center"
+                      title="Align center"
+                    >
+                      Center
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="align"
+                      data-value="right"
+                      aria-label="Align right"
+                      title="Align right"
+                    >
+                      Right
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="align"
+                      data-value="justify"
+                      aria-label="Justify"
+                      title="Justify"
+                    >
+                      Justify
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="blockquote"
+                      aria-label="Block quote"
+                      title="Block quote"
+                    >
+                      Quote
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="codeBlock"
+                      aria-label="Code block"
+                      title="Code block"
+                    >
+                      Code block
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="horizontalRule"
+                      aria-label="Horizontal rule"
+                      title="Horizontal rule"
+                    >
+                      Rule
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <label class="notes-tool-color" for="notesTextColorInput">
+                      <span>A</span>
+                      <input
+                        id="notesTextColorInput"
+                        type="color"
+                        value="#f5f5f5"
+                        aria-label="Text color"
+                      />
+                    </label>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="setTextColor"
+                      aria-label="Apply text color"
+                      title="Apply text color"
+                    >
+                      Text color
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="clearTextColor"
+                      aria-label="Clear text color"
+                      title="Clear text color"
+                    >
+                      Clear color
+                    </button>
+
+                    <label
+                      class="notes-tool-color"
+                      for="notesHighlightColorInput"
+                    >
+                      <span>Hi</span>
+                      <input
+                        id="notesHighlightColorInput"
+                        type="color"
+                        value="#ffe066"
+                        aria-label="Highlight color"
+                      />
+                    </label>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="setHighlight"
+                      aria-label="Apply highlight"
+                      title="Apply highlight"
+                    >
+                      Highlight
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="clearHighlight"
+                      aria-label="Clear highlight"
+                      title="Clear highlight"
+                    >
+                      Clear highlight
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <input
+                      class="notes-link-input"
+                      id="notesLinkInput"
+                      type="url"
+                      inputmode="url"
+                      placeholder="https://example.com"
+                      aria-label="Link URL"
+                    />
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="setLink"
+                      aria-label="Set link"
+                      title="Set link"
+                    >
+                      Set link
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="unsetLink"
+                      aria-label="Remove link"
+                      title="Remove link"
+                    >
+                      Unlink
+                    </button>
+
+                    <span class="notes-tool-divider" aria-hidden="true"></span>
+
+                    <input
+                      class="notes-tool-file-input"
+                      id="notesImageInput"
+                      type="file"
+                      accept="image/*"
+                      aria-label="Upload image"
+                      tabindex="-1"
+                    />
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="imageUpload"
+                      aria-label="Upload image"
+                      title="Upload image"
+                    >
+                      Upload image
+                    </button>
+                    <button
+                      class="notes-tool-btn"
+                      type="button"
+                      data-cmd="insertImageByUrl"
+                      aria-label="Insert image by URL"
+                      title="Insert image by URL"
+                    >
+                      Image URL
                     </button>
                   </div>
 
