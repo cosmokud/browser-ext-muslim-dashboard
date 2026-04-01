@@ -189,6 +189,17 @@ class NotesManager extends BaseManager {
       this.selectNote(id);
     });
 
+    this.listEl.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const item = e.target.closest(".notes-list-item");
+      if (!item) return;
+      e.preventDefault();
+
+      const id = String(item.dataset.noteId || "").trim();
+      if (!id) return;
+      this.selectNote(id);
+    });
+
     // Title input
     this.titleInput.addEventListener("input", () => {
       const note = this.getActiveNote();
@@ -1599,13 +1610,11 @@ class NotesManager extends BaseManager {
     const frag = document.createDocumentFragment();
 
     this.notes.forEach((note) => {
-      const row = document.createElement("div");
-      row.className = "notes-list-row";
-
-      const item = document.createElement("button");
-      item.type = "button";
+      const item = document.createElement("div");
       item.className = "notes-list-item";
       item.dataset.noteId = note.id;
+      item.tabIndex = 0;
+      item.setAttribute("role", "button");
       item.setAttribute("aria-label", `Open note: ${note.title || "Untitled"}`);
       if (note.id === this.activeNoteId) item.classList.add("active");
 
@@ -1631,9 +1640,8 @@ class NotesManager extends BaseManager {
       delBtn.setAttribute("title", "Delete note");
       delBtn.textContent = "🗑";
 
-      row.appendChild(item);
-      row.appendChild(delBtn);
-      frag.appendChild(row);
+      item.appendChild(delBtn);
+      frag.appendChild(item);
     });
 
     this.listEl.innerHTML = "";

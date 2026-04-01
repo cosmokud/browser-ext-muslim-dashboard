@@ -1254,7 +1254,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
-  padding-bottom: 0;
+  padding: 6px 2px 10px;
   scrollbar-width: auto;
   scrollbar-color: rgba(205, 205, 205, 0.8) rgba(120, 120, 120, 0.28);
 }
@@ -1279,47 +1279,53 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item {
+  flex: 0 0 clamp(176px, 24vw, 236px);
+  max-width: 236px;
   text-align: left;
   width: 100%;
   min-width: 0;
   min-height: 68px;
+  position: relative;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-primary);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-sm) calc(var(--spacing-md) + 26px) var(--spacing-sm)
+    var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-fast);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-}
-
-.notes-list-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-  align-items: stretch;
-  flex: 0 0 clamp(210px, 30vw, 290px);
-  max-width: 290px;
   scroll-snap-align: start;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
 }
 
 .notes-list-item-delete {
-  width: 34px;
-  min-width: 34px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: linear-gradient(135deg, #bc4747 0%, #8a3333 100%);
-  color: #ffffff;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(170, 56, 56, 0.9);
+  color: #fff;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.72rem;
+  line-height: 1;
+  opacity: 0.84;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
 .notes-list-item-delete:hover {
-  background: linear-gradient(135deg, #cf5454 0%, #9b3a3a 100%);
-  transform: translateY(-1px);
+  background: rgba(194, 67, 67, 0.96);
+  transform: translateY(-50%) scale(1.06);
+  opacity: 1;
 }
 
 .notes-list-item-delete:focus-visible {
@@ -1333,8 +1339,20 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item.active {
-  outline: 2px solid var(--accent-gold);
-  outline-offset: 0;
+  border-color: rgba(212, 175, 55, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.72),
+    0 0 0 4px rgba(212, 175, 55, 0.18),
+    0 12px 30px rgba(212, 175, 55, 0.28);
+}
+
+.notes-list-item:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.85),
+    0 0 0 4px rgba(255, 255, 255, 0.16),
+    0 10px 24px rgba(255, 255, 255, 0.2);
 }
 
 .notes-list-title {
@@ -1729,9 +1747,9 @@ textarea.notes-editor:focus {
     height: 38px;
   }
 
-  .notes-list-row {
-    flex-basis: clamp(150px, 62vw, 210px);
-    max-width: 210px;
+  .notes-list-item {
+    flex-basis: clamp(152px, 62vw, 212px);
+    max-width: 212px;
   }
 
   .notes-page-info {
@@ -4092,14 +4110,20 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   -webkit-overflow-scrolling: touch;
 }
 
-.content-search-result-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--spacing-xs);
-  align-items: stretch;
+.content-search-result {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
 }
 
-.content-search-result {
+.content-search-result-main {
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -4110,12 +4134,15 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   hyphens: auto;
   text-align: left;
   padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  color: var(--text-primary);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-  transition: all var(--transition-fast);
+}
+
+.content-search-result.has-delete .content-search-result-main {
+  padding-right: calc(var(--spacing-md) + 28px);
 }
 
 .content-search-result:hover {
@@ -4124,22 +4151,32 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .content-search-result-delete {
-  width: 36px;
-  min-width: 36px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: linear-gradient(135deg, #bc4747 0%, #8a3333 100%);
-  color: #ffffff;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(170, 56, 56, 0.9);
+  color: #fff;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.72rem;
+  line-height: 1;
+  opacity: 0.84;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
 .content-search-result-delete:hover {
-  background: linear-gradient(135deg, #cf5454 0%, #9b3a3a 100%);
-  transform: translateY(-1px);
+  background: rgba(194, 67, 67, 0.96);
+  transform: translateY(-50%) scale(1.06);
+  opacity: 1;
 }
 
 .content-search-result-delete:focus-visible {

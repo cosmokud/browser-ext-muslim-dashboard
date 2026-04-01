@@ -510,12 +510,12 @@ class ContentSearchManager extends BaseManager {
     }
 
     for (const it of items) {
-      const row = document.createElement("div");
-      row.className = "content-search-result-row";
+      const card = document.createElement("div");
+      card.className = "content-search-result";
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "content-search-result";
+      btn.className = "content-search-result-main";
 
       const title = document.createElement("div");
       title.className = "content-search-result-title";
@@ -550,11 +550,13 @@ class ContentSearchManager extends BaseManager {
         this.selectResult(it);
       });
 
-      row.appendChild(btn);
+      card.appendChild(btn);
 
       if (it._context === "notes") {
         const noteId = String(it?._raw?.id || "").trim();
         if (noteId) {
+          card.classList.add("has-delete");
+
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.className = "content-search-result-delete";
@@ -579,11 +581,11 @@ class ContentSearchManager extends BaseManager {
             }
           });
 
-          row.appendChild(delBtn);
+          card.appendChild(delBtn);
         }
       }
 
-      this.resultsEl.appendChild(row);
+      this.resultsEl.appendChild(card);
     }
   }
 
