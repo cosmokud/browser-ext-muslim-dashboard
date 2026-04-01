@@ -2577,7 +2577,7 @@ class NotesManager extends BaseManager {
         if (ownText) {
           lines.push(`${indent}${prefix}${ownText}`);
         } else {
-          lines.push(`${indent}${prefix}`.trimEnd());
+          lines.push(`${indent}${prefix}`);
         }
 
         const nestedLists = Array.from(li.querySelectorAll("ul,ol")).filter(
@@ -2740,7 +2740,10 @@ class NotesManager extends BaseManager {
       out += toBlock(child);
     });
 
-    const markdown = out.replace(/\n{3,}/g, "\n\n").trim();
+    const markdown = out
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/^\n+/, "")
+      .replace(/\n+$/, "");
     if (!markdown) return "";
 
     return markdown;
