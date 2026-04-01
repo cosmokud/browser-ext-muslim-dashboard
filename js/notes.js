@@ -33,6 +33,8 @@ class NotesManager extends BaseManager {
     this._previewSelectionOffsets = null;
     this._allowHtmlFallbackOnNextConvert = false;
     this._cursorRecenterTimer = null;
+    this._tableContextMenuEl = null;
+    this._tableContextTargetCell = null;
 
     // Toggle between source markdown textarea and live WYSIWYG preview editor.
     this.isMarkdownPreview = false;
@@ -152,6 +154,7 @@ class NotesManager extends BaseManager {
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
+      this.hideTableContextMenu();
       this.hideDeleteConfirmation();
     });
 
@@ -280,6 +283,24 @@ class NotesManager extends BaseManager {
     });
 
     // Source markdown editor (editable).
+    this.rawEditor.addEventListener("keydown", (e) => {
+      if (this.isMarkdownPreview) return;
+
+      if (this.handleEditorShortcuts(e)) {
+        this.captureRawSelection();
+        this.syncPreviewFromRawEditor();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+      e.preventDefault();
+
+      this.handleRawEditorTab(!!e.shiftKey);
+      this.captureRawSelection();
+      this.syncPreviewFromRawEditor();
+      this.queueSave();
+    });
+
     this.rawEditor.addEventListener("input", () => {
       if (this.isMarkdownPreview) return;
       this.syncPreviewFromRawEditor();
@@ -319,6 +340,26 @@ class NotesManager extends BaseManager {
     });
 
     // WYSIWYG editing in preview mode.
+    this.editor.addEventListener("keydown", (e) => {
+      if (!this.isMarkdownPreview) return;
+
+      if (this.handleEditorShortcuts(e)) {
+        this.capturePreviewSelection();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+      e.preventDefault();
+
+      const tabHandled = this.handlePreviewEditorTab(!!e.shiftKey);
+      if (!tabHandled) {
+        this.insertPlainTextAtCursor("  ");
+      }
+
+      this.capturePreviewSelection();
+      this.queueSave();
+    });
+
     this.editor.addEventListener("input", () => {
       if (!this.isMarkdownPreview) return;
       this.capturePreviewSelection();
@@ -344,6 +385,25 @@ class NotesManager extends BaseManager {
     this.editor.addEventListener("copy", (e) => {
       if (!this.isMarkdownPreview) return;
       this.writeInternalMarkdownClipboard(e);
+    });
+
+    this.editor.addEventListener("contextmenu", (e) => {
+      if (!this.isMarkdownPreview) return;
+      const cell = e.target.closest("td,th");
+      if (!cell || !this.editor.contains(cell)) return;
+      e.preventDefault();
+      this.showTableContextMenu(e.clientX, e.clientY, cell);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!this._tableContextMenuEl) return;
+      if (e.target.closest(".notes-table-context-menu")) return;
+      this.hideTableContextMenu();
+    });
+
+    window.addEventListener("resize", () => this.hideTableContextMenu());
+    this.editor.addEventListener("scroll", () => this.hideTableContextMenu(), {
+      passive: true,
     });
 
     // Paste handling: sanitize HTML fragments.
@@ -583,6 +643,440 @@ class NotesManager extends BaseManager {
     if (/^\|.*\|/m.test(md)) return true;
 
     return false;
+  }
+
+  handleEditorShortcuts(event) {
+    if (!event) return false;
+
+    const hasPrimary = !!(event.ctrlKey || event.metaKey);
+    if (!hasPrimary) return false;
+
+    const key = String(event.key || "").toLowerCase();
+    const shift = !!event.shiftKey;
+    const alt = !!event.altKey;
+
+    let cmd = null;
+    let block = null;
+
+    if (!shift && !alt && key === "b") cmd = "bold";
+    else if (!shift && !alt && key === "i") cmd = "italic";
+    else if (!shift && !alt && key === "u") cmd = "underline";
+    else if (!shift && !alt && key === "k") cmd = "insertLink";
+    else if (!shift && !alt && key === "`") cmd = "inlineCode";
+    else if (shift && !alt && key === "x") cmd = "strikeThrough";
+    else if (shift && !alt && key === "7") cmd = "insertOrderedList";
+    else if (shift && !alt && key === "8") cmd = "insertUnorderedList";
+    else if (shift && !alt && key === "9") cmd = "quote";
+    else if (shift && !alt && key === "c") cmd = "codeBlock";
+    else if (!shift && alt && ["1", "2", "3", "4"].includes(key))
+      block = `H${key}`;
+    else return false;
+
+    event.preventDefault();
+    this.applyToolbarAction(cmd, block);
+    this.queueSave();
+    return true;
+  }
+
+  handleRawEditorTab(isOutdent) {
+    const t = this.rawEditor;
+    if (!t) return;
+
+    const value = String(t.value || "");
+    const start = typeof t.selectionStart === "number" ? t.selectionStart : 0;
+    const end = typeof t.selectionEnd === "number" ? t.selectionEnd : start;
+    const indentToken = "  ";
+
+    if (start === end) {
+      if (!isOutdent) {
+        t.value = `${value.slice(0, start)}${indentToken}${value.slice(end)}`;
+        const next = start + indentToken.length;
+        t.setSelectionRange(next, next);
+        return;
+      }
+
+      const before = value.slice(0, start);
+      const lineStart = before.lastIndexOf("\n") + 1;
+      const linePrefix = before.slice(lineStart);
+
+      let removeCount = 0;
+      if (/\t$/.test(linePrefix)) removeCount = 1;
+      else if (/ {1,2}$/.test(linePrefix)) {
+        removeCount = linePrefix.endsWith("  ") ? 2 : 1;
+      }
+
+      if (removeCount > 0) {
+        const nextStart = Math.max(lineStart, start - removeCount);
+        t.value = `${value.slice(0, nextStart)}${value.slice(start)}`;
+        t.setSelectionRange(nextStart, nextStart);
+      }
+      return;
+    }
+
+    const selStart = Math.min(start, end);
+    const selEnd = Math.max(start, end);
+
+    const lineStart = value.lastIndexOf("\n", Math.max(0, selStart - 1)) + 1;
+    const lineEndIdxRaw = value.indexOf("\n", selEnd);
+    const lineEnd = lineEndIdxRaw === -1 ? value.length : lineEndIdxRaw;
+
+    const before = value.slice(0, lineStart);
+    const block = value.slice(lineStart, lineEnd);
+    const after = value.slice(lineEnd);
+
+    const lines = block.split("\n");
+    const nextLines = lines.map((line) => {
+      if (isOutdent) {
+        return String(line || "").replace(/^(?:\t| {1,2})/, "");
+      }
+      return `${indentToken}${line}`;
+    });
+
+    const nextBlock = nextLines.join("\n");
+    t.value = `${before}${nextBlock}${after}`;
+
+    if (start === end) {
+      const rel = start - lineStart;
+      const lineIdx = Math.max(0, block.slice(0, rel).split("\n").length - 1);
+      const oldLine = lines[lineIdx] || "";
+      const newLine = nextLines[lineIdx] || "";
+      const prefixLen = nextLines
+        .slice(0, lineIdx)
+        .reduce((sum, line) => sum + String(line || "").length + 1, 0);
+
+      let nextRel = rel;
+      if (isOutdent) {
+        const removed = Math.max(0, oldLine.length - newLine.length);
+        nextRel = Math.max(0, rel - removed);
+      } else {
+        nextRel = rel + indentToken.length;
+      }
+
+      const caret = lineStart + prefixLen + Math.min(nextRel, newLine.length);
+      t.setSelectionRange(caret, caret);
+    } else {
+      const nextSelStart = lineStart;
+      const nextSelEnd = lineStart + nextBlock.length;
+      t.setSelectionRange(nextSelStart, nextSelEnd);
+    }
+  }
+
+  handlePreviewEditorTab(isOutdent) {
+    const range = this.getActivePreviewRange();
+    if (!range) return false;
+
+    const node =
+      range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement;
+
+    const li = node?.closest ? node.closest("li") : null;
+    if (li && this.editor.contains(li)) {
+      return isOutdent
+        ? this.outdentPreviewListItem(li)
+        : this.indentPreviewListItem(li);
+    }
+
+    this.execCommand(isOutdent ? "outdent" : "indent");
+    return true;
+  }
+
+  indentPreviewListItem(li) {
+    if (!li || !li.parentElement) return false;
+
+    const list = li.parentElement;
+    if (!list || (list.tagName !== "UL" && list.tagName !== "OL")) return false;
+
+    const prevLi = li.previousElementSibling;
+    if (!prevLi || prevLi.tagName !== "LI") return false;
+
+    let subList = Array.from(prevLi.children).find(
+      (child) => child.tagName === list.tagName,
+    );
+
+    if (!subList) {
+      subList = document.createElement(
+        String(list.tagName || "UL").toLowerCase(),
+      );
+      if (list.classList.contains("notes-checklist")) {
+        subList.classList.add("notes-checklist");
+      }
+      prevLi.appendChild(subList);
+    }
+
+    subList.appendChild(li);
+    this.placeCaretInsideElement(li);
+    return true;
+  }
+
+  outdentPreviewListItem(li) {
+    if (!li || !li.parentElement) return false;
+
+    const list = li.parentElement;
+    if (!list || (list.tagName !== "UL" && list.tagName !== "OL")) return false;
+
+    const parentLi = list.closest("li");
+    if (!parentLi) return false;
+    const outerList = parentLi.parentElement;
+    if (!outerList) return false;
+
+    outerList.insertBefore(li, parentLi.nextSibling);
+
+    if (!list.querySelector(":scope > li")) {
+      list.remove();
+    }
+
+    this.placeCaretInsideElement(li);
+    return true;
+  }
+
+  placeCaretInsideElement(el) {
+    if (!el) return;
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(true);
+
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  ensureTableContextMenu() {
+    if (this._tableContextMenuEl) return this._tableContextMenuEl;
+
+    const menu = document.createElement("div");
+    menu.className = "notes-table-context-menu";
+
+    const actions = [
+      ["addRowAbove", "Add Row Above"],
+      ["addRowBelow", "Add Row Below"],
+      ["deleteRow", "Delete Row"],
+      ["addColLeft", "Add Column Left"],
+      ["addColRight", "Add Column Right"],
+      ["deleteCol", "Delete Column"],
+    ];
+
+    actions.forEach(([action, label]) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "notes-table-context-action";
+      btn.dataset.action = action;
+      btn.textContent = label;
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleTableContextAction(action);
+      });
+      menu.appendChild(btn);
+    });
+
+    document.body.appendChild(menu);
+    this._tableContextMenuEl = menu;
+    return menu;
+  }
+
+  showTableContextMenu(x, y, cell) {
+    if (!cell || !this.editor || !this.editor.contains(cell)) return;
+
+    const menu = this.ensureTableContextMenu();
+    this._tableContextTargetCell = cell;
+
+    menu.classList.add("active");
+    menu.style.left = `${Math.max(8, x)}px`;
+    menu.style.top = `${Math.max(8, y)}px`;
+
+    const rect = menu.getBoundingClientRect();
+    const maxLeft = Math.max(8, window.innerWidth - rect.width - 8);
+    const maxTop = Math.max(8, window.innerHeight - rect.height - 8);
+    menu.style.left = `${Math.min(Math.max(8, x), maxLeft)}px`;
+    menu.style.top = `${Math.min(Math.max(8, y), maxTop)}px`;
+  }
+
+  hideTableContextMenu() {
+    if (!this._tableContextMenuEl) return;
+    this._tableContextMenuEl.classList.remove("active");
+    this._tableContextTargetCell = null;
+  }
+
+  handleTableContextAction(action) {
+    const cell = this._tableContextTargetCell;
+    if (!cell || !this.editor || !this.editor.contains(cell)) {
+      this.hideTableContextMenu();
+      return;
+    }
+
+    const row = cell.closest("tr");
+    const table = cell.closest("table");
+    if (!row || !table) {
+      this.hideTableContextMenu();
+      return;
+    }
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+    const rowIndex = Math.max(0, rows.indexOf(row));
+    const cells = Array.from(row.children).filter((c) =>
+      /^(TH|TD)$/.test(String(c.tagName || "")),
+    );
+    const colIndex = Math.max(0, cells.indexOf(cell));
+
+    if (action === "addRowAbove") {
+      this.addTableRowAt(row, colIndex, false);
+    } else if (action === "addRowBelow") {
+      this.addTableRowAt(row, colIndex, true);
+    } else if (action === "deleteRow") {
+      this.deleteTableRowAt(row, colIndex);
+    } else if (action === "addColLeft") {
+      this.addTableColumnAt(table, rowIndex, colIndex, false);
+    } else if (action === "addColRight") {
+      this.addTableColumnAt(table, rowIndex, colIndex, true);
+    } else if (action === "deleteCol") {
+      this.deleteTableColumnAt(table, rowIndex, colIndex);
+    }
+
+    this.hideTableContextMenu();
+    this.capturePreviewSelection();
+    this.queueSave();
+  }
+
+  createTableCellLike(referenceCell) {
+    const tag =
+      referenceCell &&
+      String(referenceCell.tagName || "").toUpperCase() === "TH"
+        ? "th"
+        : "td";
+    const cell = document.createElement(tag);
+    cell.innerHTML = "<br>";
+    return cell;
+  }
+
+  addTableRowAt(referenceRow, focusColIndex, insertAfter) {
+    if (!referenceRow || !referenceRow.parentElement) return;
+
+    const section = referenceRow.parentElement;
+    const templateCells = Array.from(referenceRow.children).filter((c) =>
+      /^(TH|TD)$/.test(String(c.tagName || "")),
+    );
+    if (!templateCells.length) return;
+
+    const row = document.createElement("tr");
+    templateCells.forEach((cell) => {
+      row.appendChild(this.createTableCellLike(cell));
+    });
+
+    if (insertAfter) {
+      section.insertBefore(row, referenceRow.nextSibling);
+    } else {
+      section.insertBefore(row, referenceRow);
+    }
+
+    const target =
+      row.children[Math.min(focusColIndex, row.children.length - 1)];
+    this.placeCaretInsideElement(target || row);
+  }
+
+  deleteTableRowAt(row, focusColIndex) {
+    if (!row || !row.parentElement) return;
+
+    const section = row.parentElement;
+    const rows = Array.from(section.querySelectorAll(":scope > tr"));
+    if (!rows.length) return;
+
+    if (rows.length === 1) {
+      Array.from(row.children).forEach((cell) => {
+        cell.innerHTML = "<br>";
+      });
+      const first =
+        row.children[Math.min(focusColIndex, row.children.length - 1)];
+      this.placeCaretInsideElement(first || row);
+      return;
+    }
+
+    const rowIndex = rows.indexOf(row);
+    const fallback = rows[rowIndex + 1] || rows[rowIndex - 1] || null;
+    row.remove();
+
+    if (fallback) {
+      const cells = Array.from(fallback.children);
+      const target =
+        cells[Math.min(focusColIndex, cells.length - 1)] || fallback;
+      this.placeCaretInsideElement(target);
+    }
+  }
+
+  addTableColumnAt(table, focusRowIndex, colIndex, insertAfter) {
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (!rows.length) return;
+
+    rows.forEach((tr) => {
+      const cells = Array.from(tr.children).filter((c) =>
+        /^(TH|TD)$/.test(String(c.tagName || "")),
+      );
+      if (!cells.length) return;
+
+      const refIndex = Math.max(0, Math.min(colIndex, cells.length - 1));
+      const ref = cells[refIndex] || cells[cells.length - 1];
+      const next = this.createTableCellLike(ref);
+
+      if (insertAfter) {
+        tr.insertBefore(next, ref.nextSibling);
+      } else {
+        tr.insertBefore(next, ref);
+      }
+    });
+
+    const targetRow =
+      rows[Math.max(0, Math.min(focusRowIndex, rows.length - 1))];
+    if (!targetRow) return;
+
+    const targetCells = Array.from(targetRow.children).filter((c) =>
+      /^(TH|TD)$/.test(String(c.tagName || "")),
+    );
+    if (!targetCells.length) return;
+
+    const targetIndex = insertAfter ? colIndex + 1 : colIndex;
+    const target =
+      targetCells[Math.max(0, Math.min(targetIndex, targetCells.length - 1))];
+    this.placeCaretInsideElement(target || targetRow);
+  }
+
+  deleteTableColumnAt(table, focusRowIndex, colIndex) {
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (!rows.length) return;
+
+    rows.forEach((tr) => {
+      const cells = Array.from(tr.children).filter((c) =>
+        /^(TH|TD)$/.test(String(c.tagName || "")),
+      );
+      if (!cells.length) return;
+
+      if (cells.length === 1) {
+        cells[0].innerHTML = "<br>";
+        return;
+      }
+
+      const idx = Math.max(0, Math.min(colIndex, cells.length - 1));
+      cells[idx].remove();
+    });
+
+    const targetRow =
+      rows[Math.max(0, Math.min(focusRowIndex, rows.length - 1))];
+    if (!targetRow) return;
+
+    const targetCells = Array.from(targetRow.children).filter((c) =>
+      /^(TH|TD)$/.test(String(c.tagName || "")),
+    );
+    const target =
+      targetCells[Math.max(0, Math.min(colIndex, targetCells.length - 1))] ||
+      targetRow;
+    this.placeCaretInsideElement(target);
   }
 
   reloadFromStorage() {
@@ -2717,7 +3211,7 @@ class NotesManager extends BaseManager {
       this.expandPreviewSelectionToWord();
     }
 
-    const selected = this.getPreviewSelectionText().trim() || "code";
+    const selected = this.getPreviewSelectionText() || "code";
     this.insertHtmlAtCursor(`<code>${this.escapeHtml(selected)}</code>`);
   }
 

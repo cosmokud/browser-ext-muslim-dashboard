@@ -1803,6 +1803,44 @@ textarea.notes-editor:focus {
   padding: 0.35rem 0.5rem;
 }
 
+.notes-table-context-menu {
+  position: fixed;
+  z-index: 9999;
+  display: none;
+  min-width: 170px;
+  padding: 0.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(18, 24, 31, 0.96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.notes-table-context-menu.active {
+  display: block;
+}
+
+.notes-table-context-action {
+  width: 100%;
+  display: block;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  line-height: 1.25;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+}
+
+.notes-table-context-action:hover,
+.notes-table-context-action:focus-visible {
+  outline: none;
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--accent-gold-light);
+}
+
 .notes-editor p,
 .notes-editor h1,
 .notes-editor h2,

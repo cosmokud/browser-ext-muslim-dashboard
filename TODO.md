@@ -18,7 +18,10 @@
 - [x] Rework/rewrite all the buttons in the editor to complement to what is possible in markdown, including image. (let's just copy the navbar buttons of the StackEdit `https://github.com/benweet/stackedit/`)
 - [x] Make sure that the notes live editor/preview can spawn horizontal scroll bar when there's embedded image/medi that is bigger than the lived editor size.
 - [x] Redesign the notes selector to make sure the live editor/preview is able to use all the notesCard component's width. Instead of separating the component into two columns between the notes selector (left column) and the live editor/preview (right column), put the note selector on the top so that the whole component only have a single column (maximize width usage). Now the notes selector is horizontally oriented with beautiful previous and next buttons to navigate on the left and on the right of the element.
-- [] Add basic keyboard shortcuts when hovering/using the live editor for all the common buttons like bold, italic, underline, headings, etc.
+- [x] Add basic keyboard shortcuts when hovering/using the live editor for all the common buttons like bold, italic, underline, headings, etc.
+- [x] Make sure when you're focused on the editor, you can use tab key to indent the text.
+- [x] Add basic functionality like tabbing while in unordered list creating sub-bullets.
+- [x] Add basic right click functionality for the table in WYSIWYG live editor like adding row, deleting row, adding columns, etc.
 
 ## Prayer Times
 
