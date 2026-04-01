@@ -1740,6 +1740,29 @@ textarea.notes-editor:focus {
   font-size: 0.95em;
 }
 
+.notes-editor.notes-md-preview pre code {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.notes-editor.notes-md-preview :not(pre) > code,
+.notes-editor.notes-md-preview p code,
+.notes-editor.notes-md-preview li code,
+.notes-editor.notes-md-preview blockquote code,
+.notes-editor.notes-md-preview td code,
+.notes-editor.notes-md-preview th code {
+  display: inline-block;
+  padding: 0.08em 0.42em;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--accent-gold-light);
+  line-height: 1.3;
+}
+
 .notes-editor.notes-md-preview blockquote {
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);

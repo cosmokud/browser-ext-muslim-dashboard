@@ -353,8 +353,20 @@ class NotesManager extends BaseManager {
         if (!e.clipboardData) return;
         e.preventDefault();
 
+        const internalHtml =
+          e.clipboardData.getData("text/x-notes-editor-html") || "";
         const internalMarkdown =
           e.clipboardData.getData("text/x-notes-markdown") || "";
+
+        if (String(internalHtml || "").trim()) {
+          const clean = this.normalizeMarkdownHtmlForEditor(
+            this.sanitizeHtml(internalHtml),
+          );
+          this.insertHtmlAtCursor(clean, { forceRangeInsert: true });
+          this._allowHtmlFallbackOnNextConvert = false;
+          this.queueSave();
+          return;
+        }
 
         if (String(internalMarkdown || "").trim()) {
           if (this.isRichMarkdownFragment(internalMarkdown)) {
@@ -398,19 +410,100 @@ class NotesManager extends BaseManager {
       holder.appendChild(range.cloneContents());
 
       const fragmentHtml = this.sanitizeHtml(holder.innerHTML || "");
+      const withContext = this.wrapPreviewCopyWithBlockContext(
+        range,
+        fragmentHtml,
+      );
       const markdown = this.stripInternalCursorMarkers(
-        this.htmlToMarkdown(fragmentHtml),
+        this.htmlToMarkdown(withContext),
       );
       const plain = String(sel.toString() || "");
 
       event.preventDefault();
       event.clipboardData.setData("text/plain", plain);
+      if (String(withContext || "").trim()) {
+        event.clipboardData.setData("text/x-notes-editor-html", withContext);
+      }
       if (String(markdown || "").trim()) {
         event.clipboardData.setData("text/x-notes-markdown", markdown);
       }
     } catch (e) {
       // ignore
     }
+  }
+
+  wrapPreviewCopyWithBlockContext(range, fragmentHtml) {
+    const html = String(fragmentHtml || "").trim();
+    if (!html) return html;
+    if (
+      /<\s*(h[1-4]|p|blockquote|pre|ul|ol|li|table|thead|tbody|tr|th|td)\b/i.test(
+        html,
+      )
+    ) {
+      return html;
+    }
+
+    try {
+      const startEl =
+        range?.startContainer?.nodeType === Node.ELEMENT_NODE
+          ? range.startContainer
+          : range?.startContainer?.parentElement;
+      const endEl =
+        range?.endContainer?.nodeType === Node.ELEMENT_NODE
+          ? range.endContainer
+          : range?.endContainer?.parentElement;
+
+      if (!startEl || !endEl) return html;
+
+      const startBlock = this.findClosestPreviewBlock(startEl);
+      const endBlock = this.findClosestPreviewBlock(endEl);
+      if (!startBlock || startBlock !== endBlock) return html;
+
+      const tag = String(startBlock.tagName || "").toUpperCase();
+      if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4") {
+        return `<${tag.toLowerCase()}>${html}</${tag.toLowerCase()}>`;
+      }
+
+      if (tag === "BLOCKQUOTE") {
+        return `<blockquote>${html}</blockquote>`;
+      }
+
+      if (tag === "PRE") {
+        const text = String(range.toString() || "").trim() || "code";
+        return `<pre><code>${this.escapeHtml(text)}</code></pre>`;
+      }
+
+      if (tag === "LI") {
+        const list = startBlock.closest("ul,ol");
+        if (!list) return `<li>${html}</li>`;
+        const listTag = String(list.tagName || "UL").toLowerCase();
+        const listClass = list.classList.contains("notes-checklist")
+          ? ' class="notes-checklist"'
+          : "";
+        const checkedAttr = startBlock.getAttribute("data-checked");
+        const dataChecked = checkedAttr
+          ? ` data-checked="${this.escapeHtml(checkedAttr)}"`
+          : "";
+        return `<${listTag}${listClass}><li${dataChecked}>${html}</li></${listTag}>`;
+      }
+
+      if (tag === "P") {
+        return `<p>${html}</p>`;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return html;
+  }
+
+  findClosestPreviewBlock(el) {
+    if (!el || !this.editor) return null;
+    const node = el.nodeType === Node.ELEMENT_NODE ? el : el.parentElement;
+    if (!node || !node.closest) return null;
+    const block = node.closest("h1,h2,h3,h4,p,blockquote,pre,li");
+    if (!block) return null;
+    return this.editor.contains(block) ? block : null;
   }
 
   insertPlainTextAtCursor(text) {
@@ -2407,15 +2500,31 @@ class NotesManager extends BaseManager {
     }
   }
 
-  insertHtmlAtCursor(html) {
+  getActivePreviewRange() {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      if (!this.editor.contains(range.commonAncestorContainer)) return null;
+      return range;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  insertHtmlAtCursor(html, options = {}) {
     const markup = String(html || "");
     if (!markup) return;
 
-    try {
-      document.execCommand("insertHTML", false, markup);
-      return;
-    } catch (e) {
-      // fallback below
+    const forceRangeInsert = !!options.forceRangeInsert;
+
+    if (!forceRangeInsert) {
+      try {
+        document.execCommand("insertHTML", false, markup);
+        return;
+      } catch (e) {
+        // fallback below
+      }
     }
 
     try {
@@ -2449,15 +2558,115 @@ class NotesManager extends BaseManager {
   }
 
   insertPreviewInlineCode() {
+    const range = this.getActivePreviewRange();
+    if (!range) return;
+
+    const startEl =
+      range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement;
+    const endEl =
+      range.endContainer.nodeType === Node.ELEMENT_NODE
+        ? range.endContainer
+        : range.endContainer.parentElement;
+
+    const startCode = startEl?.closest ? startEl.closest("code") : null;
+    const endCode = endEl?.closest ? endEl.closest("code") : null;
+
+    if (
+      startCode &&
+      endCode &&
+      startCode === endCode &&
+      this.editor.contains(startCode) &&
+      !startCode.closest("pre")
+    ) {
+      this.unwrapPreviewInlineCodeElement(startCode);
+      return;
+    }
+
     const selected = this.getPreviewSelectionText().trim() || "code";
     this.insertHtmlAtCursor(`<code>${this.escapeHtml(selected)}</code>`);
   }
 
   insertPreviewCodeBlock() {
+    const range = this.getActivePreviewRange();
+    if (!range) return;
+
+    const startEl =
+      range.startContainer.nodeType === Node.ELEMENT_NODE
+        ? range.startContainer
+        : range.startContainer.parentElement;
+    const endEl =
+      range.endContainer.nodeType === Node.ELEMENT_NODE
+        ? range.endContainer
+        : range.endContainer.parentElement;
+
+    const startPre = startEl?.closest ? startEl.closest("pre") : null;
+    const endPre = endEl?.closest ? endEl.closest("pre") : null;
+
+    if (
+      startPre &&
+      endPre &&
+      startPre === endPre &&
+      this.editor.contains(startPre)
+    ) {
+      this.unwrapPreviewCodeBlockElement(startPre);
+      return;
+    }
+
     const selected = this.getPreviewSelectionText() || "code";
     this.insertHtmlAtCursor(
-      `<pre><code>${this.escapeHtml(String(selected).trim())}</code></pre>`,
+      `<pre><code>${this.escapeHtml(String(selected).trim() || "code")}</code></pre>`,
+      { forceRangeInsert: true },
     );
+  }
+
+  unwrapPreviewInlineCodeElement(codeEl) {
+    if (!codeEl || !codeEl.parentNode) return;
+
+    try {
+      const textNode = document.createTextNode(
+        String(codeEl.textContent || ""),
+      );
+      codeEl.parentNode.replaceChild(textNode, codeEl);
+
+      const sel = window.getSelection();
+      if (sel) {
+        const r = document.createRange();
+        r.setStart(textNode, textNode.nodeValue.length);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  unwrapPreviewCodeBlockElement(preEl) {
+    if (!preEl || !preEl.parentNode) return;
+
+    try {
+      const text = String(preEl.textContent || "");
+      const p = document.createElement("p");
+      const normalized = text.replace(/\r\n?/g, "\n");
+      p.innerHTML = normalized
+        ? this.escapeHtml(normalized).replace(/\n/g, "<br>")
+        : "<br>";
+
+      preEl.parentNode.replaceChild(p, preEl);
+
+      const sel = window.getSelection();
+      if (sel) {
+        const r = document.createRange();
+        r.selectNodeContents(p);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   insertPreviewLink() {
