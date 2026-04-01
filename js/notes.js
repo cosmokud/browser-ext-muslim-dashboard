@@ -684,6 +684,7 @@ class NotesManager extends BaseManager {
         this.placeCaretAtEnd(this.editor);
       }
 
+      this.scrollPreviewSelectionIntoView();
       this.capturePreviewSelection();
     } else {
       this.renderActiveMarkdownPreview();
@@ -704,6 +705,7 @@ class NotesManager extends BaseManager {
         this.placeCaretAtEndTextArea(this.rawEditor);
       }
 
+      this.scrollRawSelectionIntoView();
       this.captureRawSelection();
     }
   }
@@ -873,6 +875,94 @@ class NotesManager extends BaseManager {
     }
 
     return null;
+  }
+
+  scrollRawSelectionIntoView() {
+    if (!this.rawEditor) return;
+
+    try {
+      const t = this.rawEditor;
+      const caret =
+        typeof t.selectionStart === "number"
+          ? t.selectionStart
+          : typeof this._rawSelection?.start === "number"
+            ? this._rawSelection.start
+            : 0;
+
+      const boundedCaret = Math.max(0, Math.min(caret, String(t.value || "").length));
+      const before = String(t.value || "").slice(0, boundedCaret);
+
+      const lineIndex = Math.max(0, before.split("\n").length - 1);
+      const lineStart = before.lastIndexOf("\n") + 1;
+      const colIndex = Math.max(0, before.length - lineStart);
+
+      const styles = window.getComputedStyle(t);
+      const fontSize = parseFloat(styles.fontSize) || 16;
+      const parsedLineHeight = parseFloat(styles.lineHeight);
+      const lineHeight = Number.isFinite(parsedLineHeight)
+        ? parsedLineHeight
+        : fontSize * 1.5;
+      const charWidth = fontSize * 0.62;
+
+      const targetTop = lineIndex * lineHeight - t.clientHeight * 0.42;
+      const targetLeft = colIndex * charWidth - t.clientWidth * 0.35;
+
+      t.scrollTop = Math.max(0, targetTop);
+      t.scrollLeft = Math.max(0, targetLeft);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  scrollPreviewSelectionIntoView() {
+    if (!this.editor) return;
+
+    try {
+      const offsets = this.getSelectionOffsets(this.editor);
+      if (!offsets) return;
+
+      const pos = this.findTextPosition(this.editor, offsets.end);
+      if (!pos) return;
+
+      const range = document.createRange();
+      range.setStart(pos.node, pos.offset);
+      range.collapse(true);
+
+      let rect = null;
+      const rects = range.getClientRects();
+      if (rects && rects.length) rect = rects[0];
+
+      let marker = null;
+      if (!rect || (!rect.width && !rect.height)) {
+        marker = document.createElement("span");
+        marker.setAttribute("aria-hidden", "true");
+        marker.style.cssText =
+          "display:inline-block;width:1px;height:1em;opacity:0;pointer-events:none;";
+        range.insertNode(marker);
+        rect = marker.getBoundingClientRect();
+      }
+
+      if (rect) {
+        const containerRect = this.editor.getBoundingClientRect();
+        const absoluteTop = rect.top - containerRect.top + this.editor.scrollTop;
+        const absoluteLeft =
+          rect.left - containerRect.left + this.editor.scrollLeft;
+
+        this.editor.scrollTop = Math.max(
+          0,
+          absoluteTop - this.editor.clientHeight * 0.42,
+        );
+        this.editor.scrollLeft = Math.max(
+          0,
+          absoluteLeft - this.editor.clientWidth * 0.35,
+        );
+      }
+
+      if (marker && marker.parentNode) marker.parentNode.removeChild(marker);
+      this.restoreSelectionOffsets(this.editor, offsets);
+    } catch (e) {
+      // ignore
+    }
   }
 
   syncPreviewFromRawEditor() {

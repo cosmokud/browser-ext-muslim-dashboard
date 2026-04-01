@@ -1337,7 +1337,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg);
   color: var(--text-primary);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm) calc(var(--spacing-md) + 26px) var(--spacing-sm)
+  padding: var(--spacing-sm) calc(var(--spacing-md) + 36px) var(--spacing-sm)
     var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -1351,9 +1351,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(170, 56, 56, 0.9);
@@ -1363,7 +1363,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.88rem;
   line-height: 1;
   opacity: 0.84;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
@@ -4231,7 +4231,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .content-search-result.has-delete .content-search-result-main {
-  padding-right: calc(var(--spacing-md) + 28px);
+  padding-right: calc(var(--spacing-md) + 36px);
 }
 
 .content-search-result:hover {
@@ -4244,9 +4244,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(170, 56, 56, 0.9);
@@ -4256,7 +4256,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.88rem;
   line-height: 1;
   opacity: 0.84;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
