@@ -554,30 +554,6 @@ class NotesManager extends BaseManager {
     });
 
     if (this.listEl) {
-      this.listEl.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0) return;
-        if (event.pointerType === "touch") return;
-
-        const target = event.target;
-        if (!(target instanceof Element)) return;
-        if (target.closest(".mdnotes-list-delete")) return;
-
-        const item = target.closest(".mdnotes-list-item");
-        if (!item) return;
-
-        const noteId = String(item.getAttribute("data-note-id") || "").trim();
-        if (!noteId) return;
-        if (String(this.activeNoteId) === noteId) return;
-
-        this.markListItemActive(noteId);
-        this.selectNote(noteId, {
-          focus: false,
-          scrollBehavior: "auto",
-          promote: true,
-          animateMove: true,
-        });
-      });
-
       this.listEl.addEventListener(
         "scroll",
         () => this.updateSelectorNavState(),
@@ -604,16 +580,7 @@ class NotesManager extends BaseManager {
         const item = target.closest(".mdnotes-list-item");
         if (!item) return;
         const noteId = String(item.getAttribute("data-note-id") || "").trim();
-        if (!noteId) return;
-        if (String(this.activeNoteId) === noteId) return;
-
-        this.markListItemActive(noteId);
-        this.selectNote(noteId, {
-          focus: false,
-          scrollBehavior: "auto",
-          promote: true,
-          animateMove: true,
-        });
+        this.activateNoteFromSelector(noteId);
       });
     }
 
@@ -1075,7 +1042,17 @@ class NotesManager extends BaseManager {
       return;
     }
 
-    handle.dataset.notesHidden = "false";
+    const hostRect = scrollHost.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+    const handleCenterY = handleRect.top + handleRect.height / 2;
+
+    const hidden =
+      handleRect.width < 6 ||
+      handleRect.height < 6 ||
+      handleCenterY < hostRect.top + 2 ||
+      handleCenterY > hostRect.bottom - 2;
+
+    handle.dataset.notesHidden = hidden ? "true" : "false";
   }
 
   readNotesFromStorage() {
@@ -1222,6 +1199,7 @@ class NotesManager extends BaseManager {
         this.sourceEl.value = next;
       }
       this.updateCounter(next);
+      this.updateWysiwygEmptyState(next);
       return;
     }
 
@@ -1237,6 +1215,7 @@ class NotesManager extends BaseManager {
     }
 
     this.updateCounter(next);
+    this.updateWysiwygEmptyState(next);
     this.renderList();
   }
 
@@ -1356,21 +1335,24 @@ class NotesManager extends BaseManager {
     const note = this.getActiveNote();
     if (!note) return;
 
+    const markdown = String(note.md || "");
+
     if (this.titleInput) {
       this.titleInput.value = String(note.title || NotesManager.DEFAULT_TITLE);
     }
 
     if (this.sourceEl) {
-      this.sourceEl.value = String(note.md || "");
+      this.sourceEl.value = markdown;
     }
 
     if (this.isMilkdownEnabled()) {
-      this.setMilkdownMarkdown(String(note.md || ""), { silent: true });
+      this.setMilkdownMarkdown(markdown, { silent: true });
       this.scheduleMilkdownUiSync();
     }
 
     this.updateMeta(note);
-    this.updateCounter(String(note.md || ""));
+    this.updateCounter(markdown);
+    this.updateWysiwygEmptyState(markdown);
 
     if (this.deleteBtn) {
       this.deleteBtn.disabled = this.notes.length <= 0;
@@ -1430,12 +1412,7 @@ class NotesManager extends BaseManager {
       item.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        this.selectNote(String(note.id), {
-          focus: false,
-          scrollBehavior: "auto",
-          promote: true,
-          animateMove: true,
-        });
+        this.activateNoteFromSelector(String(note.id));
       });
 
       this.listEl.appendChild(item);
@@ -1445,8 +1422,31 @@ class NotesManager extends BaseManager {
     this.updateSelectorNavState();
 
     if (animate && prevRects.size) {
-      this.animateSelectorReorder(prevRects);
+      requestAnimationFrame(() => this.animateSelectorReorder(prevRects));
     }
+  }
+
+  activateNoteFromSelector(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+    if (String(this.activeNoteId) === id) return;
+
+    this.markListItemActive(id);
+    this.selectNote(id, {
+      focus: false,
+      scrollBehavior: "auto",
+      promote: true,
+      animateMove: true,
+    });
+  }
+
+  updateWysiwygEmptyState(markdown) {
+    if (!this.wysiwygHost) return;
+
+    const text = String(markdown || "")
+      .replace(/\u200b/g, "")
+      .trim();
+    this.wysiwygHost.classList.toggle("mdnotes-empty", text.length === 0);
   }
 
   markListItemActive(noteId) {

@@ -1663,6 +1663,29 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow: visible;
 }
 
+#notesCard .mdnotes-wysiwyg-host::before {
+  content: "Start writing your note...";
+  position: absolute;
+  top: 18px;
+  left: 12px;
+  right: 12px;
+  color: color-mix(in srgb, var(--text-primary) 58%, transparent 42%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: 2;
+}
+
+#notesCard .mdnotes-wysiwyg-host.mdnotes-empty::before {
+  opacity: 1;
+}
+
+#notesCard
+  .mdnotes-editor-body[data-view="markdown"]
+  .mdnotes-wysiwyg-host::before {
+  opacity: 0;
+}
+
 #notesCard .mdnotes-wysiwyg-host .milkdown {
   min-height: 100%;
   background: transparent;
@@ -1706,6 +1729,15 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
+  caret-color: var(--text-primary) !important;
+}
+
+#notesCard
+  .mdnotes-wysiwyg-host
+  .milkdown
+  .ProseMirror.ProseMirror-hideselection,
+#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror.virtual-cursor-enabled {
+  caret-color: var(--text-primary) !important;
 }
 
 #notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror::-webkit-scrollbar {
@@ -1770,7 +1802,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   right: auto !important;
   inset-inline-start: 0 !important;
   inset-inline-end: auto !important;
-  margin-left: -14px;
+  margin-left: -22px;
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -1869,7 +1901,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   }
 
   #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
-    margin-left: -8px;
+    margin-left: -14px;
   }
 }
 
@@ -2935,7 +2967,8 @@ textarea.notes-editor:focus {
 #notesCard .mdnotes-pane,
 #notesCard .mdnotes-wysiwyg-host,
 #notesCard .mdnotes-wysiwyg-host .milkdown,
-#notesCard .mdnotes-wysiwyg-host .milkdown .editor {
+#notesCard .mdnotes-wysiwyg-host .milkdown .editor,
+#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
   transform: none !important;
   perspective: none !important;
   filter: none !important;
