@@ -2638,9 +2638,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip]:hover::after,
-.notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip]:focus-visible::after,
-.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip]:hover::after,
-.notes-toolbar.ql-toolbar.ql-snow .ql-picker-label[data-notes-tooltip]:focus-visible::after {
+.notes-toolbar.ql-toolbar.ql-snow
+  button[data-notes-tooltip]:focus-visible::after,
+.notes-toolbar.ql-toolbar.ql-snow
+  .ql-picker-label[data-notes-tooltip]:hover::after,
+.notes-toolbar.ql-toolbar.ql-snow
+  .ql-picker-label[data-notes-tooltip]:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }

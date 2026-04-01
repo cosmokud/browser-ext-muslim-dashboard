@@ -522,9 +522,10 @@ class NotesManager extends BaseManager {
       }
     }
 
-    const currentValue = this.editorInstance.getFormat(formatIndex, formatLength)[
-      formatName
-    ];
+    const currentValue = this.editorInstance.getFormat(
+      formatIndex,
+      formatLength,
+    )[formatName];
     const nextValue = this.isFormatEnabled(currentValue) ? false : true;
 
     this.editorInstance.formatLine(
@@ -668,7 +669,9 @@ class NotesManager extends BaseManager {
       const target = event?.target;
       if (!(target instanceof Element)) return;
 
-      const control = target.closest("button, .ql-picker-label, .ql-picker-item");
+      const control = target.closest(
+        "button, .ql-picker-label, .ql-picker-item",
+      );
       if (!(control instanceof HTMLElement)) return;
 
       const tooltip = String(
