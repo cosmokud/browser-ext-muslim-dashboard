@@ -1740,6 +1740,17 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   cursor: default;
 }
 
+.notes-editor.notes-editor-milkdown
+  .milkdown
+  .ProseMirror[contenteditable="true"] {
+  cursor: text;
+  caret-color: var(--text-primary) !important;
+}
+
+.notes-editor.notes-editor-milkdown .milkdown .ProseMirror.ProseMirror-focused {
+  caret-color: var(--text-primary) !important;
+}
+
 .notes-editor.notes-editor-milkdown .milkdown .milkdown-block-handle,
 .notes-editor.notes-editor-milkdown .milkdown .milkdown-slash-menu {
   z-index: 120;

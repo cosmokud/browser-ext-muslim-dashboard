@@ -392,14 +392,13 @@ class NotesManager extends BaseManager {
 
     const hostRect = scrollHost.getBoundingClientRect();
     const handleRect = handle.getBoundingClientRect();
+    const handleCenterY = handleRect.top + handleRect.height / 2;
 
     const hidden =
       handleRect.width < 6 ||
       handleRect.height < 6 ||
-      handleRect.top < hostRect.top + 4 ||
-      handleRect.bottom > hostRect.bottom - 4 ||
-      handleRect.left < hostRect.left - 2 ||
-      handleRect.right > hostRect.right + 2;
+      handleCenterY < hostRect.top + 2 ||
+      handleCenterY > hostRect.bottom - 2;
 
     handle.dataset.notesHidden = hidden ? "true" : "false";
   }
