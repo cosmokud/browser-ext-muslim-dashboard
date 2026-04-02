@@ -1317,8 +1317,8 @@ class AdhkarManager extends BaseManager {
 
   /**
    * Extracts available translation language codes from a card set.
-    * Looks for keys like 'text_en', 'text_id', etc.
-    * Also supports legacy 'translation_*' and 'english' keys.
+   * Looks for keys like 'text_en', 'text_id', etc.
+   * Also supports legacy 'translation_*' and 'english' keys.
    */
   getAvailableLanguages(set) {
     if (!set || !Array.isArray(set.cards) || !set.cards.length) {
