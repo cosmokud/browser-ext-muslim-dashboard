@@ -1022,7 +1022,10 @@ class MuslimDashboard {
       if (!Number.isFinite(numeric)) return 100;
       return Math.min(200, Math.max(0, Math.round(numeric)));
     };
-    const normalizeGlassOpacity = (value, fallback = getDashboardGlassOpacity()) => {
+    const normalizeGlassOpacity = (
+      value,
+      fallback = getDashboardGlassOpacity(),
+    ) => {
       if (value === null || typeof value === "undefined") {
         return fallback;
       }
@@ -1448,7 +1451,10 @@ class MuslimDashboard {
           ? getDashboardGlassOpacity()
           : customGlassOpacity;
         if (opacityWrap) {
-          opacityWrap.classList.toggle("disabled", isGlassOff || isDashboardState);
+          opacityWrap.classList.toggle(
+            "disabled",
+            isGlassOff || isDashboardState,
+          );
         }
         if (opacitySlider) {
           opacitySlider.value = String(effectiveOpacity);
@@ -1635,7 +1641,10 @@ class MuslimDashboard {
           return;
         }
 
-        currentGlassOpacity = normalizeGlassOpacity(opacitySlider.value, currentGlassOpacity);
+        currentGlassOpacity = normalizeGlassOpacity(
+          opacitySlider.value,
+          currentGlassOpacity,
+        );
         if (opacityValueDisplay) {
           opacityValueDisplay.textContent = currentGlassOpacity + "%";
         }
