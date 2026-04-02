@@ -3381,6 +3381,21 @@ textarea.notes-editor:focus {
   padding: var(--spacing-md);
   flex: 1 1 auto;
   justify-content: center;
+  --qibla-compass-surface: color-mix(
+    in srgb,
+    var(--primary-color) 22%,
+    transparent
+  );
+  --qibla-compass-surface-hover: color-mix(
+    in srgb,
+    var(--primary-light) 28%,
+    transparent
+  );
+  --qibla-compass-border: color-mix(
+    in srgb,
+    var(--text-muted) 48%,
+    var(--primary-light) 52%
+  );
 }
 
 .compass-outer {
@@ -3395,9 +3410,9 @@ textarea.notes-editor:focus {
   left: 0;
   width: 100%;
   height: 100%;
-  border: 3px solid var(--glass-border);
+  border: 3px solid var(--qibla-compass-border);
   border-radius: var(--radius-full);
-  background: var(--glass-bg);
+  background: var(--qibla-compass-surface);
 }
 
 .compass-direction {
@@ -3440,7 +3455,11 @@ textarea.notes-editor:focus {
   width: 160px;
   height: 160px;
   border-radius: var(--radius-full);
-  background: radial-gradient(circle, var(--glass-bg-hover), transparent);
+  background: radial-gradient(
+    circle,
+    var(--qibla-compass-surface-hover),
+    transparent
+  );
   transition: transform 0.5s ease-out;
 }
 

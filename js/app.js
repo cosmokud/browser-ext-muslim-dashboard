@@ -997,6 +997,17 @@ class MuslimDashboard {
       }
     };
 
+    const getDashboardGlassOpacity = () => {
+      try {
+        const settings = this.storage.getSettings();
+        const numeric = Number(settings?.theme?.glassOpacity);
+        if (!Number.isFinite(numeric)) return 35;
+        return Math.min(100, Math.max(0, Math.round(numeric)));
+      } catch (e) {
+        return 35;
+      }
+    };
+
     const readSettings = () => this.storage.getSettings();
     const writeSettings = (patch) => {
       const current = this.storage.get("settings", {});
@@ -1010,6 +1021,15 @@ class MuslimDashboard {
       const numeric = Number(value);
       if (!Number.isFinite(numeric)) return 100;
       return Math.min(200, Math.max(0, Math.round(numeric)));
+    };
+    const normalizeGlassOpacity = (value, fallback = getDashboardGlassOpacity()) => {
+      if (value === null || typeof value === "undefined") {
+        return fallback;
+      }
+
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return fallback;
+      return Math.min(100, Math.max(0, Math.round(numeric)));
     };
 
     const blurPopupByCardId = new Map();
@@ -1120,7 +1140,7 @@ class MuslimDashboard {
     window.addEventListener("resize", repositionOpenBlurPopups);
     window.addEventListener("scroll", repositionOpenBlurPopups, true);
 
-    const setupBlurMenu = ({ cardId, stateKey, blurPowerKey }) => {
+    const setupBlurMenu = ({ cardId, stateKey, blurPowerKey, opacityKey }) => {
       const card = document.getElementById(cardId);
       const menu = document.querySelector(
         `.card-blur-menu[data-card-id="${cardId}"]`,
@@ -1138,6 +1158,31 @@ class MuslimDashboard {
       const valueDisplay = popup?.querySelector(".blur-power-value");
       const blurPowerToggleLabel = popup?.querySelector(".blur-power-toggle");
 
+      let opacityWrap = popup?.querySelector(".blur-opacity-slider-wrap");
+      if (!opacityWrap && popup) {
+        const section = document.createElement("div");
+        section.className = "blur-setting-section blur-opacity-section";
+        section.innerHTML = `
+          <span class="blur-setting-label">Opacity</span>
+          <div class="blur-power-slider-wrap blur-opacity-slider-wrap disabled">
+            <input
+              type="range"
+              class="blur-power-slider blur-opacity-slider"
+              min="0"
+              max="100"
+              value="${getDashboardGlassOpacity()}"
+              aria-label="Glass opacity"
+            />
+            <span class="blur-power-value blur-opacity-value">${getDashboardGlassOpacity()}%</span>
+          </div>
+        `;
+        popup.appendChild(section);
+        opacityWrap = section.querySelector(".blur-opacity-slider-wrap");
+      }
+
+      const opacitySlider = popup?.querySelector(".blur-opacity-slider");
+      const opacityValueDisplay = popup?.querySelector(".blur-opacity-value");
+
       if (!btn || !popup) return null;
 
       blurPopupByCardId.set(cardId, popup);
@@ -1150,14 +1195,56 @@ class MuslimDashboard {
         card.style.removeProperty("--glass-shadow");
       };
 
-      const applyCardGlassVars = (glassEnabled) => {
+      const setColorAlpha = (value, alpha) => {
+        if (typeof value !== "string") return value;
+        const match = value
+          .replace(/\s+/g, "")
+          .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
+        if (!match) return value;
+
+        const bounded = Number(
+          Math.min(1, Math.max(0, Number(alpha))).toFixed(3),
+        );
+        return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${bounded})`;
+      };
+
+      const getGlassOpacityAlphas = (opacityPercent) => {
+        const baseAlpha = normalizeGlassOpacity(opacityPercent, 35) / 100;
+        const hoverRatio = 0.45 / 0.35;
+        const borderRatio = 0.4 / 0.35;
+        const clampAlpha = (alpha) =>
+          Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
+
+        return {
+          bg: clampAlpha(baseAlpha),
+          hover: clampAlpha(baseAlpha * hoverRatio),
+          border: clampAlpha(baseAlpha * borderRatio),
+        };
+      };
+
+      const applyCardGlassVars = (glassEnabled, opacityPercent = null) => {
         const colors = this.themes?.getThemeColors?.();
         if (!colors) return;
 
         if (glassEnabled) {
-          card.style.setProperty("--glass-bg", colors.glassBg);
-          card.style.setProperty("--glass-bg-hover", colors.glassBgHover);
-          card.style.setProperty("--glass-border", colors.glassBorder);
+          const targetOpacity = normalizeGlassOpacity(
+            opacityPercent,
+            getDashboardGlassOpacity(),
+          );
+          const opacityAlphas = getGlassOpacityAlphas(targetOpacity);
+          const glassBg = setColorAlpha(colors.glassBg, opacityAlphas.bg);
+          const glassBgHover = setColorAlpha(
+            colors.glassBgHover,
+            opacityAlphas.hover,
+          );
+          const glassBorder = setColorAlpha(
+            colors.glassBorder,
+            opacityAlphas.border,
+          );
+
+          card.style.setProperty("--glass-bg", glassBg);
+          card.style.setProperty("--glass-bg-hover", glassBgHover);
+          card.style.setProperty("--glass-border", glassBorder);
           card.style.setProperty(
             "--glass-shadow",
             "0 8px 32px rgba(0, 0, 0, 0.3)",
@@ -1207,11 +1294,17 @@ class MuslimDashboard {
       };
 
       // Apply glass state to the card
-      const applyGlassState = (state, customBlurEnabled, customBlurPower) => {
+      const applyGlassState = (
+        state,
+        customBlurEnabled,
+        customBlurPower,
+        customGlassOpacity,
+      ) => {
         // Determine effective glass state based on the triple toggle
         // OFF: Force glass disabled for this component only
         // DASH: Follow dashboard setting
         // ON: Force glass enabled for this component
+        const isDashboardState = state === "dashboard";
         let effectiveGlass;
         if (state === "on") {
           effectiveGlass = true;
@@ -1231,18 +1324,19 @@ class MuslimDashboard {
           clearCardGlassVars();
         } else if (state === "on") {
           card.dataset.glassEnabled = "true";
-          applyCardGlassVars(true);
+          applyCardGlassVars(true, customGlassOpacity);
         } else if (state === "off") {
           card.dataset.glassEnabled = "false";
           applyCardGlassVars(false);
         }
 
         // Determine effective blur power
+        const usingCustomBlur = state === "on" && customBlurEnabled;
         let effectiveBlurPower;
         if (!effectiveGlass) {
           // Glass is off, blur multiplier should be 0
           effectiveBlurPower = 0;
-        } else if (customBlurEnabled) {
+        } else if (usingCustomBlur) {
           // Custom blur power enabled
           effectiveBlurPower = customBlurPower / 100;
         } else {
@@ -1255,7 +1349,7 @@ class MuslimDashboard {
           // Glass disabled - set multiplier to 0
           card.style.setProperty("--ui-blur-multiplier", "0");
           card.dataset.blurOverride = "off";
-        } else if (customBlurEnabled) {
+        } else if (usingCustomBlur) {
           // Custom blur power
           card.style.setProperty(
             "--ui-blur-multiplier",
@@ -1293,7 +1387,12 @@ class MuslimDashboard {
       };
 
       // Update UI to match state
-      const syncUI = (glassState, customBlurEnabled, customBlurPower) => {
+      const syncUI = (
+        glassState,
+        customBlurEnabled,
+        customBlurPower,
+        customGlassOpacity,
+      ) => {
         // Update glass toggle buttons
         glassOptions?.forEach((opt) => {
           const val = opt.dataset.glassValue;
@@ -1302,10 +1401,11 @@ class MuslimDashboard {
 
         // When glass is OFF, lock the blur power toggle to disabled
         const isGlassOff = glassState === "off";
+        const isDashboardState = glassState === "dashboard";
 
         // Update custom blur toggle
         if (customToggle) {
-          if (isGlassOff) {
+          if (isGlassOff || isDashboardState) {
             customToggle.checked = false;
             customToggle.disabled = true;
           } else {
@@ -1316,26 +1416,46 @@ class MuslimDashboard {
 
         // Update blur power toggle label/wrapper disabled state
         if (blurPowerToggleLabel) {
-          blurPowerToggleLabel.classList.toggle("disabled", isGlassOff);
+          blurPowerToggleLabel.classList.toggle(
+            "disabled",
+            isGlassOff || isDashboardState,
+          );
         }
 
         // Update slider state - disabled when glass is off OR custom blur is not enabled
+        const effectiveBlurPower = isDashboardState
+          ? getDashboardBlurPower()
+          : customBlurPower;
         if (sliderWrap) {
           sliderWrap.classList.toggle(
             "disabled",
-            isGlassOff || !customBlurEnabled,
+            isGlassOff || isDashboardState || !customBlurEnabled,
           );
         }
 
         // Update slider value
         if (slider) {
-          slider.value = String(customBlurPower);
-          slider.disabled = isGlassOff;
+          slider.value = String(effectiveBlurPower);
+          slider.disabled = isGlassOff || isDashboardState;
         }
 
         // Update value display
         if (valueDisplay) {
-          valueDisplay.textContent = customBlurPower + "%";
+          valueDisplay.textContent = effectiveBlurPower + "%";
+        }
+
+        const effectiveOpacity = isDashboardState
+          ? getDashboardGlassOpacity()
+          : customGlassOpacity;
+        if (opacityWrap) {
+          opacityWrap.classList.toggle("disabled", isGlassOff || isDashboardState);
+        }
+        if (opacitySlider) {
+          opacitySlider.value = String(effectiveOpacity);
+          opacitySlider.disabled = isGlassOff || isDashboardState;
+        }
+        if (opacityValueDisplay) {
+          opacityValueDisplay.textContent = effectiveOpacity + "%";
         }
       };
 
@@ -1347,9 +1467,10 @@ class MuslimDashboard {
           ? settings[blurPowerKey + "Enabled"]
           : false;
       let currentCustomPower = normalizeBlurPower(settings?.[blurPowerKey]);
+      let currentGlassOpacity = normalizeGlassOpacity(settings?.[opacityKey]);
 
-      // If glass is off, force custom enabled to false
-      if (currentGlassState === "off") {
+      // If glass is off or follows dashboard, force custom blur disabled
+      if (currentGlassState === "off" || currentGlassState === "dashboard") {
         currentCustomEnabled = false;
       }
 
@@ -1365,16 +1486,25 @@ class MuslimDashboard {
       if (settings?.[blurPowerKey] !== currentCustomPower) {
         initialPatch[blurPowerKey] = currentCustomPower;
       }
+      if (settings?.[opacityKey] !== currentGlassOpacity) {
+        initialPatch[opacityKey] = currentGlassOpacity;
+      }
       if (Object.keys(initialPatch).length > 0) {
         writeSettings(initialPatch);
       }
 
       // Apply initial state
-      syncUI(currentGlassState, currentCustomEnabled, currentCustomPower);
+      syncUI(
+        currentGlassState,
+        currentCustomEnabled,
+        currentCustomPower,
+        currentGlassOpacity,
+      );
       applyGlassState(
         currentGlassState,
         currentCustomEnabled,
         currentCustomPower,
+        currentGlassOpacity,
       );
 
       // Toggle popup open/close
@@ -1420,8 +1550,8 @@ class MuslimDashboard {
           const newState = opt.dataset.glassValue;
           currentGlassState = newState;
 
-          // If switching to OFF, force disable custom blur
-          if (newState === "off") {
+          // When not in ON mode, lock blur customization to dashboard behavior.
+          if (newState !== "on") {
             currentCustomEnabled = false;
             writeSettings({ [blurPowerKey + "Enabled"]: false });
           }
@@ -1429,13 +1559,19 @@ class MuslimDashboard {
           // Update UI
           glassOptions.forEach((o) => o.classList.remove("active"));
           opt.classList.add("active");
-          syncUI(currentGlassState, currentCustomEnabled, currentCustomPower);
+          syncUI(
+            currentGlassState,
+            currentCustomEnabled,
+            currentCustomPower,
+            currentGlassOpacity,
+          );
 
           // Apply and save
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
             currentCustomPower,
+            currentGlassOpacity,
           );
           writeSettings({ [stateKey]: newState });
         });
@@ -1443,8 +1579,8 @@ class MuslimDashboard {
 
       // Custom blur power toggle
       customToggle?.addEventListener("change", () => {
-        // Don't allow enabling custom blur when glass is off
-        if (currentGlassState === "off") {
+        // Don't allow enabling custom blur when glass is off or dashboard-linked.
+        if (currentGlassState === "off" || currentGlassState === "dashboard") {
           customToggle.checked = false;
           return;
         }
@@ -1452,21 +1588,29 @@ class MuslimDashboard {
         currentCustomEnabled = customToggle.checked;
 
         // Update slider state
-        syncUI(currentGlassState, currentCustomEnabled, currentCustomPower);
+        syncUI(
+          currentGlassState,
+          currentCustomEnabled,
+          currentCustomPower,
+          currentGlassOpacity,
+        );
 
         // Apply and save
         applyGlassState(
           currentGlassState,
           currentCustomEnabled,
           currentCustomPower,
+          currentGlassOpacity,
         );
         writeSettings({ [blurPowerKey + "Enabled"]: currentCustomEnabled });
       });
 
       // Blur power slider
       slider?.addEventListener("input", () => {
-        // Don't process if glass is off
-        if (currentGlassState === "off") return;
+        // Don't process if glass is off or dashboard-linked.
+        if (currentGlassState === "off" || currentGlassState === "dashboard") {
+          return;
+        }
 
         currentCustomPower = normalizeBlurPower(slider.value);
 
@@ -1480,18 +1624,46 @@ class MuslimDashboard {
           currentGlassState,
           currentCustomEnabled,
           currentCustomPower,
+          currentGlassOpacity,
         );
         writeSettings({ [blurPowerKey]: currentCustomPower });
+      });
+
+      // Per-card glass opacity slider
+      opacitySlider?.addEventListener("input", () => {
+        if (currentGlassState === "off" || currentGlassState === "dashboard") {
+          return;
+        }
+
+        currentGlassOpacity = normalizeGlassOpacity(opacitySlider.value, currentGlassOpacity);
+        if (opacityValueDisplay) {
+          opacityValueDisplay.textContent = currentGlassOpacity + "%";
+        }
+
+        applyGlassState(
+          currentGlassState,
+          currentCustomEnabled,
+          currentCustomPower,
+          currentGlassOpacity,
+        );
+        writeSettings({ [opacityKey]: currentGlassOpacity });
       });
 
       // Listen for dashboard glass setting changes
       document.addEventListener("md:glass-setting-changed", () => {
         // Only update if following dashboard setting
         if (currentGlassState === "dashboard") {
+          syncUI(
+            currentGlassState,
+            currentCustomEnabled,
+            currentCustomPower,
+            currentGlassOpacity,
+          );
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
             currentCustomPower,
+            currentGlassOpacity,
           );
         }
       });
@@ -1502,17 +1674,28 @@ class MuslimDashboard {
           currentGlassState,
           currentCustomEnabled,
           currentCustomPower,
+          currentGlassOpacity,
         );
       });
 
       // Listen for dashboard blur power changes
       document.addEventListener("md:ui-blur-update", () => {
-        // Only update if glass is not off and not using custom blur
-        if (currentGlassState !== "off" && !currentCustomEnabled) {
+        // Update when dashboard-linked, or when ON mode is following dashboard blur.
+        if (
+          currentGlassState === "dashboard" ||
+          (currentGlassState === "on" && !currentCustomEnabled)
+        ) {
+          syncUI(
+            currentGlassState,
+            currentCustomEnabled,
+            currentCustomPower,
+            currentGlassOpacity,
+          );
           applyGlassState(
             currentGlassState,
             currentCustomEnabled,
             currentCustomPower,
+            currentGlassOpacity,
           );
         }
       });
@@ -1525,6 +1708,7 @@ class MuslimDashboard {
             currentGlassState,
             currentCustomEnabled,
             currentCustomPower,
+            currentGlassOpacity,
           ),
       };
     };
@@ -1535,31 +1719,37 @@ class MuslimDashboard {
         cardId: "pocketQuranCard",
         stateKey: "pocketQuranBlurState",
         blurPowerKey: "pocketQuranBlurPower",
+        opacityKey: "pocketQuranGlassOpacity",
       },
       {
         cardId: "todoCard",
         stateKey: "todoBlurState",
         blurPowerKey: "todoBlurPower",
+        opacityKey: "todoGlassOpacity",
       },
       {
         cardId: "flashcardCard",
         stateKey: "flashcardBlurState",
         blurPowerKey: "flashcardBlurPower",
+        opacityKey: "flashcardGlassOpacity",
       },
       {
         cardId: "adhkarCard",
         stateKey: "adhkarBlurState",
         blurPowerKey: "adhkarBlurPower",
+        opacityKey: "adhkarGlassOpacity",
       },
       {
         cardId: "hadithCard",
         stateKey: "hadithBlurState",
         blurPowerKey: "hadithBlurPower",
+        opacityKey: "hadithGlassOpacity",
       },
       {
         cardId: "notesCard",
         stateKey: "notesBlurState",
         blurPowerKey: "notesBlurPower",
+        opacityKey: "notesGlassOpacity",
       },
     ];
 

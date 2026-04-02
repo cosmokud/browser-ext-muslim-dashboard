@@ -190,21 +190,27 @@ class StorageManager {
       pocketQuranBlurState: "dashboard",
       pocketQuranBlurPowerEnabled: false,
       pocketQuranBlurPower: 100,
+      pocketQuranGlassOpacity: null,
       todoBlurState: "dashboard",
       todoBlurPowerEnabled: false,
       todoBlurPower: 100,
+      todoGlassOpacity: null,
       flashcardBlurState: "dashboard",
       flashcardBlurPowerEnabled: false,
       flashcardBlurPower: 100,
+      flashcardGlassOpacity: null,
       adhkarBlurState: "dashboard",
       adhkarBlurPowerEnabled: false,
       adhkarBlurPower: 100,
+      adhkarGlassOpacity: null,
       hadithBlurState: "dashboard",
       hadithBlurPowerEnabled: false,
       hadithBlurPower: 100,
+      hadithGlassOpacity: null,
       notesBlurState: "dashboard",
       notesBlurPowerEnabled: false,
       notesBlurPower: 100,
+      notesGlassOpacity: null,
 
       // Pinned Apps settings
       pinnedApps: [],
@@ -465,6 +471,7 @@ class StorageManager {
         stateKey: "pocketQuranBlurState",
         blurPowerEnabledKey: "pocketQuranBlurPowerEnabled",
         blurPowerKey: "pocketQuranBlurPower",
+        opacityKey: "pocketQuranGlassOpacity",
         legacyEnabledKey: "pocketQuranBlurOverrideEnabled",
         legacyPowerKey: "pocketQuranBlurOverridePower",
       },
@@ -472,6 +479,7 @@ class StorageManager {
         stateKey: "todoBlurState",
         blurPowerEnabledKey: "todoBlurPowerEnabled",
         blurPowerKey: "todoBlurPower",
+        opacityKey: "todoGlassOpacity",
         legacyEnabledKey: "todoBlurOverrideEnabled",
         legacyPowerKey: "todoBlurOverridePower",
       },
@@ -479,6 +487,7 @@ class StorageManager {
         stateKey: "flashcardBlurState",
         blurPowerEnabledKey: "flashcardBlurPowerEnabled",
         blurPowerKey: "flashcardBlurPower",
+        opacityKey: "flashcardGlassOpacity",
         legacyEnabledKey: "flashcardBlurOverrideEnabled",
         legacyPowerKey: "flashcardBlurOverridePower",
       },
@@ -486,6 +495,7 @@ class StorageManager {
         stateKey: "adhkarBlurState",
         blurPowerEnabledKey: "adhkarBlurPowerEnabled",
         blurPowerKey: "adhkarBlurPower",
+        opacityKey: "adhkarGlassOpacity",
         legacyEnabledKey: "adhkarBlurOverrideEnabled",
         legacyPowerKey: "adhkarBlurOverridePower",
       },
@@ -493,11 +503,13 @@ class StorageManager {
         stateKey: "hadithBlurState",
         blurPowerEnabledKey: "hadithBlurPowerEnabled",
         blurPowerKey: "hadithBlurPower",
+        opacityKey: "hadithGlassOpacity",
       },
       {
         stateKey: "notesBlurState",
         blurPowerEnabledKey: "notesBlurPowerEnabled",
         blurPowerKey: "notesBlurPower",
+        opacityKey: "notesGlassOpacity",
         legacyEnabledKey: "notesBlurOverrideEnabled",
         legacyPowerKey: "notesBlurOverridePower",
       },
@@ -516,6 +528,10 @@ class StorageManager {
         stored,
         mapping.blurPowerKey,
       );
+      const hasStoredOpacity = Object.prototype.hasOwnProperty.call(
+        stored,
+        mapping.opacityKey,
+      );
 
       const rawState = hasStoredState ? stored[mapping.stateKey] : undefined;
       const rawEnabled = hasStoredEnabled
@@ -523,6 +539,9 @@ class StorageManager {
         : undefined;
       const rawPower = hasStoredPower
         ? stored[mapping.blurPowerKey]
+        : undefined;
+      const rawOpacity = hasStoredOpacity
+        ? stored[mapping.opacityKey]
         : undefined;
       const legacyEnabled = mapping.legacyEnabledKey
         ? stored[mapping.legacyEnabledKey]
@@ -555,6 +574,15 @@ class StorageManager {
           : merged[mapping.blurPowerKey];
       blurPower = Math.min(200, Math.max(0, Math.round(blurPower)));
 
+      const parsedOpacity = Number(rawOpacity);
+      let glassOpacity = Number.isFinite(parsedOpacity)
+        ? parsedOpacity
+        : Number(merged?.theme?.glassOpacity);
+      if (!Number.isFinite(glassOpacity)) {
+        glassOpacity = 35;
+      }
+      glassOpacity = Math.min(100, Math.max(0, Math.round(glassOpacity)));
+
       if (state === "off") {
         blurPowerEnabled = false;
       }
@@ -562,6 +590,7 @@ class StorageManager {
       merged[mapping.stateKey] = state;
       merged[mapping.blurPowerEnabledKey] = blurPowerEnabled;
       merged[mapping.blurPowerKey] = blurPower;
+      merged[mapping.opacityKey] = glassOpacity;
     });
 
     return merged;
