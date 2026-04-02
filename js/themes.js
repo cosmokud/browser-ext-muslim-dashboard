@@ -8,6 +8,23 @@ class ThemeManager {
   // Default theme (Pure White - clean minimalist theme)
   static DEFAULT_THEME = "emerald";
   static DEFAULT_MODE = "dark";
+  static MAIN_GRID_COMPONENT_IDS = [
+    "pinnedAppsSection",
+    "searchBarSection",
+    "quoteSection",
+    "prayerTimesCard",
+    "fastingCard",
+    "calendarCard",
+    "flashcardCard",
+    "adhkarCard",
+    "hadithCard",
+    "pocketQuranCard",
+    "lunarPhaseCard",
+    "qiblaCard",
+    "todoCard",
+    "notesCard",
+    "weatherCard",
+  ];
 
   // Theme definitions with color palettes for both dark and light modes
   static THEMES = {
@@ -1081,7 +1098,7 @@ class ThemeManager {
     );
     colors.accent = colors.accentText;
 
-    return this._applyGlassOpacityToThemeColors(colors);
+    return colors;
   }
 
   _clampGlassOpacity(value, fallback = 35) {
@@ -1125,6 +1142,16 @@ class ThemeManager {
     if (!rgb) return value;
     const bounded = Math.min(1, Math.max(0, Number(alpha)));
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(bounded.toFixed(3))})`;
+  }
+
+  _setShadowAlpha(value, alpha) {
+    if (typeof value !== "string") return value;
+
+    const bounded = Number(Math.min(1, Math.max(0, Number(alpha))).toFixed(3));
+    return value.replace(
+      /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[0-9.]+\s*\)/gi,
+      (_match, r, g, b) => `rgba(${r}, ${g}, ${b}, ${bounded})`,
+    );
   }
 
   _normalizeHexColor(value) {
@@ -1171,6 +1198,38 @@ class ThemeManager {
       glassBgHover: this._setColorAlpha(colors.glassBgHover, alphas.hover),
       glassBorder: this._setColorAlpha(colors.glassBorder, alphas.border),
     };
+  }
+
+  _applyMainGridComponentOpacity(colors) {
+    if (!colors || typeof colors !== "object") return;
+
+    const mainContainer = document.querySelector(".main-container");
+    if (!mainContainer) return;
+
+    const alphas = this._getGlassOpacityAlphas();
+    const hoverColor = this._setColorAlpha(colors.glassBgHover, alphas.hover);
+    const borderColor = this._setColorAlpha(colors.glassBorder, alphas.border);
+    const baseShadow = this._glassEnabled
+      ? "0 8px 32px rgba(0, 0, 0, 0.3)"
+      : "0 4px 20px rgba(0, 0, 0, 0.2)";
+    const shadowAlpha = this._clampGlassOpacity(this._glassOpacity, 0) / 100;
+    const shadow = this._setShadowAlpha(baseShadow, shadowAlpha);
+
+    ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
+      const component = document.getElementById(componentId);
+      if (!component || !mainContainer.contains(component)) return;
+
+      // Keep explicit per-card overrides from readability menus authoritative.
+      if (
+        Object.prototype.hasOwnProperty.call(component.dataset, "glassEnabled")
+      ) {
+        return;
+      }
+
+      component.style.setProperty("--glass-bg-hover", hoverColor);
+      component.style.setProperty("--glass-border", borderColor);
+      component.style.setProperty("--glass-shadow", shadow);
+    });
   }
 
   /**
@@ -1497,6 +1556,9 @@ class ThemeManager {
 
     // Apply body background
     document.body.style.backgroundColor = colors.bodyBg;
+
+    // Restrict component opacity overrides to main grid components only.
+    this._applyMainGridComponentOpacity(colors);
 
     // Set data attributes for CSS hooks
     root.dataset.theme = this._currentTheme;

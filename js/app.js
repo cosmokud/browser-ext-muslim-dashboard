@@ -1549,6 +1549,10 @@ class MuslimDashboard {
             [stateKey]: newState,
             [blurPowerKey + "Enabled"]: currentCustomEnabled,
           });
+
+          if (newState === "dashboard" && this.themes?.applyTheme) {
+            this.themes.applyTheme();
+          }
         });
       });
 
