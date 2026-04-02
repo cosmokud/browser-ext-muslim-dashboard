@@ -1116,7 +1116,7 @@ class QuotesManager extends BaseManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">Lang</span>`;
     btn.title = "Select quote language";
     btn.setAttribute("aria-label", "Select quote language");
     btn.style.display = "none";
@@ -1143,10 +1143,10 @@ class QuotesManager extends BaseManager {
       const current = this.getSelectedDefaultLanguageCode();
       const langInfo =
         languages.find((l) => l.code === current) || languages[0];
-      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
-        langInfo.code,
-      )}</span>`;
+      const langCode = String(langInfo.code || "en").toUpperCase();
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
+      btn.setAttribute("aria-label", `Language: ${langInfo.name}`);
     } else {
       btn.style.display = "none";
       btn.disabled = true;

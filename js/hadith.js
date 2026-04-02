@@ -647,10 +647,10 @@ class HadithManager extends BaseManager {
       const langInfo =
         languages.find((l) => l.code === currentLang) || languages[0];
 
-      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${this.getLanguageFlag(
-        langInfo.code,
-      )}</span>`;
+      const langCode = String(langInfo.code || "en").toUpperCase();
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
+      btn.setAttribute("aria-label", `Language: ${langInfo.name}`);
     } else {
       btn.style.display = "none";
       btn.disabled = true;
@@ -2099,7 +2099,7 @@ class HadithManager extends BaseManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span>`;
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">Lang</span>`;
     btn.title = "Select language";
     btn.setAttribute("aria-label", "Select language");
     btn.style.display = "none";
