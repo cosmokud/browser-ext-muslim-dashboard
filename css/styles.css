@@ -1871,7 +1871,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item-delete {
-  --_action-btn-size: var(--action-btn-size);
+  --_action-btn-size: 30px;
   position: absolute;
   right: 8px;
   top: calc(50% - (var(--_action-btn-size) / 2));
@@ -8314,7 +8314,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   user-select: none;
 }
 
-.flashcard-jump-slider {
+.flashcard-jump-slider,
+.pocket-quran-size-range,
+#settingsModal .settings-panel input[type="range"] {
   --jump-progress: 0%;
   --jump-track-height: 10px;
   --jump-track-bg: color-mix(in srgb, var(--glass-bg) 78%, transparent 22%);
@@ -8329,8 +8331,6 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--glass-border) 68%,
     rgba(255, 255, 255, 0.45) 32%
   );
-  flex: 1 1 auto;
-  min-width: 120px;
   height: 32px;
   appearance: none;
   -webkit-appearance: none;
@@ -8342,7 +8342,28 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     opacity var(--transition-fast);
 }
 
-.flashcard-jump-slider::-webkit-slider-runnable-track {
+.flashcard-jump-slider {
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.pocket-quran-size-range {
+  width: 96px;
+  min-width: 96px;
+  flex: 0 0 96px;
+}
+
+#settingsModal .settings-panel input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.flashcard-jump-slider::-webkit-slider-runnable-track,
+.pocket-quran-size-range::-webkit-slider-runnable-track,
+#settingsModal
+  .settings-panel
+  input[type="range"]::-webkit-slider-runnable-track {
   height: var(--jump-track-height);
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
@@ -8356,7 +8377,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.26);
 }
 
-.flashcard-jump-slider::-webkit-slider-thumb {
+.flashcard-jump-slider::-webkit-slider-thumb,
+.pocket-quran-size-range::-webkit-slider-thumb,
+#settingsModal .settings-panel input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
   width: 18px;
@@ -8364,35 +8387,46 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   margin-top: -5px;
   border-radius: var(--radius-full);
   border: 1px solid var(--jump-thumb-border);
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold-light) 0%,
-    var(--primary-light) 45%,
-    var(--primary-color) 100%
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 64%,
+    var(--accent-gold-light) 36%
   );
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
-    filter var(--transition-fast);
+    background var(--transition-fast);
 }
 
-.flashcard-jump-slider:hover::-webkit-slider-thumb {
-  transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+.flashcard-jump-slider:hover::-webkit-slider-thumb,
+.pocket-quran-size-range:hover::-webkit-slider-thumb,
+#settingsModal .settings-panel input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
 }
 
-.flashcard-jump-slider:active::-webkit-slider-thumb {
-  transform: scale(0.98);
+.flashcard-jump-slider:active::-webkit-slider-thumb,
+.pocket-quran-size-range:active::-webkit-slider-thumb,
+#settingsModal
+  .settings-panel
+  input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(0.97);
 }
 
-.flashcard-jump-slider:focus-visible::-webkit-slider-thumb {
+.flashcard-jump-slider:focus-visible::-webkit-slider-thumb,
+.pocket-quran-size-range:focus-visible::-webkit-slider-thumb,
+#settingsModal
+  .settings-panel
+  input[type="range"]:focus-visible::-webkit-slider-thumb {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--accent-gold-light) 36%, transparent 64%),
-    0 8px 18px rgba(0, 0, 0, 0.3);
+    0 1px 4px rgba(0, 0, 0, 0.24);
 }
 
-.flashcard-jump-slider::-moz-range-track {
+.flashcard-jump-slider::-moz-range-track,
+.pocket-quran-size-range::-moz-range-track,
+#settingsModal .settings-panel input[type="range"]::-moz-range-track {
   height: var(--jump-track-height);
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
@@ -8400,7 +8434,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.26);
 }
 
-.flashcard-jump-slider::-moz-range-progress {
+.flashcard-jump-slider::-moz-range-progress,
+.pocket-quran-size-range::-moz-range-progress,
+#settingsModal .settings-panel input[type="range"]::-moz-range-progress {
   height: var(--jump-track-height);
   border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--primary-color) 48%, transparent);
@@ -8411,46 +8447,61 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   );
 }
 
-.flashcard-jump-slider::-moz-range-thumb {
+.flashcard-jump-slider::-moz-range-thumb,
+.pocket-quran-size-range::-moz-range-thumb,
+#settingsModal .settings-panel input[type="range"]::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: var(--radius-full);
   border: 1px solid var(--jump-thumb-border);
-  background: linear-gradient(
-    135deg,
-    var(--accent-gold-light) 0%,
-    var(--primary-light) 45%,
-    var(--primary-color) 100%
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 64%,
+    var(--accent-gold-light) 36%
   );
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast),
-    filter var(--transition-fast);
+    background var(--transition-fast);
 }
 
-.flashcard-jump-slider:hover::-moz-range-thumb {
-  transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+.flashcard-jump-slider:hover::-moz-range-thumb,
+.pocket-quran-size-range:hover::-moz-range-thumb,
+#settingsModal .settings-panel input[type="range"]:hover::-moz-range-thumb {
+  transform: scale(1.03);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
 }
 
-.flashcard-jump-slider:active::-moz-range-thumb {
-  transform: scale(0.98);
+.flashcard-jump-slider:active::-moz-range-thumb,
+.pocket-quran-size-range:active::-moz-range-thumb,
+#settingsModal .settings-panel input[type="range"]:active::-moz-range-thumb {
+  transform: scale(0.97);
 }
 
-.flashcard-jump-slider:focus-visible::-moz-range-thumb {
+.flashcard-jump-slider:focus-visible::-moz-range-thumb,
+.pocket-quran-size-range:focus-visible::-moz-range-thumb,
+#settingsModal
+  .settings-panel
+  input[type="range"]:focus-visible::-moz-range-thumb {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--accent-gold-light) 36%, transparent 64%),
-    0 8px 18px rgba(0, 0, 0, 0.3);
+    0 1px 4px rgba(0, 0, 0, 0.24);
 }
 
-.flashcard-jump-slider:disabled {
+.flashcard-jump-slider:disabled,
+.pocket-quran-size-range:disabled,
+#settingsModal .settings-panel input[type="range"]:disabled {
   filter: saturate(0.66);
 }
 
 .flashcard-jump-slider:disabled::-webkit-slider-thumb,
-.flashcard-jump-slider:disabled::-moz-range-thumb {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+.pocket-quran-size-range:disabled::-webkit-slider-thumb,
+.settings-panel input[type="range"]:disabled::-webkit-slider-thumb,
+.flashcard-jump-slider:disabled::-moz-range-thumb,
+.pocket-quran-size-range:disabled::-moz-range-thumb,
+.settings-panel input[type="range"]:disabled::-moz-range-thumb {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   transform: none;
 }
 
@@ -8529,38 +8580,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .flashcards-typography-range {
   flex: 1;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--glass-bg);
-  border-radius: 3px;
-  outline: none;
-}
-
-.flashcards-typography-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.flashcards-typography-range::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 10px var(--accent-gold);
-}
-
-.flashcards-typography-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  cursor: pointer;
-  border: none;
-  transition: all var(--transition-fast);
+  min-width: 0;
 }
 
 .flashcards-typography-value {
@@ -9104,38 +9124,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .custom-width-slider input[type="range"] {
   flex: 1;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--glass-bg);
-  border-radius: 3px;
-  outline: none;
-}
-
-.custom-width-slider input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.custom-width-slider input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 10px var(--accent-gold);
-}
-
-.custom-width-slider input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  cursor: pointer;
-  border: none;
-  transition: all var(--transition-fast);
+  min-width: 0;
 }
 
 .custom-width-value {
@@ -11430,6 +11419,34 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-transform: uppercase;
 }
 
+/* Reuse todo inline delete styling for note list row delete button. */
+.notes-list-item-delete.todo-action-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.notes-list-item-delete.todo-action-btn:hover:not(:disabled) {
+  background: var(--glass-bg);
+  color: #ff6b6b;
+  transform: none;
+  box-shadow: none;
+}
+
+.notes-list-item-delete.todo-action-btn:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
   #notesCard.card .card-header-actions {
     opacity: 1;
@@ -12059,46 +12076,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-size-range {
   width: 96px;
-  height: 32px;
-  appearance: none;
-  background: transparent;
-  outline: none;
-}
-
-.pocket-quran-size-range::-webkit-slider-runnable-track {
-  height: 10px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-}
-
-.pocket-quran-size-range::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  margin-top: -4px;
-  border-radius: var(--radius-full);
-  background: var(--accent-gold-light);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-}
-
-.pocket-quran-size-range::-moz-range-track {
-  height: 10px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-}
-
-.pocket-quran-size-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-full);
-  background: var(--accent-gold-light);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
+  min-width: 96px;
+  flex: 0 0 96px;
 }
 
 .pocket-quran-size-value {

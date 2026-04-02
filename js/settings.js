@@ -796,6 +796,7 @@ class SettingsManager extends BaseManager {
     this.loadDebugSettings(settings);
 
     this.updateNotesCountHint();
+    this.updateSettingsRangeProgress();
   }
 
   normalizeCssHexColor(value, fallback) {
@@ -936,6 +937,36 @@ class SettingsManager extends BaseManager {
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
+  }
+
+  updateRangeProgress(rangeEl) {
+    if (!(rangeEl instanceof HTMLInputElement) || rangeEl.type !== "range") {
+      return;
+    }
+
+    const min = parseInt(rangeEl.min, 10);
+    const max = parseInt(rangeEl.max, 10);
+    const value = parseInt(rangeEl.value, 10);
+
+    const safeMin = Number.isFinite(min) ? min : 0;
+    const safeMax = Number.isFinite(max) ? max : safeMin + 1;
+    const safeValue = Number.isFinite(value) ? value : safeMin;
+
+    const span = Math.max(1, safeMax - safeMin);
+    const progress = ((safeValue - safeMin) / span) * 100;
+    const clamped = Math.max(0, Math.min(100, progress));
+
+    rangeEl.style.setProperty("--jump-progress", `${clamped}%`);
+  }
+
+  updateSettingsRangeProgress(root = null) {
+    const scope = root instanceof Element ? root : this.modal;
+    if (!scope) return;
+
+    const ranges = scope.querySelectorAll(
+      '.settings-panel input[type="range"]',
+    );
+    ranges.forEach((rangeEl) => this.updateRangeProgress(rangeEl));
   }
 
   updatePocketQuranBookmarkStats() {
@@ -4024,6 +4055,8 @@ class SettingsManager extends BaseManager {
       this.modal.classList.add("active");
     }
 
+    this.updateSettingsRangeProgress();
+
     this.updateSettingsTabsMinWidth();
   }
 
@@ -4089,6 +4122,9 @@ class SettingsManager extends BaseManager {
     if (tabName === "notes") {
       this.updateNotesCountHint();
     }
+
+    const activePanel = document.getElementById(`${tabName}Panel`);
+    this.updateSettingsRangeProgress(activePanel);
   }
 
   applyDebugModeVisibility() {
@@ -4543,6 +4579,18 @@ class SettingsManager extends BaseManager {
     this.tabs.forEach((tab) => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
+
+    // Keep all settings range sliders visually synced with their current value.
+    if (this.modal && this.modal.dataset.rangeProgressBound !== "1") {
+      this.modal.dataset.rangeProgressBound = "1";
+      this.modal.addEventListener("input", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement) || target.type !== "range") {
+          return;
+        }
+        this.updateRangeProgress(target);
+      });
+    }
 
     // Recompute min-width when icon theme changes (emoji vs Lucide sizes differ)
     if (!document.documentElement.dataset.settingsTabsMinWidthBound) {

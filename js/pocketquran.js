@@ -4026,6 +4026,24 @@ class PocketQuranManager extends BaseManager {
     }
   }
 
+  updateRangeProgress(rangeEl) {
+    if (!(rangeEl instanceof HTMLInputElement)) return;
+
+    const min = parseInt(rangeEl.min, 10);
+    const max = parseInt(rangeEl.max, 10);
+    const value = parseInt(rangeEl.value, 10);
+
+    const safeMin = Number.isFinite(min) ? min : 1;
+    const safeMax = Number.isFinite(max) ? max : safeMin + 1;
+    const safeValue = Number.isFinite(value) ? value : safeMin;
+
+    const range = Math.max(1, safeMax - safeMin);
+    const progress = ((safeValue - safeMin) / range) * 100;
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+
+    rangeEl.style.setProperty("--jump-progress", `${clampedProgress}%`);
+  }
+
   applyFontSizes(arabicPx, translationPx, opts = {}) {
     const { syncInputs = false, persist = false } = opts;
 
@@ -4045,6 +4063,9 @@ class PocketQuranManager extends BaseManager {
       if (this.translationSizeValue)
         this.translationSizeValue.textContent = `${t}px`;
     }
+
+    this.updateRangeProgress(this.arabicSizeRange);
+    this.updateRangeProgress(this.translationSizeRange);
 
     if (persist) {
       this.persistPocketQuranSettings({

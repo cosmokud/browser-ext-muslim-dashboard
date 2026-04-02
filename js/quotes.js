@@ -1043,7 +1043,7 @@ class QuotesManager extends BaseManager {
 
   getLanguageFlag(code) {
     const flags = {
-      en: "EN",
+      en: "🇺🇸",
       id: "🇮🇩",
       ar: "🇸🇦",
       tr: "🇹🇷",
@@ -1143,7 +1143,8 @@ class QuotesManager extends BaseManager {
       const current = this.getSelectedDefaultLanguageCode();
       const langInfo =
         languages.find((l) => l.code === current) || languages[0];
-      const langCode = String(langInfo.code || "en").toUpperCase();
+      const langCodeRaw = String(langInfo.code || "en").toLowerCase();
+      const langCode = langCodeRaw === "en" ? "US" : langCodeRaw.toUpperCase();
       btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
       btn.setAttribute("aria-label", `Language: ${langInfo.name}`);

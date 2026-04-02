@@ -590,7 +590,7 @@ class HadithManager extends BaseManager {
 
   getLanguageFlag(code) {
     const flags = {
-      en: "EN",
+      en: "🇺🇸",
       id: "🇮🇩",
       ar: "🇸🇦",
       tr: "🇹🇷",
@@ -647,7 +647,8 @@ class HadithManager extends BaseManager {
       const langInfo =
         languages.find((l) => l.code === currentLang) || languages[0];
 
-      const langCode = String(langInfo.code || "en").toUpperCase();
+      const langCodeRaw = String(langInfo.code || "en").toLowerCase();
+      const langCode = langCodeRaw === "en" ? "US" : langCodeRaw.toUpperCase();
       btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
       btn.setAttribute("aria-label", `Language: ${langInfo.name}`);
