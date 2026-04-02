@@ -600,11 +600,11 @@ class StickyNotesManager {
       }
     }
 
-    // Apply transparency (overrides alpha if provided)
-    if (note.transparency < 1) {
-      const adjusted = this.adjustAlpha(bg, note.transparency);
-      if (adjusted) bg = adjusted;
-    }
+    // Always apply note transparency to keep the opacity slider authoritative,
+    // including 100% (alpha 1.0) for palettes with built-in alpha values.
+    const normalizedAlpha = this.clampNumber(note.transparency, 0, 1, 1);
+    const adjusted = this.adjustAlpha(bg, normalizedAlpha);
+    if (adjusted) bg = adjusted;
 
     let styles = `
       left: ${note.x}px;
@@ -617,7 +617,18 @@ class StickyNotesManager {
     `;
 
     if (note.glassEffect || note.blur > 0) {
-      const blurValue = note.glassEffect ? Math.max(note.blur, 10) : note.blur;
+      const legacyBlurPower = Math.round(
+        (this.clampNumber(note.blur, 0, 20, 0) / 20) * 200,
+      );
+      const effectiveBlurPower = this.clampNumber(
+        note.blurPower,
+        0,
+        200,
+        legacyBlurPower,
+      );
+      const blurValue = note.glassEffect
+        ? Number(((effectiveBlurPower / 200) * 30).toFixed(2))
+        : this.clampNumber(note.blur, 0, 30, 0);
       styles += `backdrop-filter: blur(${blurValue}px); -webkit-backdrop-filter: blur(${blurValue}px);`;
       // apply glass border and subtle glass shadow on top of the default note shadow
       styles += `border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow), 0 10px 40px rgba(0,0,0,0.3);`;
@@ -1504,10 +1515,6 @@ class StickyNotesManager {
           100,
           note.glassOpacity || 100,
         );
-      } else {
-        // Selecting a solid color disables per-note glass by default.
-        note.blurState = "off";
-        note.blurPowerEnabled = false;
       }
 
       this.applyNoteBlurState(noteId, { save: false });
