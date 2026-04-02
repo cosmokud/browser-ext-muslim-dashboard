@@ -8605,13 +8605,17 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   overflow: auto;
+  justify-content: center;
 }
 
 .flashcard-flip-card.flashcard-mode-study .flashcard-face {
   position: relative;
   inset: auto;
   padding: 0;
-  display: block;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
   border-radius: 0;
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
@@ -8626,6 +8630,10 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .flashcard-flip-card.flashcard-mode-study .flashcard-face-content {
   max-height: none;
   overflow: visible;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Dashboard animations (flip + next/prev) */
@@ -8737,8 +8745,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .flashcard-flip-card.flashcard-mode-study .flashcard-face-content {
-  display: block;
-  height: auto;
+  display: flex;
+  height: 100%;
 }
 
 .flashcard-face-content.flashcard-question,
