@@ -98,8 +98,8 @@ class GridLayoutManager {
       ["hadithCard"],
       ["pocketQuranCard"],
       ["todoCard", "qiblaCard", "lunarPhaseCard"],
-      ["weatherCard"],
       ["notesCard"],
+      ["weatherCard"],
     ];
 
     // Bound event handlers

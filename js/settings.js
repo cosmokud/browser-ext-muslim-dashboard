@@ -4898,8 +4898,8 @@ class SettingsManager extends BaseManager {
             ["flashcardCard", "adhkarCard"],
             ["hadithCard"],
             ["pocketQuranCard"],
-            ["notesCard"],
             ["todoCard", "qiblaCard", "lunarPhaseCard"],
+            ["notesCard"],
             ["weatherCard"],
           ];
 

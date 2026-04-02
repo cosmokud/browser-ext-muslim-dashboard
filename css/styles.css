@@ -1991,6 +1991,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-delete-btn {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2103,6 +2105,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 1;
   width: 32px;
   height: 32px;
   min-width: 32px;
@@ -8053,6 +8056,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2147483647;
 }
 
 .delete-confirm-content {
