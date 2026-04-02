@@ -7947,16 +7947,46 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .calendar-day {
+  position: relative;
   padding: var(--spacing-sm);
+  min-height: 42px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
   transition:
     background var(--transition-fast),
     color var(--transition-fast);
   will-change: background;
   backface-visibility: hidden;
   transform: translateZ(0);
+}
+
+.calendar-day-number {
+  line-height: 1;
+}
+
+.calendar-fast-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 8px;
+  max-width: 100%;
+}
+
+.calendar-fast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 26%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--glass-bg) 55%, transparent);
+  cursor: help;
 }
 
 .calendar-day:hover:not(.empty) {
@@ -7978,8 +8008,65 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   box-shadow: 0 2px 8px rgba(26, 95, 74, 0.4);
 }
 
+.calendar-day.today .calendar-fast-dot {
+  border-color: color-mix(in srgb, white 75%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, white 35%, transparent);
+}
+
 .calendar-day.friday {
   color: var(--accent-gold);
+}
+
+.calendar-fast-dot--ramadan {
+  background: var(--primary-color);
+}
+
+.calendar-fast-dot--dhu-hijjah-first-ten {
+  background: color-mix(
+    in srgb,
+    var(--primary-light) 60%,
+    var(--accent-gold) 40%
+  );
+}
+
+.calendar-fast-dot--arafah {
+  background: var(--accent-gold);
+}
+
+.calendar-fast-dot--tasua {
+  background: color-mix(in srgb, #4bc0c8 70%, var(--primary-light) 30%);
+}
+
+.calendar-fast-dot--ashura {
+  background: #2ea7ff;
+}
+
+.calendar-fast-dot--shawwal-window {
+  background: color-mix(in srgb, var(--primary-light) 55%, white 45%);
+}
+
+.calendar-fast-dot--white-days {
+  background: color-mix(in srgb, var(--accent-gold-light) 86%, white 14%);
+}
+
+.calendar-fast-dot--monday {
+  background: color-mix(in srgb, var(--primary-color) 74%, white 26%);
+}
+
+.calendar-fast-dot--thursday {
+  background: color-mix(in srgb, #4ea8de 74%, white 26%);
+}
+
+.calendar-fast-dot--no-fast-eid-fitr {
+  background: #e74c3c;
+}
+
+.calendar-fast-dot--no-fast-eid-adha {
+  background: #c0392b;
+}
+
+.calendar-fast-dot--no-fast-tashreeq {
+  background: #ff7f50;
 }
 
 .calendar-today-info {

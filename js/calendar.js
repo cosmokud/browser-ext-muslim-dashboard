@@ -110,7 +110,7 @@ class CalendarManager {
   renderHijriCalendar() {
     const hijriDate = this.hijriConverter.toHijri(
       this.viewingDate,
-      this.hijriAdjustment
+      this.hijriAdjustment,
     );
     const { year, month } = hijriDate;
 
@@ -125,23 +125,29 @@ class CalendarManager {
     // Get days in month
     const daysInMonth = this.hijriConverter.getHijriDaysInMonth(year, month);
 
-    // Get first day of month
-    const firstDayOfWeek = this.hijriConverter.getFirstDayOfHijriMonth(
+    // Get first day of month, aligned with the configured Hijri adjustment.
+    const firstDayOfWeek = this._gregorianForDisplayedHijri(
       year,
-      month
-    );
+      month,
+      1,
+    ).getDay();
 
     // Get today's Hijri date for highlighting
     const todayHijri = this.hijriConverter.toHijri(
       new Date(),
-      this.hijriAdjustment
+      this.hijriAdjustment,
     );
 
     this.renderDays(
       daysInMonth,
       firstDayOfWeek,
       todayHijri.day,
-      todayHijri.month === month && todayHijri.year === year
+      todayHijri.month === month && todayHijri.year === year,
+      {
+        type: "hijri",
+        hijriYear: year,
+        hijriMonth: month,
+      },
     );
   }
 
@@ -186,16 +192,21 @@ class CalendarManager {
       today.getFullYear() === year && today.getMonth() === month;
     const todayDay = today.getDate();
 
-    this.renderDays(daysInMonth, firstDayOfWeek, todayDay, isCurrentMonth);
+    this.renderDays(daysInMonth, firstDayOfWeek, todayDay, isCurrentMonth, {
+      type: "gregorian",
+      year,
+      month,
+    });
   }
 
   /**
    * Render calendar days
    */
-  renderDays(daysInMonth, firstDayOfWeek, todayDay, isCurrentPeriod) {
+  renderDays(daysInMonth, firstDayOfWeek, todayDay, isCurrentPeriod, context) {
     if (!this.daysEl) return;
 
     let html = "";
+    const fastingVisibility = this._getFastingVisibilitySettings();
 
     // Empty cells before first day
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -204,17 +215,196 @@ class CalendarManager {
 
     // Day cells
     for (let day = 1; day <= daysInMonth; day++) {
+      const dateDetails = this._resolveDateDetails(context, day);
       const isToday = isCurrentPeriod && day === todayDay;
-      const isFriday = (firstDayOfWeek + day - 1) % 7 === 5;
+      const isFriday = dateDetails.gregorianDate.getDay() === 5;
+      const markers = this._getFastingMarkersForDate(
+        dateDetails.gregorianDate,
+        dateDetails.hijriDate,
+        fastingVisibility,
+      );
 
       let classes = "calendar-day";
       if (isToday) classes += " today";
       if (isFriday) classes += " friday";
+      if (markers.length) classes += " has-fast-marks";
 
-      html += `<span class="${classes}">${day}</span>`;
+      const dotsHtml = this._renderFastingMarkerDots(markers);
+
+      html += `<span class="${classes}"><span class="calendar-day-number">${day}</span>${dotsHtml}</span>`;
     }
 
     this.daysEl.innerHTML = html;
+  }
+
+  _resolveDateDetails(context, day) {
+    if (context?.type === "hijri") {
+      const hijriDate = {
+        year: context.hijriYear,
+        month: context.hijriMonth,
+        day,
+      };
+
+      return {
+        hijriDate,
+        gregorianDate: this._gregorianForDisplayedHijri(
+          hijriDate.year,
+          hijriDate.month,
+          hijriDate.day,
+        ),
+      };
+    }
+
+    const year = Number.isFinite(context?.year)
+      ? context.year
+      : this.viewingDate.getFullYear();
+    const month = Number.isFinite(context?.month)
+      ? context.month
+      : this.viewingDate.getMonth();
+    const gregorianDate = new Date(year, month, day);
+    const hijriDate = this.hijriConverter.toHijri(
+      gregorianDate,
+      this.hijriAdjustment,
+    );
+
+    return { gregorianDate, hijriDate };
+  }
+
+  _gregorianForDisplayedHijri(hy, hm, hd) {
+    const g = this.hijriConverter.toGregorian(hy, hm, hd);
+    const shifted = new Date(g.getFullYear(), g.getMonth(), g.getDate());
+    shifted.setDate(shifted.getDate() - Number(this.hijriAdjustment || 0));
+    return shifted;
+  }
+
+  _getFastingVisibilitySettings() {
+    const settings = this.storage?.getSettings
+      ? this.storage.getSettings()
+      : {};
+    return settings?.fasting?.visibility || {};
+  }
+
+  _getFastingMarkersForDate(gregorianDate, hijriDate, visibility = {}) {
+    const markers = [];
+    const forbidden = [];
+
+    const hm = Number(hijriDate?.month || 0);
+    const hd = Number(hijriDate?.day || 0);
+    const dow = gregorianDate.getDay();
+
+    // Forbidden days override all other fasting categories.
+    if (hm === 10 && hd === 1) {
+      forbidden.push({
+        key: "no-fast-eid-fitr",
+        label: "No fasting: Eid al-Fitr (1 Shawwal)",
+      });
+    }
+    if (hm === 12 && hd === 10) {
+      forbidden.push({
+        key: "no-fast-eid-adha",
+        label: "No fasting: Eid al-Adha (10 Dhu al-Hijjah)",
+      });
+    }
+    if (hm === 12 && hd >= 11 && hd <= 13) {
+      forbidden.push({
+        key: "no-fast-tashreeq",
+        label: "No fasting: Days of Tashreeq (11-13 Dhu al-Hijjah)",
+      });
+    }
+
+    if (forbidden.length) return forbidden;
+
+    if (hm === 9 && visibility.ramadan !== false) {
+      markers.push({
+        key: "ramadan",
+        label: "Ramadan (obligatory fasting month)",
+      });
+    }
+
+    if (hm === 12 && hd >= 1 && hd <= 9 && visibility.dhuAlHijjah !== false) {
+      markers.push({
+        key: "dhu-hijjah-first-ten",
+        label: "First 9 days of Dhu al-Hijjah",
+      });
+    }
+
+    if (hm === 12 && hd === 9 && visibility.arafah !== false) {
+      markers.push({
+        key: "arafah",
+        label: "Day of Arafah (9 Dhu al-Hijjah)",
+      });
+    }
+
+    if (hm === 1 && hd === 9) {
+      markers.push({
+        key: "tasua",
+        label: "Tasu'a (9 Muharram)",
+      });
+    }
+
+    if (hm === 1 && hd === 10) {
+      markers.push({
+        key: "ashura",
+        label: "Ashura (10 Muharram)",
+      });
+    }
+
+    if (hm === 10 && hd >= 2) {
+      markers.push({
+        key: "shawwal-window",
+        label: "6 days of Shawwal window",
+      });
+    }
+
+    if (
+      hd >= 13 &&
+      hd <= 15 &&
+      !(hm === 12 && hd === 13) &&
+      visibility.ayyamAlBeed !== false
+    ) {
+      markers.push({
+        key: "white-days",
+        label: "Ayyam al-Bid (13th-15th)",
+      });
+    }
+
+    if (dow === 1 && visibility.monday !== false) {
+      markers.push({
+        key: "monday",
+        label: "Monday fast (weekly sunnah)",
+      });
+    }
+
+    if (dow === 4 && visibility.thursday !== false) {
+      markers.push({
+        key: "thursday",
+        label: "Thursday fast (weekly sunnah)",
+      });
+    }
+
+    return markers;
+  }
+
+  _renderFastingMarkerDots(markers) {
+    if (!Array.isArray(markers) || !markers.length) return "";
+
+    const dots = markers
+      .map((marker) => {
+        const label = this._escapeAttribute(marker.label);
+        const key = String(marker.key || "").replace(/[^a-z0-9-]/gi, "");
+        return `<span class="calendar-fast-dot calendar-fast-dot--${key}" title="${label}" aria-label="${label}"></span>`;
+      })
+      .join("");
+
+    return `<span class="calendar-fast-dots">${dots}</span>`;
+  }
+
+  _escapeAttribute(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
   }
 
   /**
@@ -238,7 +428,7 @@ class CalendarManager {
       };
       this.gregorianDisplay.textContent = today.toLocaleDateString(
         "en-US",
-        options
+        options,
       );
     }
   }
