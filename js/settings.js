@@ -257,6 +257,10 @@ class SettingsManager extends BaseManager {
     this.themeCustomWidthValue = document.getElementById(
       "themeCustomWidthValue",
     );
+    this.themeDashboardScale = document.getElementById("themeDashboardScale");
+    this.themeDashboardScaleValue = document.getElementById(
+      "themeDashboardScaleValue",
+    );
 
     // Icon theme picker
     this.iconThemePicker = document.getElementById("iconThemePicker");
@@ -517,6 +521,7 @@ class SettingsManager extends BaseManager {
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
     this.applyUiBlurPower(settings.uiBlurPower ?? 200);
+    this.applyDashboardScale(settings.dashboardScale ?? 100);
   }
 
   updateSettingsTabsMinWidth() {
@@ -1896,6 +1901,12 @@ class SettingsManager extends BaseManager {
       this.toggleThemeCustomWidth(false);
     }
 
+    if (this.themeDashboardScale) {
+      const clamped = this.clampNumber(settings.dashboardScale, 25, 500, 100);
+      this.themeDashboardScale.value = String(clamped);
+    }
+    this.updateThemeDashboardScaleLabel();
+
     // Highlight active theme
     const activeTheme = themeSettings.name || "pureWhite";
     this.updateThemePickerActiveState(activeTheme);
@@ -1983,6 +1994,35 @@ class SettingsManager extends BaseManager {
       this.themeContainerWidthCustom.value = String(clamped);
       this.themeCustomWidthValue.textContent = clamped + "%";
     }
+  }
+
+  /**
+   * Update theme dashboard scale label
+   */
+  updateThemeDashboardScaleLabel() {
+    if (this.themeDashboardScaleValue && this.themeDashboardScale) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeDashboardScale.value, 10),
+        25,
+        500,
+        100,
+      );
+      this.themeDashboardScale.value = String(clamped);
+      this.themeDashboardScaleValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Apply dashboard scale setting to the whole UI
+   */
+  applyDashboardScale(scalePercent) {
+    const clamped = this.clampNumber(scalePercent, 25, 500, 100);
+    const scaleFactor = clamped / 100;
+    const root = document.documentElement;
+    if (!root) return;
+
+    root.style.zoom = String(scaleFactor);
+    root.style.setProperty("--dashboard-scale", String(scaleFactor));
   }
 
   /**
@@ -2591,6 +2631,13 @@ class SettingsManager extends BaseManager {
         );
       });
     }
+
+    if (this.themeDashboardScale) {
+      this.themeDashboardScale.addEventListener("input", () => {
+        this.updateThemeDashboardScaleLabel();
+        this.applyDashboardScale(parseInt(this.themeDashboardScale.value, 10));
+      });
+    }
   }
 
   /**
@@ -2656,6 +2703,13 @@ class SettingsManager extends BaseManager {
         70,
       );
     }
+
+    settings.dashboardScale = this.clampNumber(
+      parseInt(this.themeDashboardScale?.value, 10),
+      25,
+      500,
+      100,
+    );
 
     // Apply theme manager settings
     if (window.dashboard?.themes) {
@@ -4023,6 +4077,9 @@ class SettingsManager extends BaseManager {
       settings.containerWidth,
       settings.containerWidthCustom,
     );
+
+    // Apply full dashboard scale
+    this.applyDashboardScale(settings.dashboardScale ?? 100);
 
     // Apply UI blur power
     this.applyUiBlurPower(settings.uiBlurPower ?? 200);
