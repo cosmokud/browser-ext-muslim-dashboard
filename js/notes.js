@@ -1485,16 +1485,6 @@ class NotesManager extends BaseManager {
     const markdown = String(value || "").trim();
     if (!markdown) return "<p><br></p>";
 
-    try {
-      if (window.marked && typeof window.marked.parse === "function") {
-        return this.normalizeHtml(
-          this.sanitizeHtml(window.marked.parse(markdown)),
-        );
-      }
-    } catch (_error) {
-      // Fall back to plain text HTML when markdown parsing fails.
-    }
-
     return this.textToHtml(markdown);
   }
 

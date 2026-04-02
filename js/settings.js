@@ -4889,22 +4889,9 @@ class SettingsManager extends BaseManager {
             label: "Resetting…",
           });
           const startedAt = Date.now();
-          const defaultGridLayoutRows = [
-            ["header"],
-            ["pinnedAppsSection"],
-            ["searchBarSection"],
-            ["quoteSection"],
-            ["prayerTimesCard", "fastingCard", "calendarCard"],
-            ["flashcardCard", "adhkarCard"],
-            ["hadithCard"],
-            ["pocketQuranCard"],
-            ["todoCard", "qiblaCard", "lunarPhaseCard"],
-            ["notesCard"],
-            ["weatherCard"],
-          ];
 
           try {
-            window.dashboard.gridLayout.resetToDefault(defaultGridLayoutRows);
+            window.dashboard.gridLayout.resetToDefault();
             this.showToast("Layout reset to default!", "success");
           } finally {
             const minDuration = 900;

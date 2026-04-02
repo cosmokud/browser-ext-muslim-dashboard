@@ -1686,82 +1686,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   opacity: 0;
 }
 
-#notesCard .mdnotes-wysiwyg-host .milkdown {
-  min-height: 100%;
-  background: transparent;
-  color: var(--text-primary);
-  direction: ltr;
-  position: relative;
-  overflow: visible;
-  --crepe-color-background: transparent;
-  --crepe-color-on-background: var(--text-primary);
-  --crepe-color-surface: var(--glass-bg-hover);
-  --crepe-color-surface-low: var(--glass-bg);
-  --crepe-color-on-surface: var(--text-primary);
-  --crepe-color-on-surface-variant: var(--text-secondary);
-  --crepe-color-outline: var(--text-muted);
-  --crepe-color-primary: var(--accent-gold);
-  --crepe-color-secondary: rgba(212, 175, 55, 0.2);
-  --crepe-color-on-secondary: var(--text-primary);
-  --crepe-color-inline-code: var(--accent-gold-light);
-  --crepe-color-hover: rgba(212, 175, 55, 0.12);
-  --crepe-color-selected: rgba(212, 175, 55, 0.2);
-  --crepe-color-inline-area: rgba(212, 175, 55, 0.15);
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .editor {
-  min-height: 320px;
-  max-height: none;
-  overflow: visible;
-  direction: ltr;
-  position: relative;
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
-  min-height: 320px;
-  padding: 18px 12px 12px;
-  line-height: 1.65;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  direction: ltr;
-  max-height: 66vh;
-  overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
-  caret-color: var(--text-primary) !important;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .ProseMirror.ProseMirror-hideselection,
-#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror.virtual-cursor-enabled {
-  caret-color: var(--text-primary) !important;
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror::-webkit-scrollbar {
-  width: var(--scrollbar-size-thin);
-  height: var(--scrollbar-size-thin);
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .ProseMirror::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .ProseMirror::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: var(--radius-full);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
 #notesCard .mdnotes-footer {
   display: flex;
   align-items: center;
@@ -1779,127 +1703,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-status[data-state="loading"] {
   color: #ffd598;
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle,
-#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-slash-menu {
-  z-index: 1400 !important;
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-slash-menu {
-  z-index: 1600 !important;
-  max-height: min(56vh, 420px);
-  overflow: auto;
-  background: color-mix(in srgb, var(--body-bg) 96%, #111 4%) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
-}
-
-#notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
-  left: 0 !important;
-  right: auto !important;
-  inset-inline-start: 0 !important;
-  inset-inline-end: auto !important;
-  margin-left: -30px;
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px 5px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
-}
-
-#notesCard.floating-card
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle {
-  margin-left: -54px;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-image-inline
-  .placeholder
-  .uploader,
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-image-block
-  .placeholder
-  .uploader {
-  display: none !important;
-  pointer-events: none !important;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-image-inline
-  .placeholder
-  .text,
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-image-block
-  .placeholder
-  .text {
-  margin-left: 0 !important;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle[data-notes-hidden="true"] {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle[data-notes-hidden="false"] {
-  opacity: 1 !important;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle
-  .operation-item {
-  width: 24px;
-  height: 24px;
-  padding: 2px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle
-  .operation-item
-  svg {
-  width: 16px;
-  height: 16px;
-}
-
-#notesCard
-  .mdnotes-wysiwyg-host
-  .milkdown
-  .milkdown-block-handle
-  .operation-item:hover {
-  background: var(--glass-bg-hover);
 }
 
 @media (max-width: 1024px) {
@@ -1936,17 +1739,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
   #notesCard .mdnotes-editor-body {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  #notesCard .mdnotes-wysiwyg-host .milkdown .milkdown-block-handle {
-    margin-left: -20px;
-  }
-
-  #notesCard.floating-card
-    .mdnotes-wysiwyg-host
-    .milkdown
-    .milkdown-block-handle {
-    margin-left: -30px;
   }
 }
 
@@ -2892,311 +2684,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border: 1px solid var(--glass-border);
 }
 
-.notes-editor.notes-editor-milkdown {
-  --notes-milkdown-content-x-pad: var(--spacing-md);
-  padding: 0;
-  overflow: visible;
-  max-height: none;
-  position: relative;
-  backdrop-filter: none;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown {
-  min-height: 100%;
-  color: inherit;
-  background: transparent;
-  position: relative;
-  --crepe-color-background: transparent;
-  --crepe-color-on-background: var(--text-primary);
-  --crepe-color-surface: var(--glass-bg-hover);
-  --crepe-color-surface-low: var(--glass-bg);
-  --crepe-color-on-surface: var(--text-primary);
-  --crepe-color-on-surface-variant: var(--text-secondary);
-  --crepe-color-outline: var(--text-muted);
-  --crepe-color-primary: var(--accent-gold);
-  --crepe-color-secondary: rgba(212, 175, 55, 0.18);
-  --crepe-color-on-secondary: var(--text-primary);
-  --crepe-color-inline-code: var(--accent-gold-light);
-  --crepe-color-hover: rgba(212, 175, 55, 0.12);
-  --crepe-color-selected: rgba(212, 175, 55, 0.2);
-  --crepe-color-inline-area: rgba(212, 175, 55, 0.16);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .editor {
-  min-height: 320px;
-  max-height: 65vh;
-  overflow: auto;
-  position: relative;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar {
-  width: var(--scrollbar-size-thin);
-  height: var(--scrollbar-size-thin);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .editor::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: var(--radius-full);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror {
-  min-height: 320px;
-  padding: var(--spacing-md) var(--notes-milkdown-content-x-pad);
-  color: inherit;
-  line-height: 1.65;
-  outline: none;
-  background: transparent;
-  position: relative;
-}
-
-@media (max-width: 768px) {
-  .notes-editor.notes-editor-milkdown .milkdown .ProseMirror {
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .ProseMirror[contenteditable="false"] {
-  cursor: default;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .ProseMirror[contenteditable="true"] {
-  cursor: text;
-  caret-color: var(--text-primary) !important;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror.ProseMirror-focused {
-  caret-color: var(--text-primary) !important;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-block-handle,
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-slash-menu {
-  z-index: 120;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-block-handle {
-  margin-left: -24px;
-  padding: 2px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier, 1)));
-}
-
-@media (max-width: 768px) {
-  .notes-editor.notes-editor-milkdown .milkdown .milkdown-block-handle {
-    margin-left: -14px;
-  }
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-image-inline
-  .placeholder
-  .uploader,
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-image-block
-  .placeholder
-  .uploader {
-  display: none !important;
-  pointer-events: none !important;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-image-inline
-  .placeholder
-  .text,
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-image-block
-  .placeholder
-  .text {
-  margin-left: 0 !important;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-block-handle[data-notes-hidden="true"] {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-block-handle
-  .operation-item {
-  width: 28px;
-  height: 28px;
-  padding: 2px;
-  border-radius: var(--radius-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-block-handle
-  .operation-item
-  svg {
-  width: 20px;
-  height: 20px;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-block-handle
-  .operation-item:hover {
-  background: var(--glass-bg-hover);
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-block-handle
-  .operation-item {
-  pointer-events: auto;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-slash-menu {
-  background: rgba(16, 22, 30, 0.98) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-slash-menu .tab-group {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror p,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror blockquote,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h1,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h2,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h3,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h4,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h5,
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror h6 {
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown pre {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 0 var(--spacing-sm) 0;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--glass-bg-hover) 82%, black 18%);
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: pre;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown :not(pre) > code {
-  display: inline-block;
-  padding: 0.08em 0.42em;
-  border-radius: 8px;
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  background: rgba(212, 175, 55, 0.16);
-  color: var(--accent-gold-light);
-  line-height: 1.3;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .cm-editor {
-  background: color-mix(in srgb, var(--glass-bg-hover) 86%, black 14%);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .cm-gutters {
-  background: transparent;
-  color: var(--text-muted);
-  border-right: 1px solid var(--glass-border);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .cm-activeLine,
-.notes-editor.notes-editor-milkdown .milkdown .cm-activeLineGutter {
-  background: rgba(212, 175, 55, 0.08);
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .cm-selectionBackground {
-  background: rgba(212, 175, 55, 0.24) !important;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .milkdown-list-item-block li {
-  align-items: center;
-  min-height: 1.65em;
-}
-
-.notes-editor.notes-editor-milkdown .milkdown .ProseMirror li > p {
-  margin: 0;
-  padding: 0;
-  line-height: 1.65;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-list-item-block
-  li
-  .label-wrapper {
-  display: inline-flex;
-  height: 1.65em;
-  min-height: 1.65em;
-  padding-top: 0;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-list-item-block
-  li
-  .label-wrapper
-  .label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  padding: 0;
-  line-height: 1.65;
-}
-
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-list-item-block
-  li
-  .label-wrapper
-  .checked,
-.notes-editor.notes-editor-milkdown
-  .milkdown
-  .milkdown-list-item-block
-  li
-  .label-wrapper
-  .unchecked {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0;
-}
-
 #notesEditor,
 .notes-editor {
   scrollbar-width: thin;
@@ -3237,15 +2724,11 @@ textarea.notes-editor {
   font-family: Consolas, "Courier New", monospace;
 }
 
-.notes-editor.notes-md-preview:not(
-    .notes-editor-milkdown
-  )[contenteditable="false"] {
+.notes-editor.notes-md-preview[contenteditable="false"] {
   cursor: default;
 }
 
-.notes-editor.notes-md-preview:not(
-    .notes-editor-milkdown
-  )[contenteditable="true"] {
+.notes-editor.notes-md-preview[contenteditable="true"] {
   cursor: text;
 }
 
@@ -3262,7 +2745,7 @@ textarea.notes-editor:focus {
   text-decoration: underline;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) pre {
+.notes-editor.notes-md-preview pre {
   width: 100%;
   max-width: 100%;
   margin: 0 0 var(--spacing-sm) 0;
@@ -3275,12 +2758,12 @@ textarea.notes-editor:focus {
   white-space: pre;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) code {
+.notes-editor.notes-md-preview code {
   font-family: "Courier New", monospace;
   font-size: 0.95em;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) pre code {
+.notes-editor.notes-md-preview pre code {
   display: block;
   min-width: max-content;
   background: transparent;
@@ -3291,12 +2774,12 @@ textarea.notes-editor:focus {
   white-space: inherit;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) :not(pre) > code,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) p code,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) li code,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) blockquote code,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) td code,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) th code {
+.notes-editor.notes-md-preview :not(pre) > code,
+.notes-editor.notes-md-preview p code,
+.notes-editor.notes-md-preview li code,
+.notes-editor.notes-md-preview blockquote code,
+.notes-editor.notes-md-preview td code,
+.notes-editor.notes-md-preview th code {
   display: inline-block;
   padding: 0.08em 0.42em;
   border-radius: 8px;
@@ -3306,7 +2789,7 @@ textarea.notes-editor:focus {
   line-height: 1.3;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) blockquote {
+.notes-editor.notes-md-preview blockquote {
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-left: 3px solid var(--accent-gold);
@@ -3315,34 +2798,33 @@ textarea.notes-editor:focus {
   color: var(--text-secondary);
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown)
-  input[type="checkbox"] {
+.notes-editor.notes-md-preview input[type="checkbox"] {
   margin-right: var(--spacing-xs);
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) img,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) video,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) iframe {
+.notes-editor.notes-md-preview img,
+.notes-editor.notes-md-preview video,
+.notes-editor.notes-md-preview iframe {
   display: block;
   max-width: none;
   height: auto;
   margin: 0 0 var(--spacing-sm) 0;
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) iframe {
+.notes-editor.notes-md-preview iframe {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) table {
+.notes-editor.notes-md-preview table {
   width: max-content;
   min-width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing-sm);
 }
 
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) th,
-.notes-editor.notes-md-preview:not(.notes-editor-milkdown) td {
+.notes-editor.notes-md-preview th,
+.notes-editor.notes-md-preview td {
   border: 1px solid var(--glass-border);
   padding: 0.35rem 0.5rem;
 }
@@ -3491,8 +2973,7 @@ textarea.notes-editor:focus {
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Milkdown drop indicator uses fixed positioning; transformed ancestors
-   skew its coordinates. Keep notes card transform-free to match playground behavior. */
+/* Keep notes card transform-free so editor overlays and hit-testing remain stable. */
 #notesCard.card,
 #notesCard.card:hover,
 #notesCard.floating-card,
@@ -3525,21 +3006,13 @@ textarea.notes-editor:focus {
 #notesCard .mdnotes-main,
 #notesCard .mdnotes-editor-body,
 #notesCard .mdnotes-pane,
-#notesCard .mdnotes-wysiwyg-host,
-#notesCard .mdnotes-wysiwyg-host .milkdown,
-#notesCard .mdnotes-wysiwyg-host .milkdown .editor,
-#notesCard .mdnotes-wysiwyg-host .milkdown .ProseMirror {
+#notesCard .mdnotes-wysiwyg-host {
   transform: none !important;
   perspective: none !important;
   filter: none !important;
   -webkit-filter: none !important;
   will-change: auto !important;
   contain: none !important;
-}
-
-#notesCard .milkdown-drop-indicator,
-#notesCard .crepe-drop-cursor {
-  z-index: 240;
 }
 
 /* ========================================

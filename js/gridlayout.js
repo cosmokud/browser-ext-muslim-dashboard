@@ -2205,18 +2205,10 @@ class GridLayoutManager {
   /**
    * Reset layout to default
    */
-  resetToDefault(defaultRowsOverride = null) {
-    const hasOverrideRows =
-      Array.isArray(defaultRowsOverride) && defaultRowsOverride.length > 0;
-    const sourceRows = hasOverrideRows
-      ? JSON.parse(JSON.stringify(defaultRowsOverride))
-      : JSON.parse(JSON.stringify(this.defaultLayout));
-    const defaultRows = this.normalizeLayout(sourceRows);
-
-    // Keep canonical default in sync when caller provides an explicit layout.
-    if (hasOverrideRows) {
-      this.defaultLayout = JSON.parse(JSON.stringify(defaultRows));
-    }
+  resetToDefault() {
+    const defaultRows = this.normalizeLayout(
+      JSON.parse(JSON.stringify(this.defaultLayout)),
+    );
 
     this.rows = JSON.parse(JSON.stringify(defaultRows));
     this.activeRows = JSON.parse(JSON.stringify(defaultRows));
