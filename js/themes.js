@@ -24,6 +24,10 @@ class ThemeManager {
     "todoCard",
     "notesCard",
     "weatherCard",
+    "greeting",
+    "dateDisplay",
+    "timeMainRow",
+    "headerNextPrayer",
   ];
 
   // Theme definitions with color palettes for both dark and light modes

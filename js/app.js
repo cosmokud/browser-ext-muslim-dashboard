@@ -2472,7 +2472,9 @@ class MuslimDashboard {
     const headingSettings = settings.heading || {};
     const visibility = settings.componentVisibility || {};
     const timeSection = document.querySelector(".time-section");
-    const timeMainRow = document.querySelector(".time-main-row");
+    const timeMainRow =
+      document.getElementById("timeMainRow") ||
+      document.querySelector(".time-main-row");
     const currentSeconds = document.getElementById("currentSeconds");
     const toggleHeaderSurface = (el, enabled) => {
       if (!el) return;
