@@ -1930,12 +1930,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item-delete {
-  --_action-btn-size: 30px;
   position: absolute;
   right: 8px;
-  top: calc(50% - (var(--_action-btn-size) / 2));
+  top: calc(50% - 15px);
   z-index: 1;
-  font-size: 0.95rem;
 }
 
 .notes-list-item:hover {
@@ -5537,10 +5535,11 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .favicon-btn {
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: calc(var(--spacing-xs) + 3px) calc(var(--spacing-md) + 2px);
+  min-height: 40px;
   border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   border: 1px solid var(--glass-border);
@@ -5567,6 +5566,10 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .favicon-import-btn:hover {
   border-color: var(--primary-light);
+}
+
+.favicon-import-url-btn:hover {
+  border-color: var(--accent-blue);
 }
 
 .favicon-status {
@@ -11318,7 +11321,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
-  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ) {
   --_action-btn-size: var(--action-btn-size);
@@ -11357,7 +11359,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
-    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ):hover:not(:disabled) {
   background: var(--action-btn-bg-hover);
@@ -11371,7 +11372,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
-    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ):active:not(:disabled) {
   transform: translateY(0);
@@ -11384,7 +11384,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
-  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ):focus-visible {
   outline: 2px solid var(--action-btn-focus-ring);
@@ -11397,7 +11396,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
-  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ):disabled {
   opacity: 0.52;
@@ -11413,7 +11411,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
-    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ) {
   backdrop-filter: none;
@@ -11426,7 +11423,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
-    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   )
   .icon-theme-svg
@@ -11437,7 +11433,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
-    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   )
   svg {
@@ -11445,18 +11440,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: var(--action-btn-icon-size);
 }
 
-:where(.clear-completed-btn, .notes-delete-btn, .notes-list-item-delete) {
+:where(.clear-completed-btn, .notes-delete-btn) {
   color: var(--action-btn-danger-color);
-  border-color: var(--action-btn-danger-border);
 }
 
-:where(
-    .clear-completed-btn,
-    .notes-delete-btn,
-    .notes-list-item-delete
-  ):hover:not(:disabled) {
-  background: var(--action-btn-danger-bg-hover);
-  border-color: color-mix(in srgb, #ff7a7a 55%, var(--glass-border) 45%);
+:where(.clear-completed-btn, .notes-delete-btn):hover:not(:disabled) {
+  color: var(--action-btn-danger-color);
 }
 
 :where(.adhkar-lang-selector-btn, .quote-lang-selector-btn) {
@@ -11480,34 +11469,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-
-/* Reuse todo inline delete styling for note list row delete button. */
-.notes-list-item-delete.todo-action-btn {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.notes-list-item-delete.todo-action-btn:hover:not(:disabled) {
-  background: var(--glass-bg);
-  color: #ff6b6b;
-  transform: none;
-  box-shadow: none;
-}
-
-.notes-list-item-delete.todo-action-btn:active:not(:disabled) {
-  transform: none;
-  box-shadow: none;
 }
 
 @media (hover: hover) and (pointer: fine) {

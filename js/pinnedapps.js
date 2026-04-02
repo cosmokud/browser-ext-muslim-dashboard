@@ -52,6 +52,9 @@ class PinnedAppsManager extends BaseManager {
     this.editImportFaviconBtn = document.getElementById(
       "editPinnedAppImportFavicon",
     );
+    this.editImportFaviconUrlBtn = document.getElementById(
+      "editPinnedAppImportFaviconUrl",
+    );
     this.editFaviconFileInput = document.getElementById(
       "editPinnedAppFaviconFile",
     );
@@ -333,6 +336,13 @@ class PinnedAppsManager extends BaseManager {
       });
     }
 
+    // Favicon import by URL button
+    if (this.editImportFaviconUrlBtn) {
+      this.editImportFaviconUrlBtn.addEventListener("click", () =>
+        this.handleImportFaviconFromUrl(),
+      );
+    }
+
     // Favicon file input change
     if (this.editFaviconFileInput) {
       this.editFaviconFileInput.addEventListener("change", (e) =>
@@ -550,6 +560,64 @@ class PinnedAppsManager extends BaseManager {
     // Reset file input so same file can be selected again
     if (this.editFaviconFileInput) {
       this.editFaviconFileInput.value = "";
+    }
+  }
+
+  /**
+   * Handle favicon import from image URL
+   */
+  async handleImportFaviconFromUrl() {
+    const url = this.editUrlInput?.value.trim();
+    if (!url) {
+      this.showFaviconStatus("Please enter a URL first", "error");
+      return;
+    }
+
+    const prompted = window.prompt(
+      "Enter image URL for favicon import",
+      "https://",
+    );
+    if (prompted === null) return;
+
+    const imageUrl = String(prompted || "").trim();
+    if (!imageUrl) {
+      this.showFaviconStatus("Please enter an image URL", "error");
+      return;
+    }
+
+    // Ensure URL has protocol
+    let normalizedUrl = url;
+    if (
+      !normalizedUrl.startsWith("http://") &&
+      !normalizedUrl.startsWith("https://")
+    ) {
+      normalizedUrl = "https://" + normalizedUrl;
+    }
+
+    this.showFaviconStatus("Importing icon from URL...", "loading");
+
+    try {
+      if (!window.faviconCache?.importFromImageUrl) {
+        throw new Error("Favicon manager is unavailable.");
+      }
+
+      const dataUrl = await window.faviconCache.importFromImageUrl(
+        imageUrl,
+        normalizedUrl,
+        "pinned",
+      );
+
+      this.pendingFaviconDataUrl = dataUrl;
+      if (this.editFaviconPreview) {
+        this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
+      }
+      this.showFaviconStatus("Icon imported from URL!", "success");
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Error importing icon from image URL";
+      this.showFaviconStatus(message, "error");
     }
   }
 

@@ -3,7 +3,7 @@
  * Handles caching of favicons using IndexedDB for persistent storage
  * Features:
  * - Caches favicons as base64 data URLs
- * - Supports custom favicon imports (PNG/ICO)
+ * - Supports custom favicon imports (file + URL)
  * - Automatic downscaling to 256x256 for large images
  * - Google Favicon API fetching with caching
  * - Session-aware refresh control (only fetch on fresh start or manual refresh)
@@ -406,6 +406,80 @@ class FaviconCacheManager {
   }
 
   /**
+   * Process and import a user-provided image URL
+   * @param {string} imageUrl - Public image URL or data URL
+   * @param {string} url - The URL to associate this favicon with
+   * @param {string} type - Type of favicon ('pinned' or 'search')
+   * @returns {Promise<string>} - Base64 data URL
+   */
+  async importFromImageUrl(imageUrl, url, type = "pinned") {
+    const rawImageUrl = String(imageUrl || "").trim();
+    if (!rawImageUrl) {
+      throw new Error("Please provide an image URL.");
+    }
+
+    const isDataUrl = /^data:image\//i.test(rawImageUrl);
+    let fetchableUrl = rawImageUrl;
+
+    if (!isDataUrl) {
+      if (!/^https?:\/\//i.test(fetchableUrl)) {
+        fetchableUrl = `https://${fetchableUrl}`;
+      }
+
+      try {
+        new URL(fetchableUrl);
+      } catch (e) {
+        throw new Error("Please enter a valid image URL.");
+      }
+    }
+
+    try {
+      let dataUrl = null;
+
+      if (isDataUrl) {
+        dataUrl = rawImageUrl;
+      } else {
+        const response = await fetch(fetchableUrl, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image (HTTP ${response.status}).`);
+        }
+
+        const contentType = String(
+          response.headers.get("content-type") || "",
+        ).toLowerCase();
+        if (contentType && !contentType.startsWith("image/")) {
+          throw new Error("URL did not return an image file.");
+        }
+
+        const blob = await response.blob();
+        const maxSize = 5 * 1024 * 1024;
+        if (blob.size > maxSize) {
+          throw new Error("Image is too large. Maximum size is 5MB.");
+        }
+
+        dataUrl = await this._blobToDataUrl(blob);
+      }
+
+      // URL imports are normalized to square favicon output (<= 256x256).
+      const processedDataUrl = await this._processImage(dataUrl, {
+        forceSquare: true,
+        maxSize: FaviconCacheManager.MAX_SIZE,
+      });
+
+      await this.setCached(url, processedDataUrl, type, true);
+      return processedDataUrl;
+    } catch (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error("Failed to import image from URL.");
+    }
+  }
+
+  /**
    * Convert Blob to Data URL
    */
   _blobToDataUrl(blob) {
@@ -418,35 +492,58 @@ class FaviconCacheManager {
   }
 
   /**
-   * Process image - downscale if larger than MAX_SIZE
+   * Process image with optional square normalization.
    * @param {string} dataUrl - Base64 data URL
+   * @param {Object} options - Processing options
    * @returns {Promise<string>} - Processed base64 data URL
    */
-  async _processImage(dataUrl) {
+  async _processImage(dataUrl, options = {}) {
     return new Promise((resolve, reject) => {
       const img = new Image();
 
       img.onload = () => {
         try {
-          const maxSize = FaviconCacheManager.MAX_SIZE;
-          let { width, height } = img;
+          const maxSize = Number.isFinite(Number(options.maxSize))
+            ? Math.max(1, Number(options.maxSize))
+            : FaviconCacheManager.MAX_SIZE;
+          const forceSquare = options.forceSquare === true;
 
-          // Check if downscaling is needed
-          if (width <= maxSize && height <= maxSize) {
-            // No downscaling needed, return original
+          const needsSquareCrop = forceSquare && img.width !== img.height;
+          const needsDownscale = forceSquare
+            ? Math.min(img.width, img.height) > maxSize
+            : img.width > maxSize || img.height > maxSize;
+
+          if (!needsSquareCrop && !needsDownscale) {
             resolve(dataUrl);
             return;
           }
 
-          // Calculate new dimensions maintaining aspect ratio
-          const ratio = Math.min(maxSize / width, maxSize / height);
-          const newWidth = Math.round(width * ratio);
-          const newHeight = Math.round(height * ratio);
+          let sourceX = 0;
+          let sourceY = 0;
+          let sourceWidth = img.width;
+          let sourceHeight = img.height;
+          let outputWidth = img.width;
+          let outputHeight = img.height;
 
-          // Create canvas and draw scaled image
+          if (forceSquare) {
+            const squareSize = Math.min(img.width, img.height);
+            sourceX = Math.floor((img.width - squareSize) / 2);
+            sourceY = Math.floor((img.height - squareSize) / 2);
+            sourceWidth = squareSize;
+            sourceHeight = squareSize;
+
+            const targetSize = Math.min(squareSize, maxSize);
+            outputWidth = targetSize;
+            outputHeight = targetSize;
+          } else {
+            const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+            outputWidth = Math.max(1, Math.round(img.width * ratio));
+            outputHeight = Math.max(1, Math.round(img.height * ratio));
+          }
+
           const canvas = document.createElement("canvas");
-          canvas.width = newWidth;
-          canvas.height = newHeight;
+          canvas.width = outputWidth;
+          canvas.height = outputHeight;
 
           const ctx = canvas.getContext("2d");
           if (!ctx) {
@@ -454,13 +551,21 @@ class FaviconCacheManager {
             return;
           }
 
-          // Use better image smoothing for downscaling
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = "high";
 
-          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          ctx.drawImage(
+            img,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            0,
+            0,
+            outputWidth,
+            outputHeight,
+          );
 
-          // Convert to PNG data URL
           const result = canvas.toDataURL("image/png", 0.92);
           resolve(result);
         } catch (e) {
