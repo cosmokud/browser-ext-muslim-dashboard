@@ -1332,8 +1332,36 @@ class FlashcardManager extends BaseManager {
   renderEditorList() {
     const active = this.getActiveSet();
     const cards = active?.cards || [];
-    const readOnly =
-      this._settingsReadOnly || this.isProtectedSetId(active?.id);
+    const isDefault = this.isProtectedSetId(active?.id);
+    const readOnly = this._settingsReadOnly || isDefault;
+
+    if (!this.settingsList) return;
+
+    if (isDefault) {
+      this.settingsList.innerHTML = `
+        <div class="adhkar-default-notice">
+          <div class="adhkar-default-notice-icon">${this._getIcon("🔒", {
+            size: 24,
+          })}</div>
+          <div class="adhkar-default-notice-title">Default Flashcard Set</div>
+          <div class="adhkar-default-notice-text">
+            This is a protected default set and cannot be edited or deleted.
+            Create a custom set to add your own flashcards.
+          </div>
+          <button class="setting-btn adhkar-default-notice-btn" type="button" id="flashcardsCreateCustomBtn">
+            ${this._getIcon("➕", { size: 16 })} Create Custom Set
+          </button>
+        </div>
+      `;
+
+      const createBtn = this.settingsList.querySelector(
+        "#flashcardsCreateCustomBtn",
+      );
+      if (createBtn) {
+        createBtn.addEventListener("click", () => this.createNewSet());
+      }
+      return;
+    }
 
     const total = cards.length;
     const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
@@ -1341,8 +1369,6 @@ class FlashcardManager extends BaseManager {
 
     const start = (this.settingsPage - 1) * FlashcardManager.PAGE_SIZE;
     const end = Math.min(total, start + FlashcardManager.PAGE_SIZE);
-
-    if (!this.settingsList) return;
 
     if (!cards.length) {
       this.settingsList.innerHTML = `

@@ -1451,7 +1451,7 @@ class SettingsManager extends BaseManager {
       offsetRow.style.display = show ? "flex" : "none";
     }
     if (toggles) {
-      toggles.style.display = show ? "block" : "none";
+      toggles.style.display = show ? "" : "none";
     }
   }
 
