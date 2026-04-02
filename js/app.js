@@ -991,9 +991,9 @@ class MuslimDashboard {
     const getDashboardBlurPower = () => {
       try {
         const settings = this.storage.getSettings();
-        return settings?.uiBlurPower ?? 200;
+        return settings?.uiBlurPower ?? 100;
       } catch (e) {
-        return 200;
+        return 100;
       }
     };
 
