@@ -9510,6 +9510,37 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   pointer-events: auto;
 }
 
+.sticky-note-dropdown .sticky-note-blur-menu {
+  width: 100%;
+  display: flex;
+  position: relative;
+}
+
+.sticky-note-dropdown .sticky-note-blur-btn {
+  width: 100%;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--action-btn-bg);
+  color: var(--action-btn-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sticky-note-dropdown .sticky-note-blur-btn:hover {
+  color: var(--action-btn-hover-color);
+  border-color: var(--action-btn-hover-border);
+}
+
+.sticky-note-dropdown .sticky-note-blur-btn .icon-theme-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .sticky-note-dropdown-section {
   margin-bottom: 12px;
 }
@@ -15365,7 +15396,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
    Grid Layout - Drag and Drop System
    ======================================== */
 
-/* 
+/*
  * Fast startup: Hide content completely until layout is stable to prevent FOUC.
  * The JS applies layout order first, then reveals with a fast, smooth animation.
  * This prevents the "jumbled components" flash on startup/refresh.

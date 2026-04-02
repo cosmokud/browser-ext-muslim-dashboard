@@ -14,6 +14,18 @@ class StickyNotesManager {
     this.dragState = null;
     this.resizeState = null;
 
+    // Sticky-note blur popup state (mirrors card blur popup behavior)
+    this.noteBlurPopupByNoteId = new Map();
+    this.noteBlurPopupPortalled = new WeakSet();
+    this.noteBlurPopupPositionRaf = null;
+
+    // Delete confirmation modal state
+    this.deleteModal = null;
+    this.deletePreviewEl = null;
+    this.confirmDeleteBtn = null;
+    this.cancelDeleteBtn = null;
+    this.pendingDeleteId = null;
+
     // Color presets for notes (first item is the default 'Glass' style matching other section cards)
     this.colorPresets = [
       {
@@ -50,6 +62,7 @@ class StickyNotesManager {
     this.loadNotes();
     this.createContainer();
     this.createFloatingButtons();
+    this.createDeleteConfirmModal();
     // initial render with entrance animation
     this.renderAllNotes(true);
     this.setupGlobalListeners();
@@ -190,6 +203,118 @@ class StickyNotesManager {
     }
   }
 
+  createDeleteConfirmModal() {
+    const existing = document.getElementById("stickyNotesDeleteConfirmModal");
+    if (existing) {
+      this.deleteModal = existing;
+      this.deletePreviewEl = document.getElementById("stickyNotesDeleteName");
+      this.confirmDeleteBtn = document.getElementById(
+        "confirmStickyNotesDeleteBtn",
+      );
+      this.cancelDeleteBtn = document.getElementById(
+        "cancelStickyNotesDeleteBtn",
+      );
+      return;
+    }
+
+    const modal = document.createElement("div");
+    modal.id = "stickyNotesDeleteConfirmModal";
+    modal.className = "modal-overlay delete-confirm-modal";
+    modal.setAttribute("aria-hidden", "true");
+    modal.innerHTML = `
+      <div class="delete-confirm-content" role="dialog" aria-modal="true" aria-labelledby="stickyNotesDeleteTitle">
+        <div class="delete-confirm-icon">⚠️</div>
+        <h3 id="stickyNotesDeleteTitle">Delete Sticky Note?</h3>
+        <p>
+          You are about to permanently delete this sticky note:
+          <strong id="stickyNotesDeleteName">(untitled)</strong>
+        </p>
+        <p class="delete-confirm-hint">
+          This action cannot be undone.
+        </p>
+        <div class="delete-confirm-buttons">
+          <button class="delete-confirm-btn cancel" id="cancelStickyNotesDeleteBtn" type="button">
+            Cancel
+          </button>
+          <button class="delete-confirm-btn confirm" id="confirmStickyNotesDeleteBtn" type="button">
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    this.deleteModal = modal;
+    this.deletePreviewEl = document.getElementById("stickyNotesDeleteName");
+    this.confirmDeleteBtn = document.getElementById(
+      "confirmStickyNotesDeleteBtn",
+    );
+    this.cancelDeleteBtn = document.getElementById(
+      "cancelStickyNotesDeleteBtn",
+    );
+
+    this.confirmDeleteBtn?.addEventListener("click", () =>
+      this.confirmDelete(),
+    );
+    this.cancelDeleteBtn?.addEventListener("click", () =>
+      this.hideDeleteConfirmation(),
+    );
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        this.hideDeleteConfirmation();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Escape" &&
+        this.deleteModal?.classList.contains("active")
+      ) {
+        this.hideDeleteConfirmation();
+      }
+    });
+  }
+
+  getNotePreviewText(note) {
+    if (!note) return "(untitled)";
+    const temp = document.createElement("div");
+    temp.innerHTML = String(note.content || "");
+    const text = String(temp.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return text ? text.slice(0, 80) : "(untitled)";
+  }
+
+  showDeleteConfirmation(noteId) {
+    const note = this.notes.find((n) => n.id === noteId);
+    if (!note || !this.deleteModal) return;
+
+    this.pendingDeleteId = noteId;
+    if (this.deletePreviewEl) {
+      this.deletePreviewEl.textContent = this.getNotePreviewText(note);
+    }
+
+    this.deleteModal.classList.add("active");
+    this.deleteModal.setAttribute("aria-hidden", "false");
+  }
+
+  hideDeleteConfirmation() {
+    if (this.deleteModal) {
+      this.deleteModal.classList.remove("active");
+      this.deleteModal.setAttribute("aria-hidden", "true");
+    }
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete() {
+    const noteId = String(this.pendingDeleteId || "").trim();
+    if (!noteId) return;
+    this.deleteNote(noteId);
+    this.hideDeleteConfirmation();
+  }
+
   /**
    * Create a new note
    */
@@ -221,6 +346,34 @@ class StickyNotesManager {
         options.transparency !== undefined
           ? options.transparency
           : this.colorPresets[0].transparency || 1,
+      // New blur settings model (copied from card blur behavior)
+      blurState:
+        options.blurState ||
+        (options.glassEffect === false
+          ? "off"
+          : options.blurState === "dashboard"
+            ? "dashboard"
+            : "on"),
+      blurPowerEnabled:
+        typeof options.blurPowerEnabled === "boolean"
+          ? options.blurPowerEnabled
+          : true,
+      blurPower: this.clampNumber(
+        options.blurPower !== undefined
+          ? Number(options.blurPower)
+          : Math.round((this.clampNumber(options.blur, 0, 20, 20) / 20) * 200),
+        0,
+        200,
+        100,
+      ),
+      glassOpacity: this.clampNumber(
+        options.glassOpacity !== undefined
+          ? Number(options.glassOpacity)
+          : Math.round(this.clampNumber(options.transparency, 0.2, 1, 1) * 100),
+        0,
+        100,
+        100,
+      ),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -276,8 +429,8 @@ class StickyNotesManager {
                   (c, i) => `
                 <button class="color-preset ${
                   note.color.name === c.name ? "active" : ""
-                }" 
-                        data-color-index="${i}" 
+                }"
+                  data-color-index="${i}"
                         style="background: ${c.bg}"
                         title="${c.name}"></button>
               `,
@@ -285,31 +438,90 @@ class StickyNotesManager {
                 .join("")}
             </div>
           </div>
-          <div class="sticky-note-dropdown-section">
-            <label class="dropdown-label">
-              <span>Glass Effect</span>
-              <input type="checkbox" class="glass-toggle" ${
-                note.glassEffect ? "checked" : ""
-              }>
-            </label>
-          </div>
-          <div class="sticky-note-dropdown-section">
-            <label class="dropdown-label">
-              <span>Blur: <span class="blur-value">${note.blur}</span>px</span>
-              <input type="range" class="blur-slider" min="0" max="20" value="${
-                note.blur
-              }">
-            </label>
-          </div>
-          <div class="sticky-note-dropdown-section">
-            <label class="dropdown-label">
-              <span>Opacity: <span class="opacity-value">${Math.round(
-                note.transparency * 100,
-              )}</span>%</span>
-              <input type="range" class="opacity-slider" min="20" max="100" value="${Math.round(
-                note.transparency * 100,
-              )}">
-            </label>
+          <div class="sticky-note-dropdown-divider"></div>
+          <div
+            class="card-blur-menu sticky-note-blur-menu"
+            aria-label="Sticky note blur menu"
+            data-note-id="${note.id}"
+          >
+            <button
+              class="card-blur-btn sticky-note-blur-btn"
+              type="button"
+              aria-label="Open blur settings"
+              title="Blur & Glass Settings"
+            >
+              ${
+                note.blurState === "off"
+                  ? "⬜"
+                  : note.blurState === "dashboard"
+                    ? "🔗"
+                    : "✨"
+              }
+            </button>
+            <div class="blur-settings-popup sticky-note-blur-popup">
+              <div class="blur-popup-header">
+                <span class="blur-popup-title">
+                  <span class="blur-popup-title-icon">✨</span>
+                  Glass Settings
+                </span>
+                <button class="blur-popup-close" type="button" aria-label="Close">
+                  ×
+                </button>
+              </div>
+              <div class="blur-setting-section">
+                <span class="blur-setting-label">Glass Effect</span>
+                <div class="blur-glass-toggle">
+                  <button
+                    class="blur-glass-option${note.blurState === "off" ? " active" : ""}"
+                    data-glass-value="off"
+                    type="button"
+                  >
+                    <span class="blur-glass-option-icon">⬜</span>
+                    <span class="blur-glass-option-label">Off</span>
+                  </button>
+                  <button
+                    class="blur-glass-option${note.blurState === "dashboard" ? " active" : ""}"
+                    data-glass-value="dashboard"
+                    type="button"
+                  >
+                    <span class="blur-glass-option-icon">🔗</span>
+                    <span class="blur-glass-option-label">Dash</span>
+                  </button>
+                  <button
+                    class="blur-glass-option${note.blurState === "on" ? " active" : ""}"
+                    data-glass-value="on"
+                    type="button"
+                  >
+                    <span class="blur-glass-option-icon">✨</span>
+                    <span class="blur-glass-option-label">On</span>
+                  </button>
+                </div>
+              </div>
+              <div class="blur-setting-section">
+                <div class="blur-power-header">
+                  <span class="blur-setting-label">Blur Power</span>
+                  <label class="blur-power-toggle">
+                    <input
+                      type="checkbox"
+                      class="blur-power-checkbox"
+                      ${note.blurPowerEnabled ? "checked" : ""}
+                    />
+                    <span class="blur-power-switch"></span>
+                    <span class="blur-power-toggle-label">Custom</span>
+                  </label>
+                </div>
+                <div class="blur-power-slider-wrap disabled">
+                  <input
+                    type="range"
+                    class="blur-power-slider"
+                    min="0"
+                    max="200"
+                    value="${note.blurPower || 100}"
+                  />
+                  <span class="blur-power-value">${note.blurPower || 100}%</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="sticky-note-dropdown-divider"></div>
           <button class="sticky-note-delete-btn">
@@ -431,6 +643,427 @@ class StickyNotesManager {
     return rgba;
   }
 
+  clampNumber(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(max, Math.max(min, numeric));
+  }
+
+  getDashboardGlassEnabled() {
+    try {
+      const settings = this.storage?.getSettings?.();
+      return settings?.theme?.glassEnabled !== false;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  getDashboardBlurPower() {
+    try {
+      const settings = this.storage?.getSettings?.();
+      return this.clampNumber(settings?.uiBlurPower, 0, 200, 200);
+    } catch (e) {
+      return 200;
+    }
+  }
+
+  getDashboardGlassOpacity() {
+    try {
+      const settings = this.storage?.getSettings?.();
+      return this.clampNumber(settings?.theme?.glassOpacity, 0, 100, 35);
+    } catch (e) {
+      return 35;
+    }
+  }
+
+  getThemedIcon(emoji, size = 16) {
+    if (window.dashboard?.iconThemes) {
+      return window.dashboard.iconThemes.getIcon(emoji, { size });
+    }
+    return emoji;
+  }
+
+  normalizeNoteBlurSettings(note) {
+    if (!note || typeof note !== "object") return null;
+
+    const validStates = new Set(["off", "dashboard", "on"]);
+    if (!validStates.has(note.blurState)) {
+      note.blurState = note.glassEffect === false ? "off" : "on";
+    }
+
+    const legacyBlurPower = Math.round(
+      (this.clampNumber(note.blur, 0, 20, 10) / 20) * 200,
+    );
+    note.blurPower = this.clampNumber(note.blurPower, 0, 200, legacyBlurPower);
+
+    note.blurPowerEnabled =
+      typeof note.blurPowerEnabled === "boolean" ? note.blurPowerEnabled : true;
+
+    if (note.blurState !== "on") {
+      note.blurPowerEnabled = false;
+    }
+
+    note.glassOpacity = this.clampNumber(
+      note.glassOpacity,
+      0,
+      100,
+      Math.round(this.clampNumber(note.transparency, 0.2, 1, 1) * 100),
+    );
+
+    return note;
+  }
+
+  applyNoteBlurState(noteId, { save = true } = {}) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    const note = this.notes.find((n) => String(n.id) === id);
+    if (!note) return;
+
+    this.normalizeNoteBlurSettings(note);
+
+    const state = note.blurState;
+    const dashboardGlassEnabled = this.getDashboardGlassEnabled();
+    const dashboardBlurPower = this.getDashboardBlurPower();
+    const dashboardGlassOpacity = this.getDashboardGlassOpacity();
+
+    let effectiveGlass = false;
+    if (state === "on") {
+      effectiveGlass = true;
+    } else if (state === "dashboard") {
+      effectiveGlass = dashboardGlassEnabled;
+    }
+
+    const effectiveBlurPower = !effectiveGlass
+      ? 0
+      : state === "on" && note.blurPowerEnabled
+        ? note.blurPower
+        : dashboardBlurPower;
+
+    const effectiveOpacity =
+      state === "on" ? note.glassOpacity : dashboardGlassOpacity;
+
+    // Keep legacy fields in sync so existing rendering logic remains intact.
+    note.glassEffect = effectiveGlass;
+    note.blur = effectiveGlass
+      ? this.clampNumber(Math.round((effectiveBlurPower / 200) * 20), 0, 20, 10)
+      : 0;
+    note.transparency = effectiveGlass
+      ? this.clampNumber(effectiveOpacity / 100, 0.2, 1, 1)
+      : this.clampNumber(note.transparency, 0.2, 1, 1);
+
+    this.refreshNoteStyles(id);
+    if (save) this.saveNotes();
+  }
+
+  ensureNoteBlurPopupPortal(menu, popup) {
+    if (!menu || !popup) return;
+    if (this.noteBlurPopupPortalled.has(popup)) return;
+
+    try {
+      document.body.appendChild(popup);
+      popup.classList.add("blur-popup-portal");
+      this.noteBlurPopupPortalled.add(popup);
+    } catch (e) {}
+  }
+
+  positionNoteBlurPopup(menu, popup) {
+    if (!menu || !popup || !popup.classList.contains("blur-popup-open")) {
+      return;
+    }
+
+    const anchorRect = menu.getBoundingClientRect();
+    const viewportPadding = 10;
+    const gap = 10;
+
+    const popupWidth = Math.max(220, Math.round(popup.offsetWidth || 280));
+    const popupHeight = Math.max(200, Math.round(popup.offsetHeight || 320));
+
+    let left = Math.round(anchorRect.right - popupWidth);
+    left = Math.max(
+      viewportPadding,
+      Math.min(left, window.innerWidth - viewportPadding - popupWidth),
+    );
+
+    const belowTop = Math.round(anchorRect.bottom + gap);
+    const aboveTop = Math.round(anchorRect.top - gap - popupHeight);
+    const canFitBelow =
+      belowTop + popupHeight <= window.innerHeight - viewportPadding;
+    const canFitAbove = aboveTop >= viewportPadding;
+
+    let top = belowTop;
+    if (!canFitBelow && canFitAbove) {
+      top = aboveTop;
+    } else if (!canFitBelow && !canFitAbove) {
+      top = Math.max(
+        viewportPadding,
+        Math.min(top, window.innerHeight - viewportPadding - popupHeight),
+      );
+    }
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+    popup.style.right = "auto";
+    popup.style.bottom = "auto";
+  }
+
+  repositionOpenNoteBlurPopups() {
+    if (this.noteBlurPopupPositionRaf) {
+      cancelAnimationFrame(this.noteBlurPopupPositionRaf);
+    }
+
+    this.noteBlurPopupPositionRaf = requestAnimationFrame(() => {
+      document
+        .querySelectorAll(".sticky-note-blur-menu.blur-menu-open")
+        .forEach((menu) => {
+          const noteId = String(menu.dataset.noteId || "").trim();
+          if (!noteId) return;
+          const popup = this.noteBlurPopupByNoteId.get(noteId);
+          if (!popup) return;
+          this.positionNoteBlurPopup(menu, popup);
+        });
+    });
+  }
+
+  closeAllNoteBlurMenus() {
+    document
+      .querySelectorAll(".sticky-note-blur-menu.blur-menu-open")
+      .forEach((menu) => {
+        menu.classList.remove("blur-menu-open");
+        menu.closest(".sticky-note")?.classList.remove("card-blur-popup-open");
+
+        const noteId = String(menu.dataset.noteId || "").trim();
+        if (!noteId) return;
+        const popup = this.noteBlurPopupByNoteId.get(noteId);
+        popup?.classList.remove("blur-popup-open");
+      });
+
+    document
+      .querySelectorAll(".sticky-note-blur-popup.blur-popup-open")
+      .forEach((popup) => {
+        popup.classList.remove("blur-popup-open");
+      });
+  }
+
+  setupStickyNoteBlurMenu(noteEl, note, dropdown) {
+    const menu = dropdown.querySelector(".sticky-note-blur-menu");
+    const btn = menu?.querySelector(".card-blur-btn");
+    const popup = menu?.querySelector(".blur-settings-popup");
+    const closeBtn = popup?.querySelector(".blur-popup-close");
+    const glassOptions = popup?.querySelectorAll(".blur-glass-option");
+    const customToggle = popup?.querySelector(".blur-power-checkbox");
+    const sliderWrap = popup?.querySelector(".blur-power-slider-wrap");
+    const slider = popup?.querySelector(".blur-power-slider");
+    const valueDisplay = popup?.querySelector(".blur-power-value");
+    const blurPowerToggleLabel = popup?.querySelector(".blur-power-toggle");
+
+    if (!menu || !btn || !popup) return;
+
+    this.normalizeNoteBlurSettings(note);
+
+    let opacityWrap = popup.querySelector(".blur-opacity-slider-wrap");
+    if (!opacityWrap) {
+      const section = document.createElement("div");
+      section.className = "blur-setting-section blur-opacity-section";
+      section.innerHTML = `
+        <span class="blur-setting-label">Opacity</span>
+        <div class="blur-power-slider-wrap blur-opacity-slider-wrap disabled">
+          <input
+            type="range"
+            class="blur-power-slider blur-opacity-slider"
+            min="0"
+            max="100"
+            value="${this.clampNumber(note.glassOpacity, 0, 100, 100)}"
+            aria-label="Glass opacity"
+          />
+          <span class="blur-power-value blur-opacity-value">${this.clampNumber(
+            note.glassOpacity,
+            0,
+            100,
+            100,
+          )}%</span>
+        </div>
+      `;
+      popup.appendChild(section);
+      opacityWrap = section.querySelector(".blur-opacity-slider-wrap");
+    }
+
+    const opacitySlider = popup.querySelector(".blur-opacity-slider");
+    const opacityValueDisplay = popup.querySelector(".blur-opacity-value");
+
+    const noteId = String(note.id);
+    this.noteBlurPopupByNoteId.set(noteId, popup);
+    this.ensureNoteBlurPopupPortal(menu, popup);
+
+    const syncUI = () => {
+      this.normalizeNoteBlurSettings(note);
+
+      const isGlassOff = note.blurState === "off";
+      const isDashboardState = note.blurState === "dashboard";
+
+      glassOptions?.forEach((opt) => {
+        const val = String(opt.dataset.glassValue || "");
+        opt.classList.toggle("active", val === note.blurState);
+      });
+
+      if (customToggle) {
+        if (isGlassOff || isDashboardState) {
+          customToggle.checked = false;
+          customToggle.disabled = true;
+        } else {
+          customToggle.checked = note.blurPowerEnabled === true;
+          customToggle.disabled = false;
+        }
+      }
+
+      if (blurPowerToggleLabel) {
+        blurPowerToggleLabel.classList.toggle(
+          "disabled",
+          isGlassOff || isDashboardState,
+        );
+      }
+
+      const effectiveBlurPower = isDashboardState
+        ? this.getDashboardBlurPower()
+        : note.blurPower;
+      if (sliderWrap) {
+        sliderWrap.classList.toggle(
+          "disabled",
+          isGlassOff || isDashboardState || !note.blurPowerEnabled,
+        );
+      }
+      if (slider) {
+        slider.value = String(effectiveBlurPower);
+        slider.disabled = isGlassOff || isDashboardState;
+      }
+      if (valueDisplay) {
+        valueDisplay.textContent = `${effectiveBlurPower}%`;
+      }
+
+      const effectiveOpacity = isDashboardState
+        ? this.getDashboardGlassOpacity()
+        : note.glassOpacity;
+      if (opacityWrap) {
+        opacityWrap.classList.toggle(
+          "disabled",
+          isGlassOff || isDashboardState,
+        );
+      }
+      if (opacitySlider) {
+        opacitySlider.value = String(effectiveOpacity);
+        opacitySlider.disabled = isGlassOff || isDashboardState;
+      }
+      if (opacityValueDisplay) {
+        opacityValueDisplay.textContent = `${effectiveOpacity}%`;
+      }
+
+      if (note.blurState === "off") {
+        btn.innerHTML = this.getThemedIcon("⬜", 16);
+      } else if (note.blurState === "on") {
+        btn.innerHTML = this.getThemedIcon("✨", 16);
+      } else {
+        btn.innerHTML = this.getThemedIcon("🔗", 16);
+      }
+    };
+
+    // Apply initial normalized state and sync controls.
+    this.applyNoteBlurState(noteId, { save: false });
+    syncUI();
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const isOpen = menu.classList.contains("blur-menu-open");
+      this.closeAllNoteBlurMenus();
+
+      if (!isOpen) {
+        menu.classList.add("blur-menu-open");
+        noteEl.classList.add("card-blur-popup-open");
+        popup.classList.add("blur-popup-open");
+        this.ensureNoteBlurPopupPortal(menu, popup);
+        this.positionNoteBlurPopup(menu, popup);
+      }
+    });
+
+    closeBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      menu.classList.remove("blur-menu-open");
+      noteEl.classList.remove("card-blur-popup-open");
+      popup.classList.remove("blur-popup-open");
+    });
+
+    popup.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    glassOptions?.forEach((opt) => {
+      opt.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const newState = String(opt.dataset.glassValue || "dashboard");
+        note.blurState = ["off", "dashboard", "on"].includes(newState)
+          ? newState
+          : "dashboard";
+
+        if (note.blurState !== "on") {
+          note.blurPowerEnabled = false;
+        }
+
+        this.applyNoteBlurState(noteId, { save: true });
+        syncUI();
+      });
+    });
+
+    customToggle?.addEventListener("change", () => {
+      if (note.blurState !== "on") {
+        customToggle.checked = false;
+        note.blurPowerEnabled = false;
+      } else {
+        note.blurPowerEnabled = customToggle.checked;
+      }
+
+      this.applyNoteBlurState(noteId, { save: true });
+      syncUI();
+    });
+
+    slider?.addEventListener("input", (e) => {
+      note.blurPower = this.clampNumber(
+        parseInt(e.target.value, 10),
+        0,
+        200,
+        100,
+      );
+
+      if (valueDisplay) {
+        valueDisplay.textContent = `${note.blurPower}%`;
+      }
+
+      if (note.blurState === "on" && note.blurPowerEnabled) {
+        this.applyNoteBlurState(noteId, { save: true });
+      }
+    });
+
+    opacitySlider?.addEventListener("input", (e) => {
+      note.glassOpacity = this.clampNumber(
+        parseInt(e.target.value, 10),
+        0,
+        100,
+        100,
+      );
+
+      if (opacityValueDisplay) {
+        opacityValueDisplay.textContent = `${note.glassOpacity}%`;
+      }
+
+      if (note.blurState === "on") {
+        this.applyNoteBlurState(noteId, { save: true });
+      }
+    });
+  }
+
   /**
    * Attach event listeners to a note
    */
@@ -496,6 +1129,7 @@ class StickyNotesManager {
       document
         .querySelectorAll(".sticky-note-dropdown.open")
         .forEach((d) => d.classList.remove("open"));
+      this.closeAllNoteBlurMenus();
       if (!isOpen) {
         dropdown.classList.add("open");
         // focus the first focusable element to improve keyboard UX
@@ -521,6 +1155,7 @@ class StickyNotesManager {
       dropdown.addEventListener("keydown", (e) => {
         if (e.key === "Escape" || e.key === "Esc") {
           dropdown.classList.remove("open");
+          this.closeAllNoteBlurMenus();
           menuBtn.focus();
         }
       });
@@ -538,32 +1173,13 @@ class StickyNotesManager {
       });
     });
 
-    // Glass effect toggle
-    const glassToggle = dropdown.querySelector(".glass-toggle");
-    glassToggle.addEventListener("change", (e) => {
-      this.updateNoteGlass(note.id, e.target.checked);
-    });
-
-    // Blur slider
-    const blurSlider = dropdown.querySelector(".blur-slider");
-    const blurValue = dropdown.querySelector(".blur-value");
-    blurSlider.addEventListener("input", (e) => {
-      blurValue.textContent = e.target.value;
-      this.updateNoteBlur(note.id, parseInt(e.target.value));
-    });
-
-    // Opacity slider
-    const opacitySlider = dropdown.querySelector(".opacity-slider");
-    const opacityValue = dropdown.querySelector(".opacity-value");
-    opacitySlider.addEventListener("input", (e) => {
-      opacityValue.textContent = e.target.value;
-      this.updateNoteTransparency(note.id, parseInt(e.target.value) / 100);
-    });
+    // Sticky note blur menu (same interaction model as card blur popups)
+    this.setupStickyNoteBlurMenu(noteEl, note, dropdown);
 
     // Delete button
     deleteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.deleteNote(note.id);
+      this.showDeleteConfirmation(note.id);
     });
 
     // Content editing
@@ -721,16 +1337,49 @@ class StickyNotesManager {
     document.addEventListener("click", (e) => {
       if (
         !e.target.closest(".sticky-note-menu-btn") &&
-        !e.target.closest(".sticky-note-dropdown")
+        !e.target.closest(".sticky-note-dropdown") &&
+        !e.target.closest(".sticky-note-blur-menu") &&
+        !e.target.closest(".sticky-note-blur-popup")
       ) {
+        this.closeAllNoteBlurMenus();
         document
           .querySelectorAll(".sticky-note-dropdown.open")
           .forEach((d) => d.classList.remove("open"));
       }
     });
 
+    // Keep dashboard-linked sticky-note blur styles in sync with theme changes.
+    document.addEventListener("md:theme-change", () => {
+      this.notes.forEach((note) => {
+        this.normalizeNoteBlurSettings(note);
+        if (note.blurState === "dashboard") {
+          this.applyNoteBlurState(note.id, { save: false });
+        }
+      });
+      this.repositionOpenNoteBlurPopups();
+    });
+
+    // Sync when dashboard blur power changes.
+    document.addEventListener("md:ui-blur-update", () => {
+      this.notes.forEach((note) => {
+        this.normalizeNoteBlurSettings(note);
+        if (note.blurState === "dashboard" || !note.blurPowerEnabled) {
+          this.applyNoteBlurState(note.id, { save: false });
+        }
+      });
+      this.repositionOpenNoteBlurPopups();
+    });
+
     // Handle window resize
-    window.addEventListener("resize", () => this.constrainNotesToViewport());
+    window.addEventListener("resize", () => {
+      this.constrainNotesToViewport();
+      this.repositionOpenNoteBlurPopups();
+    });
+    window.addEventListener(
+      "scroll",
+      () => this.repositionOpenNoteBlurPopups(),
+      true,
+    );
   }
 
   /**
@@ -878,45 +1527,37 @@ class StickyNotesManager {
     if (note) {
       note.color = color;
 
-      // If this preset indicates a glass style, apply glass defaults
+      // If this preset indicates a glass style, apply blur-menu defaults.
       if (color.glass) {
-        note.glassEffect = true;
-        note.blur = color.blur !== undefined ? color.blur : note.blur || 20;
-        note.transparency =
-          color.transparency !== undefined
-            ? color.transparency
-            : note.transparency;
+        note.blurState = "on";
+        note.blurPowerEnabled = true;
+        note.blurPower = this.clampNumber(
+          Math.round((this.clampNumber(color.blur, 0, 20, 20) / 20) * 200),
+          0,
+          200,
+          note.blurPower || 100,
+        );
+        note.glassOpacity = this.clampNumber(
+          Math.round(
+            this.clampNumber(
+              color.transparency,
+              0.2,
+              1,
+              note.transparency || 1,
+            ) * 100,
+          ),
+          0,
+          100,
+          note.glassOpacity || 100,
+        );
       } else {
-        // selecting a solid color removes glass effect by default
-        note.glassEffect = false;
-        note.blur = color.blur !== undefined ? color.blur : 0;
+        // Selecting a solid color disables per-note glass by default.
+        note.blurState = "off";
+        note.blurPowerEnabled = false;
       }
 
-      this.refreshNoteStyles(noteId);
+      this.applyNoteBlurState(noteId, { save: false });
       this.updateColorPresetUI(noteId, color);
-
-      // Update dropdown UI values if present
-      const noteEl = document.getElementById(`sticky-note-${noteId}`);
-      if (noteEl) {
-        const dropdown = noteEl.querySelector(".sticky-note-dropdown");
-        if (dropdown) {
-          const blurSlider = dropdown.querySelector(".blur-slider");
-          const blurValue = dropdown.querySelector(".blur-value");
-          if (blurSlider) {
-            blurSlider.value = note.blur;
-            if (blurValue) blurValue.textContent = note.blur;
-          }
-          const opacitySlider = dropdown.querySelector(".opacity-slider");
-          const opacityValue = dropdown.querySelector(".opacity-value");
-          if (opacitySlider) {
-            opacitySlider.value = Math.round(note.transparency * 100);
-            if (opacityValue)
-              opacityValue.textContent = Math.round(note.transparency * 100);
-          }
-          const glassToggle = dropdown.querySelector(".glass-toggle");
-          if (glassToggle) glassToggle.checked = !!note.glassEffect;
-        }
-      }
 
       this.saveNotes();
     }
@@ -944,9 +1585,9 @@ class StickyNotesManager {
   updateNoteGlass(noteId, glassEffect) {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
-      note.glassEffect = glassEffect;
-      this.refreshNoteStyles(noteId);
-      this.saveNotes();
+      note.blurState = glassEffect ? "on" : "off";
+      if (!glassEffect) note.blurPowerEnabled = false;
+      this.applyNoteBlurState(noteId, { save: true });
     }
   }
 
@@ -956,9 +1597,15 @@ class StickyNotesManager {
   updateNoteBlur(noteId, blur) {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
-      note.blur = blur;
-      this.refreshNoteStyles(noteId);
-      this.saveNotes();
+      note.blurState = "on";
+      note.blurPowerEnabled = true;
+      note.blurPower = this.clampNumber(
+        Math.round((this.clampNumber(blur, 0, 20, 0) / 20) * 200),
+        0,
+        200,
+        100,
+      );
+      this.applyNoteBlurState(noteId, { save: true });
     }
   }
 
@@ -968,9 +1615,14 @@ class StickyNotesManager {
   updateNoteTransparency(noteId, transparency) {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
-      note.transparency = transparency;
-      this.refreshNoteStyles(noteId);
-      this.saveNotes();
+      note.blurState = "on";
+      note.glassOpacity = this.clampNumber(
+        Math.round(this.clampNumber(transparency, 0.2, 1, 1) * 100),
+        0,
+        100,
+        100,
+      );
+      this.applyNoteBlurState(noteId, { save: true });
     }
   }
 
@@ -989,15 +1641,35 @@ class StickyNotesManager {
    * Delete a note
    */
   deleteNote(noteId) {
-    const element = document.getElementById(`sticky-note-${noteId}`);
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    const menu = document.querySelector(
+      `.sticky-note-blur-menu[data-note-id="${id}"]`,
+    );
+    menu?.classList.remove("blur-menu-open");
+    menu?.closest(".sticky-note")?.classList.remove("card-blur-popup-open");
+
+    const popup = this.noteBlurPopupByNoteId.get(id);
+    if (popup) {
+      popup.classList.remove("blur-popup-open");
+      popup.remove();
+      this.noteBlurPopupByNoteId.delete(id);
+    }
+
+    const element = document.getElementById(`sticky-note-${id}`);
     if (element) {
       element.classList.add("deleting");
       setTimeout(() => {
         element.remove();
-        this.notes = this.notes.filter((n) => n.id !== noteId);
+        this.notes = this.notes.filter((n) => String(n.id) !== id);
         this.saveNotes();
       }, 300);
+      return;
     }
+
+    this.notes = this.notes.filter((n) => String(n.id) !== id);
+    this.saveNotes();
   }
 
   /**
