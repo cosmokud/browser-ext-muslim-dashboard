@@ -5,12 +5,11 @@
 - [] Make sure that when it's the last day of Ramadhan, the `Fasting times` says `Last day` instead `Today`
 - [] Add +/- buttons in the pocket quran Arabic and Translation sliders.
 - [] Hide `Moments` component setting if DEBUG MODE is set to OFF
-- [] Drag and dropping the pinned app items will trigger the browser blue highlight, fix this so it will not trigger it.
 - [] Increase the custom background limits from 10 to 20.
+- [] Add fonts change for notes.
 
-## Prayer Times
+## Prayer Times Dashboard Setting
 
-- [] Add (mins) to offset in Prayer Times setting.
 - [] Make `Custom Fajr Angle` setting more compact, place `Custom Fajr Angle` and `Custom Isha Setting` in the same row.
 
 ## Features

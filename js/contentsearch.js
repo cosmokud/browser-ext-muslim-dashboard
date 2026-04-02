@@ -314,8 +314,13 @@ class ContentSearchManager extends BaseManager {
 
     const textForLang = (c) => {
       if (!c) return "";
-      const k = `translation_${lang}`;
+      const k = `text_${lang}`;
       if (c[k]) return String(c[k]);
+
+      const legacyK = `translation_${lang}`;
+      if (c[legacyK]) return String(c[legacyK]);
+
+      if (c.text_en) return String(c.text_en);
       if (c.translation_en) return String(c.translation_en);
       if (c.translation) return String(c.translation);
       if (c.english) return String(c.english);

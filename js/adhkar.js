@@ -518,7 +518,11 @@ class AdhkarManager extends BaseManager {
         const missingTranslations = cards.every((c) => {
           if (!c || typeof c !== "object") return false;
           const hasTranslationKey = Object.keys(c).some(
-            (k) => k === "translation" || k.startsWith("translation_"),
+            (k) =>
+              k === "translation" ||
+              k === "text" ||
+              k.startsWith("text_") ||
+              k.startsWith("translation_"),
           );
           const hasEnglish = typeof c.english === "string" && c.english.trim();
           return !hasTranslationKey && hasEnglish;
@@ -1313,8 +1317,8 @@ class AdhkarManager extends BaseManager {
 
   /**
    * Extracts available translation language codes from a card set.
-   * Looks for keys like 'translation_en', 'translation_id', etc.
-   * Also supports legacy 'english' key as 'en'.
+    * Looks for keys like 'text_en', 'text_id', etc.
+    * Also supports legacy 'translation_*' and 'english' keys.
    */
   getAvailableLanguages(set) {
     if (!set || !Array.isArray(set.cards) || !set.cards.length) {
@@ -1324,15 +1328,21 @@ class AdhkarManager extends BaseManager {
     const langCodes = new Set();
     const firstCard = set.cards[0] || {};
 
-    // Check for translation_* keys
+    // Check for text_* keys (current format) and translation_* (legacy)
     for (const key of Object.keys(firstCard)) {
-      if (key.startsWith("translation_")) {
-        const code = key.replace("translation_", "");
-        const normalized = String(code || "")
-          .trim()
-          .toLowerCase();
-        if (normalized) langCodes.add(normalized);
+      let code = "";
+      if (key.startsWith("text_")) {
+        code = key.replace("text_", "");
+      } else if (key.startsWith("translation_")) {
+        code = key.replace("translation_", "");
+      } else {
+        continue;
       }
+
+      const normalized = String(code || "")
+        .trim()
+        .toLowerCase();
+      if (normalized) langCodes.add(normalized);
     }
 
     // Also check for legacy 'english' key
@@ -1390,13 +1400,22 @@ class AdhkarManager extends BaseManager {
 
     const langCode = this.getSelectedLanguageCode();
 
-    // Try translation_<langCode> first
+    // Try text_<langCode> first (current format)
+    const textKey = `text_${langCode}`;
+    if (card[textKey]) {
+      return String(card[textKey]);
+    }
+
+    // Backward compatibility for legacy translation_<langCode>
     const translationKey = `translation_${langCode}`;
     if (card[translationKey]) {
       return String(card[translationKey]);
     }
 
-    // Generic translation field (no language code)
+    // Generic text/translation fields (no language code)
+    if (card.text) {
+      return String(card.text);
+    }
     if (card.translation) {
       return String(card.translation);
     }
@@ -1406,7 +1425,12 @@ class AdhkarManager extends BaseManager {
       return String(card.english);
     }
 
-    // Try translation_en as fallback
+    // Try text_en as fallback
+    if (card.text_en) {
+      return String(card.text_en);
+    }
+
+    // Backward compatibility fallback
     if (card.translation_en) {
       return String(card.translation_en);
     }
@@ -1832,7 +1856,7 @@ class AdhkarManager extends BaseManager {
           ? String(parsedRepeat)
           : "1";
       const translationValue =
-        c.translation ?? c.translation_en ?? c.english ?? "";
+        c.translation ?? c.text_en ?? c.translation_en ?? c.english ?? "";
 
       rows.push(`
         <tr class="adhkar-editor-row" data-index="${i}">
@@ -2132,14 +2156,27 @@ class AdhkarManager extends BaseManager {
           const romanization = String(x.romanization || x.roman || "").trim();
 
           const translation = String(
-            x.translation || x.translation_en || x.english || "",
+            x.translation || x.text_en || x.translation_en || x.english || "",
           ).trim();
 
-          // Preserve all translation_* fields (translation_en, translation_id, etc.)
-          const translationFields = {};
+          // Preserve text_* fields and normalize legacy translation_* to text_*
+          const textFields = {};
           Object.keys(x || {}).forEach((key) => {
-            if (key.startsWith("translation_") && x[key] != null) {
-              translationFields[key] = String(x[key]).trim();
+            if (x[key] == null) return;
+
+            if (key.startsWith("text_")) {
+              textFields[key] = String(x[key]).trim();
+              return;
+            }
+
+            if (key.startsWith("translation_")) {
+              const code = String(key.replace("translation_", "") || "").trim();
+              if (!code) return;
+
+              const normalizedKey = `text_${code}`;
+              if (textFields[normalizedKey] == null) {
+                textFields[normalizedKey] = String(x[key]).trim();
+              }
             }
           });
 
@@ -2160,12 +2197,16 @@ class AdhkarManager extends BaseManager {
             reference,
             repeat,
             ...titleFields,
-            ...translationFields,
+            ...textFields,
           };
         })
         .filter((c) => {
           const hasTranslationField = Object.keys(c).some(
-            (k) => k === "translation" || k.startsWith("translation_"),
+            (k) =>
+              k === "translation" ||
+              k === "text" ||
+              k.startsWith("text_") ||
+              k.startsWith("translation_"),
           );
           return (
             c.arabic ||
@@ -2277,13 +2318,28 @@ class AdhkarManager extends BaseManager {
             arabic: String(c.arabic || ""),
             romanization: String(c.romanization || ""),
             translation: String(
-              c.translation || c.translation_en || c.english || "",
+              c.translation || c.text_en || c.translation_en || c.english || "",
             ),
-            ...Object.fromEntries(
-              Object.entries(c || {}).filter(
-                ([k, v]) => k.startsWith("translation_") && v != null,
-              ),
-            ),
+            ...Object.entries(c || {}).reduce((acc, [k, v]) => {
+              if (v == null) return acc;
+
+              if (k.startsWith("text_")) {
+                acc[k] = String(v);
+                return acc;
+              }
+
+              if (k.startsWith("translation_")) {
+                const code = String(k.replace("translation_", "") || "").trim();
+                if (!code) return acc;
+
+                const normalizedKey = `text_${code}`;
+                if (acc[normalizedKey] == null) {
+                  acc[normalizedKey] = String(v);
+                }
+              }
+
+              return acc;
+            }, {}),
             reference: String(c.reference || ""),
             repeat:
               typeof c.repeat === "number" && Number.isFinite(c.repeat)
@@ -2395,12 +2451,9 @@ class AdhkarManager extends BaseManager {
     } else {
       active.cards[globalIndex][field] = String(value ?? "");
 
-      // Keep translation_en in sync when editing translation to aid language switching
-      if (
-        field === "translation" &&
-        !active.cards[globalIndex].translation_en
-      ) {
-        active.cards[globalIndex].translation_en = String(value ?? "");
+      // Keep text_en in sync when editing translation to aid language switching
+      if (field === "translation" && !active.cards[globalIndex].text_en) {
+        active.cards[globalIndex].text_en = String(value ?? "");
       }
     }
     active.updatedAt = new Date().toISOString();
