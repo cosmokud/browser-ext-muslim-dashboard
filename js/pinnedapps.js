@@ -109,6 +109,39 @@ class PinnedAppsManager extends BaseManager {
     }
   }
 
+  _attachImageFallback(imgEl, fallbackEl, fallbackDisplay = "flex") {
+    if (!imgEl || !fallbackEl) return;
+
+    imgEl.addEventListener("error", () => {
+      imgEl.style.display = "none";
+      fallbackEl.style.display = fallbackDisplay;
+    });
+  }
+
+  _renderFaviconPreview(containerEl, faviconUrl) {
+    if (!containerEl) return;
+
+    containerEl.innerHTML = "";
+
+    const fallback = document.createElement("span");
+    fallback.className = "favicon-fallback";
+    fallback.textContent = "?";
+
+    if (!faviconUrl) {
+      containerEl.appendChild(fallback);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.src = faviconUrl;
+    img.alt = "Favicon";
+
+    fallback.style.display = "none";
+    containerEl.appendChild(img);
+    containerEl.appendChild(fallback);
+    this._attachImageFallback(img, fallback);
+  }
+
   captureClickWhileDragging(e) {
     if (!this.blockNextClick) return;
     e.preventDefault();
@@ -461,12 +494,7 @@ class PinnedAppsManager extends BaseManager {
       faviconUrl = this.getFaviconUrl(url);
     }
 
-    if (faviconUrl) {
-      this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <span class="favicon-fallback" style="display:none;">?</span>`;
-    } else {
-      this.editFaviconPreview.innerHTML = `<span class="favicon-fallback">?</span>`;
-    }
+    this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
   }
 
   /**
@@ -498,9 +526,7 @@ class PinnedAppsManager extends BaseManager {
         );
         if (dataUrl) {
           this.pendingFaviconDataUrl = dataUrl;
-          if (this.editFaviconPreview) {
-            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-          }
+          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
           this.showFaviconStatus("Favicon refreshed!", "success");
         } else {
           this.showFaviconStatus("Could not fetch favicon", "error");
@@ -508,9 +534,7 @@ class PinnedAppsManager extends BaseManager {
       } else {
         // Fallback without cache
         const faviconUrl = this.getFaviconUrl(normalizedUrl);
-        if (this.editFaviconPreview) {
-          this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon">`;
-        }
+        this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
         this.showFaviconStatus("Favicon refreshed!", "success");
       }
     } catch (e) {
@@ -550,9 +574,7 @@ class PinnedAppsManager extends BaseManager {
           "pinned",
         );
         this.pendingFaviconDataUrl = dataUrl;
-        if (this.editFaviconPreview) {
-          this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-        }
+        this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
         this.showFaviconStatus("Custom icon imported!", "success");
       } else {
         // Fallback: just show the image without caching
@@ -560,9 +582,7 @@ class PinnedAppsManager extends BaseManager {
         reader.onload = (ev) => {
           const dataUrl = ev.target.result;
           this.pendingFaviconDataUrl = dataUrl;
-          if (this.editFaviconPreview) {
-            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-          }
+          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
           this.showFaviconStatus("Custom icon imported!", "success");
         };
         reader.readAsDataURL(file);
@@ -622,9 +642,7 @@ class PinnedAppsManager extends BaseManager {
       );
 
       this.pendingFaviconDataUrl = dataUrl;
-      if (this.editFaviconPreview) {
-        this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-      }
+      this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
       this.showFaviconStatus("Icon imported from URL!", "success");
     } catch (err) {
       const message =
@@ -880,7 +898,7 @@ class PinnedAppsManager extends BaseManager {
         <div class="pinned-app-icon">
           ${
             faviconUrl
-              ? `<img src="${faviconUrl}" alt="${app.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" draggable="false">`
+              ? `<img src="${faviconUrl}" alt="${this.escapeHtml(app.name)}" draggable="false">`
               : ""
           }
           <span class="pinned-app-fallback" style="${
@@ -890,6 +908,10 @@ class PinnedAppsManager extends BaseManager {
         <span class="pinned-app-name">${this.escapeHtml(app.name)}</span>
       </a>
     `;
+
+    const iconImg = el.querySelector(".pinned-app-icon img");
+    const iconFallback = el.querySelector(".pinned-app-fallback");
+    this._attachImageFallback(iconImg, iconFallback);
 
     // Load cached favicon asynchronously if not already cached in app object
     if (!app.cachedFavicon && window.faviconCache) {
@@ -1428,79 +1450,6 @@ class PinnedAppsManager extends BaseManager {
     document.body.style.webkitUserSelect = "";
 
     this.currentDropTarget = null;
-  }
-
-  /**
-   * Handle drag start (legacy - kept for compatibility)
-   */
-  handleLegacyDragStart(e, app) {
-    this.draggedItem = app;
-    e.currentTarget.classList.add("dragging");
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", app.id);
-  }
-
-  /**
-   * Handle drag end (legacy)
-   */
-  handleDragEnd() {
-    this.draggedItem = null;
-    document.querySelectorAll(".pinned-app-item").forEach((item) => {
-      item.classList.remove(
-        "dragging",
-        "drag-over",
-        "shift-left",
-        "shift-right",
-      );
-    });
-  }
-
-  /**
-   * Handle drag over (legacy)
-   */
-  handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-
-    const target = e.target.closest(".pinned-app-item");
-    if (target && !target.classList.contains("dragging")) {
-      // Remove drag-over from all items
-      document.querySelectorAll(".pinned-app-item").forEach((item) => {
-        item.classList.remove("drag-over");
-      });
-      target.classList.add("drag-over");
-    }
-  }
-
-  /**
-   * Handle drop (legacy)
-   */
-  handleDrop(e, targetApp) {
-    e.preventDefault();
-
-    if (!this.draggedItem || this.draggedItem.id === targetApp.id) return;
-
-    // Find indexes
-    const draggedIndex = this.apps.findIndex(
-      (a) => a.id === this.draggedItem.id,
-    );
-    const targetIndex = this.apps.findIndex((a) => a.id === targetApp.id);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    // Remove dragged item
-    const [removed] = this.apps.splice(draggedIndex, 1);
-
-    // Insert at new position
-    this.apps.splice(targetIndex, 0, removed);
-
-    // Update order
-    this.apps.forEach((app, index) => {
-      app.order = index;
-    });
-
-    this.saveApps();
-    this.render();
   }
 }
 

@@ -163,7 +163,7 @@ browser-ext-muslim-dashboard/
 
 - **Background Images**: [Unsplash](https://unsplash.com/) (Free to use)
 - **Geocoding**: [OpenStreetMap Nominatim](https://nominatim.org/)
-- **Prayer Times Algorithm**: Based on [PrayTimes.org](http://praytimes.org/)
+- **Prayer Times Algorithm**: Based on [PrayTimes.org](https://praytimes.org/)
 
 ## 📜 Islamic Sources
 

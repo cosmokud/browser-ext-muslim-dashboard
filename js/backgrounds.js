@@ -17,8 +17,8 @@ class BackgroundManager extends BaseManager {
       this._updateCameraIcon();
     });
 
-    // High-quality nature background metadata from Unsplash (free to use)
-    // Each image has a `url`, `credit` and `href` (dummy placeholders for now).
+    // High-quality nature background metadata from Unsplash.
+    // Each image entry includes a `url`, `credit`, and source-profile `href`.
     // Use `this.imageParams` to control image size/quality globally (e.g., "w=1920&q=80")
     this.imageParams = "w=2560&q=80";
     this.backgrounds = {
@@ -409,14 +409,14 @@ class BackgroundManager extends BaseManager {
     if (typeof image === "string") {
       return {
         url: image,
-        credit: "Dummy Name",
-        href: "https://unsplash.com/@",
+        credit: "",
+        href: "",
       };
     }
     return {
       url: image.url || "",
-      credit: image.credit || "Dummy Name",
-      href: image.href || "https://unsplash.com/@",
+      credit: image.credit || "",
+      href: image.href || "",
     };
   }
 

@@ -143,6 +143,39 @@ class SearchBarManager extends BaseManager {
     }
   }
 
+  _attachImageFallback(imgEl, fallbackEl, fallbackDisplay = "flex") {
+    if (!imgEl || !fallbackEl) return;
+
+    imgEl.addEventListener("error", () => {
+      imgEl.style.display = "none";
+      fallbackEl.style.display = fallbackDisplay;
+    });
+  }
+
+  _renderFaviconPreview(containerEl, faviconUrl) {
+    if (!containerEl) return;
+
+    containerEl.innerHTML = "";
+
+    const fallback = document.createElement("span");
+    fallback.className = "favicon-fallback";
+    fallback.textContent = "?";
+
+    if (!faviconUrl) {
+      containerEl.appendChild(fallback);
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.src = faviconUrl;
+    img.alt = "Favicon";
+
+    fallback.style.display = "none";
+    containerEl.appendChild(img);
+    containerEl.appendChild(fallback);
+    this._attachImageFallback(img, fallback);
+  }
+
   _captureClickWhileDragging(e) {
     if (!this.blockNextClick) return;
     e.preventDefault();
@@ -438,12 +471,7 @@ class SearchBarManager extends BaseManager {
       faviconUrl = this.getFaviconUrlFromTemplate(url);
     }
 
-    if (faviconUrl) {
-      this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <span class="favicon-fallback" style="display:none;">?</span>`;
-    } else {
-      this.editFaviconPreview.innerHTML = `<span class="favicon-fallback">?</span>`;
-    }
+    this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
   }
 
   /**
@@ -466,9 +494,7 @@ class SearchBarManager extends BaseManager {
         );
         if (dataUrl) {
           this.pendingFaviconDataUrl = dataUrl;
-          if (this.editFaviconPreview) {
-            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-          }
+          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
           this.showFaviconStatus("Favicon refreshed!", "success");
         } else {
           this.showFaviconStatus("Could not fetch favicon", "error");
@@ -476,9 +502,7 @@ class SearchBarManager extends BaseManager {
       } else {
         // Fallback without cache
         const faviconUrl = this.getFaviconUrlFromTemplate(url);
-        if (this.editFaviconPreview) {
-          this.editFaviconPreview.innerHTML = `<img src="${faviconUrl}" alt="Favicon">`;
-        }
+        this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
         this.showFaviconStatus("Favicon refreshed!", "success");
       }
     } catch (e) {
@@ -509,9 +533,7 @@ class SearchBarManager extends BaseManager {
           "search",
         );
         this.pendingFaviconDataUrl = dataUrl;
-        if (this.editFaviconPreview) {
-          this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-        }
+        this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
         this.showFaviconStatus("Custom icon imported!", "success");
       } else {
         // Fallback: just show the image without caching
@@ -519,9 +541,7 @@ class SearchBarManager extends BaseManager {
         reader.onload = (ev) => {
           const dataUrl = ev.target.result;
           this.pendingFaviconDataUrl = dataUrl;
-          if (this.editFaviconPreview) {
-            this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-          }
+          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
           this.showFaviconStatus("Custom icon imported!", "success");
         };
         reader.readAsDataURL(file);
@@ -572,9 +592,7 @@ class SearchBarManager extends BaseManager {
       );
 
       this.pendingFaviconDataUrl = dataUrl;
-      if (this.editFaviconPreview) {
-        this.editFaviconPreview.innerHTML = `<img src="${dataUrl}" alt="Favicon">`;
-      }
+      this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
       this.showFaviconStatus("Icon imported from URL!", "success");
     } catch (err) {
       const message =

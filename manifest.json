@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Muslim Dashboard - Islamic New Tab",
   "short_name": "Muslim Dashboard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Transform your new tab into an Islamic dashboard! Features: Pocket Quran, Hadith collections, prayer/fasting times, flashcards, etc.",
   "author": "Muslim Dashboard",
   "homepage_url": "https://ko-fi.com/hikmahdigitalplatforms",
@@ -40,6 +40,6 @@
     "default_popup": "popup.html"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'none'"
   }
 }

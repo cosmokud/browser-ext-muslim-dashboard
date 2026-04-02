@@ -1092,7 +1092,7 @@ class FloatingModeManager {
         card.style.pointerEvents = "";
       } catch (e) {}
 
-      // return from floating.
+      // Notify layout manager after restoring this card to grid mode.
       this.notifyLayoutChanged();
 
       // When switching from Floating -> Grid layout, force a reload so the
