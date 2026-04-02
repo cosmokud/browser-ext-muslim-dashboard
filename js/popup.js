@@ -336,11 +336,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const settings = storage.getSettings();
     const settingsTheme = settings?.theme || {};
 
-    const themeName =
+    const rawThemeName =
       settingsTheme.name ||
       themes?.getCurrentTheme?.() ||
       ThemeManager.DEFAULT_THEME ||
-      "pureWhite";
+      "pure";
+    const themeName =
+      rawThemeName === "pureWhite" || rawThemeName === "pureBlack"
+        ? "pure"
+        : rawThemeName;
     const mode =
       (settingsTheme.mode || themes?.getCurrentMode?.() || "dark") === "light"
         ? "light"
@@ -357,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bodyBg: popupBlurDefaults.palette.background,
     };
 
-    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
+    const isPureTheme = themeName === "pure";
     const base = theme?.[mode] || fallbackBase;
 
     return {
@@ -383,9 +387,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const activePalette = settingsPalette || runtimePalette || null;
 
     const defaultGlassTint = context.isPureTheme
-      ? context.themeName === "pureBlack"
-        ? "#000000"
-        : "#ffffff"
+      ? context.mode === "light"
+        ? "#ffffff"
+        : "#000000"
       : activePalette?.primary || context.base?.primary;
 
     return normalizePopupPalette(
@@ -498,8 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (context.isPureTheme) {
-      const defaultGlassTint =
-        context.themeName === "pureBlack" ? "#000000" : "#ffffff";
+      const defaultGlassTint = context.mode === "light" ? "#ffffff" : "#000000";
       const glassTintHex = palette?.glassTint || defaultGlassTint;
       const tintRgb =
         typeof themes.hexToRgb === "function"

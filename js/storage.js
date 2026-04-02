@@ -178,7 +178,7 @@ class StorageManager {
 
       // Theme settings
       theme: {
-        name: "pureWhite",
+        name: "pure",
         mode: "dark",
         glassEnabled: true,
         glassOpacity: 0,
