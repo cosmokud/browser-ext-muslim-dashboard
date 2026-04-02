@@ -135,7 +135,7 @@ class FlashcardManager extends BaseManager {
     this._setModal = null;
 
     // Arabic font picker state
-    this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+    this._arabicFontFamily = "Noto Naskh Arabic";
     this._fontModal = null;
 
     // Listen for icon theme changes
@@ -1561,7 +1561,7 @@ class FlashcardManager extends BaseManager {
   normalizeArabicFontFamily(value) {
     const v = String(value || "").trim();
     if (FlashcardManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
-    return "KFGQPC Uthman Taha Naskh";
+    return "Noto Naskh Arabic";
   }
 
   applyArabicFontFamily(fontFamily, opts = {}) {

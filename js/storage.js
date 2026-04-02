@@ -264,7 +264,6 @@ class StorageManager {
             ashuraDays: true,
             dhuAlHijjah: true,
             arafah: true,
-            laylatAlQadr: true,
             ramadan: true,
           },
         },
@@ -341,7 +340,7 @@ class StorageManager {
         studyAutoAdvanceSeconds: 10,
         autoAdvancePaused: false, // pause/resume auto-advance in study mode
         fontScale: 1,
-        arabicFontFamily: "KFGQPC Uthman Taha Naskh",
+        arabicFontFamily: "Noto Naskh Arabic",
         questionFontSize: 60,
         answerFontSize: 32,
       },
@@ -354,7 +353,7 @@ class StorageManager {
         showRomanization: false,
         fontScale: 1,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
-        arabicFontSize: 28,
+        arabicFontSize: 40,
         romanizationFontSize: 18,
         englishFontSize: 18,
       },
@@ -373,7 +372,7 @@ class StorageManager {
 
       // Pocket Quran settings
       pocketQuran: {
-        arabicFontSize: 32,
+        arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
         translationResourceId: 85, // M.A.S. Abdel Haleem

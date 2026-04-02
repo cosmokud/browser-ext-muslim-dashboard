@@ -472,9 +472,6 @@ class SettingsManager extends BaseManager {
       "fastingNotifyDhuAlHijjah",
     );
     this.fastingNotifyArafah = document.getElementById("fastingNotifyArafah");
-    this.fastingNotifyLaylatAlQadr = document.getElementById(
-      "fastingNotifyLaylatAlQadr",
-    );
     this.fastingNotifyRamadan = document.getElementById("fastingNotifyRamadan");
     this.fastingNotificationToggles = document.getElementById(
       "fastingNotificationToggles",
@@ -798,7 +795,7 @@ class SettingsManager extends BaseManager {
     const pq = settings.pocketQuran || {};
 
     if (this.pocketQuranArabicSize) {
-      const clamped = this.clampNumber(pq.arabicFontSize, 8, 144, 32);
+      const clamped = this.clampNumber(pq.arabicFontSize, 8, 144, 40);
       this.pocketQuranArabicSize.value = String(clamped);
       this.updatePocketQuranArabicSizeLabel();
     }
@@ -987,7 +984,7 @@ class SettingsManager extends BaseManager {
       parseInt(this.pocketQuranArabicSize.value, 10),
       8,
       144,
-      32,
+      40,
     );
     this.pocketQuranArabicSize.value = String(clamped);
     this.pocketQuranArabicSizeValue.textContent = `${clamped}px`;
@@ -1464,9 +1461,6 @@ class SettingsManager extends BaseManager {
     }
     if (this.fastingNotifyArafah) {
       this.fastingNotifyArafah.checked = notify.arafah !== false;
-    }
-    if (this.fastingNotifyLaylatAlQadr) {
-      this.fastingNotifyLaylatAlQadr.checked = notify.laylatAlQadr !== false;
     }
     if (this.fastingNotifyRamadan) {
       this.fastingNotifyRamadan.checked = notify.ramadan !== false;
@@ -4061,7 +4055,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.pocketQuranArabicSize?.value, 10),
         8,
         144,
-        existingPocketQuran.arabicFontSize ?? 32,
+        existingPocketQuran.arabicFontSize ?? 40,
       ),
       translationFontSize: this.clampNumber(
         parseInt(this.pocketQuranTranslationSize?.value, 10),
@@ -4304,7 +4298,6 @@ class SettingsManager extends BaseManager {
         ashuraDays: this.fastingNotifyAshuraDays?.checked ?? true,
         dhuAlHijjah: this.fastingNotifyDhuAlHijjah?.checked ?? true,
         arafah: this.fastingNotifyArafah?.checked ?? true,
-        laylatAlQadr: this.fastingNotifyLaylatAlQadr?.checked ?? true,
         ramadan: this.fastingNotifyRamadan?.checked ?? true,
       },
     };

@@ -693,7 +693,7 @@ class PocketQuranManager extends BaseManager {
       pq.translationResourceId,
     );
 
-    const arabicFontSize = this.clampNumber(pq.arabicFontSize, 8, 144, 32);
+    const arabicFontSize = this.clampNumber(pq.arabicFontSize, 8, 144, 40);
     const translationFontSize = this.clampNumber(
       pq.translationFontSize,
       8,
@@ -1023,7 +1023,7 @@ class PocketQuranManager extends BaseManager {
             parseInt(this.arabicSizeRange.value, 10),
             8,
             144,
-            32,
+            40,
           ),
         });
       });
@@ -1035,7 +1035,7 @@ class PocketQuranManager extends BaseManager {
           parseInt(this.arabicSizeRange?.value, 10),
           8,
           144,
-          32,
+          40,
         );
         const t = this.clampNumber(
           parseInt(this.translationSizeRange.value, 10),
@@ -4110,7 +4110,7 @@ class PocketQuranManager extends BaseManager {
   applyFontSizes(arabicPx, translationPx, opts = {}) {
     const { syncInputs = false, persist = false } = opts;
 
-    const a = this.clampNumber(arabicPx, 8, 144, 32);
+    const a = this.clampNumber(arabicPx, 8, 144, 40);
     const t = this.clampNumber(translationPx, 8, 144, 18);
 
     if (this.card) {

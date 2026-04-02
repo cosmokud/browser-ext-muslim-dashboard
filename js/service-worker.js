@@ -730,11 +730,6 @@ function getTodayFastingType(settings, today) {
 
   const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 4=Thu
 
-  // Check Laylat al-Qadr day marker first (27 Ramadan)
-  if (notify.laylatAlQadr !== false && hijri.month === 9 && hijri.day === 27) {
-    return { type: "laylatAlQadr", label: "Laylat al-Qadr (27 Ramadan)" };
-  }
-
   // Check Ramadan (month 9)
   if (notify.ramadan !== false && hijri.month === 9) {
     return { type: "ramadan", label: "Ramadan (month 9)" };

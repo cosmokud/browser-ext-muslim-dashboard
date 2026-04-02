@@ -1049,7 +1049,7 @@ class AdhkarManager extends BaseManager {
         parseInt(settings.arabicFontSize, 10),
         12,
         144,
-        28,
+        40,
       ),
       romanization: this.clampNumber(
         parseInt(settings.romanizationFontSize, 10),
