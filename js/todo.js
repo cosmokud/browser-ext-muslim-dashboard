@@ -612,6 +612,20 @@ class TodoManager extends BaseManager {
     );
 
     document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (this.deleteModal?.classList.contains("active")) {
+          e.preventDefault();
+          this.confirmDelete();
+          return;
+        }
+
+        if (this.clearCompletedModal?.classList.contains("active")) {
+          e.preventDefault();
+          this.confirmClearCompleted();
+          return;
+        }
+      }
+
       if (e.key !== "Escape") return;
       this.hideDeleteConfirmation();
       this.hideClearCompletedConfirmation();

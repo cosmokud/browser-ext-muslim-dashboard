@@ -28,12 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupBlurMenuButton = document.getElementById("popupBlurMenuBtn");
   const popupBlurModal = document.getElementById("popupBlurModal");
   const popupBlurCloseBtn = document.getElementById("popupBlurClose");
-  const popupUseCustomBlurPowerToggle = document.getElementById(
-    "popupUseCustomBlurPower",
-  );
-  const popupBlurCustomToggleWrap = document.getElementById(
-    "popupBlurCustomToggleWrap",
-  );
   const popupBlurResetBtn = document.getElementById("popupBlurResetBtn");
   const popupBlurPowerWrap = document.getElementById("popupBlurPowerWrap");
   const popupBlurPowerSlider = document.getElementById("popupBlurPowerSlider");
@@ -678,17 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    const hasLegacyMode = stored?.mode === "off" || stored?.mode === "on";
-    let customBlurEnabled =
-      typeof stored?.customBlurEnabled === "boolean"
-        ? stored.customBlurEnabled
-        : hasLegacyMode
-          ? false
-          : popupBlurDefaults.customBlurEnabled;
-
-    if (glassState === "off") {
-      customBlurEnabled = false;
-    }
+    const customBlurEnabled = glassState === "on";
 
     const customBlurPower = clampNumber(
       stored?.customBlurPower ?? stored?.power,
@@ -789,6 +773,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const usingCustomColors = current.colorSource === "custom";
     const palette = usingCustomColors ? current.palette : dashboardPalette;
     const isGlassOff = current.glassState === "off";
+    const isDashboardState = current.glassState === "dashboard";
+    const effectiveBlurPower = isDashboardState
+      ? getDashboardBlurPower()
+      : current.customBlurPower;
 
     popupGlassStateButtons.forEach((button) => {
       const isActive = button.dataset.popupGlassState === current.glassState;
@@ -796,30 +784,20 @@ document.addEventListener("DOMContentLoaded", () => {
       button.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    if (popupUseCustomBlurPowerToggle) {
-      popupUseCustomBlurPowerToggle.checked =
-        !isGlassOff && current.customBlurEnabled;
-      popupUseCustomBlurPowerToggle.disabled = isGlassOff;
-    }
-
-    if (popupBlurCustomToggleWrap) {
-      popupBlurCustomToggleWrap.classList.toggle("disabled", isGlassOff);
-    }
-
     if (popupBlurPowerSlider) {
-      popupBlurPowerSlider.value = String(current.customBlurPower);
-      popupBlurPowerSlider.disabled = isGlassOff;
+      popupBlurPowerSlider.value = String(effectiveBlurPower);
+      popupBlurPowerSlider.disabled = isGlassOff || isDashboardState;
     }
 
     if (popupBlurPowerWrap) {
       popupBlurPowerWrap.classList.toggle(
         "disabled",
-        isGlassOff || !current.customBlurEnabled,
+        isGlassOff || isDashboardState,
       );
     }
 
     if (popupBlurPowerValue) {
-      popupBlurPowerValue.textContent = `${current.customBlurPower}%`;
+      popupBlurPowerValue.textContent = `${effectiveBlurPower}%`;
     }
 
     if (popupUseCustomColorsToggle) {
@@ -881,7 +859,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const effectiveBlurPower = !effectiveGlass
       ? 0
-      : current.customBlurEnabled
+      : current.glassState === "on"
         ? current.customBlurPower
         : getDashboardBlurPower();
 
@@ -939,10 +917,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ? next.glassState
       : popupBlurDefaults.glassState;
 
-    let nextCustomBlurEnabled = !!next.customBlurEnabled;
-    if (nextGlassState === "off") {
-      nextCustomBlurEnabled = false;
-    }
+    const nextCustomBlurEnabled = nextGlassState === "on";
 
     popupBlurSettings = {
       glassState: nextGlassState,
@@ -1023,17 +998,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    popupUseCustomBlurPowerToggle?.addEventListener("change", () => {
-      if (ensurePopupBlurSettings().glassState === "off") {
-        popupUseCustomBlurPowerToggle.checked = false;
-        return;
-      }
-
-      updatePopupBlurSettings({
-        customBlurEnabled: popupUseCustomBlurPowerToggle.checked,
-      });
-    });
-
     popupUseCustomColorsToggle?.addEventListener("change", () => {
       if (popupUseCustomColorsToggle.checked) {
         updatePopupBlurSettings({
@@ -1047,7 +1011,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     popupBlurPowerSlider?.addEventListener("input", () => {
-      if (ensurePopupBlurSettings().glassState === "off") return;
+      if (ensurePopupBlurSettings().glassState !== "on") return;
       updatePopupBlurSettings({ customBlurPower: popupBlurPowerSlider.value });
     });
 

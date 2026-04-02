@@ -5613,6 +5613,15 @@ class SettingsManager extends BaseManager {
       );
     }
     document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Enter" &&
+        this.resetNukeConfirmModal?.classList.contains("active")
+      ) {
+        e.preventDefault();
+        resolveResetNukeConfirm(true);
+        return;
+      }
+
       if (e.key !== "Escape") return;
       if (this.resetNukeConfirmModal?.classList.contains("active")) {
         resolveResetNukeConfirm(false);

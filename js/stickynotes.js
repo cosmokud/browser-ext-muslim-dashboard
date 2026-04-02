@@ -268,6 +268,12 @@ class StickyNotesManager {
     });
 
     document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && this.deleteModal?.classList.contains("active")) {
+        e.preventDefault();
+        this.confirmDelete();
+        return;
+      }
+
       if (
         e.key === "Escape" &&
         this.deleteModal?.classList.contains("active")
@@ -500,15 +506,6 @@ class StickyNotesManager {
               <div class="blur-setting-section">
                 <div class="blur-power-header">
                   <span class="blur-setting-label">Blur Power</span>
-                  <label class="blur-power-toggle">
-                    <input
-                      type="checkbox"
-                      class="blur-power-checkbox"
-                      ${note.blurPowerEnabled ? "checked" : ""}
-                    />
-                    <span class="blur-power-switch"></span>
-                    <span class="blur-power-toggle-label">Custom</span>
-                  </label>
                 </div>
                 <div class="blur-power-slider-wrap disabled">
                   <input
@@ -695,13 +692,7 @@ class StickyNotesManager {
       (this.clampNumber(note.blur, 0, 20, 10) / 20) * 200,
     );
     note.blurPower = this.clampNumber(note.blurPower, 0, 200, legacyBlurPower);
-
-    note.blurPowerEnabled =
-      typeof note.blurPowerEnabled === "boolean" ? note.blurPowerEnabled : true;
-
-    if (note.blurState !== "on") {
-      note.blurPowerEnabled = false;
-    }
+    note.blurPowerEnabled = note.blurState === "on";
 
     note.glassOpacity = this.clampNumber(
       note.glassOpacity,
@@ -736,7 +727,7 @@ class StickyNotesManager {
 
     const effectiveBlurPower = !effectiveGlass
       ? 0
-      : state === "on" && note.blurPowerEnabled
+      : state === "on"
         ? note.blurPower
         : dashboardBlurPower;
 
@@ -851,11 +842,9 @@ class StickyNotesManager {
     const popup = menu?.querySelector(".blur-settings-popup");
     const closeBtn = popup?.querySelector(".blur-popup-close");
     const glassOptions = popup?.querySelectorAll(".blur-glass-option");
-    const customToggle = popup?.querySelector(".blur-power-checkbox");
     const sliderWrap = popup?.querySelector(".blur-power-slider-wrap");
     const slider = popup?.querySelector(".blur-power-slider");
     const valueDisplay = popup?.querySelector(".blur-power-value");
-    const blurPowerToggleLabel = popup?.querySelector(".blur-power-toggle");
 
     if (!menu || !btn || !popup) return;
 
@@ -906,31 +895,11 @@ class StickyNotesManager {
         opt.classList.toggle("active", val === note.blurState);
       });
 
-      if (customToggle) {
-        if (isGlassOff || isDashboardState) {
-          customToggle.checked = false;
-          customToggle.disabled = true;
-        } else {
-          customToggle.checked = note.blurPowerEnabled === true;
-          customToggle.disabled = false;
-        }
-      }
-
-      if (blurPowerToggleLabel) {
-        blurPowerToggleLabel.classList.toggle(
-          "disabled",
-          isGlassOff || isDashboardState,
-        );
-      }
-
       const effectiveBlurPower = isDashboardState
         ? this.getDashboardBlurPower()
         : note.blurPower;
       if (sliderWrap) {
-        sliderWrap.classList.toggle(
-          "disabled",
-          isGlassOff || isDashboardState || !note.blurPowerEnabled,
-        );
+        sliderWrap.classList.toggle("disabled", isGlassOff || isDashboardState);
       }
       if (slider) {
         slider.value = String(effectiveBlurPower);
@@ -1007,26 +976,11 @@ class StickyNotesManager {
         note.blurState = ["off", "dashboard", "on"].includes(newState)
           ? newState
           : "dashboard";
-
-        if (note.blurState !== "on") {
-          note.blurPowerEnabled = false;
-        }
+        note.blurPowerEnabled = note.blurState === "on";
 
         this.applyNoteBlurState(noteId, { save: true });
         syncUI();
       });
-    });
-
-    customToggle?.addEventListener("change", () => {
-      if (note.blurState !== "on") {
-        customToggle.checked = false;
-        note.blurPowerEnabled = false;
-      } else {
-        note.blurPowerEnabled = customToggle.checked;
-      }
-
-      this.applyNoteBlurState(noteId, { save: true });
-      syncUI();
     });
 
     slider?.addEventListener("input", (e) => {
@@ -1041,7 +995,7 @@ class StickyNotesManager {
         valueDisplay.textContent = `${note.blurPower}%`;
       }
 
-      if (note.blurState === "on" && note.blurPowerEnabled) {
+      if (note.blurState === "on") {
         this.applyNoteBlurState(noteId, { save: true });
       }
     });
@@ -1363,7 +1317,7 @@ class StickyNotesManager {
     document.addEventListener("md:ui-blur-update", () => {
       this.notes.forEach((note) => {
         this.normalizeNoteBlurSettings(note);
-        if (note.blurState === "dashboard" || !note.blurPowerEnabled) {
+        if (note.blurState === "dashboard") {
           this.applyNoteBlurState(note.id, { save: false });
         }
       });

@@ -973,10 +973,10 @@ class MuslimDashboard {
      * Enhanced blur settings popup for individual cards.
      * Features:
      * - Triple toggle for glass effect: OFF / DASH (follow dashboard) / ON
-     *   - OFF: Disable glass effect for this card only (more readable), locks blur power toggle
+     *   - OFF: Disable glass effect for this card only (more readable), locks blur power slider
      *   - DASH: Follow dashboard's global glass setting (default behavior)
      *   - ON: Force enable glass effect for this card
-     * - Custom blur power slider with toggle to enable/disable
+     * - Blur power slider: enabled only in ON mode
      */
 
     const isDashboardGlassEnabled = () => {
@@ -1155,11 +1155,9 @@ class MuslimDashboard {
       const popup = menu.querySelector(".blur-settings-popup");
       const closeBtn = popup?.querySelector(".blur-popup-close");
       const glassOptions = popup?.querySelectorAll(".blur-glass-option");
-      const customToggle = popup?.querySelector(".blur-power-checkbox");
       const sliderWrap = popup?.querySelector(".blur-power-slider-wrap");
       const slider = popup?.querySelector(".blur-power-slider");
       const valueDisplay = popup?.querySelector(".blur-power-value");
-      const blurPowerToggleLabel = popup?.querySelector(".blur-power-toggle");
 
       let opacityWrap = popup?.querySelector(".blur-opacity-slider-wrap");
       if (!opacityWrap && popup) {
@@ -1334,7 +1332,7 @@ class MuslimDashboard {
         }
 
         // Determine effective blur power
-        const usingCustomBlur = state === "on" && customBlurEnabled;
+        const usingCustomBlur = state === "on";
         let effectiveBlurPower;
         if (!effectiveGlass) {
           // Glass is off, blur multiplier should be 0
@@ -1402,37 +1400,18 @@ class MuslimDashboard {
           opt.classList.toggle("active", val === glassState);
         });
 
-        // When glass is OFF, lock the blur power toggle to disabled
+        // Blur power slider is only adjustable in ON mode.
         const isGlassOff = glassState === "off";
         const isDashboardState = glassState === "dashboard";
 
-        // Update custom blur toggle
-        if (customToggle) {
-          if (isGlassOff || isDashboardState) {
-            customToggle.checked = false;
-            customToggle.disabled = true;
-          } else {
-            customToggle.checked = customBlurEnabled;
-            customToggle.disabled = false;
-          }
-        }
-
-        // Update blur power toggle label/wrapper disabled state
-        if (blurPowerToggleLabel) {
-          blurPowerToggleLabel.classList.toggle(
-            "disabled",
-            isGlassOff || isDashboardState,
-          );
-        }
-
-        // Update slider state - disabled when glass is off OR custom blur is not enabled
+        // Update slider state - disabled when glass is off or dashboard-linked
         const effectiveBlurPower = isDashboardState
           ? getDashboardBlurPower()
           : customBlurPower;
         if (sliderWrap) {
           sliderWrap.classList.toggle(
             "disabled",
-            isGlassOff || isDashboardState || !customBlurEnabled,
+            isGlassOff || isDashboardState,
           );
         }
 
@@ -1468,17 +1447,9 @@ class MuslimDashboard {
       // Load initial state
       const settings = readSettings();
       let currentGlassState = normalizeBlurState(settings?.[stateKey]);
-      let currentCustomEnabled =
-        typeof settings?.[blurPowerKey + "Enabled"] === "boolean"
-          ? settings[blurPowerKey + "Enabled"]
-          : false;
+      let currentCustomEnabled = currentGlassState === "on";
       let currentCustomPower = normalizeBlurPower(settings?.[blurPowerKey]);
       let currentGlassOpacity = normalizeGlassOpacity(settings?.[opacityKey]);
-
-      // If glass is off or follows dashboard, force custom blur disabled
-      if (currentGlassState === "off" || currentGlassState === "dashboard") {
-        currentCustomEnabled = false;
-      }
 
       // Persist normalized defaults so every blur-capable component starts in
       // dashboard-follow mode and keeps its own custom settings across reloads.
@@ -1555,12 +1526,7 @@ class MuslimDashboard {
 
           const newState = opt.dataset.glassValue;
           currentGlassState = newState;
-
-          // When not in ON mode, lock blur customization to dashboard behavior.
-          if (newState !== "on") {
-            currentCustomEnabled = false;
-            writeSettings({ [blurPowerKey + "Enabled"]: false });
-          }
+          currentCustomEnabled = newState === "on";
 
           // Update UI
           glassOptions.forEach((o) => o.classList.remove("active"));
@@ -1579,42 +1545,17 @@ class MuslimDashboard {
             currentCustomPower,
             currentGlassOpacity,
           );
-          writeSettings({ [stateKey]: newState });
+          writeSettings({
+            [stateKey]: newState,
+            [blurPowerKey + "Enabled"]: currentCustomEnabled,
+          });
         });
-      });
-
-      // Custom blur power toggle
-      customToggle?.addEventListener("change", () => {
-        // Don't allow enabling custom blur when glass is off or dashboard-linked.
-        if (currentGlassState === "off" || currentGlassState === "dashboard") {
-          customToggle.checked = false;
-          return;
-        }
-
-        currentCustomEnabled = customToggle.checked;
-
-        // Update slider state
-        syncUI(
-          currentGlassState,
-          currentCustomEnabled,
-          currentCustomPower,
-          currentGlassOpacity,
-        );
-
-        // Apply and save
-        applyGlassState(
-          currentGlassState,
-          currentCustomEnabled,
-          currentCustomPower,
-          currentGlassOpacity,
-        );
-        writeSettings({ [blurPowerKey + "Enabled"]: currentCustomEnabled });
       });
 
       // Blur power slider
       slider?.addEventListener("input", () => {
-        // Don't process if glass is off or dashboard-linked.
-        if (currentGlassState === "off" || currentGlassState === "dashboard") {
+        // Only editable in ON mode.
+        if (currentGlassState !== "on") {
           return;
         }
 
@@ -1689,11 +1630,8 @@ class MuslimDashboard {
 
       // Listen for dashboard blur power changes
       document.addEventListener("md:ui-blur-update", () => {
-        // Update when dashboard-linked, or when ON mode is following dashboard blur.
-        if (
-          currentGlassState === "dashboard" ||
-          (currentGlassState === "on" && !currentCustomEnabled)
-        ) {
+        // Update only when dashboard-linked.
+        if (currentGlassState === "dashboard") {
           syncUI(
             currentGlassState,
             currentCustomEnabled,

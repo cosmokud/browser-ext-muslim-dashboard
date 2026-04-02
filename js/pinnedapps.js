@@ -372,6 +372,20 @@ class PinnedAppsManager extends BaseManager {
     this._bindOverlayCloseBehavior(this.deleteModal, () =>
       this.hideDeleteConfirmation(),
     );
+
+    document.addEventListener("keydown", (event) => {
+      if (!this.deleteModal?.classList.contains("active")) return;
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.confirmDelete();
+        return;
+      }
+
+      if (event.key === "Escape") {
+        this.hideDeleteConfirmation();
+      }
+    });
   }
 
   /**

@@ -360,6 +360,12 @@ class SearchBarManager extends BaseManager {
 
     // Escape closes context menu + modals
     document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && this.deleteModal?.classList.contains("active")) {
+        e.preventDefault();
+        this.confirmDelete();
+        return;
+      }
+
       if (e.key !== "Escape") return;
       this.hideContextMenu();
       this.hideAddModal();
