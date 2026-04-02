@@ -60,18 +60,6 @@
   font-display: swap;
 }
 
-@property --liquid-glass-angle-1 {
-  syntax: "<angle>";
-  inherits: true;
-  initial-value: -75deg;
-}
-
-@property --liquid-glass-angle-2 {
-  syntax: "<angle>";
-  inherits: true;
-  initial-value: -45deg;
-}
-
 /* CSS Variables */
 :root {
   /* Colors */
@@ -103,19 +91,6 @@
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --liquid-glass-enabled: 0;
-  --liquid-glass-angle-1: -75deg;
-  --liquid-glass-angle-2: -45deg;
-  --liquid-glass-alpha: 0.35;
-  --liquid-glass-highlight-alpha: 0.52;
-  --liquid-glass-border-alpha: 0.46;
-  --liquid-glass-shadow-strength: 0.34;
-  --liquid-glass-surface-rgb: 26, 95, 74;
-  --liquid-glass-accent-rgb: 45, 138, 110;
-  --liquid-glass-edge-rgb: 45, 138, 110;
-  --liquid-glass-shadow-ambient: 0 14px 34px rgba(0, 0, 0, 0.3);
-  --liquid-glass-shadow-inner:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 
   /* Text colors */
   --text-primary: #ffffff;
@@ -261,7 +236,6 @@ body {
 /* Performance mode: neutralize expensive effects only while enabled */
 html[data-performance-mode="true"] {
   --ui-blur-multiplier: 0 !important;
-  --liquid-glass-enabled: 0 !important;
   --transition-fast: 0s !important;
   --transition-normal: 0s !important;
   --transition-slow: 0s !important;
@@ -15628,24 +15602,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 /* Glass Toggle */
-.theme-glass-toggle-row {
-  display: flex;
-  align-items: stretch;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
 .theme-glass-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   cursor: pointer;
-  flex: 1 1 260px;
 }
 
 .theme-glass-toggle:hover {
@@ -15656,11 +15621,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   accent-color: var(--accent-gold);
   width: 18px;
   height: 18px;
-}
-
-.theme-liquid-glass-toggle.disabled {
-  opacity: 0.55;
-  pointer-events: none;
 }
 
 /* Blur Group (only visible when glass enabled) */
@@ -15952,221 +15912,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 [data-theme-mode="light"] .setting-select option {
   background: #f5f5f5;
   color: #333;
-}
-
-[data-liquid-glass-enabled="false"] {
-  --liquid-glass-enabled: 0;
-  --liquid-glass-alpha: 0;
-  --liquid-glass-highlight-alpha: 0;
-  --liquid-glass-border-alpha: 0;
-}
-
-html[data-glass-enabled="true"][data-liquid-glass-enabled="true"]
-  :where(
-    .card:not(#notesCard),
-    #notesCard .mdnotes-shell,
-    #notesCard .mdnotes-selector-wrap,
-    #notesCard .mdnotes-main,
-    #notesCard .mdnotes-editor-body,
-    #notesCard .mdnotes-pane,
-    .quote-container,
-    .modal,
-    .blur-popup,
-    .calendar-toggle,
-    .header-surface-enabled,
-    .search-bar-shell,
-    .search-bar-engine-tab,
-    .search-bar-engine-arrow,
-    .search-bar-btn,
-    .setting-input,
-    .setting-select,
-    .setting-textarea,
-    .settings-tab,
-    .theme-mode-btn,
-    .theme-glass-toggle,
-    .theme-card,
-    .icon-theme-card,
-    .next-prayer,
-    .prayer-item,
-    .compact-weather,
-    .pocket-quran-toggle-group > button,
-    .card-header-actions > button,
-    .card-header-actions > .notes-header-actions > button,
-    .card-header-actions > .card-blur-menu > .card-blur-btn,
-    .quote-search-btn,
-    .quote-lang-selector-btn
-  ) {
-  --liquid-local-alpha: calc(
-    var(--liquid-glass-alpha) * var(--liquid-glass-enabled)
-  );
-  --liquid-local-highlight: calc(
-    var(--liquid-glass-highlight-alpha) * var(--liquid-glass-enabled)
-  );
-  --liquid-local-border: calc(
-    var(--liquid-glass-border-alpha) * var(--liquid-glass-enabled)
-  );
-  background:
-    linear-gradient(
-        var(--liquid-glass-angle-2),
-        rgba(255, 255, 255, calc(var(--liquid-local-highlight) * 0.04)) 0%,
-        rgba(255, 255, 255, calc(var(--liquid-local-highlight) * 0.74)) 44%,
-        rgba(255, 255, 255, calc(var(--liquid-local-highlight) * 0.06)) 58%,
-        rgba(255, 255, 255, 0) 72%
-      )
-      padding-box,
-    linear-gradient(
-        160deg,
-        rgba(
-            var(--liquid-glass-accent-rgb),
-            calc(var(--liquid-local-alpha) * 1.08)
-          )
-          0%,
-        rgba(
-            var(--liquid-glass-surface-rgb),
-            calc(var(--liquid-local-alpha) * 0.9)
-          )
-          58%,
-        rgba(
-            var(--liquid-glass-edge-rgb),
-            calc(var(--liquid-local-alpha) * 0.95)
-          )
-          100%
-      )
-      padding-box,
-    conic-gradient(
-        from var(--liquid-glass-angle-1) at 50% 50%,
-        rgba(255, 255, 255, calc(var(--liquid-local-border) * 0.88)) 0deg,
-        rgba(255, 255, 255, calc(var(--liquid-local-border) * 0.12)) 58deg,
-        rgba(255, 255, 255, calc(var(--liquid-local-border) * 0.72)) 146deg,
-        rgba(255, 255, 255, calc(var(--liquid-local-border) * 0.12)) 238deg,
-        rgba(255, 255, 255, calc(var(--liquid-local-border) * 0.88)) 360deg
-      )
-      border-box,
-    linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box,
-    linear-gradient(var(--glass-border), var(--glass-border)) border-box;
-  border: 1px solid transparent;
-  box-shadow:
-    var(--liquid-glass-shadow-ambient), var(--liquid-glass-shadow-inner);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier))) saturate(1.55)
-    brightness(1.05);
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    saturate(1.55) brightness(1.05);
-  transition:
-    background-position calc(var(--transition-normal) + 120ms) ease,
-    box-shadow var(--transition-normal),
-    transform var(--transition-normal),
-    --liquid-glass-angle-1 520ms cubic-bezier(0.25, 1, 0.5, 1),
-    --liquid-glass-angle-2 520ms cubic-bezier(0.25, 1, 0.5, 1);
-  background-size:
-    220% 220%,
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    100% 100%;
-  background-position:
-    0% 50%,
-    50% 50%,
-    50% 50%,
-    50% 50%,
-    50% 50%;
-}
-
-html[data-glass-enabled="true"][data-liquid-glass-enabled="true"]
-  :where(
-    .card:not(#notesCard):hover,
-    .quote-container:hover,
-    .modal:hover,
-    .blur-popup:hover,
-    .calendar-toggle:hover,
-    .header-surface-enabled:hover,
-    .search-bar-shell:hover,
-    .search-bar-engine-tab:hover,
-    .search-bar-engine-arrow:hover,
-    .search-bar-btn:hover,
-    .settings-tab:hover,
-    .theme-mode-btn:hover,
-    .theme-glass-toggle:hover,
-    .theme-card:hover,
-    .icon-theme-card:hover,
-    .next-prayer:hover,
-    .prayer-item:hover,
-    .compact-weather:hover,
-    .pocket-quran-toggle-group > button:hover,
-    .card-header-actions > button:hover,
-    .card-header-actions > .notes-header-actions > button:hover,
-    .card-header-actions > .card-blur-menu > .card-blur-btn:hover,
-    .quote-search-btn:hover,
-    .quote-lang-selector-btn:hover
-  ) {
-  --liquid-glass-angle-1: -126deg;
-  --liquid-glass-angle-2: -18deg;
-  background-position:
-    24% 50%,
-    50% 50%,
-    50% 50%;
-}
-
-html[data-glass-enabled="true"][data-liquid-glass-enabled="true"]
-  :where(
-    .search-bar-engine-tab:active,
-    .search-bar-engine-arrow:active,
-    .search-bar-btn:active,
-    .theme-mode-btn:active,
-    .theme-card:active,
-    .icon-theme-card:active,
-    .card-header-actions > button:active,
-    .card-header-actions > .notes-header-actions > button:active,
-    .card-header-actions > .card-blur-menu > .card-blur-btn:active,
-    .quote-search-btn:active,
-    .quote-lang-selector-btn:active,
-    .pocket-quran-toggle-group > button:active
-  ) {
-  --liquid-glass-angle-1: -76deg;
-  --liquid-glass-angle-2: -8deg;
-  background-position:
-    52% 20%,
-    50% 50%,
-    50% 50%;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-glass-enabled="true"][data-liquid-glass-enabled="true"]
-    :where(
-      .card:not(#notesCard),
-      #notesCard .mdnotes-shell,
-      #notesCard .mdnotes-selector-wrap,
-      #notesCard .mdnotes-main,
-      #notesCard .mdnotes-editor-body,
-      #notesCard .mdnotes-pane,
-      .quote-container,
-      .modal,
-      .blur-popup,
-      .calendar-toggle,
-      .header-surface-enabled,
-      .search-bar-shell,
-      .search-bar-engine-tab,
-      .search-bar-engine-arrow,
-      .search-bar-btn,
-      .setting-input,
-      .setting-select,
-      .setting-textarea,
-      .settings-tab,
-      .theme-mode-btn,
-      .theme-glass-toggle,
-      .theme-card,
-      .icon-theme-card,
-      .next-prayer,
-      .prayer-item,
-      .compact-weather,
-      .pocket-quran-toggle-group > button,
-      .card-header-actions > button,
-      .card-header-actions > .notes-header-actions > button,
-      .card-header-actions > .card-blur-menu > .card-blur-btn,
-      .quote-search-btn,
-      .quote-lang-selector-btn
-    ) {
-    transition: none;
-  }
 }
 
 /* Disable Glass Mode Adjustments */

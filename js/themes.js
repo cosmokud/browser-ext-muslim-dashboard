@@ -680,7 +680,6 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
-    this._liquidGlassEnabled = false;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -771,8 +770,6 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
-    this._liquidGlassEnabled =
-      themeSettings.liquidGlassEnabled === true && this._glassEnabled;
     this._glassOpacity = this._clampGlassOpacity(
       themeSettings.glassOpacity,
       50,
@@ -832,8 +829,6 @@ class ThemeManager {
       name: this._currentTheme,
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
-      liquidGlassEnabled:
-        this._glassEnabled && this._liquidGlassEnabled === true,
       glassOpacity: this._glassOpacity,
       componentOpacity: this._mainGridComponentOpacity,
       customAccent: this._customAccent,
@@ -861,13 +856,6 @@ class ThemeManager {
    */
   isGlassEnabled() {
     return this._glassEnabled;
-  }
-
-  /**
-   * Check if liquid glass effect is enabled
-   */
-  isLiquidGlassEnabled() {
-    return this._glassEnabled && this._liquidGlassEnabled === true;
   }
 
   /**
@@ -928,22 +916,7 @@ class ThemeManager {
    * Enable or disable glass effect
    */
   setGlassEnabled(enabled, save = true) {
-    this._glassEnabled = enabled === true;
-    if (!this._glassEnabled) {
-      this._liquidGlassEnabled = false;
-    }
-    this.applyTheme();
-
-    if (save) {
-      this.saveThemeSettings();
-    }
-  }
-
-  /**
-   * Enable or disable liquid glass effect
-   */
-  setLiquidGlassEnabled(enabled, save = true) {
-    this._liquidGlassEnabled = enabled === true && this._glassEnabled;
+    this._glassEnabled = enabled;
     this.applyTheme();
 
     if (save) {
@@ -1249,117 +1222,6 @@ class ThemeManager {
     };
   }
 
-  _clearLiquidGlassVars(target) {
-    if (!target?.style) return;
-
-    [
-      "--liquid-glass-enabled",
-      "--liquid-glass-alpha",
-      "--liquid-glass-highlight-alpha",
-      "--liquid-glass-border-alpha",
-      "--liquid-glass-shadow-strength",
-      "--liquid-glass-surface-rgb",
-      "--liquid-glass-accent-rgb",
-      "--liquid-glass-edge-rgb",
-      "--liquid-glass-shadow-ambient",
-      "--liquid-glass-shadow-inner",
-    ].forEach((prop) => target.style.removeProperty(prop));
-  }
-
-  _applyLiquidGlassVars(target, colors, opacityPercent = this._glassOpacity) {
-    if (!target?.style || !colors || typeof colors !== "object") return;
-
-    const mode = this._currentMode === "light" ? "light" : "dark";
-    const alphas = this._getGlassOpacityAlphas(opacityPercent);
-    const glassBg = this._setColorAlpha(colors.glassBg, alphas.bg);
-    const glassHover = this._setColorAlpha(colors.glassBgHover, alphas.hover);
-    const glassBorder = this._setColorAlpha(colors.glassBorder, alphas.border);
-
-    const surfaceRgb = this._extractRgbChannels(glassBg) ||
-      this.hexToRgb(colors.primary) || {
-        r: 26,
-        g: 95,
-        b: 74,
-      };
-    const accentRgb =
-      this._extractRgbChannels(glassHover) ||
-      this.hexToRgb(colors.primaryLight) ||
-      surfaceRgb;
-    const edgeRgb =
-      this._extractRgbChannels(glassBorder) ||
-      this.hexToRgb(colors.primaryDark) ||
-      accentRgb;
-
-    const bgAlpha =
-      this._parseRgbaAlpha(glassBg) ?? (mode === "light" ? 0.2 : 0.35);
-    const clampAlpha = (value) =>
-      Number(Math.min(1, Math.max(0, value)).toFixed(3));
-
-    const highlightAlpha = clampAlpha(
-      bgAlpha * (mode === "light" ? 1.2 : 1.05) +
-        (mode === "light" ? 0.13 : 0.16),
-    );
-    const borderAlpha = clampAlpha(
-      (this._parseRgbaAlpha(glassBorder) ?? bgAlpha) +
-        (mode === "light" ? 0.1 : 0.06),
-    );
-    const shadowStrength = clampAlpha(
-      bgAlpha * (mode === "light" ? 1.15 : 1.35) +
-        (mode === "light" ? 0.06 : 0.08),
-    );
-
-    target.style.setProperty(
-      "--liquid-glass-surface-rgb",
-      `${surfaceRgb.r}, ${surfaceRgb.g}, ${surfaceRgb.b}`,
-    );
-    target.style.setProperty(
-      "--liquid-glass-accent-rgb",
-      `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`,
-    );
-    target.style.setProperty(
-      "--liquid-glass-edge-rgb",
-      `${edgeRgb.r}, ${edgeRgb.g}, ${edgeRgb.b}`,
-    );
-    target.style.setProperty(
-      "--liquid-glass-alpha",
-      String(clampAlpha(bgAlpha)),
-    );
-    target.style.setProperty(
-      "--liquid-glass-highlight-alpha",
-      String(highlightAlpha),
-    );
-    target.style.setProperty(
-      "--liquid-glass-border-alpha",
-      String(borderAlpha),
-    );
-    target.style.setProperty(
-      "--liquid-glass-shadow-strength",
-      String(shadowStrength),
-    );
-    target.style.setProperty(
-      "--liquid-glass-shadow-ambient",
-      mode === "light"
-        ? `0 10px 30px rgba(20, 30, 45, ${Number(
-            (shadowStrength * 0.45).toFixed(3),
-          )})`
-        : `0 14px 34px rgba(0, 0, 0, ${Number((shadowStrength * 0.62).toFixed(3))})`,
-    );
-    target.style.setProperty(
-      "--liquid-glass-shadow-inner",
-      mode === "light"
-        ? `inset 0 1px 0 rgba(255, 255, 255, ${Number(
-            Math.min(0.95, highlightAlpha * 0.9).toFixed(3),
-          )}), inset 0 -1px 0 rgba(255, 255, 255, ${Number(
-            Math.min(0.55, clampAlpha(bgAlpha * 0.55)).toFixed(3),
-          )})`
-        : `inset 0 1px 0 rgba(255, 255, 255, ${Number(
-            Math.min(0.8, highlightAlpha * 0.78).toFixed(3),
-          )}), inset 0 -1px 0 rgba(0, 0, 0, ${Number(
-            Math.min(0.45, clampAlpha(bgAlpha * 0.52)).toFixed(3),
-          )})`,
-    );
-  }
-
   _applyMainGridComponentOpacity(colors) {
     if (!colors || typeof colors !== "object") return;
 
@@ -1379,7 +1241,6 @@ class ThemeManager {
         component.style.removeProperty("--glass-bg-hover");
         component.style.removeProperty("--glass-border");
         component.style.removeProperty("--glass-shadow");
-        this._clearLiquidGlassVars(component);
         return;
       }
 
@@ -1387,20 +1248,6 @@ class ThemeManager {
       component.style.setProperty("--glass-bg-hover", hoverColor);
       component.style.setProperty("--glass-border", borderColor);
       component.style.removeProperty("--glass-shadow");
-      this._applyLiquidGlassVars(
-        component,
-        {
-          ...colors,
-          glassBg: bgColor,
-          glassBgHover: hoverColor,
-          glassBorder: borderColor,
-        },
-        this._mainGridComponentOpacity,
-      );
-      component.style.setProperty(
-        "--liquid-glass-enabled",
-        this.isLiquidGlassEnabled() ? "1" : "0",
-      );
     };
 
     const alphas = this._getGlassOpacityAlphas(this._mainGridComponentOpacity);
@@ -1677,15 +1524,6 @@ class ThemeManager {
     if (!colors) return;
 
     const root = document.documentElement;
-    const settings = this.storage.getSettings();
-    const performanceModeEnabled =
-      settings?.performanceModeEnabled === true ||
-      root?.dataset?.performanceMode === "true" ||
-      window.__MD_PERFORMANCE_MODE__ === true;
-    const effectiveLiquidGlassEnabled =
-      this._glassEnabled &&
-      this._liquidGlassEnabled === true &&
-      !performanceModeEnabled;
 
     // Apply color variables
     root.style.setProperty("--primary-color", colors.primary);
@@ -1751,16 +1589,6 @@ class ThemeManager {
       root.style.setProperty("--glass-shadow", "0 4px 20px rgba(0, 0, 0, 0.2)");
     }
 
-    this._applyLiquidGlassVars(root, colors, this._glassOpacity);
-    root.style.setProperty(
-      "--liquid-glass-enabled",
-      effectiveLiquidGlassEnabled ? "1" : "0",
-    );
-    if (!this._glassEnabled) {
-      this._clearLiquidGlassVars(root);
-      root.style.setProperty("--liquid-glass-enabled", "0");
-    }
-
     // Apply body background
     document.body.style.backgroundColor = colors.bodyBg;
 
@@ -1771,9 +1599,6 @@ class ThemeManager {
     root.dataset.theme = this._currentTheme;
     root.dataset.themeMode = this._currentMode;
     root.dataset.glassEnabled = this._glassEnabled ? "true" : "false";
-    root.dataset.liquidGlassEnabled = effectiveLiquidGlassEnabled
-      ? "true"
-      : "false";
 
     // Settings shadow based on current settings color
     const settingsRgb = this.hexToRgb(colors.settingsColor);
@@ -1791,8 +1616,6 @@ class ThemeManager {
           theme: this._currentTheme,
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
-          liquidGlassEnabled: this._liquidGlassEnabled,
-          effectiveLiquidGlassEnabled,
           glassOpacity: this._glassOpacity,
           componentOpacity: this._mainGridComponentOpacity,
         },

@@ -550,14 +550,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return settings?.theme?.glassEnabled !== false;
   }
 
-  function isDashboardLiquidGlassEnabled() {
-    const settings = storage.getSettings();
-    return (
-      settings?.theme?.glassEnabled !== false &&
-      settings?.theme?.liquidGlassEnabled === true
-    );
-  }
-
   function getDashboardBlurPower() {
     const settings = storage.getSettings();
     return clampNumber(
@@ -589,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     )})`;
   }
 
-  function getPopupGlassVars(colors, glassEnabled, liquidGlassEnabled = false) {
+  function getPopupGlassVars(colors, glassEnabled) {
     if (!colors) return null;
 
     if (glassEnabled) {
@@ -597,9 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
         glassBg: colors.glassBg,
         glassBgHover: colors.glassBgHover,
         glassBorder: colors.glassBorder,
-        glassShadow: liquidGlassEnabled
-          ? "0 12px 34px rgba(0, 0, 0, 0.32)"
-          : "0 8px 32px rgba(0, 0, 0, 0.3)",
+        glassShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
       };
     }
 
@@ -628,12 +618,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function applyPopupGlassVars(
-    colors,
-    glassEnabled,
-    liquidGlassEnabled = false,
-  ) {
-    const vars = getPopupGlassVars(colors, glassEnabled, liquidGlassEnabled);
+  function applyPopupGlassVars(colors, glassEnabled) {
+    const vars = getPopupGlassVars(colors, glassEnabled);
     if (!vars) return;
 
     const root = document.documentElement;
@@ -641,12 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
     root.style.setProperty("--glass-bg-hover", vars.glassBgHover);
     root.style.setProperty("--glass-border", vars.glassBorder);
     root.style.setProperty("--glass-shadow", vars.glassShadow);
-    root.style.setProperty(
-      "--liquid-glass-enabled",
-      liquidGlassEnabled ? "1" : "0",
-    );
     root.dataset.glassEnabled = glassEnabled ? "true" : "false";
-    root.dataset.liquidGlassEnabled = liquidGlassEnabled ? "true" : "false";
   }
 
   function readPopupBlurSettings() {
@@ -875,14 +856,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function applyPopupBlurStyles() {
     const current = ensurePopupBlurSettings();
     const dashboardGlassEnabled = isDashboardGlassEnabled();
-    const dashboardLiquidGlassEnabled = isDashboardLiquidGlassEnabled();
     const effectiveGlass =
       current.glassState === "on"
         ? true
         : current.glassState === "off"
           ? false
           : dashboardGlassEnabled;
-    const effectiveLiquid = effectiveGlass && dashboardLiquidGlassEnabled;
 
     const effectiveBlurPower = !effectiveGlass
       ? 0
@@ -894,7 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const colors = buildThemeColorsFromPopupPalette(current.palette);
       if (colors) {
         applyThemeColorsToPopup(colors);
-        applyPopupGlassVars(colors, effectiveGlass, effectiveLiquid);
+        applyPopupGlassVars(colors, effectiveGlass);
         applyPopupBackdropFromColors(colors);
       }
     } else {
@@ -907,7 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const dashboardColors = themes.getThemeColors?.();
       if (dashboardColors) {
-        applyPopupGlassVars(dashboardColors, effectiveGlass, effectiveLiquid);
+        applyPopupGlassVars(dashboardColors, effectiveGlass);
         applyPopupBackdropFromColors(dashboardColors);
       }
     }
