@@ -6,7 +6,7 @@
 
 class ThemeManager {
   // Default theme (Pure White - clean minimalist theme)
-  static DEFAULT_THEME = "pureWhite";
+  static DEFAULT_THEME = "emerald";
   static DEFAULT_MODE = "dark";
 
   // Theme definitions with color palettes for both dark and light modes
