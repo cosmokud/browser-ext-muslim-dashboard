@@ -1003,6 +1003,15 @@ class MuslimDashboard {
       this.storage.set("settings", { ...current, ...patch });
     };
 
+    const validBlurStates = new Set(["off", "dashboard", "on"]);
+    const normalizeBlurState = (value) =>
+      validBlurStates.has(value) ? value : "dashboard";
+    const normalizeBlurPower = (value) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return 100;
+      return Math.min(200, Math.max(0, Math.round(numeric)));
+    };
+
     const blurPopupByCardId = new Map();
     const blurPopupPortalled = new WeakSet();
     let blurPopupPositionRaf = null;
@@ -1332,13 +1341,32 @@ class MuslimDashboard {
 
       // Load initial state
       const settings = readSettings();
-      let currentGlassState = settings?.[stateKey] || "dashboard";
-      let currentCustomEnabled = settings?.[blurPowerKey + "Enabled"] || false;
-      let currentCustomPower = settings?.[blurPowerKey] ?? 100;
+      let currentGlassState = normalizeBlurState(settings?.[stateKey]);
+      let currentCustomEnabled =
+        typeof settings?.[blurPowerKey + "Enabled"] === "boolean"
+          ? settings[blurPowerKey + "Enabled"]
+          : false;
+      let currentCustomPower = normalizeBlurPower(settings?.[blurPowerKey]);
 
       // If glass is off, force custom enabled to false
       if (currentGlassState === "off") {
         currentCustomEnabled = false;
+      }
+
+      // Persist normalized defaults so every blur-capable component starts in
+      // dashboard-follow mode and keeps its own custom settings across reloads.
+      const initialPatch = {};
+      if (settings?.[stateKey] !== currentGlassState) {
+        initialPatch[stateKey] = currentGlassState;
+      }
+      if (settings?.[blurPowerKey + "Enabled"] !== currentCustomEnabled) {
+        initialPatch[blurPowerKey + "Enabled"] = currentCustomEnabled;
+      }
+      if (settings?.[blurPowerKey] !== currentCustomPower) {
+        initialPatch[blurPowerKey] = currentCustomPower;
+      }
+      if (Object.keys(initialPatch).length > 0) {
+        writeSettings(initialPatch);
       }
 
       // Apply initial state
@@ -1440,7 +1468,7 @@ class MuslimDashboard {
         // Don't process if glass is off
         if (currentGlassState === "off") return;
 
-        currentCustomPower = parseInt(slider.value, 10);
+        currentCustomPower = normalizeBlurPower(slider.value);
 
         // Update value display
         if (valueDisplay) {

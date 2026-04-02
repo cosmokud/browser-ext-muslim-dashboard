@@ -126,6 +126,34 @@
   /* UI effects */
   --ui-blur-multiplier: 1;
 
+  /* Theme-aware modal/popover surfaces */
+  --surface-base-bg: #1a1a2e;
+  --modal-surface-base: color-mix(
+    in srgb,
+    var(--surface-base-bg) 62%,
+    var(--primary-color) 38%
+  );
+  --modal-gradient-start: color-mix(
+    in srgb,
+    var(--modal-surface-base) 95%,
+    transparent 5%
+  );
+  --modal-gradient-end: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--surface-base-bg) 74%, var(--primary-dark) 26%) 98%,
+    transparent 2%
+  );
+  --modal-surface-bg: color-mix(
+    in srgb,
+    var(--modal-surface-base) 95%,
+    transparent 5%
+  );
+  --modal-popover-bg: color-mix(
+    in srgb,
+    var(--modal-surface-base) 100%,
+    transparent 0%
+  );
+
   /* Global action button ground truth */
   --action-btn-size: 36px;
   --action-btn-radius: var(--radius-sm);
@@ -5155,8 +5183,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .modal {
   background: linear-gradient(
     135deg,
-    rgba(30, 40, 50, 0.95),
-    rgba(20, 30, 40, 0.98)
+    var(--modal-gradient-start),
+    var(--modal-gradient-end)
   );
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
@@ -7175,8 +7203,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border-radius: var(--radius-md);
   background: linear-gradient(
     135deg,
-    rgba(30, 40, 50, 0.95),
-    rgba(20, 30, 40, 0.98)
+    var(--modal-gradient-start),
+    var(--modal-gradient-end)
   );
   border: 2px solid var(--accent-gold);
   display: flex;
@@ -11503,7 +11531,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: rgba(30, 40, 50, 1);
+  background: var(--modal-popover-bg);
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.35),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -11541,7 +11569,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 14px;
   width: 12px;
   height: 12px;
-  background: rgba(30, 40, 50, 0.95);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-bottom: none;
   border-right: none;
@@ -12704,7 +12732,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-bookmark-modal-content {
-  background: rgba(30, 40, 50, 0.95);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 90%;
@@ -13482,7 +13510,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .flashcard-set-modal-content {
-  background: rgba(30, 40, 50, 0.95);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 90%;
@@ -14261,7 +14289,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-set-modal-content {
-  background: rgba(30, 40, 50, 0.95);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 90%;
@@ -14646,7 +14674,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-lang-modal-content {
-  background: rgba(30, 40, 50, 0.95);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 90%;
@@ -15137,7 +15165,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Light Mode Adjustments */
 [data-theme-mode="light"] .modal {
-  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
 }
 

@@ -894,12 +894,12 @@ class ThemeManager {
       const fallback = isPureTheme
         ? this._getDefaultPureThemePalette(
             this._currentTheme,
-            this._currentMode
+            this._currentMode,
           )
         : null;
       const current = this.getCustomPalette(
         this._currentTheme,
-        this._currentMode
+        this._currentMode,
       ) || {
         primary:
           fallback?.primary ||
@@ -914,7 +914,7 @@ class ThemeManager {
         this._currentTheme,
         this._currentMode,
         { ...current, accent: hexColor },
-        false
+        false,
       );
     }
 
@@ -976,8 +976,8 @@ class ThemeManager {
         (themeName === "pureBlack"
           ? "#000000"
           : themeName === "pureWhite"
-          ? "#ffffff"
-          : undefined),
+            ? "#ffffff"
+            : undefined),
     };
 
     if (this._currentTheme === themeName && this._currentMode === colorMode) {
@@ -1066,7 +1066,7 @@ class ThemeManager {
 
     return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
       base.b,
-      mix.b
+      mix.b,
     )})`;
   }
 
@@ -1091,6 +1091,7 @@ class ThemeManager {
     root.style.setProperty("--text-primary", colors.textPrimary);
     root.style.setProperty("--text-secondary", colors.textSecondary);
     root.style.setProperty("--text-muted", colors.textMuted);
+    root.style.setProperty("--surface-base-bg", colors.bodyBg);
 
     // Apply glass effect or solid background
     if (this._glassEnabled) {
@@ -1136,7 +1137,7 @@ class ThemeManager {
     if (settingsRgb) {
       root.style.setProperty(
         "--settings-shadow",
-        `0 4px 20px rgba(${settingsRgb.r}, ${settingsRgb.g}, ${settingsRgb.b}, 0.45)`
+        `0 4px 20px rgba(${settingsRgb.r}, ${settingsRgb.g}, ${settingsRgb.b}, 0.45)`,
       );
     }
 
@@ -1148,7 +1149,7 @@ class ThemeManager {
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
         },
-      })
+      }),
     );
   }
 

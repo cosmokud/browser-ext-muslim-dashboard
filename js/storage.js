@@ -176,17 +176,25 @@ class StorageManager {
       timeFormat: "24h",
       uiBlurPower: 100, // percentage (100 = current blur, 0 = no blur)
 
-      // Readability: per-card blur overrides (percent; applied as local --ui-blur-multiplier)
-      pocketQuranBlurOverrideEnabled: false,
-      pocketQuranBlurOverridePower: 100,
-      todoBlurOverrideEnabled: false,
-      todoBlurOverridePower: 100,
-      flashcardBlurOverrideEnabled: false,
-      flashcardBlurOverridePower: 100,
-      adhkarBlurOverrideEnabled: false,
-      adhkarBlurOverridePower: 100,
-      notesBlurOverrideEnabled: false,
-      notesBlurOverridePower: 100,
+      // Readability: per-card blur settings from card-blur-btn controls
+      pocketQuranBlurState: "dashboard",
+      pocketQuranBlurPowerEnabled: false,
+      pocketQuranBlurPower: 100,
+      todoBlurState: "dashboard",
+      todoBlurPowerEnabled: false,
+      todoBlurPower: 100,
+      flashcardBlurState: "dashboard",
+      flashcardBlurPowerEnabled: false,
+      flashcardBlurPower: 100,
+      adhkarBlurState: "dashboard",
+      adhkarBlurPowerEnabled: false,
+      adhkarBlurPower: 100,
+      hadithBlurState: "dashboard",
+      hadithBlurPowerEnabled: false,
+      hadithBlurPower: 100,
+      notesBlurState: "dashboard",
+      notesBlurPowerEnabled: false,
+      notesBlurPower: 100,
 
       // Pinned Apps settings
       pinnedApps: [],
@@ -434,6 +442,112 @@ class StorageManager {
         merged[key] = stored[key];
       }
     }
+
+    // Normalize blur settings for all supported card-blur-btn components,
+    // and migrate legacy override keys when present.
+    const blurMappings = [
+      {
+        stateKey: "pocketQuranBlurState",
+        blurPowerEnabledKey: "pocketQuranBlurPowerEnabled",
+        blurPowerKey: "pocketQuranBlurPower",
+        legacyEnabledKey: "pocketQuranBlurOverrideEnabled",
+        legacyPowerKey: "pocketQuranBlurOverridePower",
+      },
+      {
+        stateKey: "todoBlurState",
+        blurPowerEnabledKey: "todoBlurPowerEnabled",
+        blurPowerKey: "todoBlurPower",
+        legacyEnabledKey: "todoBlurOverrideEnabled",
+        legacyPowerKey: "todoBlurOverridePower",
+      },
+      {
+        stateKey: "flashcardBlurState",
+        blurPowerEnabledKey: "flashcardBlurPowerEnabled",
+        blurPowerKey: "flashcardBlurPower",
+        legacyEnabledKey: "flashcardBlurOverrideEnabled",
+        legacyPowerKey: "flashcardBlurOverridePower",
+      },
+      {
+        stateKey: "adhkarBlurState",
+        blurPowerEnabledKey: "adhkarBlurPowerEnabled",
+        blurPowerKey: "adhkarBlurPower",
+        legacyEnabledKey: "adhkarBlurOverrideEnabled",
+        legacyPowerKey: "adhkarBlurOverridePower",
+      },
+      {
+        stateKey: "hadithBlurState",
+        blurPowerEnabledKey: "hadithBlurPowerEnabled",
+        blurPowerKey: "hadithBlurPower",
+      },
+      {
+        stateKey: "notesBlurState",
+        blurPowerEnabledKey: "notesBlurPowerEnabled",
+        blurPowerKey: "notesBlurPower",
+        legacyEnabledKey: "notesBlurOverrideEnabled",
+        legacyPowerKey: "notesBlurOverridePower",
+      },
+    ];
+
+    blurMappings.forEach((mapping) => {
+      const hasStoredState = Object.prototype.hasOwnProperty.call(
+        stored,
+        mapping.stateKey,
+      );
+      const hasStoredEnabled = Object.prototype.hasOwnProperty.call(
+        stored,
+        mapping.blurPowerEnabledKey,
+      );
+      const hasStoredPower = Object.prototype.hasOwnProperty.call(
+        stored,
+        mapping.blurPowerKey,
+      );
+
+      const rawState = hasStoredState ? stored[mapping.stateKey] : undefined;
+      const rawEnabled = hasStoredEnabled
+        ? stored[mapping.blurPowerEnabledKey]
+        : undefined;
+      const rawPower = hasStoredPower
+        ? stored[mapping.blurPowerKey]
+        : undefined;
+      const legacyEnabled = mapping.legacyEnabledKey
+        ? stored[mapping.legacyEnabledKey]
+        : undefined;
+      const legacyPower = mapping.legacyPowerKey
+        ? stored[mapping.legacyPowerKey]
+        : undefined;
+
+      const state = ["off", "dashboard", "on"].includes(rawState)
+        ? rawState
+        : typeof legacyEnabled === "boolean"
+          ? legacyEnabled
+            ? "on"
+            : "dashboard"
+          : merged[mapping.stateKey];
+
+      let blurPowerEnabled =
+        typeof rawEnabled === "boolean"
+          ? rawEnabled
+          : typeof legacyEnabled === "boolean"
+            ? legacyEnabled
+            : merged[mapping.blurPowerEnabledKey];
+
+      const parsedPower = Number(rawPower);
+      const parsedLegacyPower = Number(legacyPower);
+      let blurPower = Number.isFinite(parsedPower)
+        ? parsedPower
+        : Number.isFinite(parsedLegacyPower)
+          ? parsedLegacyPower
+          : merged[mapping.blurPowerKey];
+      blurPower = Math.min(200, Math.max(0, Math.round(blurPower)));
+
+      if (state === "off") {
+        blurPowerEnabled = false;
+      }
+
+      merged[mapping.stateKey] = state;
+      merged[mapping.blurPowerEnabledKey] = blurPowerEnabled;
+      merged[mapping.blurPowerKey] = blurPower;
+    });
 
     return merged;
   }

@@ -694,6 +694,10 @@ document.addEventListener("DOMContentLoaded", () => {
     root.style.setProperty("--text-primary", colors.textPrimary);
     root.style.setProperty("--text-secondary", colors.textSecondary);
     root.style.setProperty("--text-muted", colors.textMuted);
+    root.style.setProperty(
+      "--surface-base-bg",
+      colors.bodyBg || popupBlurDefaults.palette.background,
+    );
 
     const settingsRgb =
       typeof themes.hexToRgb === "function"
