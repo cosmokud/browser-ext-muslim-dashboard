@@ -242,13 +242,16 @@ class StorageManager {
           monday: true,
           thursday: true,
           ayyamAlBeed: true,
+          ashuraDays: true,
           dhuAlHijjah: true,
           arafah: true,
           ramadan: true,
         },
+        showRecommendations: true,
         // Display window settings (how many days before to show countdown)
         dhuAlHijjahWithinDays: 30,
         arafahWithinDays: 30,
+        ashuraWithinDays: 30,
         // Suhur notification settings
         notifications: {
           enabled: false,
@@ -258,8 +261,10 @@ class StorageManager {
             monday: true,
             thursday: true,
             ayyamAlBeed: true,
+            ashuraDays: true,
             dhuAlHijjah: true,
             arafah: true,
+            laylatAlQadr: true,
             ramadan: true,
           },
         },

@@ -730,14 +730,19 @@ function getTodayFastingType(settings, today) {
 
   const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 4=Thu
 
+  // Check Laylat al-Qadr day marker first (27 Ramadan)
+  if (notify.laylatAlQadr !== false && hijri.month === 9 && hijri.day === 27) {
+    return { type: "laylatAlQadr", label: "Laylat al-Qadr (27 Ramadan)" };
+  }
+
   // Check Ramadan (month 9)
   if (notify.ramadan !== false && hijri.month === 9) {
-    return { type: "ramadan", label: "Ramadan" };
+    return { type: "ramadan", label: "Ramadan (month 9)" };
   }
 
   // Check Day of Arafah (9 Dhu al-Hijjah, month 12)
   if (notify.arafah !== false && hijri.month === 12 && hijri.day === 9) {
-    return { type: "arafah", label: "Day of Arafah" };
+    return { type: "arafah", label: "Day of Arafah (9 Dhu al-Hijjah)" };
   }
 
   // Check Dhu al-Hijjah first 9 days (month 12, days 1-9)
@@ -747,7 +752,18 @@ function getTodayFastingType(settings, today) {
     hijri.day >= 1 &&
     hijri.day <= 9
   ) {
-    return { type: "dhuAlHijjah", label: "Dhu al-Hijjah" };
+    return {
+      type: "dhuAlHijjah",
+      label: "First 9 days of Dhu al-Hijjah (1-9 Dhu al-Hijjah)",
+    };
+  }
+
+  // Check Tasu'a and Ashura (9-10 Muharram)
+  if (notify.ashuraDays !== false && hijri.month === 1 && hijri.day === 9) {
+    return { type: "tasua", label: "Tasu'a (9 Muharram)" };
+  }
+  if (notify.ashuraDays !== false && hijri.month === 1 && hijri.day === 10) {
+    return { type: "ashura", label: "Ashura (10 Muharram)" };
   }
 
   // Check Ayyam al-Beed (13th-15th of any Hijri month, except Ramadan)
@@ -757,7 +773,10 @@ function getTodayFastingType(settings, today) {
     hijri.day >= 13 &&
     hijri.day <= 15
   ) {
-    return { type: "ayyamAlBeed", label: "Ayyam al-Beed" };
+    return {
+      type: "ayyamAlBeed",
+      label: "Ayyam al-Beed (13th-15th of each Hijri month)",
+    };
   }
 
   // Check Monday fast

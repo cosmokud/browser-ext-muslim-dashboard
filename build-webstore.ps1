@@ -23,10 +23,57 @@ $runtimeDirectories = @(
   "js"
 )
 
-function Write-MatchList {
-  param([object[]]$Matches)
+$configPath = Join-Path $repoRoot "js\config.js"
+if (-not (Test-Path -LiteralPath $configPath)) {
+  throw "Missing required file: $configPath"
+}
 
-  foreach ($match in $Matches) {
+$debugAssignments = @()
+$configLines = Get-Content -LiteralPath $configPath
+foreach ($line in $configLines) {
+  $trimmedLine = $line.Trim()
+  if (
+    $trimmedLine.StartsWith("//") -or
+    $trimmedLine.StartsWith("/*") -or
+    $trimmedLine.StartsWith("*")
+  ) {
+    continue
+  }
+
+  $assignmentMatch = [regex]::Match(
+    $line,
+    'globalThis\.ENABLE_DEBUG_MODE\s*=\s*(true|false)\s*;'
+  )
+  if ($assignmentMatch.Success) {
+    $debugAssignments += $assignmentMatch.Groups[1].Value.ToLowerInvariant()
+  }
+}
+
+if ($debugAssignments.Count -eq 0) {
+  throw "Missing debug mode assignment in js/config.js. Expected: globalThis.ENABLE_DEBUG_MODE = false;"
+}
+
+$hasDebugEnabled = $false
+foreach ($assignment in $debugAssignments) {
+  if ($assignment -eq "true") {
+    $hasDebugEnabled = $true
+    break
+  }
+}
+
+if ($hasDebugEnabled) {
+  throw "Debug mode is enabled in js/config.js. Set globalThis.ENABLE_DEBUG_MODE = false; before building webstore package."
+}
+
+$lastDebugValue = $debugAssignments[$debugAssignments.Count - 1]
+if ($lastDebugValue -ne "false") {
+  throw "Final debug mode assignment in js/config.js must be false before building webstore package."
+}
+
+function Write-MatchList {
+  param([object[]]$MatchList)
+
+  foreach ($match in $MatchList) {
     Write-Host (" - {0}:{1}: {2}" -f $match.Path, $match.LineNumber, $match.Line.Trim())
   }
 }
@@ -70,7 +117,7 @@ if ($htmlFiles) {
 
 if ($remoteScriptMatches.Count -gt 0) {
   Write-Host "Remote script references detected in packaged HTML:"
-  Write-MatchList -Matches $remoteScriptMatches
+  Write-MatchList -MatchList $remoteScriptMatches
   throw "Packaged extension still contains remote script tags."
 }
 
@@ -88,7 +135,7 @@ if ($styleFiles) {
 
 if ($remoteStyleMatches.Count -gt 0) {
   Write-Host "Remote stylesheet or font references detected in packaged assets:"
-  Write-MatchList -Matches $remoteStyleMatches
+  Write-MatchList -MatchList $remoteStyleMatches
   throw "Packaged extension still contains remote stylesheet or font references."
 }
 
@@ -106,7 +153,7 @@ if ($codeFiles) {
 
 if ($remoteImportMatches.Count -gt 0) {
   Write-Host "Remote code import patterns detected in packaged sources:"
-  Write-MatchList -Matches $remoteImportMatches
+  Write-MatchList -MatchList $remoteImportMatches
   throw "Packaged extension still contains remote code import patterns."
 }
 

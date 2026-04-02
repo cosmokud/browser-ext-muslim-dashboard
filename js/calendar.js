@@ -321,17 +321,25 @@ class CalendarManager {
 
     if (forbidden.length) return forbidden;
 
-    // During Ramadan, only the Ramadan marker should be shown.
+    // During Ramadan, show Ramadan and special Ramadan markers.
     if (hm === 9) {
+      const ramadanMarkers = [];
+
       if (visibility.ramadan !== false) {
-        return [
-          {
-            key: "ramadan",
-            label: "Ramadan (obligatory fasting month)",
-          },
-        ];
+        ramadanMarkers.push({
+          key: "ramadan",
+          label: "Ramadan (obligatory fasting month)",
+        });
       }
-      return [];
+
+      if (hd === 27) {
+        ramadanMarkers.push({
+          key: "laylat-al-qadr",
+          label: "Laylat al-Qadr possibility (27 Ramadan)",
+        });
+      }
+
+      return ramadanMarkers;
     }
 
     if (hm === 12 && hd >= 1 && hd <= 9 && visibility.dhuAlHijjah !== false) {
@@ -348,14 +356,14 @@ class CalendarManager {
       });
     }
 
-    if (hm === 1 && hd === 9) {
+    if (visibility.ashuraDays !== false && hm === 1 && hd === 9) {
       markers.push({
         key: "tasua",
         label: "Tasu'a (9 Muharram)",
       });
     }
 
-    if (hm === 1 && hd === 10) {
+    if (visibility.ashuraDays !== false && hm === 1 && hd === 10) {
       markers.push({
         key: "ashura",
         label: "Ashura (10 Muharram)",

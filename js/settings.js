@@ -432,16 +432,25 @@ class SettingsManager extends BaseManager {
     this.fastingShowAyyamAlBeed = document.getElementById(
       "fastingShowAyyamAlBeed",
     );
+    this.fastingShowAshuraDays = document.getElementById(
+      "fastingShowAshuraDays",
+    );
     this.fastingShowDhuAlHijjah = document.getElementById(
       "fastingShowDhuAlHijjah",
     );
     this.fastingShowArafah = document.getElementById("fastingShowArafah");
     this.fastingShowRamadan = document.getElementById("fastingShowRamadan");
+    this.fastingShowRecommendations = document.getElementById(
+      "fastingShowRecommendations",
+    );
     this.fastingDhuAlHijjahWithinDays = document.getElementById(
       "fastingDhuAlHijjahWithinDays",
     );
     this.fastingArafahWithinDays = document.getElementById(
       "fastingArafahWithinDays",
+    );
+    this.fastingAshuraWithinDays = document.getElementById(
+      "fastingAshuraWithinDays",
     );
     this.fastingNotificationsEnabled = document.getElementById(
       "fastingNotificationsEnabled",
@@ -456,10 +465,16 @@ class SettingsManager extends BaseManager {
     this.fastingNotifyAyyamAlBeed = document.getElementById(
       "fastingNotifyAyyamAlBeed",
     );
+    this.fastingNotifyAshuraDays = document.getElementById(
+      "fastingNotifyAshuraDays",
+    );
     this.fastingNotifyDhuAlHijjah = document.getElementById(
       "fastingNotifyDhuAlHijjah",
     );
     this.fastingNotifyArafah = document.getElementById("fastingNotifyArafah");
+    this.fastingNotifyLaylatAlQadr = document.getElementById(
+      "fastingNotifyLaylatAlQadr",
+    );
     this.fastingNotifyRamadan = document.getElementById("fastingNotifyRamadan");
     this.fastingNotificationToggles = document.getElementById(
       "fastingNotificationToggles",
@@ -1385,6 +1400,9 @@ class SettingsManager extends BaseManager {
     if (this.fastingShowAyyamAlBeed) {
       this.fastingShowAyyamAlBeed.checked = visibility.ayyamAlBeed !== false;
     }
+    if (this.fastingShowAshuraDays) {
+      this.fastingShowAshuraDays.checked = visibility.ashuraDays !== false;
+    }
     if (this.fastingShowDhuAlHijjah) {
       this.fastingShowDhuAlHijjah.checked = visibility.dhuAlHijjah !== false;
     }
@@ -1393,6 +1411,10 @@ class SettingsManager extends BaseManager {
     }
     if (this.fastingShowRamadan) {
       this.fastingShowRamadan.checked = visibility.ramadan !== false;
+    }
+    if (this.fastingShowRecommendations) {
+      this.fastingShowRecommendations.checked =
+        fasting.showRecommendations !== false;
     }
 
     // Within days settings
@@ -1408,6 +1430,10 @@ class SettingsManager extends BaseManager {
     if (this.fastingArafahWithinDays) {
       const clamped = this.clampNumber(fasting.arafahWithinDays, 7, 365, 30);
       this.fastingArafahWithinDays.value = String(clamped);
+    }
+    if (this.fastingAshuraWithinDays) {
+      const clamped = this.clampNumber(fasting.ashuraWithinDays, 7, 365, 30);
+      this.fastingAshuraWithinDays.value = String(clamped);
     }
 
     // Notification settings
@@ -1430,11 +1456,17 @@ class SettingsManager extends BaseManager {
     if (this.fastingNotifyAyyamAlBeed) {
       this.fastingNotifyAyyamAlBeed.checked = notify.ayyamAlBeed !== false;
     }
+    if (this.fastingNotifyAshuraDays) {
+      this.fastingNotifyAshuraDays.checked = notify.ashuraDays !== false;
+    }
     if (this.fastingNotifyDhuAlHijjah) {
       this.fastingNotifyDhuAlHijjah.checked = notify.dhuAlHijjah !== false;
     }
     if (this.fastingNotifyArafah) {
       this.fastingNotifyArafah.checked = notify.arafah !== false;
+    }
+    if (this.fastingNotifyLaylatAlQadr) {
+      this.fastingNotifyLaylatAlQadr.checked = notify.laylatAlQadr !== false;
     }
     if (this.fastingNotifyRamadan) {
       this.fastingNotifyRamadan.checked = notify.ramadan !== false;
@@ -4227,10 +4259,14 @@ class SettingsManager extends BaseManager {
       monday: this.fastingShowMonday?.checked ?? true,
       thursday: this.fastingShowThursday?.checked ?? true,
       ayyamAlBeed: this.fastingShowAyyamAlBeed?.checked ?? true,
+      ashuraDays: this.fastingShowAshuraDays?.checked ?? true,
       dhuAlHijjah: this.fastingShowDhuAlHijjah?.checked ?? true,
       arafah: this.fastingShowArafah?.checked ?? true,
       ramadan: this.fastingShowRamadan?.checked ?? true,
     };
+
+    settings.fasting.showRecommendations =
+      this.fastingShowRecommendations?.checked ?? true;
 
     // Within days settings
     settings.fasting.dhuAlHijjahWithinDays = this.clampNumber(
@@ -4241,6 +4277,12 @@ class SettingsManager extends BaseManager {
     );
     settings.fasting.arafahWithinDays = this.clampNumber(
       parseInt(this.fastingArafahWithinDays?.value, 10),
+      7,
+      365,
+      30,
+    );
+    settings.fasting.ashuraWithinDays = this.clampNumber(
+      parseInt(this.fastingAshuraWithinDays?.value, 10),
       7,
       365,
       30,
@@ -4259,8 +4301,10 @@ class SettingsManager extends BaseManager {
         monday: this.fastingNotifyMonday?.checked ?? true,
         thursday: this.fastingNotifyThursday?.checked ?? true,
         ayyamAlBeed: this.fastingNotifyAyyamAlBeed?.checked ?? true,
+        ashuraDays: this.fastingNotifyAshuraDays?.checked ?? true,
         dhuAlHijjah: this.fastingNotifyDhuAlHijjah?.checked ?? true,
         arafah: this.fastingNotifyArafah?.checked ?? true,
+        laylatAlQadr: this.fastingNotifyLaylatAlQadr?.checked ?? true,
         ramadan: this.fastingNotifyRamadan?.checked ?? true,
       },
     };

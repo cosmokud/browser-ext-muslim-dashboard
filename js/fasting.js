@@ -6,8 +6,12 @@
  *   - Monday/Thursday fasts (weekday-based)
  *   - 1 Ramadan (or 29 Ramadan when currently in Ramadan)
  *   - 13th of the (next) Hijri month (except when currently Ramadan)
+ *   - Tasu'a and Ashura (9-10 Muharram)
  *   - 1 Dhu al-Hijjah (only when within 30 days)
  *   - Day of Arafah (9 Dhu al-Hijjah, only when within 30 days)
+ * - Adds contextual subtitle hints:
+ *   - Recommended seasons (Sha'ban, 27 Ramadan, Shawwal 2+)
+ *   - Forbidden fasting days (Eid and Tashreeq)
  */
 
 class FastingManager {
@@ -82,6 +86,7 @@ class FastingManager {
     // Get fasting settings with defaults
     const fastingSettings = settings.fasting || {};
     const visibility = fastingSettings.visibility || {};
+    const showRecommendations = fastingSettings.showRecommendations !== false;
     const dhuAlHijjahWithinDays = this._clampInt(
       fastingSettings.dhuAlHijjahWithinDays,
       7,
@@ -94,6 +99,12 @@ class FastingManager {
       365,
       30,
     );
+    const ashuraWithinDays = this._clampInt(
+      fastingSettings.ashuraWithinDays,
+      7,
+      365,
+      30,
+    );
 
     // Required: derive Hijri first (with adjustment)
     const hijriNow = this.hijri.toHijri(now, adjustment);
@@ -101,6 +112,7 @@ class FastingManager {
     if (this.subtitle) {
       // Use full month name (no abbreviation)
       this.subtitle.textContent = this.hijri.format(hijriNow, "full", "en");
+      this._applySubtitleState(hijriNow, showRecommendations);
     }
 
     const items = [];
@@ -154,6 +166,16 @@ class FastingManager {
       if (ayyam) items.push(ayyam);
     }
 
+    if (visibility.ashuraDays !== false) {
+      const ashuraDays = this._ashuraCountdown(
+        nowStart,
+        hijriNow,
+        adjustment,
+        ashuraWithinDays,
+      );
+      if (ashuraDays) items.push(ashuraDays);
+    }
+
     // Dhu al-Hijjah countdowns (only when within configured days)
     if (visibility.dhuAlHijjah !== false) {
       const dhu1 = this._hijriCountdownWithin(
@@ -168,7 +190,7 @@ class FastingManager {
         items.push({
           key: "dhu1",
           title: "Dhu al-Hijjah",
-          subtitle: "Approaching the sacred month",
+          subtitle: "1 Dhu al-Hijjah",
           daysLeft: dhu1.daysLeft,
           totalDays: dhuAlHijjahWithinDays,
           meta: this._daysLeftText(dhu1.daysLeft),
@@ -286,6 +308,124 @@ class FastingManager {
     }
   }
 
+  _applySubtitleState(hijriNow, showRecommendations) {
+    if (!this.subtitle || !hijriNow) return;
+
+    const hm = Number(hijriNow.month || 0);
+    const hd = Number(hijriNow.day || 0);
+
+    let mode = "";
+    let tooltip = "";
+
+    if (hm === 10 && hd === 1) {
+      mode = "fasting-subtitle--forbidden";
+      tooltip = "Fasting is prohibited on Eid al-Fitr (1 Shawwal).";
+    } else if (hm === 12 && hd === 10) {
+      mode = "fasting-subtitle--forbidden";
+      tooltip = "Fasting is prohibited on Eid al-Adha (10 Dhu al-Hijjah).";
+    } else if (hm === 12 && hd >= 11 && hd <= 13) {
+      mode = "fasting-subtitle--forbidden";
+      tooltip =
+        "Fasting is prohibited during the Days of Tashreeq (11-13 Dhu al-Hijjah).";
+    } else if (showRecommendations && hm === 8) {
+      mode = "fasting-subtitle--recommendation";
+      tooltip =
+        "Recommended fasting season: Sha'ban is a month in which the Prophet (peace be upon him) frequently fasted.";
+    } else if (showRecommendations && hm === 9 && hd === 27) {
+      mode = "fasting-subtitle--recommendation";
+      tooltip =
+        "Recommended focus: 27 Ramadan is a Laylat al-Qadr possibility, so increase worship and complete your Ramadan fast with excellence.";
+    } else if (showRecommendations && hm === 10 && hd >= 2) {
+      mode = "fasting-subtitle--recommendation";
+      tooltip =
+        "Recommended fasting season: from 2 Shawwal onward, strive to complete the six fasts of Shawwal.";
+    }
+
+    this.subtitle.classList.remove(
+      "fasting-subtitle--recommendation",
+      "fasting-subtitle--forbidden",
+    );
+    this.subtitle.removeAttribute("data-fasting-tooltip");
+    this.subtitle.removeAttribute("title");
+    this.subtitle.removeAttribute("aria-label");
+    this.subtitle.removeAttribute("tabindex");
+
+    if (!mode || !tooltip) return;
+
+    this.subtitle.classList.add(mode);
+    this.subtitle.setAttribute("data-fasting-tooltip", tooltip);
+    this.subtitle.setAttribute("title", tooltip);
+    this.subtitle.setAttribute(
+      "aria-label",
+      `${this.subtitle.textContent}. ${tooltip}`,
+    );
+    this.subtitle.setAttribute("tabindex", "0");
+  }
+
+  _ashuraCountdown(nowStart, hijriNow, adjustment, withinDays) {
+    const hy = hijriNow.year;
+    const hm = hijriNow.month;
+    const hd = hijriNow.day;
+
+    if (hm === 1 && (hd === 9 || hd === 10)) {
+      const badge = `${hd} Muharram`;
+      const phase = hd === 9 ? "Tasu'a" : "Ashura";
+      return {
+        key: "ashuraDays",
+        title: "Tasu'a and Ashura",
+        subtitle: "9th - 10th of Muharram",
+        daysLeft: 0,
+        totalDays: withinDays,
+        meta: "Today",
+        aria: `${phase} (${badge}): Today`,
+        badge,
+      };
+    }
+
+    let targetYear = hy;
+    if (hm > 1 || (hm === 1 && hd > 10)) {
+      targetYear = hy + 1;
+    }
+
+    const tasuaTarget = this._targetGregorianForHijri(
+      targetYear,
+      1,
+      9,
+      adjustment,
+    );
+    const ashuraTarget = this._targetGregorianForHijri(
+      targetYear,
+      1,
+      10,
+      adjustment,
+    );
+
+    const daysToTasua = this._diffDays(nowStart, tasuaTarget);
+    const daysToAshura = this._diffDays(nowStart, ashuraTarget);
+
+    let target = tasuaTarget;
+    let badge = "9-10 Muharram";
+
+    if (daysToTasua < 0 && daysToAshura >= 0) {
+      target = ashuraTarget;
+      badge = "10 Muharram";
+    }
+
+    const daysLeft = Math.max(0, this._diffDays(nowStart, target));
+    if (daysLeft > withinDays) return null;
+
+    return {
+      key: "ashuraDays",
+      title: "Tasu'a and Ashura",
+      subtitle: "9th - 10th of Muharram",
+      daysLeft,
+      totalDays: withinDays,
+      meta: this._daysLeftText(daysLeft),
+      aria: `Tasu'a and Ashura (${badge}): ${this._daysLeftText(daysLeft)}`,
+      badge: daysLeft === 0 ? badge : "9-10 Muharram",
+    };
+  }
+
   _weekdayCountdown(nowStart, targetDow) {
     const todayDow = nowStart.getDay(); // 0=Sun
     const delta = (targetDow - todayDow + 7) % 7;
@@ -303,7 +443,7 @@ class FastingManager {
       return {
         key: "ramadan",
         title: "Ramadan",
-        subtitle: "In the blessed month",
+        subtitle: "1st-29th of Ramadan (month 9)",
         daysLeft,
         totalDays: 29,
         meta,
@@ -322,7 +462,7 @@ class FastingManager {
     return {
       key: "ramadan",
       title: "Ramadan",
-      subtitle: "Countdown to 1 Ramadan",
+      subtitle: "1 Ramadan (month 9)",
       daysLeft,
       totalDays: 354,
       meta: this._daysLeftText(daysLeft),
@@ -345,7 +485,7 @@ class FastingManager {
       return {
         key: "thirteenth",
         title: "Ayyam al-Beed",
-        subtitle: "13th - 15th of the Hijri month",
+        subtitle: "13th - 15th of each Hijri month",
         daysLeft: 0,
         totalDays: 29,
         meta: "Today",
@@ -379,7 +519,7 @@ class FastingManager {
     return {
       key: "thirteenth",
       title: "Ayyam al-Beed",
-      subtitle: "13th - 15th of the Hijri month",
+      subtitle: "13th - 15th of each Hijri month",
       daysLeft,
       totalDays: 29,
       meta: this._daysLeftText(daysLeft),

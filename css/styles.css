@@ -8103,6 +8103,10 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   background: var(--primary-color);
 }
 
+.calendar-fast-dot--laylat-al-qadr {
+  background: color-mix(in srgb, var(--accent-gold-light) 70%, #ffe9a6 30%);
+}
+
 .calendar-fast-dot--dhu-hijjah-first-ten {
   background: color-mix(
     in srgb,
@@ -10478,6 +10482,143 @@ body.sticky-note-resizing {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-xl);
   white-space: nowrap;
+  position: relative;
+  isolation: isolate;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.fasting-subtitle[data-fasting-tooltip] {
+  cursor: help;
+}
+
+.fasting-subtitle[data-fasting-tooltip]::before,
+.fasting-subtitle[data-fasting-tooltip]::after {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    visibility 0s linear 140ms;
+}
+
+.fasting-subtitle[data-fasting-tooltip]::before {
+  content: attr(data-fasting-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translate(-50%, 6px) scale(0.98);
+  width: max-content;
+  max-width: min(310px, 72vw);
+  white-space: normal;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  background: color-mix(in srgb, var(--card-bg) 76%, var(--glass-bg) 24%);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--primary-color) 26%, transparent),
+    0 4px 14px color-mix(in srgb, black 20%, transparent);
+  z-index: 11;
+}
+
+.fasting-subtitle[data-fasting-tooltip]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  background: color-mix(in srgb, var(--card-bg) 76%, var(--glass-bg) 24%);
+  transform: translateX(-50%) rotate(45deg);
+  z-index: 10;
+}
+
+.fasting-subtitle[data-fasting-tooltip]:hover::before,
+.fasting-subtitle[data-fasting-tooltip]:hover::after,
+.fasting-subtitle[data-fasting-tooltip]:focus-visible::before,
+.fasting-subtitle[data-fasting-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.fasting-subtitle[data-fasting-tooltip]:hover::before,
+.fasting-subtitle[data-fasting-tooltip]:focus-visible::before {
+  transform: translate(-50%, 0) scale(1);
+}
+
+.fasting-subtitle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-gold) 35%, transparent);
+}
+
+.fasting-subtitle--recommendation {
+  color: color-mix(in srgb, var(--accent-gold-light) 86%, white 14%);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-gold) 65%,
+    var(--glass-border) 35%
+  );
+  background: color-mix(in srgb, var(--glass-bg) 78%, var(--accent-gold) 22%);
+  animation:
+    fastingSubtitleBeat 1.8s ease-in-out infinite,
+    fastingSubtitleGlowGold 2.6s ease-in-out infinite;
+}
+
+.fasting-subtitle--forbidden {
+  color: color-mix(in srgb, white 92%, var(--text-primary) 8%);
+  border-color: color-mix(in srgb, white 65%, var(--glass-border) 35%);
+  background: color-mix(in srgb, var(--glass-bg) 80%, white 20%);
+  animation:
+    fastingSubtitleBeat 1.8s ease-in-out infinite,
+    fastingSubtitleGlowWhite 2.6s ease-in-out infinite;
+}
+
+@keyframes fastingSubtitleBeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes fastingSubtitleGlowGold {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-gold) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--accent-gold) 18%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent-gold-light) 38%, transparent);
+  }
+}
+
+@keyframes fastingSubtitleGlowWhite {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, white 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, white 24%, transparent),
+      0 0 18px color-mix(in srgb, white 44%, transparent);
+  }
 }
 
 .fasting-bars {
@@ -10619,6 +10760,16 @@ body.sticky-note-resizing {
   .fasting-bar__fill {
     transition: width 0.15s ease;
     animation: none;
+  }
+
+  .fasting-subtitle--recommendation,
+  .fasting-subtitle--forbidden {
+    animation: none;
+  }
+
+  .fasting-subtitle[data-fasting-tooltip]::before,
+  .fasting-subtitle[data-fasting-tooltip]::after {
+    transition: none;
   }
 }
 

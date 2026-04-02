@@ -3793,42 +3793,71 @@
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">🌕</span>
-                  <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
+                  <span class="visibility-name"
+                    >Ayyam al-Beed (13th-15th of each Hijri month)</span
+                  >
                   <input type="checkbox" id="fastingShowAyyamAlBeed" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">💧</span>
+                  <span class="visibility-name"
+                    >Tasu'a and Ashura (9-10 Muharram)</span
+                  >
+                  <input type="checkbox" id="fastingShowAshuraDays" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">🕌</span>
-                  <span class="visibility-name">Dhu al-Hijjah</span>
+                  <span class="visibility-name"
+                    >First 9 days of Dhu al-Hijjah (1-9 Dhu al-Hijjah)</span
+                  >
                   <input type="checkbox" id="fastingShowDhuAlHijjah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">⛰️</span>
-                  <span class="visibility-name">Day of Arafah</span>
+                  <span class="visibility-name"
+                    >Day of Arafah (9 Dhu al-Hijjah)</span
+                  >
                   <input type="checkbox" id="fastingShowArafah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">🌟</span>
-                  <span class="visibility-name">Ramadan</span>
+                  <span class="visibility-name">Ramadan (Hijri month 9)</span>
                   <input type="checkbox" id="fastingShowRamadan" checked />
                   <span class="toggle-switch"></span>
                 </label>
               </div>
+              <label class="checkbox-option" style="margin-top: 12px">
+                <input
+                  type="checkbox"
+                  id="fastingShowRecommendations"
+                  checked
+                />
+                <span
+                  >Show Sha'ban, Laylat al-Qadr, and Shawwal fasting
+                  recommendation highlight</span
+                >
+              </label>
+              <p class="setting-hint" style="margin-top: 8px">
+                Adds a glowing subtitle hint and tooltip in Sha'ban, on 27
+                Ramadan (Laylat al-Qadr), and from 2 Shawwal onward.
+              </p>
             </div>
 
             <div class="setting-group">
               <label class="setting-label">Display Window Settings</label>
               <p class="setting-hint">
-                Set how many days before Dhu al-Hijjah and Day of Arafah to
-                start showing the countdown.
+                Set how many days before each season/day to start showing the
+                countdown.
               </p>
               <div class="setting-row">
                 <label
                   class="setting-sublabel"
                   for="fastingDhuAlHijjahWithinDays"
-                  >Dhu al-Hijjah within</label
+                  >First 9 days of Dhu al-Hijjah within</label
                 >
                 <input
                   type="number"
@@ -3848,6 +3877,20 @@
                   type="number"
                   class="setting-input setting-input-narrow"
                   id="fastingArafahWithinDays"
+                  min="7"
+                  max="365"
+                  value="30"
+                />
+                <span class="setting-suffix">days</span>
+              </div>
+              <div class="setting-row">
+                <label class="setting-sublabel" for="fastingAshuraWithinDays"
+                  >Tasu'a and Ashura within</label
+                >
+                <input
+                  type="number"
+                  class="setting-input setting-input-narrow"
+                  id="fastingAshuraWithinDays"
                   min="7"
                   max="365"
                   value="30"
@@ -3909,7 +3952,9 @@
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">🌕</span>
-                  <span class="visibility-name">Ayyam al-Beed (13-15th)</span>
+                  <span class="visibility-name"
+                    >Ayyam al-Beed (13th-15th of each Hijri month)</span
+                  >
                   <input
                     type="checkbox"
                     id="fastingNotifyAyyamAlBeed"
@@ -3918,8 +3963,18 @@
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">💧</span>
+                  <span class="visibility-name"
+                    >Tasu'a and Ashura (9-10 Muharram)</span
+                  >
+                  <input type="checkbox" id="fastingNotifyAshuraDays" checked />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">🕌</span>
-                  <span class="visibility-name">Dhu al-Hijjah (1st-9th)</span>
+                  <span class="visibility-name"
+                    >First 9 days of Dhu al-Hijjah (1-9 Dhu al-Hijjah)</span
+                  >
                   <input
                     type="checkbox"
                     id="fastingNotifyDhuAlHijjah"
@@ -3929,13 +3984,27 @@
                 </label>
                 <label class="visibility-toggle-item">
                   <span class="visibility-icon">⛰️</span>
-                  <span class="visibility-name">Day of Arafah</span>
+                  <span class="visibility-name"
+                    >Day of Arafah (9 Dhu al-Hijjah)</span
+                  >
                   <input type="checkbox" id="fastingNotifyArafah" checked />
                   <span class="toggle-switch"></span>
                 </label>
                 <label class="visibility-toggle-item">
+                  <span class="visibility-icon">🌙</span>
+                  <span class="visibility-name"
+                    >Laylat al-Qadr (27 Ramadan)</span
+                  >
+                  <input
+                    type="checkbox"
+                    id="fastingNotifyLaylatAlQadr"
+                    checked
+                  />
+                  <span class="toggle-switch"></span>
+                </label>
+                <label class="visibility-toggle-item">
                   <span class="visibility-icon">🌟</span>
-                  <span class="visibility-name">Ramadan</span>
+                  <span class="visibility-name">Ramadan (Hijri month 9)</span>
                   <input type="checkbox" id="fastingNotifyRamadan" checked />
                   <span class="toggle-switch"></span>
                 </label>
