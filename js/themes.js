@@ -1157,6 +1157,10 @@ class ThemeManager {
     root.style.setProperty("--primary-color", colors.primary);
     root.style.setProperty("--primary-light", colors.primaryLight);
     root.style.setProperty("--primary-dark", colors.primaryDark);
+    const onPrimaryText = this._isDarkColor(colors.primary)
+      ? "#ffffff"
+      : "#1a1a1a";
+    root.style.setProperty("--on-primary-text", onPrimaryText);
     root.style.setProperty("--accent-gold", colors.accent);
     root.style.setProperty("--accent-gold-light", colors.accentLight);
     root.style.setProperty("--accent-blue", colors.accentBlue);

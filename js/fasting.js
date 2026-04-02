@@ -219,7 +219,7 @@ class FastingManager {
       const remainingRatio = this._clamp(daysLeft / totalDays, 0, 1);
       const fillRatio = this._clamp(1 - remainingRatio, 0, 1);
 
-      const scheme = this._schemeForRemainingRatio(remainingRatio);
+      const scheme = this._schemeForFillRatio(fillRatio);
 
       const row = document.createElement("div");
       row.className = "fasting-bar";
@@ -265,6 +265,7 @@ class FastingManager {
 
       const fill = document.createElement("div");
       fill.className = "fasting-bar__fill";
+      fill.classList.add(`fasting-bar__fill--${scheme.level}`);
       fill.style.setProperty("--fasting-c1", scheme.c1);
       fill.style.setProperty("--fasting-c2", scheme.c2);
       fill.style.setProperty("--fasting-c3", scheme.c3);
@@ -436,26 +437,31 @@ class FastingManager {
     return `${daysLeft} days left`;
   }
 
-  _schemeForRemainingRatio(remainingRatio) {
-    // remainingRatio: 1 = far (green), 0 = today (red)
-    if (remainingRatio <= 0.33) {
+  _schemeForFillRatio(fillRatio) {
+    // fillRatio: 0 = far away, 1 = today
+    if (fillRatio >= 0.995) {
       return {
-        c1: "#ff6b6b",
-        c2: "#ee5a5a",
-        c3: "rgba(255, 107, 107, 0.55)",
+        level: "full",
+        c1: "color-mix(in srgb, var(--primary-light) 70%, var(--primary-color) 30%)",
+        c2: "color-mix(in srgb, var(--primary-color) 78%, var(--primary-dark) 22%)",
+        c3: "color-mix(in srgb, var(--text-primary) 26%, transparent)",
       };
     }
-    if (remainingRatio <= 0.66) {
+
+    if (fillRatio >= 0.5) {
       return {
-        c1: "var(--accent-gold-light)",
+        level: "medium",
+        c1: "color-mix(in srgb, var(--accent-gold-light) 88%, var(--primary-light) 12%)",
         c2: "var(--accent-gold)",
-        c3: "rgba(212, 175, 55, 0.45)",
+        c3: "color-mix(in srgb, var(--accent-gold) 32%, transparent)",
       };
     }
+
     return {
-      c1: "var(--primary-light)",
+      level: "low",
+      c1: "color-mix(in srgb, var(--primary-light) 82%, var(--glass-bg) 18%)",
       c2: "var(--primary-color)",
-      c3: "rgba(45, 138, 110, 0.45)",
+      c3: "color-mix(in srgb, var(--glass-border) 72%, transparent)",
     };
   }
 
