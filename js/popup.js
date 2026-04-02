@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
       settingsTheme.name ||
       themes?.getCurrentTheme?.() ||
       ThemeManager.DEFAULT_THEME ||
-      "emerald";
+      "pureWhite";
     const mode =
       (settingsTheme.mode || themes?.getCurrentMode?.() || "dark") === "light"
         ? "light"
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getDashboardGlassOpacityPercent() {
     const settings = storage.getSettings();
-    return clampNumber(settings?.theme?.glassOpacity, 0, 100, 35);
+    return clampNumber(settings?.theme?.glassOpacity, 0, 100, 0);
   }
 
   function getGlassOpacityAlphas(opacityPercent) {

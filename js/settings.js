@@ -516,7 +516,7 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
-    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
   }
 
   updateSettingsTabsMinWidth() {
@@ -727,7 +727,7 @@ class SettingsManager extends BaseManager {
 
     // UI blur power
     if (this.uiBlurPower) {
-      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
       this.uiBlurPower.value = String(clamped);
       this.updateUiBlurPowerLabel();
       this.applyUiBlurPower(clamped);
@@ -1858,7 +1858,7 @@ class SettingsManager extends BaseManager {
     this.updateThemeBlurGroupState(glassEnabled);
 
     // Load blur power
-    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
     if (this.themeBlurPower) {
       this.themeBlurPower.value = String(blurPower);
     }
@@ -1869,7 +1869,7 @@ class SettingsManager extends BaseManager {
       themeSettings.glassOpacity,
       0,
       100,
-      window.dashboard?.themes?.getGlassOpacity?.() ?? 35,
+      window.dashboard?.themes?.getGlassOpacity?.() ?? 0,
     );
     if (this.themeGlassOpacity) {
       this.themeGlassOpacity.value = String(glassOpacity);
@@ -1897,7 +1897,7 @@ class SettingsManager extends BaseManager {
     }
 
     // Highlight active theme
-    const activeTheme = themeSettings.name || "emerald";
+    const activeTheme = themeSettings.name || "pureWhite";
     this.updateThemePickerActiveState(activeTheme);
   }
 
@@ -2000,7 +2000,7 @@ class SettingsManager extends BaseManager {
     const activeTheme =
       window.dashboard?.themes?.getCurrentTheme?.() ||
       settings.theme?.name ||
-      "emerald";
+      "pureWhite";
 
     let html = "";
 
@@ -2009,8 +2009,6 @@ class SettingsManager extends BaseManager {
       const isActive = id === activeTheme;
       const isCustomizable = theme.customizable || false;
 
-      const isPureTheme = id === "pureWhite" || id === "pureBlack";
-
       // For customizable themes, preview using the saved/custom palette (per theme + mode)
       const palette = isCustomizable
         ? window.dashboard?.themes?.getCustomPalette?.(id, currentMode) ||
@@ -2018,14 +2016,9 @@ class SettingsManager extends BaseManager {
           null
         : null;
 
-      const defaultBase =
-        isCustomizable && isPureTheme
-          ? ThemeManager.THEMES?.emerald?.[currentMode] || colors
-          : colors;
-
-      const previewPrimary = palette?.primary || defaultBase.primary;
-      const previewAccent = palette?.accent || defaultBase.accent;
-      const previewBg = palette?.bodyBg || defaultBase.bodyBg;
+      const previewPrimary = palette?.primary || colors.primary;
+      const previewAccent = palette?.accent || colors.accent;
+      const previewBg = palette?.bodyBg || colors.bodyBg;
 
       html += `
         <div class="theme-card${isActive ? " active" : ""}${
@@ -2080,7 +2073,7 @@ class SettingsManager extends BaseManager {
 
     const resetBtn = document.getElementById("themePaletteResetDefaults");
     if (resetBtn) {
-      const show = themeName === "pureWhite" || themeName === "pureBlack";
+      const show = this._isThemePaletteResettable(themeName);
       resetBtn.style.display = show ? "inline-flex" : "none";
     }
 
@@ -2088,6 +2081,9 @@ class SettingsManager extends BaseManager {
     if (title) {
       title.textContent = `🎨 Customize ${theme.name} Palette`;
     }
+
+    this._themePaletteHasUnsavedPreview = false;
+    this._toggleThemePaletteGlobalFontFields(themeName);
 
     this.updateThemePaletteModeButtons(this._paletteModalMode);
     this.syncThemePaletteModalInputs();
@@ -2097,10 +2093,104 @@ class SettingsManager extends BaseManager {
   }
 
   closeThemePaletteModal() {
+    this.flushThemePalettePreviewUpdates(true);
+
     const overlay = document.getElementById("themePaletteModal");
     if (!overlay) return;
     overlay.classList.remove("active");
     overlay.setAttribute("aria-hidden", "true");
+
+    this._paletteModalTheme = null;
+    this._themePaletteHasUnsavedPreview = false;
+  }
+
+  _isThemePaletteResettable(themeName) {
+    return (
+      themeName === "pureWhite" ||
+      themeName === "pureBlack" ||
+      themeName === "userTheme"
+    );
+  }
+
+  _isThemeWithGlobalFontPalette(themeName) {
+    return themeName === "userTheme";
+  }
+
+  _getThemePaletteDefaultGlassTint(themeName, mode = "dark") {
+    if (themeName === "pureBlack") return "#000000";
+    if (themeName === "pureWhite") return "#ffffff";
+    if (themeName === "userTheme") {
+      return mode === "light" ? "#000000" : "#ffffff";
+    }
+
+    const primary = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
+    return this._normalizeColorInputHex(primary, "#ffffff");
+  }
+
+  _normalizeColorInputHex(value, fallbackHex) {
+    if (typeof value !== "string") return fallbackHex;
+
+    const normalized = value.trim().toLowerCase();
+    if (/^#[a-f\d]{6}$/i.test(normalized)) return normalized;
+
+    const shortMatch = normalized.match(/^#([a-f\d]{3})$/i);
+    if (shortMatch) {
+      const [r, g, b] = shortMatch[1].split("");
+      return `#${r}${r}${g}${g}${b}${b}`;
+    }
+
+    const rgbaMatch = normalized
+      .replace(/\s+/g, "")
+      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
+    if (rgbaMatch) {
+      const toHex = (channel) =>
+        Math.max(0, Math.min(255, Number(channel)))
+          .toString(16)
+          .padStart(2, "0");
+      return `#${toHex(rgbaMatch[1])}${toHex(rgbaMatch[2])}${toHex(
+        rgbaMatch[3],
+      )}`;
+    }
+
+    return fallbackHex;
+  }
+
+  _toggleThemePaletteGlobalFontFields(themeName) {
+    const globalFontFields = document.getElementById(
+      "themePaletteGlobalFontFields",
+    );
+    if (!globalFontFields) return;
+
+    const isUserTheme = this._isThemeWithGlobalFontPalette(themeName);
+    globalFontFields.classList.toggle("active", isUserTheme);
+    globalFontFields.setAttribute(
+      "aria-hidden",
+      isUserTheme ? "false" : "true",
+    );
+  }
+
+  scheduleThemePalettePreviewUpdate() {
+    if (this._themePalettePreviewRaf) return;
+
+    this._themePalettePreviewRaf = requestAnimationFrame(() => {
+      this._themePalettePreviewRaf = null;
+      this.applyThemePaletteFromModal(false, false);
+      this._themePaletteHasUnsavedPreview = true;
+    });
+  }
+
+  flushThemePalettePreviewUpdates(save = true) {
+    if (this._themePalettePreviewRaf) {
+      cancelAnimationFrame(this._themePalettePreviewRaf);
+      this._themePalettePreviewRaf = null;
+      this.applyThemePaletteFromModal(false, false);
+      this._themePaletteHasUnsavedPreview = true;
+    }
+
+    if (save && this._themePaletteHasUnsavedPreview) {
+      this.applyThemePaletteFromModal(true, true);
+      this._themePaletteHasUnsavedPreview = false;
+    }
   }
 
   updateThemePaletteModeButtons(mode) {
@@ -2120,8 +2210,15 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
+    const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
+    const textSecondaryEl = document.getElementById(
+      "themePaletteTextSecondary",
+    );
+    const textMutedEl = document.getElementById("themePaletteTextMuted");
     if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
       return;
+
+    this._toggleThemePaletteGlobalFontFields(themeName);
 
     const base = ThemeManager.THEMES[themeName]?.[mode];
     if (!base) return;
@@ -2129,7 +2226,10 @@ class SettingsManager extends BaseManager {
     const palette =
       window.dashboard?.themes?.getCustomPalette?.(themeName, mode) || null;
 
-    const defaultGlassTint = themeName === "pureBlack" ? "#000000" : "#ffffff";
+    const defaultGlassTint = this._getThemePaletteDefaultGlassTint(
+      themeName,
+      mode,
+    );
     const resolvedPrimary = palette?.primary || base.primary;
     const defaultOnPrimaryText =
       palette?.onPrimaryText ||
@@ -2143,6 +2243,31 @@ class SettingsManager extends BaseManager {
     accentEl.value = palette?.accent || base.accent;
     bgEl.value = palette?.bodyBg || base.bodyBg;
     glassTintEl.value = palette?.glassTint || defaultGlassTint;
+
+    if (
+      this._isThemeWithGlobalFontPalette(themeName) &&
+      textPrimaryEl &&
+      textSecondaryEl &&
+      textMutedEl
+    ) {
+      const isDarkBackground =
+        window.dashboard?.themes?._isDarkColor?.(
+          palette?.bodyBg || base.bodyBg,
+        ) || false;
+
+      textPrimaryEl.value = this._normalizeColorInputHex(
+        palette?.textPrimary || base.textPrimary,
+        isDarkBackground ? "#ffffff" : "#1a1a1a",
+      );
+      textSecondaryEl.value = this._normalizeColorInputHex(
+        palette?.textSecondary || base.textSecondary,
+        isDarkBackground ? "#d9d9d9" : "#4d4d4d",
+      );
+      textMutedEl.value = this._normalizeColorInputHex(
+        palette?.textMuted || base.textMuted,
+        isDarkBackground ? "#9a9a9a" : "#7a7a7a",
+      );
+    }
   }
 
   resetThemePaletteToDefaults(save = true) {
@@ -2150,8 +2275,7 @@ class SettingsManager extends BaseManager {
     const mode = this._paletteModalMode || "dark";
     if (!themeName || !window.dashboard?.themes) return;
 
-    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
-    if (!isPureTheme) return;
+    if (!this._isThemePaletteResettable(themeName)) return;
 
     const base = ThemeManager.THEMES?.[themeName]?.[mode];
     if (!base) return;
@@ -2161,6 +2285,11 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
+    const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
+    const textSecondaryEl = document.getElementById(
+      "themePaletteTextSecondary",
+    );
+    const textMutedEl = document.getElementById("themePaletteTextMuted");
     if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
       return;
 
@@ -2172,13 +2301,33 @@ class SettingsManager extends BaseManager {
         : "#1a1a1a");
     accentEl.value = base.accent;
     bgEl.value = base.bodyBg;
-    glassTintEl.value = themeName === "pureBlack" ? "#000000" : "#ffffff";
+    glassTintEl.value = this._getThemePaletteDefaultGlassTint(themeName, mode);
+
+    if (
+      this._isThemeWithGlobalFontPalette(themeName) &&
+      textPrimaryEl &&
+      textSecondaryEl &&
+      textMutedEl
+    ) {
+      textPrimaryEl.value = this._normalizeColorInputHex(
+        base.textPrimary,
+        "#ffffff",
+      );
+      textSecondaryEl.value = this._normalizeColorInputHex(
+        base.textSecondary,
+        "#d9d9d9",
+      );
+      textMutedEl.value = this._normalizeColorInputHex(
+        base.textMuted,
+        "#9a9a9a",
+      );
+    }
 
     this.applyThemePaletteFromModal(save);
     this.renderThemePickerGrid();
   }
 
-  applyThemePaletteFromModal(save = true) {
+  applyThemePaletteFromModal(save = true, renderGrid = true) {
     const themeName = this._paletteModalTheme;
     const mode = this._paletteModalMode || "dark";
     if (!themeName || !window.dashboard?.themes) return;
@@ -2188,23 +2337,38 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
+    const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
+    const textSecondaryEl = document.getElementById(
+      "themePaletteTextSecondary",
+    );
+    const textMutedEl = document.getElementById("themePaletteTextMuted");
     if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
       return;
 
-    window.dashboard.themes.setCustomPalette(
-      themeName,
-      mode,
-      {
-        primary: primaryEl.value,
-        onPrimaryText: onPrimaryEl.value,
-        accent: accentEl.value,
-        bodyBg: bgEl.value,
-        glassTint: glassTintEl.value,
-      },
-      save,
-    );
+    const palette = {
+      primary: primaryEl.value,
+      onPrimaryText: onPrimaryEl.value,
+      accent: accentEl.value,
+      bodyBg: bgEl.value,
+      glassTint: glassTintEl.value,
+    };
 
-    this.renderThemePickerGrid();
+    if (
+      this._isThemeWithGlobalFontPalette(themeName) &&
+      textPrimaryEl &&
+      textSecondaryEl &&
+      textMutedEl
+    ) {
+      palette.textPrimary = textPrimaryEl.value;
+      palette.textSecondary = textSecondaryEl.value;
+      palette.textMuted = textMutedEl.value;
+    }
+
+    window.dashboard.themes.setCustomPalette(themeName, mode, palette, save);
+
+    if (renderGrid) {
+      this.renderThemePickerGrid();
+    }
   }
 
   /**
@@ -2324,6 +2488,11 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
+    const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
+    const textSecondaryEl = document.getElementById(
+      "themePaletteTextSecondary",
+    );
+    const textMutedEl = document.getElementById("themePaletteTextMuted");
 
     if (paletteOverlay) {
       this._bindOverlayCloseBehavior(paletteOverlay, () =>
@@ -2347,6 +2516,7 @@ class SettingsManager extends BaseManager {
     }
     if (modeDark) {
       modeDark.addEventListener("click", () => {
+        this.flushThemePalettePreviewUpdates(true);
         this._paletteModalMode = "dark";
         this.updateThemePaletteModeButtons("dark");
         this.syncThemePaletteModalInputs();
@@ -2354,18 +2524,49 @@ class SettingsManager extends BaseManager {
     }
     if (modeLight) {
       modeLight.addEventListener("click", () => {
+        this.flushThemePalettePreviewUpdates(true);
         this._paletteModalMode = "light";
         this.updateThemePaletteModeButtons("light");
         this.syncThemePaletteModalInputs();
       });
     }
 
-    const onPaletteInput = () => this.applyThemePaletteFromModal(true);
-    if (primaryEl) primaryEl.addEventListener("input", onPaletteInput);
-    if (onPrimaryEl) onPrimaryEl.addEventListener("input", onPaletteInput);
-    if (accentEl) accentEl.addEventListener("input", onPaletteInput);
-    if (bgEl) bgEl.addEventListener("input", onPaletteInput);
-    if (glassTintEl) glassTintEl.addEventListener("input", onPaletteInput);
+    const onPalettePreviewInput = () =>
+      this.scheduleThemePalettePreviewUpdate();
+    const onPaletteCommit = () => this.flushThemePalettePreviewUpdates(true);
+
+    if (primaryEl) {
+      primaryEl.addEventListener("input", onPalettePreviewInput);
+      primaryEl.addEventListener("change", onPaletteCommit);
+    }
+    if (onPrimaryEl) {
+      onPrimaryEl.addEventListener("input", onPalettePreviewInput);
+      onPrimaryEl.addEventListener("change", onPaletteCommit);
+    }
+    if (accentEl) {
+      accentEl.addEventListener("input", onPalettePreviewInput);
+      accentEl.addEventListener("change", onPaletteCommit);
+    }
+    if (bgEl) {
+      bgEl.addEventListener("input", onPalettePreviewInput);
+      bgEl.addEventListener("change", onPaletteCommit);
+    }
+    if (glassTintEl) {
+      glassTintEl.addEventListener("input", onPalettePreviewInput);
+      glassTintEl.addEventListener("change", onPaletteCommit);
+    }
+    if (textPrimaryEl) {
+      textPrimaryEl.addEventListener("input", onPalettePreviewInput);
+      textPrimaryEl.addEventListener("change", onPaletteCommit);
+    }
+    if (textSecondaryEl) {
+      textSecondaryEl.addEventListener("input", onPalettePreviewInput);
+      textSecondaryEl.addEventListener("change", onPaletteCommit);
+    }
+    if (textMutedEl) {
+      textMutedEl.addEventListener("input", onPalettePreviewInput);
+      textMutedEl.addEventListener("change", onPaletteCommit);
+    }
 
     // Container width (in Themes panel)
     if (this.themeContainerWidth) {
@@ -2410,11 +2611,11 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeGlassOpacity?.value, 10),
       0,
       100,
-      35,
+      0,
     );
 
     // Get active theme
-    let activeTheme = "emerald";
+    let activeTheme = "pureWhite";
     const activeCard =
       this.themePickerGrid?.querySelector(".theme-card.active");
     if (activeCard) {
@@ -2442,7 +2643,7 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeBlurPower?.value, 10),
       0,
       200,
-      100,
+      200,
     );
 
     // Save container width (now from Themes panel)
@@ -3824,7 +4025,7 @@ class SettingsManager extends BaseManager {
     );
 
     // Apply UI blur power
-    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
 
     // Update weather unit
     if (this.weather) {

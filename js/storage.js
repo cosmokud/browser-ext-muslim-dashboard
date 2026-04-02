@@ -174,7 +174,17 @@ class StorageManager {
 
       // UI settings
       timeFormat: "24h",
-      uiBlurPower: 100, // percentage (100 = current blur, 0 = no blur)
+      uiBlurPower: 200, // percentage (100 = current blur baseline)
+
+      // Theme settings
+      theme: {
+        name: "pureWhite",
+        mode: "dark",
+        glassEnabled: true,
+        glassOpacity: 0,
+        customAccent: null,
+        customPalettes: {},
+      },
 
       // Readability: per-card blur settings from card-blur-btn controls
       pocketQuranBlurState: "dashboard",

@@ -15143,6 +15143,25 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   gap: var(--spacing-md);
 }
 
+.theme-palette-global-fonts {
+  display: none;
+  border-top: 1px solid var(--glass-border);
+  padding-top: var(--spacing-md);
+  gap: var(--spacing-lg);
+}
+
+.theme-palette-global-fonts.active {
+  display: grid;
+}
+
+.theme-palette-global-fonts-title {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .theme-palette-color {
   width: 64px;
   height: 40px;

@@ -4953,10 +4953,10 @@
                   id="themeBlurPower"
                   min="0"
                   max="200"
-                  value="100"
+                  value="200"
                 />
                 <span class="custom-width-value" id="themeBlurPowerValue"
-                  >100%</span
+                  >200%</span
                 >
               </div>
             </div>
@@ -4967,8 +4967,8 @@
             >
               <label class="setting-label">Opacity</label>
               <p class="setting-hint">
-                Scales global glass transparency. 35% matches the default glass
-                alpha balance.
+                Scales global glass transparency. 0% keeps all glass fully
+                transparent by default.
               </p>
               <div class="custom-width-slider">
                 <input
@@ -4976,10 +4976,10 @@
                   id="themeGlassOpacity"
                   min="0"
                   max="100"
-                  value="35"
+                  value="0"
                 />
                 <span class="custom-width-value" id="themeGlassOpacityValue"
-                  >35%</span
+                  >0%</span
                 >
               </div>
             </div>
@@ -5562,7 +5562,7 @@
       </div>
     </div>
 
-    <!-- Theme Palette Modal (Pure White / Pure Black customization) -->
+    <!-- Theme Palette Modal (customizable theme palettes) -->
     <div class="modal-overlay" id="themePaletteModal" aria-hidden="true">
       <div
         class="modal modal-small theme-palette-modal"
@@ -5651,6 +5651,46 @@
                 id="themePaletteGlassTint"
                 class="theme-palette-color"
               />
+            </div>
+
+            <div
+              class="theme-palette-global-fonts"
+              id="themePaletteGlobalFontFields"
+              aria-hidden="true"
+            >
+              <div class="theme-palette-global-fonts-title">
+                Global Font Colors
+              </div>
+              <div class="theme-palette-field">
+                <label class="setting-label" for="themePaletteTextPrimary"
+                  >Primary Font</label
+                >
+                <input
+                  type="color"
+                  id="themePaletteTextPrimary"
+                  class="theme-palette-color"
+                />
+              </div>
+              <div class="theme-palette-field">
+                <label class="setting-label" for="themePaletteTextSecondary"
+                  >Secondary Font</label
+                >
+                <input
+                  type="color"
+                  id="themePaletteTextSecondary"
+                  class="theme-palette-color"
+                />
+              </div>
+              <div class="theme-palette-field">
+                <label class="setting-label" for="themePaletteTextMuted"
+                  >Muted Font</label
+                >
+                <input
+                  type="color"
+                  id="themePaletteTextMuted"
+                  class="theme-palette-color"
+                />
+              </div>
             </div>
           </div>
         </div>
