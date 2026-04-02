@@ -7987,6 +7987,88 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border: 1px solid color-mix(in srgb, var(--text-primary) 26%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--glass-bg) 55%, transparent);
   cursor: help;
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.calendar-fast-dot:hover,
+.calendar-fast-dot:focus-visible {
+  transform: scale(1.18);
+  filter: saturate(1.08);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glass-bg-hover) 60%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--accent-gold) 18%, transparent);
+}
+
+.calendar-fast-dot:focus-visible {
+  outline: none;
+}
+
+.calendar-fast-tooltip {
+  --calendar-fast-tooltip-arrow-left: 50%;
+  position: fixed;
+  z-index: 12140;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  background: color-mix(in srgb, var(--card-bg) 74%, var(--glass-bg) 26%);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--primary-color) 24%, transparent),
+    0 4px 14px color-mix(in srgb, black 20%, transparent);
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.98);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    visibility 0s linear 140ms;
+}
+
+.calendar-fast-tooltip::after {
+  content: "";
+  position: absolute;
+  left: var(--calendar-fast-tooltip-arrow-left);
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  background: color-mix(in srgb, var(--card-bg) 74%, var(--glass-bg) 26%);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.calendar-fast-tooltip.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+
+.calendar-fast-tooltip.active.is-below {
+  transform: translateY(0) scale(1);
+}
+
+.calendar-fast-tooltip.is-below::after {
+  top: -5px;
+  bottom: auto;
+  border-right: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  transform: translateX(-50%) rotate(-135deg);
 }
 
 .calendar-day:hover:not(.empty) {

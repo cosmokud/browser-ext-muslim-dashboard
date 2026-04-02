@@ -442,28 +442,30 @@ class FastingManager {
   _schemeForFillRatio(fillRatio) {
     // fillRatio: 0 = far away, 1 = today
     if (fillRatio >= 0.995) {
+      const fullMix =
+        "color-mix(in srgb, var(--accent-gold) 50%, var(--primary-color) 50%)";
       return {
         level: "full",
-        c1: "color-mix(in srgb, var(--primary-light) 70%, var(--primary-color) 30%)",
-        c2: "color-mix(in srgb, var(--primary-color) 78%, var(--primary-dark) 22%)",
-        c3: "color-mix(in srgb, var(--text-primary) 26%, transparent)",
+        c1: fullMix,
+        c2: fullMix,
+        c3: "color-mix(in srgb, var(--accent-gold) 34%, transparent)",
       };
     }
 
     if (fillRatio >= 0.5) {
       return {
         level: "medium",
-        c1: "color-mix(in srgb, var(--accent-gold-light) 88%, var(--primary-light) 12%)",
-        c2: "var(--accent-gold)",
-        c3: "color-mix(in srgb, var(--accent-gold) 32%, transparent)",
+        c1: "color-mix(in srgb, var(--primary-color) 75%, var(--accent-gold) 25%)",
+        c2: "color-mix(in srgb, var(--primary-color) 75%, var(--accent-gold) 25%)",
+        c3: "color-mix(in srgb, var(--primary-color) 30%, transparent)",
       };
     }
 
     return {
       level: "low",
-      c1: "color-mix(in srgb, var(--primary-light) 82%, var(--glass-bg) 18%)",
-      c2: "var(--primary-color)",
-      c3: "color-mix(in srgb, var(--glass-border) 72%, transparent)",
+      c1: "color-mix(in srgb, var(--accent-gold) 75%, var(--primary-color) 25%)",
+      c2: "color-mix(in srgb, var(--accent-gold) 75%, var(--primary-color) 25%)",
+      c3: "color-mix(in srgb, var(--accent-gold) 28%, transparent)",
     };
   }
 

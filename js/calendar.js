@@ -21,6 +21,10 @@ class CalendarManager {
     this.hijriDisplay = document.getElementById("hijriDateDisplay");
     this.gregorianDisplay = document.getElementById("gregorianDateDisplay");
     this.typeBtns = document.querySelectorAll(".calendar-type-btn");
+
+    this.calendarFastTooltipEl = null;
+    this.activeFastTooltipDot = null;
+    this.fastTooltipEventsBound = false;
   }
 
   /**
@@ -61,6 +65,8 @@ class CalendarManager {
         this.storage.saveSettings(settings);
       });
     });
+
+    this._bindFastingDotTooltipEvents();
   }
 
   /**
@@ -234,6 +240,7 @@ class CalendarManager {
       html += `<span class="${classes}"><span class="calendar-day-number">${day}</span>${dotsHtml}</span>`;
     }
 
+    this._hideCalendarFastTooltip();
     this.daysEl.innerHTML = html;
   }
 
@@ -398,11 +405,151 @@ class CalendarManager {
       .map((marker) => {
         const label = this._escapeAttribute(marker.label);
         const key = String(marker.key || "").replace(/[^a-z0-9-]/gi, "");
-        return `<span class="calendar-fast-dot calendar-fast-dot--${key}" title="${label}" aria-label="${label}"></span>`;
+        return `<span class="calendar-fast-dot calendar-fast-dot--${key}" data-fast-tooltip="${label}" aria-label="${label}" tabindex="0"></span>`;
       })
       .join("");
 
     return `<span class="calendar-fast-dots">${dots}</span>`;
+  }
+
+  _bindFastingDotTooltipEvents() {
+    if (!this.daysEl || this.fastTooltipEventsBound) return;
+    this.fastTooltipEventsBound = true;
+
+    this.daysEl.addEventListener("mouseover", (event) => {
+      const dot = event.target.closest(".calendar-fast-dot");
+      if (!dot || !this.daysEl.contains(dot)) return;
+      this._showCalendarFastTooltip(dot, event.clientX, event.clientY);
+    });
+
+    this.daysEl.addEventListener("mousemove", (event) => {
+      const dot = event.target.closest(".calendar-fast-dot");
+      if (!dot || dot !== this.activeFastTooltipDot) return;
+      this._positionCalendarFastTooltip(event.clientX, event.clientY);
+    });
+
+    this.daysEl.addEventListener("mouseout", (event) => {
+      const dot = event.target.closest(".calendar-fast-dot");
+      if (!dot || dot !== this.activeFastTooltipDot) return;
+      this._hideCalendarFastTooltip();
+    });
+
+    this.daysEl.addEventListener("focusin", (event) => {
+      const dot = event.target.closest(".calendar-fast-dot");
+      if (!dot || !this.daysEl.contains(dot)) return;
+
+      const rect = dot.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      this._showCalendarFastTooltip(dot, x, y);
+    });
+
+    this.daysEl.addEventListener("focusout", (event) => {
+      const dot = event.target.closest(".calendar-fast-dot");
+      if (!dot || dot !== this.activeFastTooltipDot) return;
+      this._hideCalendarFastTooltip();
+    });
+
+    this.daysEl.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      this._hideCalendarFastTooltip();
+    });
+
+    window.addEventListener(
+      "scroll",
+      () => this._hideCalendarFastTooltip(),
+      true,
+    );
+    window.addEventListener("resize", () => this._hideCalendarFastTooltip());
+  }
+
+  _ensureCalendarFastTooltip() {
+    if (this.calendarFastTooltipEl) return this.calendarFastTooltipEl;
+
+    const tip = document.createElement("div");
+    tip.className = "calendar-fast-tooltip";
+    tip.setAttribute("role", "tooltip");
+    tip.setAttribute("aria-hidden", "true");
+    document.body.appendChild(tip);
+
+    this.calendarFastTooltipEl = tip;
+    return tip;
+  }
+
+  _tooltipTextForDot(dot) {
+    return (
+      dot?.getAttribute("data-fast-tooltip") ||
+      dot?.getAttribute("aria-label") ||
+      ""
+    ).trim();
+  }
+
+  _showCalendarFastTooltip(dot, clientX, clientY) {
+    const text = this._tooltipTextForDot(dot);
+    if (!text) {
+      this._hideCalendarFastTooltip();
+      return;
+    }
+
+    const tip = this._ensureCalendarFastTooltip();
+    tip.textContent = text;
+    tip.classList.add("active");
+    tip.setAttribute("aria-hidden", "false");
+    this.activeFastTooltipDot = dot;
+
+    this._positionCalendarFastTooltip(clientX, clientY);
+  }
+
+  _positionCalendarFastTooltip(clientX, clientY) {
+    const tip = this._ensureCalendarFastTooltip();
+    if (!tip.classList.contains("active")) return;
+
+    const margin = 12;
+    const offsetX = 18;
+    const offsetY = 16;
+    const tipRect = tip.getBoundingClientRect();
+
+    let left = clientX + offsetX;
+    if (left + tipRect.width + margin > window.innerWidth) {
+      left = clientX - tipRect.width - offsetX;
+    }
+    left = Math.max(
+      margin,
+      Math.min(left, window.innerWidth - tipRect.width - margin),
+    );
+
+    let top = clientY - tipRect.height - offsetY;
+    let below = false;
+    if (top < margin) {
+      top = clientY + offsetY;
+      below = true;
+    }
+    top = Math.max(
+      margin,
+      Math.min(top, window.innerHeight - tipRect.height - margin),
+    );
+
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+    tip.classList.toggle("is-below", below);
+
+    const arrowLeft = Math.max(
+      12,
+      Math.min(clientX - left, tipRect.width - 12),
+    );
+    tip.style.setProperty(
+      "--calendar-fast-tooltip-arrow-left",
+      `${Math.round(arrowLeft)}px`,
+    );
+  }
+
+  _hideCalendarFastTooltip() {
+    this.activeFastTooltipDot = null;
+    const tip = this.calendarFastTooltipEl;
+    if (!tip) return;
+
+    tip.classList.remove("active", "is-below");
+    tip.setAttribute("aria-hidden", "true");
   }
 
   _escapeAttribute(value) {
