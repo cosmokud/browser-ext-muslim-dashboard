@@ -23,6 +23,16 @@ class NotesManager extends BaseManager {
     this.editorInstance = null;
     this.toolbarTooltipObserver = null;
     this.lastSelectionRange = null;
+    this.urlPromptOverlay = null;
+    this.urlPromptTitleEl = null;
+    this.urlPromptDescriptionEl = null;
+    this.urlPromptLabelEl = null;
+    this.urlPromptInputEl = null;
+    this.urlPromptSubmitBtn = null;
+    this.urlPromptConfig = null;
+    this.urlPromptResolver = null;
+    this.urlPromptFocusRestoreEl = null;
+    this.urlPromptEscapeBound = false;
 
     this.card = document.getElementById("notesCard");
     this.newBtn = document.getElementById("notesNewBtn");
@@ -118,6 +128,9 @@ class NotesManager extends BaseManager {
               align: (value) => {
                 this.applyAlignFormat(value);
               },
+              link: () => {
+                this.insertLinkByUrl();
+              },
               image: () => {
                 this.insertImageByUrl();
               },
@@ -137,9 +150,10 @@ class NotesManager extends BaseManager {
       this.bindToolbarTooltipFallbackEvents();
       this.bindToolbarFocusRetention();
 
-      this.editorInstance.on("text-change", (_delta, _oldDelta, source) => {
+      this.editorInstance.on("text-change", (delta, _oldDelta, source) => {
         if (this.isSettingContent) return;
         if (source === "user") {
+          this.extendLinkFormattingForTypedText(delta);
           this.queueSave();
         }
       });
@@ -483,14 +497,371 @@ class NotesManager extends BaseManager {
     };
   }
 
-  insertImageByUrl() {
+  ensureUrlPromptModal() {
+    if (
+      this.urlPromptOverlay &&
+      document.body.contains(this.urlPromptOverlay)
+    ) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "notesUrlPromptModal";
+    overlay.className = "modal-overlay notes-url-prompt-modal";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <div
+        class="modal modal-small notes-url-prompt-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notesUrlPromptTitle"
+      >
+        <div class="modal-header">
+          <h2 class="modal-title" id="notesUrlPromptTitle">Insert URL</h2>
+          <button
+            class="modal-close"
+            id="notesUrlPromptCloseBtn"
+            type="button"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="notes-url-prompt-description" id="notesUrlPromptDescription"></p>
+          <form id="notesUrlPromptForm">
+            <div class="setting-group notes-url-prompt-group">
+              <label class="setting-label" for="notesUrlPromptInput" id="notesUrlPromptLabel">
+                URL
+              </label>
+              <input
+                class="setting-input"
+                id="notesUrlPromptInput"
+                type="text"
+                inputmode="url"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="https://"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="modal-btn cancel-btn"
+            id="notesUrlPromptCancelBtn"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="modal-btn save-btn"
+            id="notesUrlPromptSubmitBtn"
+            type="submit"
+            form="notesUrlPromptForm"
+          >
+            Insert
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    this.urlPromptOverlay = overlay;
+    this.urlPromptTitleEl = overlay.querySelector("#notesUrlPromptTitle");
+    this.urlPromptDescriptionEl = overlay.querySelector(
+      "#notesUrlPromptDescription",
+    );
+    this.urlPromptLabelEl = overlay.querySelector("#notesUrlPromptLabel");
+    this.urlPromptInputEl = overlay.querySelector("#notesUrlPromptInput");
+    this.urlPromptSubmitBtn = overlay.querySelector("#notesUrlPromptSubmitBtn");
+
+    const form = overlay.querySelector("#notesUrlPromptForm");
+    const closeBtn = overlay.querySelector("#notesUrlPromptCloseBtn");
+    const cancelBtn = overlay.querySelector("#notesUrlPromptCancelBtn");
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.submitUrlPromptModal();
+    });
+
+    closeBtn?.addEventListener("click", () => {
+      this.closeUrlPromptModal("");
+    });
+
+    cancelBtn?.addEventListener("click", () => {
+      this.closeUrlPromptModal("");
+    });
+
+    this._bindOverlayCloseBehavior(overlay, () => this.closeUrlPromptModal(""));
+
+    if (!this.urlPromptEscapeBound) {
+      document.addEventListener("keydown", (event) => {
+        if (!this.urlPromptOverlay?.classList.contains("active")) return;
+        if (event.key !== "Escape") return;
+
+        event.preventDefault();
+        this.closeUrlPromptModal("");
+      });
+
+      this.urlPromptEscapeBound = true;
+    }
+  }
+
+  openUrlPromptModal(config = {}) {
+    this.ensureUrlPromptModal();
+
+    if (
+      !this.urlPromptOverlay ||
+      !this.urlPromptTitleEl ||
+      !this.urlPromptDescriptionEl ||
+      !this.urlPromptLabelEl ||
+      !this.urlPromptInputEl ||
+      !this.urlPromptSubmitBtn
+    ) {
+      return Promise.resolve("");
+    }
+
+    if (typeof this.urlPromptResolver === "function") {
+      this.urlPromptResolver("");
+      this.urlPromptResolver = null;
+    }
+
+    const title = String(config.title || "Insert URL").trim() || "Insert URL";
+    const description = String(config.description || "").trim();
+    const label = String(config.label || "URL").trim() || "URL";
+    const placeholder =
+      String(config.placeholder || "https://").trim() || "https://";
+    const submitLabel =
+      String(config.submitLabel || "Insert").trim() || "Insert";
+    const initialValue = String(config.initialValue || "").trim();
+
+    this.urlPromptConfig = {
+      validate:
+        typeof config.validate === "function"
+          ? config.validate
+          : (value) => String(value || "").trim(),
+      invalidMessage:
+        String(config.invalidMessage || "Please enter a valid URL.").trim() ||
+        "Please enter a valid URL.",
+    };
+
+    this.urlPromptTitleEl.textContent = title;
+    this.urlPromptDescriptionEl.textContent = description;
+    this.urlPromptDescriptionEl.hidden = !description;
+    this.urlPromptLabelEl.textContent = label;
+    this.urlPromptInputEl.placeholder = placeholder;
+    this.urlPromptInputEl.value = initialValue;
+    this.urlPromptInputEl.setCustomValidity("");
+    this.urlPromptSubmitBtn.textContent = submitLabel;
+
+    this.urlPromptFocusRestoreEl =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    this.urlPromptOverlay.classList.add("active");
+    this.urlPromptOverlay.setAttribute("aria-hidden", "false");
+
+    const focusInput = () => {
+      if (!this.urlPromptInputEl) return;
+      this.urlPromptInputEl.focus();
+      if (this.urlPromptInputEl.value) {
+        this.urlPromptInputEl.select();
+      }
+    };
+
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(focusInput);
+    } else {
+      window.setTimeout(focusInput, 0);
+    }
+
+    return new Promise((resolve) => {
+      this.urlPromptResolver = resolve;
+    });
+  }
+
+  submitUrlPromptModal() {
+    if (!this.urlPromptInputEl) return;
+
+    const rawValue = String(this.urlPromptInputEl.value || "").trim();
+    const validator = this.urlPromptConfig?.validate;
+    const normalized =
+      typeof validator === "function"
+        ? String(validator(rawValue) || "").trim()
+        : rawValue;
+
+    if (!normalized) {
+      const message =
+        String(this.urlPromptConfig?.invalidMessage || "").trim() ||
+        "Please enter a valid URL.";
+      this.urlPromptInputEl.setCustomValidity(message);
+      this.urlPromptInputEl.reportValidity();
+      return;
+    }
+
+    this.urlPromptInputEl.setCustomValidity("");
+    this.closeUrlPromptModal(normalized);
+  }
+
+  closeUrlPromptModal(result = "") {
+    if (!this.urlPromptOverlay) return;
+
+    this.urlPromptOverlay.classList.remove("active");
+    this.urlPromptOverlay.setAttribute("aria-hidden", "true");
+    this.urlPromptInputEl?.setCustomValidity("");
+
+    const resolve = this.urlPromptResolver;
+    const focusRestoreEl = this.urlPromptFocusRestoreEl;
+
+    this.urlPromptResolver = null;
+    this.urlPromptConfig = null;
+    this.urlPromptFocusRestoreEl = null;
+
+    if (focusRestoreEl && typeof focusRestoreEl.focus === "function") {
+      window.setTimeout(() => {
+        try {
+          focusRestoreEl.focus({ preventScroll: true });
+        } catch (_error) {
+          // Ignore focus restore failures.
+        }
+      }, 0);
+    }
+
+    if (typeof resolve === "function") {
+      resolve(String(result || "").trim());
+    }
+  }
+
+  async insertImageByUrl() {
     if (!this.editorInstance) return;
 
-    const prompted = window.prompt("Enter image URL", "https://");
-    const src = this.normalizeImageUrl(prompted || "");
+    const src = await this.openUrlPromptModal({
+      title: "Insert Image by URL",
+      description:
+        "Paste a direct image URL. Supported schemes: http(s), data:image, and blob.",
+      label: "Image URL",
+      placeholder: "https://example.com/image.jpg",
+      submitLabel: "Insert image",
+      initialValue: "https://",
+      validate: (value) => this.normalizeImageUrl(value),
+      invalidMessage:
+        "Please enter a valid image URL that starts with http(s), data:image, or blob:.",
+    });
+
     if (!src) return;
 
     this.insertImageAtCursor(src);
+  }
+
+  async insertLinkByUrl() {
+    if (!this.editorInstance) return;
+
+    const contentLength = Math.max(0, this.editorInstance.getLength() - 1);
+    const range = this.getActiveSelectionRange() || {
+      index: contentLength,
+      length: 0,
+    };
+
+    const href = await this.openUrlPromptModal({
+      title: "Insert Link",
+      description: "Paste the URL to insert as a hyperlink.",
+      label: "Link URL",
+      placeholder: "https://example.com",
+      submitLabel: "Insert link",
+      initialValue: "https://",
+      validate: (value) => this.normalizeLinkUrl(value),
+      invalidMessage: "Please enter a valid URL.",
+    });
+
+    if (!href) return;
+
+    const startIndex = Math.max(0, Math.min(range.index, contentLength));
+
+    if (range.length > 0) {
+      this.editorInstance.formatText(
+        startIndex,
+        range.length,
+        "link",
+        href,
+        "user",
+      );
+      this.restoreEditorSelection({ index: startIndex, length: range.length });
+      this.queueSave();
+      return;
+    }
+
+    this.editorInstance.insertText(startIndex, href, { link: href }, "user");
+
+    const cursorIndex = startIndex + href.length;
+    this.editorInstance.setSelection(cursorIndex, 0, "silent");
+    this.lastSelectionRange = { index: cursorIndex, length: 0 };
+    this.queueSave();
+  }
+
+  extendLinkFormattingForTypedText(delta) {
+    if (!this.editorInstance) return;
+    if (!delta || !Array.isArray(delta.ops)) return;
+
+    let index = 0;
+
+    delta.ops.forEach((op) => {
+      if (typeof op?.retain === "number") {
+        index += Math.max(0, op.retain);
+        return;
+      }
+
+      if (typeof op?.insert === "string") {
+        const insertedText = op.insert;
+
+        for (let offset = 0; offset < insertedText.length; offset += 1) {
+          const nextChar = insertedText.charAt(offset);
+          if (!nextChar || /\s/.test(nextChar)) {
+            continue;
+          }
+
+          this.applyAdjacentLinkFormatAt(index + offset);
+        }
+
+        index += insertedText.length;
+      }
+    });
+  }
+
+  applyAdjacentLinkFormatAt(index) {
+    if (!this.editorInstance) return;
+
+    const contentLength = Math.max(0, this.editorInstance.getLength() - 1);
+    if (!Number.isFinite(index) || index < 0 || index >= contentLength) return;
+
+    const currentLink = this.editorInstance.getFormat(index, 1).link;
+    if (this.isFormatEnabled(currentLink)) return;
+
+    const prevLink =
+      index > 0 ? this.editorInstance.getFormat(index - 1, 1).link : "";
+    const nextLink =
+      index + 1 < contentLength
+        ? this.editorInstance.getFormat(index + 1, 1).link
+        : "";
+
+    const resolvedLink = this.resolveAdjacentLinkValue(prevLink, nextLink);
+    if (!resolvedLink) return;
+
+    this.editorInstance.formatText(index, 1, "link", resolvedLink, "silent");
+  }
+
+  resolveAdjacentLinkValue(prevLink, nextLink) {
+    const prev = this.isFormatEnabled(prevLink) ? String(prevLink).trim() : "";
+    const next = this.isFormatEnabled(nextLink) ? String(nextLink).trim() : "";
+
+    if (prev && next && prev !== next) {
+      return "";
+    }
+
+    return prev || next || "";
   }
 
   applyInlineFormatToWordOrSelection(formatName) {
