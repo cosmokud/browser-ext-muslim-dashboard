@@ -412,7 +412,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseAlpha = clampNumber(opacityPercent, 0, 100, 35) / 100;
     const hoverRatio = 0.45 / 0.35;
     const borderRatio = 0.4 / 0.35;
-    const clampAlpha = (alpha) => Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
+    const clampAlpha = (alpha) =>
+      Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
 
     return {
       bg: clampAlpha(baseAlpha),

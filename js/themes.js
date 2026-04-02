@@ -638,7 +638,10 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
-    this._glassOpacity = this._clampGlassOpacity(themeSettings.glassOpacity, 35);
+    this._glassOpacity = this._clampGlassOpacity(
+      themeSettings.glassOpacity,
+      35,
+    );
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -945,9 +948,7 @@ class ThemeManager {
     const rgb = this._extractRgbChannels(value);
     if (!rgb) return value;
     const bounded = Math.min(1, Math.max(0, Number(alpha)));
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(
-      bounded.toFixed(3),
-    )})`;
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(bounded.toFixed(3))})`;
   }
 
   _applyGlassOpacityToThemeColors(colors) {
