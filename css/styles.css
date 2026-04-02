@@ -96,6 +96,7 @@
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.85);
   --text-muted: rgba(255, 255, 255, 0.6);
+  --text-placeholder: var(--text-muted);
   --on-primary-text: #ffffff;
 
   /* Spacing */
@@ -2263,7 +2264,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-link-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .notes-tool-file-input {
@@ -3710,7 +3711,7 @@ textarea.notes-editor:focus {
 }
 
 .todo-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .todo-add-btn {
@@ -5888,6 +5889,12 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   padding: var(--spacing-sm) var(--spacing-md);
 }
 
+.setting-input::placeholder,
+.setting-textarea::placeholder {
+  color: color-mix(in srgb, var(--text-placeholder) 90%, transparent 10%);
+  opacity: 1;
+}
+
 .setting-row {
   display: flex;
   align-items: center;
@@ -7165,7 +7172,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .search-bar-input::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 88%, transparent 12%);
+  color: color-mix(in srgb, var(--text-placeholder) 88%, transparent 12%);
   opacity: 1;
 }
 
@@ -7240,7 +7247,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .search-bar-add-input::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 88%, transparent 12%);
+  color: color-mix(in srgb, var(--text-placeholder) 88%, transparent 12%);
   opacity: 1;
 }
 
@@ -13508,7 +13515,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-bookmark-search-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .pq-bookmark-add-category {
@@ -14293,7 +14300,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .flashcard-set-search-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .flashcard-set-list {
@@ -15080,7 +15087,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-set-search-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .adhkar-set-list {
@@ -15466,7 +15473,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-lang-search-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 .adhkar-lang-list {

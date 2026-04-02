@@ -647,30 +647,32 @@ class ThemeManager {
         glassBg: "rgba(255, 255, 255, 0.16)",
         glassBgHover: "rgba(255, 255, 255, 0.24)",
         glassBorder: "rgba(255, 255, 255, 0.24)",
-        textPrimary: "#ffffff",
-        textSecondary: "#e9f0f6",
-        textMuted: "#b4c2cf",
+        textPrimary: "#f7fbff",
+        textSecondary: "#dbe8f2",
+        textMuted: "#9fb5c7",
+        textPlaceholder: "#7f97aa",
         bodyBg: "#0b141b",
       },
       light: {
-        primary: "#d9e9f4",
-        primaryLight: "#eef6fb",
-        primaryDark: "#bfd6e7",
-        onPrimaryText: "#10202b",
-        accent: "#2f6ea0",
-        accentBackground: "#2f6ea0",
-        accentText: "#2f6ea0",
-        accentLight: "#4c8dc2",
-        accentBlue: "#2b6797",
-        settingsColor: "#2f6ea0",
-        settingsLight: "#5d9fd1",
-        glassBg: "rgba(0, 0, 0, 0.1)",
-        glassBgHover: "rgba(0, 0, 0, 0.15)",
-        glassBorder: "rgba(0, 0, 0, 0.18)",
-        textPrimary: "#10202b",
-        textSecondary: "#2b4354",
-        textMuted: "#4a6477",
-        bodyBg: "#f4f9fc",
+        primary: "#d2e4f2",
+        primaryLight: "#e8f2f9",
+        primaryDark: "#aac6db",
+        onPrimaryText: "#0f2433",
+        accent: "#2a6b9d",
+        accentBackground: "#2a6b9d",
+        accentText: "#2a6b9d",
+        accentLight: "#4a89ba",
+        accentBlue: "#245f8f",
+        settingsColor: "#2a6b9d",
+        settingsLight: "#5d9ecf",
+        glassBg: "rgba(255, 255, 255, 0.62)",
+        glassBgHover: "rgba(255, 255, 255, 0.75)",
+        glassBorder: "rgba(21, 54, 78, 0.2)",
+        textPrimary: "#102736",
+        textSecondary: "#1f3d52",
+        textMuted: "#3d6077",
+        textPlaceholder: "#5d7b91",
+        bodyBg: "#eef5f9",
       },
     },
   };
@@ -755,6 +757,9 @@ class ThemeManager {
         base.textSecondary,
       );
       defaultPalette.textMuted = this._normalizeHexColor(base.textMuted);
+      defaultPalette.textPlaceholder = this._normalizeHexColor(
+        base.textPlaceholder || base.textMuted,
+      );
     }
 
     return defaultPalette;
@@ -1058,10 +1063,14 @@ class ThemeManager {
           const textPrimary = this._normalizeHexColor(palette.textPrimary);
           const textSecondary = this._normalizeHexColor(palette.textSecondary);
           const textMuted = this._normalizeHexColor(palette.textMuted);
+          const textPlaceholder = this._normalizeHexColor(
+            palette.textPlaceholder,
+          );
 
           if (textPrimary) colors.textPrimary = textPrimary;
           if (textSecondary) colors.textSecondary = textSecondary;
           if (textMuted) colors.textMuted = textMuted;
+          if (textPlaceholder) colors.textPlaceholder = textPlaceholder;
         }
       } else if (this._customAccent) {
         // Backward compatible: accent-only override
@@ -1129,6 +1138,7 @@ class ThemeManager {
       colorMode,
     );
     colors.accent = colors.accentText;
+    colors.textPlaceholder = colors.textPlaceholder || colors.textMuted;
 
     return colors;
   }
@@ -1314,6 +1324,9 @@ class ThemeManager {
           ? { textSecondary: fallback.textSecondary }
           : {}),
         ...(fallback?.textMuted ? { textMuted: fallback.textMuted } : {}),
+        ...(fallback?.textPlaceholder
+          ? { textPlaceholder: fallback.textPlaceholder }
+          : {}),
       };
       this.setCustomPalette(
         this._currentTheme,
@@ -1422,6 +1435,12 @@ class ThemeManager {
               this._normalizeHexColor(palette?.textMuted) ||
               fallback?.textMuted ||
               this._normalizeHexColor(defaultBase.textMuted),
+            textPlaceholder:
+              this._normalizeHexColor(palette?.textPlaceholder) ||
+              fallback?.textPlaceholder ||
+              this._normalizeHexColor(
+                defaultBase.textPlaceholder || defaultBase.textMuted,
+              ),
           }
         : {}),
     };
@@ -1552,6 +1571,7 @@ class ThemeManager {
     root.style.setProperty("--text-primary", colors.textPrimary);
     root.style.setProperty("--text-secondary", colors.textSecondary);
     root.style.setProperty("--text-muted", colors.textMuted);
+    root.style.setProperty("--text-placeholder", colors.textPlaceholder);
     root.style.setProperty("--surface-base-bg", colors.bodyBg);
 
     // Apply glass effect or solid background

@@ -336,11 +336,39 @@ class BackgroundManager extends BaseManager {
    * Get images array for a category
    */
   getImagesForCategory(category, settings) {
+    if (category === "allNoCustom" || category === "allWithCustom") {
+      const allBuiltIn = Object.values(this.backgrounds).flat();
+
+      if (category === "allNoCustom") {
+        return allBuiltIn.length > 0 ? allBuiltIn : this.backgrounds.nature;
+      }
+
+      const customBgs = settings.customBackgrounds || [];
+      const merged = [...allBuiltIn, ...customBgs];
+      return merged.length > 0 ? merged : this.backgrounds.nature;
+    }
+
     if (category === "custom") {
       const customBgs = settings.customBackgrounds || [];
       return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
     }
     return this.backgrounds[category] || this.backgrounds.nature;
+  }
+
+  _getRandomIndex(length, excludeIndex = -1) {
+    if (!Number.isFinite(length) || length <= 0) return 0;
+    if (length === 1) return 0;
+
+    let index = Math.floor(Math.random() * length);
+    if (excludeIndex < 0 || excludeIndex >= length) {
+      return index;
+    }
+
+    while (index === excludeIndex) {
+      index = Math.floor(Math.random() * length);
+    }
+
+    return index;
   }
 
   /**
@@ -349,11 +377,13 @@ class BackgroundManager extends BaseManager {
   loadBackground(settings) {
     const category = settings.bgCategory || "nature";
     const images = this.getImagesForCategory(category, settings);
+    if (images.length === 0) return;
 
-    let index = settings.currentBgIndex || 0;
-    // Ensure index is within bounds
-    if (index >= images.length) {
-      index = 0;
+    let index = Number.isInteger(settings.currentBgIndex)
+      ? settings.currentBgIndex
+      : -1;
+    if (index < 0 || index >= images.length) {
+      index = -1;
     }
 
     const lastChange = settings.lastBgChange;
@@ -361,16 +391,15 @@ class BackgroundManager extends BaseManager {
       settings.bgInterval === "custom"
         ? settings.bgIntervalCustom
         : settings.bgInterval;
-    const interval = (intervalValue || 60) * 60 * 1000;
+    const intervalMinutes = Number(intervalValue) || 60;
+    const interval = intervalMinutes * 60 * 1000;
     const now = Date.now();
 
-    // Check if we need to rotate
-    if (lastChange && now - lastChange >= interval) {
-      index = (index + 1) % images.length;
+    const shouldRotate =
+      !lastChange || now - lastChange >= interval || index === -1;
+    if (shouldRotate) {
+      index = this._getRandomIndex(images.length, index);
       settings.currentBgIndex = index;
-      settings.lastBgChange = now;
-      this.storage.saveSettings(settings);
-    } else if (!lastChange) {
       settings.lastBgChange = now;
       this.storage.saveSettings(settings);
     }
@@ -684,7 +713,8 @@ class BackgroundManager extends BaseManager {
       clearInterval(this.intervalId);
     }
 
-    const intervalMs = intervalMinutes * 60 * 1000;
+    const safeIntervalMinutes = Number(intervalMinutes) || 60;
+    const intervalMs = safeIntervalMinutes * 60 * 1000;
     this.intervalId = setInterval(() => {
       this.changeBackground();
     }, intervalMs);
@@ -697,8 +727,12 @@ class BackgroundManager extends BaseManager {
     const settings = this.storage.getSettings();
     const category = settings.bgCategory || "nature";
     const images = this.getImagesForCategory(category, settings);
+    if (images.length === 0) return;
 
-    let index = ((settings.currentBgIndex || 0) + 1) % images.length;
+    const currentIndex = Number.isInteger(settings.currentBgIndex)
+      ? settings.currentBgIndex
+      : -1;
+    const index = this._getRandomIndex(images.length, currentIndex);
     settings.currentBgIndex = index;
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
@@ -713,15 +747,21 @@ class BackgroundManager extends BaseManager {
   updateCategory(category) {
     const settings = this.storage.getSettings();
     settings.bgCategory = category;
+    const images = this.getImagesForCategory(category, settings);
+    if (images.length > 0) {
+      const index = this._getRandomIndex(images.length);
+      settings.currentBgIndex = index;
+      settings.lastBgChange = Date.now();
+      this.storage.saveSettings(settings);
+
+      const imageObj = this.normalizeImage(images[index]);
+      this.setBackground(imageObj);
+      return;
+    }
+
     settings.currentBgIndex = 0;
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
-
-    const images = this.getImagesForCategory(category, settings);
-    if (images.length > 0) {
-      const imageObj = this.normalizeImage(images[0]);
-      this.setBackground(imageObj);
-    }
   }
 
   /**

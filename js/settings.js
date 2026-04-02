@@ -2351,6 +2351,9 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
+    const textPlaceholderEl = document.getElementById(
+      "themePaletteTextPlaceholder",
+    );
     if (
       !primaryEl ||
       !onPrimaryEl ||
@@ -2405,7 +2408,8 @@ class SettingsManager extends BaseManager {
       this._isThemeWithGlobalFontPalette(themeName) &&
       textPrimaryEl &&
       textSecondaryEl &&
-      textMutedEl
+      textMutedEl &&
+      textPlaceholderEl
     ) {
       const isDarkBackground =
         window.dashboard?.themes?._isDarkColor?.(
@@ -2422,6 +2426,13 @@ class SettingsManager extends BaseManager {
       );
       textMutedEl.value = this._normalizeColorInputHex(
         palette?.textMuted || base.textMuted,
+        isDarkBackground ? "#9a9a9a" : "#7a7a7a",
+      );
+      textPlaceholderEl.value = this._normalizeColorInputHex(
+        palette?.textPlaceholder ||
+          base.textPlaceholder ||
+          palette?.textMuted ||
+          base.textMuted,
         isDarkBackground ? "#9a9a9a" : "#7a7a7a",
       );
     }
@@ -2448,6 +2459,9 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
+    const textPlaceholderEl = document.getElementById(
+      "themePaletteTextPlaceholder",
+    );
     if (
       !primaryEl ||
       !onPrimaryEl ||
@@ -2479,7 +2493,8 @@ class SettingsManager extends BaseManager {
       this._isThemeWithGlobalFontPalette(themeName) &&
       textPrimaryEl &&
       textSecondaryEl &&
-      textMutedEl
+      textMutedEl &&
+      textPlaceholderEl
     ) {
       textPrimaryEl.value = this._normalizeColorInputHex(
         base.textPrimary,
@@ -2491,6 +2506,10 @@ class SettingsManager extends BaseManager {
       );
       textMutedEl.value = this._normalizeColorInputHex(
         base.textMuted,
+        "#9a9a9a",
+      );
+      textPlaceholderEl.value = this._normalizeColorInputHex(
+        base.textPlaceholder || base.textMuted,
         "#9a9a9a",
       );
     }
@@ -2515,6 +2534,9 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
+    const textPlaceholderEl = document.getElementById(
+      "themePaletteTextPlaceholder",
+    );
     if (
       !primaryEl ||
       !onPrimaryEl ||
@@ -2542,11 +2564,13 @@ class SettingsManager extends BaseManager {
       this._isThemeWithGlobalFontPalette(themeName) &&
       textPrimaryEl &&
       textSecondaryEl &&
-      textMutedEl
+      textMutedEl &&
+      textPlaceholderEl
     ) {
       palette.textPrimary = textPrimaryEl.value;
       palette.textSecondary = textSecondaryEl.value;
       palette.textMuted = textMutedEl.value;
+      palette.textPlaceholder = textPlaceholderEl.value;
     }
 
     window.dashboard.themes.setCustomPalette(themeName, mode, palette, save);
@@ -2781,6 +2805,9 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
+    const textPlaceholderEl = document.getElementById(
+      "themePaletteTextPlaceholder",
+    );
 
     if (paletteOverlay) {
       this._bindOverlayCloseBehavior(paletteOverlay, () =>
@@ -2858,6 +2885,10 @@ class SettingsManager extends BaseManager {
     if (textMutedEl) {
       textMutedEl.addEventListener("input", onPalettePreviewInput);
       textMutedEl.addEventListener("change", onPaletteCommit);
+    }
+    if (textPlaceholderEl) {
+      textPlaceholderEl.addEventListener("input", onPalettePreviewInput);
+      textPlaceholderEl.addEventListener("change", onPaletteCommit);
     }
 
     // Container width (in Themes panel)
