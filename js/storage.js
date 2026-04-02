@@ -184,7 +184,6 @@ class StorageManager {
         name: "emerald",
         mode: "dark",
         glassEnabled: true,
-        liquidGlassEnabled: false,
         glassOpacity: 50,
         componentOpacity: 0,
         customAccent: null,
@@ -481,19 +480,6 @@ class StorageManager {
       } else {
         merged[key] = stored[key];
       }
-    }
-
-    if (!merged.theme || typeof merged.theme !== "object") {
-      merged.theme = { ...defaults.theme };
-    }
-
-    merged.theme.liquidGlassEnabled = merged.theme.liquidGlassEnabled === true;
-
-    if (
-      merged.theme.glassEnabled === false ||
-      merged.performanceModeEnabled === true
-    ) {
-      merged.theme.liquidGlassEnabled = false;
     }
 
     // Normalize blur settings for all supported card-blur-btn components,

@@ -128,8 +128,6 @@
 
   /* UI effects */
   --ui-blur-multiplier: 1;
-  --liquid-glass-enabled: 0;
-  --liquid-glass-filter: var(--liquid-glass-filter-empty,);
 
   /* Theme-aware modal/popover surfaces */
   --surface-base-bg: #1a1a2e;
@@ -233,11 +231,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
-}
-
-[data-liquid-glass-enabled="false"] {
-  --liquid-glass-enabled: 0;
-  --liquid-glass-filter: var(--liquid-glass-filter-empty,);
 }
 
 /* Performance mode: neutralize expensive effects only while enabled */
@@ -696,8 +689,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all var(--transition-normal);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .calendar-toggle:hover {
@@ -727,10 +719,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -807,8 +797,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   color: var(--text-secondary);
   font-size: 0.82rem;
@@ -850,8 +839,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(calc(15px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(15px * var(--ui-blur-multiplier)));
   margin-left: 0;
   width: fit-content;
   animation: fadeInScale 0.4s ease-out;
@@ -1018,8 +1006,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .quote-container {
   position: relative;
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
@@ -1981,8 +1968,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
     var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   scroll-snap-align: start;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
 }
@@ -2047,8 +2033,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   font-size: 1rem;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
@@ -2094,8 +2079,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: var(--spacing-sm) var(--spacing-md);
   outline: none;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-title-input:focus {
@@ -2111,8 +2095,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-scale-control {
@@ -2422,8 +2405,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   word-break: normal;
   line-height: 1.7;
   font-size: calc(1rem * var(--notes-scale));
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-editor.notes-editor-quill {
@@ -2432,8 +2414,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   max-height: none;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-toolbar.ql-toolbar.ql-snow {
@@ -3025,8 +3006,7 @@ textarea.notes-editor:focus {
   border: 1px solid var(--glass-border);
   background: rgba(18, 24, 31, 0.96);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-table-context-menu.active {
@@ -3118,8 +3098,7 @@ textarea.notes-editor:focus {
 /* Card Base Styles */
 .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
@@ -3814,8 +3793,7 @@ textarea.notes-editor:focus {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .todo-page-numbers {
@@ -4037,10 +4015,8 @@ textarea.notes-editor:focus {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   box-shadow: var(--glass-shadow);
   font-size: 0.85rem;
   line-height: 1.2;
@@ -4256,7 +4232,7 @@ textarea.notes-editor:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  backdrop-filter: blur(6px) var(--liquid-glass-filter);
+  backdrop-filter: blur(6px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   user-select: none;
   opacity: 0;
@@ -5146,10 +5122,8 @@ body:not(.moment-mode) .moment-mode-exit-hover-zone {
     rgba(255, 255, 255, 0.08) 50%,
     rgba(255, 255, 255, 0.03) 100%
   );
-  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier, 1)));
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: var(--text-primary);
   cursor: pointer;
@@ -5272,10 +5246,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   transform: translateX(-50%) translateY(20px);
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier, 1)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
@@ -5402,8 +5374,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6923,8 +6894,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .toast {
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -6995,8 +6965,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
   transition:
     background-color var(--transition-normal),
     border-color var(--transition-normal),
@@ -7257,8 +7226,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
 }
 
 .search-bar-add-input {
@@ -7329,8 +7297,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   overflow-y: visible;
   padding: var(--spacing-md);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   min-height: 80px;
@@ -7481,8 +7448,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     0 0 0 4px rgba(212, 175, 55, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: dragGhostAppear 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   overflow: hidden;
 }
 
@@ -7619,10 +7585,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   position: fixed;
   z-index: 10000;
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--glass-shadow);
@@ -7743,8 +7707,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .delete-confirm-content {
   background: rgba(30, 30, 50, 0.98);
-  backdrop-filter: blur(calc(30px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(30px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
@@ -8060,10 +8023,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   box-shadow:
     0 10px 24px color-mix(in srgb, var(--primary-color) 24%, transparent),
     0 4px 14px color-mix(in srgb, black 20%, transparent);
-  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -8311,8 +8272,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8455,7 +8415,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     box-shadow 0.18s ease,
     background 0.18s ease;
   will-change: transform, box-shadow;
-  backdrop-filter: blur(8px) saturate(120%) var(--liquid-glass-filter);
+  backdrop-filter: blur(8px) saturate(120%);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
 }
 
@@ -8629,8 +8589,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border-style: solid;
   border-color: rgba(255, 255, 255, 0.06);
   border-image: initial;
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
   position: relative;
   transform-style: preserve-3d;
   transition: transform var(--transition-normal);
@@ -9747,7 +9706,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .sticky-note-toggle-btn {
   right: calc(var(--spacing-xl) + 196px);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px) var(--liquid-glass-filter);
+  backdrop-filter: blur(10px);
 }
 
 .sticky-note-toggle-btn:hover {
@@ -9883,10 +9842,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   right: 8px;
   width: 220px;
   background: var(--modal-popover-bg);
-  backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   box-shadow:
@@ -10991,8 +10948,7 @@ body.sticky-note-resizing {
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: center;
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   cursor: pointer;
   transition: all var(--transition-fast);
   /* Default: 7 columns layout using a 10px gap (6 gaps between items).
@@ -11047,8 +11003,7 @@ body.sticky-note-resizing {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
   position: relative;
 }
 
@@ -11066,8 +11021,7 @@ body.sticky-note-resizing {
   border-radius: var(--radius-md);
   padding: 8px 10px;
   color: var(--text-primary);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
   font-size: 0.85rem;
   line-height: 1.2;
@@ -11403,8 +11357,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   white-space: nowrap;
   pointer-events: auto;
   position: relative;
@@ -11674,8 +11627,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
 }
 
 .time-section.clock-style-pill .current-time,
@@ -11809,8 +11761,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   color: var(--text-secondary);
   font-size: 0.85rem;
   line-height: 1.25;
@@ -11847,8 +11798,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   overflow: hidden;
 }
 
@@ -11931,8 +11881,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   background: var(--glass-bg);
   color: var(--text-primary);
   outline: none;
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-pill-input:focus {
@@ -11961,10 +11910,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   position: absolute;
   inset: 0;
   background: var(--glass-bg-hover);
-  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
   pointer-events: none;
   z-index: 0;
 }
@@ -12046,10 +11993,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     color var(--transition-fast),
     opacity var(--transition-fast);
   box-shadow: var(--action-btn-shadow);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 :where(
@@ -12667,10 +12612,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   /* Ensure blur settings affect the full Pocket Quran area too.
      Use a near-transparent background so Chromium reliably composites backdrop-filter. */
   background: rgba(255, 255, 255, 0.001);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-controls {
@@ -12683,10 +12626,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-ayah-nav {
@@ -12879,10 +12820,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   overflow-anchor: none;
   /* Let global/per-card blur power affect the content region itself. */
   background: rgba(255, 255, 255, 0.001);
-  backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-ayah {
@@ -12891,10 +12830,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   transition:
     transform var(--transition-fast),
     background var(--transition-fast),
@@ -13249,10 +13186,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13475,8 +13410,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px) var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(8px) var(--liquid-glass-filter);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13876,10 +13811,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   /* Opaque background so underlying text doesn't show through while sticky */
   background: rgba(30, 40, 50, 0.98);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   border-radius: var(--radius-sm);
   position: sticky;
   top: 0;
@@ -13989,10 +13922,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-lg);
   border: 1px solid var(--accent-gold);
   background: rgba(212, 175, 55, 0.1);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   flex-wrap: wrap;
   animation: pqSlideIn 0.3s ease-out;
   width: fit-content;
@@ -14266,8 +14197,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px) var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(8px) var(--liquid-glass-filter);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14686,10 +14617,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 /* Animations (nav + script toggle) */
@@ -15055,8 +14984,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px) var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(8px) var(--liquid-glass-filter);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15441,8 +15370,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px) var(--liquid-glass-filter);
-  -webkit-backdrop-filter: blur(8px) var(--liquid-glass-filter);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15673,18 +15602,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 /* Glass Toggle */
-.theme-glass-toggle-row {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.theme-glass-toggle-row .theme-glass-toggle {
-  flex: 1 1 280px;
-}
-
 .theme-glass-toggle {
   display: inline-flex;
   align-items: center;
@@ -15704,15 +15621,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   accent-color: var(--accent-gold);
   width: 18px;
   height: 18px;
-}
-
-.theme-liquid-glass-toggle.is-disabled {
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.theme-liquid-glass-hint {
-  margin-top: var(--spacing-xs);
 }
 
 /* Blur Group (only visible when glass enabled) */
@@ -15991,8 +15899,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Light Mode Adjustments */
 [data-theme-mode="light"] .modal {
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)))
-    var(--liquid-glass-filter);
+  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
 }
 
 [data-theme-mode="light"] .settings-tab,
