@@ -1848,7 +1848,7 @@ class SettingsManager extends BaseManager {
 
     // Load current icon theme setting
     const settings = this.storage.getSettings();
-    const currentIconTheme = settings.iconTheme || "colorful";
+    const currentIconTheme = settings.iconTheme || "monochrome";
     this.updateIconThemePickerState(currentIconTheme);
 
     // Add click handlers to icon theme cards
