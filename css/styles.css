@@ -91,9 +91,6 @@
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --badge-bg: rgba(255, 255, 255, 0.12);
-  --badge-bg-hover: rgba(255, 255, 255, 0.18);
-  --badge-border: rgba(255, 255, 255, 0.2);
 
   /* Text colors */
   --text-primary: #ffffff;
@@ -1379,8 +1376,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   height: 34px;
   padding: 0;
   border-radius: var(--radius-full);
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   color: var(--text-primary);
   cursor: pointer;
   transition:
@@ -1392,8 +1389,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard .mdnotes-pill-btn:hover {
   transform: translateY(-1px);
-  background: var(--badge-bg-hover);
-  border-color: var(--badge-border);
+  background: var(--glass-bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 #notesCard .mdnotes-pill-btn.danger {
@@ -2289,7 +2286,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   gap: 4px;
   padding: 0 0.4rem;
   border-color: var(--glass-border);
-  background: var(--badge-bg);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .notes-mode-chip {
@@ -5325,13 +5322,11 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .content-search-results {
-  --content-search-hover-offset: 4px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   flex: 1;
   min-height: 0;
-  padding-right: calc(var(--content-search-hover-offset) + 2px);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -5374,7 +5369,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .content-search-result:hover {
   background: var(--glass-bg-hover);
-  transform: translateX(var(--content-search-hover-offset));
+  transform: translateX(4px);
 }
 
 .content-search-result-delete {
@@ -5439,8 +5434,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .content-search-result-meta-chip {
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-muted);
   font-size: 0.82rem;
 }
@@ -5974,9 +5969,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.85);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   animation: supportKofiFloat 2.6s ease-in-out infinite;
   z-index: 1;
@@ -6030,9 +6025,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.85);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   animation: supportKofiFloat 2.6s ease-in-out infinite;
   z-index: 1;
@@ -10173,8 +10168,8 @@ body.sticky-note-resizing {
 .fasting-bar__badge {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 2px 8px;
   border-radius: var(--radius-xl);
 }
@@ -11346,15 +11341,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.55rem 0.9rem;
   /* Capsule box (rounded rectangle) instead of full pill */
   border-radius: var(--radius-md);
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   color: var(--text-primary);
   outline: none;
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .pocket-quran-pill-input:focus {
-  background: var(--badge-bg-hover);
+  background: var(--glass-bg-hover);
   border-color: rgba(212, 175, 55, 0.45);
 }
 
@@ -12275,8 +12270,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12290,8 +12285,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12302,7 +12297,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-star:hover {
-  background: var(--badge-bg-hover);
+  background: var(--glass-bg-hover);
   transform: scale(1.1);
 }
 
@@ -14012,8 +14007,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   bottom: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   color: var(--accent-gold-light-, var(--accent-gold-light));
   font-size: 0.75rem;
   line-height: 1.1;
