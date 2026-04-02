@@ -2325,7 +2325,12 @@ class MuslimDashboard {
     const headingSettings = settings.heading || {};
     const visibility = settings.componentVisibility || {};
     const timeSection = document.querySelector(".time-section");
+    const timeMainRow = document.querySelector(".time-main-row");
     const currentSeconds = document.getElementById("currentSeconds");
+    const toggleHeaderSurface = (el, enabled) => {
+      if (!el) return;
+      el.classList.toggle("header-surface-enabled", enabled === true);
+    };
 
     // Show/hide clock
     if (timeSection) {
@@ -2355,6 +2360,19 @@ class MuslimDashboard {
       this.dateDisplay.style.display =
         headingSettings.showDate === false ? "none" : "";
     }
+
+    toggleHeaderSurface(
+      this.greeting,
+      headingSettings.greetingBackgroundEnabled === true,
+    );
+    toggleHeaderSurface(
+      this.dateDisplay,
+      headingSettings.dateBackgroundEnabled === true,
+    );
+    toggleHeaderSurface(
+      timeMainRow,
+      headingSettings.timeBackgroundEnabled === true,
+    );
 
     if (
       this.momentMode &&

@@ -418,6 +418,11 @@ class StorageManager {
         dateFormat: "full-weekday", // 'full-weekday', 'full', 'medium-weekday', 'medium', 'short'
         dateCalendar: "hijri", // 'hijri', 'gregorian', 'both'
         showIslamicEvents: true,
+
+        // Header surface backgrounds
+        greetingBackgroundEnabled: false,
+        dateBackgroundEnabled: false,
+        timeBackgroundEnabled: false,
       },
     };
   }

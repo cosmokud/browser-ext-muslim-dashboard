@@ -297,6 +297,11 @@ class SettingsManager extends BaseManager {
     this.showDate = document.getElementById("showDate");
     this.showIslamicEvents = document.getElementById("showIslamicEvents");
     this.dateFormatSelect = document.getElementById("dateFormatSelect");
+    this.headerGreetingBgEnabled = document.getElementById(
+      "headerGreetingBgEnabled",
+    );
+    this.headerDateBgEnabled = document.getElementById("headerDateBgEnabled");
+    this.headerTimeBgEnabled = document.getElementById("headerTimeBgEnabled");
     this.dateCalendarRadios = document.querySelectorAll(
       'input[name="dateCalendar"]',
     );
@@ -1163,6 +1168,17 @@ class SettingsManager extends BaseManager {
       `input[name="dateCalendar"][value="${dateCalendar}"]`,
     );
     if (dateCalendarRadio) dateCalendarRadio.checked = true;
+
+    if (this.headerGreetingBgEnabled) {
+      this.headerGreetingBgEnabled.checked =
+        heading.greetingBackgroundEnabled === true;
+    }
+    if (this.headerDateBgEnabled) {
+      this.headerDateBgEnabled.checked = heading.dateBackgroundEnabled === true;
+    }
+    if (this.headerTimeBgEnabled) {
+      this.headerTimeBgEnabled.checked = heading.timeBackgroundEnabled === true;
+    }
   }
 
   /**
@@ -3559,6 +3575,13 @@ class SettingsManager extends BaseManager {
       'input[name="dateCalendar"]:checked',
     );
     settings.heading.dateCalendar = dateCalendarRadio?.value || "hijri";
+
+    settings.heading.greetingBackgroundEnabled =
+      this.headerGreetingBgEnabled?.checked === true;
+    settings.heading.dateBackgroundEnabled =
+      this.headerDateBgEnabled?.checked === true;
+    settings.heading.timeBackgroundEnabled =
+      this.headerTimeBgEnabled?.checked === true;
   }
 
   /**

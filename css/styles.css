@@ -687,6 +687,37 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   justify-content: flex-end;
 }
 
+.header-surface-enabled {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+#greeting.header-surface-enabled {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-xl);
+}
+
+#dateDisplay.header-surface-enabled {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+}
+
+.time-main-row.header-surface-enabled {
+  padding: 0.35rem 0.72rem;
+  border-radius: 999px;
+}
+
 @keyframes slideInRight {
   0% {
     opacity: 0.01;
@@ -6919,6 +6950,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   gap: var(--spacing-sm);
   flex: 1 1 auto;
   min-width: 0;
+  color: var(--text-primary);
 }
 
 .search-bar-input {
@@ -6930,6 +6962,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
   background: rgba(var(--sb-accent-rgb), 0.12);
   color: var(--text-primary);
+  caret-color: var(--accent-gold);
   outline: none;
   transition:
     border-color var(--transition-fast),
@@ -6938,7 +6971,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .search-bar-input::placeholder {
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--text-muted) 88%, transparent 12%);
+  opacity: 1;
 }
 
 .search-bar-input:focus {
@@ -7012,7 +7046,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .search-bar-add-input::placeholder {
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--text-muted) 88%, transparent 12%);
+  opacity: 1;
 }
 
 .search-bar-add-input:focus {
