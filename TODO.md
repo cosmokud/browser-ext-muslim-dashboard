@@ -7,6 +7,7 @@
 - [] Hide `Moments` component setting if DEBUG MODE is set to OFF
 - [] Increase the custom background limits from 10 to 20.
 - [] Add fonts change for notes.
+- [] Add performance mode.
 
 ## Prayer Times Dashboard Setting
 

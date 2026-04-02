@@ -120,6 +120,7 @@ class HadithManager extends BaseManager {
     document.addEventListener("md:icon-theme-change", () => {
       this._updateSetSelectorIcon();
       this._updateSetModalIcons();
+      this.updateLanguageSelectorButton();
     });
   }
 
@@ -649,7 +650,8 @@ class HadithManager extends BaseManager {
 
       const langCodeRaw = String(langInfo.code || "en").toLowerCase();
       const langCode = langCodeRaw === "en" ? "US" : langCodeRaw.toUpperCase();
-      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
+      const langIcon = this._getIcon("🌐", { size: 16 });
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
       btn.setAttribute("aria-label", `Language: ${langInfo.name}`);
     } else {
@@ -2100,7 +2102,8 @@ class HadithManager extends BaseManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">Lang</span>`;
+    const langIcon = this._getIcon("🌐", { size: 16 });
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">Lang</span>`;
     btn.title = "Select language";
     btn.setAttribute("aria-label", "Select language");
     btn.style.display = "none";

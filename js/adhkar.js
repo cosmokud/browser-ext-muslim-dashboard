@@ -153,6 +153,7 @@ class AdhkarManager extends BaseManager {
     document.addEventListener("md:icon-theme-change", () => {
       this._updateSetSelectorIcon();
       this._updateSetModalIcons();
+      this.updateLanguageSelectorButton();
     });
   }
 
@@ -1490,7 +1491,8 @@ class AdhkarManager extends BaseManager {
         languages.find((l) => l.code === currentLang) || languages[0];
       const langCodeRaw = String(langInfo.code || "en").toLowerCase();
       const langCode = langCodeRaw === "en" ? "US" : langCodeRaw.toUpperCase();
-      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
+      const langIcon = this._getIcon("🌐", { size: 16 });
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Translation: ${langInfo.name}`;
       btn.setAttribute("aria-label", `Translation: ${langInfo.name}`);
     } else {
@@ -2544,7 +2546,8 @@ class AdhkarManager extends BaseManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">Lang</span>`;
+    const langIcon = this._getIcon("🌐", { size: 16 });
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">Lang</span>`;
     btn.title = "Select translation language";
     btn.setAttribute("aria-label", "Select translation language");
     btn.style.display = "none"; // Hidden by default

@@ -174,15 +174,15 @@ class StorageManager {
 
       // UI settings
       timeFormat: "24h",
-      uiBlurPower: 200, // percentage (100 = current blur baseline)
+      uiBlurPower: 100, // percentage (100 = current blur baseline)
 
       // Theme settings
       theme: {
-        name: "pureWhite",
+        name: "emerald",
         mode: "dark",
         glassEnabled: true,
-        glassOpacity: 0,
-        componentOpacity: null,
+        glassOpacity: 50,
+        componentOpacity: 0,
         customAccent: null,
         customPalettes: {},
       },
@@ -590,7 +590,7 @@ class StorageManager {
         ? parsedOpacity
         : Number(merged?.theme?.glassOpacity);
       if (!Number.isFinite(glassOpacity)) {
-        glassOpacity = 35;
+        glassOpacity = 50;
       }
       glassOpacity = Math.min(100, Math.max(0, Math.round(glassOpacity)));
 

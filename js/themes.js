@@ -633,44 +633,44 @@ class ThemeManager {
       description: "Your fully custom palette with global font colors",
       customizable: true,
       dark: {
-        primary: "#2f2f2f",
-        primaryLight: "#4a4a4a",
-        primaryDark: "#1a1a1a",
+        primary: "#214055",
+        primaryLight: "#2f5b77",
+        primaryDark: "#132b3b",
         onPrimaryText: "#ffffff",
-        accent: "#8fc7ff",
-        accentBackground: "#8fc7ff",
-        accentText: "#8fc7ff",
-        accentLight: "#b5dbff",
-        accentBlue: "#7fbfff",
-        settingsColor: "#8fc7ff",
-        settingsLight: "#bfe1ff",
-        glassBg: "rgba(255, 255, 255, 0.12)",
-        glassBgHover: "rgba(255, 255, 255, 0.18)",
-        glassBorder: "rgba(255, 255, 255, 0.2)",
+        accent: "#8ec9ff",
+        accentBackground: "#8ec9ff",
+        accentText: "#8ec9ff",
+        accentLight: "#b6ddff",
+        accentBlue: "#7abcf8",
+        settingsColor: "#8ec9ff",
+        settingsLight: "#bfe4ff",
+        glassBg: "rgba(255, 255, 255, 0.16)",
+        glassBgHover: "rgba(255, 255, 255, 0.24)",
+        glassBorder: "rgba(255, 255, 255, 0.24)",
         textPrimary: "#ffffff",
-        textSecondary: "#d9d9d9",
-        textMuted: "#9a9a9a",
-        bodyBg: "#0f0f0f",
+        textSecondary: "#e9f0f6",
+        textMuted: "#b4c2cf",
+        bodyBg: "#0b141b",
       },
       light: {
-        primary: "#dcdcdc",
-        primaryLight: "#efefef",
-        primaryDark: "#c4c4c4",
-        onPrimaryText: "#1a1a1a",
-        accent: "#4f89c7",
-        accentBackground: "#4f89c7",
-        accentText: "#4f89c7",
-        accentLight: "#74a8e0",
-        accentBlue: "#3b76b7",
-        settingsColor: "#4f89c7",
-        settingsLight: "#78abe0",
-        glassBg: "rgba(0, 0, 0, 0.08)",
-        glassBgHover: "rgba(0, 0, 0, 0.12)",
-        glassBorder: "rgba(0, 0, 0, 0.15)",
-        textPrimary: "#1a1a1a",
-        textSecondary: "#4d4d4d",
-        textMuted: "#7a7a7a",
-        bodyBg: "#f3f3f3",
+        primary: "#d9e9f4",
+        primaryLight: "#eef6fb",
+        primaryDark: "#bfd6e7",
+        onPrimaryText: "#10202b",
+        accent: "#2f6ea0",
+        accentBackground: "#2f6ea0",
+        accentText: "#2f6ea0",
+        accentLight: "#4c8dc2",
+        accentBlue: "#2b6797",
+        settingsColor: "#2f6ea0",
+        settingsLight: "#5d9fd1",
+        glassBg: "rgba(0, 0, 0, 0.1)",
+        glassBgHover: "rgba(0, 0, 0, 0.15)",
+        glassBorder: "rgba(0, 0, 0, 0.18)",
+        textPrimary: "#10202b",
+        textSecondary: "#2b4354",
+        textMuted: "#4a6477",
+        bodyBg: "#f4f9fc",
       },
     },
   };
@@ -680,8 +680,8 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
-    this._glassOpacity = 35;
-    this._mainGridComponentOpacity = 35;
+    this._glassOpacity = 50;
+    this._mainGridComponentOpacity = 0;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -772,11 +772,11 @@ class ThemeManager {
     this._glassEnabled = themeSettings.glassEnabled !== false;
     this._glassOpacity = this._clampGlassOpacity(
       themeSettings.glassOpacity,
-      35,
+      50,
     );
     this._mainGridComponentOpacity = this._clampGlassOpacity(
       themeSettings.componentOpacity,
-      this._glassOpacity,
+      0,
     );
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
@@ -1133,14 +1133,14 @@ class ThemeManager {
     return colors;
   }
 
-  _clampGlassOpacity(value, fallback = 35) {
+  _clampGlassOpacity(value, fallback = 50) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return fallback;
     return Math.min(100, Math.max(0, Math.round(numeric)));
   }
 
   _getGlassOpacityAlphas(opacityPercent = this._glassOpacity) {
-    const bgAlpha = this._clampGlassOpacity(opacityPercent, 35) / 100;
+    const bgAlpha = this._clampGlassOpacity(opacityPercent, 50) / 100;
     const hoverRatio = 0.45 / 0.35;
     const borderRatio = 0.4 / 0.35;
     const clampAlpha = (alpha) => {

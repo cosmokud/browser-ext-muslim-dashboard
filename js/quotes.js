@@ -47,6 +47,11 @@ class QuotesManager extends BaseManager {
     this.importBtn = document.getElementById("importQuotesBtn");
     this.exportBtn = document.getElementById("exportQuotesBtn");
     this.importInput = document.getElementById("importQuotesInput");
+
+    // Keep language selector icon in sync with icon theme changes.
+    document.addEventListener("md:icon-theme-change", () => {
+      this.updateLanguageSelectorButton();
+    });
   }
 
   /**
@@ -1116,7 +1121,8 @@ class QuotesManager extends BaseManager {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">Lang</span>`;
+    const langIcon = this._getIcon("🌐", { size: 16 });
+    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">Lang</span>`;
     btn.title = "Select quote language";
     btn.setAttribute("aria-label", "Select quote language");
     btn.style.display = "none";
@@ -1145,7 +1151,8 @@ class QuotesManager extends BaseManager {
         languages.find((l) => l.code === current) || languages[0];
       const langCodeRaw = String(langInfo.code || "en").toLowerCase();
       const langCode = langCodeRaw === "en" ? "US" : langCodeRaw.toUpperCase();
-      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">🌐</span><span class="lang-label">${langCode}</span>`;
+      const langIcon = this._getIcon("🌐", { size: 16 });
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">${langCode}</span>`;
       btn.title = `Language: ${langInfo.name}`;
       btn.setAttribute("aria-label", `Language: ${langInfo.name}`);
     } else {

@@ -500,6 +500,9 @@ class SettingsManager extends BaseManager {
     this.pocketQuranBookmarkStats = document.getElementById(
       "pocketQuranBookmarkStats",
     );
+
+    // Debounced theme slider updates (prevents heavy re-theme on every tick).
+    this._themeSliderDebounceTimers = Object.create(null);
   }
 
   /**
@@ -522,7 +525,7 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
-    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
 
     // Clean up any stale inline zoom left by the removed Dashboard Scale feature.
     const root = document.documentElement;
@@ -740,7 +743,7 @@ class SettingsManager extends BaseManager {
 
     // UI blur power
     if (this.uiBlurPower) {
-      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
+      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
       this.uiBlurPower.value = String(clamped);
       this.updateUiBlurPowerLabel();
       this.applyUiBlurPower(clamped);
@@ -1871,7 +1874,7 @@ class SettingsManager extends BaseManager {
     this.updateThemeBlurGroupState(glassEnabled);
 
     // Load blur power
-    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
+    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
     if (this.themeBlurPower) {
       this.themeBlurPower.value = String(blurPower);
     }
@@ -1882,7 +1885,7 @@ class SettingsManager extends BaseManager {
       themeSettings.glassOpacity,
       0,
       100,
-      window.dashboard?.themes?.getGlassOpacity?.() ?? 0,
+      window.dashboard?.themes?.getGlassOpacity?.() ?? 50,
     );
     if (this.themeGlassOpacity) {
       this.themeGlassOpacity.value = String(glassOpacity);
@@ -1894,7 +1897,7 @@ class SettingsManager extends BaseManager {
       themeSettings.componentOpacity,
       0,
       100,
-      window.dashboard?.themes?.getMainGridComponentOpacity?.() ?? glassOpacity,
+      window.dashboard?.themes?.getMainGridComponentOpacity?.() ?? 0,
     );
     if (this.themeComponentOpacity) {
       this.themeComponentOpacity.value = String(componentOpacity);
@@ -1922,7 +1925,7 @@ class SettingsManager extends BaseManager {
     }
 
     // Highlight active theme
-    const activeTheme = themeSettings.name || "pureWhite";
+    const activeTheme = themeSettings.name || "emerald";
     this.updateThemePickerActiveState(activeTheme);
   }
 
@@ -1978,7 +1981,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.themeGlassOpacity.value, 10),
         0,
         100,
-        35,
+        50,
       );
       this.themeGlassOpacity.value = String(clamped);
       this.themeGlassOpacityValue.textContent = clamped + "%";
@@ -1994,7 +1997,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.themeComponentOpacity.value, 10),
         0,
         100,
-        35,
+        0,
       );
       this.themeComponentOpacity.value = String(clamped);
       this.themeComponentOpacityValue.textContent = clamped + "%";
@@ -2041,7 +2044,7 @@ class SettingsManager extends BaseManager {
     const activeTheme =
       window.dashboard?.themes?.getCurrentTheme?.() ||
       settings.theme?.name ||
-      "pureWhite";
+      "emerald";
 
     let html = "";
 
@@ -2517,12 +2520,69 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    const themeSliderDefaults = {
+      blurPower: 100,
+      glassOpacity: 50,
+      componentOpacity: 0,
+    };
+    const themeSliderDebounceMs = 120;
+
+    const scheduleThemeSliderUpdate = (key, callback) => {
+      if (this._themeSliderDebounceTimers[key]) {
+        clearTimeout(this._themeSliderDebounceTimers[key]);
+      }
+      this._themeSliderDebounceTimers[key] = setTimeout(() => {
+        this._themeSliderDebounceTimers[key] = null;
+        callback();
+      }, themeSliderDebounceMs);
+    };
+
+    const flushThemeSliderUpdate = (key, callback) => {
+      if (this._themeSliderDebounceTimers[key]) {
+        clearTimeout(this._themeSliderDebounceTimers[key]);
+        this._themeSliderDebounceTimers[key] = null;
+      }
+      callback();
+    };
+
+    const applyThemeGlassOpacity = (opacity) => {
+      if (window.dashboard?.themes?.setGlassOpacity) {
+        window.dashboard.themes.setGlassOpacity(opacity, false);
+      }
+
+      try {
+        document.dispatchEvent(new CustomEvent("md:glass-setting-changed"));
+      } catch (e) {}
+    };
+
+    const applyThemeComponentOpacity = (opacity) => {
+      if (window.dashboard?.themes?.setMainGridComponentOpacity) {
+        window.dashboard.themes.setMainGridComponentOpacity(opacity, false);
+      }
+    };
+
     // Blur power slider
     if (this.themeBlurPower) {
       this.themeBlurPower.addEventListener("input", () => {
         this.updateThemeBlurPowerLabel();
         const power = parseInt(this.themeBlurPower.value, 10);
-        this.applyUiBlurPower(power);
+        scheduleThemeSliderUpdate("blurPower", () =>
+          this.applyUiBlurPower(power),
+        );
+      });
+
+      this.themeBlurPower.addEventListener("change", () => {
+        this.updateThemeBlurPowerLabel();
+        const power = parseInt(this.themeBlurPower.value, 10);
+        flushThemeSliderUpdate("blurPower", () => this.applyUiBlurPower(power));
+      });
+
+      this.themeBlurPower.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.themeBlurPower.value = String(themeSliderDefaults.blurPower);
+        this.updateThemeBlurPowerLabel();
+        const power = parseInt(this.themeBlurPower.value, 10);
+        flushThemeSliderUpdate("blurPower", () => this.applyUiBlurPower(power));
       });
     }
 
@@ -2531,14 +2591,27 @@ class SettingsManager extends BaseManager {
       this.themeGlassOpacity.addEventListener("input", () => {
         this.updateThemeGlassOpacityLabel();
         const opacity = parseInt(this.themeGlassOpacity.value, 10);
+        scheduleThemeSliderUpdate("glassOpacity", () =>
+          applyThemeGlassOpacity(opacity),
+        );
+      });
 
-        if (window.dashboard?.themes?.setGlassOpacity) {
-          window.dashboard.themes.setGlassOpacity(opacity, false);
-        }
+      this.themeGlassOpacity.addEventListener("change", () => {
+        this.updateThemeGlassOpacityLabel();
+        const opacity = parseInt(this.themeGlassOpacity.value, 10);
+        flushThemeSliderUpdate("glassOpacity", () =>
+          applyThemeGlassOpacity(opacity),
+        );
+      });
 
-        try {
-          document.dispatchEvent(new CustomEvent("md:glass-setting-changed"));
-        } catch (e) {}
+      this.themeGlassOpacity.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.themeGlassOpacity.value = String(themeSliderDefaults.glassOpacity);
+        this.updateThemeGlassOpacityLabel();
+        const opacity = parseInt(this.themeGlassOpacity.value, 10);
+        flushThemeSliderUpdate("glassOpacity", () =>
+          applyThemeGlassOpacity(opacity),
+        );
       });
     }
 
@@ -2548,9 +2621,29 @@ class SettingsManager extends BaseManager {
         this.updateThemeComponentOpacityLabel();
         const opacity = parseInt(this.themeComponentOpacity.value, 10);
 
-        if (window.dashboard?.themes?.setMainGridComponentOpacity) {
-          window.dashboard.themes.setMainGridComponentOpacity(opacity, false);
-        }
+        scheduleThemeSliderUpdate("componentOpacity", () =>
+          applyThemeComponentOpacity(opacity),
+        );
+      });
+
+      this.themeComponentOpacity.addEventListener("change", () => {
+        this.updateThemeComponentOpacityLabel();
+        const opacity = parseInt(this.themeComponentOpacity.value, 10);
+        flushThemeSliderUpdate("componentOpacity", () =>
+          applyThemeComponentOpacity(opacity),
+        );
+      });
+
+      this.themeComponentOpacity.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.themeComponentOpacity.value = String(
+          themeSliderDefaults.componentOpacity,
+        );
+        this.updateThemeComponentOpacityLabel();
+        const opacity = parseInt(this.themeComponentOpacity.value, 10);
+        flushThemeSliderUpdate("componentOpacity", () =>
+          applyThemeComponentOpacity(opacity),
+        );
       });
     }
 
@@ -2723,17 +2816,17 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeGlassOpacity?.value, 10),
       0,
       100,
-      0,
+      50,
     );
     const componentOpacity = this.clampNumber(
       parseInt(this.themeComponentOpacity?.value, 10),
       0,
       100,
-      glassOpacity,
+      0,
     );
 
     // Get active theme
-    let activeTheme = "pureWhite";
+    let activeTheme = "emerald";
     const activeCard =
       this.themePickerGrid?.querySelector(".theme-card.active");
     if (activeCard) {
@@ -2762,7 +2855,7 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeBlurPower?.value, 10),
       0,
       200,
-      200,
+      100,
     );
 
     // Save container width (now from Themes panel)
@@ -4153,7 +4246,7 @@ class SettingsManager extends BaseManager {
     );
 
     // Apply UI blur power
-    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
 
     // Update weather unit
     if (this.weather) {

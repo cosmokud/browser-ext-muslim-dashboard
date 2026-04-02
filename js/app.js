@@ -991,9 +991,9 @@ class MuslimDashboard {
     const getDashboardBlurPower = () => {
       try {
         const settings = this.storage.getSettings();
-        return settings?.uiBlurPower ?? 200;
+        return settings?.uiBlurPower ?? 100;
       } catch (e) {
-        return 200;
+        return 100;
       }
     };
 
@@ -1001,10 +1001,10 @@ class MuslimDashboard {
       try {
         const settings = this.storage.getSettings();
         const numeric = Number(settings?.theme?.glassOpacity);
-        if (!Number.isFinite(numeric)) return 35;
+        if (!Number.isFinite(numeric)) return 50;
         return Math.min(100, Math.max(0, Math.round(numeric)));
       } catch (e) {
-        return 35;
+        return 50;
       }
     };
 
