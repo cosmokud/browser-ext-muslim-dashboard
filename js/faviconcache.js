@@ -28,7 +28,7 @@ class FaviconCacheManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(
         FaviconCacheManager.DB_NAME,
-        FaviconCacheManager.DB_VERSION
+        FaviconCacheManager.DB_VERSION,
       );
 
       request.onerror = () => {
@@ -107,7 +107,7 @@ class FaviconCacheManager {
       return new Promise((resolve) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readonly"
+          "readonly",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
         const request = store.get(key);
@@ -124,7 +124,7 @@ class FaviconCacheManager {
         request.onerror = () => {
           console.warn(
             "FaviconCache: Error getting cached favicon",
-            request.error
+            request.error,
           );
           resolve(null);
         };
@@ -150,7 +150,7 @@ class FaviconCacheManager {
       return new Promise((resolve, reject) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readwrite"
+          "readwrite",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
 
@@ -190,7 +190,7 @@ class FaviconCacheManager {
       return new Promise((resolve) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readwrite"
+          "readwrite",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
         const request = store.delete(key);
@@ -218,7 +218,7 @@ class FaviconCacheManager {
       return new Promise((resolve) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readonly"
+          "readonly",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
         const request = store.get(key);
@@ -366,8 +366,8 @@ class FaviconCacheManager {
       if (!validTypes.includes(file.type) && !isValidExtension) {
         reject(
           new Error(
-            "Invalid file type. Please use PNG, ICO, JPG, GIF, WebP, or SVG."
-          )
+            "Invalid file type. Please use PNG, ICO, JPG, GIF, WebP, or SVG.",
+          ),
         );
         return;
       }
@@ -496,7 +496,7 @@ class FaviconCacheManager {
       return new Promise((resolve) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readwrite"
+          "readwrite",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
         const request = store.clear();
@@ -527,7 +527,7 @@ class FaviconCacheManager {
       return new Promise((resolve) => {
         const transaction = db.transaction(
           FaviconCacheManager.STORE_NAME,
-          "readonly"
+          "readonly",
         );
         const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
         const request = store.getAll();
@@ -541,7 +541,7 @@ class FaviconCacheManager {
             custom: records.filter((r) => r.isCustom).length,
             totalSize: records.reduce(
               (sum, r) => sum + (r.dataUrl?.length || 0),
-              0
+              0,
             ),
           };
           resolve(stats);
