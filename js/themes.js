@@ -680,6 +680,7 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
+    this._liquidGlassEnabled = false;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -770,6 +771,15 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
+    this._liquidGlassEnabled = themeSettings.liquidGlassEnabled === true;
+
+    if (
+      this._glassEnabled !== true ||
+      settings.performanceModeEnabled === true
+    ) {
+      this._liquidGlassEnabled = false;
+    }
+
     this._glassOpacity = this._clampGlassOpacity(
       themeSettings.glassOpacity,
       50,
@@ -829,6 +839,7 @@ class ThemeManager {
       name: this._currentTheme,
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
+      liquidGlassEnabled: this._liquidGlassEnabled,
       glassOpacity: this._glassOpacity,
       componentOpacity: this._mainGridComponentOpacity,
       customAccent: this._customAccent,
@@ -856,6 +867,13 @@ class ThemeManager {
    */
   isGlassEnabled() {
     return this._glassEnabled;
+  }
+
+  /**
+   * Check if liquid glass effect is enabled
+   */
+  isLiquidGlassEnabled() {
+    return this._liquidGlassEnabled;
   }
 
   /**
@@ -916,7 +934,12 @@ class ThemeManager {
    * Enable or disable glass effect
    */
   setGlassEnabled(enabled, save = true) {
-    this._glassEnabled = enabled;
+    this._glassEnabled = enabled === true;
+
+    if (!this._glassEnabled) {
+      this._liquidGlassEnabled = false;
+    }
+
     this.applyTheme();
 
     if (save) {
@@ -929,6 +952,23 @@ class ThemeManager {
    */
   toggleGlass(save = true) {
     this.setGlassEnabled(!this._glassEnabled, save);
+  }
+
+  /**
+   * Enable or disable liquid glass effect
+   */
+  setLiquidGlassEnabled(enabled, save = true) {
+    const settings = this.storage.getSettings();
+    const performanceModeEnabled = settings?.performanceModeEnabled === true;
+    const nextEnabled =
+      enabled === true && this._glassEnabled && !performanceModeEnabled;
+
+    this._liquidGlassEnabled = nextEnabled;
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
   }
 
   /**
@@ -1599,6 +1639,13 @@ class ThemeManager {
     root.dataset.theme = this._currentTheme;
     root.dataset.themeMode = this._currentMode;
     root.dataset.glassEnabled = this._glassEnabled ? "true" : "false";
+    root.dataset.liquidGlassEnabled = this._liquidGlassEnabled
+      ? "true"
+      : "false";
+    root.style.setProperty(
+      "--liquid-glass-enabled",
+      this._liquidGlassEnabled ? "1" : "0",
+    );
 
     // Settings shadow based on current settings color
     const settingsRgb = this.hexToRgb(colors.settingsColor);
@@ -1616,6 +1663,7 @@ class ThemeManager {
           theme: this._currentTheme,
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
+          liquidGlassEnabled: this._liquidGlassEnabled,
           glassOpacity: this._glassOpacity,
           componentOpacity: this._mainGridComponentOpacity,
         },

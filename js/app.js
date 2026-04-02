@@ -36,6 +36,7 @@ class MuslimDashboard {
     this.notes = null; // Will be initialized after DOM
     this.pocketQuran = null; // Will be initialized after DOM
     this.momentMode = null; // Will be initialized after DOM
+    this.liquidGlass = null; // Global liquid glass runtime manager
 
     // Unified content search modal (Quotes / Adhkar / Hadith / Notes / Todo)
     this.contentSearch = null;
@@ -872,6 +873,19 @@ class MuslimDashboard {
     // Apply per-card blur overrides (readability-first components)
     this.initReadabilityBlurOverrides();
 
+    // Initialize global liquid glass effect manager after card states are restored
+    try {
+      if (typeof window.LiquidGlassManager === "function") {
+        this.liquidGlass = new window.LiquidGlassManager(
+          this.storage,
+          this.themes,
+        );
+        this.liquidGlass.init();
+      }
+    } catch (e) {
+      console.warn("LiquidGlassManager init failed:", e);
+    }
+
     // Initialize Quran Focus Mode
     this.initQuranFocusMode();
 
@@ -1325,15 +1339,26 @@ class MuslimDashboard {
         // - DASH => remove attribute so it follows dashboard/root setting
         if (state === "dashboard") {
           delete card.dataset.glassEnabled;
+          if (effectiveGlass) {
+            delete card.dataset.liquidGlassEnabled;
+          } else {
+            card.dataset.liquidGlassEnabled = "false";
+          }
           if (resetDashboardSurface) {
             clearCardGlassVars();
           }
         } else if (state === "on") {
           card.dataset.glassEnabled = "true";
+          card.dataset.liquidGlassEnabled = "true";
           applyCardGlassVars(true, customGlassOpacity);
         } else if (state === "off") {
           card.dataset.glassEnabled = "false";
+          card.dataset.liquidGlassEnabled = "false";
           applyCardGlassVars(false);
+        }
+
+        if (!effectiveGlass) {
+          card.dataset.liquidGlassEnabled = "false";
         }
 
         // Determine effective blur power

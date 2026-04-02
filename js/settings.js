@@ -257,6 +257,12 @@ class SettingsManager extends BaseManager {
     // Themes panel elements
     this.themeModeButtons = document.querySelectorAll(".theme-mode-btn");
     this.themeGlassEnabled = document.getElementById("themeGlassEnabled");
+    this.themeLiquidGlassEnabled = document.getElementById(
+      "themeLiquidGlassEnabled",
+    );
+    this.themeLiquidGlassToggleWrap = document.getElementById(
+      "themeLiquidGlassToggleWrap",
+    );
     this.themeBlurPower = document.getElementById("themeBlurPower");
     this.themeBlurPowerValue = document.getElementById("themeBlurPowerValue");
     this.themeBlurGroup = document.getElementById("themeBlurGroup");
@@ -1942,6 +1948,7 @@ class SettingsManager extends BaseManager {
   loadThemePanelSettings() {
     const settings = this.storage.getSettings();
     const themeSettings = settings.theme || {};
+    const performanceModeEnabled = settings.performanceModeEnabled === true;
 
     // Load mode
     const mode = themeSettings.mode || "dark";
@@ -1952,7 +1959,20 @@ class SettingsManager extends BaseManager {
     if (this.themeGlassEnabled) {
       this.themeGlassEnabled.checked = glassEnabled;
     }
+
+    const liquidGlassEnabled =
+      glassEnabled &&
+      !performanceModeEnabled &&
+      themeSettings.liquidGlassEnabled === true;
+    if (this.themeLiquidGlassEnabled) {
+      this.themeLiquidGlassEnabled.checked = liquidGlassEnabled;
+    }
+
     this.updateThemeBlurGroupState(glassEnabled);
+    this.updateThemeLiquidGlassToggleState(
+      glassEnabled,
+      performanceModeEnabled,
+    );
 
     // Load blur power
     const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
@@ -2006,10 +2026,9 @@ class SettingsManager extends BaseManager {
     }
 
     if (this.themePerformanceModeEnabled) {
-      this.themePerformanceModeEnabled.checked =
-        settings.performanceModeEnabled === true;
+      this.themePerformanceModeEnabled.checked = performanceModeEnabled;
     }
-    this.applyPerformanceMode(settings.performanceModeEnabled === true);
+    this.applyPerformanceMode(performanceModeEnabled);
 
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";
@@ -2040,6 +2059,17 @@ class SettingsManager extends BaseManager {
 
     if (this.themeBlurGroup) {
       this.themeBlurGroup.classList.toggle("disabled", !glassEnabled);
+    }
+  }
+
+  updateThemeLiquidGlassToggleState(glassEnabled, performanceModeEnabled) {
+    if (!this.themeLiquidGlassEnabled) return;
+
+    const disabled = glassEnabled !== true || performanceModeEnabled === true;
+    this.themeLiquidGlassEnabled.disabled = disabled;
+
+    if (this.themeLiquidGlassToggleWrap) {
+      this.themeLiquidGlassToggleWrap.classList.toggle("is-disabled", disabled);
     }
   }
 
@@ -2593,16 +2623,64 @@ class SettingsManager extends BaseManager {
     if (this.themeGlassEnabled) {
       this.themeGlassEnabled.addEventListener("change", () => {
         const enabled = this.themeGlassEnabled.checked;
+        const performanceModeEnabled =
+          this.themePerformanceModeEnabled?.checked === true;
+
+        if (!enabled && this.themeLiquidGlassEnabled) {
+          this.themeLiquidGlassEnabled.checked = false;
+        }
+
         this.updateThemeBlurGroupState(enabled);
+        this.updateThemeLiquidGlassToggleState(enabled, performanceModeEnabled);
 
         // Apply glass toggle immediately
         if (window.dashboard?.themes) {
           window.dashboard.themes.setGlassEnabled(enabled, false);
+          if (!enabled && window.dashboard.themes.setLiquidGlassEnabled) {
+            window.dashboard.themes.setLiquidGlassEnabled(false, false);
+          }
         }
 
         // Notify cards with "dashboard" blur state to update
         try {
           document.dispatchEvent(new CustomEvent("md:glass-setting-changed"));
+        } catch (e) {}
+
+        if (!enabled) {
+          try {
+            document.dispatchEvent(
+              new CustomEvent("md:liquid-glass-setting-changed"),
+            );
+          } catch (e) {}
+        }
+      });
+    }
+
+    if (this.themeLiquidGlassEnabled) {
+      this.themeLiquidGlassEnabled.addEventListener("change", () => {
+        const glassEnabled = this.themeGlassEnabled?.checked !== false;
+        const performanceModeEnabled =
+          this.themePerformanceModeEnabled?.checked === true;
+
+        let enabled = this.themeLiquidGlassEnabled.checked === true;
+        if (!glassEnabled || performanceModeEnabled) {
+          enabled = false;
+          this.themeLiquidGlassEnabled.checked = false;
+        }
+
+        this.updateThemeLiquidGlassToggleState(
+          glassEnabled,
+          performanceModeEnabled,
+        );
+
+        if (window.dashboard?.themes?.setLiquidGlassEnabled) {
+          window.dashboard.themes.setLiquidGlassEnabled(enabled, false);
+        }
+
+        try {
+          document.dispatchEvent(
+            new CustomEvent("md:liquid-glass-setting-changed"),
+          );
         } catch (e) {}
       });
     }
@@ -2886,7 +2964,24 @@ class SettingsManager extends BaseManager {
 
     if (this.themePerformanceModeEnabled) {
       this.themePerformanceModeEnabled.addEventListener("change", () => {
-        this.applyPerformanceMode(this.themePerformanceModeEnabled.checked);
+        const enabled = this.themePerformanceModeEnabled.checked;
+        this.applyPerformanceMode(enabled);
+
+        const glassEnabled = this.themeGlassEnabled?.checked !== false;
+        if (enabled && this.themeLiquidGlassEnabled) {
+          this.themeLiquidGlassEnabled.checked = false;
+          if (window.dashboard?.themes?.setLiquidGlassEnabled) {
+            window.dashboard.themes.setLiquidGlassEnabled(false, false);
+          }
+
+          try {
+            document.dispatchEvent(
+              new CustomEvent("md:liquid-glass-setting-changed"),
+            );
+          } catch (e) {}
+        }
+
+        this.updateThemeLiquidGlassToggleState(glassEnabled, enabled);
       });
     }
   }
@@ -2905,6 +3000,21 @@ class SettingsManager extends BaseManager {
 
     // Get glass enabled
     const glassEnabled = this.themeGlassEnabled?.checked !== false;
+    const performanceModeEnabled =
+      this.themePerformanceModeEnabled?.checked === true;
+    const liquidGlassEnabled =
+      glassEnabled &&
+      !performanceModeEnabled &&
+      this.themeLiquidGlassEnabled?.checked === true;
+
+    if (this.themeLiquidGlassEnabled) {
+      this.themeLiquidGlassEnabled.checked = liquidGlassEnabled;
+      this.updateThemeLiquidGlassToggleState(
+        glassEnabled,
+        performanceModeEnabled,
+      );
+    }
+
     const glassOpacity = this.clampNumber(
       parseInt(this.themeGlassOpacity?.value, 10),
       0,
@@ -2937,6 +3047,7 @@ class SettingsManager extends BaseManager {
       name: activeTheme,
       mode: mode,
       glassEnabled: glassEnabled,
+      liquidGlassEnabled: liquidGlassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
       customAccent: customAccent,
@@ -2962,14 +3073,16 @@ class SettingsManager extends BaseManager {
       );
     }
 
-    settings.performanceModeEnabled =
-      this.themePerformanceModeEnabled?.checked === true;
+    settings.performanceModeEnabled = performanceModeEnabled;
 
     // Apply theme manager settings
     if (window.dashboard?.themes) {
       window.dashboard.themes.setTheme(activeTheme, true);
       window.dashboard.themes.setMode(mode, true);
       window.dashboard.themes.setGlassEnabled(glassEnabled, true);
+      if (typeof window.dashboard.themes.setLiquidGlassEnabled === "function") {
+        window.dashboard.themes.setLiquidGlassEnabled(liquidGlassEnabled, true);
+      }
       if (typeof window.dashboard.themes.setGlassOpacity === "function") {
         window.dashboard.themes.setGlassOpacity(glassOpacity, true);
       }
