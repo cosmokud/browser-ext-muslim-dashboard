@@ -184,6 +184,7 @@ class StorageManager {
         name: "emerald",
         mode: "dark",
         glassEnabled: true,
+        liquidGlassEnabled: false,
         glassOpacity: 50,
         componentOpacity: 0,
         customAccent: null,

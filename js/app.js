@@ -988,6 +988,18 @@ class MuslimDashboard {
       }
     };
 
+    const isDashboardLiquidGlassEnabled = () => {
+      try {
+        const settings = this.storage.getSettings();
+        return (
+          settings?.theme?.glassEnabled !== false &&
+          settings?.theme?.liquidGlassEnabled === true
+        );
+      } catch (e) {
+        return false;
+      }
+    };
+
     const getDashboardBlurPower = () => {
       try {
         const settings = this.storage.getSettings();
@@ -1319,20 +1331,30 @@ class MuslimDashboard {
           effectiveGlass = isDashboardGlassEnabled();
         }
 
+        const effectiveLiquid =
+          effectiveGlass && isDashboardLiquidGlassEnabled();
+
         // Apply per-card glass override attribute:
         // - OFF  => data-glass-enabled="false" on this card only
         // - ON   => data-glass-enabled="true" on this card only
         // - DASH => remove attribute so it follows dashboard/root setting
         if (state === "dashboard") {
           delete card.dataset.glassEnabled;
+          delete card.dataset.liquidGlassEnabled;
           if (resetDashboardSurface) {
             clearCardGlassVars();
           }
         } else if (state === "on") {
           card.dataset.glassEnabled = "true";
+          if (effectiveLiquid) {
+            card.dataset.liquidGlassEnabled = "true";
+          } else {
+            card.dataset.liquidGlassEnabled = "false";
+          }
           applyCardGlassVars(true, customGlassOpacity);
         } else if (state === "off") {
           card.dataset.glassEnabled = "false";
+          card.dataset.liquidGlassEnabled = "false";
           applyCardGlassVars(false);
         }
 
