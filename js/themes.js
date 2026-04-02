@@ -1564,11 +1564,6 @@ class ThemeManager {
       );
       root.style.setProperty("--glass-border", globalGlassColors.glassBorder);
       root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
-      root.style.setProperty("--flashcard-scene-bg", globalGlassColors.glassBg);
-      root.style.setProperty(
-        "--flashcard-scene-border",
-        globalGlassColors.glassBorder,
-      );
     } else {
       // Solid mode - NO transparency in the base surfaces.
       // We mix theme colors into the body background to get fully-opaque panel colors.
@@ -1592,8 +1587,6 @@ class ThemeManager {
       root.style.setProperty("--glass-bg-hover", solidHover);
       root.style.setProperty("--glass-border", solidBorder);
       root.style.setProperty("--glass-shadow", "0 4px 20px rgba(0, 0, 0, 0.2)");
-      root.style.setProperty("--flashcard-scene-bg", solidBg);
-      root.style.setProperty("--flashcard-scene-border", solidBorder);
     }
 
     // Apply body background

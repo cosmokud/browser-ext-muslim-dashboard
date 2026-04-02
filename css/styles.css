@@ -8387,8 +8387,11 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   max-height: 100%; /* don't overflow the scene */
   align-self: center;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--flashcard-scene-border, var(--glass-border));
-  background: var(--flashcard-scene-bg, var(--glass-bg));
+  background: rgba(255, 255, 255, 0.04);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.06);
+  border-image: initial;
   backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
   position: relative;
   transform-style: preserve-3d;
