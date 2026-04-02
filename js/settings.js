@@ -43,6 +43,24 @@ class SettingsManager extends BaseManager {
     ghn: "Ghunnah",
   };
 
+  static CUSTOM_BACKGROUND_LIMIT = 20;
+
+  static NOTES_CARD_FONT_FAMILIES = [
+    "Poppins",
+    "Amiri",
+    "Noto Naskh Arabic",
+    "Uthmani Tajweed",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
+
   constructor(
     storage,
     prayerTimes,
@@ -454,6 +472,7 @@ class SettingsManager extends BaseManager {
     this.importNotesBtn = document.getElementById("importNotesBtn");
     this.exportNotesBtn = document.getElementById("exportNotesBtn");
     this.importNotesInput = document.getElementById("importNotesInput");
+    this.notesCardFontFamily = document.getElementById("notesCardFontFamily");
     this.notesCountHint = document.getElementById("notesCountHint");
 
     // Pocket Quran tab elements
@@ -819,6 +838,13 @@ class SettingsManager extends BaseManager {
 
     // Load debug settings
     this.loadDebugSettings(settings);
+
+    if (this.notesCardFontFamily) {
+      this.notesCardFontFamily.value = this.normalizeNotesCardFontFamily(
+        settings.notesCardFontFamily,
+      );
+    }
+    this.applyNotesCardFontFamily(settings.notesCardFontFamily);
 
     this.updateNotesCountHint();
     this.updateSettingsRangeProgress();
@@ -2956,7 +2982,7 @@ class SettingsManager extends BaseManager {
     }
 
     if (this.customBgCount) {
-      this.customBgCount.textContent = `${customBgs.length}/10`;
+      this.customBgCount.textContent = `${customBgs.length}/${SettingsManager.CUSTOM_BACKGROUND_LIMIT}`;
     }
   }
 
@@ -2967,8 +2993,11 @@ class SettingsManager extends BaseManager {
     const settings = this.storage.getSettings();
     const customBgs = settings.customBackgrounds || [];
 
-    if (customBgs.length >= 10) {
-      this.showToast("Maximum 10 custom backgrounds allowed", "error");
+    if (customBgs.length >= SettingsManager.CUSTOM_BACKGROUND_LIMIT) {
+      this.showToast(
+        `Maximum ${SettingsManager.CUSTOM_BACKGROUND_LIMIT} custom backgrounds allowed`,
+        "error",
+      );
       return;
     }
 
@@ -3473,7 +3502,7 @@ class SettingsManager extends BaseManager {
     if (Array.isArray(data.customBackgrounds)) {
       const filtered = data.customBackgrounds
         .filter((x) => typeof x === "string" && x.startsWith("data:image"))
-        .slice(0, 10);
+        .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT);
       settings.customBackgrounds = filtered;
     }
 
@@ -3971,6 +4000,11 @@ class SettingsManager extends BaseManager {
         existingPocketQuran.translationResourceId ?? 85,
       ),
     };
+
+    settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(
+      this.notesCardFontFamily?.value || settings.notesCardFontFamily,
+    );
+    this.applyNotesCardFontFamily(settings.notesCardFontFamily);
 
     // Save heading settings
     this.saveHeadingSettings(settings);
@@ -5211,6 +5245,38 @@ class SettingsManager extends BaseManager {
     scheduleHide(2500);
   }
 
+  normalizeNotesCardFontFamily(value) {
+    const normalized = String(value || "").trim();
+    if (SettingsManager.NOTES_CARD_FONT_FAMILIES.includes(normalized)) {
+      return normalized;
+    }
+    return "Poppins";
+  }
+
+  applyNotesCardFontFamily(fontFamily) {
+    const normalized = this.normalizeNotesCardFontFamily(fontFamily);
+    const notesCard = document.getElementById("notesCard");
+
+    if (!notesCard) return normalized;
+
+    let cssValue = `"${normalized}", var(--font-primary)`;
+    if (normalized === "Georgia") {
+      cssValue = '"Georgia", serif';
+    } else if (normalized === "Courier New") {
+      cssValue = '"Courier New", monospace';
+    } else if (normalized === "Cascadia Code") {
+      cssValue = '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+
+    notesCard.style.setProperty("--notes-card-font-family", cssValue);
+
+    if (this.notesCardFontFamily) {
+      this.notesCardFontFamily.value = normalized;
+    }
+
+    return normalized;
+  }
+
   updateNotesCountHint() {
     if (!this.notesCountHint) return;
     const notes = this.storage.getNotes
@@ -5470,6 +5536,12 @@ class SettingsManager extends BaseManager {
       });
 
     // Notes import/export
+    if (this.notesCardFontFamily) {
+      this.notesCardFontFamily.addEventListener("change", () => {
+        this.applyNotesCardFontFamily(this.notesCardFontFamily.value);
+      });
+    }
+
     if (this.importNotesBtn && this.importNotesInput) {
       this.importNotesBtn.addEventListener("click", () => {
         this.importNotesInput.click();
@@ -5894,7 +5966,7 @@ class SettingsManager extends BaseManager {
       )
         ? current.customBackgrounds
             .filter((x) => typeof x === "string" && x.startsWith("data:image"))
-            .slice(0, 10)
+            .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT)
         : [];
 
       defaults.customBackgrounds = preservedCustomBackgrounds;

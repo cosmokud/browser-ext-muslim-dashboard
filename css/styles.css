@@ -1298,6 +1298,11 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   grid-column: span 3;
 }
 
+#notesCard {
+  --notes-card-font-family: var(--font-primary);
+  font-family: var(--notes-card-font-family);
+}
+
 /* ========================================
    Notes Studio (New Component)
    ======================================== */
@@ -1351,6 +1356,17 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 0.84rem;
+}
+
+#notesCard .mdnotes-title,
+#notesCard .mdnotes-subtitle,
+#notesCard .mdnotes-list-title,
+#notesCard .mdnotes-list-meta,
+#notesCard .mdnotes-title-input,
+#notesCard .mdnotes-pane-label-text,
+#notesCard .mdnotes-footer,
+#notesCard .mdnotes-status {
+  font-family: var(--notes-card-font-family);
 }
 
 #notesCard .mdnotes-header-actions {
@@ -2605,6 +2621,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   color: var(--text-primary);
   line-height: 1.7;
   font-size: calc(1rem * var(--notes-scale));
+  font-family: var(--notes-card-font-family);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -7883,16 +7900,39 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.custom-angle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: var(--spacing-md);
+  align-items: end;
+}
+
+.custom-angle-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.custom-angle-field .setting-label {
+  margin-bottom: 0;
 }
 
 .isha-custom-row {
   display: flex;
   gap: var(--spacing-md);
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .isha-custom-row .setting-input {
-  width: 100px;
+  width: 110px;
+  flex: 0 0 auto;
 }
 
 /* Setting hint text */
@@ -9097,9 +9137,14 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     grid-template-columns: 1fr 1fr;
   }
 
+  .custom-angle-row {
+    grid-template-columns: 1fr;
+  }
+
   .isha-custom-row {
     flex-direction: column;
     align-items: flex-start;
+    width: 100%;
   }
 
   .isha-custom-row .setting-input {
@@ -11578,11 +11623,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 :where(.adhkar-lang-selector-btn, .quote-lang-selector-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.36rem;
   width: auto;
   max-width: 100%;
   padding: 0 calc(var(--spacing-sm) + 1px);
   border-radius: calc(var(--action-btn-radius) + 1px);
   white-space: nowrap;
+  line-height: 1;
 }
 
 :where(.adhkar-lang-selector-btn, .quote-lang-selector-btn) .lang-icon,
@@ -11600,10 +11650,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 :where(.adhkar-lang-selector-btn, .quote-lang-selector-btn) .lang-label {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1;
 }
 
 .card-blur-menu {
@@ -12223,12 +12276,59 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.pocket-quran-size-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.pocket-quran-size-step-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.pocket-quran-size-step-btn:hover {
+  transform: translateY(-1px);
+  background: var(--glass-bg-hover);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-gold) 38%,
+    var(--glass-border) 62%
+  );
+}
+
+.pocket-quran-size-step-btn:active {
+  transform: translateY(0);
+}
+
+.pocket-quran-size-step-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
+  outline-offset: 2px;
 }
 
 .pocket-quran-size-range {
-  width: 96px;
-  min-width: 96px;
-  flex: 0 0 96px;
+  width: 88px;
+  min-width: 88px;
+  flex: 0 0 88px;
 }
 
 .pocket-quran-size-value {
@@ -14770,6 +14870,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Language selector button */
 .adhkar-lang-selector-btn {
+  align-items: center;
   justify-content: flex-start;
   max-width: 100%;
 }

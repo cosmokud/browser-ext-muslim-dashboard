@@ -1965,15 +1965,35 @@
                           for="pocketQuranArabicSizeRange"
                           >Arabic</label
                         >
-                        <input
-                          class="pocket-quran-size-range"
-                          id="pocketQuranArabicSizeRange"
-                          type="range"
-                          min="8"
-                          max="144"
-                          value="32"
-                          aria-label="Arabic text size"
-                        />
+                        <div class="pocket-quran-size-stepper">
+                          <button
+                            type="button"
+                            class="pocket-quran-size-step-btn"
+                            id="pocketQuranArabicSizeDecreaseBtn"
+                            aria-label="Decrease Arabic text size"
+                            title="Decrease Arabic text size"
+                          >
+                            -
+                          </button>
+                          <input
+                            class="pocket-quran-size-range"
+                            id="pocketQuranArabicSizeRange"
+                            type="range"
+                            min="8"
+                            max="144"
+                            value="32"
+                            aria-label="Arabic text size"
+                          />
+                          <button
+                            type="button"
+                            class="pocket-quran-size-step-btn"
+                            id="pocketQuranArabicSizeIncreaseBtn"
+                            aria-label="Increase Arabic text size"
+                            title="Increase Arabic text size"
+                          >
+                            +
+                          </button>
+                        </div>
                         <span
                           class="pocket-quran-size-value"
                           id="pocketQuranArabicSizeValue"
@@ -1987,15 +2007,35 @@
                           for="pocketQuranTranslationSizeRange"
                           >Translation</label
                         >
-                        <input
-                          class="pocket-quran-size-range"
-                          id="pocketQuranTranslationSizeRange"
-                          type="range"
-                          min="8"
-                          max="144"
-                          value="18"
-                          aria-label="Translation text size"
-                        />
+                        <div class="pocket-quran-size-stepper">
+                          <button
+                            type="button"
+                            class="pocket-quran-size-step-btn"
+                            id="pocketQuranTranslationSizeDecreaseBtn"
+                            aria-label="Decrease translation text size"
+                            title="Decrease translation text size"
+                          >
+                            -
+                          </button>
+                          <input
+                            class="pocket-quran-size-range"
+                            id="pocketQuranTranslationSizeRange"
+                            type="range"
+                            min="8"
+                            max="144"
+                            value="18"
+                            aria-label="Translation text size"
+                          />
+                          <button
+                            type="button"
+                            class="pocket-quran-size-step-btn"
+                            id="pocketQuranTranslationSizeIncreaseBtn"
+                            aria-label="Increase translation text size"
+                            title="Increase translation text size"
+                          >
+                            +
+                          </button>
+                        </div>
                         <span
                           class="pocket-quran-size-value"
                           id="pocketQuranTranslationSizeValue"
@@ -2449,31 +2489,41 @@
               id="customAnglesGroup"
               style="display: none"
             >
-              <label class="setting-label">Custom Fajr Angle</label>
-              <input
-                type="number"
-                class="setting-input"
-                id="customFajrAngle"
-                value="18"
-                min="10"
-                max="25"
-                step="0.1"
-              />
-              <label class="setting-label">Custom Isha Setting</label>
-              <div class="isha-custom-row">
-                <input
-                  type="number"
-                  class="setting-input"
-                  id="customIshaAngle"
-                  value="17"
-                  min="10"
-                  max="25"
-                  step="0.1"
-                />
-                <label class="checkbox-option">
-                  <input type="checkbox" id="customIshaMinutes" />
-                  <span>Minutes after Maghrib</span>
-                </label>
+              <div class="custom-angle-row">
+                <div class="custom-angle-field">
+                  <label class="setting-label" for="customFajrAngle"
+                    >Custom Fajr Angle</label
+                  >
+                  <input
+                    type="number"
+                    class="setting-input"
+                    id="customFajrAngle"
+                    value="18"
+                    min="10"
+                    max="25"
+                    step="0.1"
+                  />
+                </div>
+                <div class="custom-angle-field custom-angle-field-isha">
+                  <label class="setting-label" for="customIshaAngle"
+                    >Custom Isha Setting</label
+                  >
+                  <div class="isha-custom-row">
+                    <input
+                      type="number"
+                      class="setting-input"
+                      id="customIshaAngle"
+                      value="17"
+                      min="10"
+                      max="25"
+                      step="0.1"
+                    />
+                    <label class="checkbox-option">
+                      <input type="checkbox" id="customIshaMinutes" />
+                      <span>Minutes after Maghrib</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -4338,6 +4388,35 @@
           <!-- Notes Settings -->
           <div class="settings-panel" id="notesPanel">
             <div class="setting-group">
+              <label class="setting-label" for="notesCardFontFamily"
+                >Notes Card Font</label
+              >
+              <p class="setting-hint">
+                Choose from the fonts already bundled and used in the dashboard.
+              </p>
+              <select class="setting-select" id="notesCardFontFamily">
+                <option value="Poppins" selected>Poppins</option>
+                <option value="Amiri">Amiri</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Uthmani Tajweed">Uthmani Tajweed</option>
+                <option value="KFGQPC Uthman Taha Naskh">
+                  KFGQPC Uthman Taha Naskh
+                </option>
+                <option value="KFGQPC KSA Regular">KFGQPC KSA Regular</option>
+                <option value="KFGQPC Kufi Stylistic Regular">
+                  KFGQPC Kufi Stylistic Regular
+                </option>
+                <option value="KFGQPC AN Regular">KFGQPC AN Regular</option>
+                <option value="KFGQPC AlJalil Dot">KFGQPC AlJalil Dot</option>
+                <option value="KFGQPC Sindhi Naskh Regular">
+                  KFGQPC Sindhi Naskh Regular
+                </option>
+                <option value="Georgia">Georgia</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+            <div class="setting-group">
               <label class="setting-label">Import / Export Notes</label>
               <p class="setting-hint">
                 Backup your Notes as JSON, or import a JSON file to add notes.
@@ -4830,7 +4909,7 @@
               </select>
             </div>
             <div class="setting-group custom-bg-group" id="customBgGroup">
-              <label class="setting-label">Custom Backgrounds (up to 10)</label>
+              <label class="setting-label">Custom Backgrounds (up to 20)</label>
               <div class="custom-bg-list" id="customBgList">
                 <!-- Custom backgrounds will be shown here -->
               </div>
@@ -4845,7 +4924,7 @@
                 <button class="setting-btn" id="addCustomBgBtn">
                   🖼️ Add Background
                 </button>
-                <span class="custom-bg-count" id="customBgCount">0/10</span>
+                <span class="custom-bg-count" id="customBgCount">0/20</span>
               </div>
             </div>
             <div class="setting-group">

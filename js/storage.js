@@ -159,7 +159,8 @@ class StorageManager {
       bgCategory: "nature",
       lastBgChange: null,
       currentBgIndex: 0,
-      customBackgrounds: [], // up to 10 custom backgrounds (base64)
+      customBackgrounds: [], // up to 20 custom backgrounds (base64)
+      notesCardFontFamily: "Poppins",
 
       // Todo settings
       todoPosition: "bottom", // only 'bottom' now (full width)

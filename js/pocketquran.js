@@ -573,6 +573,18 @@ class PocketQuranManager extends BaseManager {
     this.translationSizeValue = document.getElementById(
       "pocketQuranTranslationSizeValue",
     );
+    this.arabicSizeDecreaseBtn = document.getElementById(
+      "pocketQuranArabicSizeDecreaseBtn",
+    );
+    this.arabicSizeIncreaseBtn = document.getElementById(
+      "pocketQuranArabicSizeIncreaseBtn",
+    );
+    this.translationSizeDecreaseBtn = document.getElementById(
+      "pocketQuranTranslationSizeDecreaseBtn",
+    );
+    this.translationSizeIncreaseBtn = document.getElementById(
+      "pocketQuranTranslationSizeIncreaseBtn",
+    );
     this.tajweedToggleBtn = document.getElementById("pocketQuranTajweedToggle");
 
     this.fontToggleBtn = document.getElementById("pocketQuranFontToggle");
@@ -958,6 +970,33 @@ class PocketQuranManager extends BaseManager {
       });
     }
 
+    const adjustSizeRangeByStep = (rangeEl, direction) => {
+      if (!rangeEl) return;
+
+      const stepRaw = parseFloat(rangeEl.step);
+      const step = Number.isFinite(stepRaw) && stepRaw > 0 ? stepRaw : 1;
+      const min = this.clampNumber(parseFloat(rangeEl.min), 0, 10000, 8);
+      const max = this.clampNumber(parseFloat(rangeEl.max), min, 10000, 144);
+      const current = this.clampNumber(
+        parseFloat(rangeEl.value),
+        min,
+        max,
+        min,
+      );
+      const next = this.clampNumber(
+        current + direction * step,
+        min,
+        max,
+        current,
+      );
+
+      if (Math.abs(next - current) < 0.0001) return;
+
+      rangeEl.value = String(next);
+      rangeEl.dispatchEvent(new Event("input", { bubbles: true }));
+      rangeEl.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
     // Font size controls
     if (this.arabicSizeRange) {
       this.arabicSizeRange.addEventListener("input", () => {
@@ -1018,6 +1057,30 @@ class PocketQuranManager extends BaseManager {
             18,
           ),
         });
+      });
+    }
+
+    if (this.arabicSizeDecreaseBtn) {
+      this.arabicSizeDecreaseBtn.addEventListener("click", () => {
+        adjustSizeRangeByStep(this.arabicSizeRange, -1);
+      });
+    }
+
+    if (this.arabicSizeIncreaseBtn) {
+      this.arabicSizeIncreaseBtn.addEventListener("click", () => {
+        adjustSizeRangeByStep(this.arabicSizeRange, 1);
+      });
+    }
+
+    if (this.translationSizeDecreaseBtn) {
+      this.translationSizeDecreaseBtn.addEventListener("click", () => {
+        adjustSizeRangeByStep(this.translationSizeRange, -1);
+      });
+    }
+
+    if (this.translationSizeIncreaseBtn) {
+      this.translationSizeIncreaseBtn.addEventListener("click", () => {
+        adjustSizeRangeByStep(this.translationSizeRange, 1);
       });
     }
 

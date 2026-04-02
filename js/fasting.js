@@ -298,14 +298,16 @@ class FastingManager {
 
     if (month === 9) {
       const daysLeft = Math.max(0, 29 - day);
+      const isLastDay = day >= 29;
+      const meta = isLastDay ? "Last day" : this._daysLeftText(daysLeft);
       return {
         key: "ramadan",
         title: "Ramadan",
         subtitle: "In the blessed month",
         daysLeft,
         totalDays: 29,
-        meta: this._daysLeftText(daysLeft),
-        aria: `Ramadan (to 29 Ramadan): ${this._daysLeftText(daysLeft)}`,
+        meta,
+        aria: `Ramadan (to 29 Ramadan): ${meta}`,
         badge: "29 Ramadan",
       };
     }
