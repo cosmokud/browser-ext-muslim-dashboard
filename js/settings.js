@@ -559,7 +559,7 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
-    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
     this.applyPerformanceMode(settings.performanceModeEnabled === true);
 
     // Clean up any stale inline zoom left by the removed Dashboard Scale feature.
@@ -778,7 +778,7 @@ class SettingsManager extends BaseManager {
 
     // UI blur power
     if (this.uiBlurPower) {
-      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
       this.uiBlurPower.value = String(clamped);
       this.updateUiBlurPowerLabel();
       this.applyUiBlurPower(clamped);
@@ -1791,7 +1791,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.uiBlurPower.value, 10),
         0,
         200,
-        100,
+        200,
       );
       this.uiBlurPower.value = String(clamped);
       this.uiBlurPowerValue.textContent = clamped + "%";
@@ -1799,7 +1799,7 @@ class SettingsManager extends BaseManager {
   }
 
   applyUiBlurPower(powerPercent) {
-    const clamped = this.clampNumber(powerPercent, 0, 200, 100);
+    const clamped = this.clampNumber(powerPercent, 0, 200, 200);
     const multiplier = clamped / 100;
     document.documentElement.style.setProperty(
       "--ui-blur-multiplier",
@@ -1955,7 +1955,7 @@ class SettingsManager extends BaseManager {
     this.updateThemeBlurGroupState(glassEnabled);
 
     // Load blur power
-    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 200);
     if (this.themeBlurPower) {
       this.themeBlurPower.value = String(blurPower);
     }
@@ -2052,7 +2052,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.themeBlurPower.value, 10),
         0,
         200,
-        100,
+        200,
       );
       this.themeBlurPower.value = String(clamped);
       this.themeBlurPowerValue.textContent = clamped + "%";
@@ -2608,7 +2608,7 @@ class SettingsManager extends BaseManager {
     }
 
     const themeSliderDefaults = {
-      blurPower: 100,
+      blurPower: 200,
       glassOpacity: 50,
       componentOpacity: 0,
     };
@@ -2948,7 +2948,7 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeBlurPower?.value, 10),
       0,
       200,
-      100,
+      200,
     );
 
     // Save container width (now from Themes panel)
@@ -4361,7 +4361,7 @@ class SettingsManager extends BaseManager {
     );
 
     // Apply UI blur power
-    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 200);
     this.applyPerformanceMode(settings.performanceModeEnabled === true);
 
     // Update weather unit
