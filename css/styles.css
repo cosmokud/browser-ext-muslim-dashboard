@@ -94,6 +94,7 @@
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.85);
   --text-muted: rgba(255, 255, 255, 0.6);
+  --on-primary-text: #ffffff;
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -540,7 +541,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
     var(--primary-light)
   );
   border: none;
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.45);
   display: flex;
@@ -561,6 +562,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .sidebar-mode-btn.active {
   background: linear-gradient(135deg, #2f7f66, #4ea78b);
+  color: #ffffff;
   box-shadow:
     0 4px 16px rgba(47, 127, 102, 0.48),
     0 0 0 2px rgba(78, 167, 139, 0.24);
@@ -3305,7 +3307,13 @@ textarea.notes-editor:focus {
     var(--primary-color),
     var(--primary-light)
   );
+  color: var(--on-primary-text);
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
+}
+
+.prayer-item.active .prayer-name,
+.prayer-item.active .prayer-time {
+  color: var(--on-primary-text);
 }
 
 .prayer-name {
@@ -3334,11 +3342,12 @@ textarea.notes-editor:focus {
   align-items: center;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  color: var(--on-primary-text);
 }
 
 .next-prayer-label {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--on-primary-text) 78%, transparent);
 }
 
 .next-prayer-name {
@@ -3352,6 +3361,7 @@ textarea.notes-editor:focus {
   font-size: 1.2rem;
   font-weight: 700;
   font-family: "Courier New", monospace;
+  color: var(--on-primary-text);
 }
 
 /* Qibla Card */
@@ -3536,7 +3546,7 @@ textarea.notes-editor:focus {
     var(--primary-light)
   );
   border: none;
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -3737,7 +3747,7 @@ textarea.notes-editor:focus {
 
 .todo-checkbox.checked::after {
   content: "✓";
-  color: white;
+  color: var(--on-primary-text);
   font-size: 14px;
 }
 
@@ -3955,7 +3965,7 @@ textarea.notes-editor:focus {
     var(--primary-light)
   );
   border: none;
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(26, 95, 74, 0.5);
   display: flex;
@@ -5971,7 +5981,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--primary-light)
   );
   border: none;
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   animation: supportKofiPulse 2.8s ease-in-out infinite;
 }
@@ -6035,7 +6045,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--primary-light)
   );
   border: none;
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   animation: supportKofiPulse 2.8s ease-in-out infinite;
 }
@@ -6321,6 +6331,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .prayer-settings-toggle input[type="checkbox"]:checked + .toggle-switch::after {
   left: 25px;
+  background: var(--on-primary-text);
 }
 
 .prayer-settings-toggle input[type="checkbox"]:focus-visible + .toggle-switch {
@@ -7783,6 +7794,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--primary-color),
     var(--primary-light)
   );
+  color: var(--on-primary-text);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(26, 95, 74, 0.4);
 }
@@ -7820,6 +7832,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--primary-light)
   );
   border: none;
+  color: var(--on-primary-text);
 }
 
 .detect-location-btn:hover {
@@ -7999,7 +8012,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--primary-color),
     var(--primary-light)
   );
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8818,6 +8831,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   height: 24px;
   border-radius: var(--radius-full);
   background: var(--primary-color);
+  color: var(--on-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8896,7 +8910,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .quote-item-action-btn.primary {
   background: var(--primary-color);
   border-color: var(--primary-color);
-  color: var(--text-primary);
+  color: var(--on-primary-text);
 }
 
 .quote-item-action-btn.primary:hover {
@@ -8965,7 +8979,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .pagination-btn.active {
   background: var(--primary-color);
   border-color: var(--primary-color);
-  color: var(--text-primary);
+  color: var(--on-primary-text);
 }
 
 .pagination-btn:disabled {
@@ -10799,6 +10813,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .visibility-toggle-item input[type="checkbox"]:checked + .toggle-switch::after {
   left: 25px;
+  background: var(--on-primary-text);
 }
 
 /* ========================================
@@ -14887,7 +14902,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     var(--primary-color),
     var(--primary-light)
   );
-  color: var(--text-primary);
+  color: var(--on-primary-text);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 

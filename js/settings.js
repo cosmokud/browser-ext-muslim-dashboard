@@ -2116,10 +2116,12 @@ class SettingsManager extends BaseManager {
     if (!themeName) return;
 
     const primaryEl = document.getElementById("themePalettePrimary");
+    const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
-    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
+    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+      return;
 
     const base = ThemeManager.THEMES[themeName]?.[mode];
     if (!base) return;
@@ -2128,8 +2130,16 @@ class SettingsManager extends BaseManager {
       window.dashboard?.themes?.getCustomPalette?.(themeName, mode) || null;
 
     const defaultGlassTint = themeName === "pureBlack" ? "#000000" : "#ffffff";
+    const resolvedPrimary = palette?.primary || base.primary;
+    const defaultOnPrimaryText =
+      palette?.onPrimaryText ||
+      base.onPrimaryText ||
+      (window.dashboard?.themes?._isDarkColor?.(resolvedPrimary)
+        ? "#ffffff"
+        : "#1a1a1a");
 
-    primaryEl.value = palette?.primary || base.primary;
+    primaryEl.value = resolvedPrimary;
+    onPrimaryEl.value = defaultOnPrimaryText;
     accentEl.value = palette?.accent || base.accent;
     bgEl.value = palette?.bodyBg || base.bodyBg;
     glassTintEl.value = palette?.glassTint || defaultGlassTint;
@@ -2147,12 +2157,19 @@ class SettingsManager extends BaseManager {
     if (!base) return;
 
     const primaryEl = document.getElementById("themePalettePrimary");
+    const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
-    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
+    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+      return;
 
     primaryEl.value = base.primary;
+    onPrimaryEl.value =
+      base.onPrimaryText ||
+      (window.dashboard?.themes?._isDarkColor?.(base.primary)
+        ? "#ffffff"
+        : "#1a1a1a");
     accentEl.value = base.accent;
     bgEl.value = base.bodyBg;
     glassTintEl.value = themeName === "pureBlack" ? "#000000" : "#ffffff";
@@ -2167,16 +2184,19 @@ class SettingsManager extends BaseManager {
     if (!themeName || !window.dashboard?.themes) return;
 
     const primaryEl = document.getElementById("themePalettePrimary");
+    const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
-    if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
+    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+      return;
 
     window.dashboard.themes.setCustomPalette(
       themeName,
       mode,
       {
         primary: primaryEl.value,
+        onPrimaryText: onPrimaryEl.value,
         accent: accentEl.value,
         bodyBg: bgEl.value,
         glassTint: glassTintEl.value,
@@ -2300,6 +2320,7 @@ class SettingsManager extends BaseManager {
     const modeDark = document.getElementById("themePaletteModeDark");
     const modeLight = document.getElementById("themePaletteModeLight");
     const primaryEl = document.getElementById("themePalettePrimary");
+    const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
@@ -2341,6 +2362,7 @@ class SettingsManager extends BaseManager {
 
     const onPaletteInput = () => this.applyThemePaletteFromModal(true);
     if (primaryEl) primaryEl.addEventListener("input", onPaletteInput);
+    if (onPrimaryEl) onPrimaryEl.addEventListener("input", onPaletteInput);
     if (accentEl) accentEl.addEventListener("input", onPaletteInput);
     if (bgEl) bgEl.addEventListener("input", onPaletteInput);
     if (glassTintEl) glassTintEl.addEventListener("input", onPaletteInput);

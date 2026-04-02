@@ -521,6 +521,7 @@ class ThemeManager {
         primary: "#ffffff",
         primaryLight: "#ffffff",
         primaryDark: "#e0e0e0",
+        onPrimaryText: "#1a1a1a",
         accent: "#c4c4c4",
         accentLight: "#dfdfdf",
         accentBlue: "#a6a6a6",
@@ -538,6 +539,7 @@ class ThemeManager {
         primary: "#424242",
         primaryLight: "#616161",
         primaryDark: "#212121",
+        onPrimaryText: "#ffffff",
         accent: "#5f5f5f",
         accentLight: "#7a7a7a",
         accentBlue: "#494949",
@@ -562,6 +564,7 @@ class ThemeManager {
         primary: "#212121",
         primaryLight: "#424242",
         primaryDark: "#000000",
+        onPrimaryText: "#ffffff",
         accent: "#a0a0a0",
         accentLight: "#c0c0c0",
         accentBlue: "#7a7a7a",
@@ -579,6 +582,7 @@ class ThemeManager {
         primary: "#9e9e9e",
         primaryLight: "#bdbdbd",
         primaryDark: "#757575",
+        onPrimaryText: "#1a1a1a",
         accent: "#5c5c5c",
         accentLight: "#767676",
         accentBlue: "#464646",
@@ -604,7 +608,7 @@ class ThemeManager {
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
-    // Shape: { [themeId]: { dark: {primary, accent, bodyBg}, light: {...} } }
+    // Shape: { [themeId]: { dark: {primary, accent, bodyBg, onPrimaryText}, light: {...} } }
     this._customPalettes = {};
 
     this.init();
@@ -624,6 +628,10 @@ class ThemeManager {
       primary: pureTheme.primary,
       accent: pureTheme.accent,
       bodyBg: pureTheme.bodyBg,
+      onPrimaryText: this._resolveOnPrimaryText(
+        pureTheme.onPrimaryText,
+        pureTheme.primary,
+      ),
       glassTint: themeName === "pureBlack" ? "#000000" : "#ffffff",
     };
   }
@@ -830,6 +838,11 @@ class ThemeManager {
           colors.primaryLight = this._lightenColor(palette.primary, 18);
           colors.primaryDark = this._darkenColor(palette.primary, 18);
         }
+        if (Object.prototype.hasOwnProperty.call(palette, "onPrimaryText")) {
+          colors.onPrimaryText = palette.onPrimaryText;
+        } else {
+          colors.onPrimaryText = null;
+        }
         if (palette.accent) {
           colors.accent = palette.accent;
           colors.accentLight = this._lightenColor(palette.accent, 18);
@@ -899,6 +912,11 @@ class ThemeManager {
       }
     }
 
+    colors.onPrimaryText = this._resolveOnPrimaryText(
+      colors.onPrimaryText,
+      colors.primary,
+    );
+
     return this._applyGlassOpacityToThemeColors(colors);
   }
 
@@ -945,6 +963,26 @@ class ThemeManager {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(bounded.toFixed(3))})`;
   }
 
+  _normalizeHexColor(value) {
+    if (typeof value !== "string") return null;
+    const hex = value.trim().toLowerCase();
+    if (/^#([a-f\d]{6})$/i.test(hex)) return hex;
+
+    const short = /^#([a-f\d]{3})$/i.exec(hex);
+    if (!short) return null;
+
+    const [r, g, b] = short[1].split("");
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+
+  _resolveOnPrimaryText(candidateHex, primaryHex) {
+    const normalizedCandidate = this._normalizeHexColor(candidateHex);
+    if (normalizedCandidate) return normalizedCandidate;
+
+    const normalizedPrimary = this._normalizeHexColor(primaryHex) || "#1a5f4a";
+    return this._isDarkColor(normalizedPrimary) ? "#ffffff" : "#1a1a1a";
+  }
+
   _applyGlassOpacityToThemeColors(colors) {
     if (!colors || typeof colors !== "object") return colors;
 
@@ -974,17 +1012,26 @@ class ThemeManager {
             this._currentMode,
           )
         : null;
+      const defaultPrimary =
+        fallback?.primary ||
+        ThemeManager.THEMES[this._currentTheme][this._currentMode].primary;
+      const defaultBodyBg =
+        fallback?.bodyBg ||
+        ThemeManager.THEMES[this._currentTheme][this._currentMode].bodyBg;
+      const defaultOnPrimaryText = this._resolveOnPrimaryText(
+        fallback?.onPrimaryText ||
+          ThemeManager.THEMES[this._currentTheme][this._currentMode]
+            .onPrimaryText,
+        defaultPrimary,
+      );
       const current = this.getCustomPalette(
         this._currentTheme,
         this._currentMode,
       ) || {
-        primary:
-          fallback?.primary ||
-          ThemeManager.THEMES[this._currentTheme][this._currentMode].primary,
+        primary: defaultPrimary,
         accent: hexColor,
-        bodyBg:
-          fallback?.bodyBg ||
-          ThemeManager.THEMES[this._currentTheme][this._currentMode].bodyBg,
+        bodyBg: defaultBodyBg,
+        onPrimaryText: defaultOnPrimaryText,
         ...(fallback?.glassTint ? { glassTint: fallback.glassTint } : {}),
       };
       this.setCustomPalette(
@@ -1037,14 +1084,20 @@ class ThemeManager {
     const colorMode = mode === "light" ? "light" : "dark";
 
     const defaultBase = theme[colorMode];
+    const primary = palette?.primary || defaultBase.primary;
+    const onPrimaryText = this._resolveOnPrimaryText(
+      palette?.onPrimaryText || defaultBase.onPrimaryText,
+      primary,
+    );
 
     this._customPalettes ||= {};
     this._customPalettes[themeName] ||= { dark: {}, light: {} };
 
     this._customPalettes[themeName][colorMode] = {
-      primary: palette?.primary || defaultBase.primary,
+      primary,
       accent: palette?.accent || defaultBase.accent,
       bodyBg: palette?.bodyBg || defaultBase.bodyBg,
+      onPrimaryText,
       glassTint:
         palette?.glassTint ||
         (themeName === "pureBlack"
@@ -1157,9 +1210,10 @@ class ThemeManager {
     root.style.setProperty("--primary-color", colors.primary);
     root.style.setProperty("--primary-light", colors.primaryLight);
     root.style.setProperty("--primary-dark", colors.primaryDark);
-    const onPrimaryText = this._isDarkColor(colors.primary)
-      ? "#ffffff"
-      : "#1a1a1a";
+    const onPrimaryText = this._resolveOnPrimaryText(
+      colors.onPrimaryText,
+      colors.primary,
+    );
     root.style.setProperty("--on-primary-text", onPrimaryText);
     root.style.setProperty("--accent-gold", colors.accent);
     root.style.setProperty("--accent-gold-light", colors.accentLight);
