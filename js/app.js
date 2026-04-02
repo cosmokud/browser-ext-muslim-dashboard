@@ -1300,7 +1300,10 @@ class MuslimDashboard {
         customBlurEnabled,
         customBlurPower,
         customGlassOpacity,
+        options = {},
       ) => {
+        const resetDashboardSurface = options?.resetDashboardSurface === true;
+
         // Determine effective glass state based on the triple toggle
         // OFF: Force glass disabled for this component only
         // DASH: Follow dashboard setting
@@ -1322,7 +1325,9 @@ class MuslimDashboard {
         // - DASH => remove attribute so it follows dashboard/root setting
         if (state === "dashboard") {
           delete card.dataset.glassEnabled;
-          clearCardGlassVars();
+          if (resetDashboardSurface) {
+            clearCardGlassVars();
+          }
         } else if (state === "on") {
           card.dataset.glassEnabled = "true";
           applyCardGlassVars(true, customGlassOpacity);
@@ -1544,6 +1549,7 @@ class MuslimDashboard {
             currentCustomEnabled,
             currentCustomPower,
             currentGlassOpacity,
+            { resetDashboardSurface: newState === "dashboard" },
           );
           writeSettings({
             [stateKey]: newState,
