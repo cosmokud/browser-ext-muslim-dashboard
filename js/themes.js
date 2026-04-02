@@ -523,6 +523,8 @@ class ThemeManager {
         primaryDark: "#e0e0e0",
         onPrimaryText: "#1a1a1a",
         accent: "#c4c4c4",
+        accentBackground: "#6f6f6f",
+        accentText: "#c4c4c4",
         accentLight: "#dfdfdf",
         accentBlue: "#a6a6a6",
         settingsColor: "#b0b0b0",
@@ -541,6 +543,8 @@ class ThemeManager {
         primaryDark: "#212121",
         onPrimaryText: "#ffffff",
         accent: "#5f5f5f",
+        accentBackground: "#5f5f5f",
+        accentText: "#5f5f5f",
         accentLight: "#7a7a7a",
         accentBlue: "#494949",
         settingsColor: "#4f4f4f",
@@ -566,6 +570,8 @@ class ThemeManager {
         primaryDark: "#000000",
         onPrimaryText: "#ffffff",
         accent: "#a0a0a0",
+        accentBackground: "#a0a0a0",
+        accentText: "#a0a0a0",
         accentLight: "#c0c0c0",
         accentBlue: "#7a7a7a",
         settingsColor: "#8a8a8a",
@@ -584,6 +590,8 @@ class ThemeManager {
         primaryDark: "#757575",
         onPrimaryText: "#1a1a1a",
         accent: "#5c5c5c",
+        accentBackground: "#5c5c5c",
+        accentText: "#5c5c5c",
         accentLight: "#767676",
         accentBlue: "#464646",
         settingsColor: "#4c4c4c",
@@ -609,6 +617,8 @@ class ThemeManager {
         primaryDark: "#1a1a1a",
         onPrimaryText: "#ffffff",
         accent: "#8fc7ff",
+        accentBackground: "#8fc7ff",
+        accentText: "#8fc7ff",
         accentLight: "#b5dbff",
         accentBlue: "#7fbfff",
         settingsColor: "#8fc7ff",
@@ -627,6 +637,8 @@ class ThemeManager {
         primaryDark: "#c4c4c4",
         onPrimaryText: "#1a1a1a",
         accent: "#4f89c7",
+        accentBackground: "#4f89c7",
+        accentText: "#4f89c7",
         accentLight: "#74a8e0",
         accentBlue: "#3b76b7",
         settingsColor: "#4f89c7",
@@ -651,7 +663,7 @@ class ThemeManager {
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
-    // Shape: { [themeId]: { dark: {primary, accent, bodyBg, onPrimaryText}, light: {...} } }
+    // Shape: { [themeId]: { dark: {primary, accentText, accentBackground, bodyBg, onPrimaryText}, light: {...} } }
     this._customPalettes = {};
 
     this.init();
@@ -693,9 +705,20 @@ class ThemeManager {
     const base = customTheme[colorMode];
     if (!base) return null;
 
+    const defaultAccentBackground =
+      this._normalizeHexColor(base.accentBackground || base.accent) ||
+      "#d4af37";
+    const defaultAccentText = this._resolveAccentTextColor(
+      base.accentText || base.accent,
+      defaultAccentBackground,
+      colorMode,
+    );
+
     const defaultPalette = {
       primary: base.primary,
-      accent: base.accent,
+      accent: defaultAccentText,
+      accentText: defaultAccentText,
+      accentBackground: defaultAccentBackground,
       bodyBg: base.bodyBg,
       onPrimaryText: this._resolveOnPrimaryText(
         base.onPrimaryText,
@@ -743,15 +766,26 @@ class ThemeManager {
       if (theme?.customizable) {
         const baseDark = theme.dark;
         const baseLight = theme.light;
+        const darkAccentBackground =
+          this._normalizeHexColor(baseDark.accentBackground || baseDark.accent) ||
+          "#d4af37";
+        const lightAccentBackground =
+          this._normalizeHexColor(
+            baseLight.accentBackground || baseLight.accent,
+          ) || "#d4af37";
         this._customPalettes[this._currentTheme] = {
           dark: {
             primary: baseDark.primary,
             accent: this._customAccent,
+            accentText: this._customAccent,
+            accentBackground: darkAccentBackground,
             bodyBg: baseDark.bodyBg,
           },
           light: {
             primary: baseLight.primary,
             accent: this._customAccent,
+            accentText: this._customAccent,
+            accentBackground: lightAccentBackground,
             bodyBg: baseLight.bodyBg,
           },
         };
@@ -924,20 +958,34 @@ class ThemeManager {
         } else {
           colors.onPrimaryText = null;
         }
-        if (palette.accent) {
-          colors.accent = palette.accent;
-          colors.accentLight = this._lightenColor(palette.accent, 18);
-          colors.accentBlue = this._lightenColor(palette.accent, 10);
-          colors.settingsColor = palette.accent;
-          colors.settingsLight = this._lightenColor(palette.accent, 25);
+        const accentText = this._normalizeHexColor(
+          palette.accentText || palette.accent,
+        );
+        const accentBackground = this._normalizeHexColor(
+          palette.accentBackground || palette.accent,
+        );
+
+        if (accentText) {
+          colors.accent = accentText;
+          colors.accentText = accentText;
+          colors.accentLight = this._lightenColor(accentText, 18);
+          colors.accentBlue = this._lightenColor(accentText, 10);
+          colors.settingsColor = accentText;
+          colors.settingsLight = this._lightenColor(accentText, 25);
         } else if (this._customAccent) {
           // Legacy fallback
           colors.accent = this._customAccent;
+          colors.accentText = this._customAccent;
           colors.accentLight = this._lightenColor(this._customAccent, 20);
           colors.accentBlue = this._lightenColor(this._customAccent, 10);
           colors.settingsColor = this._customAccent;
           colors.settingsLight = this._lightenColor(this._customAccent, 25);
         }
+
+        if (accentBackground) {
+          colors.accentBackground = accentBackground;
+        }
+
         if (palette.bodyBg) {
           colors.bodyBg = palette.bodyBg;
 
@@ -968,6 +1016,7 @@ class ThemeManager {
       } else if (this._customAccent) {
         // Backward compatible: accent-only override
         colors.accent = this._customAccent;
+        colors.accentText = this._customAccent;
         colors.accentLight = this._lightenColor(this._customAccent, 20);
         colors.accentBlue = this._lightenColor(this._customAccent, 10);
         colors.settingsColor = this._customAccent;
@@ -1021,6 +1070,15 @@ class ThemeManager {
       colors.onPrimaryText,
       colors.primary,
     );
+    colors.accentBackground =
+      this._normalizeHexColor(colors.accentBackground || colors.accent) ||
+      "#d4af37";
+    colors.accentText = this._resolveAccentTextColor(
+      colors.accentText || colors.accent,
+      colors.accentBackground,
+      colorMode,
+    );
+    colors.accent = colors.accentText;
 
     return this._applyGlassOpacityToThemeColors(colors);
   }
@@ -1088,6 +1146,20 @@ class ThemeManager {
     return this._isDarkColor(normalizedPrimary) ? "#ffffff" : "#1a1a1a";
   }
 
+  _resolveAccentTextColor(candidateHex, accentBackgroundHex, mode = "dark") {
+    const normalizedCandidate = this._normalizeHexColor(candidateHex);
+    if (normalizedCandidate) return normalizedCandidate;
+
+    const normalizedAccent =
+      this._normalizeHexColor(accentBackgroundHex) || "#d4af37";
+    const prefersLightText =
+      this._isDarkColor(normalizedAccent) || mode === "dark";
+
+    return prefersLightText
+      ? this._lightenColor(normalizedAccent, 48)
+      : this._darkenColor(normalizedAccent, 45);
+  }
+
   _applyGlassOpacityToThemeColors(colors) {
     if (!colors || typeof colors !== "object") return colors;
 
@@ -1124,12 +1196,25 @@ class ThemeManager {
             .onPrimaryText,
         defaultPrimary,
       );
+      const defaultAccentBackground =
+        fallback?.accentBackground ||
+        ThemeManager.THEMES[this._currentTheme][this._currentMode]
+          .accentBackground ||
+        fallback?.accent ||
+        ThemeManager.THEMES[this._currentTheme][this._currentMode].accent;
+      const defaultAccentText = this._resolveAccentTextColor(
+        hexColor,
+        defaultAccentBackground,
+        this._currentMode,
+      );
       const current = this.getCustomPalette(
         this._currentTheme,
         this._currentMode,
       ) || {
         primary: defaultPrimary,
-        accent: hexColor,
+        accent: defaultAccentText,
+        accentText: defaultAccentText,
+        accentBackground: defaultAccentBackground,
         bodyBg: defaultBodyBg,
         onPrimaryText: defaultOnPrimaryText,
         ...(fallback?.glassTint ? { glassTint: fallback.glassTint } : {}),
@@ -1142,7 +1227,11 @@ class ThemeManager {
       this.setCustomPalette(
         this._currentTheme,
         this._currentMode,
-        { ...current, accent: hexColor },
+        {
+          ...current,
+          accent: defaultAccentText,
+          accentText: defaultAccentText,
+        },
         false,
       );
     }
@@ -1196,13 +1285,32 @@ class ThemeManager {
     );
     const fallback = this._getDefaultPureThemePalette(themeName, colorMode);
     const supportsCustomText = this._isThemeWithCustomTextPalette(themeName);
+    const accentBackground =
+      this._normalizeHexColor(palette?.accentBackground || palette?.accent) ||
+      this._normalizeHexColor(
+        defaultBase.accentBackground || fallback?.accentBackground,
+      ) ||
+      this._normalizeHexColor(defaultBase.accent || fallback?.accent) ||
+      "#d4af37";
+    const accentText = this._resolveAccentTextColor(
+      palette?.accentText ||
+        palette?.accent ||
+        defaultBase.accentText ||
+        fallback?.accentText ||
+        defaultBase.accent ||
+        fallback?.accent,
+      accentBackground,
+      colorMode,
+    );
 
     this._customPalettes ||= {};
     this._customPalettes[themeName] ||= { dark: {}, light: {} };
 
     this._customPalettes[themeName][colorMode] = {
       primary,
-      accent: palette?.accent || defaultBase.accent,
+      accent: accentText,
+      accentText,
+      accentBackground,
       bodyBg: palette?.bodyBg || defaultBase.bodyBg,
       onPrimaryText,
       glassTint:
@@ -1334,8 +1442,18 @@ class ThemeManager {
       colors.onPrimaryText,
       colors.primary,
     );
+    const accentBackground =
+      this._normalizeHexColor(colors.accentBackground || colors.accent) ||
+      "#d4af37";
+    const accentText = this._resolveAccentTextColor(
+      colors.accentText || colors.accent,
+      accentBackground,
+      this._currentMode,
+    );
     root.style.setProperty("--on-primary-text", onPrimaryText);
-    root.style.setProperty("--accent-gold", colors.accent);
+    root.style.setProperty("--accent-gold", accentText);
+    root.style.setProperty("--accent-bg", accentBackground);
+    root.style.setProperty("--accent-text", accentText);
     root.style.setProperty("--accent-gold-light", colors.accentLight);
     root.style.setProperty("--accent-blue", colors.accentBlue);
     root.style.setProperty("--settings-color", colors.settingsColor);

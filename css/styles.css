@@ -68,6 +68,8 @@
   --primary-dark: #0d3d2e;
   --accent-gold: #d4af37;
   --accent-gold-light: #e6c866;
+  --accent-bg: var(--accent-gold);
+  --accent-text: var(--accent-gold);
 
   /* Utility accents (used by a few components) */
   --accent-blue: #0066cc;
@@ -12955,8 +12957,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-bookmark-category.active {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
+  border-color: color-mix(in srgb, var(--accent-bg) 58%, var(--glass-border));
+  background: color-mix(in srgb, var(--accent-bg) 16%, var(--glass-bg));
+}
+
+.pq-bookmark-category.active .pq-bookmark-category-name {
+  color: var(--accent-text);
+}
+
+.pq-bookmark-category.active .pq-bookmark-category-count {
+  color: color-mix(in srgb, var(--accent-text) 74%, var(--text-secondary));
 }
 
 .pq-bookmark-category-info {
@@ -13243,9 +13253,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-translation-item.active {
-  background: rgba(255, 193, 7, 0.15);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  background: color-mix(in srgb, var(--accent-bg) 18%, var(--glass-bg));
+  border-color: color-mix(in srgb, var(--accent-bg) 62%, var(--glass-border));
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 .pq-translation-name {
@@ -13253,7 +13264,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-translation-check {
-  color: var(--accent-gold);
+  color: var(--accent-text);
   font-weight: bold;
 }
 

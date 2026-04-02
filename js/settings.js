@@ -2024,7 +2024,11 @@ class SettingsManager extends BaseManager {
         : null;
 
       const previewPrimary = palette?.primary || colors.primary;
-      const previewAccent = palette?.accent || colors.accent;
+      const previewAccent =
+        palette?.accentBackground ||
+        palette?.accent ||
+        colors.accentBackground ||
+        colors.accent;
       const previewBg = palette?.bodyBg || colors.bodyBg;
 
       html += `
@@ -2215,6 +2219,7 @@ class SettingsManager extends BaseManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
+    const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
@@ -2222,7 +2227,14 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
-    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+    if (
+      !primaryEl ||
+      !onPrimaryEl ||
+      !accentEl ||
+      !accentTextEl ||
+      !bgEl ||
+      !glassTintEl
+    )
       return;
 
     this._toggleThemePaletteGlobalFontFields(themeName);
@@ -2244,10 +2256,27 @@ class SettingsManager extends BaseManager {
       (window.dashboard?.themes?._isDarkColor?.(resolvedPrimary)
         ? "#ffffff"
         : "#1a1a1a");
+    const resolvedAccentBackground =
+      palette?.accentBackground ||
+      base.accentBackground ||
+      palette?.accent ||
+      base.accent;
+    const resolvedAccentText =
+      palette?.accentText ||
+      palette?.accent ||
+      base.accentText ||
+      base.accent;
 
     primaryEl.value = resolvedPrimary;
     onPrimaryEl.value = defaultOnPrimaryText;
-    accentEl.value = palette?.accent || base.accent;
+    accentEl.value = this._normalizeColorInputHex(
+      resolvedAccentBackground,
+      base.accentBackground || base.accent,
+    );
+    accentTextEl.value = this._normalizeColorInputHex(
+      resolvedAccentText,
+      base.accentText || base.accent,
+    );
     bgEl.value = palette?.bodyBg || base.bodyBg;
     glassTintEl.value = palette?.glassTint || defaultGlassTint;
 
@@ -2290,6 +2319,7 @@ class SettingsManager extends BaseManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
+    const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
@@ -2297,7 +2327,14 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
-    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+    if (
+      !primaryEl ||
+      !onPrimaryEl ||
+      !accentEl ||
+      !accentTextEl ||
+      !bgEl ||
+      !glassTintEl
+    )
       return;
 
     primaryEl.value = base.primary;
@@ -2306,7 +2343,14 @@ class SettingsManager extends BaseManager {
       (window.dashboard?.themes?._isDarkColor?.(base.primary)
         ? "#ffffff"
         : "#1a1a1a");
-    accentEl.value = base.accent;
+    accentEl.value = this._normalizeColorInputHex(
+      base.accentBackground || base.accent,
+      base.accent,
+    );
+    accentTextEl.value = this._normalizeColorInputHex(
+      base.accentText || base.accent,
+      base.accent,
+    );
     bgEl.value = base.bodyBg;
     glassTintEl.value = this._getThemePaletteDefaultGlassTint(themeName, mode);
 
@@ -2342,6 +2386,7 @@ class SettingsManager extends BaseManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
+    const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
@@ -2349,13 +2394,25 @@ class SettingsManager extends BaseManager {
       "themePaletteTextSecondary",
     );
     const textMutedEl = document.getElementById("themePaletteTextMuted");
-    if (!primaryEl || !onPrimaryEl || !accentEl || !bgEl || !glassTintEl)
+    if (
+      !primaryEl ||
+      !onPrimaryEl ||
+      !accentEl ||
+      !accentTextEl ||
+      !bgEl ||
+      !glassTintEl
+    )
       return;
+
+    const accentBackground = accentEl.value;
+    const accentText = accentTextEl.value;
 
     const palette = {
       primary: primaryEl.value,
       onPrimaryText: onPrimaryEl.value,
-      accent: accentEl.value,
+      accent: accentText,
+      accentText,
+      accentBackground,
       bodyBg: bgEl.value,
       glassTint: glassTintEl.value,
     };
@@ -2493,6 +2550,7 @@ class SettingsManager extends BaseManager {
     const primaryEl = document.getElementById("themePalettePrimary");
     const onPrimaryEl = document.getElementById("themePaletteOnPrimaryText");
     const accentEl = document.getElementById("themePaletteAccent");
+    const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
@@ -2553,6 +2611,10 @@ class SettingsManager extends BaseManager {
     if (accentEl) {
       accentEl.addEventListener("input", onPalettePreviewInput);
       accentEl.addEventListener("change", onPaletteCommit);
+    }
+    if (accentTextEl) {
+      accentTextEl.addEventListener("input", onPalettePreviewInput);
+      accentTextEl.addEventListener("change", onPaletteCommit);
     }
     if (bgEl) {
       bgEl.addEventListener("input", onPalettePreviewInput);

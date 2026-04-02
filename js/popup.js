@@ -467,6 +467,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ? themes._lightenColor.bind(themes)
           : (hex) => hex;
       colors.accent = palette.accent;
+      colors.accentText = palette.accent;
+      colors.accentBackground = palette.accent;
       colors.accentLight = lighten(palette.accent, 18);
       colors.accentBlue = lighten(palette.accent, 10);
       colors.settingsColor = palette.accent;
@@ -709,10 +711,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!colors) return;
 
     const root = document.documentElement;
+    const accentBackground = colors.accentBackground || colors.accent;
+    const accentText = colors.accentText || colors.accent;
     root.style.setProperty("--primary-color", colors.primary);
     root.style.setProperty("--primary-light", colors.primaryLight);
     root.style.setProperty("--primary-dark", colors.primaryDark);
-    root.style.setProperty("--accent-gold", colors.accent);
+    root.style.setProperty("--accent-gold", accentText);
+    root.style.setProperty("--accent-bg", accentBackground);
+    root.style.setProperty("--accent-text", accentText);
     root.style.setProperty("--accent-gold-light", colors.accentLight);
     root.style.setProperty("--accent-blue", colors.accentBlue);
     root.style.setProperty("--settings-color", colors.settingsColor);
