@@ -358,9 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
-    const base = isPureTheme
-      ? ThemeManager.THEMES?.emerald?.[mode] || theme?.[mode] || fallbackBase
-      : theme?.[mode] || fallbackBase;
+    const base = theme?.[mode] || fallbackBase;
 
     return {
       settings,
@@ -489,7 +487,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ? themes._isDarkColor(palette.background)
           : true;
 
-      colors.textPrimary = isDarkBg ? "#ffffff" : "#1a1a2e";
+      const lightTextPrimary = context.isPureTheme ? "#1a1a1a" : "#1a1a2e";
+      colors.textPrimary = isDarkBg ? "#ffffff" : lightTextPrimary;
       colors.textSecondary = isDarkBg
         ? "rgba(255, 255, 255, 0.85)"
         : "rgba(0, 0, 0, 0.75)";

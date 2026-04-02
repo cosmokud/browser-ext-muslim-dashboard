@@ -2121,10 +2121,7 @@ class SettingsManager extends BaseManager {
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     if (!primaryEl || !accentEl || !bgEl || !glassTintEl) return;
 
-    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
-    const base = isPureTheme
-      ? ThemeManager.THEMES?.emerald?.[mode]
-      : ThemeManager.THEMES[themeName]?.[mode];
+    const base = ThemeManager.THEMES[themeName]?.[mode];
     if (!base) return;
 
     const palette =
@@ -2146,7 +2143,7 @@ class SettingsManager extends BaseManager {
     const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
     if (!isPureTheme) return;
 
-    const base = ThemeManager.THEMES?.emerald?.[mode];
+    const base = ThemeManager.THEMES?.[themeName]?.[mode];
     if (!base) return;
 
     const primaryEl = document.getElementById("themePalettePrimary");

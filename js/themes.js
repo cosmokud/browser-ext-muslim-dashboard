@@ -521,28 +521,28 @@ class ThemeManager {
         primary: "#ffffff",
         primaryLight: "#ffffff",
         primaryDark: "#e0e0e0",
-        accent: "#d4af37",
-        accentLight: "#e6c866",
-        accentBlue: "#64b5f6",
-        settingsColor: "#42a5f5",
-        settingsLight: "#90caf9",
+        accent: "#c4c4c4",
+        accentLight: "#dfdfdf",
+        accentBlue: "#a6a6a6",
+        settingsColor: "#b0b0b0",
+        settingsLight: "#d6d6d6",
         glassBg: "rgba(255, 255, 255, 0.12)",
         glassBgHover: "rgba(255, 255, 255, 0.18)",
         glassBorder: "rgba(255, 255, 255, 0.2)",
         textPrimary: "#ffffff",
         textSecondary: "rgba(255, 255, 255, 0.85)",
         textMuted: "rgba(255, 255, 255, 0.6)",
-        bodyBg: "#1a1a2e",
+        bodyBg: "#1a1a1a",
       },
       light: {
         primary: "#424242",
         primaryLight: "#616161",
         primaryDark: "#212121",
-        accent: "#b8941f",
-        accentLight: "#d4af37",
-        accentBlue: "#1976d2",
-        settingsColor: "#1e88e5",
-        settingsLight: "#42a5f5",
+        accent: "#5f5f5f",
+        accentLight: "#7a7a7a",
+        accentBlue: "#494949",
+        settingsColor: "#4f4f4f",
+        settingsLight: "#7f7f7f",
         glassBg: "rgba(255, 255, 255, 0.65)",
         glassBgHover: "rgba(255, 255, 255, 0.75)",
         glassBorder: "rgba(0, 0, 0, 0.1)",
@@ -562,11 +562,11 @@ class ThemeManager {
         primary: "#212121",
         primaryLight: "#424242",
         primaryDark: "#000000",
-        accent: "#d4af37",
-        accentLight: "#e6c866",
-        accentBlue: "#64b5f6",
-        settingsColor: "#42a5f5",
-        settingsLight: "#90caf9",
+        accent: "#a0a0a0",
+        accentLight: "#c0c0c0",
+        accentBlue: "#7a7a7a",
+        settingsColor: "#8a8a8a",
+        settingsLight: "#b2b2b2",
         glassBg: "rgba(0, 0, 0, 0.45)",
         glassBgHover: "rgba(0, 0, 0, 0.55)",
         glassBorder: "rgba(255, 255, 255, 0.12)",
@@ -579,11 +579,11 @@ class ThemeManager {
         primary: "#9e9e9e",
         primaryLight: "#bdbdbd",
         primaryDark: "#757575",
-        accent: "#b8941f",
-        accentLight: "#d4af37",
-        accentBlue: "#1976d2",
-        settingsColor: "#1e88e5",
-        settingsLight: "#42a5f5",
+        accent: "#5c5c5c",
+        accentLight: "#767676",
+        accentBlue: "#464646",
+        settingsColor: "#4c4c4c",
+        settingsLight: "#7b7b7b",
         glassBg: "rgba(0, 0, 0, 0.08)",
         glassBgHover: "rgba(0, 0, 0, 0.12)",
         glassBorder: "rgba(0, 0, 0, 0.15)",
@@ -617,13 +617,13 @@ class ThemeManager {
 
   _getDefaultPureThemePalette(themeName, mode) {
     const colorMode = mode === "light" ? "light" : "dark";
-    const emerald = ThemeManager.THEMES?.emerald?.[colorMode];
-    if (!emerald) return null;
+    const pureTheme = ThemeManager.THEMES?.[themeName]?.[colorMode];
+    if (!pureTheme) return null;
 
     return {
-      primary: emerald.primary,
-      accent: emerald.accent,
-      bodyBg: emerald.bodyBg,
+      primary: pureTheme.primary,
+      accent: pureTheme.accent,
+      bodyBg: pureTheme.bodyBg,
       glassTint: themeName === "pureBlack" ? "#000000" : "#ffffff",
     };
   }
@@ -654,15 +654,8 @@ class ThemeManager {
     if (this._customAccent && !themeSettings.customPalettes) {
       const theme = ThemeManager.THEMES[this._currentTheme];
       if (theme?.customizable) {
-        const isPureTheme =
-          this._currentTheme === "pureWhite" ||
-          this._currentTheme === "pureBlack";
-        const baseDark = isPureTheme
-          ? ThemeManager.THEMES?.emerald?.dark || theme.dark
-          : theme.dark;
-        const baseLight = isPureTheme
-          ? ThemeManager.THEMES?.emerald?.light || theme.light
-          : theme.light;
+        const baseDark = theme.dark;
+        const baseLight = theme.light;
         this._customPalettes[this._currentTheme] = {
           dark: {
             primary: baseDark.primary,
@@ -855,7 +848,8 @@ class ThemeManager {
           colors.bodyBg = palette.bodyBg;
 
           const isDarkBg = this._isDarkColor(palette.bodyBg);
-          colors.textPrimary = isDarkBg ? "#ffffff" : "#1a1a2e";
+          const lightTextPrimary = isPureTheme ? "#1a1a1a" : "#1a1a2e";
+          colors.textPrimary = isDarkBg ? "#ffffff" : lightTextPrimary;
           colors.textSecondary = isDarkBg
             ? "rgba(255, 255, 255, 0.85)"
             : "rgba(0, 0, 0, 0.75)";
@@ -1042,10 +1036,7 @@ class ThemeManager {
 
     const colorMode = mode === "light" ? "light" : "dark";
 
-    const isPureTheme = themeName === "pureWhite" || themeName === "pureBlack";
-    const defaultBase = isPureTheme
-      ? ThemeManager.THEMES?.emerald?.[colorMode] || theme[colorMode]
-      : theme[colorMode];
+    const defaultBase = theme[colorMode];
 
     this._customPalettes ||= {};
     this._customPalettes[themeName] ||= { dark: {}, light: {} };
