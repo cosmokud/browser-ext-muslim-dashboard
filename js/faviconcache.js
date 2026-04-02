@@ -80,14 +80,14 @@ class FaviconCacheManager {
   }
 
   /**
-   * Get hostname from URL (for display and favicon fetching)
+   * Build Google favicon API URL using the full URL (not hostname only)
    */
-  _getHostname(url) {
+  _getGoogleFaviconUrl(url, size = 256) {
     try {
       // Handle URL templates with %s
-      const cleanUrl = url.replace(/%s/g, "test");
-      const urlObj = new URL(cleanUrl);
-      return urlObj.hostname;
+      const cleanUrl = String(url).replace(/%s/g, "test");
+      const normalizedUrl = new URL(cleanUrl).href;
+      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(normalizedUrl)}&sz=${size}`;
     } catch (e) {
       return null;
     }
@@ -243,8 +243,8 @@ class FaviconCacheManager {
    * @returns {Promise<string|null>} - Base64 data URL or null
    */
   async fetchAndCache(url, type = "pinned", forceRefresh = false) {
-    const hostname = this._getHostname(url);
-    if (!hostname) return null;
+    const googleUrl = this._getGoogleFaviconUrl(url, 256);
+    if (!googleUrl) return null;
 
     const cacheKey = this._getCacheKey(url, type);
 
@@ -264,7 +264,6 @@ class FaviconCacheManager {
     }
 
     // Fetch from Google Favicon API
-    const googleUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
 
     try {
       const response = await fetch(googleUrl, {
@@ -309,9 +308,9 @@ class FaviconCacheManager {
 
     // If preferCached is true, don't auto-fetch
     if (preferCached) {
-      const hostname = this._getHostname(url);
-      if (hostname) {
-        return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+      const googleUrl = this._getGoogleFaviconUrl(url, 256);
+      if (googleUrl) {
+        return googleUrl;
       }
       return null;
     }
@@ -323,9 +322,9 @@ class FaviconCacheManager {
     }
 
     // Fallback to Google API URL
-    const hostname = this._getHostname(url);
-    if (hostname) {
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+    const googleUrl = this._getGoogleFaviconUrl(url, 256);
+    if (googleUrl) {
+      return googleUrl;
     }
 
     return null;

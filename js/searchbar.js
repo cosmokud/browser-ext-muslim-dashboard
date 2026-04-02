@@ -1440,7 +1440,7 @@ class SearchBarManager extends BaseManager {
 
     try {
       const urlObj = new URL(test);
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
     } catch (e) {
       return null;
     }

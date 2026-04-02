@@ -715,7 +715,7 @@ class PinnedAppsManager extends BaseManager {
     try {
       const urlObj = new URL(url);
       // Use Google's favicon service as primary
-      return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
     } catch (e) {
       return null;
     }
