@@ -314,11 +314,17 @@ class CalendarManager {
 
     if (forbidden.length) return forbidden;
 
-    if (hm === 9 && visibility.ramadan !== false) {
-      markers.push({
-        key: "ramadan",
-        label: "Ramadan (obligatory fasting month)",
-      });
+    // During Ramadan, only the Ramadan marker should be shown.
+    if (hm === 9) {
+      if (visibility.ramadan !== false) {
+        return [
+          {
+            key: "ramadan",
+            label: "Ramadan (obligatory fasting month)",
+          },
+        ];
+      }
+      return [];
     }
 
     if (hm === 12 && hd >= 1 && hd <= 9 && visibility.dhuAlHijjah !== false) {
