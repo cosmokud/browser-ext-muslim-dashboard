@@ -1897,7 +1897,7 @@ class SettingsManager extends BaseManager {
     }
 
     // Highlight active theme
-    const activeTheme = this._normalizeThemeName(themeSettings.name || "pure");
+    const activeTheme = themeSettings.name || "pureWhite";
     this.updateThemePickerActiveState(activeTheme);
   }
 
@@ -1997,11 +1997,10 @@ class SettingsManager extends BaseManager {
       window.dashboard?.themes?.getCurrentMode?.() ||
       settings.theme?.mode ||
       "dark";
-    const activeTheme = this._normalizeThemeName(
+    const activeTheme =
       window.dashboard?.themes?.getCurrentTheme?.() ||
-        settings.theme?.name ||
-        "pure",
-    );
+      settings.theme?.name ||
+      "pureWhite";
 
     let html = "";
 
@@ -2106,9 +2105,10 @@ class SettingsManager extends BaseManager {
   }
 
   _isThemePaletteResettable(themeName) {
-    const normalizedThemeName = this._normalizeThemeName(themeName);
     return (
-      normalizedThemeName === "pure" || normalizedThemeName === "userTheme"
+      themeName === "pureWhite" ||
+      themeName === "pureBlack" ||
+      themeName === "userTheme"
     );
   }
 
@@ -2117,26 +2117,14 @@ class SettingsManager extends BaseManager {
   }
 
   _getThemePaletteDefaultGlassTint(themeName, mode = "dark") {
-    const normalizedThemeName = this._normalizeThemeName(themeName);
-    const colorMode = mode === "light" ? "light" : "dark";
-
-    if (normalizedThemeName === "pure") {
-      return colorMode === "light" ? "#ffffff" : "#000000";
+    if (themeName === "pureBlack") return "#000000";
+    if (themeName === "pureWhite") return "#ffffff";
+    if (themeName === "userTheme") {
+      return mode === "light" ? "#000000" : "#ffffff";
     }
 
-    if (normalizedThemeName === "userTheme") {
-      return colorMode === "light" ? "#000000" : "#ffffff";
-    }
-
-    const primary =
-      ThemeManager.THEMES?.[normalizedThemeName]?.[colorMode]?.primary;
+    const primary = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
     return this._normalizeColorInputHex(primary, "#ffffff");
-  }
-
-  _normalizeThemeName(themeName) {
-    return themeName === "pureWhite" || themeName === "pureBlack"
-      ? "pure"
-      : themeName;
   }
 
   _normalizeColorInputHex(value, fallbackHex) {
@@ -2389,12 +2377,10 @@ class SettingsManager extends BaseManager {
   updateThemePickerActiveState(activeTheme) {
     if (!this.themePickerGrid) return;
 
-    const normalizedActiveTheme = this._normalizeThemeName(activeTheme);
-
     const cards = this.themePickerGrid.querySelectorAll(".theme-card");
     cards.forEach((card) => {
       const themeName = card.dataset.theme;
-      card.classList.toggle("active", themeName === normalizedActiveTheme);
+      card.classList.toggle("active", themeName === activeTheme);
     });
   }
 
@@ -2629,7 +2615,7 @@ class SettingsManager extends BaseManager {
     );
 
     // Get active theme
-    let activeTheme = "pure";
+    let activeTheme = "pureWhite";
     const activeCard =
       this.themePickerGrid?.querySelector(".theme-card.active");
     if (activeCard) {

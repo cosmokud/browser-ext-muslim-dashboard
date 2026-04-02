@@ -5,8 +5,8 @@
  */
 
 class ThemeManager {
-  // Default theme (Pure - clean monochrome theme)
-  static DEFAULT_THEME = "pure";
+  // Default theme (Pure White - clean minimalist theme)
+  static DEFAULT_THEME = "pureWhite";
   static DEFAULT_MODE = "dark";
 
   // Theme definitions with color palettes for both dark and light modes
@@ -512,24 +512,24 @@ class ThemeManager {
     // ═══════════════════════════════════════════════════════════════════════════
     // CUSTOMIZABLE THEMES (Pure transparent glass with custom accent)
     // ═══════════════════════════════════════════════════════════════════════════
-    pure: {
-      name: "Pure",
-      icon: "◐",
-      description: "Monochrome glass with customizable accent",
+    pureWhite: {
+      name: "Pure White",
+      icon: "⬜",
+      description: "Clean white glass with customizable accent",
       customizable: true,
       dark: {
-        primary: "#212121",
-        primaryLight: "#424242",
-        primaryDark: "#000000",
-        onPrimaryText: "#ffffff",
-        accent: "#a0a0a0",
-        accentLight: "#c0c0c0",
-        accentBlue: "#7a7a7a",
-        settingsColor: "#8a8a8a",
-        settingsLight: "#b2b2b2",
-        glassBg: "rgba(0, 0, 0, 0.45)",
-        glassBgHover: "rgba(0, 0, 0, 0.55)",
-        glassBorder: "rgba(255, 255, 255, 0.12)",
+        primary: "#ffffff",
+        primaryLight: "#ffffff",
+        primaryDark: "#e0e0e0",
+        onPrimaryText: "#1a1a1a",
+        accent: "#c4c4c4",
+        accentLight: "#dfdfdf",
+        accentBlue: "#a6a6a6",
+        settingsColor: "#b0b0b0",
+        settingsLight: "#d6d6d6",
+        glassBg: "rgba(255, 255, 255, 0.12)",
+        glassBgHover: "rgba(255, 255, 255, 0.18)",
+        glassBorder: "rgba(255, 255, 255, 0.2)",
         textPrimary: "#ffffff",
         textSecondary: "rgba(255, 255, 255, 0.85)",
         textMuted: "rgba(255, 255, 255, 0.6)",
@@ -552,6 +552,49 @@ class ThemeManager {
         textSecondary: "rgba(0, 0, 0, 0.75)",
         textMuted: "rgba(0, 0, 0, 0.55)",
         bodyBg: "#fafafa",
+      },
+    },
+
+    pureBlack: {
+      name: "Pure Black",
+      icon: "⬛",
+      description: "Deep black glass with customizable accent",
+      customizable: true,
+      dark: {
+        primary: "#212121",
+        primaryLight: "#424242",
+        primaryDark: "#000000",
+        onPrimaryText: "#ffffff",
+        accent: "#a0a0a0",
+        accentLight: "#c0c0c0",
+        accentBlue: "#7a7a7a",
+        settingsColor: "#8a8a8a",
+        settingsLight: "#b2b2b2",
+        glassBg: "rgba(0, 0, 0, 0.45)",
+        glassBgHover: "rgba(0, 0, 0, 0.55)",
+        glassBorder: "rgba(255, 255, 255, 0.12)",
+        textPrimary: "#ffffff",
+        textSecondary: "rgba(255, 255, 255, 0.85)",
+        textMuted: "rgba(255, 255, 255, 0.6)",
+        bodyBg: "#000000",
+      },
+      light: {
+        primary: "#9e9e9e",
+        primaryLight: "#bdbdbd",
+        primaryDark: "#757575",
+        onPrimaryText: "#1a1a1a",
+        accent: "#5c5c5c",
+        accentLight: "#767676",
+        accentBlue: "#464646",
+        settingsColor: "#4c4c4c",
+        settingsLight: "#7b7b7b",
+        glassBg: "rgba(0, 0, 0, 0.08)",
+        glassBgHover: "rgba(0, 0, 0, 0.12)",
+        glassBorder: "rgba(0, 0, 0, 0.15)",
+        textPrimary: "#212121",
+        textSecondary: "rgba(0, 0, 0, 0.75)",
+        textMuted: "rgba(0, 0, 0, 0.55)",
+        bodyBg: "#f5f5f5",
       },
     },
 
@@ -619,16 +662,8 @@ class ThemeManager {
     this.applyTheme();
   }
 
-  _normalizeThemeName(themeName) {
-    if (themeName === "pureWhite" || themeName === "pureBlack") {
-      return "pure";
-    }
-
-    return themeName;
-  }
-
   _isPureTheme(themeName) {
-    return this._normalizeThemeName(themeName) === "pure";
+    return themeName === "pureWhite" || themeName === "pureBlack";
   }
 
   _isThemeWithCustomGlassTint(themeName) {
@@ -640,26 +675,19 @@ class ThemeManager {
   }
 
   _getDefaultGlassTint(themeName, mode) {
-    const normalizedThemeName = this._normalizeThemeName(themeName);
-    const colorMode = mode === "light" ? "light" : "dark";
-
-    if (normalizedThemeName === "pure") {
-      return colorMode === "light" ? "#ffffff" : "#000000";
-    }
-
-    if (normalizedThemeName === "userTheme") {
+    if (themeName === "pureBlack") return "#000000";
+    if (themeName === "pureWhite") return "#ffffff";
+    if (themeName === "userTheme") {
       return mode === "light" ? "#000000" : "#ffffff";
     }
 
-    const fallback =
-      ThemeManager.THEMES?.[normalizedThemeName]?.[colorMode]?.primary;
+    const fallback = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
     return this._normalizeHexColor(fallback) || "#ffffff";
   }
 
   _getDefaultPureThemePalette(themeName, mode) {
     const colorMode = mode === "light" ? "light" : "dark";
-    const normalizedThemeName = this._normalizeThemeName(themeName);
-    const customTheme = ThemeManager.THEMES?.[normalizedThemeName];
+    const customTheme = ThemeManager.THEMES?.[themeName];
     if (!customTheme?.customizable) return null;
 
     const base = customTheme[colorMode];
@@ -687,39 +715,6 @@ class ThemeManager {
     return defaultPalette;
   }
 
-  _migrateLegacyPureCustomPalettes(customPalettes) {
-    if (!customPalettes || typeof customPalettes !== "object") {
-      return {};
-    }
-
-    const palettes = JSON.parse(JSON.stringify(customPalettes));
-    const pureWhite = palettes.pureWhite;
-    const pureBlack = palettes.pureBlack;
-
-    if (!pureWhite && !pureBlack) {
-      return palettes;
-    }
-
-    const existingPure = palettes.pure || {};
-    palettes.pure = {
-      dark: {
-        ...(existingPure.dark || {}),
-        ...(pureWhite?.dark || {}),
-        ...(pureBlack?.dark || {}),
-      },
-      light: {
-        ...(existingPure.light || {}),
-        ...(pureBlack?.light || {}),
-        ...(pureWhite?.light || {}),
-      },
-    };
-
-    delete palettes.pureWhite;
-    delete palettes.pureBlack;
-
-    return palettes;
-  }
-
   /**
    * Load theme settings from storage
    */
@@ -727,9 +722,7 @@ class ThemeManager {
     const settings = this.storage.getSettings();
     const themeSettings = settings.theme || {};
 
-    this._currentTheme = this._normalizeThemeName(
-      themeSettings.name || ThemeManager.DEFAULT_THEME,
-    );
+    this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
     this._glassOpacity = this._clampGlassOpacity(
@@ -737,9 +730,7 @@ class ThemeManager {
       35,
     );
     this._customAccent = themeSettings.customAccent || null;
-    this._customPalettes = this._migrateLegacyPureCustomPalettes(
-      themeSettings.customPalettes || {},
-    );
+    this._customPalettes = themeSettings.customPalettes || {};
 
     // Validate theme exists
     if (!ThemeManager.THEMES[this._currentTheme]) {
@@ -816,8 +807,6 @@ class ThemeManager {
    * Set the active theme
    */
   setTheme(themeName, save = true) {
-    themeName = this._normalizeThemeName(themeName);
-
     if (!ThemeManager.THEMES[themeName]) {
       console.warn(`Theme "${themeName}" not found, using default`);
       themeName = ThemeManager.DEFAULT_THEME;
@@ -905,7 +894,7 @@ class ThemeManager {
    * Get theme colors for current mode
    */
   getThemeColors(themeName = null, mode = null) {
-    const name = this._normalizeThemeName(themeName || this._currentTheme);
+    const name = themeName || this._currentTheme;
     const colorMode = mode || this._currentMode;
 
     const theme = ThemeManager.THEMES[name];
@@ -1176,7 +1165,7 @@ class ThemeManager {
    * Get palette override for a theme + mode.
    */
   getCustomPalette(themeName = null, mode = null) {
-    const name = this._normalizeThemeName(themeName || this._currentTheme);
+    const name = themeName || this._currentTheme;
     const colorMode = mode || this._currentMode;
     const entry = this._customPalettes?.[name]?.[colorMode];
     return entry ? { ...entry } : null;
@@ -1193,9 +1182,8 @@ class ThemeManager {
    * Set palette override for a theme + mode.
    */
   setCustomPalette(themeName, mode, palette, save = true) {
-    const normalizedThemeName = this._normalizeThemeName(themeName);
-    if (!ThemeManager.THEMES[normalizedThemeName]) return;
-    const theme = ThemeManager.THEMES[normalizedThemeName];
+    if (!ThemeManager.THEMES[themeName]) return;
+    const theme = ThemeManager.THEMES[themeName];
     if (!theme?.customizable) return;
 
     const colorMode = mode === "light" ? "light" : "dark";
@@ -1206,17 +1194,13 @@ class ThemeManager {
       palette?.onPrimaryText || defaultBase.onPrimaryText,
       primary,
     );
-    const fallback = this._getDefaultPureThemePalette(
-      normalizedThemeName,
-      colorMode,
-    );
-    const supportsCustomText =
-      this._isThemeWithCustomTextPalette(normalizedThemeName);
+    const fallback = this._getDefaultPureThemePalette(themeName, colorMode);
+    const supportsCustomText = this._isThemeWithCustomTextPalette(themeName);
 
     this._customPalettes ||= {};
-    this._customPalettes[normalizedThemeName] ||= { dark: {}, light: {} };
+    this._customPalettes[themeName] ||= { dark: {}, light: {} };
 
-    this._customPalettes[normalizedThemeName][colorMode] = {
+    this._customPalettes[themeName][colorMode] = {
       primary,
       accent: palette?.accent || defaultBase.accent,
       bodyBg: palette?.bodyBg || defaultBase.bodyBg,
@@ -1224,7 +1208,7 @@ class ThemeManager {
       glassTint:
         this._normalizeHexColor(palette?.glassTint) ||
         fallback?.glassTint ||
-        this._getDefaultGlassTint(normalizedThemeName, colorMode),
+        this._getDefaultGlassTint(themeName, colorMode),
       ...(supportsCustomText
         ? {
             textPrimary:
@@ -1243,10 +1227,7 @@ class ThemeManager {
         : {}),
     };
 
-    if (
-      this._currentTheme === normalizedThemeName &&
-      this._currentMode === colorMode
-    ) {
+    if (this._currentTheme === themeName && this._currentMode === colorMode) {
       this.applyTheme();
     }
 
