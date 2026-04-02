@@ -443,7 +443,7 @@ class FastingManager {
     // fillRatio: 0 = far away, 1 = today
     if (fillRatio >= 0.995) {
       const fullMix =
-        "color-mix(in srgb, var(--accent-gold) 50%, var(--primary-color) 50%)";
+        "color-mix(in srgb, var(--primary-color) 85%, var(--accent-gold) 15%)";
       return {
         level: "full",
         c1: fullMix,
@@ -455,16 +455,16 @@ class FastingManager {
     if (fillRatio >= 0.5) {
       return {
         level: "medium",
-        c1: "color-mix(in srgb, var(--primary-color) 75%, var(--accent-gold) 25%)",
-        c2: "color-mix(in srgb, var(--primary-color) 75%, var(--accent-gold) 25%)",
+        c1: "color-mix(in srgb, var(--primary-color) 50%, var(--accent-gold) 50%)",
+        c2: "color-mix(in srgb, var(--primary-color) 50%, var(--accent-gold) 50%)",
         c3: "color-mix(in srgb, var(--primary-color) 30%, transparent)",
       };
     }
 
     return {
       level: "low",
-      c1: "color-mix(in srgb, var(--accent-gold) 75%, var(--primary-color) 25%)",
-      c2: "color-mix(in srgb, var(--accent-gold) 75%, var(--primary-color) 25%)",
+      c1: "color-mix(in srgb, var(--primary-color) 15%, var(--accent-gold) 85%)",
+      c2: "color-mix(in srgb, var(--primary-color) 15%, var(--accent-gold) 85%)",
       c3: "color-mix(in srgb, var(--accent-gold) 28%, transparent)",
     };
   }
