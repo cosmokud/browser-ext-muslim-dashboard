@@ -2602,7 +2602,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip:not(.ql-editing) {
+  .ql-tooltip:not(.ql-editing):not(.ql-hidden) {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -2610,13 +2610,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip:not(.ql-editing)::before {
+  .ql-tooltip:not(.ql-editing):not(.ql-hidden)::before {
   margin-right: 0;
   white-space: nowrap;
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip:not(.ql-editing)
+  .ql-tooltip:not(.ql-editing):not(.ql-hidden)
   a.ql-preview {
   flex: 1 1 100%;
   max-width: 100%;
@@ -2627,24 +2627,29 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip:not(.ql-editing)
+  .ql-tooltip:not(.ql-editing):not(.ql-hidden)
   a.ql-action::after {
   margin-left: 0;
   white-space: nowrap;
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip:not(.ql-editing)
+  .ql-tooltip:not(.ql-editing):not(.ql-hidden)
   a.ql-remove::before {
   margin-left: 0;
   white-space: nowrap;
 }
 
-.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip.ql-editing {
+.notes-editor.notes-editor-quill.ql-container.ql-snow
+  .ql-tooltip.ql-editing:not(.ql-hidden) {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip.ql-hidden {
+  display: none !important;
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
@@ -2669,10 +2674,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-url-prompt-modal {
-  z-index: 2147483646;
+  z-index: 2147483647 !important;
+  isolation: isolate;
 }
 
 .notes-url-prompt-modal .notes-url-prompt-dialog {
+  position: relative;
+  z-index: 2147483647;
   width: min(92vw, 520px);
   border: 1px solid color-mix(in srgb, var(--primary-color) 44%, #334155 56%);
   box-shadow:
