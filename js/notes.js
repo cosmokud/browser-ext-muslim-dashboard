@@ -1140,7 +1140,7 @@ class NotesManager extends BaseManager {
       const del = document.createElement("button");
       del.type = "button";
       del.className = "notes-list-item-delete";
-      del.textContent = "×";
+      del.textContent = "🗑";
       del.title = "Delete note";
       del.setAttribute("data-note-id", String(note.id));
       del.setAttribute(

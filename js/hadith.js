@@ -590,7 +590,7 @@ class HadithManager extends BaseManager {
 
   getLanguageFlag(code) {
     const flags = {
-      en: "🇬🇧",
+      en: "EN",
       id: "🇮🇩",
       ar: "🇸🇦",
       tr: "🇹🇷",

@@ -926,6 +926,9 @@ class AdhkarManager extends BaseManager {
       if (this.scriptToggleBtn) {
         this.scriptToggleBtn.disabled = true;
         this.scriptToggleBtn.title = "No items";
+        this.scriptToggleBtn.setAttribute("aria-pressed", "false");
+        this.scriptToggleBtn.innerHTML =
+          '<span class="mode-icon" aria-hidden="true">Aa</span>';
       }
 
       this.updateAutoAdvanceToggleUi();
@@ -993,12 +996,15 @@ class AdhkarManager extends BaseManager {
     if (this.scriptToggleBtn) {
       this.scriptToggleBtn.disabled = false;
       this.scriptToggleBtn.dataset.mode = showRoman ? "roman" : "arabic";
+      this.scriptToggleBtn.setAttribute(
+        "aria-pressed",
+        showRoman ? "true" : "false",
+      );
       const label = showRoman ? "Show Arabic" : "Show Romanization";
       this.scriptToggleBtn.title = label;
       this.scriptToggleBtn.setAttribute("aria-label", label);
-      this.scriptToggleBtn.innerHTML = `<span class="mode-icon" aria-hidden="true">${
-        showRoman ? "ع" : "Aa"
-      }</span>`;
+      this.scriptToggleBtn.innerHTML =
+        '<span class="mode-icon" aria-hidden="true">Aa</span>';
     }
 
     if (animateScriptToggle) {
@@ -1473,7 +1479,7 @@ class AdhkarManager extends BaseManager {
    */
   getLanguageFlag(code) {
     const flags = {
-      en: "🇬🇧",
+      en: "EN",
       id: "🇮🇩",
       ar: "🇸🇦",
       tr: "🇹🇷",

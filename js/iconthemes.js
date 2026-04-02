@@ -812,6 +812,7 @@ class IconThemeManager {
         ".pq-bookmark-btn",
         ".clear-completed-btn",
         ".notes-list-item-delete",
+        ".pq-tajweed-toggle-icon",
         ".blur-popup-title-icon",
         ".blur-glass-option-icon",
         ".pq-bookmark-empty-icon",

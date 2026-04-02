@@ -1043,7 +1043,7 @@ class QuotesManager extends BaseManager {
 
   getLanguageFlag(code) {
     const flags = {
-      en: "🇬🇧",
+      en: "EN",
       id: "🇮🇩",
       ar: "🇸🇦",
       tr: "🇹🇷",
