@@ -406,77 +406,34 @@ class FaviconCacheManager {
   }
 
   /**
-   * Process and import a user-provided image URL
-   * @param {string} imageUrl - Public image URL or data URL
-   * @param {string} url - The URL to associate this favicon with
-   * @param {string} type - Type of favicon ('pinned' or 'search')
-   * @returns {Promise<string>} - Base64 data URL
+   * Normalize an imported image URL without downloading/caching it.
+   * URL imports are stored as direct links.
+   * @param {string} imageUrl - HTTP(S) image URL
+   * @returns {Promise<string>} - Normalized URL string
    */
-  async importFromImageUrl(imageUrl, url, type = "pinned") {
+  async importFromImageUrl(imageUrl, _url, _type = "pinned") {
     const rawImageUrl = String(imageUrl || "").trim();
     if (!rawImageUrl) {
       throw new Error("Please provide an image URL.");
     }
 
-    const isDataUrl = /^data:image\//i.test(rawImageUrl);
-    let fetchableUrl = rawImageUrl;
-
-    if (!isDataUrl) {
-      if (!/^https?:\/\//i.test(fetchableUrl)) {
-        fetchableUrl = `https://${fetchableUrl}`;
-      }
-
-      try {
-        new URL(fetchableUrl);
-      } catch (e) {
-        throw new Error("Please enter a valid image URL.");
-      }
+    let normalizedUrl = rawImageUrl;
+    if (!/^https?:\/\//i.test(normalizedUrl)) {
+      normalizedUrl = `https://${normalizedUrl}`;
     }
 
+    let parsedUrl = null;
     try {
-      let dataUrl = null;
-
-      if (isDataUrl) {
-        dataUrl = rawImageUrl;
-      } else {
-        const response = await fetch(fetchableUrl, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image (HTTP ${response.status}).`);
-        }
-
-        const contentType = String(
-          response.headers.get("content-type") || "",
-        ).toLowerCase();
-        if (contentType && !contentType.startsWith("image/")) {
-          throw new Error("URL did not return an image file.");
-        }
-
-        const blob = await response.blob();
-        const maxSize = 5 * 1024 * 1024;
-        if (blob.size > maxSize) {
-          throw new Error("Image is too large. Maximum size is 5MB.");
-        }
-
-        dataUrl = await this._blobToDataUrl(blob);
-      }
-
-      // URL imports are normalized to square favicon output (<= 256x256).
-      const processedDataUrl = await this._processImage(dataUrl, {
-        forceSquare: true,
-        maxSize: FaviconCacheManager.MAX_SIZE,
-      });
-
-      await this.setCached(url, processedDataUrl, type, true);
-      return processedDataUrl;
-    } catch (err) {
-      if (err instanceof Error) {
-        throw err;
-      }
-      throw new Error("Failed to import image from URL.");
+      parsedUrl = new URL(normalizedUrl);
+    } catch (e) {
+      throw new Error("Please enter a valid image URL.");
     }
+
+    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+      throw new Error("Only HTTP(S) image URLs are supported.");
+    }
+
+    return parsedUrl.href;
   }
 
   /**
