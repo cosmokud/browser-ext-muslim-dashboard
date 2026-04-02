@@ -182,6 +182,7 @@ class StorageManager {
         mode: "dark",
         glassEnabled: true,
         glassOpacity: 0,
+        componentOpacity: null,
         customAccent: null,
         customPalettes: {},
       },

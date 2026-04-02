@@ -246,6 +246,12 @@ class SettingsManager extends BaseManager {
     this.themeGlassOpacityValue = document.getElementById(
       "themeGlassOpacityValue",
     );
+    this.themeComponentOpacity = document.getElementById(
+      "themeComponentOpacity",
+    );
+    this.themeComponentOpacityValue = document.getElementById(
+      "themeComponentOpacityValue",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -1883,6 +1889,18 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeGlassOpacityLabel();
 
+    // Load main grid component opacity
+    const componentOpacity = this.clampNumber(
+      themeSettings.componentOpacity,
+      0,
+      100,
+      window.dashboard?.themes?.getMainGridComponentOpacity?.() ?? glassOpacity,
+    );
+    if (this.themeComponentOpacity) {
+      this.themeComponentOpacity.value = String(componentOpacity);
+    }
+    this.updateThemeComponentOpacityLabel();
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -1964,6 +1982,22 @@ class SettingsManager extends BaseManager {
       );
       this.themeGlassOpacity.value = String(clamped);
       this.themeGlassOpacityValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Update main grid component opacity label
+   */
+  updateThemeComponentOpacityLabel() {
+    if (this.themeComponentOpacityValue && this.themeComponentOpacity) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeComponentOpacity.value, 10),
+        0,
+        100,
+        35,
+      );
+      this.themeComponentOpacity.value = String(clamped);
+      this.themeComponentOpacityValue.textContent = clamped + "%";
     }
   }
 
@@ -2508,6 +2542,18 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    // Component-only opacity slider
+    if (this.themeComponentOpacity) {
+      this.themeComponentOpacity.addEventListener("input", () => {
+        this.updateThemeComponentOpacityLabel();
+        const opacity = parseInt(this.themeComponentOpacity.value, 10);
+
+        if (window.dashboard?.themes?.setMainGridComponentOpacity) {
+          window.dashboard.themes.setMainGridComponentOpacity(opacity, false);
+        }
+      });
+    }
+
     // Theme picker cards
     if (this.themePickerGrid) {
       this.themePickerGrid.addEventListener("click", (e) => {
@@ -2679,6 +2725,12 @@ class SettingsManager extends BaseManager {
       100,
       0,
     );
+    const componentOpacity = this.clampNumber(
+      parseInt(this.themeComponentOpacity?.value, 10),
+      0,
+      100,
+      glassOpacity,
+    );
 
     // Get active theme
     let activeTheme = "pureWhite";
@@ -2700,6 +2752,7 @@ class SettingsManager extends BaseManager {
       mode: mode,
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
+      componentOpacity: componentOpacity,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -2730,6 +2783,15 @@ class SettingsManager extends BaseManager {
       window.dashboard.themes.setGlassEnabled(glassEnabled, true);
       if (typeof window.dashboard.themes.setGlassOpacity === "function") {
         window.dashboard.themes.setGlassOpacity(glassOpacity, true);
+      }
+      if (
+        typeof window.dashboard.themes.setMainGridComponentOpacity ===
+        "function"
+      ) {
+        window.dashboard.themes.setMainGridComponentOpacity(
+          componentOpacity,
+          true,
+        );
       }
     }
   }

@@ -677,6 +677,7 @@ class ThemeManager {
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
     this._glassOpacity = 35;
+    this._mainGridComponentOpacity = 35;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -769,6 +770,10 @@ class ThemeManager {
       themeSettings.glassOpacity,
       35,
     );
+    this._mainGridComponentOpacity = this._clampGlassOpacity(
+      themeSettings.componentOpacity,
+      this._glassOpacity,
+    );
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -821,6 +826,7 @@ class ThemeManager {
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
       glassOpacity: this._glassOpacity,
+      componentOpacity: this._mainGridComponentOpacity,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
@@ -853,6 +859,13 @@ class ThemeManager {
    */
   getGlassOpacity() {
     return this._glassOpacity;
+  }
+
+  /**
+   * Get current main grid component opacity percentage
+   */
+  getMainGridComponentOpacity() {
+    return this._mainGridComponentOpacity;
   }
 
   /**
@@ -921,6 +934,21 @@ class ThemeManager {
     this._glassOpacity = this._clampGlassOpacity(
       opacityPercent,
       this._glassOpacity,
+    );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  /**
+   * Set main grid component opacity percentage
+   */
+  setMainGridComponentOpacity(opacityPercent, save = true) {
+    this._mainGridComponentOpacity = this._clampGlassOpacity(
+      opacityPercent,
+      this._mainGridComponentOpacity,
     );
     this.applyTheme();
 
@@ -1144,16 +1172,6 @@ class ThemeManager {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(bounded.toFixed(3))})`;
   }
 
-  _setShadowAlpha(value, alpha) {
-    if (typeof value !== "string") return value;
-
-    const bounded = Number(Math.min(1, Math.max(0, Number(alpha))).toFixed(3));
-    return value.replace(
-      /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[0-9.]+\s*\)/gi,
-      (_match, r, g, b) => `rgba(${r}, ${g}, ${b}, ${bounded})`,
-    );
-  }
-
   _normalizeHexColor(value) {
     if (typeof value !== "string") return null;
     const hex = value.trim().toLowerCase();
@@ -1206,19 +1224,7 @@ class ThemeManager {
     const mainContainer = document.querySelector(".main-container");
     if (!mainContainer) return;
 
-    const alphas = this._getGlassOpacityAlphas();
-    const hoverColor = this._setColorAlpha(colors.glassBgHover, alphas.hover);
-    const borderColor = this._setColorAlpha(colors.glassBorder, alphas.border);
-    const baseShadow = this._glassEnabled
-      ? "0 8px 32px rgba(0, 0, 0, 0.3)"
-      : "0 4px 20px rgba(0, 0, 0, 0.2)";
-    const shadowAlpha = this._clampGlassOpacity(this._glassOpacity, 0) / 100;
-    const shadow = this._setShadowAlpha(baseShadow, shadowAlpha);
-
-    ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
-      const component = document.getElementById(componentId);
-      if (!component || !mainContainer.contains(component)) return;
-
+    const applyToComponent = (component, bgColor, hoverColor, borderColor) => {
       // Keep explicit per-card overrides from readability menus authoritative.
       if (
         Object.prototype.hasOwnProperty.call(component.dataset, "glassEnabled")
@@ -1226,9 +1232,30 @@ class ThemeManager {
         return;
       }
 
+      if (!this._glassEnabled) {
+        component.style.removeProperty("--glass-bg");
+        component.style.removeProperty("--glass-bg-hover");
+        component.style.removeProperty("--glass-border");
+        component.style.removeProperty("--glass-shadow");
+        return;
+      }
+
+      component.style.setProperty("--glass-bg", bgColor);
       component.style.setProperty("--glass-bg-hover", hoverColor);
       component.style.setProperty("--glass-border", borderColor);
-      component.style.setProperty("--glass-shadow", shadow);
+      component.style.removeProperty("--glass-shadow");
+    };
+
+    const alphas = this._getGlassOpacityAlphas(this._mainGridComponentOpacity);
+    const bgColor = this._setColorAlpha(colors.glassBg, alphas.bg);
+    const hoverColor = this._setColorAlpha(colors.glassBgHover, alphas.hover);
+    const borderColor = this._setColorAlpha(colors.glassBorder, alphas.border);
+
+    ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
+      const component = document.getElementById(componentId);
+      if (!component || !mainContainer.contains(component)) return;
+
+      applyToComponent(component, bgColor, hoverColor, borderColor);
     });
   }
 
@@ -1525,9 +1552,13 @@ class ThemeManager {
 
     // Apply glass effect or solid background
     if (this._glassEnabled) {
-      root.style.setProperty("--glass-bg", colors.glassBg);
-      root.style.setProperty("--glass-bg-hover", colors.glassBgHover);
-      root.style.setProperty("--glass-border", colors.glassBorder);
+      const globalGlassColors = this._applyGlassOpacityToThemeColors(colors);
+      root.style.setProperty("--glass-bg", globalGlassColors.glassBg);
+      root.style.setProperty(
+        "--glass-bg-hover",
+        globalGlassColors.glassBgHover,
+      );
+      root.style.setProperty("--glass-border", globalGlassColors.glassBorder);
       root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
     } else {
       // Solid mode - NO transparency in the base surfaces.
@@ -1582,6 +1613,7 @@ class ThemeManager {
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
           glassOpacity: this._glassOpacity,
+          componentOpacity: this._mainGridComponentOpacity,
         },
       }),
     );

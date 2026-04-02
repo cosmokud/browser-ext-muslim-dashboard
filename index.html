@@ -4915,10 +4915,9 @@
               class="setting-group theme-blur-group"
               id="themeGlassOpacityGroup"
             >
-              <label class="setting-label">Component Opacity</label>
+              <label class="setting-label">Opacity</label>
               <p class="setting-hint">
-                Adjusts glass hover, border, and shadow opacity for main grid
-                components inside the dashboard container only.
+                Scales global glass transparency for all dashboard surfaces.
               </p>
               <div class="custom-width-slider">
                 <input
@@ -4929,6 +4928,29 @@
                   value="0"
                 />
                 <span class="custom-width-value" id="themeGlassOpacityValue"
+                  >0%</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="setting-group theme-blur-group"
+              id="themeComponentOpacityGroup"
+            >
+              <label class="setting-label">Component Opacity</label>
+              <p class="setting-hint">
+                Overrides glass background, hover, and border opacity for main
+                grid components only.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="themeComponentOpacity"
+                  min="0"
+                  max="100"
+                  value="0"
+                />
+                <span class="custom-width-value" id="themeComponentOpacityValue"
                   >0%</span
                 >
               </div>
