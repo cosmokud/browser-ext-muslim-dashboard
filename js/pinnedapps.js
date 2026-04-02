@@ -893,6 +893,9 @@ class PinnedAppsManager extends BaseManager {
     // Only left mouse button
     if (e.button !== 0) return;
 
+    // Match search-style drag behavior by preventing native text selection.
+    e.preventDefault();
+
     // Don't start drag if clicking on a link for navigation
     // But allow drag to start after a small move
 
