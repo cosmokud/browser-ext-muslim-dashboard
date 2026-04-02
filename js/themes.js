@@ -600,6 +600,7 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
+    this._glassOpacity = 35;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -637,6 +638,7 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
+    this._glassOpacity = this._clampGlassOpacity(themeSettings.glassOpacity, 35);
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -683,6 +685,7 @@ class ThemeManager {
       name: this._currentTheme,
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
+      glassOpacity: this._glassOpacity,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
@@ -708,6 +711,13 @@ class ThemeManager {
    */
   isGlassEnabled() {
     return this._glassEnabled;
+  }
+
+  /**
+   * Get current global glass opacity percentage
+   */
+  getGlassOpacity() {
+    return this._glassOpacity;
   }
 
   /**
@@ -767,6 +777,21 @@ class ThemeManager {
    */
   toggleGlass(save = true) {
     this.setGlassEnabled(!this._glassEnabled, save);
+  }
+
+  /**
+   * Set global glass opacity percentage
+   */
+  setGlassOpacity(opacityPercent, save = true) {
+    this._glassOpacity = this._clampGlassOpacity(
+      opacityPercent,
+      this._glassOpacity,
+    );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
   }
 
   /**
@@ -877,7 +902,64 @@ class ThemeManager {
       }
     }
 
-    return colors;
+    return this._applyGlassOpacityToThemeColors(colors);
+  }
+
+  _clampGlassOpacity(value, fallback = 35) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(100, Math.max(0, Math.round(numeric)));
+  }
+
+  _getGlassOpacityAlphas(opacityPercent = this._glassOpacity) {
+    const bgAlpha = this._clampGlassOpacity(opacityPercent, 35) / 100;
+    const hoverRatio = 0.45 / 0.35;
+    const borderRatio = 0.4 / 0.35;
+    const clampAlpha = (alpha) => {
+      const bounded = Math.min(1, Math.max(0, alpha));
+      return Number(bounded.toFixed(3));
+    };
+
+    return {
+      bg: clampAlpha(bgAlpha),
+      hover: clampAlpha(bgAlpha * hoverRatio),
+      border: clampAlpha(bgAlpha * borderRatio),
+    };
+  }
+
+  _extractRgbChannels(value) {
+    if (typeof value !== "string") return null;
+    const match = value
+      .replace(/\s+/g, "")
+      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
+    if (!match) return null;
+
+    return {
+      r: Number(match[1]),
+      g: Number(match[2]),
+      b: Number(match[3]),
+    };
+  }
+
+  _setColorAlpha(value, alpha) {
+    const rgb = this._extractRgbChannels(value);
+    if (!rgb) return value;
+    const bounded = Math.min(1, Math.max(0, Number(alpha)));
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(
+      bounded.toFixed(3),
+    )})`;
+  }
+
+  _applyGlassOpacityToThemeColors(colors) {
+    if (!colors || typeof colors !== "object") return colors;
+
+    const alphas = this._getGlassOpacityAlphas();
+    return {
+      ...colors,
+      glassBg: this._setColorAlpha(colors.glassBg, alphas.bg),
+      glassBgHover: this._setColorAlpha(colors.glassBgHover, alphas.hover),
+      glassBorder: this._setColorAlpha(colors.glassBorder, alphas.border),
+    };
   }
 
   /**
@@ -1148,6 +1230,7 @@ class ThemeManager {
           theme: this._currentTheme,
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
+          glassOpacity: this._glassOpacity,
         },
       }),
     );

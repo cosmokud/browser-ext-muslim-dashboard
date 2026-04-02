@@ -403,6 +403,48 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function getDashboardGlassOpacityPercent() {
+    const settings = storage.getSettings();
+    return clampNumber(settings?.theme?.glassOpacity, 0, 100, 35);
+  }
+
+  function getGlassOpacityAlphas(opacityPercent) {
+    const baseAlpha = clampNumber(opacityPercent, 0, 100, 35) / 100;
+    const hoverRatio = 0.45 / 0.35;
+    const borderRatio = 0.4 / 0.35;
+    const clampAlpha = (alpha) => Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
+
+    return {
+      bg: clampAlpha(baseAlpha),
+      hover: clampAlpha(baseAlpha * hoverRatio),
+      border: clampAlpha(baseAlpha * borderRatio),
+    };
+  }
+
+  function setColorAlpha(value, alpha) {
+    if (typeof value !== "string") return value;
+
+    const match = value
+      .replace(/\s+/g, "")
+      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
+    if (!match) return value;
+
+    const bounded = Number(Math.min(1, Math.max(0, Number(alpha))).toFixed(3));
+    return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${bounded})`;
+  }
+
+  function applyGlassOpacityToColors(colors) {
+    if (!colors) return colors;
+
+    const alphas = getGlassOpacityAlphas(getDashboardGlassOpacityPercent());
+    return {
+      ...colors,
+      glassBg: setColorAlpha(colors.glassBg, alphas.bg),
+      glassBgHover: setColorAlpha(colors.glassBgHover, alphas.hover),
+      glassBorder: setColorAlpha(colors.glassBorder, alphas.border),
+    };
+  }
+
   function buildThemeColorsFromPopupPalette(inputPalette) {
     const context = getCurrentThemeContext();
     const themeByMode = context.isPureTheme
@@ -504,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    return colors;
+    return applyGlassOpacityToColors(colors);
   }
 
   function isDashboardGlassEnabled() {

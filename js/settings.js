@@ -242,6 +242,10 @@ class SettingsManager extends BaseManager {
     this.themeBlurPower = document.getElementById("themeBlurPower");
     this.themeBlurPowerValue = document.getElementById("themeBlurPowerValue");
     this.themeBlurGroup = document.getElementById("themeBlurGroup");
+    this.themeGlassOpacity = document.getElementById("themeGlassOpacity");
+    this.themeGlassOpacityValue = document.getElementById(
+      "themeGlassOpacityValue",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -1860,6 +1864,18 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeBlurPowerLabel();
 
+    // Load glass opacity
+    const glassOpacity = this.clampNumber(
+      themeSettings.glassOpacity,
+      0,
+      100,
+      window.dashboard?.themes?.getGlassOpacity?.() ?? 35,
+    );
+    if (this.themeGlassOpacity) {
+      this.themeGlassOpacity.value = String(glassOpacity);
+    }
+    this.updateThemeGlassOpacityLabel();
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -1899,6 +1915,14 @@ class SettingsManager extends BaseManager {
    * Update theme blur group visibility based on glass enabled
    */
   updateThemeBlurGroupState(glassEnabled) {
+    const groups = document.querySelectorAll(".theme-blur-group");
+    if (groups.length > 0) {
+      groups.forEach((group) => {
+        group.classList.toggle("disabled", !glassEnabled);
+      });
+      return;
+    }
+
     if (this.themeBlurGroup) {
       this.themeBlurGroup.classList.toggle("disabled", !glassEnabled);
     }
@@ -1917,6 +1941,22 @@ class SettingsManager extends BaseManager {
       );
       this.themeBlurPower.value = String(clamped);
       this.themeBlurPowerValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Update theme glass opacity label
+   */
+  updateThemeGlassOpacityLabel() {
+    if (this.themeGlassOpacityValue && this.themeGlassOpacity) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeGlassOpacity.value, 10),
+        0,
+        100,
+        35,
+      );
+      this.themeGlassOpacity.value = String(clamped);
+      this.themeGlassOpacityValue.textContent = clamped + "%";
     }
   }
 
@@ -2210,6 +2250,22 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    // Glass opacity slider
+    if (this.themeGlassOpacity) {
+      this.themeGlassOpacity.addEventListener("input", () => {
+        this.updateThemeGlassOpacityLabel();
+        const opacity = parseInt(this.themeGlassOpacity.value, 10);
+
+        if (window.dashboard?.themes?.setGlassOpacity) {
+          window.dashboard.themes.setGlassOpacity(opacity, false);
+        }
+
+        try {
+          document.dispatchEvent(new CustomEvent("md:glass-setting-changed"));
+        } catch (e) {}
+      });
+    }
+
     // Theme picker cards
     if (this.themePickerGrid) {
       this.themePickerGrid.addEventListener("click", (e) => {
@@ -2331,6 +2387,12 @@ class SettingsManager extends BaseManager {
 
     // Get glass enabled
     const glassEnabled = this.themeGlassEnabled?.checked !== false;
+    const glassOpacity = this.clampNumber(
+      parseInt(this.themeGlassOpacity?.value, 10),
+      0,
+      100,
+      35,
+    );
 
     // Get active theme
     let activeTheme = "emerald";
@@ -2351,6 +2413,7 @@ class SettingsManager extends BaseManager {
       name: activeTheme,
       mode: mode,
       glassEnabled: glassEnabled,
+      glassOpacity: glassOpacity,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -2379,6 +2442,9 @@ class SettingsManager extends BaseManager {
       window.dashboard.themes.setTheme(activeTheme, true);
       window.dashboard.themes.setMode(mode, true);
       window.dashboard.themes.setGlassEnabled(glassEnabled, true);
+      if (typeof window.dashboard.themes.setGlassOpacity === "function") {
+        window.dashboard.themes.setGlassOpacity(glassOpacity, true);
+      }
     }
   }
 
