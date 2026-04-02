@@ -767,8 +767,9 @@ class ThemeManager {
         const baseDark = theme.dark;
         const baseLight = theme.light;
         const darkAccentBackground =
-          this._normalizeHexColor(baseDark.accentBackground || baseDark.accent) ||
-          "#d4af37";
+          this._normalizeHexColor(
+            baseDark.accentBackground || baseDark.accent,
+          ) || "#d4af37";
         const lightAccentBackground =
           this._normalizeHexColor(
             baseLight.accentBackground || baseLight.accent,

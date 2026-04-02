@@ -2262,10 +2262,7 @@ class SettingsManager extends BaseManager {
       palette?.accent ||
       base.accent;
     const resolvedAccentText =
-      palette?.accentText ||
-      palette?.accent ||
-      base.accentText ||
-      base.accent;
+      palette?.accentText || palette?.accent || base.accentText || base.accent;
 
     primaryEl.value = resolvedPrimary;
     onPrimaryEl.value = defaultOnPrimaryText;
