@@ -233,6 +233,30 @@ body {
   line-height: 1.6;
 }
 
+/* Performance mode: neutralize expensive effects only while enabled */
+html[data-performance-mode="true"] {
+  --ui-blur-multiplier: 0 !important;
+  --transition-fast: 0s !important;
+  --transition-normal: 0s !important;
+  --transition-slow: 0s !important;
+  --glass-shadow: none;
+}
+
+html[data-performance-mode="true"] *,
+html[data-performance-mode="true"] *::before,
+html[data-performance-mode="true"] *::after {
+  animation: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+html[data-performance-mode="true"] * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
 /* App-wide theme-aware scrollbars */
 * {
   scrollbar-width: thin;

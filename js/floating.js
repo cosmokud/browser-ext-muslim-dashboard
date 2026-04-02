@@ -47,6 +47,7 @@ class FloatingModeManager {
     this.runtime = new Map();
 
     this._resizeRaf = null;
+    this._performanceResizeTimer = null;
 
     // Animation tuning (ms)
     this.collapseOutMs = 260;
@@ -400,6 +401,7 @@ class FloatingModeManager {
         mutationObserver: null,
         saveTimer: null,
         minUpdateRaf: null,
+        minUpdateTimer: null,
         dragPersistRaf: null,
         dragPersistLastAt: 0,
       });
@@ -425,6 +427,34 @@ class FloatingModeManager {
     // Keep floating windows visible on viewport changes, but never persist
     // these automatic adjustments.
     window.addEventListener("resize", () => this.onWindowResize());
+
+    document.addEventListener("md:performance-mode-change", (event) => {
+      if (event?.detail?.enabled !== true) return;
+
+      if (this._resizeRaf) {
+        cancelAnimationFrame(this._resizeRaf);
+        this._resizeRaf = null;
+      }
+      if (this._performanceResizeTimer) {
+        clearTimeout(this._performanceResizeTimer);
+        this._performanceResizeTimer = null;
+      }
+
+      for (const st of this.runtime.values()) {
+        if (st.dragPersistRaf) {
+          cancelAnimationFrame(st.dragPersistRaf);
+          st.dragPersistRaf = null;
+        }
+        if (st.minUpdateRaf) {
+          cancelAnimationFrame(st.minUpdateRaf);
+          st.minUpdateRaf = null;
+        }
+        if (st.minUpdateTimer) {
+          clearTimeout(st.minUpdateTimer);
+          st.minUpdateTimer = null;
+        }
+      }
+    });
 
     // Keep constraint in sync with viewport
     const onViewportChange = () => this.applyViewportConstraint();
@@ -927,6 +957,13 @@ class FloatingModeManager {
       st.minUpdateRaf = null;
     }
 
+    if (st.minUpdateTimer) {
+      try {
+        clearTimeout(st.minUpdateTimer);
+      } catch (e) {}
+      st.minUpdateTimer = null;
+    }
+
     const finalizeRestoreToTiling = () => {
       // Button only exists in floating mode
       this.removeCollapseButton(key);
@@ -1174,6 +1211,14 @@ class FloatingModeManager {
     if (!st || !st.card) return;
     if (!st.card.classList.contains("floating-card")) return;
 
+    if (this.isPerformanceModeEnabled()) {
+      const now = Date.now();
+      if (now - (st.dragPersistLastAt || 0) < 160) return;
+      st.dragPersistLastAt = now;
+      this.flushSave(key, { force: true });
+      return;
+    }
+
     if (st.dragPersistRaf) return;
     st.dragPersistRaf = requestAnimationFrame(() => {
       st.dragPersistRaf = null;
@@ -1189,6 +1234,15 @@ class FloatingModeManager {
     const st = this.runtime.get(key);
     if (!st || !st.card) return;
     if (!st.card.classList.contains("floating-card")) return;
+
+    if (this.isPerformanceModeEnabled()) {
+      if (st.minUpdateTimer) return;
+      st.minUpdateTimer = window.setTimeout(() => {
+        st.minUpdateTimer = null;
+        this.updateMinSizeToContent(key);
+      }, 80);
+      return;
+    }
 
     if (st.minUpdateRaf) return;
     st.minUpdateRaf = requestAnimationFrame(() => {
@@ -1362,6 +1416,20 @@ class FloatingModeManager {
   }
 
   onWindowResize() {
+    if (this.isPerformanceModeEnabled()) {
+      if (this._performanceResizeTimer) {
+        clearTimeout(this._performanceResizeTimer);
+      }
+      this._performanceResizeTimer = window.setTimeout(() => {
+        this._performanceResizeTimer = null;
+        for (const key of this.runtime.keys()) {
+          this.enforceHorizontalSpace(key);
+          this.clampCardToViewport(key, { persist: false });
+        }
+      }, 90);
+      return;
+    }
+
     if (this._resizeRaf) return;
     this._resizeRaf = requestAnimationFrame(() => {
       this._resizeRaf = null;
@@ -1443,6 +1511,20 @@ class FloatingModeManager {
 
     this.updateButton(key);
     return true;
+  }
+
+  isPerformanceModeEnabled() {
+    if (typeof window !== "undefined") {
+      if (typeof window.__MD_PERFORMANCE_MODE__ === "boolean") {
+        return window.__MD_PERFORMANCE_MODE__ === true;
+      }
+    }
+
+    try {
+      return this.storage.getSettings()?.performanceModeEnabled === true;
+    } catch (e) {
+      return false;
+    }
   }
 
   isPersistenceSuppressed(key) {

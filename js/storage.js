@@ -176,6 +176,7 @@ class StorageManager {
       // UI settings
       timeFormat: "24h",
       uiBlurPower: 100, // percentage (100 = current blur baseline)
+      performanceModeEnabled: false,
       iconTheme: "monochrome",
 
       // Theme settings

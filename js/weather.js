@@ -69,6 +69,16 @@ class WeatherManager extends BaseManager {
       this._refreshWeatherIcons();
     });
 
+    // Keep chart animation behavior in sync with performance mode.
+    document.addEventListener("md:performance-mode-change", () => {
+      if (this._chartRaf) {
+        cancelAnimationFrame(this._chartRaf);
+        this._chartRaf = null;
+      }
+      this._chartAnim = null;
+      this.renderHourlyChart();
+    });
+
     // Weather code to icon/description mapping (WMO codes)
     this.weatherCodes = {
       0: { icon: "☀️", desc: "Clear sky" },
@@ -114,6 +124,20 @@ class WeatherManager extends BaseManager {
     }
     if (this.hourlyForecast) {
       this.renderHourlyChart();
+    }
+  }
+
+  isPerformanceModeEnabled() {
+    if (typeof window !== "undefined") {
+      if (typeof window.__MD_PERFORMANCE_MODE__ === "boolean") {
+        return window.__MD_PERFORMANCE_MODE__ === true;
+      }
+    }
+
+    try {
+      return this.storage.getSettings()?.performanceModeEnabled === true;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -610,6 +634,12 @@ class WeatherManager extends BaseManager {
       cancelAnimationFrame(this._chartRaf);
       this._chartRaf = null;
     }
+
+    if (this.isPerformanceModeEnabled()) {
+      this._chartAnim = null;
+      return;
+    }
+
     this._chartAnim = {
       start: performance.now(),
       duration: 520,
@@ -1451,7 +1481,9 @@ class WeatherManager extends BaseManager {
 
     const nowMs = performance.now();
     const anim = this._chartAnim;
+    const performanceModeEnabled = this.isPerformanceModeEnabled();
     const shouldAnimate =
+      !performanceModeEnabled &&
       !!anim &&
       anim.metric === metric &&
       nowMs - anim.start < anim.duration + points * anim.stagger + 60;

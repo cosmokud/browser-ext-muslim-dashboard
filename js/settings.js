@@ -281,6 +281,9 @@ class SettingsManager extends BaseManager {
     this.themeCustomWidthValue = document.getElementById(
       "themeCustomWidthValue",
     );
+    this.themePerformanceModeEnabled = document.getElementById(
+      "themePerformanceModeEnabled",
+    );
 
     // Icon theme picker
     this.iconThemePicker = document.getElementById("iconThemePicker");
@@ -545,6 +548,7 @@ class SettingsManager extends BaseManager {
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyPerformanceMode(settings.performanceModeEnabled === true);
 
     // Clean up any stale inline zoom left by the removed Dashboard Scale feature.
     const root = document.documentElement;
@@ -1787,6 +1791,31 @@ class SettingsManager extends BaseManager {
     } catch (e) {}
   }
 
+  applyPerformanceMode(enabled) {
+    const isEnabled = enabled === true;
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (root) {
+      root.dataset.performanceMode = isEnabled ? "true" : "false";
+      root.classList.toggle("performance-mode", isEnabled);
+    }
+
+    if (body) {
+      body.classList.toggle("performance-mode", isEnabled);
+    }
+
+    window.__MD_PERFORMANCE_MODE__ = isEnabled;
+
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:performance-mode-change", {
+          detail: { enabled: isEnabled },
+        }),
+      );
+    } catch (e) {}
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // THEMES PANEL METHODS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1949,6 +1978,12 @@ class SettingsManager extends BaseManager {
     } else {
       this.toggleThemeCustomWidth(false);
     }
+
+    if (this.themePerformanceModeEnabled) {
+      this.themePerformanceModeEnabled.checked =
+        settings.performanceModeEnabled === true;
+    }
+    this.applyPerformanceMode(settings.performanceModeEnabled === true);
 
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";
@@ -2822,6 +2857,12 @@ class SettingsManager extends BaseManager {
         );
       });
     }
+
+    if (this.themePerformanceModeEnabled) {
+      this.themePerformanceModeEnabled.addEventListener("change", () => {
+        this.applyPerformanceMode(this.themePerformanceModeEnabled.checked);
+      });
+    }
   }
 
   /**
@@ -2894,6 +2935,9 @@ class SettingsManager extends BaseManager {
         70,
       );
     }
+
+    settings.performanceModeEnabled =
+      this.themePerformanceModeEnabled?.checked === true;
 
     // Apply theme manager settings
     if (window.dashboard?.themes) {
@@ -4281,6 +4325,7 @@ class SettingsManager extends BaseManager {
 
     // Apply UI blur power
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyPerformanceMode(settings.performanceModeEnabled === true);
 
     // Update weather unit
     if (this.weather) {

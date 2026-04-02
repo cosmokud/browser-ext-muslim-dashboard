@@ -1124,6 +1124,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function applyPerformanceModeState(settings = storage.getSettings()) {
+    const enabled = settings?.performanceModeEnabled === true;
+    const root = document.documentElement;
+
+    if (root) {
+      root.dataset.performanceMode = enabled ? "true" : "false";
+      root.classList.toggle("performance-mode", enabled);
+    }
+
+    document.body?.classList.toggle("performance-mode", enabled);
+    window.__MD_PERFORMANCE_MODE__ = enabled;
+
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:performance-mode-change", {
+          detail: { enabled },
+        }),
+      );
+    } catch (e) {}
+  }
+
   function applyThemeAndIconSettings() {
     try {
       themes.loadThemeSettings();
@@ -1185,6 +1206,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function refreshPopupState() {
     const settings = storage.getSettings();
+
+    applyPerformanceModeState(settings);
 
     applyThemeAndIconSettings();
 
