@@ -11,31 +11,37 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: "KFGQPC Uthman Taha Naskh";
   src: url("../fonts/UthmanTN_v2-0.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: "KFGQPC KSA Regular";
   src: url("../fonts/KSARegular.woff2") format("woff2");
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
+  font-family: "KFGQPC Kufi Stylistic Regular";
   src: url("../fonts/KFGQPC-KufiStyV14.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: "KFGQPC AN Regular";
   src: url("../fonts/KFGQPCAnRegular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -43,17 +49,19 @@
   src: url("../fonts/AlJalilDot_v01.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  :where(.clear-completed-btn, .notes-delete-btn) {
+  font-family: "KFGQPC Sindhi Naskh Regular";
   src: url("../fonts/UthmanTSVer1.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
-      .notes-delete-btn
+/* CSS Variables */
+:root {
   /* Colors */
   --primary-color: #1a5f4a;
   --primary-light: #2d8a6e;
@@ -1863,50 +1871,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item-delete {
+  --_action-btn-size: var(--action-btn-size);
   position: absolute;
   right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: calc(50% - (var(--_action-btn-size) / 2));
   z-index: 1;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  padding: 0;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.96rem;
-  line-height: 1;
-  transition: all var(--transition-fast);
-}
-
-.notes-list-item-delete:hover {
-  background: var(--glass-bg);
-  color: #ff6b6b;
-}
-
-.notes-list-item-delete:active {
-  transform: translateY(-50%);
-}
-
-.notes-list-item-delete:focus-visible {
-  outline: 2px solid var(--action-btn-focus-ring);
-  outline-offset: 2px;
-}
-
-.notes-list-item-delete:disabled {
-  opacity: 0.52;
-  cursor: not-allowed;
-}
-
-.notes-list-item-delete:disabled:hover {
-  background: transparent;
-  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .notes-list-item:hover {
@@ -11296,6 +11266,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ) {
   --_action-btn-size: var(--action-btn-size);
@@ -11334,6 +11305,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ):hover:not(:disabled) {
   background: var(--action-btn-bg-hover);
@@ -11347,6 +11319,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ):active:not(:disabled) {
   transform: translateY(0);
@@ -11359,6 +11332,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ):focus-visible {
   outline: 2px solid var(--action-btn-focus-ring);
@@ -11371,6 +11345,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .notes-list-item-delete,
   .pocket-quran-toggle-group > button
 ):disabled {
   opacity: 0.52;
@@ -11386,6 +11361,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   ) {
   backdrop-filter: none;
@@ -11398,6 +11374,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   )
   .icon-theme-svg
@@ -11408,6 +11385,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .notes-list-item-delete,
     .pocket-quran-toggle-group > button
   )
   svg {
@@ -11415,14 +11393,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: var(--action-btn-icon-size);
 }
 
-:where(.clear-completed-btn, .notes-delete-btn) {
+:where(.clear-completed-btn, .notes-delete-btn, .notes-list-item-delete) {
   color: var(--action-btn-danger-color);
   border-color: var(--action-btn-danger-border);
 }
 
 :where(
     .clear-completed-btn,
-  .notes-delete-btn
+    .notes-delete-btn,
+    .notes-list-item-delete
   ):hover:not(:disabled) {
   background: var(--action-btn-danger-bg-hover);
   border-color: color-mix(in srgb, #ff7a7a 55%, var(--glass-border) 45%);
