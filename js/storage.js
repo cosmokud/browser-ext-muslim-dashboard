@@ -167,7 +167,6 @@ class StorageManager {
       // Container width settings
       containerWidth: "narrow", // 'extra-compact', 'compact', 'slim', 'narrow', 'medium', 'wide', 'full', 'custom'
       containerWidthCustom: 70, // percentage for custom width (50-98)
-      dashboardScale: 100, // percentage for full UI scale (25-500)
 
       // Calendar settings
       calendarType: "hijri",
@@ -449,7 +448,17 @@ class StorageManager {
    */
   getSettings() {
     const defaults = this.getDefaultSettings();
-    const stored = this.get("settings", {});
+    const storedRaw = this.get("settings", {});
+    const stored =
+      storedRaw && typeof storedRaw === "object" && !Array.isArray(storedRaw)
+        ? { ...storedRaw }
+        : {};
+
+    // Hard-reset deprecated dashboard scale setting from persisted storage.
+    if (Object.prototype.hasOwnProperty.call(stored, "dashboardScale")) {
+      delete stored.dashboardScale;
+      this.saveSettings(stored);
+    }
 
     // Deep merge for nested objects
     const merged = { ...defaults };

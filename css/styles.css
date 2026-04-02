@@ -9447,24 +9447,46 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 /* Dropdown Menu */
 .sticky-note-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 10px);
   right: 8px;
   width: 220px;
-  background: rgba(40, 40, 40, 0.98);
-  backdrop-filter: blur(20px);
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background: var(--modal-popover-bg);
+  backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
+  -webkit-backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.35),
+    0 0 1px rgba(255, 255, 255, 0.1) inset;
   padding: 12px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px) scale(0.95);
-  transition: all 0.2s ease;
+  transform: translateY(-8px) scale(0.96);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s;
+  pointer-events: none;
   z-index: 1000;
-  color: #fff;
+  color: var(--text-primary);
 
   /* Allow menu to grow beyond the note container */
   overflow: visible;
   padding-right: 12px;
+}
+
+.sticky-note-dropdown::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  background: var(--modal-surface-bg);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-right: none;
+  transform: rotate(45deg);
 }
 
 /* Custom scrollbar removed to allow the dropdown to grow beyond the note */
@@ -9484,7 +9506,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .sticky-note-dropdown.open {
   opacity: 1;
   visibility: visible;
-  transform: translateY(5px) scale(1);
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 .sticky-note-dropdown-section {
@@ -9500,7 +9523,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   align-items: center;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   margin-bottom: 8px;
   cursor: pointer;
 }
@@ -9547,7 +9570,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .sticky-note-dropdown-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-border);
   margin: 12px 0;
 }
 

@@ -841,7 +841,6 @@ class MuslimDashboard {
       settings.containerWidth || "narrow",
       settings.containerWidthCustom || 70,
     );
-    this.settings.applyDashboardScale(settings.dashboardScale || 100);
 
     // Apply floating mode positions/states before visibility + layout calculations
     try {
