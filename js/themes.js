@@ -660,6 +660,7 @@ class ThemeManager {
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
     this._glassOpacity = 35;
+    this._badgeOpacity = 35;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -752,6 +753,10 @@ class ThemeManager {
       themeSettings.glassOpacity,
       35,
     );
+    this._badgeOpacity = this._clampGlassOpacity(
+      themeSettings.badgeOpacity,
+      35,
+    );
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -804,6 +809,7 @@ class ThemeManager {
       mode: this._currentMode,
       glassEnabled: this._glassEnabled,
       glassOpacity: this._glassOpacity,
+      badgeOpacity: this._badgeOpacity,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
@@ -836,6 +842,13 @@ class ThemeManager {
    */
   getGlassOpacity() {
     return this._glassOpacity;
+  }
+
+  /**
+   * Get current badge opacity percentage
+   */
+  getBadgeOpacity() {
+    return this._badgeOpacity;
   }
 
   /**
@@ -904,6 +917,21 @@ class ThemeManager {
     this._glassOpacity = this._clampGlassOpacity(
       opacityPercent,
       this._glassOpacity,
+    );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  /**
+   * Set badge/chip opacity percentage
+   */
+  setBadgeOpacity(opacityPercent, save = true) {
+    this._badgeOpacity = this._clampGlassOpacity(
+      opacityPercent,
+      this._badgeOpacity,
     );
     this.applyTheme();
 
@@ -1104,6 +1132,10 @@ class ThemeManager {
       hover: clampAlpha(bgAlpha * hoverRatio),
       border: clampAlpha(bgAlpha * borderRatio),
     };
+  }
+
+  _getBadgeOpacityAlphas(opacityPercent = this._badgeOpacity) {
+    return this._getGlassOpacityAlphas(opacityPercent);
   }
 
   _extractRgbChannels(value) {
@@ -1464,6 +1496,21 @@ class ThemeManager {
     root.style.setProperty("--text-muted", colors.textMuted);
     root.style.setProperty("--surface-base-bg", colors.bodyBg);
 
+    // Badge/chip/pill/tag surfaces use their own independent opacity.
+    const badgeAlphas = this._getBadgeOpacityAlphas();
+    root.style.setProperty(
+      "--badge-bg",
+      this._setColorAlpha(colors.glassBg, badgeAlphas.bg),
+    );
+    root.style.setProperty(
+      "--badge-bg-hover",
+      this._setColorAlpha(colors.glassBgHover, badgeAlphas.hover),
+    );
+    root.style.setProperty(
+      "--badge-border",
+      this._setColorAlpha(colors.glassBorder, badgeAlphas.border),
+    );
+
     // Apply glass effect or solid background
     if (this._glassEnabled) {
       root.style.setProperty("--glass-bg", colors.glassBg);
@@ -1520,6 +1567,7 @@ class ThemeManager {
           mode: this._currentMode,
           glassEnabled: this._glassEnabled,
           glassOpacity: this._glassOpacity,
+          badgeOpacity: this._badgeOpacity,
         },
       }),
     );

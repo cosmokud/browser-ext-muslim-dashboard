@@ -246,6 +246,10 @@ class SettingsManager extends BaseManager {
     this.themeGlassOpacityValue = document.getElementById(
       "themeGlassOpacityValue",
     );
+    this.themeBadgeOpacity = document.getElementById("themeBadgeOpacity");
+    this.themeBadgeOpacityValue = document.getElementById(
+      "themeBadgeOpacityValue",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -1883,6 +1887,18 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeGlassOpacityLabel();
 
+    // Load badge opacity
+    const badgeOpacity = this.clampNumber(
+      themeSettings.badgeOpacity,
+      0,
+      100,
+      window.dashboard?.themes?.getBadgeOpacity?.() ?? 35,
+    );
+    if (this.themeBadgeOpacity) {
+      this.themeBadgeOpacity.value = String(badgeOpacity);
+    }
+    this.updateThemeBadgeOpacityLabel();
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -1964,6 +1980,22 @@ class SettingsManager extends BaseManager {
       );
       this.themeGlassOpacity.value = String(clamped);
       this.themeGlassOpacityValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Update theme badge opacity label
+   */
+  updateThemeBadgeOpacityLabel() {
+    if (this.themeBadgeOpacityValue && this.themeBadgeOpacity) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeBadgeOpacity.value, 10),
+        0,
+        100,
+        35,
+      );
+      this.themeBadgeOpacity.value = String(clamped);
+      this.themeBadgeOpacityValue.textContent = clamped + "%";
     }
   }
 
@@ -2508,6 +2540,18 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    // Badge opacity slider
+    if (this.themeBadgeOpacity) {
+      this.themeBadgeOpacity.addEventListener("input", () => {
+        this.updateThemeBadgeOpacityLabel();
+        const opacity = parseInt(this.themeBadgeOpacity.value, 10);
+
+        if (window.dashboard?.themes?.setBadgeOpacity) {
+          window.dashboard.themes.setBadgeOpacity(opacity, false);
+        }
+      });
+    }
+
     // Theme picker cards
     if (this.themePickerGrid) {
       this.themePickerGrid.addEventListener("click", (e) => {
@@ -2679,6 +2723,12 @@ class SettingsManager extends BaseManager {
       100,
       0,
     );
+    const badgeOpacity = this.clampNumber(
+      parseInt(this.themeBadgeOpacity?.value, 10),
+      0,
+      100,
+      35,
+    );
 
     // Get active theme
     let activeTheme = "pureWhite";
@@ -2700,6 +2750,7 @@ class SettingsManager extends BaseManager {
       mode: mode,
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
+      badgeOpacity: badgeOpacity,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -2730,6 +2781,9 @@ class SettingsManager extends BaseManager {
       window.dashboard.themes.setGlassEnabled(glassEnabled, true);
       if (typeof window.dashboard.themes.setGlassOpacity === "function") {
         window.dashboard.themes.setGlassOpacity(glassOpacity, true);
+      }
+      if (typeof window.dashboard.themes.setBadgeOpacity === "function") {
+        window.dashboard.themes.setBadgeOpacity(badgeOpacity, true);
       }
     }
   }

@@ -182,6 +182,7 @@ class StorageManager {
         mode: "dark",
         glassEnabled: true,
         glassOpacity: 0,
+        badgeOpacity: 35,
         customAccent: null,
         customPalettes: {},
       },
