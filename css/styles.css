@@ -7885,6 +7885,28 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
 }
 
+#pocketQuranTajweedToggle[aria-pressed="true"]:not(:disabled) {
+  border-color: color-mix(
+    in srgb,
+    var(--accent-gold) 56%,
+    var(--glass-border) 44%
+  );
+  background: color-mix(
+    in srgb,
+    var(--accent-gold) 20%,
+    var(--action-btn-bg) 80%
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-gold) 45%, transparent 55%),
+    0 0 18px color-mix(in srgb, var(--accent-gold) 42%, transparent 58%),
+    var(--action-btn-shadow-hover);
+}
+
+#pocketQuranTajweedToggle[aria-pressed="true"] .pq-tajweed-toggle-icon {
+  text-shadow: 0 0 12px
+    color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
+}
+
 /* Auto-advance control inside the jump container */
 .flashcard-auto-wrap {
   display: inline-flex;
