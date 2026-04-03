@@ -8179,15 +8179,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--accent-gold) 24%,
     var(--calendar-fast-tooltip-glass-border) 76%
   );
-  --calendar-fast-tooltip-surface: color-mix(
-    in srgb,
-    var(--calendar-fast-tooltip-glass-bg) 78%,
-    var(--card-bg) 22%
-  );
-  --calendar-fast-tooltip-surface-soft: color-mix(
-    in srgb,
-    var(--calendar-fast-tooltip-glass-bg-hover) 70%,
-    var(--card-bg) 30%
+  --calendar-fast-tooltip-surface: var(--calendar-fast-tooltip-glass-bg);
+  --calendar-fast-tooltip-surface-soft: var(
+    --calendar-fast-tooltip-glass-bg-hover
   );
   position: fixed;
   z-index: 12140;
@@ -10686,16 +10680,8 @@ body.sticky-note-resizing {
     var(--accent-gold) 24%,
     var(--glass-border) 76%
   );
-  --fasting-tooltip-surface: color-mix(
-    in srgb,
-    var(--glass-bg) 80%,
-    var(--card-bg) 20%
-  );
-  --fasting-tooltip-surface-soft: color-mix(
-    in srgb,
-    var(--glass-bg-hover) 70%,
-    var(--card-bg) 30%
-  );
+  --fasting-tooltip-surface: var(--glass-bg);
+  --fasting-tooltip-surface-soft: var(--glass-bg-hover);
 }
 
 .fasting-subtitle[data-fasting-tooltip]::before,
