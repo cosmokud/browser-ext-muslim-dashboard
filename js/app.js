@@ -2476,6 +2476,7 @@ class MuslimDashboard {
       document.getElementById("timeMainRow") ||
       document.querySelector(".time-main-row");
     const currentSeconds = document.getElementById("currentSeconds");
+    const compactWeather = document.getElementById("compactWeather");
     const toggleHeaderSurface = (el, enabled) => {
       if (!el) return;
       el.classList.toggle("header-surface-enabled", enabled === true);
@@ -2522,6 +2523,25 @@ class MuslimDashboard {
       timeMainRow,
       headingSettings.timeBackgroundEnabled === true,
     );
+    toggleHeaderSurface(
+      this.headerNextPrayer,
+      headingSettings.nextPrayerBackgroundEnabled === true,
+    );
+    toggleHeaderSurface(
+      compactWeather,
+      headingSettings.compactWeatherBackgroundEnabled === true,
+    );
+
+    if (
+      this.themes &&
+      typeof this.themes.getMainGridComponentOpacity === "function" &&
+      typeof this.themes.setMainGridComponentOpacity === "function"
+    ) {
+      this.themes.setMainGridComponentOpacity(
+        this.themes.getMainGridComponentOpacity(),
+        false,
+      );
+    }
 
     if (
       this.momentMode &&

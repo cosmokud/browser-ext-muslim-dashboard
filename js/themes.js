@@ -28,6 +28,7 @@ class ThemeManager {
     "dateDisplay",
     "timeMainRow",
     "headerNextPrayer",
+    "compactWeather",
   ];
 
   // Theme definitions with color palettes for both dark and light modes

@@ -333,6 +333,12 @@ class SettingsManager extends BaseManager {
     );
     this.headerDateBgEnabled = document.getElementById("headerDateBgEnabled");
     this.headerTimeBgEnabled = document.getElementById("headerTimeBgEnabled");
+    this.headerNextPrayerBgEnabled = document.getElementById(
+      "headerNextPrayerBgEnabled",
+    );
+    this.headerCompactWeatherBgEnabled = document.getElementById(
+      "headerCompactWeatherBgEnabled",
+    );
     this.dateCalendarRadios = document.querySelectorAll(
       'input[name="dateCalendar"]',
     );
@@ -1240,6 +1246,14 @@ class SettingsManager extends BaseManager {
     }
     if (this.headerTimeBgEnabled) {
       this.headerTimeBgEnabled.checked = heading.timeBackgroundEnabled === true;
+    }
+    if (this.headerNextPrayerBgEnabled) {
+      this.headerNextPrayerBgEnabled.checked =
+        heading.nextPrayerBackgroundEnabled === true;
+    }
+    if (this.headerCompactWeatherBgEnabled) {
+      this.headerCompactWeatherBgEnabled.checked =
+        heading.compactWeatherBackgroundEnabled === true;
     }
   }
 
@@ -4259,6 +4273,10 @@ class SettingsManager extends BaseManager {
       this.headerDateBgEnabled?.checked === true;
     settings.heading.timeBackgroundEnabled =
       this.headerTimeBgEnabled?.checked === true;
+    settings.heading.nextPrayerBackgroundEnabled =
+      this.headerNextPrayerBgEnabled?.checked === true;
+    settings.heading.compactWeatherBackgroundEnabled =
+      this.headerCompactWeatherBgEnabled?.checked === true;
   }
 
   /**

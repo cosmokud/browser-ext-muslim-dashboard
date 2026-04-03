@@ -447,6 +447,8 @@ class StorageManager {
         greetingBackgroundEnabled: false,
         dateBackgroundEnabled: false,
         timeBackgroundEnabled: false,
+        nextPrayerBackgroundEnabled: false,
+        compactWeatherBackgroundEnabled: false,
       },
     };
   }
