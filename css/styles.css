@@ -5966,6 +5966,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 /* Settings Tabs */
 .settings-tabs {
+  --settings-tab-columns: 4;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -5979,9 +5980,13 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .settings-tab {
-  flex: 0 0 var(--settings-tab-width, auto);
-  width: min(100%, var(--settings-tab-width, auto));
-  max-width: 100%;
+  --settings-tab-cell-width: calc(
+    (100% - (var(--settings-tab-columns) - 1) * var(--spacing-sm)) /
+      var(--settings-tab-columns)
+  );
+  flex: 0 0 var(--settings-tab-cell-width);
+  width: var(--settings-tab-cell-width);
+  max-width: var(--settings-tab-cell-width);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
