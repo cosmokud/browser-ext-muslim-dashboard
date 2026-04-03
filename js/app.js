@@ -2313,6 +2313,29 @@ class MuslimDashboard {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
+  hexToRgb(color) {
+    const normalized = this.normalizeHexColor(color);
+    if (!normalized) return null;
+
+    return {
+      r: parseInt(normalized.slice(1, 3), 16),
+      g: parseInt(normalized.slice(3, 5), 16),
+      b: parseInt(normalized.slice(5, 7), 16),
+    };
+  }
+
+  clampHeaderGlowOpacity(value, fallback = 72) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(0, Math.min(100, Math.round(parsed)));
+  }
+
+  clampHeaderGlowRadius(value, fallback = 14) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(0, Math.min(50, Math.round(parsed)));
+  }
+
   getInverseTextColorHex(sourceEl) {
     const target = sourceEl || document.body;
     if (!target || typeof window.getComputedStyle !== "function") {
@@ -2331,18 +2354,28 @@ class MuslimDashboard {
     return this.getInverseTextColorHex(sourceEl);
   }
 
-  applyHeaderGlow(el, enabled, glowColor) {
+  applyHeaderGlow(el, enabled, glowColor, opacity = 72, radius = 14) {
     if (!el) return;
 
     if (enabled === true) {
       const safeColor = this.normalizeHexColor(glowColor) || "#ffffff";
+      const safeOpacity = this.clampHeaderGlowOpacity(opacity, 72);
+      const safeRadius = this.clampHeaderGlowRadius(radius, 14);
+      const rgb = this.hexToRgb(safeColor) || { r: 255, g: 255, b: 255 };
+      const alpha = Number((safeOpacity / 100).toFixed(3));
+
       el.classList.add("header-glow-enabled");
-      el.style.setProperty("--header-glow-color", safeColor);
+      el.style.setProperty(
+        "--header-glow-color",
+        `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`,
+      );
+      el.style.setProperty("--header-glow-radius", `${safeRadius}px`);
       return;
     }
 
     el.classList.remove("header-glow-enabled");
     el.style.removeProperty("--header-glow-color");
+    el.style.removeProperty("--header-glow-radius");
   }
 
   /**
@@ -2544,12 +2577,7 @@ class MuslimDashboard {
   applyHeadingSettings() {
     const settings = this.storage.getSettings();
     const headingSettings = settings.heading || {};
-    const themeSettings = settings.theme || {};
     const visibility = settings.componentVisibility || {};
-    const headerComponentBackgroundsEnabled =
-      typeof this.themes?.isHeaderComponentBackgroundsEnabled === "function"
-        ? this.themes.isHeaderComponentBackgroundsEnabled()
-        : themeSettings.headerComponentBackgroundsEnabled === true;
     const timeSection = document.querySelector(".time-section");
     const timeMainRow =
       document.getElementById("timeMainRow") ||
@@ -2616,28 +2644,23 @@ class MuslimDashboard {
 
     toggleHeaderSurface(
       this.greeting,
-      headerComponentBackgroundsEnabled &&
-        headingSettings.greetingBackgroundEnabled === true,
+      headingSettings.greetingBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.dateDisplay,
-      headerComponentBackgroundsEnabled &&
-        headingSettings.dateBackgroundEnabled === true,
+      headingSettings.dateBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       timeMainRow,
-      headerComponentBackgroundsEnabled &&
-        headingSettings.timeBackgroundEnabled === true,
+      headingSettings.timeBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.headerNextPrayer,
-      headerComponentBackgroundsEnabled &&
-        headingSettings.nextPrayerBackgroundEnabled === true,
+      headingSettings.nextPrayerBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       compactWeather,
-      headerComponentBackgroundsEnabled &&
-        headingSettings.compactWeatherBackgroundEnabled === true,
+      headingSettings.compactWeatherBackgroundEnabled === true,
     );
 
     const greetingGlowColor = this.resolveHeaderGlowColor(
@@ -2661,31 +2684,86 @@ class MuslimDashboard {
       compactWeather?.querySelector(".compact-weather-temp") || compactWeather,
     );
 
+    const greetingGlowOpacity = this.clampHeaderGlowOpacity(
+      headingSettings.greetingGlowOpacity,
+      72,
+    );
+    const greetingGlowRadius = this.clampHeaderGlowRadius(
+      headingSettings.greetingGlowRadius,
+      14,
+    );
+
+    const dateGlowOpacity = this.clampHeaderGlowOpacity(
+      headingSettings.dateGlowOpacity,
+      72,
+    );
+    const dateGlowRadius = this.clampHeaderGlowRadius(
+      headingSettings.dateGlowRadius,
+      14,
+    );
+
+    const timeGlowOpacity = this.clampHeaderGlowOpacity(
+      headingSettings.timeGlowOpacity,
+      72,
+    );
+    const timeGlowRadius = this.clampHeaderGlowRadius(
+      headingSettings.timeGlowRadius,
+      14,
+    );
+
+    const nextPrayerGlowOpacity = this.clampHeaderGlowOpacity(
+      headingSettings.nextPrayerGlowOpacity,
+      72,
+    );
+    const nextPrayerGlowRadius = this.clampHeaderGlowRadius(
+      headingSettings.nextPrayerGlowRadius,
+      14,
+    );
+
+    const compactWeatherGlowOpacity = this.clampHeaderGlowOpacity(
+      headingSettings.compactWeatherGlowOpacity,
+      72,
+    );
+    const compactWeatherGlowRadius = this.clampHeaderGlowRadius(
+      headingSettings.compactWeatherGlowRadius,
+      14,
+    );
+
     this.applyHeaderGlow(
       this.greeting,
       headingSettings.greetingGlowEnabled === true && showGreeting,
       greetingGlowColor,
+      greetingGlowOpacity,
+      greetingGlowRadius,
     );
     this.applyHeaderGlow(
       this.dateDisplay,
       headingSettings.dateGlowEnabled === true && showDate,
       dateGlowColor,
+      dateGlowOpacity,
+      dateGlowRadius,
     );
     this.applyHeaderGlow(
       timeMainRow,
       headingSettings.timeGlowEnabled === true && showClock,
       timeGlowColor,
+      timeGlowOpacity,
+      timeGlowRadius,
     );
     this.applyHeaderGlow(
       this.headerNextPrayer,
       headingSettings.nextPrayerGlowEnabled === true && showNextPrayer,
       nextPrayerGlowColor,
+      nextPrayerGlowOpacity,
+      nextPrayerGlowRadius,
     );
     this.applyHeaderGlow(
       compactWeather,
       headingSettings.compactWeatherGlowEnabled === true &&
         settings.compactWeatherEnabled === true,
       compactWeatherGlowColor,
+      compactWeatherGlowOpacity,
+      compactWeatherGlowRadius,
     );
 
     if (

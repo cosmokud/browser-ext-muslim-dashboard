@@ -3032,10 +3032,6 @@
                 Toggle visibility, surface background, and glow for each header
                 item.
               </p>
-              <p class="setting-hint" id="headerSurfaceBackgroundsThemeHint">
-                Enable Header Component Backgrounds in Themes before you can
-                edit Surface toggles.
-              </p>
 
               <div class="header-control-grid" aria-label="Header controls">
                 <div class="header-control-row is-head" aria-hidden="true">
@@ -3077,6 +3073,48 @@
                       value="#ffffff"
                       aria-label="Greeting glow color"
                     />
+                    <button
+                      class="header-glow-popover-btn"
+                      type="button"
+                      id="headerGreetingGlowPopoverBtn"
+                      aria-expanded="false"
+                      aria-controls="headerGreetingGlowPopover"
+                    >
+                      Tune
+                    </button>
+                    <div
+                      class="header-glow-popover"
+                      id="headerGreetingGlowPopover"
+                      role="dialog"
+                      aria-label="Greeting glow settings"
+                    >
+                      <div class="header-glow-popover-row">
+                        <label for="headerGreetingGlowOpacity">Opacity</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerGreetingGlowOpacity"
+                            min="0"
+                            max="100"
+                            value="72"
+                          />
+                          <span id="headerGreetingGlowOpacityValue">72%</span>
+                        </div>
+                      </div>
+                      <div class="header-glow-popover-row">
+                        <label for="headerGreetingGlowRadius">Radius</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerGreetingGlowRadius"
+                            min="0"
+                            max="50"
+                            value="14"
+                          />
+                          <span id="headerGreetingGlowRadiusValue">14px</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3108,6 +3146,48 @@
                       value="#ffffff"
                       aria-label="Clock glow color"
                     />
+                    <button
+                      class="header-glow-popover-btn"
+                      type="button"
+                      id="headerTimeGlowPopoverBtn"
+                      aria-expanded="false"
+                      aria-controls="headerTimeGlowPopover"
+                    >
+                      Tune
+                    </button>
+                    <div
+                      class="header-glow-popover"
+                      id="headerTimeGlowPopover"
+                      role="dialog"
+                      aria-label="Clock glow settings"
+                    >
+                      <div class="header-glow-popover-row">
+                        <label for="headerTimeGlowOpacity">Opacity</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerTimeGlowOpacity"
+                            min="0"
+                            max="100"
+                            value="72"
+                          />
+                          <span id="headerTimeGlowOpacityValue">72%</span>
+                        </div>
+                      </div>
+                      <div class="header-glow-popover-row">
+                        <label for="headerTimeGlowRadius">Radius</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerTimeGlowRadius"
+                            min="0"
+                            max="50"
+                            value="14"
+                          />
+                          <span id="headerTimeGlowRadiusValue">14px</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3139,6 +3219,48 @@
                       value="#ffffff"
                       aria-label="Date glow color"
                     />
+                    <button
+                      class="header-glow-popover-btn"
+                      type="button"
+                      id="headerDateGlowPopoverBtn"
+                      aria-expanded="false"
+                      aria-controls="headerDateGlowPopover"
+                    >
+                      Tune
+                    </button>
+                    <div
+                      class="header-glow-popover"
+                      id="headerDateGlowPopover"
+                      role="dialog"
+                      aria-label="Date glow settings"
+                    >
+                      <div class="header-glow-popover-row">
+                        <label for="headerDateGlowOpacity">Opacity</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerDateGlowOpacity"
+                            min="0"
+                            max="100"
+                            value="72"
+                          />
+                          <span id="headerDateGlowOpacityValue">72%</span>
+                        </div>
+                      </div>
+                      <div class="header-glow-popover-row">
+                        <label for="headerDateGlowRadius">Radius</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerDateGlowRadius"
+                            min="0"
+                            max="50"
+                            value="14"
+                          />
+                          <span id="headerDateGlowRadiusValue">14px</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3180,6 +3302,56 @@
                       value="#ffffff"
                       aria-label="Compact weather glow color"
                     />
+                    <button
+                      class="header-glow-popover-btn"
+                      type="button"
+                      id="headerCompactWeatherGlowPopoverBtn"
+                      aria-expanded="false"
+                      aria-controls="headerCompactWeatherGlowPopover"
+                    >
+                      Tune
+                    </button>
+                    <div
+                      class="header-glow-popover"
+                      id="headerCompactWeatherGlowPopover"
+                      role="dialog"
+                      aria-label="Compact weather glow settings"
+                    >
+                      <div class="header-glow-popover-row">
+                        <label for="headerCompactWeatherGlowOpacity"
+                          >Opacity</label
+                        >
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerCompactWeatherGlowOpacity"
+                            min="0"
+                            max="100"
+                            value="72"
+                          />
+                          <span id="headerCompactWeatherGlowOpacityValue"
+                            >72%</span
+                          >
+                        </div>
+                      </div>
+                      <div class="header-glow-popover-row">
+                        <label for="headerCompactWeatherGlowRadius"
+                          >Radius</label
+                        >
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerCompactWeatherGlowRadius"
+                            min="0"
+                            max="50"
+                            value="14"
+                          />
+                          <span id="headerCompactWeatherGlowRadiusValue"
+                            >14px</span
+                          >
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3218,6 +3390,48 @@
                       value="#ffffff"
                       aria-label="Next prayer glow color"
                     />
+                    <button
+                      class="header-glow-popover-btn"
+                      type="button"
+                      id="headerNextPrayerGlowPopoverBtn"
+                      aria-expanded="false"
+                      aria-controls="headerNextPrayerGlowPopover"
+                    >
+                      Tune
+                    </button>
+                    <div
+                      class="header-glow-popover"
+                      id="headerNextPrayerGlowPopover"
+                      role="dialog"
+                      aria-label="Next prayer glow settings"
+                    >
+                      <div class="header-glow-popover-row">
+                        <label for="headerNextPrayerGlowOpacity">Opacity</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerNextPrayerGlowOpacity"
+                            min="0"
+                            max="100"
+                            value="72"
+                          />
+                          <span id="headerNextPrayerGlowOpacityValue">72%</span>
+                        </div>
+                      </div>
+                      <div class="header-glow-popover-row">
+                        <label for="headerNextPrayerGlowRadius">Radius</label>
+                        <div class="header-glow-popover-slider">
+                          <input
+                            type="range"
+                            id="headerNextPrayerGlowRadius"
+                            min="0"
+                            max="50"
+                            value="14"
+                          />
+                          <span id="headerNextPrayerGlowRadiusValue">14px</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -5241,25 +5455,6 @@
                   >0%</span
                 >
               </div>
-            </div>
-
-            <div
-              class="setting-group"
-              id="themeHeaderComponentBackgroundsGroup"
-            >
-              <label class="setting-label">Header Component Backgrounds</label>
-              <p class="setting-hint">
-                Enables header component backgrounds. You can customize
-                individually per components on the Header tab in the Dashboard
-                Setting.
-              </p>
-              <label class="checkbox-option theme-glass-toggle">
-                <input
-                  type="checkbox"
-                  id="themeHeaderComponentBackgroundsEnabled"
-                />
-                <span>Enable Header Component Backgrounds</span>
-              </label>
             </div>
 
             <div class="setting-group">

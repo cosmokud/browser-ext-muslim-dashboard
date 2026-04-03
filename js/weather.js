@@ -225,14 +225,7 @@ class WeatherManager extends BaseManager {
   ensureCompactWeatherElement() {
     const settings = this.storage.getSettings();
     const headingSettings = settings.heading || {};
-    const themeSettings = settings.theme || {};
-    const themeHeaderComponentBackgroundsEnabled =
-      typeof window.dashboard?.themes?.isHeaderComponentBackgroundsEnabled ===
-      "function"
-        ? window.dashboard.themes.isHeaderComponentBackgroundsEnabled()
-        : themeSettings.headerComponentBackgroundsEnabled === true;
     const compactWeatherBgEnabled =
-      themeHeaderComponentBackgroundsEnabled &&
       headingSettings.compactWeatherBackgroundEnabled === true;
 
     const header = document.querySelector(".header");

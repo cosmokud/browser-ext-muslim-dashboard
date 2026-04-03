@@ -685,7 +685,6 @@ class ThemeManager {
     this._glassEnabled = true;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
-    this._headerComponentBackgroundsEnabled = false;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -800,8 +799,6 @@ class ThemeManager {
       themeSettings.componentOpacity,
       0,
     );
-    this._headerComponentBackgroundsEnabled =
-      themeSettings.headerComponentBackgroundsEnabled === true;
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -855,8 +852,6 @@ class ThemeManager {
       glassEnabled: this._glassEnabled,
       glassOpacity: this._glassOpacity,
       componentOpacity: this._mainGridComponentOpacity,
-      headerComponentBackgroundsEnabled:
-        this._headerComponentBackgroundsEnabled,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
@@ -896,13 +891,6 @@ class ThemeManager {
    */
   getMainGridComponentOpacity() {
     return this._mainGridComponentOpacity;
-  }
-
-  /**
-   * Check if header component backgrounds are enabled
-   */
-  isHeaderComponentBackgroundsEnabled() {
-    return this._headerComponentBackgroundsEnabled === true;
   }
 
   /**
@@ -988,23 +976,6 @@ class ThemeManager {
       this._mainGridComponentOpacity,
     );
     this.applyTheme();
-
-    if (save) {
-      this.saveThemeSettings();
-    }
-  }
-
-  /**
-   * Enable or disable header component backgrounds globally
-   */
-  setHeaderComponentBackgroundsEnabled(enabled, save = true) {
-    this._headerComponentBackgroundsEnabled = enabled === true;
-
-    try {
-      if (window.dashboard?.applyHeadingSettings) {
-        window.dashboard.applyHeadingSettings();
-      }
-    } catch (e) {}
 
     if (save) {
       this.saveThemeSettings();

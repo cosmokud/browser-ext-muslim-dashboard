@@ -270,9 +270,6 @@ class SettingsManager extends BaseManager {
     this.themeComponentOpacityValue = document.getElementById(
       "themeComponentOpacityValue",
     );
-    this.themeHeaderComponentBackgroundsEnabled = document.getElementById(
-      "themeHeaderComponentBackgroundsEnabled",
-    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -349,25 +346,115 @@ class SettingsManager extends BaseManager {
     this.headerGreetingGlowColor = document.getElementById(
       "headerGreetingGlowColor",
     );
+    this.headerGreetingGlowPopoverBtn = document.getElementById(
+      "headerGreetingGlowPopoverBtn",
+    );
+    this.headerGreetingGlowPopover = document.getElementById(
+      "headerGreetingGlowPopover",
+    );
+    this.headerGreetingGlowOpacity = document.getElementById(
+      "headerGreetingGlowOpacity",
+    );
+    this.headerGreetingGlowOpacityValue = document.getElementById(
+      "headerGreetingGlowOpacityValue",
+    );
+    this.headerGreetingGlowRadius = document.getElementById(
+      "headerGreetingGlowRadius",
+    );
+    this.headerGreetingGlowRadiusValue = document.getElementById(
+      "headerGreetingGlowRadiusValue",
+    );
     this.headerDateGlowEnabled = document.getElementById(
       "headerDateGlowEnabled",
     );
     this.headerDateGlowColor = document.getElementById("headerDateGlowColor");
+    this.headerDateGlowPopoverBtn = document.getElementById(
+      "headerDateGlowPopoverBtn",
+    );
+    this.headerDateGlowPopover = document.getElementById(
+      "headerDateGlowPopover",
+    );
+    this.headerDateGlowOpacity = document.getElementById(
+      "headerDateGlowOpacity",
+    );
+    this.headerDateGlowOpacityValue = document.getElementById(
+      "headerDateGlowOpacityValue",
+    );
+    this.headerDateGlowRadius = document.getElementById(
+      "headerDateGlowRadius",
+    );
+    this.headerDateGlowRadiusValue = document.getElementById(
+      "headerDateGlowRadiusValue",
+    );
     this.headerTimeGlowEnabled = document.getElementById(
       "headerTimeGlowEnabled",
     );
     this.headerTimeGlowColor = document.getElementById("headerTimeGlowColor");
+    this.headerTimeGlowPopoverBtn = document.getElementById(
+      "headerTimeGlowPopoverBtn",
+    );
+    this.headerTimeGlowPopover = document.getElementById(
+      "headerTimeGlowPopover",
+    );
+    this.headerTimeGlowOpacity = document.getElementById(
+      "headerTimeGlowOpacity",
+    );
+    this.headerTimeGlowOpacityValue = document.getElementById(
+      "headerTimeGlowOpacityValue",
+    );
+    this.headerTimeGlowRadius = document.getElementById(
+      "headerTimeGlowRadius",
+    );
+    this.headerTimeGlowRadiusValue = document.getElementById(
+      "headerTimeGlowRadiusValue",
+    );
     this.headerNextPrayerGlowEnabled = document.getElementById(
       "headerNextPrayerGlowEnabled",
     );
     this.headerNextPrayerGlowColor = document.getElementById(
       "headerNextPrayerGlowColor",
     );
+    this.headerNextPrayerGlowPopoverBtn = document.getElementById(
+      "headerNextPrayerGlowPopoverBtn",
+    );
+    this.headerNextPrayerGlowPopover = document.getElementById(
+      "headerNextPrayerGlowPopover",
+    );
+    this.headerNextPrayerGlowOpacity = document.getElementById(
+      "headerNextPrayerGlowOpacity",
+    );
+    this.headerNextPrayerGlowOpacityValue = document.getElementById(
+      "headerNextPrayerGlowOpacityValue",
+    );
+    this.headerNextPrayerGlowRadius = document.getElementById(
+      "headerNextPrayerGlowRadius",
+    );
+    this.headerNextPrayerGlowRadiusValue = document.getElementById(
+      "headerNextPrayerGlowRadiusValue",
+    );
     this.headerCompactWeatherGlowEnabled = document.getElementById(
       "headerCompactWeatherGlowEnabled",
     );
     this.headerCompactWeatherGlowColor = document.getElementById(
       "headerCompactWeatherGlowColor",
+    );
+    this.headerCompactWeatherGlowPopoverBtn = document.getElementById(
+      "headerCompactWeatherGlowPopoverBtn",
+    );
+    this.headerCompactWeatherGlowPopover = document.getElementById(
+      "headerCompactWeatherGlowPopover",
+    );
+    this.headerCompactWeatherGlowOpacity = document.getElementById(
+      "headerCompactWeatherGlowOpacity",
+    );
+    this.headerCompactWeatherGlowOpacityValue = document.getElementById(
+      "headerCompactWeatherGlowOpacityValue",
+    );
+    this.headerCompactWeatherGlowRadius = document.getElementById(
+      "headerCompactWeatherGlowRadius",
+    );
+    this.headerCompactWeatherGlowRadiusValue = document.getElementById(
+      "headerCompactWeatherGlowRadiusValue",
     );
     this.headerSurfaceBackgroundsGroup = document.getElementById(
       "headerSurfaceBackgroundsGroup",
@@ -1303,6 +1390,16 @@ class SettingsManager extends BaseManager {
         fallback,
       );
     }
+    if (this.headerGreetingGlowOpacity) {
+      this.headerGreetingGlowOpacity.value = String(
+        this.clampHeaderGlowOpacity(heading.greetingGlowOpacity, 72),
+      );
+    }
+    if (this.headerGreetingGlowRadius) {
+      this.headerGreetingGlowRadius.value = String(
+        this.clampHeaderGlowRadius(heading.greetingGlowRadius, 14),
+      );
+    }
 
     if (this.headerDateGlowEnabled) {
       this.headerDateGlowEnabled.checked = heading.dateGlowEnabled === true;
@@ -1312,6 +1409,16 @@ class SettingsManager extends BaseManager {
       this.headerDateGlowColor.value = this.normalizeColorHex(
         heading.dateGlowColor,
         fallback,
+      );
+    }
+    if (this.headerDateGlowOpacity) {
+      this.headerDateGlowOpacity.value = String(
+        this.clampHeaderGlowOpacity(heading.dateGlowOpacity, 72),
+      );
+    }
+    if (this.headerDateGlowRadius) {
+      this.headerDateGlowRadius.value = String(
+        this.clampHeaderGlowRadius(heading.dateGlowRadius, 14),
       );
     }
 
@@ -1325,6 +1432,16 @@ class SettingsManager extends BaseManager {
         fallback,
       );
     }
+    if (this.headerTimeGlowOpacity) {
+      this.headerTimeGlowOpacity.value = String(
+        this.clampHeaderGlowOpacity(heading.timeGlowOpacity, 72),
+      );
+    }
+    if (this.headerTimeGlowRadius) {
+      this.headerTimeGlowRadius.value = String(
+        this.clampHeaderGlowRadius(heading.timeGlowRadius, 14),
+      );
+    }
 
     if (this.headerNextPrayerGlowEnabled) {
       this.headerNextPrayerGlowEnabled.checked =
@@ -1335,6 +1452,16 @@ class SettingsManager extends BaseManager {
       this.headerNextPrayerGlowColor.value = this.normalizeColorHex(
         heading.nextPrayerGlowColor,
         fallback,
+      );
+    }
+    if (this.headerNextPrayerGlowOpacity) {
+      this.headerNextPrayerGlowOpacity.value = String(
+        this.clampHeaderGlowOpacity(heading.nextPrayerGlowOpacity, 72),
+      );
+    }
+    if (this.headerNextPrayerGlowRadius) {
+      this.headerNextPrayerGlowRadius.value = String(
+        this.clampHeaderGlowRadius(heading.nextPrayerGlowRadius, 14),
       );
     }
 
@@ -1351,7 +1478,18 @@ class SettingsManager extends BaseManager {
         fallback,
       );
     }
+    if (this.headerCompactWeatherGlowOpacity) {
+      this.headerCompactWeatherGlowOpacity.value = String(
+        this.clampHeaderGlowOpacity(heading.compactWeatherGlowOpacity, 72),
+      );
+    }
+    if (this.headerCompactWeatherGlowRadius) {
+      this.headerCompactWeatherGlowRadius.value = String(
+        this.clampHeaderGlowRadius(heading.compactWeatherGlowRadius, 14),
+      );
+    }
 
+    this.updateHeaderGlowTuningUi();
     this.updateHeaderGlowColorLockState();
 
     this.updateHeaderSurfaceBackgroundsLockState();
@@ -1942,6 +2080,166 @@ class SettingsManager extends BaseManager {
     return this.rgbToHex(255 - rgb.r, 255 - rgb.g, 255 - rgb.b);
   }
 
+  clampHeaderGlowOpacity(value, fallback = 72) {
+    return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
+  }
+
+  clampHeaderGlowRadius(value, fallback = 14) {
+    return this.clampNumber(parseInt(value, 10), 0, 50, fallback);
+  }
+
+  getHeaderGlowControlConfigs() {
+    return [
+      {
+        key: "greeting",
+        toggle: this.headerGreetingGlowEnabled,
+        color: this.headerGreetingGlowColor,
+        button: this.headerGreetingGlowPopoverBtn,
+        popover: this.headerGreetingGlowPopover,
+        opacity: this.headerGreetingGlowOpacity,
+        opacityValue: this.headerGreetingGlowOpacityValue,
+        radius: this.headerGreetingGlowRadius,
+        radiusValue: this.headerGreetingGlowRadiusValue,
+      },
+      {
+        key: "date",
+        toggle: this.headerDateGlowEnabled,
+        color: this.headerDateGlowColor,
+        button: this.headerDateGlowPopoverBtn,
+        popover: this.headerDateGlowPopover,
+        opacity: this.headerDateGlowOpacity,
+        opacityValue: this.headerDateGlowOpacityValue,
+        radius: this.headerDateGlowRadius,
+        radiusValue: this.headerDateGlowRadiusValue,
+      },
+      {
+        key: "time",
+        toggle: this.headerTimeGlowEnabled,
+        color: this.headerTimeGlowColor,
+        button: this.headerTimeGlowPopoverBtn,
+        popover: this.headerTimeGlowPopover,
+        opacity: this.headerTimeGlowOpacity,
+        opacityValue: this.headerTimeGlowOpacityValue,
+        radius: this.headerTimeGlowRadius,
+        radiusValue: this.headerTimeGlowRadiusValue,
+      },
+      {
+        key: "nextPrayer",
+        toggle: this.headerNextPrayerGlowEnabled,
+        color: this.headerNextPrayerGlowColor,
+        button: this.headerNextPrayerGlowPopoverBtn,
+        popover: this.headerNextPrayerGlowPopover,
+        opacity: this.headerNextPrayerGlowOpacity,
+        opacityValue: this.headerNextPrayerGlowOpacityValue,
+        radius: this.headerNextPrayerGlowRadius,
+        radiusValue: this.headerNextPrayerGlowRadiusValue,
+      },
+      {
+        key: "compactWeather",
+        toggle: this.headerCompactWeatherGlowEnabled,
+        color: this.headerCompactWeatherGlowColor,
+        button: this.headerCompactWeatherGlowPopoverBtn,
+        popover: this.headerCompactWeatherGlowPopover,
+        opacity: this.headerCompactWeatherGlowOpacity,
+        opacityValue: this.headerCompactWeatherGlowOpacityValue,
+        radius: this.headerCompactWeatherGlowRadius,
+        radiusValue: this.headerCompactWeatherGlowRadiusValue,
+      },
+    ];
+  }
+
+  updateHeaderGlowTuningUi() {
+    this.getHeaderGlowControlConfigs().forEach((config) => {
+      if (config.opacity && config.opacityValue) {
+        const opacity = this.clampHeaderGlowOpacity(config.opacity.value, 72);
+        config.opacity.value = String(opacity);
+        config.opacityValue.textContent = `${opacity}%`;
+      }
+      if (config.radius && config.radiusValue) {
+        const radius = this.clampHeaderGlowRadius(config.radius.value, 14);
+        config.radius.value = String(radius);
+        config.radiusValue.textContent = `${radius}px`;
+      }
+    });
+  }
+
+  closeAllHeaderGlowPopovers() {
+    this.getHeaderGlowControlConfigs().forEach((config) => {
+      if (config.popover) {
+        config.popover.classList.remove("open");
+      }
+      if (config.button) {
+        config.button.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  setupHeaderGlowPopoverControls() {
+    const configs = this.getHeaderGlowControlConfigs();
+    if (!configs.length) return;
+
+    this.updateHeaderGlowTuningUi();
+
+    configs.forEach((config) => {
+      if (config.button && config.popover) {
+        config.button.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const willOpen = !config.popover.classList.contains("open");
+          this.closeAllHeaderGlowPopovers();
+
+          if (willOpen) {
+            config.popover.classList.add("open");
+            config.button.setAttribute("aria-expanded", "true");
+          }
+        });
+
+        config.popover.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      if (config.opacity) {
+        config.opacity.addEventListener("input", () => {
+          this.updateHeaderGlowTuningUi();
+          this.applyHeaderQuickControlsInstantly();
+        });
+        config.opacity.addEventListener("change", () => {
+          this.updateHeaderGlowTuningUi();
+          this.applyHeaderQuickControlsInstantly();
+        });
+      }
+
+      if (config.radius) {
+        config.radius.addEventListener("input", () => {
+          this.updateHeaderGlowTuningUi();
+          this.applyHeaderQuickControlsInstantly();
+        });
+        config.radius.addEventListener("change", () => {
+          this.updateHeaderGlowTuningUi();
+          this.applyHeaderQuickControlsInstantly();
+        });
+      }
+    });
+
+    if (this.modal && this.modal.dataset.headerGlowPopoverBound !== "1") {
+      this.modal.dataset.headerGlowPopoverBound = "1";
+      this.modal.addEventListener("click", () => {
+        this.closeAllHeaderGlowPopovers();
+      });
+    }
+
+    if (document.documentElement.dataset.headerGlowEscBound !== "1") {
+      document.documentElement.dataset.headerGlowEscBound = "1";
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          this.closeAllHeaderGlowPopovers();
+        }
+      });
+    }
+  }
+
   /**
    * Update custom width label
    */
@@ -2158,16 +2456,6 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeComponentOpacityLabel();
 
-    const headerComponentBackgroundsEnabled =
-      themeSettings.headerComponentBackgroundsEnabled === true;
-    if (this.themeHeaderComponentBackgroundsEnabled) {
-      this.themeHeaderComponentBackgroundsEnabled.checked =
-        headerComponentBackgroundsEnabled;
-    }
-    this.updateHeaderSurfaceBackgroundsLockState(
-      headerComponentBackgroundsEnabled,
-    );
-
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -2274,12 +2562,7 @@ class SettingsManager extends BaseManager {
     }
   }
 
-  updateHeaderSurfaceBackgroundsLockState(enabled = null) {
-    const isEnabled =
-      typeof enabled === "boolean"
-        ? enabled
-        : this.themeHeaderComponentBackgroundsEnabled?.checked === true;
-
+  updateHeaderSurfaceBackgroundsLockState() {
     const controls = [
       this.headerGreetingBgEnabled,
       this.headerDateBgEnabled,
@@ -2290,38 +2573,51 @@ class SettingsManager extends BaseManager {
 
     controls.forEach((control) => {
       if (!control) return;
-      control.disabled = !isEnabled;
+      control.disabled = false;
     });
 
     if (this.headerSurfaceBackgroundsGroup) {
-      this.headerSurfaceBackgroundsGroup.classList.toggle(
-        "disabled",
-        !isEnabled,
-      );
-      this.headerSurfaceBackgroundsGroup.setAttribute(
-        "aria-disabled",
-        isEnabled ? "false" : "true",
-      );
+      this.headerSurfaceBackgroundsGroup.classList.remove("disabled");
+      this.headerSurfaceBackgroundsGroup.setAttribute("aria-disabled", "false");
     }
   }
 
   updateHeaderGlowColorLockState() {
-    const pairs = [
-      [this.headerGreetingGlowEnabled, this.headerGreetingGlowColor],
-      [this.headerDateGlowEnabled, this.headerDateGlowColor],
-      [this.headerTimeGlowEnabled, this.headerTimeGlowColor],
-      [this.headerNextPrayerGlowEnabled, this.headerNextPrayerGlowColor],
-      [
-        this.headerCompactWeatherGlowEnabled,
-        this.headerCompactWeatherGlowColor,
-      ],
-    ];
+    this.getHeaderGlowControlConfigs().forEach((config) => {
+      const enabled = config.toggle?.checked === true;
 
-    pairs.forEach(([toggle, picker]) => {
-      if (!picker) return;
-      const enabled = toggle?.checked === true;
-      picker.disabled = !enabled;
-      picker.setAttribute("aria-disabled", enabled ? "false" : "true");
+      if (config.color) {
+        config.color.disabled = !enabled;
+        config.color.setAttribute("aria-disabled", enabled ? "false" : "true");
+      }
+
+      if (config.button) {
+        config.button.disabled = !enabled;
+        config.button.setAttribute("aria-disabled", enabled ? "false" : "true");
+      }
+
+      if (config.opacity) {
+        config.opacity.disabled = !enabled;
+        config.opacity.setAttribute(
+          "aria-disabled",
+          enabled ? "false" : "true",
+        );
+      }
+
+      if (config.radius) {
+        config.radius.disabled = !enabled;
+        config.radius.setAttribute(
+          "aria-disabled",
+          enabled ? "false" : "true",
+        );
+      }
+
+      if (!enabled && config.popover?.classList.contains("open")) {
+        config.popover.classList.remove("open");
+      }
+      if (!enabled && config.button) {
+        config.button.setAttribute("aria-expanded", "false");
+      }
     });
   }
 
@@ -2356,18 +2652,42 @@ class SettingsManager extends BaseManager {
     settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
       ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
       : "";
+    settings.heading.greetingGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerGreetingGlowOpacity?.value,
+      72,
+    );
+    settings.heading.greetingGlowRadius = this.clampHeaderGlowRadius(
+      this.headerGreetingGlowRadius?.value,
+      14,
+    );
 
     settings.heading.dateGlowEnabled =
       this.headerDateGlowEnabled?.checked === true;
     settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
       ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
       : "";
+    settings.heading.dateGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerDateGlowOpacity?.value,
+      72,
+    );
+    settings.heading.dateGlowRadius = this.clampHeaderGlowRadius(
+      this.headerDateGlowRadius?.value,
+      14,
+    );
 
     settings.heading.timeGlowEnabled =
       this.headerTimeGlowEnabled?.checked === true;
     settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
       ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
       : "";
+    settings.heading.timeGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerTimeGlowOpacity?.value,
+      72,
+    );
+    settings.heading.timeGlowRadius = this.clampHeaderGlowRadius(
+      this.headerTimeGlowRadius?.value,
+      14,
+    );
 
     settings.heading.nextPrayerGlowEnabled =
       this.headerNextPrayerGlowEnabled?.checked === true;
@@ -2375,6 +2695,14 @@ class SettingsManager extends BaseManager {
       .nextPrayerGlowEnabled
       ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
       : "";
+    settings.heading.nextPrayerGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerNextPrayerGlowOpacity?.value,
+      72,
+    );
+    settings.heading.nextPrayerGlowRadius = this.clampHeaderGlowRadius(
+      this.headerNextPrayerGlowRadius?.value,
+      14,
+    );
 
     settings.heading.compactWeatherGlowEnabled =
       this.headerCompactWeatherGlowEnabled?.checked === true;
@@ -2382,6 +2710,14 @@ class SettingsManager extends BaseManager {
       .compactWeatherGlowEnabled
       ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
       : "";
+    settings.heading.compactWeatherGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerCompactWeatherGlowOpacity?.value,
+      72,
+    );
+    settings.heading.compactWeatherGlowRadius = this.clampHeaderGlowRadius(
+      this.headerCompactWeatherGlowRadius?.value,
+      14,
+    );
 
     this.storage.saveSettings(settings);
 
@@ -3016,17 +3352,6 @@ class SettingsManager extends BaseManager {
       }
     };
 
-    const applyThemeHeaderComponentBackgrounds = (enabled) => {
-      if (window.dashboard?.themes?.setHeaderComponentBackgroundsEnabled) {
-        window.dashboard.themes.setHeaderComponentBackgroundsEnabled(
-          enabled,
-          false,
-        );
-      } else if (window.dashboard?.applyHeadingSettings) {
-        window.dashboard.applyHeadingSettings();
-      }
-    };
-
     // Blur power slider
     if (this.themeBlurPower) {
       this.themeBlurPower.addEventListener("input", () => {
@@ -3111,18 +3436,6 @@ class SettingsManager extends BaseManager {
           applyThemeComponentOpacity(opacity),
         );
       });
-    }
-
-    if (this.themeHeaderComponentBackgroundsEnabled) {
-      this.themeHeaderComponentBackgroundsEnabled.addEventListener(
-        "change",
-        () => {
-          const enabled =
-            this.themeHeaderComponentBackgroundsEnabled.checked === true;
-          this.updateHeaderSurfaceBackgroundsLockState(enabled);
-          applyThemeHeaderComponentBackgrounds(enabled);
-        },
-      );
     }
 
     // Theme picker cards
@@ -3320,9 +3633,6 @@ class SettingsManager extends BaseManager {
       100,
       0,
     );
-    const headerComponentBackgroundsEnabled =
-      this.themeHeaderComponentBackgroundsEnabled?.checked === true;
-
     // Get active theme
     let activeTheme = "emerald";
     const activeCard =
@@ -3344,7 +3654,6 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
-      headerComponentBackgroundsEnabled: headerComponentBackgroundsEnabled,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -3388,15 +3697,7 @@ class SettingsManager extends BaseManager {
           true,
         );
       }
-      if (
-        typeof window.dashboard.themes.setHeaderComponentBackgroundsEnabled ===
-        "function"
-      ) {
-        window.dashboard.themes.setHeaderComponentBackgroundsEnabled(
-          headerComponentBackgroundsEnabled,
-          true,
-        );
-      } else if (typeof window.dashboard.applyHeadingSettings === "function") {
+      if (typeof window.dashboard.applyHeadingSettings === "function") {
         window.dashboard.applyHeadingSettings();
       }
     }
@@ -4621,18 +4922,42 @@ class SettingsManager extends BaseManager {
     settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
       ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
       : "";
+    settings.heading.greetingGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerGreetingGlowOpacity?.value,
+      72,
+    );
+    settings.heading.greetingGlowRadius = this.clampHeaderGlowRadius(
+      this.headerGreetingGlowRadius?.value,
+      14,
+    );
 
     settings.heading.dateGlowEnabled =
       this.headerDateGlowEnabled?.checked === true;
     settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
       ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
       : "";
+    settings.heading.dateGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerDateGlowOpacity?.value,
+      72,
+    );
+    settings.heading.dateGlowRadius = this.clampHeaderGlowRadius(
+      this.headerDateGlowRadius?.value,
+      14,
+    );
 
     settings.heading.timeGlowEnabled =
       this.headerTimeGlowEnabled?.checked === true;
     settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
       ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
       : "";
+    settings.heading.timeGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerTimeGlowOpacity?.value,
+      72,
+    );
+    settings.heading.timeGlowRadius = this.clampHeaderGlowRadius(
+      this.headerTimeGlowRadius?.value,
+      14,
+    );
 
     settings.heading.nextPrayerGlowEnabled =
       this.headerNextPrayerGlowEnabled?.checked === true;
@@ -4640,6 +4965,14 @@ class SettingsManager extends BaseManager {
       .nextPrayerGlowEnabled
       ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
       : "";
+    settings.heading.nextPrayerGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerNextPrayerGlowOpacity?.value,
+      72,
+    );
+    settings.heading.nextPrayerGlowRadius = this.clampHeaderGlowRadius(
+      this.headerNextPrayerGlowRadius?.value,
+      14,
+    );
 
     settings.heading.compactWeatherGlowEnabled =
       this.headerCompactWeatherGlowEnabled?.checked === true;
@@ -4647,6 +4980,14 @@ class SettingsManager extends BaseManager {
       .compactWeatherGlowEnabled
       ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
       : "";
+    settings.heading.compactWeatherGlowOpacity = this.clampHeaderGlowOpacity(
+      this.headerCompactWeatherGlowOpacity?.value,
+      72,
+    );
+    settings.heading.compactWeatherGlowRadius = this.clampHeaderGlowRadius(
+      this.headerCompactWeatherGlowRadius?.value,
+      14,
+    );
   }
 
   /**
@@ -6865,6 +7206,8 @@ class SettingsManager extends BaseManager {
         this.applyHeaderQuickControlsInstantly();
       });
     }
+
+    this.setupHeaderGlowPopoverControls();
 
     [
       this.headerGreetingGlowEnabled,
