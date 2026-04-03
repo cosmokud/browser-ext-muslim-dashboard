@@ -2248,7 +2248,11 @@ class SettingsManager extends BaseManager {
   }
 
   _isThemeWithGlobalFontPalette(themeName) {
-    return themeName === "userTheme";
+    return (
+      themeName === "pureWhite" ||
+      themeName === "pureBlack" ||
+      themeName === "userTheme"
+    );
   }
 
   _getThemePaletteDefaultGlassTint(themeName, mode = "dark") {
@@ -2260,6 +2264,12 @@ class SettingsManager extends BaseManager {
 
     const primary = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
     return this._normalizeColorInputHex(primary, "#ffffff");
+  }
+
+  _getThemePaletteDefaultGlassBackground(themeName, mode = "dark") {
+    const fallbackTint = this._getThemePaletteDefaultGlassTint(themeName, mode);
+    const glassBg = ThemeManager.THEMES?.[themeName]?.[mode]?.glassBg;
+    return this._normalizeColorInputHex(glassBg, fallbackTint);
   }
 
   _normalizeColorInputHex(value, fallbackHex) {
@@ -2296,11 +2306,12 @@ class SettingsManager extends BaseManager {
     );
     if (!globalFontFields) return;
 
-    const isUserTheme = this._isThemeWithGlobalFontPalette(themeName);
-    globalFontFields.classList.toggle("active", isUserTheme);
+    const supportsGlobalFontPalette =
+      this._isThemeWithGlobalFontPalette(themeName);
+    globalFontFields.classList.toggle("active", supportsGlobalFontPalette);
     globalFontFields.setAttribute(
       "aria-hidden",
-      isUserTheme ? "false" : "true",
+      supportsGlobalFontPalette ? "false" : "true",
     );
   }
 
@@ -2345,6 +2356,7 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
+    const glassBgEl = document.getElementById("themePaletteGlassBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
     const textSecondaryEl = document.getElementById(
@@ -2360,6 +2372,7 @@ class SettingsManager extends BaseManager {
       !accentEl ||
       !accentTextEl ||
       !bgEl ||
+      !glassBgEl ||
       !glassTintEl
     )
       return;
@@ -2373,6 +2386,10 @@ class SettingsManager extends BaseManager {
       window.dashboard?.themes?.getCustomPalette?.(themeName, mode) || null;
 
     const defaultGlassTint = this._getThemePaletteDefaultGlassTint(
+      themeName,
+      mode,
+    );
+    const defaultGlassBackground = this._getThemePaletteDefaultGlassBackground(
       themeName,
       mode,
     );
@@ -2402,6 +2419,10 @@ class SettingsManager extends BaseManager {
       base.accentText || base.accent,
     );
     bgEl.value = palette?.bodyBg || base.bodyBg;
+    glassBgEl.value = this._normalizeColorInputHex(
+      palette?.glassBgColor || base.glassBg,
+      defaultGlassBackground,
+    );
     glassTintEl.value = palette?.glassTint || defaultGlassTint;
 
     if (
@@ -2453,6 +2474,7 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
+    const glassBgEl = document.getElementById("themePaletteGlassBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
     const textSecondaryEl = document.getElementById(
@@ -2468,6 +2490,7 @@ class SettingsManager extends BaseManager {
       !accentEl ||
       !accentTextEl ||
       !bgEl ||
+      !glassBgEl ||
       !glassTintEl
     )
       return;
@@ -2487,6 +2510,10 @@ class SettingsManager extends BaseManager {
       base.accent,
     );
     bgEl.value = base.bodyBg;
+    glassBgEl.value = this._getThemePaletteDefaultGlassBackground(
+      themeName,
+      mode,
+    );
     glassTintEl.value = this._getThemePaletteDefaultGlassTint(themeName, mode);
 
     if (
@@ -2528,6 +2555,7 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
+    const glassBgEl = document.getElementById("themePaletteGlassBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
     const textSecondaryEl = document.getElementById(
@@ -2543,6 +2571,7 @@ class SettingsManager extends BaseManager {
       !accentEl ||
       !accentTextEl ||
       !bgEl ||
+      !glassBgEl ||
       !glassTintEl
     )
       return;
@@ -2557,6 +2586,7 @@ class SettingsManager extends BaseManager {
       accentText,
       accentBackground,
       bodyBg: bgEl.value,
+      glassBgColor: glassBgEl.value,
       glassTint: glassTintEl.value,
     };
 
@@ -2799,6 +2829,7 @@ class SettingsManager extends BaseManager {
     const accentEl = document.getElementById("themePaletteAccent");
     const accentTextEl = document.getElementById("themePaletteAccentText");
     const bgEl = document.getElementById("themePaletteBackground");
+    const glassBgEl = document.getElementById("themePaletteGlassBackground");
     const glassTintEl = document.getElementById("themePaletteGlassTint");
     const textPrimaryEl = document.getElementById("themePaletteTextPrimary");
     const textSecondaryEl = document.getElementById(
@@ -2869,6 +2900,10 @@ class SettingsManager extends BaseManager {
     if (bgEl) {
       bgEl.addEventListener("input", onPalettePreviewInput);
       bgEl.addEventListener("change", onPaletteCommit);
+    }
+    if (glassBgEl) {
+      glassBgEl.addEventListener("input", onPalettePreviewInput);
+      glassBgEl.addEventListener("change", onPaletteCommit);
     }
     if (glassTintEl) {
       glassTintEl.addEventListener("input", onPalettePreviewInput);

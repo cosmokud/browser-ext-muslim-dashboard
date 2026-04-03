@@ -707,7 +707,7 @@ class ThemeManager {
   }
 
   _isThemeWithCustomTextPalette(themeName) {
-    return themeName === "userTheme";
+    return this._isPureTheme(themeName) || themeName === "userTheme";
   }
 
   _getDefaultGlassTint(themeName, mode) {
@@ -719,6 +719,12 @@ class ThemeManager {
 
     const fallback = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
     return this._normalizeHexColor(fallback) || "#ffffff";
+  }
+
+  _getDefaultGlassBackgroundColor(themeName, mode) {
+    const fallbackTint = this._getDefaultGlassTint(themeName, mode);
+    const baseGlassBg = ThemeManager.THEMES?.[themeName]?.[mode]?.glassBg;
+    return this._colorToHex(baseGlassBg, fallbackTint);
   }
 
   _getDefaultPureThemePalette(themeName, mode) {
@@ -748,17 +754,26 @@ class ThemeManager {
         base.onPrimaryText,
         base.primary,
       ),
+      glassBgColor: this._getDefaultGlassBackgroundColor(themeName, colorMode),
       glassTint: this._getDefaultGlassTint(themeName, colorMode),
     };
 
     if (this._isThemeWithCustomTextPalette(themeName)) {
-      defaultPalette.textPrimary = this._normalizeHexColor(base.textPrimary);
-      defaultPalette.textSecondary = this._normalizeHexColor(
-        base.textSecondary,
+      defaultPalette.textPrimary = this._colorToHex(
+        base.textPrimary,
+        "#ffffff",
       );
-      defaultPalette.textMuted = this._normalizeHexColor(base.textMuted);
-      defaultPalette.textPlaceholder = this._normalizeHexColor(
+      defaultPalette.textSecondary = this._colorToHex(
+        base.textSecondary,
+        colorMode === "dark" ? "#d9d9d9" : "#4d4d4d",
+      );
+      defaultPalette.textMuted = this._colorToHex(
+        base.textMuted,
+        colorMode === "dark" ? "#9a9a9a" : "#7a7a7a",
+      );
+      defaultPalette.textPlaceholder = this._colorToHex(
         base.textPlaceholder || base.textMuted,
+        colorMode === "dark" ? "#9a9a9a" : "#7a7a7a",
       );
     }
 
@@ -1060,12 +1075,10 @@ class ThemeManager {
         }
 
         if (supportsCustomText) {
-          const textPrimary = this._normalizeHexColor(palette.textPrimary);
-          const textSecondary = this._normalizeHexColor(palette.textSecondary);
-          const textMuted = this._normalizeHexColor(palette.textMuted);
-          const textPlaceholder = this._normalizeHexColor(
-            palette.textPlaceholder,
-          );
+          const textPrimary = this._colorToHex(palette.textPrimary);
+          const textSecondary = this._colorToHex(palette.textSecondary);
+          const textMuted = this._colorToHex(palette.textMuted);
+          const textPlaceholder = this._colorToHex(palette.textPlaceholder);
 
           if (textPrimary) colors.textPrimary = textPrimary;
           if (textSecondary) colors.textSecondary = textSecondary;
@@ -1085,9 +1098,17 @@ class ThemeManager {
       // Themes with explicit glass tint controls use one tint color for glass vars.
       if (supportsCustomGlassTint) {
         const defaultGlassTint = this._getDefaultGlassTint(name, colorMode);
+        const defaultGlassBgColor = this._getDefaultGlassBackgroundColor(
+          name,
+          colorMode,
+        );
         const glassTintHex = palette?.glassTint || defaultGlassTint;
+        const glassBgHex =
+          palette?.glassBgColor || defaultGlassBgColor || defaultGlassTint;
         const tintRgb = this.hexToRgb(glassTintHex);
-        if (tintRgb) {
+        const bgRgb = this.hexToRgb(glassBgHex) || tintRgb;
+
+        if (bgRgb || tintRgb) {
           const base = theme[colorMode];
           const aBg =
             this._parseRgbaAlpha(base.glassBg) ??
@@ -1099,9 +1120,17 @@ class ThemeManager {
             this._parseRgbaAlpha(base.glassBorder) ??
             (colorMode === "light" ? 0.25 : 0.4);
 
-          colors.glassBg = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${aBg})`;
-          colors.glassBgHover = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${aHover})`;
-          colors.glassBorder = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${aBorder})`;
+          if (bgRgb) {
+            colors.glassBg = `rgba(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b}, ${aBg})`;
+          }
+
+          if (tintRgb) {
+            colors.glassBgHover = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${aHover})`;
+            colors.glassBorder = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, ${aBorder})`;
+          } else if (bgRgb) {
+            colors.glassBgHover = `rgba(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b}, ${aHover})`;
+            colors.glassBorder = `rgba(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b}, ${aBorder})`;
+          }
         }
       } else if (palette?.primary) {
         // Other customizable themes (future-proof): tint glass by primary while preserving base alpha values.
@@ -1196,6 +1225,21 @@ class ThemeManager {
 
     const [r, g, b] = short[1].split("");
     return `#${r}${r}${g}${g}${b}${b}`;
+  }
+
+  _colorToHex(value, fallback = null) {
+    const normalizedHex = this._normalizeHexColor(value);
+    if (normalizedHex) return normalizedHex;
+
+    const rgb = this._extractRgbChannels(value);
+    if (!rgb) return fallback;
+
+    const toHex = (channel) =>
+      Math.max(0, Math.min(255, Number(channel)))
+        .toString(16)
+        .padStart(2, "0");
+
+    return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
   }
 
   _resolveOnPrimaryText(candidateHex, primaryHex) {
@@ -1318,6 +1362,9 @@ class ThemeManager {
         accentBackground: defaultAccentBackground,
         bodyBg: defaultBodyBg,
         onPrimaryText: defaultOnPrimaryText,
+        ...(fallback?.glassBgColor
+          ? { glassBgColor: fallback.glassBgColor }
+          : {}),
         ...(fallback?.glassTint ? { glassTint: fallback.glassTint } : {}),
         ...(fallback?.textPrimary ? { textPrimary: fallback.textPrimary } : {}),
         ...(fallback?.textSecondary
@@ -1417,6 +1464,10 @@ class ThemeManager {
       accentBackground,
       bodyBg: palette?.bodyBg || defaultBase.bodyBg,
       onPrimaryText,
+      glassBgColor:
+        this._normalizeHexColor(palette?.glassBgColor) ||
+        fallback?.glassBgColor ||
+        this._getDefaultGlassBackgroundColor(themeName, colorMode),
       glassTint:
         this._normalizeHexColor(palette?.glassTint) ||
         fallback?.glassTint ||
@@ -1424,21 +1475,21 @@ class ThemeManager {
       ...(supportsCustomText
         ? {
             textPrimary:
-              this._normalizeHexColor(palette?.textPrimary) ||
+              this._colorToHex(palette?.textPrimary) ||
               fallback?.textPrimary ||
-              this._normalizeHexColor(defaultBase.textPrimary),
+              this._colorToHex(defaultBase.textPrimary),
             textSecondary:
-              this._normalizeHexColor(palette?.textSecondary) ||
+              this._colorToHex(palette?.textSecondary) ||
               fallback?.textSecondary ||
-              this._normalizeHexColor(defaultBase.textSecondary),
+              this._colorToHex(defaultBase.textSecondary),
             textMuted:
-              this._normalizeHexColor(palette?.textMuted) ||
+              this._colorToHex(palette?.textMuted) ||
               fallback?.textMuted ||
-              this._normalizeHexColor(defaultBase.textMuted),
+              this._colorToHex(defaultBase.textMuted),
             textPlaceholder:
-              this._normalizeHexColor(palette?.textPlaceholder) ||
+              this._colorToHex(palette?.textPlaceholder) ||
               fallback?.textPlaceholder ||
-              this._normalizeHexColor(
+              this._colorToHex(
                 defaultBase.textPlaceholder || defaultBase.textMuted,
               ),
           }
