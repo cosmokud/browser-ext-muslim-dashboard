@@ -1114,6 +1114,8 @@ class FloatingModeManager {
       card.style.overflow = "";
       card.style.minWidth = "";
       card.style.minHeight = "";
+      card.style.maxWidth = "";
+      card.style.maxHeight = "";
 
       // Fade in quickly once the card is in place.
       if (inserted && !prefersReducedMotion) {
@@ -1145,6 +1147,43 @@ class FloatingModeManager {
 
       // Notify layout manager after restoring this card to grid mode.
       this.notifyLayoutChanged();
+
+      // Ensure browser-native resize dimensions cannot leak into tiling mode.
+      window.requestAnimationFrame(() => {
+        try {
+          if (!card.classList.contains("floating-card")) {
+            card.style.width = "";
+            card.style.height = "";
+            card.style.minWidth = "";
+            card.style.minHeight = "";
+            card.style.maxWidth = "";
+            card.style.maxHeight = "";
+          }
+        } catch (e) {}
+      });
+
+      // Replace reload-based recovery: force a deterministic grid rebuild when
+      // user disabled floating while grid layout is active.
+      try {
+        const desiredStillFloating = this.isEnabledDesired(key);
+        if (gridLayoutActive && !desiredStillFloating) {
+          const grid = window.dashboard?.gridLayout;
+          if (grid) {
+            window.requestAnimationFrame(() => {
+              try {
+                if (typeof grid.applyLayout === "function") {
+                  grid.applyLayout();
+                }
+              } catch (e) {}
+              try {
+                if (typeof grid.recalculateLayout === "function") {
+                  grid.recalculateLayout();
+                }
+              } catch (e) {}
+            });
+          }
+        }
+      } catch (e) {}
     };
 
     if (prefersReducedMotion) {
