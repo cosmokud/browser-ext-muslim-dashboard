@@ -668,7 +668,11 @@ class FloatingModeManager {
       280,
       Math.floor(window.innerWidth - this.viewportPadding * 2),
     );
-    const width = this.clamp(this.safeNumber(cfg.width, 420), 280, maxFloatingWidth);
+    const width = this.clamp(
+      this.safeNumber(cfg.width, 420),
+      280,
+      maxFloatingWidth,
+    );
     const height = this.safeNumber(cfg.height, 520);
     const z = this.safeNumber(cfg.z, 10);
 
