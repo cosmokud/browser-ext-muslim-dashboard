@@ -2299,6 +2299,35 @@
           <button class="modal-close" id="settingsClose">&times;</button>
         </div>
         <div class="modal-body">
+          <div class="settings-search-shell">
+            <div class="settings-search-field">
+              <span class="settings-search-icon" aria-hidden="true">🔎</span>
+              <input
+                type="search"
+                class="settings-search-input"
+                id="settingsSearchInput"
+                placeholder="Search all settings..."
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Search settings"
+              />
+              <button
+                class="settings-search-clear"
+                id="settingsSearchClearBtn"
+                type="button"
+                aria-label="Clear settings search"
+                hidden
+              >
+                ✕
+              </button>
+            </div>
+            <p
+              class="settings-search-empty"
+              id="settingsSearchEmpty"
+              aria-live="polite"
+            ></p>
+          </div>
+
           <!-- Tabs -->
           <div class="settings-tabs">
             <button class="settings-tab active" data-tab="location">

@@ -93,6 +93,15 @@ class SettingsManager extends BaseManager {
     this.tabs = document.querySelectorAll(".settings-tab");
     this.panels = document.querySelectorAll(".settings-panel");
     this.tabStrip = this.modal?.querySelector?.(".settings-tabs");
+    this.settingsSearchInput = document.getElementById("settingsSearchInput");
+    this.settingsSearchClearBtn = document.getElementById(
+      "settingsSearchClearBtn",
+    );
+    this.settingsSearchEmpty = document.getElementById("settingsSearchEmpty");
+
+    this._autoSaveTimer = null;
+    this._isAutoSaving = false;
+    this._autoSaveQueued = false;
 
     // Debug mode (gated)
     this.debugEnabled = globalThis.ENABLE_DEBUG_MODE === true;
@@ -726,6 +735,281 @@ class SettingsManager extends BaseManager {
           strip.style.setProperty("--settings-tab-min-width", `${width}px`);
         }
       });
+    });
+  }
+
+  normalizeSettingsSearchText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  applySettingsSearch(rawQuery = "") {
+    const query = this.normalizeSettingsSearchText(rawQuery);
+    const tabs = Array.from(this.tabs || []);
+    const panels = Array.from(this.panels || []);
+    const panelMatchMap = new Map();
+    let hasVisibleTab = false;
+
+    panels.forEach((panel) => {
+      const tabName = panel.id.replace(/Panel$/, "");
+      const relatedTab = tabs.find((tab) => tab.dataset.tab === tabName);
+      const tabText = this.normalizeSettingsSearchText(
+        relatedTab?.textContent || "",
+      );
+      const panelText = this.normalizeSettingsSearchText(panel.textContent);
+      const tabDirectMatch = query ? tabText.includes(query) : false;
+      const groups = Array.from(panel.querySelectorAll(".setting-group"));
+
+      panel.classList.remove("settings-search-filtered-out");
+
+      if (!query) {
+        groups.forEach((group) => {
+          group.classList.remove(
+            "settings-search-filtered-out",
+            "settings-search-match",
+          );
+        });
+        panelMatchMap.set(panel.id, true);
+        return;
+      }
+
+      if (!groups.length) {
+        const matches = tabDirectMatch || panelText.includes(query);
+        panel.classList.toggle("settings-search-filtered-out", !matches);
+        panelMatchMap.set(panel.id, matches);
+        return;
+      }
+
+      let matchedGroups = 0;
+      groups.forEach((group) => {
+        const groupText = this.normalizeSettingsSearchText(group.textContent);
+        const matches = tabDirectMatch || groupText.includes(query);
+
+        group.classList.toggle("settings-search-filtered-out", !matches);
+        group.classList.toggle(
+          "settings-search-match",
+          !tabDirectMatch && groupText.includes(query),
+        );
+
+        if (matches) {
+          matchedGroups += 1;
+        }
+      });
+
+      const panelMatches =
+        tabDirectMatch || matchedGroups > 0 || panelText.includes(query);
+      panelMatchMap.set(panel.id, panelMatches);
+    });
+
+    tabs.forEach((tab) => {
+      const isDebugLocked = tab.dataset.tab === "debug" && !this.debugEnabled;
+      if (isDebugLocked) {
+        return;
+      }
+
+      const panelId = `${tab.dataset.tab}Panel`;
+      const tabText = this.normalizeSettingsSearchText(tab.textContent);
+      const matches =
+        !query || tabText.includes(query) || panelMatchMap.get(panelId) === true;
+
+      tab.classList.toggle("settings-search-filtered-out", !matches);
+      tab.classList.toggle("settings-search-match-tab", query && matches);
+      tab.setAttribute("aria-hidden", matches ? "false" : "true");
+
+      if (matches) {
+        hasVisibleTab = true;
+      }
+    });
+
+    if (query) {
+      const hasVisibleActiveTab = tabs.some(
+        (tab) =>
+          tab.classList.contains("active") &&
+          !tab.classList.contains("settings-search-filtered-out"),
+      );
+
+      if (!hasVisibleActiveTab) {
+        const firstMatchTab = tabs.find(
+          (tab) => !tab.classList.contains("settings-search-filtered-out"),
+        );
+        if (firstMatchTab?.dataset?.tab) {
+          this.switchTab(firstMatchTab.dataset.tab);
+        }
+      }
+    }
+
+    if (this.settingsSearchClearBtn) {
+      this.settingsSearchClearBtn.hidden = query.length === 0;
+    }
+
+    if (this.settingsSearchEmpty) {
+      if (query && !hasVisibleTab) {
+        const safeQuery = String(rawQuery || "").trim();
+        this.settingsSearchEmpty.textContent = safeQuery
+          ? `No settings matched "${safeQuery}".`
+          : "No settings matched.";
+        this.settingsSearchEmpty.classList.add("active");
+      } else {
+        this.settingsSearchEmpty.textContent = "";
+        this.settingsSearchEmpty.classList.remove("active");
+      }
+    }
+
+    this.updateSettingsTabsMinWidth();
+  }
+
+  resetSettingsSearch() {
+    if (this.settingsSearchInput) {
+      this.settingsSearchInput.value = "";
+    }
+    this.applySettingsSearch("");
+  }
+
+  setupSettingsSearchEventListeners() {
+    if (this.settingsSearchInput && this.settingsSearchInput.dataset.bound !== "1") {
+      this.settingsSearchInput.dataset.bound = "1";
+
+      this.settingsSearchInput.addEventListener("input", () => {
+        this.applySettingsSearch(this.settingsSearchInput.value);
+      });
+
+      this.settingsSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          this.resetSettingsSearch();
+          this.settingsSearchInput.blur();
+        }
+      });
+    }
+
+    if (
+      this.settingsSearchClearBtn &&
+      this.settingsSearchClearBtn.dataset.bound !== "1"
+    ) {
+      this.settingsSearchClearBtn.dataset.bound = "1";
+      this.settingsSearchClearBtn.addEventListener("click", () => {
+        this.resetSettingsSearch();
+        this.settingsSearchInput?.focus();
+      });
+    }
+  }
+
+  isAutoSaveTarget(target) {
+    if (!(target instanceof Element)) {
+      return false;
+    }
+
+    if (!this.modal || !this.modal.contains(target)) {
+      return false;
+    }
+
+    const isFormControl =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLTextAreaElement;
+
+    if (!isFormControl) {
+      return false;
+    }
+
+    if (target.id === "settingsSearchInput") {
+      return false;
+    }
+
+    if (target instanceof HTMLInputElement) {
+      const type = String(target.type || "").toLowerCase();
+      if (
+        type === "button" ||
+        type === "submit" ||
+        type === "reset" ||
+        type === "file" ||
+        type === "image"
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  runAutoSave() {
+    if (this._isAutoSaving) {
+      this._autoSaveQueued = true;
+      return;
+    }
+
+    this._isAutoSaving = true;
+    try {
+      this.saveSettings({
+        source: "auto",
+        showToast: false,
+        closeModal: false,
+        showValidationErrors: false,
+      });
+    } finally {
+      this._isAutoSaving = false;
+
+      if (this._autoSaveQueued) {
+        this._autoSaveQueued = false;
+        this.scheduleAutoSave(120);
+      }
+    }
+  }
+
+  scheduleAutoSave(delayMs = 280) {
+    if (!this.modal?.classList.contains("active")) {
+      return;
+    }
+
+    if (this._autoSaveTimer) {
+      clearTimeout(this._autoSaveTimer);
+    }
+
+    const safeDelay = this.clampNumber(delayMs, 0, 5000, 280);
+    this._autoSaveTimer = setTimeout(() => {
+      this._autoSaveTimer = null;
+      this.runAutoSave();
+    }, safeDelay);
+  }
+
+  clearScheduledAutoSave() {
+    if (this._autoSaveTimer) {
+      clearTimeout(this._autoSaveTimer);
+      this._autoSaveTimer = null;
+    }
+    this._autoSaveQueued = false;
+  }
+
+  setupSettingsAutoSaveListeners() {
+    if (!this.modal || this.modal.dataset.autoSaveBound === "1") {
+      return;
+    }
+
+    this.modal.dataset.autoSaveBound = "1";
+
+    this.modal.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!this.isAutoSaveTarget(target)) {
+        return;
+      }
+
+      const delay =
+        target instanceof HTMLInputElement &&
+        (target.type === "range" || target.type === "number")
+          ? 200
+          : 380;
+
+      this.scheduleAutoSave(delay);
+    });
+
+    this.modal.addEventListener("change", (event) => {
+      if (!this.isAutoSaveTarget(event.target)) {
+        return;
+      }
+
+      this.scheduleAutoSave(120);
     });
   }
 
@@ -1766,16 +2050,26 @@ class SettingsManager extends BaseManager {
           this.weatherCitySearchResults,
           results,
           (result) => {
-            if (this.weatherCityInput)
+            if (this.weatherCityInput) {
               this.weatherCityInput.value = result.city;
-            if (this.weatherLatitudeInput)
-              this.weatherLatitudeInput.value = Number(result.latitude).toFixed(
-                4,
+              this.weatherCityInput.dispatchEvent(
+                new Event("input", { bubbles: true }),
               );
-            if (this.weatherLongitudeInput)
-              this.weatherLongitudeInput.value = Number(
-                result.longitude,
-              ).toFixed(4);
+              this.weatherCityInput.dispatchEvent(
+                new Event("change", { bubbles: true }),
+              );
+            }
+
+            this._applyLatLngToInputs(
+              this.weatherLatitudeInput,
+              this.weatherLongitudeInput,
+              {
+                latitude: Number(result.latitude).toFixed(4),
+                longitude: Number(result.longitude).toFixed(4),
+              },
+            );
+
+            this.scheduleAutoSave(80);
 
             const pickedLabel = result.fullName
               ? `${result.city} (${result.fullName})`
@@ -3290,6 +3584,8 @@ class SettingsManager extends BaseManager {
 
         // Re-render theme picker with new mode colors
         this.renderThemePickerGrid();
+
+        this.scheduleAutoSave(120);
       });
     });
 
@@ -3374,6 +3670,7 @@ class SettingsManager extends BaseManager {
         this.updateThemeBlurPowerLabel();
         const power = parseInt(this.themeBlurPower.value, 10);
         flushThemeSliderUpdate("blurPower", () => this.applyUiBlurPower(power));
+        this.scheduleAutoSave(120);
       });
     }
 
@@ -3403,6 +3700,7 @@ class SettingsManager extends BaseManager {
         flushThemeSliderUpdate("glassOpacity", () =>
           applyThemeGlassOpacity(opacity),
         );
+        this.scheduleAutoSave(120);
       });
     }
 
@@ -3435,6 +3733,7 @@ class SettingsManager extends BaseManager {
         flushThemeSliderUpdate("componentOpacity", () =>
           applyThemeComponentOpacity(opacity),
         );
+        this.scheduleAutoSave(120);
       });
     }
 
@@ -3464,6 +3763,8 @@ class SettingsManager extends BaseManager {
 
         // Re-render to update preview colors
         this.renderThemePickerGrid();
+
+        this.scheduleAutoSave(120);
       });
     }
 
@@ -4627,7 +4928,14 @@ class SettingsManager extends BaseManager {
   /**
    * Save settings
    */
-  saveSettings() {
+  saveSettings(options = {}) {
+    const {
+      source = "manual",
+      showToast = source === "manual",
+      closeModal = source === "manual",
+      showValidationErrors = source === "manual",
+    } = options;
+
     // Ensure floating mode geometry/state is persisted before we snapshot settings
     try {
       if (window.dashboard && window.dashboard.floating) {
@@ -4645,8 +4953,12 @@ class SettingsManager extends BaseManager {
     );
     if (locationRadio) settings.locationMethod = locationRadio.value;
     settings.city = this.cityInput?.value || "";
-    settings.latitude = parseFloat(this.latitudeInput?.value) || null;
-    settings.longitude = parseFloat(this.longitudeInput?.value) || null;
+    const parsedLatitude = parseFloat(this.latitudeInput?.value);
+    const parsedLongitude = parseFloat(this.longitudeInput?.value);
+    settings.latitude = Number.isFinite(parsedLatitude) ? parsedLatitude : null;
+    settings.longitude = Number.isFinite(parsedLongitude)
+      ? parsedLongitude
+      : null;
 
     // Prayer settings
     settings.calculationMethod = this.calculationMethod?.value || "MWL";
@@ -4807,8 +5119,8 @@ class SettingsManager extends BaseManager {
     this.saveFastingSettings(settings);
 
     // Save debug settings
-    if (!this.saveDebugSettings(settings)) {
-      return;
+    if (!this.saveDebugSettings(settings, { showValidationErrors })) {
+      return false;
     }
 
     // Save to storage
@@ -4826,20 +5138,18 @@ class SettingsManager extends BaseManager {
       }
     }
 
-    // Apply changes (may reload)
+    // Apply changes live
     this.applySettings(settings);
 
-    // Show confirmation
-    this.showToast("Settings saved successfully! Refreshing...", "success");
+    if (showToast) {
+      this.showToast("Settings saved successfully!", "success");
+    }
 
-    // Close modal
-    this.closeModal();
+    if (closeModal) {
+      this.closeModal();
+    }
 
-    // Some UI (especially icons) is injected/cached by many components.
-    // A hard refresh ensures everything re-renders consistently.
-    setTimeout(() => {
-      window.location.reload();
-    }, 350);
+    return true;
   }
 
   /**
@@ -5121,11 +5431,10 @@ class SettingsManager extends BaseManager {
     }
 
     // Update location if manual
-    if (
-      settings.locationMethod === "manual" &&
-      settings.latitude &&
-      settings.longitude
-    ) {
+    const hasManualCoordinates =
+      Number.isFinite(settings.latitude) && Number.isFinite(settings.longitude);
+
+    if (settings.locationMethod === "manual" && hasManualCoordinates) {
       if (this.prayerTimes) {
         this.prayerTimes.setManualLocation(
           settings.latitude,
@@ -5690,11 +5999,22 @@ class SettingsManager extends BaseManager {
           this.citySearchResults,
           results,
           (result) => {
-            if (this.cityInput) this.cityInput.value = result.city;
-            if (this.latitudeInput)
-              this.latitudeInput.value = Number(result.latitude).toFixed(4);
-            if (this.longitudeInput)
-              this.longitudeInput.value = Number(result.longitude).toFixed(4);
+            if (this.cityInput) {
+              this.cityInput.value = result.city;
+              this.cityInput.dispatchEvent(
+                new Event("input", { bubbles: true }),
+              );
+              this.cityInput.dispatchEvent(
+                new Event("change", { bubbles: true }),
+              );
+            }
+
+            this._applyLatLngToInputs(this.latitudeInput, this.longitudeInput, {
+              latitude: Number(result.latitude).toFixed(4),
+              longitude: Number(result.longitude).toFixed(4),
+            });
+
+            this.scheduleAutoSave(80);
 
             const pickedLabel = result.fullName
               ? `${result.city} (${result.fullName})`
@@ -5767,6 +6087,8 @@ class SettingsManager extends BaseManager {
       this.modal.classList.add("active");
     }
 
+    this.resetSettingsSearch();
+
     this.updateSettingsRangeProgress();
 
     this.updateSettingsTabsMinWidth();
@@ -5776,6 +6098,8 @@ class SettingsManager extends BaseManager {
    * Close modal
    */
   closeModal() {
+    this.clearScheduledAutoSave();
+
     if (this.modal) {
       this.modal.classList.remove("active");
     }
@@ -6007,7 +6331,9 @@ class SettingsManager extends BaseManager {
     this.setDebugDateControlsEnabled(enabled);
   }
 
-  saveDebugSettings(settings) {
+  saveDebugSettings(settings, options = {}) {
+    const { showValidationErrors = true } = options;
+
     settings.debug =
       settings.debug && typeof settings.debug === "object"
         ? settings.debug
@@ -6021,14 +6347,16 @@ class SettingsManager extends BaseManager {
     const selectedDate = fromPicker || fromParts;
 
     if (enabled && !selectedDate) {
-      this.showToast(
-        "Please select a valid simulated date (YYYY-MM-DD).",
-        "error",
-      );
-      if (this.debugEnabled) {
-        try {
-          this.switchTab("debug");
-        } catch (e) {}
+      if (showValidationErrors) {
+        this.showToast(
+          "Please select a valid simulated date (YYYY-MM-DD).",
+          "error",
+        );
+        if (this.debugEnabled) {
+          try {
+            this.switchTab("debug");
+          } catch (e) {}
+        }
       }
       return false;
     }
@@ -6314,7 +6642,16 @@ class SettingsManager extends BaseManager {
       this.closeBtn.addEventListener("click", () => this.closeModal());
     }
     if (this.saveBtn) {
-      this.saveBtn.addEventListener("click", () => this.saveSettings());
+      this.saveBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        this.clearScheduledAutoSave();
+        this.saveSettings({
+          source: "manual",
+          showToast: true,
+          closeModal: true,
+          showValidationErrors: true,
+        });
+      });
     }
 
     this._bindOverlayCloseBehavior(this.modal, () => this.closeModal());
@@ -6323,6 +6660,9 @@ class SettingsManager extends BaseManager {
     this.tabs.forEach((tab) => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
+
+    this.setupSettingsSearchEventListeners();
+    this.setupSettingsAutoSaveListeners();
 
     // Keep all settings range sliders visually synced with their current value.
     if (this.modal && this.modal.dataset.rangeProgressBound !== "1") {
