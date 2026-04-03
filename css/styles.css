@@ -570,7 +570,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border: 1px solid color-mix(in srgb, var(--settings-light) 34%, transparent);
   color: var(--on-primary-text);
   cursor: pointer;
-  box-shadow: 0 4px 15px color-mix(in srgb, var(--settings-color) 42%, transparent);
+  box-shadow: 0 4px 15px
+    color-mix(in srgb, var(--settings-color) 42%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -589,7 +590,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .sidebar-mode-btn:hover {
   transform: scale(1.06);
   border-color: color-mix(in srgb, var(--settings-light) 48%, transparent);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--settings-color) 52%, transparent);
+  box-shadow: 0 6px 20px
+    color-mix(in srgb, var(--settings-color) 52%, transparent);
 }
 
 .sidebar-mode-btn.active {
