@@ -664,13 +664,16 @@ class FloatingModeManager {
       this.getStoredBox(key) || this.getSettings()?.floating?.[key] || {};
     const left = this.safeNumber(cfg.left, 40);
     const top = this.safeNumber(cfg.top, 120);
-    const width = this.safeNumber(cfg.width, 420);
+    const maxFloatingWidth = Math.max(
+      280,
+      Math.floor(window.innerWidth - this.viewportPadding * 2),
+    );
+    const width = this.clamp(this.safeNumber(cfg.width, 420), 280, maxFloatingWidth);
     const height = this.safeNumber(cfg.height, 520);
     const z = this.safeNumber(cfg.z, 10);
 
-    // If the viewport can't accommodate the main container plus a sidebar-wide
-    // floating window, keep tiling layout. Do NOT change the user's desired
-    // setting; we'll auto-restore when space returns.
+    // If space is constrained, width above has already been clamped to a safe
+    // viewport-fit value so toggling still works without needing a full reload.
     if (!this.hasHorizontalSpace(width)) {
       st.spaceSuspended = true;
       // If it was already floating, restore it to tiling.
@@ -1503,7 +1506,11 @@ class FloatingModeManager {
 
   hasHorizontalSpace(componentWidth) {
     const w = this.safeNumber(componentWidth, 0) || 0;
-    return w <= this.getAvailableSidebarSpace();
+    const maxFloatingWidth = Math.max(
+      280,
+      Math.floor(window.innerWidth - this.viewportPadding * 2),
+    );
+    return w <= maxFloatingWidth;
   }
 
   enforceHorizontalSpace(key) {
