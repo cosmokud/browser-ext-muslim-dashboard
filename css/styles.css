@@ -6049,6 +6049,25 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   margin-bottom: var(--spacing-sm);
 }
 
+.setting-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.setting-label-row .setting-label {
+  margin-bottom: 0;
+}
+
+.editor-detach-btn {
+  flex: 0 0 auto;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
 .setting-input,
 .setting-select,
 .setting-textarea {
@@ -9579,6 +9598,117 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   overflow: hidden;
   resize: none;
   min-height: 56px;
+}
+
+.quotes-editor-lang-note {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.quotes-editor-header,
+.quote-editor-row {
+  grid-template-columns: 42px minmax(260px, 2fr) minmax(220px, 1fr) 34px;
+}
+
+.quote-editor-row .setting-input,
+.quote-editor-row .flashcard-cell {
+  margin: 0;
+}
+
+.quote-editor-text {
+  min-height: 42px;
+}
+
+.quote-editor-source {
+  min-width: 0;
+}
+
+#quotesEditorGroup .quotes-pagination {
+  justify-content: flex-end;
+  padding-top: 0;
+}
+
+@media (max-width: 900px) {
+  .quotes-editor-header,
+  .quote-editor-row {
+    grid-template-columns: 34px minmax(180px, 1.7fr) minmax(140px, 1fr) 30px;
+  }
+}
+
+.editor-detach-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 2vw, 24px);
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 12000;
+}
+
+.editor-detach-modal.active {
+  display: flex;
+}
+
+.editor-detach-modal-content {
+  width: min(96vw, var(--detached-editor-width, 1200px));
+  max-width: 96vw;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.editor-detach-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.editor-detach-modal-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.editor-detach-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.editor-detach-modal-close:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.editor-detach-modal-body {
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+.editor-detach-modal-body .setting-group {
+  margin-bottom: 0;
+}
+
+.editor-detach-modal-body .editor-detach-btn {
+  display: none;
 }
 
 /* Pagination */

@@ -210,10 +210,15 @@ class SettingsManager extends BaseManager {
     // Quote elements
     this.useDefaultQuotes = document.getElementById("useDefaultQuotes");
     this.useUserQuotes = document.getElementById("useUserQuotes");
-    this.newQuoteText = document.getElementById("newQuoteText");
-    this.newQuoteSource = document.getElementById("newQuoteSource");
-    this.newQuoteArabic = document.getElementById("newQuoteArabic");
-    this.addQuoteBtn = document.getElementById("addQuoteBtn");
+
+    // Detached settings editor modal state
+    this.detachedEditorModal = null;
+    this.detachedEditorModalContent = null;
+    this.detachedEditorModalBody = null;
+    this.detachedEditorModalTitle = null;
+    this.detachedEditorCloseBtn = null;
+    this._detachedEditorState = null;
+    this._detachedEditorResizeHandler = null;
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -674,6 +679,7 @@ class SettingsManager extends BaseManager {
    */
   init() {
     this.loadSettings();
+    this.ensureDetachedEditorModal();
     this.setupEventListeners();
     this.updateMethodAnglesDisplay();
     this.renderCustomBackgrounds();
@@ -6083,33 +6089,230 @@ class SettingsManager extends BaseManager {
     }
   }
 
-  /**
-   * Add user quote
-   */
-  addUserQuote() {
-    const text = this.newQuoteText?.value.trim();
-    const source = this.newQuoteSource?.value.trim();
-    const langCode =
-      this.quotes?.getSelectedEditorLanguageCode?.() || "en";
+  getDetachedEditorConfigs() {
+    return [
+      {
+        buttonId: "quotesDetachEditorBtn",
+        groupId: "quotesEditorGroup",
+        title: "Quotes Editor",
+        onBeforeOpen: () => this.quotes?.renderQuotesList?.(),
+        onAfterClose: () => this.quotes?.renderQuotesList?.(),
+      },
+      {
+        buttonId: "flashcardsDetachEditorBtn",
+        groupId: "flashcardsEditorGroup",
+        title: "Flashcards Editor",
+        onBeforeOpen: () => this.flashcards?.renderSettings?.(),
+        onAfterClose: () => this.flashcards?.renderSettings?.(),
+      },
+      {
+        buttonId: "hadithDetachEditorBtn",
+        groupId: "hadithEditorGroup",
+        title: "Hadith Editor",
+        onBeforeOpen: () => this.hadith?.renderSettings?.(),
+        onAfterClose: () => this.hadith?.renderSettings?.(),
+      },
+      {
+        buttonId: "adhkarDetachEditorBtn",
+        groupId: "adhkarEditorGroup",
+        title: "Adhkar Editor",
+        onBeforeOpen: () => this.adhkar?.renderSettings?.(),
+        onAfterClose: () => this.adhkar?.renderSettings?.(),
+      },
+    ];
+  }
 
-    if (!text) {
-      this.showToast("Please enter quote text", "error");
+  ensureDetachedEditorModal() {
+    if (this.detachedEditorModal) return;
+
+    let modal = document.getElementById("settingsEditorDetachModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "settingsEditorDetachModal";
+      modal.className = "editor-detach-modal";
+      modal.innerHTML = `
+        <div class="editor-detach-modal-content">
+          <div class="editor-detach-modal-header">
+            <h3 class="editor-detach-modal-title" id="settingsEditorDetachTitle">Detached Editor</h3>
+            <button type="button" class="editor-detach-modal-close" aria-label="Close detached editor">&times;</button>
+          </div>
+          <div class="editor-detach-modal-body" id="settingsEditorDetachBody"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    this.detachedEditorModal = modal;
+    this.detachedEditorModalContent = modal.querySelector(
+      ".editor-detach-modal-content",
+    );
+    this.detachedEditorModalBody = modal.querySelector(
+      ".editor-detach-modal-body",
+    );
+    this.detachedEditorModalTitle = modal.querySelector(
+      ".editor-detach-modal-title",
+    );
+    this.detachedEditorCloseBtn = modal.querySelector(
+      ".editor-detach-modal-close",
+    );
+
+    if (this.detachedEditorModalBody?.dataset.bound !== "1") {
+      this.detachedEditorModalBody.dataset.bound = "1";
+      this.detachedEditorModalBody.addEventListener("input", () =>
+        this.updateDetachedEditorModalWidth(),
+      );
+      this.detachedEditorModalBody.addEventListener("click", () =>
+        this.updateDetachedEditorModalWidth(),
+      );
+    }
+
+    if (this.detachedEditorCloseBtn?.dataset.bound !== "1") {
+      this.detachedEditorCloseBtn.dataset.bound = "1";
+      this.detachedEditorCloseBtn.addEventListener("click", () =>
+        this.closeDetachedEditorModal(),
+      );
+    }
+
+    this._bindOverlayCloseBehavior(this.detachedEditorModal, () =>
+      this.closeDetachedEditorModal(),
+    );
+
+    if (!document.documentElement.dataset.detachedEditorEscBound) {
+      document.documentElement.dataset.detachedEditorEscBound = "1";
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (this.detachedEditorModal?.classList.contains("active")) {
+          this.closeDetachedEditorModal();
+        }
+      });
+    }
+  }
+
+  bindDetachedEditorButtons() {
+    this.getDetachedEditorConfigs().forEach((config) => {
+      const btn = document.getElementById(config.buttonId);
+      if (!btn || btn.dataset.bound === "1") return;
+
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openDetachedEditorModal(config);
+      });
+    });
+  }
+
+  openDetachedEditorModal(config) {
+    if (!config?.groupId) return;
+    this.ensureDetachedEditorModal();
+
+    if (!this.detachedEditorModal || !this.detachedEditorModalBody) return;
+
+    if (typeof config.onBeforeOpen === "function") {
+      try {
+        config.onBeforeOpen();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (this._detachedEditorState?.groupId === config.groupId) {
+      this.updateDetachedEditorModalWidth();
       return;
     }
 
-    if (!source) {
-      this.showToast("Please enter quote source", "error");
+    if (this._detachedEditorState) {
+      this.closeDetachedEditorModal({ skipAfterCloseRefresh: true });
+    }
+
+    const group = document.getElementById(config.groupId);
+    const parent = group?.parentElement;
+    if (!group || !parent) return;
+
+    const placeholder = document.createElement("div");
+    placeholder.className = "editor-detached-host-placeholder";
+    placeholder.hidden = true;
+    parent.insertBefore(placeholder, group);
+
+    this.detachedEditorModalBody.appendChild(group);
+    this.detachedEditorModal.classList.add("active");
+    this.detachedEditorModalTitle.textContent = config.title || "Detached Editor";
+
+    this._detachedEditorState = {
+      groupId: config.groupId,
+      group,
+      placeholder,
+      onAfterClose: config.onAfterClose,
+    };
+
+    this.updateDetachedEditorModalWidth();
+
+    if (!this._detachedEditorResizeHandler) {
+      this._detachedEditorResizeHandler = () =>
+        this.updateDetachedEditorModalWidth();
+      window.addEventListener("resize", this._detachedEditorResizeHandler);
+      window.addEventListener(
+        "orientationchange",
+        this._detachedEditorResizeHandler,
+      );
+    }
+  }
+
+  updateDetachedEditorModalWidth() {
+    if (!this._detachedEditorState?.group || !this.detachedEditorModalContent)
       return;
+
+    const group = this._detachedEditorState.group;
+    const surface =
+      group.querySelector(
+        ".hadith-editor-table-wrap, .adhkar-editor-table-wrap, .flashcard-editor-body, .flashcards-editor, .adhkar-editor, .user-quotes-list",
+      ) || group;
+
+    const measured = Math.max(
+      surface.scrollWidth || 0,
+      group.scrollWidth || 0,
+      760,
+    );
+    const viewportCap = Math.max(720, Math.floor(window.innerWidth * 0.96));
+    const targetWidth = Math.min(viewportCap, measured + 72);
+
+    this.detachedEditorModalContent.style.setProperty(
+      "--detached-editor-width",
+      `${targetWidth}px`,
+    );
+  }
+
+  closeDetachedEditorModal({ skipAfterCloseRefresh = false } = {}) {
+    if (this.detachedEditorModal) {
+      this.detachedEditorModal.classList.remove("active");
     }
 
-    if (this.quotes) {
-      this.quotes.addUserQuote(text, source, langCode);
+    if (!this._detachedEditorState) return;
+
+    const { group, placeholder, onAfterClose } = this._detachedEditorState;
+
+    if (placeholder?.parentElement && group) {
+      placeholder.parentElement.insertBefore(group, placeholder);
+      placeholder.remove();
     }
 
-    if (this.newQuoteText) this.newQuoteText.value = "";
-    if (this.newQuoteSource) this.newQuoteSource.value = "";
+    if (!skipAfterCloseRefresh && typeof onAfterClose === "function") {
+      try {
+        onAfterClose();
+      } catch (e) {
+        // ignore
+      }
+    }
 
-    this.showToast("Quote added!", "success");
+    if (this._detachedEditorResizeHandler) {
+      window.removeEventListener("resize", this._detachedEditorResizeHandler);
+      window.removeEventListener(
+        "orientationchange",
+        this._detachedEditorResizeHandler,
+      );
+      this._detachedEditorResizeHandler = null;
+    }
+
+    this._detachedEditorState = null;
   }
 
   /**
@@ -6145,6 +6348,7 @@ class SettingsManager extends BaseManager {
    */
   closeModal() {
     this.clearScheduledAutoSave();
+    this.closeDetachedEditorModal();
 
     if (this.modal) {
       this.modal.classList.remove("active");
@@ -6709,6 +6913,7 @@ class SettingsManager extends BaseManager {
 
     this.setupSettingsSearchEventListeners();
     this.setupSettingsAutoSaveListeners();
+    this.bindDetachedEditorButtons();
 
     // Keep all settings range sliders visually synced with their current value.
     if (this.modal && this.modal.dataset.rangeProgressBound !== "1") {
@@ -6921,11 +7126,6 @@ class SettingsManager extends BaseManager {
         this.toggleCustomAngles(e.target.value === "Custom");
         this.updateMethodAnglesDisplay();
       });
-    }
-
-    // Add quote
-    if (this.addQuoteBtn) {
-      this.addQuoteBtn.addEventListener("click", () => this.addUserQuote());
     }
 
     // Background interval change - toggle custom interval field

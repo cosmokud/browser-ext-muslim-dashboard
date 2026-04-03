@@ -4536,29 +4536,6 @@
             </div>
 
             <div class="setting-group">
-              <label class="setting-label">Add Custom Quote</label>
-              <p class="setting-hint">
-                Text is saved to the currently selected editor language key.
-              </p>
-              <div class="add-quote-form">
-                <textarea
-                  class="setting-textarea"
-                  id="newQuoteText"
-                  placeholder="Enter quote text..."
-                ></textarea>
-                <input
-                  type="text"
-                  class="setting-input"
-                  id="newQuoteSource"
-                  placeholder="Source (e.g., Surah Al-Baqarah 2:255)"
-                />
-                <button class="setting-btn" id="addQuoteBtn">
-                  ➕ Add Quote
-                </button>
-              </div>
-            </div>
-
-            <div class="setting-group">
               <label class="setting-label">Import / Export Quotes</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="importQuotesBtn">
@@ -4576,8 +4553,17 @@
               </div>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">My Custom Quotes</label>
+            <div class="setting-group" id="quotesEditorGroup">
+              <div class="setting-label-row">
+                <label class="setting-label">My Custom Quotes</label>
+                <button
+                  class="setting-btn editor-detach-btn"
+                  type="button"
+                  id="quotesDetachEditorBtn"
+                >
+                  ⤢ Detach
+                </button>
+              </div>
               <div class="data-editor-language-toolbar">
                 <button
                   type="button"
@@ -4588,11 +4574,19 @@
                   <span aria-hidden="true">▾</span>
                 </button>
               </div>
-              <div class="user-quotes-list" id="userQuotesList">
-                <!-- Quotes will be dynamically generated with pagination -->
+              <p class="setting-hint">
+                Edit quote text and source directly in the table below.
+              </p>
+              <div class="flashcards-editor user-quotes-list" id="userQuotesList">
+                <!-- Quotes table will be dynamically generated -->
               </div>
-              <div class="quotes-pagination" id="quotesPagination">
-                <!-- Pagination controls will be dynamically generated -->
+              <div class="flashcards-editor-footer">
+                <button class="setting-btn" id="quotesAddItemBtn">
+                  ➕ Add Quote
+                </button>
+                <div class="quotes-pagination" id="quotesPagination">
+                  <!-- Pagination controls will be dynamically generated -->
+                </div>
               </div>
             </div>
           </div>
@@ -4703,8 +4697,17 @@
               </div>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Manage Cards</label>
+            <div class="setting-group" id="flashcardsEditorGroup">
+              <div class="setting-label-row">
+                <label class="setting-label">Manage Cards</label>
+                <button
+                  class="setting-btn editor-detach-btn"
+                  type="button"
+                  id="flashcardsDetachEditorBtn"
+                >
+                  ⤢ Detach
+                </button>
+              </div>
               <div class="flashcards-editor" id="flashcardsEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="flashcardsAddCardBtn">
@@ -4825,8 +4828,17 @@
               </div>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Manage Hadith</label>
+            <div class="setting-group" id="hadithEditorGroup">
+              <div class="setting-label-row">
+                <label class="setting-label">Manage Hadith</label>
+                <button
+                  class="setting-btn editor-detach-btn"
+                  type="button"
+                  id="hadithDetachEditorBtn"
+                >
+                  ⤢ Detach
+                </button>
+              </div>
               <div class="data-editor-language-toolbar">
                 <button
                   type="button"
@@ -4954,8 +4966,17 @@
               </div>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Manage Adhkar</label>
+            <div class="setting-group" id="adhkarEditorGroup">
+              <div class="setting-label-row">
+                <label class="setting-label">Manage Adhkar</label>
+                <button
+                  class="setting-btn editor-detach-btn"
+                  type="button"
+                  id="adhkarDetachEditorBtn"
+                >
+                  ⤢ Detach
+                </button>
+              </div>
               <div class="data-editor-language-toolbar">
                 <button
                   type="button"
