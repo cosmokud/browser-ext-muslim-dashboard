@@ -846,6 +846,7 @@ class IconThemeManager {
         ".search-bar-btn",
         ".search-bar-engine-arrow",
         ".location-icon",
+        ".settings-search-icon",
       ].join(","),
     );
     iconOnly.forEach((el) => this._applyIconOnlyElement(el));

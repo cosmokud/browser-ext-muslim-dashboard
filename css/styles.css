@@ -777,6 +777,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
   display: inline-flex;
   align-items: baseline;
+  justify-content: flex-end;
   min-width: 5ch;
   text-align: right;
 }
