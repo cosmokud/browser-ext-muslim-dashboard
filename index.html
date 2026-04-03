@@ -3838,12 +3838,25 @@
                   <input type="checkbox" id="visibilitySearchBar" checked />
                   <span class="toggle-switch"></span>
                 </label>
-                <label class="visibility-toggle-item">
+                <div class="visibility-toggle-item">
                   <span class="visibility-icon">💬</span>
-                  <span class="visibility-name">Quotes</span>
-                  <input type="checkbox" id="visibilityQuotes" checked />
-                  <span class="toggle-switch"></span>
-                </label>
+                  <label class="visibility-name" for="visibilityQuotes"
+                    >Quotes</label
+                  >
+                  <button
+                    class="floating-mode-btn"
+                    type="button"
+                    id="floatingQuotesBtn"
+                    aria-pressed="false"
+                    title="Toggle Floating Mode"
+                  >
+                    Floating
+                  </button>
+                  <label class="visibility-toggle-control">
+                    <input type="checkbox" id="visibilityQuotes" checked />
+                    <span class="toggle-switch"></span>
+                  </label>
+                </div>
                 <div class="visibility-toggle-item">
                   <span class="visibility-icon">🕌</span>
                   <label class="visibility-name" for="visibilityPrayerTimes"
@@ -3915,18 +3928,48 @@
                   <input type="checkbox" id="visibilityWeather" checked />
                   <span class="toggle-switch"></span>
                 </label>
-                <label class="visibility-toggle-item">
+                <div class="visibility-toggle-item">
                   <span class="visibility-icon">🌕</span>
-                  <span class="visibility-name">Lunar Phase</span>
-                  <input type="checkbox" id="visibilityLunarPhase" checked />
-                  <span class="toggle-switch"></span>
-                </label>
-                <label class="visibility-toggle-item">
+                  <label class="visibility-name" for="visibilityLunarPhase"
+                    >Lunar Phase</label
+                  >
+                  <button
+                    class="floating-mode-btn"
+                    type="button"
+                    id="floatingLunarPhaseBtn"
+                    aria-pressed="false"
+                    title="Toggle Floating Mode"
+                  >
+                    Floating
+                  </button>
+                  <label class="visibility-toggle-control">
+                    <input
+                      type="checkbox"
+                      id="visibilityLunarPhase"
+                      checked
+                    />
+                    <span class="toggle-switch"></span>
+                  </label>
+                </div>
+                <div class="visibility-toggle-item">
                   <span class="visibility-icon">🥗</span>
-                  <span class="visibility-name">Fasting Times</span>
-                  <input type="checkbox" id="visibilityFasting" checked />
-                  <span class="toggle-switch"></span>
-                </label>
+                  <label class="visibility-name" for="visibilityFasting"
+                    >Fasting Times</label
+                  >
+                  <button
+                    class="floating-mode-btn"
+                    type="button"
+                    id="floatingFastingBtn"
+                    aria-pressed="false"
+                    title="Toggle Floating Mode"
+                  >
+                    Floating
+                  </button>
+                  <label class="visibility-toggle-control">
+                    <input type="checkbox" id="visibilityFasting" checked />
+                    <span class="toggle-switch"></span>
+                  </label>
+                </div>
                 <div class="visibility-toggle-item">
                   <span class="visibility-icon">📇</span>
                   <label class="visibility-name" for="visibilityFlashcards"
@@ -3946,18 +3989,44 @@
                     <span class="toggle-switch"></span>
                   </label>
                 </div>
-                <label class="visibility-toggle-item">
+                <div class="visibility-toggle-item">
                   <span class="visibility-icon">📃</span>
-                  <span class="visibility-name">Adhkar</span>
-                  <input type="checkbox" id="visibilityAdhkar" checked />
-                  <span class="toggle-switch"></span>
-                </label>
-                <label class="visibility-toggle-item">
+                  <label class="visibility-name" for="visibilityAdhkar"
+                    >Adhkar</label
+                  >
+                  <button
+                    class="floating-mode-btn"
+                    type="button"
+                    id="floatingAdhkarBtn"
+                    aria-pressed="false"
+                    title="Toggle Floating Mode"
+                  >
+                    Floating
+                  </button>
+                  <label class="visibility-toggle-control">
+                    <input type="checkbox" id="visibilityAdhkar" checked />
+                    <span class="toggle-switch"></span>
+                  </label>
+                </div>
+                <div class="visibility-toggle-item">
                   <span class="visibility-icon">📜</span>
-                  <span class="visibility-name">Hadith</span>
-                  <input type="checkbox" id="visibilityHadith" checked />
-                  <span class="toggle-switch"></span>
-                </label>
+                  <label class="visibility-name" for="visibilityHadith"
+                    >Hadith</label
+                  >
+                  <button
+                    class="floating-mode-btn"
+                    type="button"
+                    id="floatingHadithBtn"
+                    aria-pressed="false"
+                    title="Toggle Floating Mode"
+                  >
+                    Floating
+                  </button>
+                  <label class="visibility-toggle-control">
+                    <input type="checkbox" id="visibilityHadith" checked />
+                    <span class="toggle-switch"></span>
+                  </label>
+                </div>
                 <div class="visibility-toggle-item">
                   <span class="visibility-icon">✅</span>
                   <label class="visibility-name" for="visibilityTodoList"

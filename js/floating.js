@@ -20,6 +20,12 @@ class FloatingModeManager {
     this.viewportPadding = 8;
 
     this.targets = {
+      quotes: {
+        cardId: "quoteSection",
+        buttonId: "floatingQuotesBtn",
+        // Quotes does not use .card-header, so drag from its container.
+        handleSelector: ".quote-container",
+      },
       prayerTimes: {
         cardId: "prayerTimesCard",
         buttonId: "floatingPrayerTimesBtn",
@@ -34,9 +40,25 @@ class FloatingModeManager {
         cardId: "qiblaCard",
         buttonId: "floatingQiblaDirectionBtn",
       },
+      lunarPhase: {
+        cardId: "lunarPhaseCard",
+        buttonId: "floatingLunarPhaseBtn",
+      },
+      fasting: {
+        cardId: "fastingCard",
+        buttonId: "floatingFastingBtn",
+      },
       flashcards: {
         cardId: "flashcardCard",
         buttonId: "floatingFlashcardsBtn",
+      },
+      adhkar: {
+        cardId: "adhkarCard",
+        buttonId: "floatingAdhkarBtn",
+      },
+      hadith: {
+        cardId: "hadithCard",
+        buttonId: "floatingHadithBtn",
       },
       todoList: {
         cardId: "todoCard",
@@ -481,12 +503,21 @@ class FloatingModeManager {
   }
 
   notifyLayoutChanged() {
+    const dashboard = window.dashboard;
+    if (!dashboard) return;
+
+    if (typeof dashboard.applyComponentVisibility === "function") {
+      try {
+        dashboard.applyComponentVisibility();
+      } catch (e) {}
+    }
+
     if (
-      window.dashboard &&
-      typeof window.dashboard.applyComponentVisibility === "function"
+      dashboard.gridLayout &&
+      typeof dashboard.gridLayout.recalculateLayout === "function"
     ) {
       try {
-        window.dashboard.applyComponentVisibility();
+        dashboard.gridLayout.recalculateLayout();
       } catch (e) {}
     }
   }
@@ -533,16 +564,7 @@ class FloatingModeManager {
     const desired = this.isEnabledDesired(key);
     this.setEnabledDesired(key, !desired);
     this.applyOne(key);
-
-    // Let layout recalculations run if the dashboard exposes it
-    if (
-      window.dashboard &&
-      typeof window.dashboard.applyComponentVisibility === "function"
-    ) {
-      try {
-        window.dashboard.applyComponentVisibility();
-      } catch (e) {}
-    }
+    this.notifyLayoutChanged();
   }
 
   applyViewportConstraint() {
@@ -560,15 +582,7 @@ class FloatingModeManager {
 
     this.hasAppliedOnce = true;
     this.updateAllButtons();
-
-    if (
-      window.dashboard &&
-      typeof window.dashboard.applyComponentVisibility === "function"
-    ) {
-      try {
-        window.dashboard.applyComponentVisibility();
-      } catch (e) {}
-    }
+    this.notifyLayoutChanged();
   }
 
   updateAllButtons() {
@@ -1131,21 +1145,6 @@ class FloatingModeManager {
 
       // Notify layout manager after restoring this card to grid mode.
       this.notifyLayoutChanged();
-
-      // When switching from Floating -> Grid layout, force a reload so the
-      // GridLayoutManager rehydrates the DOM deterministically.
-      // IMPORTANT: only do this when the user has disabled floating (desired=false).
-      // Auto-suspensions (viewport/space constraints) must not trigger reload loops.
-      try {
-        const desiredStillFloating = this.isEnabledDesired(key);
-        if (gridLayoutActive && !desiredStillFloating) {
-          window.setTimeout(() => {
-            try {
-              window.location.reload();
-            } catch (e) {}
-          }, 50);
-        }
-      } catch (e) {}
     };
 
     if (prefersReducedMotion) {
@@ -1567,11 +1566,16 @@ class FloatingModeManager {
    */
   _getGridPositionOrder(key) {
     const orderMap = {
+      quotes: 50,
       prayerTimes: 100,
-      hijriCalendar: 200,
-      qiblaDirection: 300,
-      flashcards: 600,
-      todoList: 700,
+      fasting: 110,
+      hijriCalendar: 120,
+      flashcards: 200,
+      adhkar: 210,
+      hadith: 300,
+      todoList: 400,
+      qiblaDirection: 410,
+      lunarPhase: 420,
     };
     return orderMap[key] ?? 500;
   }
@@ -1584,9 +1588,14 @@ class FloatingModeManager {
     if (!parent) return null;
 
     const cardIdToKey = {
+      quoteSection: "quotes",
       prayerTimesCard: "prayerTimes",
       calendarCard: "hijriCalendar",
+      fastingCard: "fasting",
+      adhkarCard: "adhkar",
+      hadithCard: "hadith",
       qiblaCard: "qiblaDirection",
+      lunarPhaseCard: "lunarPhase",
       flashcardCard: "flashcards",
       todoCard: "todoList",
     };
