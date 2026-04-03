@@ -649,8 +649,8 @@ class ThemeManager {
         glassBorder: "rgba(255, 255, 255, 0.24)",
         textPrimary: "#f7fbff",
         textSecondary: "#dbe8f2",
-        textMuted: "#9fb5c7",
-        textPlaceholder: "#7f97aa",
+        textMuted: "#f7f7f7",
+        textPlaceholder: "#d4d4d4",
         bodyBg: "#0b141b",
       },
       light: {
