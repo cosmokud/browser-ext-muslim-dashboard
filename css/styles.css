@@ -9414,6 +9414,23 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   opacity: 0.7;
 }
 
+.data-editor-language-toolbar {
+  margin-bottom: var(--spacing-sm);
+}
+
+.data-editor-language-picker {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  text-align: left;
+}
+
+.data-editor-language-picker span:last-child {
+  opacity: 0.8;
+}
+
 .quote-item {
   display: flex;
   align-items: flex-start;
@@ -9464,6 +9481,14 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .quote-item-source {
   font-size: 0.8rem;
   color: var(--accent-gold);
+}
+
+.quote-item-lang-code {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .quote-item-delete {
@@ -9542,6 +9567,11 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);
+}
+
+.quote-edit-lang-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 .quote-edit-textarea {
@@ -15377,6 +15407,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-feature-settings: "tnum";
 }
 
+.hadith-col-title-lang {
+  width: 200px;
+}
+
+.hadith-col-text-lang {
+  width: 320px;
+}
+
 .hadith-col-actions {
   width: 40px;
   text-align: center;
@@ -15834,6 +15872,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 150px;
 }
 
+.adhkar-col-title-lang {
+  width: 150px;
+}
+
 .adhkar-col-arabic {
   width: 200px;
 }
@@ -15846,8 +15888,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 200px;
 }
 
+.adhkar-col-text-lang {
+  width: 220px;
+}
+
 .adhkar-col-repeat {
   width: 70px;
+}
+
+.adhkar-col-reference {
+  width: 180px;
 }
 
 .adhkar-col-actions {

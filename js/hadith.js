@@ -74,6 +74,7 @@ class HadithManager extends BaseManager {
     this.settingsRenameSetBtn = null;
     this.settingsImportInput = null;
     this.settingsAddItemBtn = null;
+    this.settingsLanguagePickerBtn = null;
     this.settingsList = null;
     this.settingsPagination = null;
     this.settingsMeta = null;
@@ -115,6 +116,7 @@ class HadithManager extends BaseManager {
 
     // Language selector state
     this._langModal = null;
+    this._langModalContext = "dashboard";
     this.defaultSets = [];
 
     // Listen for icon theme changes
@@ -471,22 +473,112 @@ class HadithManager extends BaseManager {
   }
 
   normalizeImportedCards(json) {
-    const items = Array.isArray(json) ? json : [];
-
-    const normalized = [];
-    for (const raw of items) {
-      if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-
-      const id = raw.id ?? raw.hadith_id ?? null;
-      const parsedId = parseInt(id, 10);
-
-      normalized.push({
-        id: Number.isFinite(parsedId) ? parsedId : null,
-        ...raw,
-      });
+    if (json && typeof json === "object" && !Array.isArray(json)) {
+      const arr =
+        json.cards || json.items || json.hadith || json.entries || json.data;
+      return this.normalizeImportedCards(Array.isArray(arr) ? arr : []);
     }
 
-    return normalized;
+    const items = Array.isArray(json) ? json : [];
+
+    const normalized = items
+      .filter((raw) => raw && typeof raw === "object" && !Array.isArray(raw))
+      .map((raw) => {
+        const id = raw.id ?? raw.hadith_id ?? null;
+        const parsedIdNum = parseInt(id, 10);
+        const normalizedId = Number.isFinite(parsedIdNum)
+          ? parsedIdNum
+          : String(id || "").trim();
+
+        const narrator = String(raw.narrator || raw.rawi || "").trim();
+        const reference = String(raw.reference || raw.source || "").trim();
+
+        const titleFields = {};
+        const textFields = {};
+
+        Object.entries(raw).forEach(([rawKey, rawValue]) => {
+          if (rawValue == null) return;
+          const key = String(rawKey || "");
+          const value = String(rawValue).trim();
+          if (!value) return;
+
+          let match = key.match(/^title_(.+)$/i);
+          if (match) {
+            const code = this.normalizeLanguageCode(match[1]);
+            if (!code) return;
+            titleFields[`title_${code}`] = value;
+            return;
+          }
+
+          match = key.match(/^text_(.+)$/i);
+          if (match) {
+            const code = this.normalizeLanguageCode(match[1]);
+            if (!code) return;
+            textFields[`text_${code}`] = value;
+            return;
+          }
+
+          match = key.match(/^translation_(.+)$/i);
+          if (match) {
+            const code = this.normalizeLanguageCode(match[1]);
+            if (!code) return;
+            if (!textFields[`text_${code}`]) {
+              textFields[`text_${code}`] = value;
+            }
+          }
+        });
+
+        const legacyTitle = String(raw.title || raw.name || "").trim();
+        if (legacyTitle && !titleFields.title_en) {
+          titleFields.title_en = legacyTitle;
+        }
+
+        const legacyText = String(raw.text || raw.translation || "").trim();
+        if (legacyText && !textFields.text_en) {
+          textFields.text_en = legacyText;
+        }
+
+        const hasLocalizedTitle = Object.keys(titleFields).length > 0;
+        const hasLocalizedText = Object.keys(textFields).length > 0;
+        if (
+          !narrator &&
+          !reference &&
+          !hasLocalizedTitle &&
+          !hasLocalizedText
+        ) {
+          return null;
+        }
+
+        const normalizedItem = {
+          narrator,
+          reference,
+          ...titleFields,
+          ...textFields,
+        };
+        if (normalizedId !== "") normalizedItem.id = normalizedId;
+        return normalizedItem;
+      })
+      .filter(Boolean);
+
+    // Keep only unique card payloads (ignoring `id`) to avoid duplicate key/value entries.
+    const deduped = [];
+    const seen = new Set();
+    for (const card of normalized) {
+      const cmp = { ...card };
+      delete cmp.id;
+      const ordered = {};
+      Object.keys(cmp)
+        .sort()
+        .forEach((k) => {
+          ordered[k] = cmp[k];
+        });
+      const key = JSON.stringify(ordered);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(card);
+    }
+
+    return deduped;
   }
 
   // ---------- Language selection ----------
@@ -495,42 +587,31 @@ class HadithManager extends BaseManager {
     const settings = this.getHadithSettings();
     const activeSetId = this.getActiveSetId();
     const langMap = settings.languageBySet || {};
-    return langMap[activeSetId] || "en";
+    const normalized = this.normalizeLanguageCode(langMap[activeSetId]);
+    return normalized || "en";
   }
 
   setSelectedLanguageCode(langCode) {
     const activeSetId = this.getActiveSetId();
     if (!activeSetId) return;
 
+    const normalized = this.normalizeLanguageCode(langCode);
+    if (!normalized) return;
+
     const settings = this.getHadithSettings();
     const langMap = settings.languageBySet || {};
-    langMap[activeSetId] = langCode;
+    langMap[activeSetId] = normalized;
     this.setHadithSettings({ languageBySet: langMap });
   }
 
-  getAvailableLanguages(set) {
-    if (!set || !Array.isArray(set.cards) || !set.cards.length) {
-      return [{ code: "en", name: "English" }];
-    }
+  normalizeLanguageCode(code) {
+    return String(code || "")
+      .trim()
+      .toLowerCase();
+  }
 
-    const first = set.cards[0] || {};
-    const langCodes = new Set();
-
-    for (const key of Object.keys(first)) {
-      if (key.startsWith("title_")) {
-        langCodes.add(key.replace("title_", ""));
-      }
-      if (key.startsWith("text_")) {
-        langCodes.add(key.replace("text_", ""));
-      }
-    }
-
-    if (!langCodes.size) {
-      // legacy fallback: treat as English
-      langCodes.add("en");
-    }
-
-    const langNames = {
+  getKnownLanguageMap() {
+    return {
       en: "English",
       id: "Indonesian (Bahasa Indonesia)",
       ar: "Arabic",
@@ -552,8 +633,11 @@ class HadithManager extends BaseManager {
       it: "Italian",
       th: "Thai",
     };
+  }
 
-    const languages = [...langCodes].map((code) => ({
+  toSortedLanguageList(langCodes) {
+    const langNames = this.getKnownLanguageMap();
+    const languages = [...langCodes].filter(Boolean).map((code) => ({
       code,
       name: langNames[code] || code.toUpperCase(),
     }));
@@ -565,6 +649,61 @@ class HadithManager extends BaseManager {
     });
 
     return languages.length ? languages : [{ code: "en", name: "English" }];
+  }
+
+  getAvailableLanguages(set) {
+    if (!set || !Array.isArray(set.cards) || !set.cards.length) {
+      return [{ code: "en", name: "English" }];
+    }
+
+    const langCodes = new Set();
+
+    for (const card of set.cards) {
+      if (!card || typeof card !== "object" || Array.isArray(card)) continue;
+
+      for (const rawKey of Object.keys(card)) {
+        const key = String(rawKey || "");
+
+        let match = key.match(/^title_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+        }
+
+        match = key.match(/^text_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+        }
+
+        match = key.match(/^translation_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+        }
+      }
+    }
+
+    if (!langCodes.size) {
+      // legacy fallback: treat as English
+      langCodes.add("en");
+    }
+
+    return this.toSortedLanguageList(langCodes);
+  }
+
+  getEditorLanguageOptions(set) {
+    const actual = this.getAvailableLanguages(set);
+    const langCodes = new Set(
+      actual.map((l) => this.normalizeLanguageCode(l.code)),
+    );
+
+    Object.keys(this.getKnownLanguageMap()).forEach((code) => {
+      const normalized = this.normalizeLanguageCode(code);
+      if (normalized) langCodes.add(normalized);
+    });
+
+    return this.toSortedLanguageList(langCodes);
   }
 
   getLanguageFlag(code) {
@@ -598,6 +737,7 @@ class HadithManager extends BaseManager {
     const lang = this.getSelectedLanguageCode();
     const k = `title_${lang}`;
     if (card[k]) return String(card[k]);
+    if (card.title) return String(card.title);
     if (card.title_en) return String(card.title_en);
     return "";
   }
@@ -607,6 +747,10 @@ class HadithManager extends BaseManager {
     const lang = this.getSelectedLanguageCode();
     const k = `text_${lang}`;
     if (card[k]) return String(card[k]);
+    const legacyK = `translation_${lang}`;
+    if (card[legacyK]) return String(card[legacyK]);
+    if (card.text) return String(card.text);
+    if (card.translation) return String(card.translation);
     if (card.text_en) return String(card.text_en);
     return "";
   }
@@ -636,6 +780,27 @@ class HadithManager extends BaseManager {
       btn.style.display = "none";
       btn.disabled = true;
     }
+  }
+
+  updateSettingsLanguagePickerButton() {
+    const btn = this.settingsLanguagePickerBtn;
+    if (!btn) return;
+
+    const activeSet = this.getActiveSet();
+    const editorOptions = this.getEditorLanguageOptions(activeSet);
+    const current = this.normalizeLanguageCode(this.getSelectedLanguageCode());
+    const langInfo = editorOptions.find((l) => l.code === current) ||
+      editorOptions.find((l) => l.code === "en") ||
+      editorOptions[0] || { code: "en", name: "English" };
+
+    btn.innerHTML = `<span>Editor Language: ${this.escapeHtmlAttr(
+      `${langInfo.name} (${langInfo.code.toUpperCase()})`,
+    )}</span><span aria-hidden="true">▾</span>`;
+    btn.title = `Select editor language (${langInfo.name})`;
+    btn.setAttribute(
+      "aria-label",
+      `Select hadith editor language (${langInfo.name})`,
+    );
   }
 
   // ---------- Dashboard rendering ----------
@@ -1024,6 +1189,10 @@ class HadithManager extends BaseManager {
       this.settingsImportInput = document.getElementById("hadithImportInput");
     if (!this.settingsAddItemBtn)
       this.settingsAddItemBtn = document.getElementById("hadithAddItemBtn");
+    if (!this.settingsLanguagePickerBtn)
+      this.settingsLanguagePickerBtn = document.getElementById(
+        "hadithEditorLangPickerBtn",
+      );
     if (!this.settingsList)
       this.settingsList = document.getElementById("hadithEditorList");
     if (!this.settingsPagination)
@@ -1115,6 +1284,13 @@ class HadithManager extends BaseManager {
       );
     }
 
+    if (this.settingsLanguagePickerBtn) {
+      this.settingsLanguagePickerBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openLanguageSelectorModal("settingsEditor");
+      });
+    }
+
     if (this.settingsAutoAdvanceSeconds) {
       this.settingsAutoAdvanceSeconds.addEventListener("change", (e) => {
         this.setAutoAdvanceSeconds(e.target.value);
@@ -1193,7 +1369,7 @@ class HadithManager extends BaseManager {
     sets.forEach((s) => {
       const opt = document.createElement("option");
       opt.value = s.id;
-      opt.textContent = s.name;
+      opt.textContent = this.isProtectedSetId(s.id) ? `🔒 ${s.name}` : s.name;
       this.settingsSetSelect.appendChild(opt);
     });
 
@@ -1249,6 +1425,8 @@ class HadithManager extends BaseManager {
       );
     }
 
+    this.updateSettingsLanguagePickerButton();
+
     this.renderEditorList();
     this.renderPagination();
   }
@@ -1303,58 +1481,55 @@ class HadithManager extends BaseManager {
       return;
     }
 
+    const selectedLang =
+      this.normalizeLanguageCode(this.getSelectedLanguageCode()) || "en";
+    const titleField = `title_${selectedLang}`;
+    const textField = `text_${selectedLang}`;
+    const langCodeLabel = selectedLang.toUpperCase();
+
     const rows = [];
     for (let i = start; i < end; i += 1) {
       const c = items[i] || {
         id: "",
         title_en: "",
         text_en: "",
-        title_id: "",
-        text_id: "",
         narrator: "",
         reference: "",
       };
 
+      const titleValue =
+        c[titleField] ??
+        (selectedLang === "en" ? (c.title ?? c.title_en) : c.title_en) ??
+        "";
+      const textValue =
+        c[textField] ??
+        c[`translation_${selectedLang}`] ??
+        (selectedLang === "en"
+          ? (c.text ?? c.translation ?? c.text_en)
+          : (c.text_en ?? c.text ?? c.translation)) ??
+        "";
+
       rows.push(`
         <tr class="hadith-editor-row" data-index="${i}">
           <td class="hadith-col-id">${i + 1}</td>
-          <td class="hadith-col-title-en">
+          <td class="hadith-col-title-lang">
             <input
               class="hadith-editor-input setting-input"
               type="text"
-              data-field="title_en"
-              placeholder="Title (en)"
+              data-field="${this.escapeHtmlAttr(titleField)}"
+              placeholder="Title (${this.escapeHtmlAttr(selectedLang)})"
               maxlength="200"
-              value="${this.escapeHtmlAttr(c.title_en || "")}"
+              value="${this.escapeHtmlAttr(titleValue)}"
             />
           </td>
-          <td class="hadith-col-text-en">
+          <td class="hadith-col-text-lang">
             <textarea
               class="hadith-editor-textarea setting-input"
-              data-field="text_en"
+              data-field="${this.escapeHtmlAttr(textField)}"
               rows="2"
-              placeholder="Text (en)"
+              placeholder="Text (${this.escapeHtmlAttr(selectedLang)})"
               maxlength="12000"
-            >${this.escapeHtmlAttr(c.text_en || "")}</textarea>
-          </td>
-          <td class="hadith-col-title-id">
-            <input
-              class="hadith-editor-input setting-input"
-              type="text"
-              data-field="title_id"
-              placeholder="Title (id)"
-              maxlength="200"
-              value="${this.escapeHtmlAttr(c.title_id || "")}"
-            />
-          </td>
-          <td class="hadith-col-text-id">
-            <textarea
-              class="hadith-editor-textarea setting-input"
-              data-field="text_id"
-              rows="2"
-              placeholder="Text (id)"
-              maxlength="12000"
-            >${this.escapeHtmlAttr(c.text_id || "")}</textarea>
+            >${this.escapeHtmlAttr(textValue)}</textarea>
           </td>
           <td class="hadith-col-narrator">
             <input
@@ -1397,10 +1572,8 @@ class HadithManager extends BaseManager {
           <thead>
             <tr>
               <th class="hadith-col-id">ID</th>
-              <th class="hadith-col-title-en">Title (en)</th>
-              <th class="hadith-col-text-en">Text (en)</th>
-              <th class="hadith-col-title-id">Title (id)</th>
-              <th class="hadith-col-text-id">Text (id)</th>
+              <th class="hadith-col-title-lang">Title (${langCodeLabel})</th>
+              <th class="hadith-col-text-lang">Text (${langCodeLabel})</th>
               <th class="hadith-col-narrator">Narrator</th>
               <th class="hadith-col-reference">Reference</th>
               <th class="hadith-col-actions"></th>
@@ -1515,15 +1688,27 @@ class HadithManager extends BaseManager {
     if (index < 0 || index >= items.length) return;
 
     const item = items[index] || {};
-    item[field] = value;
+    const normalizedField = String(field || "").trim();
+    const baseAllowed = new Set([
+      "narrator",
+      "reference",
+      "title",
+      "text",
+      "translation",
+    ]);
+    const isLocalizedField = /^(title|text)_[a-z0-9-]+$/i.test(normalizedField);
+    if (!baseAllowed.has(normalizedField) && !isLocalizedField) return;
+
+    let targetField = normalizedField;
+    if (targetField === "title") targetField = "title_en";
+    if (targetField === "text" || targetField === "translation") {
+      targetField = "text_en";
+    }
+
+    item[targetField] = String(value ?? "");
 
     set.cards = items;
     this.saveSets(sets);
-
-    // Keep defaults in sync for the currently edited language fields
-    if (field === "title" && item.title_en && !item.title_en.trim()) {
-      item.title_en = value;
-    }
 
     this.renderDashboard();
   }
@@ -1701,15 +1886,23 @@ class HadithManager extends BaseManager {
 
     const items = Array.isArray(set.cards) ? set.cards : [];
 
-    items.push({
+    const currentLang =
+      this.normalizeLanguageCode(this.getSelectedLanguageCode()) || "en";
+    const titleField = `title_${currentLang}`;
+    const textField = `text_${currentLang}`;
+    const newItem = {
       id: items.length + 1,
       title_en: "",
       text_en: "",
-      title_id: "",
-      text_id: "",
       narrator: "",
       reference: "",
-    });
+    };
+    if (currentLang !== "en") {
+      newItem[titleField] = "";
+      newItem[textField] = "";
+    }
+
+    items.push(newItem);
 
     set.cards = items;
     this.saveSets(sets);
@@ -1810,7 +2003,11 @@ class HadithManager extends BaseManager {
     const active = this.getActiveSet();
     if (!active) return;
 
-    const data = JSON.stringify(active.cards || [], null, 2);
+    const data = JSON.stringify(
+      this.normalizeImportedCards(active.cards || []),
+      null,
+      2,
+    );
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
@@ -2138,9 +2335,12 @@ class HadithManager extends BaseManager {
     this.renderLanguageSelectorModal("");
   }
 
-  openLanguageSelectorModal() {
+  openLanguageSelectorModal(context = "dashboard") {
     if (!this._langModal) this.createLanguageSelectorModal();
     if (!this._langModal) return;
+
+    this._langModalContext =
+      context === "settingsEditor" ? "settingsEditor" : "dashboard";
 
     this._langModal.classList.add("active");
 
@@ -2167,8 +2367,24 @@ class HadithManager extends BaseManager {
     if (!this._langModal) return;
 
     const activeSet = this.getActiveSet();
-    const languages = this.getAvailableLanguages(activeSet);
-    const current = this.getSelectedLanguageCode();
+    const context =
+      this._langModalContext === "settingsEditor"
+        ? "settingsEditor"
+        : "dashboard";
+    const languages =
+      context === "settingsEditor"
+        ? this.getEditorLanguageOptions(activeSet)
+        : this.getAvailableLanguages(activeSet);
+    const current = this.normalizeLanguageCode(this.getSelectedLanguageCode());
+
+    const titleEl = this._langModal.querySelector(".adhkar-lang-modal-title");
+    if (titleEl) {
+      titleEl.innerHTML = `<span aria-hidden="true">🌐</span>${
+        context === "settingsEditor"
+          ? "Select Editor Language"
+          : "Select Language"
+      }`;
+    }
 
     const q = String(searchQuery || "")
       .trim()
@@ -2223,8 +2439,20 @@ class HadithManager extends BaseManager {
         this.setSelectedLanguageCode(code);
         this.renderDashboard();
         this.renderSettings();
-        const lang = languages.find((l) => l.code === code);
-        if (lang) this.showToast(`Language: ${lang.name}`, "success");
+        const clickContext =
+          this._langModalContext === "settingsEditor"
+            ? "settingsEditor"
+            : "dashboard";
+        const optionsNow =
+          clickContext === "settingsEditor"
+            ? this.getEditorLanguageOptions(this.getActiveSet())
+            : this.getAvailableLanguages(this.getActiveSet());
+        const lang = optionsNow.find((l) => l.code === code);
+        if (lang) {
+          const prefix =
+            clickContext === "settingsEditor" ? "Editor language" : "Language";
+          this.showToast(`${prefix}: ${lang.name}`, "success");
+        }
         this.closeLanguageSelectorModal();
       });
     }

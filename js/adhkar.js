@@ -99,6 +99,7 @@ class AdhkarManager extends BaseManager {
     this.settingsNewSetBtn = null;
     this.settingsImportInput = null;
     this.settingsAddItemBtn = null;
+    this.settingsLanguagePickerBtn = null;
     this.settingsList = null;
     this.settingsPagination = null;
     this.settingsMeta = null;
@@ -143,6 +144,7 @@ class AdhkarManager extends BaseManager {
 
     // Language selector state
     this._langModal = null;
+    this._langModalContext = "dashboard";
     this._selectedLangCode = null;
 
     // Arabic font picker state
@@ -1248,38 +1250,14 @@ class AdhkarManager extends BaseManager {
    * Looks for keys like 'text_en', 'text_id', etc.
    * Also supports legacy 'translation_*' and 'english' keys.
    */
-  getAvailableLanguages(set) {
-    if (!set || !Array.isArray(set.cards) || !set.cards.length) {
-      return [{ code: "en", name: "English" }];
-    }
+  normalizeLanguageCode(code) {
+    return String(code || "")
+      .trim()
+      .toLowerCase();
+  }
 
-    const langCodes = new Set();
-    const firstCard = set.cards[0] || {};
-
-    // Check for text_* keys (current format) and translation_* (legacy)
-    for (const key of Object.keys(firstCard)) {
-      let code = "";
-      if (key.startsWith("text_")) {
-        code = key.replace("text_", "");
-      } else if (key.startsWith("translation_")) {
-        code = key.replace("translation_", "");
-      } else {
-        continue;
-      }
-
-      const normalized = String(code || "")
-        .trim()
-        .toLowerCase();
-      if (normalized) langCodes.add(normalized);
-    }
-
-    // Also check for legacy 'english' key
-    if (firstCard.english && !langCodes.has("en")) {
-      langCodes.add("en");
-    }
-
-    // Map codes to language names
-    const langNames = {
+  getKnownLanguageMap() {
+    return {
       en: "English",
       id: "Indonesian (Bahasa Indonesia)",
       ar: "Arabic",
@@ -1301,16 +1279,15 @@ class AdhkarManager extends BaseManager {
       it: "Italian",
       th: "Thai",
     };
+  }
 
-    const languages = [];
-    for (const code of langCodes) {
-      languages.push({
-        code,
-        name: langNames[code] || code.toUpperCase(),
-      });
-    }
+  toSortedLanguageList(langCodes) {
+    const langNames = this.getKnownLanguageMap();
+    const languages = [...langCodes].filter(Boolean).map((code) => ({
+      code,
+      name: langNames[code] || code.toUpperCase(),
+    }));
 
-    // Sort with English first, then alphabetically
     languages.sort((a, b) => {
       if (a.code === "en") return -1;
       if (b.code === "en") return 1;
@@ -1318,6 +1295,55 @@ class AdhkarManager extends BaseManager {
     });
 
     return languages.length ? languages : [{ code: "en", name: "English" }];
+  }
+
+  getAvailableLanguages(set) {
+    if (!set || !Array.isArray(set.cards) || !set.cards.length) {
+      return [{ code: "en", name: "English" }];
+    }
+
+    const langCodes = new Set();
+    for (const card of set.cards) {
+      if (!card || typeof card !== "object" || Array.isArray(card)) continue;
+
+      for (const rawKey of Object.keys(card)) {
+        const key = String(rawKey || "");
+
+        let match = key.match(/^text_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+          continue;
+        }
+
+        match = key.match(/^translation_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+          continue;
+        }
+
+        if (key === "english") {
+          langCodes.add("en");
+        }
+      }
+    }
+
+    return this.toSortedLanguageList(langCodes);
+  }
+
+  getEditorLanguageOptions(set) {
+    const actual = this.getAvailableLanguages(set);
+    const langCodes = new Set(
+      actual.map((l) => this.normalizeLanguageCode(l.code)),
+    );
+
+    Object.keys(this.getKnownLanguageMap()).forEach((code) => {
+      const normalized = this.normalizeLanguageCode(code);
+      if (normalized) langCodes.add(normalized);
+    });
+
+    return this.toSortedLanguageList(langCodes);
   }
 
   /**
@@ -1428,6 +1454,27 @@ class AdhkarManager extends BaseManager {
     }
   }
 
+  updateSettingsLanguagePickerButton() {
+    const btn = this.settingsLanguagePickerBtn;
+    if (!btn) return;
+
+    const activeSet = this.getActiveSet();
+    const editorOptions = this.getEditorLanguageOptions(activeSet);
+    const current = this.normalizeLanguageCode(this.getSelectedLanguageCode());
+    const langInfo = editorOptions.find((l) => l.code === current) ||
+      editorOptions.find((l) => l.code === "en") ||
+      editorOptions[0] || { code: "en", name: "English" };
+
+    btn.innerHTML = `<span>Editor Language: ${this.escapeHtmlAttr(
+      `${langInfo.name} (${langInfo.code.toUpperCase()})`,
+    )}</span><span aria-hidden="true">▾</span>`;
+    btn.title = `Select editor language (${langInfo.name})`;
+    btn.setAttribute(
+      "aria-label",
+      `Select adhkar editor language (${langInfo.name})`,
+    );
+  }
+
   /**
    * Get an emoji flag or icon for a language code.
    */
@@ -1477,6 +1524,10 @@ class AdhkarManager extends BaseManager {
       this.settingsImportInput = document.getElementById("adhkarImportInput");
     if (!this.settingsAddItemBtn)
       this.settingsAddItemBtn = document.getElementById("adhkarAddItemBtn");
+    if (!this.settingsLanguagePickerBtn)
+      this.settingsLanguagePickerBtn = document.getElementById(
+        "adhkarEditorLangPickerBtn",
+      );
     if (!this.settingsList)
       this.settingsList = document.getElementById("adhkarEditorList");
     if (!this.settingsPagination)
@@ -1555,6 +1606,13 @@ class AdhkarManager extends BaseManager {
     this.settingsAddItemBtn.addEventListener("click", () => {
       this.addItemToActiveSet();
     });
+
+    if (this.settingsLanguagePickerBtn) {
+      this.settingsLanguagePickerBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openLanguageSelectorModal("settingsEditor");
+      });
+    }
 
     this.settingsImportBtn.addEventListener("click", () => {
       this.settingsImportInput.click();
@@ -1663,7 +1721,7 @@ class AdhkarManager extends BaseManager {
     sets.forEach((s) => {
       const opt = document.createElement("option");
       opt.value = s.id;
-      opt.textContent = s.name;
+      opt.textContent = this.isProtectedSetId(s.id) ? `🔒 ${s.name}` : s.name;
       this.settingsSetSelect.appendChild(opt);
     });
 
@@ -1711,6 +1769,8 @@ class AdhkarManager extends BaseManager {
         this.getAutoAdvanceSeconds(),
       );
     }
+
+    this.updateSettingsLanguagePickerButton();
 
     this.renderEditorList();
     this.renderPagination();
@@ -1768,36 +1828,51 @@ class AdhkarManager extends BaseManager {
       return;
     }
 
+    const selectedLang =
+      this.normalizeLanguageCode(this.getSelectedLanguageCode()) || "en";
+    const titleField = `title_${selectedLang}`;
+    const textField = `text_${selectedLang}`;
+    const langCodeLabel = selectedLang.toUpperCase();
+
     const rows = [];
     for (let i = start; i < end; i += 1) {
       const c = items[i] || {
         id: "",
-        title: "",
+        title_en: "",
         repeat: 1,
         reference: "",
         arabic: "",
         romanization: "",
-        translation: "",
+        text_en: "",
       };
       const parsedRepeat = parseInt(c.repeat, 10);
       const repeatValue =
         Number.isFinite(parsedRepeat) && parsedRepeat > 0
           ? String(parsedRepeat)
           : "1";
-      const translationValue =
-        c.translation ?? c.text_en ?? c.translation_en ?? c.english ?? "";
+      const titleValue =
+        c[titleField] ??
+        (selectedLang === "en" ? (c.title ?? c.title_en) : c.title_en) ??
+        "";
+      const textValue =
+        c[textField] ??
+        c[`translation_${selectedLang}`] ??
+        (selectedLang === "en"
+          ? (c.translation ?? c.text ?? c.english ?? c.text_en)
+          : (c.text_en ?? c.translation ?? c.text ?? c.english)) ??
+        "";
 
       rows.push(`
         <tr class="adhkar-editor-row" data-index="${i}">
           <td class="adhkar-col-id">${i + 1}</td>
-          <td class="adhkar-col-title">
+          <td class="adhkar-col-title-lang">
             <input
               class="adhkar-editor-input setting-input"
               type="text"
-              data-field="title"
-              placeholder="Title"
+              data-field="${this.escapeHtmlAttr(titleField)}"
+              placeholder="Title (${this.escapeHtmlAttr(selectedLang)})"
               maxlength="200"
-              value="${this.escapeHtmlAttr(c.title || "")}"
+              value="${this.escapeHtmlAttr(titleValue)}"
             />
           </td>
           <td class="adhkar-col-arabic">
@@ -1818,14 +1893,24 @@ class AdhkarManager extends BaseManager {
               maxlength="2000"
             >${this.escapeHtmlAttr(c.romanization || "")}</textarea>
           </td>
-          <td class="adhkar-col-translation">
+          <td class="adhkar-col-text-lang">
             <textarea
               class="adhkar-editor-textarea setting-input"
-              data-field="translation"
+              data-field="${this.escapeHtmlAttr(textField)}"
               rows="2"
-              placeholder="Translation"
+              placeholder="Text (${this.escapeHtmlAttr(selectedLang)})"
               maxlength="4000"
-            >${this.escapeHtmlAttr(translationValue)}</textarea>
+            >${this.escapeHtmlAttr(textValue)}</textarea>
+          </td>
+          <td class="adhkar-col-reference">
+            <input
+              class="adhkar-editor-input setting-input"
+              type="text"
+              data-field="reference"
+              placeholder="Reference"
+              maxlength="250"
+              value="${this.escapeHtmlAttr(c.reference || "")}" 
+            />
           </td>
           <td class="adhkar-col-repeat">
             <input
@@ -1860,10 +1945,11 @@ class AdhkarManager extends BaseManager {
           <thead>
             <tr>
               <th class="adhkar-col-id">ID</th>
-              <th class="adhkar-col-title">Title</th>
+              <th class="adhkar-col-title-lang">Title (${langCodeLabel})</th>
               <th class="adhkar-col-arabic">Arabic</th>
               <th class="adhkar-col-romanization">Romanization</th>
-              <th class="adhkar-col-translation">Translation</th>
+              <th class="adhkar-col-text-lang">Text (${langCodeLabel})</th>
+              <th class="adhkar-col-reference">Reference</th>
               <th class="adhkar-col-repeat">Repeat</th>
               <th class="adhkar-col-actions"></th>
             </tr>
@@ -2062,14 +2148,14 @@ class AdhkarManager extends BaseManager {
     // - Array of items: [{arabic, romanization, english, ...}]
     // - Object with cards/items field
     if (Array.isArray(data)) {
-      return data
-        .filter((x) => x && typeof x === "object")
+      const normalizedCards = data
+        .filter((x) => x && typeof x === "object" && !Array.isArray(x))
         .map((x) => {
-          const rawId = x.id;
-          const parsedId =
-            typeof rawId === "number" || typeof rawId === "string"
-              ? String(rawId)
-              : "";
+          const rawId = x.id ?? x.adhkar_id ?? null;
+          const parsedIdNum = parseInt(rawId, 10);
+          const id = Number.isFinite(parsedIdNum)
+            ? parsedIdNum
+            : String(rawId || "").trim();
 
           const rawRepeat = x.repeat ?? x.repeats ?? x.count;
           const parsedRepeat = parseInt(rawRepeat, 10);
@@ -2078,74 +2164,102 @@ class AdhkarManager extends BaseManager {
               ? parsedRepeat
               : 1;
 
-          const title = String(x.title || x.title_en || x.name || "").trim();
           const reference = String(x.reference || x.source || "").trim();
-
           const arabic = String(x.arabic || "").trim();
           const romanization = String(x.romanization || x.roman || "").trim();
 
-          const translation = String(
-            x.translation || x.text_en || x.translation_en || x.english || "",
-          ).trim();
-
-          // Preserve text_* fields and normalize legacy translation_* to text_*
           const textFields = {};
-          Object.keys(x || {}).forEach((key) => {
-            if (x[key] == null) return;
+          const titleFields = {};
 
-            if (key.startsWith("text_")) {
-              textFields[key] = String(x[key]).trim();
+          Object.entries(x || {}).forEach(([rawKey, rawValue]) => {
+            if (rawValue == null) return;
+
+            const key = String(rawKey || "");
+            const value = String(rawValue).trim();
+            if (!value) return;
+
+            let match = key.match(/^text_(.+)$/i);
+            if (match) {
+              const code = this.normalizeLanguageCode(match[1]);
+              if (!code) return;
+              textFields[`text_${code}`] = value;
               return;
             }
 
-            if (key.startsWith("translation_")) {
-              const code = String(key.replace("translation_", "") || "").trim();
+            match = key.match(/^translation_(.+)$/i);
+            if (match) {
+              const code = this.normalizeLanguageCode(match[1]);
               if (!code) return;
-
-              const normalizedKey = `text_${code}`;
-              if (textFields[normalizedKey] == null) {
-                textFields[normalizedKey] = String(x[key]).trim();
+              if (!textFields[`text_${code}`]) {
+                textFields[`text_${code}`] = value;
               }
+              return;
+            }
+
+            match = key.match(/^title_(.+)$/i);
+            if (match) {
+              const code = this.normalizeLanguageCode(match[1]);
+              if (!code) return;
+              titleFields[`title_${code}`] = value;
             }
           });
 
-          // Preserve all title_* fields (title_en, title_id, etc.)
-          const titleFields = {};
-          Object.keys(x || {}).forEach((key) => {
-            if (key.startsWith("title_") && x[key] != null) {
-              titleFields[key] = String(x[key]).trim();
-            }
-          });
+          const legacyTitle = String(x.title || x.name || "").trim();
+          if (legacyTitle && !titleFields.title_en) {
+            titleFields.title_en = legacyTitle;
+          }
 
-          return {
-            id: parsedId,
-            title,
+          const legacyText = String(
+            x.text || x.translation || x.translation_en || x.english || "",
+          ).trim();
+          if (legacyText) {
+            if (x.isArabic === true) {
+              if (!textFields.text_ar) textFields.text_ar = legacyText;
+            } else if (!textFields.text_en) {
+              textFields.text_en = legacyText;
+            }
+          }
+
+          const hasText = Object.keys(textFields).length > 0;
+          const hasTitle = Object.keys(titleFields).length > 0;
+          if (!arabic && !romanization && !reference && !hasText && !hasTitle) {
+            return null;
+          }
+
+          const normalized = {
             arabic,
             romanization,
-            translation,
             reference,
             repeat,
             ...titleFields,
             ...textFields,
           };
+
+          if (id !== "") normalized.id = id;
+
+          return normalized;
         })
-        .filter((c) => {
-          const hasTranslationField = Object.keys(c).some(
-            (k) =>
-              k === "translation" ||
-              k === "text" ||
-              k.startsWith("text_") ||
-              k.startsWith("translation_"),
-          );
-          return (
-            c.arabic ||
-            c.romanization ||
-            c.translation ||
-            hasTranslationField ||
-            c.title ||
-            c.reference
-          );
-        });
+        .filter(Boolean);
+
+      // Keep only unique card payloads (ignoring `id`) to avoid duplicate key/value entries.
+      const deduped = [];
+      const seen = new Set();
+      for (const card of normalizedCards) {
+        const cmp = { ...card };
+        delete cmp.id;
+        const ordered = {};
+        Object.keys(cmp)
+          .sort()
+          .forEach((k) => {
+            ordered[k] = cmp[k];
+          });
+        const key = JSON.stringify(ordered);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(card);
+      }
+
+      return deduped;
     }
 
     if (data && typeof data === "object") {
@@ -2236,48 +2350,7 @@ class AdhkarManager extends BaseManager {
     const active = this.getActiveSet();
     if (!active) return;
 
-    const payload = {
-      exportType: "adhkarSet",
-      version: 1,
-      exportDate: new Date().toISOString(),
-      name: String(active.name || "Adhkar").slice(0, 60),
-      cards: Array.isArray(active.cards)
-        ? active.cards.map((c) => ({
-            title: String(c.title || ""),
-            arabic: String(c.arabic || ""),
-            romanization: String(c.romanization || ""),
-            translation: String(
-              c.translation || c.text_en || c.translation_en || c.english || "",
-            ),
-            ...Object.entries(c || {}).reduce((acc, [k, v]) => {
-              if (v == null) return acc;
-
-              if (k.startsWith("text_")) {
-                acc[k] = String(v);
-                return acc;
-              }
-
-              if (k.startsWith("translation_")) {
-                const code = String(k.replace("translation_", "") || "").trim();
-                if (!code) return acc;
-
-                const normalizedKey = `text_${code}`;
-                if (acc[normalizedKey] == null) {
-                  acc[normalizedKey] = String(v);
-                }
-              }
-
-              return acc;
-            }, {}),
-            reference: String(c.reference || ""),
-            repeat:
-              typeof c.repeat === "number" && Number.isFinite(c.repeat)
-                ? c.repeat
-                : 1,
-          }))
-        : [],
-    };
-
+    const payload = this.normalizeImportedCards(active.cards || []);
     const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2335,14 +2408,23 @@ class AdhkarManager extends BaseManager {
     }
 
     active.cards = Array.isArray(active.cards) ? active.cards : [];
-    active.cards.push({
-      title: "",
+    const currentLang =
+      this.normalizeLanguageCode(this.getSelectedLanguageCode()) || "en";
+    const titleField = `title_${currentLang}`;
+    const textField = `text_${currentLang}`;
+    const newItem = {
       repeat: 1,
       reference: "",
       arabic: "",
       romanization: "",
-      translation: "",
-    });
+      title_en: "",
+      text_en: "",
+    };
+    if (currentLang !== "en") {
+      newItem[titleField] = "";
+      newItem[textField] = "";
+    }
+    active.cards.push(newItem);
     active.updatedAt = new Date().toISOString();
     this.saveSets(sets);
 
@@ -2362,7 +2444,8 @@ class AdhkarManager extends BaseManager {
 
     if (this.isProtectedSetId(active.id)) return;
 
-    const allowed = new Set([
+    const normalizedField = String(field || "").trim();
+    const baseAllowed = new Set([
       "title",
       "repeat",
       "reference",
@@ -2370,20 +2453,27 @@ class AdhkarManager extends BaseManager {
       "romanization",
       "translation",
       "english",
+      "text",
     ]);
-    if (!allowed.has(field)) return;
+    const isLocalizedField = /^(title|text)_[a-z0-9-]+$/i.test(normalizedField);
+    if (!baseAllowed.has(normalizedField) && !isLocalizedField) return;
 
-    if (field === "repeat") {
+    let targetField = normalizedField;
+    if (targetField === "title") targetField = "title_en";
+    if (
+      targetField === "translation" ||
+      targetField === "english" ||
+      targetField === "text"
+    ) {
+      targetField = "text_en";
+    }
+
+    if (targetField === "repeat") {
       const n = parseInt(value, 10);
       const normalized = Number.isFinite(n) && n > 0 ? Math.min(n, 9999) : 1;
-      active.cards[globalIndex][field] = normalized;
+      active.cards[globalIndex][targetField] = normalized;
     } else {
-      active.cards[globalIndex][field] = String(value ?? "");
-
-      // Keep text_en in sync when editing translation to aid language switching
-      if (field === "translation" && !active.cards[globalIndex].text_en) {
-        active.cards[globalIndex].text_en = String(value ?? "");
-      }
+      active.cards[globalIndex][targetField] = String(value ?? "");
     }
     active.updatedAt = new Date().toISOString();
 
@@ -2537,9 +2627,12 @@ class AdhkarManager extends BaseManager {
     this.renderLanguageSelectorModal("");
   }
 
-  openLanguageSelectorModal() {
+  openLanguageSelectorModal(context = "dashboard") {
     if (!this._langModal) this.createLanguageSelectorModal();
     if (!this._langModal) return;
+
+    this._langModalContext =
+      context === "settingsEditor" ? "settingsEditor" : "dashboard";
 
     this._langModal.classList.add("active");
 
@@ -2566,8 +2659,24 @@ class AdhkarManager extends BaseManager {
     if (!this._langModal) return;
 
     const activeSet = this.getActiveSet();
-    const languages = this.getAvailableLanguages(activeSet);
-    const current = this.getSelectedLanguageCode();
+    const context =
+      this._langModalContext === "settingsEditor"
+        ? "settingsEditor"
+        : "dashboard";
+    const languages =
+      context === "settingsEditor"
+        ? this.getEditorLanguageOptions(activeSet)
+        : this.getAvailableLanguages(activeSet);
+    const current = this.normalizeLanguageCode(this.getSelectedLanguageCode());
+
+    const titleEl = this._langModal.querySelector(".adhkar-lang-modal-title");
+    if (titleEl) {
+      titleEl.innerHTML = `<span aria-hidden="true">🌐</span>${
+        context === "settingsEditor"
+          ? "Select Editor Language"
+          : "Select Language"
+      }`;
+    }
 
     const q = String(searchQuery || "")
       .trim()
@@ -2622,8 +2731,20 @@ class AdhkarManager extends BaseManager {
         this.setSelectedLanguageCode(code);
         this.renderDashboard();
         this.renderSettings();
-        const lang = languages.find((l) => l.code === code);
-        if (lang) this.showToast(`Language: ${lang.name}`, "success");
+        const clickContext =
+          this._langModalContext === "settingsEditor"
+            ? "settingsEditor"
+            : "dashboard";
+        const optionsNow =
+          clickContext === "settingsEditor"
+            ? this.getEditorLanguageOptions(this.getActiveSet())
+            : this.getAvailableLanguages(this.getActiveSet());
+        const lang = optionsNow.find((l) => l.code === code);
+        if (lang) {
+          const prefix =
+            clickContext === "settingsEditor" ? "Editor language" : "Language";
+          this.showToast(`${prefix}: ${lang.name}`, "success");
+        }
         this.closeLanguageSelectorModal();
       });
     }

@@ -4537,6 +4537,9 @@
 
             <div class="setting-group">
               <label class="setting-label">Add Custom Quote</label>
+              <p class="setting-hint">
+                Text is saved to the currently selected editor language key.
+              </p>
               <div class="add-quote-form">
                 <textarea
                   class="setting-textarea"
@@ -4549,10 +4552,6 @@
                   id="newQuoteSource"
                   placeholder="Source (e.g., Surah Al-Baqarah 2:255)"
                 />
-                <label class="checkbox-option">
-                  <input type="checkbox" id="newQuoteArabic" />
-                  <span>Arabic Text</span>
-                </label>
                 <button class="setting-btn" id="addQuoteBtn">
                   ➕ Add Quote
                 </button>
@@ -4579,6 +4578,16 @@
 
             <div class="setting-group">
               <label class="setting-label">My Custom Quotes</label>
+              <div class="data-editor-language-toolbar">
+                <button
+                  type="button"
+                  class="setting-select data-editor-language-picker"
+                  id="quotesEditorLangPickerBtn"
+                >
+                  <span>Editor Language: EN</span>
+                  <span aria-hidden="true">▾</span>
+                </button>
+              </div>
               <div class="user-quotes-list" id="userQuotesList">
                 <!-- Quotes will be dynamically generated with pagination -->
               </div>
@@ -4680,15 +4689,15 @@
               <label class="setting-label">Import / Export</label>
               <div class="import-export-btns">
                 <button class="setting-btn" id="flashcardsImportBtn">
-                  📥 Import CSV
+                  📥 Import CSV/JSON
                 </button>
                 <button class="setting-btn" id="flashcardsExportBtn">
-                  📤 Export CSV
+                  📤 Export JSON
                 </button>
                 <input
                   type="file"
                   id="flashcardsImportInput"
-                  accept=".csv,text/csv"
+                  accept=".csv,.json,text/csv,application/json"
                   style="display: none"
                 />
               </div>
@@ -4818,6 +4827,16 @@
 
             <div class="setting-group">
               <label class="setting-label">Manage Hadith</label>
+              <div class="data-editor-language-toolbar">
+                <button
+                  type="button"
+                  class="setting-select data-editor-language-picker"
+                  id="hadithEditorLangPickerBtn"
+                >
+                  <span>Editor Language: EN</span>
+                  <span aria-hidden="true">▾</span>
+                </button>
+              </div>
               <div class="flashcards-editor" id="hadithEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="hadithAddItemBtn">
@@ -4937,6 +4956,16 @@
 
             <div class="setting-group">
               <label class="setting-label">Manage Adhkar</label>
+              <div class="data-editor-language-toolbar">
+                <button
+                  type="button"
+                  class="setting-select data-editor-language-picker"
+                  id="adhkarEditorLangPickerBtn"
+                >
+                  <span>Editor Language: EN</span>
+                  <span aria-hidden="true">▾</span>
+                </button>
+              </div>
               <div class="adhkar-editor" id="adhkarEditorList"></div>
               <div class="flashcards-editor-footer">
                 <button class="setting-btn" id="adhkarAddItemBtn">

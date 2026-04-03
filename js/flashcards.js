@@ -1,7 +1,7 @@
 /**
  * Flashcard Manager
  * - Loads bundled default cards from data/*.csv at runtime
- * - Supports up to 100 flashcard sets (CSV import)
+ * - Supports up to 100 flashcard sets (CSV/JSON import)
  * - Dashboard viewer + Settings tab editor (20 cards/page)
  */
 
@@ -941,7 +941,7 @@ class FlashcardManager extends BaseManager {
 
     if (!cards.length) {
       this.questionEl.textContent = "No flashcards yet";
-      this.answerEl.textContent = "Import a CSV in Settings → Flashcards";
+      this.answerEl.textContent = "Import CSV or JSON in Settings → Flashcards";
       this.applyTextLanguageStyling(
         this.questionEl,
         this.questionEl.textContent,
@@ -1126,13 +1126,13 @@ class FlashcardManager extends BaseManager {
       this.settingsImportInput.addEventListener("change", async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        await this.importCsvFile(file);
+        await this.importCardsFile(file);
       });
     }
 
     if (this.settingsExportBtn) {
       this.settingsExportBtn.addEventListener("click", () => {
-        this.exportActiveSetCsv();
+        this.exportActiveSetJson();
       });
     }
 
@@ -1199,7 +1199,7 @@ class FlashcardManager extends BaseManager {
     sets.forEach((s) => {
       const opt = document.createElement("option");
       opt.value = s.id;
-      opt.textContent = s.name;
+      opt.textContent = this.isProtectedSetId(s.id) ? `🔒 ${s.name}` : s.name;
       this.settingsSetSelect.appendChild(opt);
     });
 
@@ -1298,7 +1298,7 @@ class FlashcardManager extends BaseManager {
       this.settingsList.innerHTML = `
         <div class="quotes-empty">
           <div class="quotes-empty-title">No flashcards in this set</div>
-          <div class="quotes-empty-hint">Use “Add Card” or import a CSV.</div>
+          <div class="quotes-empty-hint">Use “Add Card” or import CSV/JSON.</div>
         </div>
       `;
       return;
@@ -1705,7 +1705,7 @@ class FlashcardManager extends BaseManager {
 
   // ---------- Settings actions ----------
 
-  async importCsvFile(file) {
+  async importCardsFile(file) {
     const name = this.inferSetNameFromFile(file.name);
 
     const sets = this.getSets();
@@ -1729,20 +1729,25 @@ class FlashcardManager extends BaseManager {
       return;
     }
 
-    let csvText;
+    let fileText;
     try {
-      csvText = await file.text();
+      fileText = await file.text();
     } catch (e) {
-      this.showToast("Could not read the CSV file.", "error");
+      this.showToast("Could not read the selected file.", "error");
       return;
     }
 
     let cards;
     try {
-      cards = this.parseCsvTwoColumns(csvText);
+      cards = this.parseImportedCardsFile(file, fileText);
     } catch (e) {
       console.error(e);
-      this.showToast("Invalid CSV format.", "error");
+      this.showToast("Invalid flashcards file format.", "error");
+      return;
+    }
+
+    if (!cards.length) {
+      this.showToast("No valid flashcards found in the file.", "error");
       return;
     }
 
@@ -1783,22 +1788,131 @@ class FlashcardManager extends BaseManager {
     this.renderDashboard();
   }
 
-  exportActiveSetCsv() {
+  // Backward-compatible alias (existing internal calls used this name).
+  async importCsvFile(file) {
+    return this.importCardsFile(file);
+  }
+
+  parseImportedCardsFile(file, text) {
+    const filename = String(file?.name || "").toLowerCase();
+    const content = String(text || "");
+    const looksLikeJson =
+      filename.endsWith(".json") || /^\s*[\[{]/.test(content);
+
+    if (looksLikeJson) {
+      const parsed = JSON.parse(content);
+      return this.normalizeImportedCards(parsed);
+    }
+
+    return this.parseCsvTwoColumns(content);
+  }
+
+  normalizeImportedCards(payload) {
+    const items = Array.isArray(payload)
+      ? payload
+      : payload && typeof payload === "object"
+        ? Array.isArray(payload.cards)
+          ? payload.cards
+          : Array.isArray(payload.items)
+            ? payload.items
+            : Array.isArray(payload.flashcards)
+              ? payload.flashcards
+              : Array.isArray(payload.data)
+                ? payload.data
+                : []
+        : [];
+
+    const cards = [];
+    const seen = new Set();
+
+    for (const raw of items) {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+      const card = this.normalizeImportedCard(raw);
+      if (!card) continue;
+
+      const dedupeKey = `${card.question}\n${card.answer}`;
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      cards.push(card);
+    }
+
+    return cards;
+  }
+
+  normalizeImportedCard(raw) {
+    const toText = (value) => String(value ?? "").trim();
+
+    let question = toText(
+      raw.question ?? raw.q ?? raw.front ?? raw.term ?? raw.prompt ?? raw.text,
+    );
+    let answer = toText(
+      raw.answer ??
+        raw.a ??
+        raw.back ??
+        raw.definition ??
+        raw.response ??
+        raw.translation,
+    );
+
+    if (!question) question = this.pickLocalizedField(raw, "question");
+    if (!answer) answer = this.pickLocalizedField(raw, "answer");
+
+    // Legacy aliases for localized schemas.
+    if (!question) question = this.pickLocalizedField(raw, "text");
+    if (!answer) answer = this.pickLocalizedField(raw, "translation");
+
+    if (!question && !answer) return null;
+    return { question, answer };
+  }
+
+  pickLocalizedField(raw, prefix) {
+    const valuesByCode = new Map();
+    const preferredOrder = ["en", "id", "ar"];
+
+    Object.entries(raw || {}).forEach(([rawKey, rawValue]) => {
+      if (rawValue == null) return;
+      const key = String(rawKey || "");
+      const match = key.match(new RegExp(`^${prefix}_(.+)$`, "i"));
+      if (!match) return;
+
+      const code = String(match[1] || "")
+        .trim()
+        .toLowerCase();
+      const value = String(rawValue).trim();
+      if (!code || !value || valuesByCode.has(code)) return;
+
+      valuesByCode.set(code, value);
+    });
+
+    for (const code of preferredOrder) {
+      if (valuesByCode.has(code)) return valuesByCode.get(code);
+    }
+
+    const first = [...valuesByCode.keys()].sort()[0];
+    return first ? valuesByCode.get(first) : "";
+  }
+
+  exportActiveSetJson() {
     const active = this.getActiveSet();
     if (!active) return;
 
-    const csv = this.cardsToCsv(active.cards || []);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const payload = this.normalizeImportedCards(active.cards || []);
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${this.slugify(active.name || "flashcards")}.csv`;
+    a.download = `${this.slugify(active.name || "flashcards")}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  exportActiveSetCsv() {
+    this.exportActiveSetJson();
   }
 
   deleteActiveSet() {

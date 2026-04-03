@@ -6089,7 +6089,8 @@ class SettingsManager extends BaseManager {
   addUserQuote() {
     const text = this.newQuoteText?.value.trim();
     const source = this.newQuoteSource?.value.trim();
-    const isArabic = this.newQuoteArabic?.checked || false;
+    const langCode =
+      this.quotes?.getSelectedEditorLanguageCode?.() || "en";
 
     if (!text) {
       this.showToast("Please enter quote text", "error");
@@ -6102,12 +6103,11 @@ class SettingsManager extends BaseManager {
     }
 
     if (this.quotes) {
-      this.quotes.addUserQuote(text, source, isArabic);
+      this.quotes.addUserQuote(text, source, langCode);
     }
 
     if (this.newQuoteText) this.newQuoteText.value = "";
     if (this.newQuoteSource) this.newQuoteSource.value = "";
-    if (this.newQuoteArabic) this.newQuoteArabic.checked = false;
 
     this.showToast("Quote added!", "success");
   }

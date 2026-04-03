@@ -20,6 +20,7 @@ class QuotesManager extends BaseManager {
 
     // Default quotes language selector (applies to bundled default quotes only)
     this._langModal = null;
+    this._langModalContext = "default";
 
     // Editing state for settings UI
     this.editingQuoteId = null;
@@ -47,6 +48,9 @@ class QuotesManager extends BaseManager {
     this.importBtn = document.getElementById("importQuotesBtn");
     this.exportBtn = document.getElementById("exportQuotesBtn");
     this.importInput = document.getElementById("importQuotesInput");
+    this.editorLangPickerBtn = document.getElementById(
+      "quotesEditorLangPickerBtn",
+    );
 
     // Keep language selector icon in sync with icon theme changes.
     document.addEventListener("md:icon-theme-change", () => {
@@ -157,9 +161,273 @@ class QuotesManager extends BaseManager {
    * Load user quotes from storage
    */
   loadUserQuotes() {
-    this.userQuotes = this.storage.getUserQuotes();
+    const stored = this.storage.getUserQuotes();
+    this.userQuotes = this.normalizeUserQuotes(stored);
     const settings = this.storage.getSettings();
     this.quotesPerPage = settings.quotesPerPage || 10;
+
+    // Persist migrations from legacy quote schema if needed.
+    this.storage.saveUserQuotes(this.userQuotes);
+  }
+
+  normalizeLanguageCode(code) {
+    return String(code || "")
+      .trim()
+      .toLowerCase();
+  }
+
+  getKnownLanguageMap() {
+    return {
+      en: "English",
+      id: "Indonesian (Bahasa Indonesia)",
+      ar: "Arabic",
+      tr: "Turkish",
+      ur: "Urdu",
+      ms: "Malay",
+      fr: "French",
+      de: "German",
+      es: "Spanish",
+      bn: "Bengali",
+      fa: "Persian (Farsi)",
+      hi: "Hindi",
+      pt: "Portuguese",
+      ru: "Russian",
+      zh: "Chinese",
+      ja: "Japanese",
+      ko: "Korean",
+      nl: "Dutch",
+      it: "Italian",
+      th: "Thai",
+    };
+  }
+
+  toSortedLanguageList(langCodes) {
+    const langNames = this.getKnownLanguageMap();
+    const languages = [...langCodes].filter(Boolean).map((code) => ({
+      code,
+      name: langNames[code] || code.toUpperCase(),
+    }));
+
+    languages.sort((a, b) => {
+      if (a.code === "en") return -1;
+      if (b.code === "en") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return languages.length ? languages : [{ code: "en", name: "English" }];
+  }
+
+  getSelectedEditorLanguageCode() {
+    const settings = this.storage.getSettings();
+    const editor = this.normalizeLanguageCode(settings?.quotesUserLang);
+    if (editor) return editor;
+    const fallback = this.normalizeLanguageCode(settings?.quotesDefaultLang);
+    return fallback || "en";
+  }
+
+  setSelectedEditorLanguageCode(langCode) {
+    const normalized = this.normalizeLanguageCode(langCode);
+    if (!normalized) return;
+
+    const settings = this.storage.getSettings();
+    settings.quotesUserLang = normalized;
+    this.storage.saveSettings(settings);
+  }
+
+  getEditorTextField() {
+    return `text_${this.getSelectedEditorLanguageCode()}`;
+  }
+
+  getAvailableUserLanguages() {
+    if (!Array.isArray(this.userQuotes) || !this.userQuotes.length) {
+      return [{ code: "en", name: "English" }];
+    }
+
+    const langCodes = new Set();
+    this.userQuotes.forEach((quote) => {
+      if (!quote || typeof quote !== "object" || Array.isArray(quote)) return;
+      Object.keys(quote).forEach((rawKey) => {
+        const key = String(rawKey || "");
+        const match = key.match(/^text_(.+)$/i);
+        if (match) {
+          const code = this.normalizeLanguageCode(match[1]);
+          if (code) langCodes.add(code);
+        }
+      });
+
+      if (quote.text && quote.isArabic) {
+        langCodes.add("ar");
+      } else if (quote.text) {
+        langCodes.add("en");
+      }
+    });
+
+    if (!langCodes.size) langCodes.add("en");
+    return this.toSortedLanguageList(langCodes);
+  }
+
+  getEditorLanguageOptions() {
+    const actual = this.getAvailableUserLanguages();
+    const langCodes = new Set(
+      actual.map((l) => this.normalizeLanguageCode(l.code)),
+    );
+
+    Object.keys(this.getKnownLanguageMap()).forEach((code) => {
+      const normalized = this.normalizeLanguageCode(code);
+      if (normalized) langCodes.add(normalized);
+    });
+
+    return this.toSortedLanguageList(langCodes);
+  }
+
+  getQuoteLocalizedText(quote, langCode) {
+    if (!quote) return "";
+    const normalizedLang = this.normalizeLanguageCode(langCode) || "en";
+    const localizedKey = `text_${normalizedLang}`;
+    if (typeof quote[localizedKey] === "string" && quote[localizedKey].trim()) {
+      return quote[localizedKey].trim();
+    }
+
+    const legacyKey = `translation_${normalizedLang}`;
+    if (typeof quote[legacyKey] === "string" && quote[legacyKey].trim()) {
+      return quote[legacyKey].trim();
+    }
+
+    if (
+      normalizedLang === "ar" &&
+      typeof quote.text === "string" &&
+      quote.isArabic
+    ) {
+      return quote.text.trim();
+    }
+
+    if (typeof quote.text_en === "string" && quote.text_en.trim()) {
+      return quote.text_en.trim();
+    }
+    if (typeof quote.text === "string" && quote.text.trim()) {
+      return quote.text.trim();
+    }
+
+    const firstLocalized = Object.keys(quote).find((k) =>
+      /^text_[a-z0-9-]+$/i.test(k),
+    );
+    if (firstLocalized && typeof quote[firstLocalized] === "string") {
+      return quote[firstLocalized].trim();
+    }
+
+    return "";
+  }
+
+  getQuoteLanguageCode(quote) {
+    if (!quote) return "en";
+
+    if (quote._isDefault) {
+      return this.getSelectedDefaultLanguageCode();
+    }
+
+    const preferred = this.getSelectedEditorLanguageCode();
+    if (quote[`text_${preferred}`]) return preferred;
+
+    const localizedKey = Object.keys(quote || {}).find((k) =>
+      /^text_[a-z0-9-]+$/i.test(k),
+    );
+    if (localizedKey) {
+      return this.normalizeLanguageCode(localizedKey.replace(/^text_/i, ""));
+    }
+
+    if (quote.isArabic) return "ar";
+    return "en";
+  }
+
+  normalizeQuoteRecord(raw) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+
+    const source = String(raw.source || "").trim();
+    const type = String(raw.type || "user").trim() || "user";
+    const textFields = {};
+
+    Object.entries(raw).forEach(([rawKey, rawValue]) => {
+      if (rawValue == null) return;
+      const key = String(rawKey || "");
+      const value = String(rawValue).trim();
+      if (!value) return;
+
+      let match = key.match(/^text_(.+)$/i);
+      if (match) {
+        const code = this.normalizeLanguageCode(match[1]);
+        if (!code) return;
+        textFields[`text_${code}`] = value;
+        return;
+      }
+
+      match = key.match(/^translation_(.+)$/i);
+      if (match) {
+        const code = this.normalizeLanguageCode(match[1]);
+        if (!code) return;
+        if (!textFields[`text_${code}`]) {
+          textFields[`text_${code}`] = value;
+        }
+      }
+    });
+
+    const legacyText = String(
+      raw.text || raw.translation || raw.english || "",
+    ).trim();
+    if (legacyText) {
+      if (raw.isArabic === true) {
+        if (!textFields.text_ar) textFields.text_ar = legacyText;
+      } else if (!textFields.text_en) {
+        textFields.text_en = legacyText;
+      }
+    }
+
+    if (!Object.keys(textFields).length) return null;
+
+    const rawId = raw.id;
+    const parsedId = Number(rawId);
+    const id = Number.isFinite(parsedId)
+      ? parsedId
+      : Date.now() + Math.floor(Math.random() * 1000000);
+
+    return {
+      id,
+      source,
+      type,
+      ...textFields,
+    };
+  }
+
+  normalizeUserQuotes(quotes) {
+    const list = Array.isArray(quotes) ? quotes : [];
+    const normalized = list
+      .map((q) => this.normalizeQuoteRecord(q))
+      .filter(Boolean);
+
+    const deduped = [];
+    const seen = new Set();
+    normalized.forEach((quote) => {
+      const key = JSON.stringify(this.serializeUserQuote(quote));
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(quote);
+    });
+
+    return deduped;
+  }
+
+  serializeUserQuote(quote) {
+    const out = {};
+    Object.keys(quote || {})
+      .filter((key) => /^text_[a-z0-9-]+$/i.test(key))
+      .sort()
+      .forEach((key) => {
+        const value = String(quote[key] || "").trim();
+        if (value) out[key.toLowerCase()] = value;
+      });
+
+    out.source = String(quote?.source || "").trim();
+    out.type = String(quote?.type || "user").trim() || "user";
+    return out;
   }
 
   /**
@@ -290,7 +558,8 @@ class QuotesManager extends BaseManager {
 
     const quoteText = this.getQuoteText(quote);
     const quoteSource = quote?.source ? `— ${quote.source}` : "";
-    const isArabic = !!quote?.isArabic;
+    const quoteLang = this.getQuoteLanguageCode(quote);
+    const isArabic = quoteLang === "ar" || !!quote?.isArabic;
 
     if (!container || prefersReducedMotion) {
       this.quoteText.textContent = quoteText;
@@ -430,16 +699,17 @@ class QuotesManager extends BaseManager {
   /**
    * Add user quote
    */
-  addUserQuote(text, source, isArabic = false) {
+  addUserQuote(text, source, languageCode = "en") {
+    const normalizedLang = this.normalizeLanguageCode(languageCode) || "en";
+    const textField = `text_${normalizedLang}`;
     const quote = {
-      id: Date.now(),
-      text: text.trim(),
+      id: Date.now() + Math.floor(Math.random() * 1000000),
       source: source.trim(),
       type: "user",
-      isArabic: isArabic,
+      [textField]: text.trim(),
     };
 
-    this.userQuotes.push(quote);
+    this.userQuotes = this.normalizeUserQuotes([...this.userQuotes, quote]);
     this.storage.saveUserQuotes(this.userQuotes);
 
     // Jump to the last page so the newly added quote is visible
@@ -451,12 +721,18 @@ class QuotesManager extends BaseManager {
   /**
    * Update an existing user quote
    */
-  updateUserQuote(id, { text, source, isArabic }) {
+  updateUserQuote(id, { text, source, textField }) {
     const quote = this.userQuotes.find((q) => q.id === id);
     if (!quote) return false;
 
     const nextText = String(text ?? "").trim();
     const nextSource = String(source ?? "").trim();
+    const requestedField = String(textField || "")
+      .trim()
+      .toLowerCase();
+    const targetField = /^text_[a-z0-9-]+$/i.test(requestedField)
+      ? requestedField
+      : this.getEditorTextField();
 
     if (!nextText) {
       alert("Quote text cannot be empty");
@@ -467,10 +743,12 @@ class QuotesManager extends BaseManager {
       return false;
     }
 
-    quote.text = nextText;
+    quote[targetField] = nextText;
     quote.source = nextSource;
-    quote.isArabic = !!isArabic;
+    delete quote.text;
+    delete quote.isArabic;
 
+    this.userQuotes = this.normalizeUserQuotes(this.userQuotes);
     this.storage.saveUserQuotes(this.userQuotes);
     return true;
   }
@@ -535,6 +813,11 @@ class QuotesManager extends BaseManager {
   renderQuotesList() {
     if (!this.quotesListContainer) return;
 
+    this.updateEditorLanguagePickerButton();
+
+    const selectedLang = this.getSelectedEditorLanguageCode();
+    const textField = `text_${selectedLang}`;
+
     const quotes = this.getPaginatedQuotes();
     const totalPages = this.getTotalPages();
 
@@ -555,6 +838,9 @@ class QuotesManager extends BaseManager {
           (this.currentPage - 1) * this.quotesPerPage + index + 1;
         const quoteEl = document.createElement("div");
         quoteEl.className = "quote-item";
+        const localizedText = this.getQuoteLocalizedText(quote, selectedLang);
+        const quoteLang = this.getQuoteLanguageCode(quote);
+        const isArabic = quoteLang === "ar";
 
         // Inline edit mode
         if (this.editingQuoteId === quote.id) {
@@ -572,10 +858,10 @@ class QuotesManager extends BaseManager {
 
           const textArea = document.createElement("textarea");
           textArea.className = `setting-textarea quote-edit-textarea ${
-            quote.isArabic ? "arabic-text" : ""
+            isArabic ? "arabic-text" : ""
           }`;
-          textArea.value = quote.text;
-          textArea.placeholder = "Quote text";
+          textArea.value = localizedText;
+          textArea.placeholder = `Quote text (${textField})`;
 
           const sourceInput = document.createElement("input");
           sourceInput.type = "text";
@@ -586,18 +872,9 @@ class QuotesManager extends BaseManager {
           const optionsRow = document.createElement("div");
           optionsRow.className = "quote-edit-row";
 
-          const arabicLabel = document.createElement("label");
-          arabicLabel.className = "checkbox-option";
-
-          const arabicCheckbox = document.createElement("input");
-          arabicCheckbox.type = "checkbox";
-          arabicCheckbox.checked = !!quote.isArabic;
-
-          const arabicText = document.createElement("span");
-          arabicText.textContent = "Arabic Text";
-
-          arabicLabel.appendChild(arabicCheckbox);
-          arabicLabel.appendChild(arabicText);
+          const langNote = document.createElement("span");
+          langNote.className = "quote-edit-lang-note";
+          langNote.textContent = `Editing key: ${textField}`;
 
           const actionsRow = document.createElement("div");
           actionsRow.className = "quote-edit-actions";
@@ -615,7 +892,7 @@ class QuotesManager extends BaseManager {
           actionsRow.appendChild(cancelBtn);
           actionsRow.appendChild(saveBtn);
 
-          optionsRow.appendChild(arabicLabel);
+          optionsRow.appendChild(langNote);
 
           formEl.appendChild(textArea);
           formEl.appendChild(sourceInput);
@@ -651,11 +928,6 @@ class QuotesManager extends BaseManager {
           textArea.addEventListener("input", autoResize);
           requestAnimationFrame(autoResize);
 
-          arabicCheckbox.addEventListener("change", () => {
-            textArea.classList.toggle("arabic-text", arabicCheckbox.checked);
-            autoResize();
-          });
-
           cancelBtn.addEventListener("click", () => {
             this.editingQuoteId = null;
             this.renderQuotesList();
@@ -665,7 +937,7 @@ class QuotesManager extends BaseManager {
             const ok = this.updateUserQuote(quote.id, {
               text: textArea.value,
               source: sourceInput.value,
-              isArabic: arabicCheckbox.checked,
+              textField,
             });
             if (!ok) return;
             this.editingQuoteId = null;
@@ -673,7 +945,7 @@ class QuotesManager extends BaseManager {
           });
 
           deleteBtn.addEventListener("click", () => {
-            const id = parseInt(deleteBtn.dataset.id);
+            const id = Number(deleteBtn.dataset.id);
             if (confirm("Delete this quote?")) {
               this.deleteUserQuote(id);
             }
@@ -687,9 +959,10 @@ class QuotesManager extends BaseManager {
         quoteEl.innerHTML = `
           <div class="quote-item-number">${globalIndex}</div>
           <div class="quote-item-content">
+            <p class="quote-item-lang-code">${this.escapeHtml(textField)}</p>
             <p class="quote-item-text ${
-              quote.isArabic ? "arabic-text" : ""
-            }">${this.escapeHtml(quote.text)}</p>
+              isArabic ? "arabic-text" : ""
+            }">${this.escapeHtml(localizedText)}</p>
             <p class="quote-item-source">${this.escapeHtml(quote.source)}</p>
           </div>
           <div class="quote-item-actions">
@@ -713,7 +986,7 @@ class QuotesManager extends BaseManager {
         .querySelectorAll(".quote-item-delete")
         .forEach((btn) => {
           btn.addEventListener("click", () => {
-            const id = parseInt(btn.dataset.id);
+            const id = Number(btn.dataset.id);
             if (confirm("Delete this quote?")) {
               this.deleteUserQuote(id);
             }
@@ -725,7 +998,7 @@ class QuotesManager extends BaseManager {
         .querySelectorAll('.quote-item-action-btn[data-action="edit"]')
         .forEach((btn) => {
           btn.addEventListener("click", () => {
-            const id = parseInt(btn.dataset.id);
+            const id = Number(btn.dataset.id);
             this.editingQuoteId = id;
             this.renderQuotesList();
           });
@@ -822,7 +1095,16 @@ class QuotesManager extends BaseManager {
    * Export quotes as JSON
    */
   exportQuotes() {
-    const json = JSON.stringify(this.userQuotes, null, 2);
+    const normalizedQuotes = this.normalizeUserQuotes(this.userQuotes);
+    if (normalizedQuotes.length !== this.userQuotes.length) {
+      this.userQuotes = normalizedQuotes;
+      this.storage.saveUserQuotes(this.userQuotes);
+    }
+
+    const payload = normalizedQuotes.map((quote) =>
+      this.serializeUserQuote(quote),
+    );
+    const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
@@ -845,27 +1127,32 @@ class QuotesManager extends BaseManager {
       reader.onload = (e) => {
         try {
           const json = e.target.result;
-          const quotes = JSON.parse(json);
+          const parsed = JSON.parse(json);
+          const quotes = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray(parsed?.quotes)
+              ? parsed.quotes
+              : Array.isArray(parsed?.items)
+                ? parsed.items
+                : null;
 
           if (!Array.isArray(quotes)) {
             reject(new Error("Invalid format: expected an array"));
             return;
           }
 
-          // Validate and add quotes
-          let addedCount = 0;
-          quotes.forEach((q) => {
-            if (typeof q.text === "string" && q.text.trim()) {
-              this.userQuotes.push({
-                id: Date.now() + Math.random(),
-                text: q.text.trim(),
-                source: q.source || "",
-                type: "user",
-                isArabic: q.isArabic || false,
-              });
-              addedCount++;
-            }
-          });
+          const before = this.userQuotes.length;
+          const incoming = this.normalizeUserQuotes(quotes);
+          this.userQuotes = this.normalizeUserQuotes([
+            ...this.userQuotes,
+            ...incoming,
+          ]);
+          const addedCount = Math.max(0, this.userQuotes.length - before);
+
+          if (!addedCount) {
+            reject(new Error("JSON contains no valid quotes"));
+            return;
+          }
 
           this.storage.saveUserQuotes(this.userQuotes);
           this.renderQuotesList();
@@ -955,10 +1242,18 @@ class QuotesManager extends BaseManager {
       });
     }
 
+    if (this.editorLangPickerBtn) {
+      this.editorLangPickerBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openLanguageSelectorModal("editor");
+      });
+    }
+
     // React to settings changes (e.g., disabling default quotes)
     if (document && typeof document.addEventListener === "function") {
       document.addEventListener("md:settings-applied", () => {
         this.updateLanguageSelectorButton();
+        this.updateEditorLanguagePickerButton();
       });
     }
   }
@@ -968,18 +1263,12 @@ class QuotesManager extends BaseManager {
   getSelectedDefaultLanguageCode() {
     const settings = this.storage.getSettings();
     const raw = settings?.quotesDefaultLang;
-    const normalized =
-      typeof raw === "string" || typeof raw === "number"
-        ? String(raw).trim().toLowerCase()
-        : "";
+    const normalized = this.normalizeLanguageCode(raw);
     return normalized || "en";
   }
 
   setSelectedDefaultLanguageCode(langCode) {
-    const normalized =
-      typeof langCode === "string" || typeof langCode === "number"
-        ? String(langCode).trim().toLowerCase()
-        : "";
+    const normalized = this.normalizeLanguageCode(langCode);
     if (!normalized) return;
 
     const settings = this.storage.getSettings();
@@ -991,59 +1280,25 @@ class QuotesManager extends BaseManager {
     if (!Array.isArray(this.defaultQuotes) || !this.defaultQuotes.length) {
       return [{ code: "en", name: "English" }];
     }
-
-    const first = this.defaultQuotes[0] || {};
     const langCodes = new Set();
 
-    for (const key of Object.keys(first)) {
-      if (key.startsWith("text_")) {
-        const code = String(key.replace("text_", "") || "")
-          .trim()
-          .toLowerCase();
+    this.defaultQuotes.forEach((quote) => {
+      if (!quote || typeof quote !== "object" || Array.isArray(quote)) return;
+      Object.keys(quote).forEach((rawKey) => {
+        const key = String(rawKey || "");
+        const match = key.match(/^text_(.+)$/i);
+        if (!match) return;
+        const code = this.normalizeLanguageCode(match[1]);
         if (code) langCodes.add(code);
-      }
-    }
+      });
+    });
 
     if (!langCodes.size) {
       // legacy fallback
       langCodes.add("en");
     }
 
-    const langNames = {
-      en: "English",
-      id: "Indonesian (Bahasa Indonesia)",
-      ar: "Arabic",
-      tr: "Turkish",
-      ur: "Urdu",
-      ms: "Malay",
-      fr: "French",
-      de: "German",
-      es: "Spanish",
-      bn: "Bengali",
-      fa: "Persian (Farsi)",
-      hi: "Hindi",
-      pt: "Portuguese",
-      ru: "Russian",
-      zh: "Chinese",
-      ja: "Japanese",
-      ko: "Korean",
-      nl: "Dutch",
-      it: "Italian",
-      th: "Thai",
-    };
-
-    const languages = [...langCodes].map((code) => ({
-      code,
-      name: langNames[code] || code.toUpperCase(),
-    }));
-
-    languages.sort((a, b) => {
-      if (a.code === "en") return -1;
-      if (b.code === "en") return 1;
-      return a.name.localeCompare(b.name);
-    });
-
-    return languages.length ? languages : [{ code: "en", name: "English" }];
+    return this.toSortedLanguageList(langCodes);
   }
 
   getLanguageFlag(code) {
@@ -1096,20 +1351,37 @@ class QuotesManager extends BaseManager {
   getQuoteText(quote) {
     if (!quote) return "";
 
-    // Language switching is ONLY for bundled default quotes.
     if (quote._isDefault) {
-      const lang = this.getSelectedDefaultLanguageCode();
-      const k = `text_${lang}`;
-      if (quote[k]) return String(quote[k]);
-      if (quote.text_en) return String(quote.text_en);
-      if (quote.text) return String(quote.text);
-      return "";
+      return this.getQuoteLocalizedText(
+        quote,
+        this.getSelectedDefaultLanguageCode(),
+      );
     }
 
-    // User quotes keep legacy shape.
-    if (typeof quote.text === "string") return quote.text;
-    if (typeof quote.text_en === "string") return quote.text_en;
-    return "";
+    return this.getQuoteLocalizedText(
+      quote,
+      this.getSelectedEditorLanguageCode(),
+    );
+  }
+
+  updateEditorLanguagePickerButton() {
+    const btn = this.editorLangPickerBtn;
+    if (!btn) return;
+
+    const options = this.getEditorLanguageOptions();
+    const current = this.getSelectedEditorLanguageCode();
+    const langInfo = options.find((l) => l.code === current) ||
+      options.find((l) => l.code === "en") ||
+      options[0] || { code: "en", name: "English" };
+
+    btn.innerHTML = `<span>Editor Language: ${this.escapeHtml(
+      `${langInfo.name} (${langInfo.code.toUpperCase()})`,
+    )}</span><span aria-hidden="true">▾</span>`;
+    btn.title = `Select editor language (${langInfo.name})`;
+    btn.setAttribute(
+      "aria-label",
+      `Select quote editor language (${langInfo.name})`,
+    );
   }
 
   createLanguageSelectorButton() {
@@ -1208,9 +1480,11 @@ class QuotesManager extends BaseManager {
     this.renderLanguageSelectorModal("");
   }
 
-  openLanguageSelectorModal() {
+  openLanguageSelectorModal(context = "default") {
     if (!this._langModal) this.createLanguageSelectorModal();
     if (!this._langModal) return;
+
+    this._langModalContext = context === "editor" ? "editor" : "default";
 
     this._langModal.classList.add("active");
 
@@ -1236,8 +1510,24 @@ class QuotesManager extends BaseManager {
   renderLanguageSelectorModal(searchQuery) {
     if (!this._langModal) return;
 
-    const languages = this.getAvailableDefaultLanguages();
-    const current = this.getSelectedDefaultLanguageCode();
+    const context = this._langModalContext === "editor" ? "editor" : "default";
+    const languages =
+      context === "editor"
+        ? this.getEditorLanguageOptions()
+        : this.getAvailableDefaultLanguages();
+    const current =
+      context === "editor"
+        ? this.getSelectedEditorLanguageCode()
+        : this.getSelectedDefaultLanguageCode();
+
+    const titleEl = this._langModal.querySelector(".adhkar-lang-modal-title");
+    if (titleEl) {
+      titleEl.innerHTML = `<span aria-hidden="true">🌐</span>${
+        context === "editor"
+          ? "Select Editor Language"
+          : "Select Quote Language"
+      }`;
+    }
 
     const q = String(searchQuery || "")
       .trim()
@@ -1289,11 +1579,23 @@ class QuotesManager extends BaseManager {
         const code = item.dataset.lang;
         if (!code) return;
 
-        this.setSelectedDefaultLanguageCode(code);
-        this.updateLanguageSelectorButton();
+        const clickContext =
+          this._langModalContext === "editor" ? "editor" : "default";
 
-        if (this.currentQuote && this.currentQuote._isDefault) {
-          this.animateQuote(this.currentQuote);
+        if (clickContext === "editor") {
+          this.setSelectedEditorLanguageCode(code);
+          this.updateEditorLanguagePickerButton();
+          this.renderQuotesList();
+          if (this.currentQuote && !this.currentQuote._isDefault) {
+            this.animateQuote(this.currentQuote);
+          }
+        } else {
+          this.setSelectedDefaultLanguageCode(code);
+          this.updateLanguageSelectorButton();
+
+          if (this.currentQuote && this.currentQuote._isDefault) {
+            this.animateQuote(this.currentQuote);
+          }
         }
 
         this.closeLanguageSelectorModal();
