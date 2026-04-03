@@ -2271,6 +2271,80 @@ class MuslimDashboard {
     return legacyShowWeekday === false ? "full" : "full-weekday";
   }
 
+  normalizeHexColor(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
+    if (shortHex) {
+      const expanded = shortHex[1]
+        .split("")
+        .map((c) => c + c)
+        .join("")
+        .toLowerCase();
+      return `#${expanded}`;
+    }
+
+    const fullHex = raw.match(/^#([0-9a-f]{6})$/i);
+    if (fullHex) {
+      return `#${fullHex[1].toLowerCase()}`;
+    }
+
+    return "";
+  }
+
+  parseCssRgbColor(colorValue) {
+    const value = String(colorValue || "").trim();
+    const match = value.match(
+      /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
+    );
+    if (!match) return null;
+
+    return {
+      r: Math.max(0, Math.min(255, Math.round(Number(match[1])))),
+      g: Math.max(0, Math.min(255, Math.round(Number(match[2])))),
+      b: Math.max(0, Math.min(255, Math.round(Number(match[3])))),
+    };
+  }
+
+  rgbToHex(r, g, b) {
+    const toHex = (value) =>
+      Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+
+  getInverseTextColorHex(sourceEl) {
+    const target = sourceEl || document.body;
+    if (!target || typeof window.getComputedStyle !== "function") {
+      return "#ffffff";
+    }
+
+    const rgb = this.parseCssRgbColor(window.getComputedStyle(target).color);
+    if (!rgb) return "#ffffff";
+
+    return this.rgbToHex(255 - rgb.r, 255 - rgb.g, 255 - rgb.b);
+  }
+
+  resolveHeaderGlowColor(preferredColor, sourceEl) {
+    const normalized = this.normalizeHexColor(preferredColor);
+    if (normalized) return normalized;
+    return this.getInverseTextColorHex(sourceEl);
+  }
+
+  applyHeaderGlow(el, enabled, glowColor) {
+    if (!el) return;
+
+    if (enabled === true) {
+      const safeColor = this.normalizeHexColor(glowColor) || "#ffffff";
+      el.classList.add("header-glow-enabled");
+      el.style.setProperty("--header-glow-color", safeColor);
+      return;
+    }
+
+    el.classList.remove("header-glow-enabled");
+    el.style.removeProperty("--header-glow-color");
+  }
+
   /**
    * Format Gregorian date based on a combined Date Format value
    */
@@ -2481,18 +2555,42 @@ class MuslimDashboard {
       document.getElementById("timeMainRow") ||
       document.querySelector(".time-main-row");
     const currentSeconds = document.getElementById("currentSeconds");
+
+    if (
+      settings.compactWeatherEnabled === true &&
+      this.weather &&
+      typeof this.weather.ensureCompactWeatherElement === "function"
+    ) {
+      this.weather.ensureCompactWeatherElement();
+    }
+
     const compactWeather = document.getElementById("compactWeather");
     const toggleHeaderSurface = (el, enabled) => {
       if (!el) return;
       el.classList.toggle("header-surface-enabled", enabled === true);
     };
 
+    const showGreeting =
+      headingSettings.showGreeting !== false && visibility.header !== false;
+    const showClock =
+      headingSettings.showClock !== false && visibility.header !== false;
+    const showDate = headingSettings.showDate !== false;
+    const showNextPrayer =
+      showClock &&
+      headingSettings.showNextPrayer === true &&
+      visibility.header !== false;
+
     // Show/hide clock
     if (timeSection) {
-      timeSection.style.display =
-        headingSettings.showClock === false || visibility.header === false
-          ? "none"
-          : "";
+      timeSection.style.display = showClock ? "" : "none";
+    }
+
+    if (this.greeting) {
+      this.greeting.style.display = showGreeting ? "" : "none";
+      this.greeting.setAttribute(
+        "aria-hidden",
+        showGreeting ? "false" : "true",
+      );
     }
 
     // Show/hide seconds
@@ -2512,8 +2610,8 @@ class MuslimDashboard {
 
     // Show/hide date
     if (this.dateDisplay) {
-      this.dateDisplay.style.display =
-        headingSettings.showDate === false ? "none" : "";
+      this.dateDisplay.style.display = showDate ? "" : "none";
+      this.dateDisplay.setAttribute("aria-hidden", showDate ? "false" : "true");
     }
 
     toggleHeaderSurface(
@@ -2540,6 +2638,54 @@ class MuslimDashboard {
       compactWeather,
       headerComponentBackgroundsEnabled &&
         headingSettings.compactWeatherBackgroundEnabled === true,
+    );
+
+    const greetingGlowColor = this.resolveHeaderGlowColor(
+      headingSettings.greetingGlowColor,
+      this.greeting,
+    );
+    const dateGlowColor = this.resolveHeaderGlowColor(
+      headingSettings.dateGlowColor,
+      this.dateDisplay,
+    );
+    const timeGlowColor = this.resolveHeaderGlowColor(
+      headingSettings.timeGlowColor,
+      this.currentTime || timeMainRow,
+    );
+    const nextPrayerGlowColor = this.resolveHeaderGlowColor(
+      headingSettings.nextPrayerGlowColor,
+      this.headerNextPrayer,
+    );
+    const compactWeatherGlowColor = this.resolveHeaderGlowColor(
+      headingSettings.compactWeatherGlowColor,
+      compactWeather?.querySelector(".compact-weather-temp") || compactWeather,
+    );
+
+    this.applyHeaderGlow(
+      this.greeting,
+      headingSettings.greetingGlowEnabled === true && showGreeting,
+      greetingGlowColor,
+    );
+    this.applyHeaderGlow(
+      this.dateDisplay,
+      headingSettings.dateGlowEnabled === true && showDate,
+      dateGlowColor,
+    );
+    this.applyHeaderGlow(
+      timeMainRow,
+      headingSettings.timeGlowEnabled === true && showClock,
+      timeGlowColor,
+    );
+    this.applyHeaderGlow(
+      this.headerNextPrayer,
+      headingSettings.nextPrayerGlowEnabled === true && showNextPrayer,
+      nextPrayerGlowColor,
+    );
+    this.applyHeaderGlow(
+      compactWeather,
+      headingSettings.compactWeatherGlowEnabled === true &&
+        settings.compactWeatherEnabled === true,
+      compactWeatherGlowColor,
     );
 
     if (

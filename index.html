@@ -3026,6 +3026,203 @@
 
           <!-- Heading Settings -->
           <div class="settings-panel" id="headingPanel">
+            <div class="setting-group" id="headerSurfaceBackgroundsGroup">
+              <label class="setting-label">Header Quick Controls</label>
+              <p class="setting-hint">
+                Toggle visibility, surface background, and glow for each header
+                item.
+              </p>
+              <p class="setting-hint" id="headerSurfaceBackgroundsThemeHint">
+                Enable Header Component Backgrounds in Themes before you can
+                edit Surface toggles.
+              </p>
+
+              <div class="header-control-grid" aria-label="Header controls">
+                <div class="header-control-row is-head" aria-hidden="true">
+                  <span class="header-control-cell component">Item</span>
+                  <span class="header-control-cell center">Show</span>
+                  <span class="header-control-cell center">Surface</span>
+                  <span class="header-control-cell center">Glow</span>
+                </div>
+
+                <div class="header-control-row">
+                  <span class="header-control-cell component">Greeting</span>
+
+                  <label class="header-control-toggle" title="Show Greeting">
+                    <input type="checkbox" id="showGreeting" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <label
+                    class="header-control-toggle header-surface-cell"
+                    title="Greeting Surface"
+                  >
+                    <input
+                      type="checkbox"
+                      id="headerGreetingBgEnabled"
+                      checked
+                    />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <div class="header-control-glow">
+                    <label class="header-control-toggle" title="Greeting Glow">
+                      <input type="checkbox" id="headerGreetingGlowEnabled" />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                    </label>
+                    <input
+                      type="color"
+                      id="headerGreetingGlowColor"
+                      class="header-glow-color"
+                      value="#ffffff"
+                      aria-label="Greeting glow color"
+                    />
+                  </div>
+                </div>
+
+                <div class="header-control-row">
+                  <span class="header-control-cell component">Clock</span>
+
+                  <label class="header-control-toggle" title="Show Clock">
+                    <input type="checkbox" id="showClock" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <label
+                    class="header-control-toggle header-surface-cell"
+                    title="Clock Surface"
+                  >
+                    <input type="checkbox" id="headerTimeBgEnabled" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <div class="header-control-glow">
+                    <label class="header-control-toggle" title="Clock Glow">
+                      <input type="checkbox" id="headerTimeGlowEnabled" />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                    </label>
+                    <input
+                      type="color"
+                      id="headerTimeGlowColor"
+                      class="header-glow-color"
+                      value="#ffffff"
+                      aria-label="Clock glow color"
+                    />
+                  </div>
+                </div>
+
+                <div class="header-control-row">
+                  <span class="header-control-cell component">Date</span>
+
+                  <label class="header-control-toggle" title="Show Date">
+                    <input type="checkbox" id="showDate" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <label
+                    class="header-control-toggle header-surface-cell"
+                    title="Date Surface"
+                  >
+                    <input type="checkbox" id="headerDateBgEnabled" checked />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <div class="header-control-glow">
+                    <label class="header-control-toggle" title="Date Glow">
+                      <input type="checkbox" id="headerDateGlowEnabled" />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                    </label>
+                    <input
+                      type="color"
+                      id="headerDateGlowColor"
+                      class="header-glow-color"
+                      value="#ffffff"
+                      aria-label="Date glow color"
+                    />
+                  </div>
+                </div>
+
+                <div class="header-control-row">
+                  <span class="header-control-cell component">Weather</span>
+
+                  <label
+                    class="header-control-toggle"
+                    title="Show Compact Weather"
+                  >
+                    <input type="checkbox" id="compactWeatherEnabled" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <label
+                    class="header-control-toggle header-surface-cell"
+                    title="Weather Surface"
+                  >
+                    <input
+                      type="checkbox"
+                      id="headerCompactWeatherBgEnabled"
+                      checked
+                    />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <div class="header-control-glow">
+                    <label class="header-control-toggle" title="Weather Glow">
+                      <input
+                        type="checkbox"
+                        id="headerCompactWeatherGlowEnabled"
+                      />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                    </label>
+                    <input
+                      type="color"
+                      id="headerCompactWeatherGlowColor"
+                      class="header-glow-color"
+                      value="#ffffff"
+                      aria-label="Compact weather glow color"
+                    />
+                  </div>
+                </div>
+
+                <div class="header-control-row">
+                  <span class="header-control-cell component">Next Prayer</span>
+
+                  <label class="header-control-toggle" title="Show Next Prayer">
+                    <input type="checkbox" id="showNextPrayer" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <label
+                    class="header-control-toggle header-surface-cell"
+                    title="Next Prayer Surface"
+                  >
+                    <input
+                      type="checkbox"
+                      id="headerNextPrayerBgEnabled"
+                      checked
+                    />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+
+                  <div class="header-control-glow">
+                    <label
+                      class="header-control-toggle"
+                      title="Next Prayer Glow"
+                    >
+                      <input type="checkbox" id="headerNextPrayerGlowEnabled" />
+                      <span class="toggle-switch" aria-hidden="true"></span>
+                    </label>
+                    <input
+                      type="color"
+                      id="headerNextPrayerGlowColor"
+                      class="header-glow-color"
+                      value="#ffffff"
+                      aria-label="Next prayer glow color"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Greeting Settings -->
             <div class="setting-group">
               <label class="setting-label">Greeting Message</label>
@@ -3109,17 +3306,6 @@
               </div>
             </div>
 
-            <!-- Clock Settings -->
-            <div class="setting-group">
-              <label class="setting-label">Clock Display</label>
-              <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showClock" checked />
-                  <span>Show Clock</span>
-                </label>
-              </div>
-            </div>
-
             <div class="setting-group clock-options" id="clockOptionsGroup">
               <label class="setting-label">Clock Format</label>
               <div class="setting-options">
@@ -3143,12 +3329,6 @@
                 <label class="checkbox-option" id="ampmOption">
                   <input type="checkbox" id="showAmPm" checked />
                   <span>Show AM/PM</span>
-                </label>
-              </div>
-              <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showNextPrayer" />
-                  <span>Show Next Prayer Under Clock</span>
                 </label>
               </div>
             </div>
@@ -3250,60 +3430,12 @@
               </div>
             </div>
 
-            <div class="setting-group" id="headerSurfaceBackgroundsGroup">
-              <label class="setting-label">Header Surface Backgrounds</label>
-              <p class="setting-hint">
-                Toggle theme-aware box or pill backgrounds for each header
-                element.
-              </p>
-              <p class="setting-hint" id="headerSurfaceBackgroundsThemeHint">
-                Enable Header Component Backgrounds in Themes before you can
-                edit these toggles.
-              </p>
-              <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="headerGreetingBgEnabled" checked />
-                  <span>Greeting Box</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="headerDateBgEnabled" checked />
-                  <span>Date Pill</span>
-                </label>
-                <label class="checkbox-option">
-                  <input type="checkbox" id="headerTimeBgEnabled" checked />
-                  <span>Time Pill</span>
-                </label>
-                <label class="checkbox-option">
-                  <input
-                    type="checkbox"
-                    id="headerNextPrayerBgEnabled"
-                    checked
-                  />
-                  <span>Next Prayer Badge</span>
-                </label>
-                <label class="checkbox-option">
-                  <input
-                    type="checkbox"
-                    id="headerCompactWeatherBgEnabled"
-                    checked
-                  />
-                  <span>Compact Weather Pill</span>
-                </label>
-              </div>
-            </div>
-
             <!-- Compact Weather in Header -->
             <div class="setting-group">
-              <label class="setting-label">Compact Weather Display</label>
+              <label class="setting-label">Compact Weather Details</label>
               <p class="setting-hint">
-                Show a compact weather indicator below the date in the header.
+                Choose detail level when Weather is enabled above.
               </p>
-              <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="compactWeatherEnabled" />
-                  <span>Enable Compact Weather in Header</span>
-                </label>
-              </div>
               <div
                 class="compact-weather-options"
                 id="compactWeatherOptions"
@@ -3342,12 +3474,8 @@
 
             <!-- Date Settings -->
             <div class="setting-group">
-              <label class="setting-label">Date Display</label>
+              <label class="setting-label">Date Details</label>
               <div class="setting-options">
-                <label class="checkbox-option">
-                  <input type="checkbox" id="showDate" checked />
-                  <span>Show Date</span>
-                </label>
                 <label class="checkbox-option">
                   <input type="checkbox" id="showIslamicEvents" checked />
                   <span>Show Islamic Events</span>

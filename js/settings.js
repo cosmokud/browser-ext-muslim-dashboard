@@ -318,6 +318,7 @@ class SettingsManager extends BaseManager {
     this.greetingAfternoon = document.getElementById("greetingAfternoon");
     this.greetingEvening = document.getElementById("greetingEvening");
     this.greetingNight = document.getElementById("greetingNight");
+    this.showGreeting = document.getElementById("showGreeting");
     this.showClock = document.getElementById("showClock");
     this.clockFormatRadios = document.querySelectorAll(
       'input[name="clockFormat"]',
@@ -341,6 +342,32 @@ class SettingsManager extends BaseManager {
     );
     this.headerCompactWeatherBgEnabled = document.getElementById(
       "headerCompactWeatherBgEnabled",
+    );
+    this.headerGreetingGlowEnabled = document.getElementById(
+      "headerGreetingGlowEnabled",
+    );
+    this.headerGreetingGlowColor = document.getElementById(
+      "headerGreetingGlowColor",
+    );
+    this.headerDateGlowEnabled = document.getElementById(
+      "headerDateGlowEnabled",
+    );
+    this.headerDateGlowColor = document.getElementById("headerDateGlowColor");
+    this.headerTimeGlowEnabled = document.getElementById(
+      "headerTimeGlowEnabled",
+    );
+    this.headerTimeGlowColor = document.getElementById("headerTimeGlowColor");
+    this.headerNextPrayerGlowEnabled = document.getElementById(
+      "headerNextPrayerGlowEnabled",
+    );
+    this.headerNextPrayerGlowColor = document.getElementById(
+      "headerNextPrayerGlowColor",
+    );
+    this.headerCompactWeatherGlowEnabled = document.getElementById(
+      "headerCompactWeatherGlowEnabled",
+    );
+    this.headerCompactWeatherGlowColor = document.getElementById(
+      "headerCompactWeatherGlowColor",
     );
     this.headerSurfaceBackgroundsGroup = document.getElementById(
       "headerSurfaceBackgroundsGroup",
@@ -1203,6 +1230,9 @@ class SettingsManager extends BaseManager {
         timeRanges.night?.text || "As-salamu alaykum, Good Night";
 
     // Clock settings
+    if (this.showGreeting)
+      this.showGreeting.checked = heading.showGreeting !== false;
+
     if (this.showClock) this.showClock.checked = heading.showClock !== false;
     this.toggleClockOptions(heading.showClock !== false);
 
@@ -1261,6 +1291,68 @@ class SettingsManager extends BaseManager {
       this.headerCompactWeatherBgEnabled.checked =
         heading.compactWeatherBackgroundEnabled === true;
     }
+
+    if (this.headerGreetingGlowEnabled) {
+      this.headerGreetingGlowEnabled.checked =
+        heading.greetingGlowEnabled === true;
+    }
+    if (this.headerGreetingGlowColor) {
+      const fallback = this.getAutoHeaderGlowColor("#greeting");
+      this.headerGreetingGlowColor.value = this.normalizeColorHex(
+        heading.greetingGlowColor,
+        fallback,
+      );
+    }
+
+    if (this.headerDateGlowEnabled) {
+      this.headerDateGlowEnabled.checked = heading.dateGlowEnabled === true;
+    }
+    if (this.headerDateGlowColor) {
+      const fallback = this.getAutoHeaderGlowColor("#dateDisplay");
+      this.headerDateGlowColor.value = this.normalizeColorHex(
+        heading.dateGlowColor,
+        fallback,
+      );
+    }
+
+    if (this.headerTimeGlowEnabled) {
+      this.headerTimeGlowEnabled.checked = heading.timeGlowEnabled === true;
+    }
+    if (this.headerTimeGlowColor) {
+      const fallback = this.getAutoHeaderGlowColor("#currentTime");
+      this.headerTimeGlowColor.value = this.normalizeColorHex(
+        heading.timeGlowColor,
+        fallback,
+      );
+    }
+
+    if (this.headerNextPrayerGlowEnabled) {
+      this.headerNextPrayerGlowEnabled.checked =
+        heading.nextPrayerGlowEnabled === true;
+    }
+    if (this.headerNextPrayerGlowColor) {
+      const fallback = this.getAutoHeaderGlowColor("#headerNextPrayer");
+      this.headerNextPrayerGlowColor.value = this.normalizeColorHex(
+        heading.nextPrayerGlowColor,
+        fallback,
+      );
+    }
+
+    if (this.headerCompactWeatherGlowEnabled) {
+      this.headerCompactWeatherGlowEnabled.checked =
+        heading.compactWeatherGlowEnabled === true;
+    }
+    if (this.headerCompactWeatherGlowColor) {
+      const fallback = this.getAutoHeaderGlowColor(
+        "#compactWeather .compact-weather-temp",
+      );
+      this.headerCompactWeatherGlowColor.value = this.normalizeColorHex(
+        heading.compactWeatherGlowColor,
+        fallback,
+      );
+    }
+
+    this.updateHeaderGlowColorLockState();
 
     this.updateHeaderSurfaceBackgroundsLockState();
   }
@@ -1791,6 +1883,65 @@ class SettingsManager extends BaseManager {
     return Math.min(max, Math.max(min, numeric));
   }
 
+  normalizeColorHex(value, fallback = "") {
+    const raw = String(value || "").trim();
+    if (!raw) return fallback;
+
+    const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
+    if (shortHex) {
+      const expanded = shortHex[1]
+        .split("")
+        .map((c) => c + c)
+        .join("")
+        .toLowerCase();
+      return `#${expanded}`;
+    }
+
+    const fullHex = raw.match(/^#([0-9a-f]{6})$/i);
+    if (fullHex) {
+      return `#${fullHex[1].toLowerCase()}`;
+    }
+
+    return fallback;
+  }
+
+  parseCssRgbColor(colorValue) {
+    const value = String(colorValue || "").trim();
+    const match = value.match(
+      /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
+    );
+    if (!match) return null;
+
+    return {
+      r: Math.max(0, Math.min(255, Math.round(Number(match[1])))),
+      g: Math.max(0, Math.min(255, Math.round(Number(match[2])))),
+      b: Math.max(0, Math.min(255, Math.round(Number(match[3])))),
+    };
+  }
+
+  rgbToHex(r, g, b) {
+    const toHex = (value) =>
+      Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+
+  getAutoHeaderGlowColor(targetSelector, fallback = "#ffffff") {
+    if (typeof window.getComputedStyle !== "function") return fallback;
+
+    const target =
+      typeof targetSelector === "string"
+        ? document.querySelector(targetSelector)
+        : targetSelector;
+
+    const source = target || document.body;
+    if (!source) return fallback;
+
+    const rgb = this.parseCssRgbColor(window.getComputedStyle(source).color);
+    if (!rgb) return fallback;
+
+    return this.rgbToHex(255 - rgb.r, 255 - rgb.g, 255 - rgb.b);
+  }
+
   /**
    * Update custom width label
    */
@@ -2151,6 +2302,106 @@ class SettingsManager extends BaseManager {
         "aria-disabled",
         isEnabled ? "false" : "true",
       );
+    }
+  }
+
+  updateHeaderGlowColorLockState() {
+    const pairs = [
+      [this.headerGreetingGlowEnabled, this.headerGreetingGlowColor],
+      [this.headerDateGlowEnabled, this.headerDateGlowColor],
+      [this.headerTimeGlowEnabled, this.headerTimeGlowColor],
+      [this.headerNextPrayerGlowEnabled, this.headerNextPrayerGlowColor],
+      [
+        this.headerCompactWeatherGlowEnabled,
+        this.headerCompactWeatherGlowColor,
+      ],
+    ];
+
+    pairs.forEach(([toggle, picker]) => {
+      if (!picker) return;
+      const enabled = toggle?.checked === true;
+      picker.disabled = !enabled;
+      picker.setAttribute("aria-disabled", enabled ? "false" : "true");
+    });
+  }
+
+  applyHeaderQuickControlsInstantly() {
+    const dashboard = window.dashboard;
+    if (!dashboard || !this.storage) return;
+
+    const settings = this.storage.getSettings();
+    settings.heading = settings.heading || {};
+
+    settings.heading.showGreeting = this.showGreeting?.checked ?? true;
+    settings.heading.showClock = this.showClock?.checked ?? true;
+    settings.heading.showDate = this.showDate?.checked ?? true;
+    settings.heading.showNextPrayer = this.showNextPrayer?.checked === true;
+
+    settings.compactWeatherEnabled =
+      this.compactWeatherEnabled?.checked ?? false;
+
+    settings.heading.greetingBackgroundEnabled =
+      this.headerGreetingBgEnabled?.checked === true;
+    settings.heading.dateBackgroundEnabled =
+      this.headerDateBgEnabled?.checked === true;
+    settings.heading.timeBackgroundEnabled =
+      this.headerTimeBgEnabled?.checked === true;
+    settings.heading.nextPrayerBackgroundEnabled =
+      this.headerNextPrayerBgEnabled?.checked === true;
+    settings.heading.compactWeatherBackgroundEnabled =
+      this.headerCompactWeatherBgEnabled?.checked === true;
+
+    settings.heading.greetingGlowEnabled =
+      this.headerGreetingGlowEnabled?.checked === true;
+    settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
+      ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
+      : "";
+
+    settings.heading.dateGlowEnabled =
+      this.headerDateGlowEnabled?.checked === true;
+    settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
+      ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
+      : "";
+
+    settings.heading.timeGlowEnabled =
+      this.headerTimeGlowEnabled?.checked === true;
+    settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
+      ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
+      : "";
+
+    settings.heading.nextPrayerGlowEnabled =
+      this.headerNextPrayerGlowEnabled?.checked === true;
+    settings.heading.nextPrayerGlowColor = settings.heading
+      .nextPrayerGlowEnabled
+      ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
+      : "";
+
+    settings.heading.compactWeatherGlowEnabled =
+      this.headerCompactWeatherGlowEnabled?.checked === true;
+    settings.heading.compactWeatherGlowColor = settings.heading
+      .compactWeatherGlowEnabled
+      ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
+      : "";
+
+    this.storage.saveSettings(settings);
+
+    this.toggleClockOptions(settings.heading.showClock !== false);
+    this.toggleCompactWeatherOptions(settings.compactWeatherEnabled === true);
+
+    if (typeof dashboard.updateGreeting === "function") {
+      dashboard.updateGreeting();
+    }
+    if (typeof dashboard.updateDate === "function") {
+      dashboard.updateDate();
+    }
+    if (
+      dashboard.weather &&
+      typeof dashboard.weather.updateCompactWeather === "function"
+    ) {
+      dashboard.weather.updateCompactWeather();
+    }
+    if (typeof dashboard.applyHeadingSettings === "function") {
+      dashboard.applyHeadingSettings();
     }
   }
 
@@ -4302,6 +4553,7 @@ class SettingsManager extends BaseManager {
     settings.heading = settings.heading || {};
     settings.heading.useCustomGreeting = useCustomGreeting;
     settings.heading.customGreeting = this.customGreetingInput?.value || "";
+    settings.heading.showGreeting = this.showGreeting?.checked ?? true;
 
     // Time-based greetings
     settings.heading.greetingTimeRanges = {
@@ -4363,6 +4615,38 @@ class SettingsManager extends BaseManager {
       this.headerNextPrayerBgEnabled?.checked === true;
     settings.heading.compactWeatherBackgroundEnabled =
       this.headerCompactWeatherBgEnabled?.checked === true;
+
+    settings.heading.greetingGlowEnabled =
+      this.headerGreetingGlowEnabled?.checked === true;
+    settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
+      ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
+      : "";
+
+    settings.heading.dateGlowEnabled =
+      this.headerDateGlowEnabled?.checked === true;
+    settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
+      ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
+      : "";
+
+    settings.heading.timeGlowEnabled =
+      this.headerTimeGlowEnabled?.checked === true;
+    settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
+      ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
+      : "";
+
+    settings.heading.nextPrayerGlowEnabled =
+      this.headerNextPrayerGlowEnabled?.checked === true;
+    settings.heading.nextPrayerGlowColor = settings.heading
+      .nextPrayerGlowEnabled
+      ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
+      : "";
+
+    settings.heading.compactWeatherGlowEnabled =
+      this.headerCompactWeatherGlowEnabled?.checked === true;
+    settings.heading.compactWeatherGlowColor = settings.heading
+      .compactWeatherGlowEnabled
+      ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
+      : "";
   }
 
   /**
@@ -5920,6 +6204,7 @@ class SettingsManager extends BaseManager {
     if (this.compactWeatherEnabled) {
       this.compactWeatherEnabled.addEventListener("change", (e) => {
         this.toggleCompactWeatherOptions(e.target.checked);
+        this.applyHeaderQuickControlsInstantly();
       });
     }
 
@@ -6577,8 +6862,44 @@ class SettingsManager extends BaseManager {
     if (this.showClock) {
       this.showClock.addEventListener("change", () => {
         this.toggleClockOptions(this.showClock.checked);
+        this.applyHeaderQuickControlsInstantly();
       });
     }
+
+    [
+      this.headerGreetingGlowEnabled,
+      this.headerDateGlowEnabled,
+      this.headerTimeGlowEnabled,
+      this.headerNextPrayerGlowEnabled,
+      this.headerCompactWeatherGlowEnabled,
+    ].forEach((toggle) => {
+      if (!toggle) return;
+      toggle.addEventListener("change", () => {
+        this.updateHeaderGlowColorLockState();
+        this.applyHeaderQuickControlsInstantly();
+      });
+    });
+
+    [
+      this.showGreeting,
+      this.showDate,
+      this.showNextPrayer,
+      this.headerGreetingBgEnabled,
+      this.headerDateBgEnabled,
+      this.headerTimeBgEnabled,
+      this.headerNextPrayerBgEnabled,
+      this.headerCompactWeatherBgEnabled,
+      this.headerGreetingGlowColor,
+      this.headerDateGlowColor,
+      this.headerTimeGlowColor,
+      this.headerNextPrayerGlowColor,
+      this.headerCompactWeatherGlowColor,
+    ].forEach((control) => {
+      if (!control) return;
+      control.addEventListener("change", () => {
+        this.applyHeaderQuickControlsInstantly();
+      });
+    });
 
     // Heading settings - clock format toggle (show/hide AM/PM option)
     this.clockFormatRadios.forEach((radio) => {

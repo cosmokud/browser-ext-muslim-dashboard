@@ -411,6 +411,7 @@ class StorageManager {
         // Greeting settings
         useCustomGreeting: false,
         customGreeting: "",
+        showGreeting: true,
         greetingTimeRanges: {
           morning: {
             start: 3,
@@ -450,6 +451,18 @@ class StorageManager {
         timeBackgroundEnabled: true,
         nextPrayerBackgroundEnabled: true,
         compactWeatherBackgroundEnabled: true,
+
+        // Header glow settings
+        greetingGlowEnabled: false,
+        greetingGlowColor: "",
+        dateGlowEnabled: false,
+        dateGlowColor: "",
+        timeGlowEnabled: false,
+        timeGlowColor: "",
+        nextPrayerGlowEnabled: false,
+        nextPrayerGlowColor: "",
+        compactWeatherGlowEnabled: false,
+        compactWeatherGlowColor: "",
       },
     };
   }
