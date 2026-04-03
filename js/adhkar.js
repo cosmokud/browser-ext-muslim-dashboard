@@ -1,6 +1,6 @@
 /**
  * Adhkar Manager
- * - Loads default adhkar sets from data/*.json on first run
+ * - Loads bundled default adhkar sets from data/*.json at runtime
  * - Supports up to 100 adhkar sets (JSON import)
  * - Dashboard reader + Settings tab editor (20 items/page)
  */
@@ -148,6 +148,7 @@ class AdhkarManager extends BaseManager {
     // Arabic font picker state
     this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
     this._fontModal = null;
+    this.defaultSets = [];
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -199,12 +200,32 @@ class AdhkarManager extends BaseManager {
 
   // ---------- Storage ----------
 
+  getStoredCustomSets() {
+    const stored = this.storage.get("adhkarSets", []);
+    if (!Array.isArray(stored)) return [];
+    return stored.filter((set) => set && !this.isProtectedSetId(set.id));
+  }
+
   getSets() {
-    return this.storage.get("adhkarSets", []);
+    const defaults = Array.isArray(this.defaultSets) ? this.defaultSets : [];
+    const customSets = this.getStoredCustomSets();
+    const merged = [...defaults, ...customSets];
+    const byId = new Map();
+
+    for (const set of merged) {
+      const id = String(set?.id || "");
+      if (!id) continue;
+      byId.set(id, set);
+    }
+
+    return [...byId.values()];
   }
 
   saveSets(sets) {
-    return this.storage.set("adhkarSets", sets);
+    const customSets = Array.isArray(sets)
+      ? sets.filter((set) => set && !this.isProtectedSetId(set.id))
+      : [];
+    return this.storage.set("adhkarSets", customSets);
   }
 
   getAdhkarSettings() {
@@ -455,101 +476,33 @@ class AdhkarManager extends BaseManager {
   // ---------- Default bootstrap ----------
 
   async ensureDefaultSets() {
-    const sets = this.getSets();
     const defs = Array.isArray(AdhkarManager.DEFAULT_SETS)
       ? AdhkarManager.DEFAULT_SETS
       : [];
 
-    const existingSets = Array.isArray(sets) ? sets : [];
+    const loadedDefaults = await Promise.all(
+      defs.map((def) => this.loadDefaultSet(def)),
+    );
+    this.defaultSets = loadedDefaults;
 
-    // Fresh install: create all default sets
-    if (existingSets.length === 0) {
-      const created = [];
-      for (const def of defs) {
-        created.push(await this.loadDefaultSet(def));
-      }
-      this.saveSets(created);
-
-      const preferredId = "default_adhkar_morning";
-      const preferred = created.find((s) => s.id === preferredId) || created[0];
-      this.setActiveSetId(preferred?.id || preferredId);
-      return;
-    }
-
-    // Upgrade path: ensure each default set exists (do not overwrite)
-    let changed = false;
-    const existingIds = new Set(existingSets.map((s) => s.id));
-    for (const def of defs) {
-      if (!existingIds.has(def.id)) {
-        const newSet = await this.loadDefaultSet(def);
-        existingSets.push(newSet);
-        changed = true;
+    // Migration cleanup: remove legacy stored copies of protected default sets.
+    const stored = this.storage.get("adhkarSets", []);
+    if (Array.isArray(stored)) {
+      const cleaned = stored.filter((set) => !this.isProtectedSetId(set?.id));
+      if (cleaned.length !== stored.length) {
+        this.storage.set("adhkarSets", cleaned);
       }
     }
 
-    if (changed) {
-      this.saveSets(existingSets);
-      if (!this.getActiveSetId() && existingSets[0]) {
-        this.setActiveSetId(existingSets[0].id);
-      }
-    }
-
-    // Schema upgrade: older versions imported defaults without title/reference/repeat.
-    // Only refresh protected default sets when they appear to be in the legacy shape.
-    try {
-      let upgraded = false;
-      for (const def of defs) {
-        const idx = existingSets.findIndex((s) => s && s.id === def.id);
-        if (idx === -1) continue;
-
-        const set = existingSets[idx];
-        if (!this.isProtectedSetId(set.id)) continue;
-        const cards = Array.isArray(set.cards) ? set.cards : [];
-        if (!cards.length) continue;
-
-        const looksLegacy = cards.every((c) => {
-          if (!c || typeof c !== "object") return true;
-          const hasTitle = typeof c.title === "string" && c.title.trim();
-          const hasRef = typeof c.reference === "string" && c.reference.trim();
-          const hasRepeat =
-            typeof c.repeat === "number" && Number.isFinite(c.repeat);
-          return !hasTitle && !hasRef && !hasRepeat;
-        });
-
-        const missingTranslations = cards.every((c) => {
-          if (!c || typeof c !== "object") return false;
-          const hasTranslationKey = Object.keys(c).some(
-            (k) =>
-              k === "translation" ||
-              k === "text" ||
-              k.startsWith("text_") ||
-              k.startsWith("translation_"),
-          );
-          const hasEnglish = typeof c.english === "string" && c.english.trim();
-          return !hasTranslationKey && hasEnglish;
-        });
-
-        if (!looksLegacy && !missingTranslations) continue;
-
-        const fresh = await this.loadDefaultSet(def);
-        if (fresh && Array.isArray(fresh.cards) && fresh.cards.length) {
-          existingSets[idx].cards = fresh.cards;
-          existingSets[idx].name = fresh.name;
-          upgraded = true;
-        }
-      }
-
-      if (upgraded) {
-        this.saveSets(existingSets);
-      }
-    } catch (e) {
-      console.warn("Adhkar: default set upgrade skipped:", e);
-    }
+    const sets = this.getSets();
+    if (!sets.length) return;
 
     // Ensure active set id exists
     const activeId = this.getActiveSetId();
-    if (activeId && !existingSets.some((s) => s.id === activeId)) {
-      this.setActiveSetId(existingSets[0]?.id || "default_adhkar_morning");
+    if (!activeId || !sets.some((s) => s.id === activeId)) {
+      const preferredId = "default_adhkar_morning";
+      const preferredExists = sets.some((s) => s.id === preferredId);
+      this.setActiveSetId(preferredExists ? preferredId : sets[0]?.id || null);
     }
   }
 
@@ -580,41 +533,15 @@ class AdhkarManager extends BaseManager {
   }
 
   /**
-   * Refreshes the content of default Adhkar sets from JSON files
+   * Backward-compatible refresh entrypoint.
+   * Default sets are file-backed and reloaded at runtime.
    */
   async refreshDefaultData() {
-    const sets = this.getSets();
-    const defs = AdhkarManager.DEFAULT_SETS;
-    let changed = false;
-
-    // Load all default sets in parallel
-    const freshSets = await Promise.all(
-      defs.map((def) => this.loadDefaultSet(def)),
-    );
-
-    for (const newSet of freshSets) {
-      if (!newSet || !newSet.cards || !newSet.cards.length) continue;
-
-      const idx = sets.findIndex((s) => s.id === newSet.id);
-      if (idx !== -1) {
-        sets[idx].cards = newSet.cards;
-        sets[idx].name = newSet.name;
-        changed = true;
-      } else {
-        sets.push(newSet);
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      this.saveSets(sets);
-
-      // If active set was one of them, we need to refresh the current view
-      const activeId = this.getActiveSetId();
-      if (defs.some((d) => d.id === activeId)) {
-        this.renderDashboard();
-      }
-    }
+    await this.ensureDefaultSets();
+    this.restoreCurrentCardIndexForActiveSet();
+    this.renderDashboard();
+    this.renderSettings();
+    this.ensureAutoAdvanceState({ reset: true });
   }
 
   // ---------- Dashboard events ----------

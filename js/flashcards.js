@@ -1,6 +1,6 @@
 /**
  * Flashcard Manager
- * - Loads default cards from data/flashcard_default.csv on first run
+ * - Loads bundled default cards from data/*.csv at runtime
  * - Supports up to 100 flashcard sets (CSV import)
  * - Dashboard viewer + Settings tab editor (20 cards/page)
  */
@@ -137,6 +137,7 @@ class FlashcardManager extends BaseManager {
     // Arabic font picker state
     this._arabicFontFamily = "Noto Naskh Arabic";
     this._fontModal = null;
+    this.defaultSets = [];
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -164,12 +165,32 @@ class FlashcardManager extends BaseManager {
 
   // ---------- Storage ----------
 
+  getStoredCustomSets() {
+    const stored = this.storage.get("flashcardSets", []);
+    if (!Array.isArray(stored)) return [];
+    return stored.filter((set) => set && !this.isProtectedSetId(set.id));
+  }
+
   getSets() {
-    return this.storage.get("flashcardSets", []);
+    const defaults = Array.isArray(this.defaultSets) ? this.defaultSets : [];
+    const customSets = this.getStoredCustomSets();
+    const merged = [...defaults, ...customSets];
+    const byId = new Map();
+
+    for (const set of merged) {
+      const id = String(set?.id || "");
+      if (!id) continue;
+      byId.set(id, set);
+    }
+
+    return [...byId.values()];
   }
 
   saveSets(sets) {
-    return this.storage.set("flashcardSets", sets);
+    const customSets = Array.isArray(sets)
+      ? sets.filter((set) => set && !this.isProtectedSetId(set.id))
+      : [];
+    return this.storage.set("flashcardSets", customSets);
   }
 
   getFlashcardSettings() {
@@ -487,7 +508,6 @@ class FlashcardManager extends BaseManager {
   // ---------- Default bootstrap ----------
 
   async ensureDefaultSet() {
-    const sets = this.getSets();
     const defs = Array.isArray(FlashcardManager.DEFAULT_SETS)
       ? FlashcardManager.DEFAULT_SETS
       : [
@@ -499,162 +519,66 @@ class FlashcardManager extends BaseManager {
           },
         ];
 
-    const existingSets = Array.isArray(sets) ? sets : [];
-
-    // Fresh install: create all default sets
-    if (existingSets.length === 0) {
-      const created = [];
-      for (const def of defs) {
-        try {
-          const res = await fetch(def.file, { cache: "no-store" });
-          if (!res.ok)
-            throw new Error(`Failed to load default CSV: ${res.status}`);
-          const text = await res.text();
-          const cards =
-            def.parser === "pipe"
-              ? this.parsePipeTwoColumns(text)
-              : this.parseCsvTwoColumns(text);
-          created.push({
-            id: def.id,
-            name: def.name,
-            createdAt: new Date().toISOString(),
-            cards,
-          });
-        } catch (e) {
-          console.error(
-            `Flashcards: failed to initialize default set ${def.id}`,
-            e,
-          );
-          created.push({
-            id: def.id,
-            name: def.name,
-            createdAt: new Date().toISOString(),
-            cards: [],
-          });
-        }
-      }
-      this.saveSets(created);
-      // Prefer 99 Names (Arabic) as the initial active set if present
-      const preferredId = "default_99names_ar";
-      const preferred = created.find((s) => s.id === preferredId) || created[0];
-      this.setActiveSetId(preferred?.id || preferredId);
-      return;
-    }
-
-    // Upgrade path: ensure each default set exists (do not overwrite existing user sets)
-    let changed = false;
-    const existingIds = new Set(existingSets.map((s) => s.id));
+    const loadedDefaults = [];
     for (const def of defs) {
-      if (!existingIds.has(def.id)) {
-        try {
-          const res = await fetch(def.file, { cache: "no-store" });
-          let cards = [];
-          if (res.ok) {
-            const text = await res.text();
-            cards =
-              def.parser === "pipe"
-                ? this.parsePipeTwoColumns(text)
-                : this.parseCsvTwoColumns(text);
-          } else {
-            console.warn(
-              `Flashcards: failed to load default CSV (${def.file}): ${res.status}`,
-            );
-          }
-          const newSet = {
-            id: def.id,
-            name: def.name,
-            createdAt: new Date().toISOString(),
-            cards,
-          };
-          existingSets.push(newSet);
-          changed = true;
-        } catch (e) {
-          console.error(`Flashcards: failed to fetch default set ${def.id}`, e);
-          const newSet = {
-            id: def.id,
-            name: def.name,
-            createdAt: new Date().toISOString(),
-            cards: [],
-          };
-          existingSets.push(newSet);
-          changed = true;
-        }
+      loadedDefaults.push(await this.loadDefaultSet(def));
+    }
+    this.defaultSets = loadedDefaults;
+
+    // Migration cleanup: remove legacy stored copies of protected default sets.
+    const stored = this.storage.get("flashcardSets", []);
+    if (Array.isArray(stored)) {
+      const cleaned = stored.filter((set) => !this.isProtectedSetId(set?.id));
+      if (cleaned.length !== stored.length) {
+        this.storage.set("flashcardSets", cleaned);
       }
     }
 
-    if (changed) this.saveSets(existingSets);
+    const sets = this.getSets();
+    if (!sets.length) return;
 
-    // Ensure active set is valid; prefer 99 Names (Arabic) when setting initial/invalid active set
+    // Ensure active set is valid; prefer 99 Names (Arabic) when available.
     const activeId = this.getActiveSetId();
-    if (!activeId || !existingSets.some((s) => s.id === activeId)) {
+    if (!activeId || !sets.some((s) => s.id === activeId)) {
       const preferredId = "default_99names_ar";
-      const preferredExists = existingSets.some((s) => s.id === preferredId);
-      this.setActiveSetId(preferredExists ? preferredId : existingSets[0]?.id);
+      const preferredExists = sets.some((s) => s.id === preferredId);
+      this.setActiveSetId(preferredExists ? preferredId : sets[0]?.id || null);
     }
   }
 
+  async loadDefaultSet(def) {
+    const now = new Date().toISOString();
+    let cards = [];
+
+    try {
+      const res = await fetch(def.file, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Failed to load default CSV: ${res.status}`);
+      }
+
+      const text = await res.text();
+      cards =
+        def.parser === "pipe"
+          ? this.parsePipeTwoColumns(text)
+          : this.parseCsvTwoColumns(text);
+    } catch (e) {
+      console.error(`Flashcards: failed to load default set ${def?.id}`, e);
+    }
+
+    return {
+      id: def.id,
+      name: def.name,
+      createdAt: now,
+      cards,
+    };
+  }
+
   /**
-   * Reload default (protected) sets from the bundled files.
-   * This updates existing default sets in storage so extension updates can
-   * deliver new/updated default content without requiring a full reset.
+   * Backward-compatible refresh entrypoint.
+   * Default sets are file-backed and reloaded at runtime.
    */
   async refreshDefaultSets() {
-    const defs = Array.isArray(FlashcardManager.DEFAULT_SETS)
-      ? FlashcardManager.DEFAULT_SETS
-      : [];
-
-    const setsRaw = this.getSets();
-    const sets = Array.isArray(setsRaw) ? setsRaw : [];
-
-    let changed = false;
-    const byId = new Map(sets.map((s) => [String(s?.id || ""), s]));
-
-    for (const def of defs) {
-      if (!def?.id || !def?.file) continue;
-
-      let cards = [];
-      try {
-        const res = await fetch(def.file, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(
-            `Failed to load default set ${def.id}: ${res.status}`,
-          );
-        }
-        const text = await res.text();
-        cards =
-          def.parser === "pipe"
-            ? this.parsePipeTwoColumns(text)
-            : this.parseCsvTwoColumns(text);
-      } catch (e) {
-        console.error(`Flashcards: failed to refresh default set ${def.id}`, e);
-        cards = [];
-      }
-
-      const existing = byId.get(String(def.id));
-      if (existing) {
-        existing.name = def.name || existing.name;
-        existing.cards = cards;
-        if (!existing.createdAt) {
-          existing.createdAt = new Date().toISOString();
-        }
-        changed = true;
-      } else {
-        sets.push({
-          id: def.id,
-          name: def.name,
-          createdAt: new Date().toISOString(),
-          cards,
-        });
-        byId.set(String(def.id), sets[sets.length - 1]);
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      this.saveSets(sets);
-    }
-
-    // Keep the UI consistent with potentially changed card counts.
+    await this.ensureDefaultSet();
     this.restoreCurrentCardIndexForActiveSet();
     this.renderDashboard();
     this.renderSettings();

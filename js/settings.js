@@ -244,11 +244,6 @@ class SettingsManager extends BaseManager {
     );
     this.nukeAllDataBtn = document.getElementById("nukeAllDataBtn");
 
-    // General: refresh default content
-    this.refreshDefaultDataBtn = document.getElementById(
-      "refreshDefaultDataBtn",
-    );
-
     // Reset/Nuke confirmation modal
     this.resetNukeConfirmModal = document.getElementById(
       "resetNukeConfirmModal",
@@ -4722,10 +4717,10 @@ class SettingsManager extends BaseManager {
       }))
       .slice(0, Math.max(0, maxSets - protectedSetsOrdered.length));
 
-    // Prepend protected default sets in their canonical order and truncate to maxSets
+    // Keep only custom sets in storage; protected defaults are loaded from bundled files at runtime.
     this.storage.set(
       "flashcardSets",
-      [...protectedSetsOrdered, ...cleanedCustomSets].slice(0, maxSets),
+      cleanedCustomSets,
     );
 
     // Flashcards active set (optional)
@@ -4773,17 +4768,8 @@ class SettingsManager extends BaseManager {
         ? AdhkarManager.DEFAULT_SETS
         : [];
 
-    const keptProtectedAdhkarSets = adhkarDefaultDefs.length
-      ? adhkarDefaultDefs
-          .map((def) =>
-            (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).find(
-              (s) => s && s.id === def.id,
-            ),
-          )
-          .filter(Boolean)
-      : (Array.isArray(existingAdhkarSets) ? existingAdhkarSets : []).filter(
-          (s) => s && s.id && adhkarProtectedIds.includes(s.id),
-        );
+    const reservedAdhkarDefaultCount =
+      adhkarDefaultDefs.length || adhkarProtectedIds.length;
 
     const incomingAdhkarSetsRaw =
       data.adhkar?.sets ||
@@ -4824,20 +4810,19 @@ class SettingsManager extends BaseManager {
               }))
           : [],
       }))
-      .slice(0, Math.max(0, maxAdhkarSets - keptProtectedAdhkarSets.length));
+      .slice(0, Math.max(0, maxAdhkarSets - reservedAdhkarDefaultCount));
 
-    const mergedAdhkarSets = [
-      ...keptProtectedAdhkarSets,
-      ...cleanedCustomAdhkarSets,
-    ].slice(0, maxAdhkarSets);
-    this.storage.set("adhkarSets", mergedAdhkarSets);
+    this.storage.set("adhkarSets", cleanedCustomAdhkarSets);
 
     const incomingAdhkarActiveSetId = data.adhkar?.activeSetId;
     const validActiveAdhkarId =
       typeof incomingAdhkarActiveSetId === "string" &&
-      mergedAdhkarSets.some((s) => s && s.id === incomingAdhkarActiveSetId)
+      (adhkarProtectedIds.includes(incomingAdhkarActiveSetId) ||
+        cleanedCustomAdhkarSets.some(
+          (s) => s && s.id === incomingAdhkarActiveSetId,
+        ))
         ? incomingAdhkarActiveSetId
-        : mergedAdhkarSets[0]?.id || null;
+        : adhkarDefaultDefs[0]?.id || "default_adhkar_morning";
 
     settings.adhkar = {
       ...(settings.adhkar || {}),
@@ -4865,17 +4850,8 @@ class SettingsManager extends BaseManager {
         ? HadithManager.DEFAULT_SETS
         : [];
 
-    const keptProtectedHadithSets = hadithDefaultDefs.length
-      ? hadithDefaultDefs
-          .map((def) =>
-            (Array.isArray(existingHadithSets) ? existingHadithSets : []).find(
-              (s) => s && s.id === def.id,
-            ),
-          )
-          .filter(Boolean)
-      : (Array.isArray(existingHadithSets) ? existingHadithSets : []).filter(
-          (s) => s && s.id && hadithProtectedIds.includes(s.id),
-        );
+    const reservedHadithDefaultCount =
+      hadithDefaultDefs.length || hadithProtectedIds.length;
 
     const incomingHadithSetsRaw =
       data.hadith?.sets ||
@@ -4909,20 +4885,19 @@ class SettingsManager extends BaseManager {
               }))
           : [],
       }))
-      .slice(0, Math.max(0, maxHadithSets - keptProtectedHadithSets.length));
+      .slice(0, Math.max(0, maxHadithSets - reservedHadithDefaultCount));
 
-    const mergedHadithSets = [
-      ...keptProtectedHadithSets,
-      ...cleanedCustomHadithSets,
-    ].slice(0, maxHadithSets);
-    this.storage.set("hadithSets", mergedHadithSets);
+    this.storage.set("hadithSets", cleanedCustomHadithSets);
 
     const incomingHadithActiveSetId = data.hadith?.activeSetId;
     const validActiveHadithId =
       typeof incomingHadithActiveSetId === "string" &&
-      mergedHadithSets.some((s) => s && s.id === incomingHadithActiveSetId)
+      (hadithProtectedIds.includes(incomingHadithActiveSetId) ||
+        cleanedCustomHadithSets.some(
+          (s) => s && s.id === incomingHadithActiveSetId,
+        ))
         ? incomingHadithActiveSetId
-        : mergedHadithSets[0]?.id || null;
+        : hadithDefaultDefs[0]?.id || "default_hadith_nawawi40";
 
     settings.hadith = {
       ...(settings.hadith || {}),
@@ -7117,54 +7092,6 @@ class SettingsManager extends BaseManager {
             const delay = Math.max(0, minDuration - elapsed);
             setTimeout(() => stopRefresh(), delay);
           }
-        }
-      });
-    }
-
-    // Refresh default flashcards + default quotes
-    if (this.refreshDefaultDataBtn) {
-      this.refreshDefaultDataBtn.addEventListener("click", async () => {
-        const btn = this.refreshDefaultDataBtn;
-        const stopRefresh = this._startRefreshButton(btn, {
-          label: "Refreshing…",
-        });
-        const startedAt = Date.now();
-
-        try {
-          const tasks = [];
-
-          if (this.flashcards?.refreshDefaultSets) {
-            tasks.push(this.flashcards.refreshDefaultSets());
-          }
-
-          if (this.quotes?.refreshDefaultQuotes) {
-            tasks.push(this.quotes.refreshDefaultQuotes());
-          } else if (this.quotes?.loadDefaultQuotes) {
-            // Backward-compatible fallback
-            tasks.push(this.quotes.loadDefaultQuotes());
-          }
-
-          if (this.adhkar?.refreshDefaultData) {
-            tasks.push(this.adhkar.refreshDefaultData());
-          }
-
-          if (this.hadith?.refreshDefaultData) {
-            tasks.push(this.hadith.refreshDefaultData());
-          }
-
-          await Promise.all(tasks);
-          this.showToast(
-            "Default hadith, adhkar, flashcards and quotes refreshed!",
-            "success",
-          );
-        } catch (e) {
-          console.error("Failed to refresh default data:", e);
-          this.showToast("Failed to refresh default data.", "error");
-        } finally {
-          const minDuration = 900;
-          const elapsed = Date.now() - startedAt;
-          const delay = Math.max(0, minDuration - elapsed);
-          setTimeout(() => stopRefresh(), delay);
         }
       });
     }
