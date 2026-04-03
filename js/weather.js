@@ -223,6 +223,18 @@ class WeatherManager extends BaseManager {
    * Create compact weather element in header below date display
    */
   ensureCompactWeatherElement() {
+    const settings = this.storage.getSettings();
+    const headingSettings = settings.heading || {};
+    const themeSettings = settings.theme || {};
+    const themeHeaderComponentBackgroundsEnabled =
+      typeof window.dashboard?.themes?.isHeaderComponentBackgroundsEnabled ===
+      "function"
+        ? window.dashboard.themes.isHeaderComponentBackgroundsEnabled()
+        : themeSettings.headerComponentBackgroundsEnabled === true;
+    const compactWeatherBgEnabled =
+      themeHeaderComponentBackgroundsEnabled &&
+      headingSettings.compactWeatherBackgroundEnabled === true;
+
     const header = document.querySelector(".header");
     const greetingSection = document.querySelector(".greeting-section");
     const dateDisplay = document.getElementById("dateDisplay");
@@ -270,6 +282,11 @@ class WeatherManager extends BaseManager {
     } else {
       greetingSection.appendChild(compactWeather);
     }
+
+    compactWeather.classList.toggle(
+      "header-surface-enabled",
+      compactWeatherBgEnabled,
+    );
 
     this.compactWeatherEl = compactWeather;
   }

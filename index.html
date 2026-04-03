@@ -3250,31 +3250,43 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="headerSurfaceBackgroundsGroup">
               <label class="setting-label">Header Surface Backgrounds</label>
               <p class="setting-hint">
                 Toggle theme-aware box or pill backgrounds for each header
                 element.
               </p>
+              <p class="setting-hint" id="headerSurfaceBackgroundsThemeHint">
+                Enable Header Component Backgrounds in Themes before you can
+                edit these toggles.
+              </p>
               <div class="setting-options">
                 <label class="checkbox-option">
-                  <input type="checkbox" id="headerGreetingBgEnabled" />
+                  <input type="checkbox" id="headerGreetingBgEnabled" checked />
                   <span>Greeting Box</span>
                 </label>
                 <label class="checkbox-option">
-                  <input type="checkbox" id="headerDateBgEnabled" />
+                  <input type="checkbox" id="headerDateBgEnabled" checked />
                   <span>Date Pill</span>
                 </label>
                 <label class="checkbox-option">
-                  <input type="checkbox" id="headerTimeBgEnabled" />
+                  <input type="checkbox" id="headerTimeBgEnabled" checked />
                   <span>Time Pill</span>
                 </label>
                 <label class="checkbox-option">
-                  <input type="checkbox" id="headerNextPrayerBgEnabled" />
+                  <input
+                    type="checkbox"
+                    id="headerNextPrayerBgEnabled"
+                    checked
+                  />
                   <span>Next Prayer Badge</span>
                 </label>
                 <label class="checkbox-option">
-                  <input type="checkbox" id="headerCompactWeatherBgEnabled" />
+                  <input
+                    type="checkbox"
+                    id="headerCompactWeatherBgEnabled"
+                    checked
+                  />
                   <span>Compact Weather Pill</span>
                 </label>
               </div>
@@ -5101,6 +5113,25 @@
                   >0%</span
                 >
               </div>
+            </div>
+
+            <div
+              class="setting-group"
+              id="themeHeaderComponentBackgroundsGroup"
+            >
+              <label class="setting-label">Header Component Backgrounds</label>
+              <p class="setting-hint">
+                Enables header component backgrounds. You can customize
+                individually per components on the Header tab in the Dashboard
+                Setting.
+              </p>
+              <label class="checkbox-option theme-glass-toggle">
+                <input
+                  type="checkbox"
+                  id="themeHeaderComponentBackgroundsEnabled"
+                />
+                <span>Enable Header Component Backgrounds</span>
+              </label>
             </div>
 
             <div class="setting-group">

@@ -270,6 +270,9 @@ class SettingsManager extends BaseManager {
     this.themeComponentOpacityValue = document.getElementById(
       "themeComponentOpacityValue",
     );
+    this.themeHeaderComponentBackgroundsEnabled = document.getElementById(
+      "themeHeaderComponentBackgroundsEnabled",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -338,6 +341,9 @@ class SettingsManager extends BaseManager {
     );
     this.headerCompactWeatherBgEnabled = document.getElementById(
       "headerCompactWeatherBgEnabled",
+    );
+    this.headerSurfaceBackgroundsGroup = document.getElementById(
+      "headerSurfaceBackgroundsGroup",
     );
     this.dateCalendarRadios = document.querySelectorAll(
       'input[name="dateCalendar"]',
@@ -1255,6 +1261,8 @@ class SettingsManager extends BaseManager {
       this.headerCompactWeatherBgEnabled.checked =
         heading.compactWeatherBackgroundEnabled === true;
     }
+
+    this.updateHeaderSurfaceBackgroundsLockState();
   }
 
   /**
@@ -1999,6 +2007,16 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeComponentOpacityLabel();
 
+    const headerComponentBackgroundsEnabled =
+      themeSettings.headerComponentBackgroundsEnabled === true;
+    if (this.themeHeaderComponentBackgroundsEnabled) {
+      this.themeHeaderComponentBackgroundsEnabled.checked =
+        headerComponentBackgroundsEnabled;
+    }
+    this.updateHeaderSurfaceBackgroundsLockState(
+      headerComponentBackgroundsEnabled,
+    );
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -2102,6 +2120,37 @@ class SettingsManager extends BaseManager {
       );
       this.themeComponentOpacity.value = String(clamped);
       this.themeComponentOpacityValue.textContent = clamped + "%";
+    }
+  }
+
+  updateHeaderSurfaceBackgroundsLockState(enabled = null) {
+    const isEnabled =
+      typeof enabled === "boolean"
+        ? enabled
+        : this.themeHeaderComponentBackgroundsEnabled?.checked === true;
+
+    const controls = [
+      this.headerGreetingBgEnabled,
+      this.headerDateBgEnabled,
+      this.headerTimeBgEnabled,
+      this.headerNextPrayerBgEnabled,
+      this.headerCompactWeatherBgEnabled,
+    ];
+
+    controls.forEach((control) => {
+      if (!control) return;
+      control.disabled = !isEnabled;
+    });
+
+    if (this.headerSurfaceBackgroundsGroup) {
+      this.headerSurfaceBackgroundsGroup.classList.toggle(
+        "disabled",
+        !isEnabled,
+      );
+      this.headerSurfaceBackgroundsGroup.setAttribute(
+        "aria-disabled",
+        isEnabled ? "false" : "true",
+      );
     }
   }
 
@@ -2716,6 +2765,17 @@ class SettingsManager extends BaseManager {
       }
     };
 
+    const applyThemeHeaderComponentBackgrounds = (enabled) => {
+      if (window.dashboard?.themes?.setHeaderComponentBackgroundsEnabled) {
+        window.dashboard.themes.setHeaderComponentBackgroundsEnabled(
+          enabled,
+          false,
+        );
+      } else if (window.dashboard?.applyHeadingSettings) {
+        window.dashboard.applyHeadingSettings();
+      }
+    };
+
     // Blur power slider
     if (this.themeBlurPower) {
       this.themeBlurPower.addEventListener("input", () => {
@@ -2800,6 +2860,18 @@ class SettingsManager extends BaseManager {
           applyThemeComponentOpacity(opacity),
         );
       });
+    }
+
+    if (this.themeHeaderComponentBackgroundsEnabled) {
+      this.themeHeaderComponentBackgroundsEnabled.addEventListener(
+        "change",
+        () => {
+          const enabled =
+            this.themeHeaderComponentBackgroundsEnabled.checked === true;
+          this.updateHeaderSurfaceBackgroundsLockState(enabled);
+          applyThemeHeaderComponentBackgrounds(enabled);
+        },
+      );
     }
 
     // Theme picker cards
@@ -2997,6 +3069,8 @@ class SettingsManager extends BaseManager {
       100,
       0,
     );
+    const headerComponentBackgroundsEnabled =
+      this.themeHeaderComponentBackgroundsEnabled?.checked === true;
 
     // Get active theme
     let activeTheme = "emerald";
@@ -3019,6 +3093,7 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
+      headerComponentBackgroundsEnabled: headerComponentBackgroundsEnabled,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -3061,6 +3136,17 @@ class SettingsManager extends BaseManager {
           componentOpacity,
           true,
         );
+      }
+      if (
+        typeof window.dashboard.themes.setHeaderComponentBackgroundsEnabled ===
+        "function"
+      ) {
+        window.dashboard.themes.setHeaderComponentBackgroundsEnabled(
+          headerComponentBackgroundsEnabled,
+          true,
+        );
+      } else if (typeof window.dashboard.applyHeadingSettings === "function") {
+        window.dashboard.applyHeadingSettings();
       }
     }
   }

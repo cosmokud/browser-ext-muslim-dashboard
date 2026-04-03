@@ -2470,7 +2470,12 @@ class MuslimDashboard {
   applyHeadingSettings() {
     const settings = this.storage.getSettings();
     const headingSettings = settings.heading || {};
+    const themeSettings = settings.theme || {};
     const visibility = settings.componentVisibility || {};
+    const headerComponentBackgroundsEnabled =
+      typeof this.themes?.isHeaderComponentBackgroundsEnabled === "function"
+        ? this.themes.isHeaderComponentBackgroundsEnabled()
+        : themeSettings.headerComponentBackgroundsEnabled === true;
     const timeSection = document.querySelector(".time-section");
     const timeMainRow =
       document.getElementById("timeMainRow") ||
@@ -2513,23 +2518,28 @@ class MuslimDashboard {
 
     toggleHeaderSurface(
       this.greeting,
-      headingSettings.greetingBackgroundEnabled === true,
+      headerComponentBackgroundsEnabled &&
+        headingSettings.greetingBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.dateDisplay,
-      headingSettings.dateBackgroundEnabled === true,
+      headerComponentBackgroundsEnabled &&
+        headingSettings.dateBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       timeMainRow,
-      headingSettings.timeBackgroundEnabled === true,
+      headerComponentBackgroundsEnabled &&
+        headingSettings.timeBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.headerNextPrayer,
-      headingSettings.nextPrayerBackgroundEnabled === true,
+      headerComponentBackgroundsEnabled &&
+        headingSettings.nextPrayerBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       compactWeather,
-      headingSettings.compactWeatherBackgroundEnabled === true,
+      headerComponentBackgroundsEnabled &&
+        headingSettings.compactWeatherBackgroundEnabled === true,
     );
 
     if (

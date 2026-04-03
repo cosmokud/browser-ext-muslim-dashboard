@@ -186,6 +186,7 @@ class StorageManager {
         glassEnabled: true,
         glassOpacity: 50,
         componentOpacity: 0,
+        headerComponentBackgroundsEnabled: false,
         customAccent: null,
         customPalettes: {},
       },
@@ -444,11 +445,11 @@ class StorageManager {
         showIslamicEvents: true,
 
         // Header surface backgrounds
-        greetingBackgroundEnabled: false,
-        dateBackgroundEnabled: false,
-        timeBackgroundEnabled: false,
-        nextPrayerBackgroundEnabled: false,
-        compactWeatherBackgroundEnabled: false,
+        greetingBackgroundEnabled: true,
+        dateBackgroundEnabled: true,
+        timeBackgroundEnabled: true,
+        nextPrayerBackgroundEnabled: true,
+        compactWeatherBackgroundEnabled: true,
       },
     };
   }

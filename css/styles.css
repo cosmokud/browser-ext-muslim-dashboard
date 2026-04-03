@@ -15641,6 +15641,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   pointer-events: none;
 }
 
+#headerSurfaceBackgroundsGroup.disabled {
+  opacity: 0.6;
+}
+
+#headerSurfaceBackgroundsGroup.disabled .checkbox-option {
+  cursor: not-allowed;
+}
+
 /* Theme Picker Grid */
 .theme-picker-grid {
   display: grid;
