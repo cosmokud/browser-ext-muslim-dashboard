@@ -5969,14 +5969,14 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .settings-tab {
-  flex: 0 0 auto;
-  width: var(--settings-tab-width, auto);
+  flex: 0 0 var(--settings-tab-width, auto);
+  width: min(100%, var(--settings-tab-width, auto));
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 38px;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5990,6 +5990,15 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+@media (max-width: 560px) {
+  .settings-tab {
+    white-space: normal;
+    line-height: 1.2;
+    min-height: 44px;
+    padding: 8px var(--spacing-md);
+  }
 }
 
 .settings-tab .icon-theme-svg {

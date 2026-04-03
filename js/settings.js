@@ -722,12 +722,22 @@ class SettingsManager extends BaseManager {
         let maxWidth = 0;
         for (const tab of tabs) {
           const rect = tab.getBoundingClientRect();
+          const contentWidth = Number.isFinite(tab.scrollWidth)
+            ? tab.scrollWidth
+            : 0;
           if (rect && Number.isFinite(rect.width)) {
-            maxWidth = Math.max(maxWidth, rect.width);
+            maxWidth = Math.max(maxWidth, rect.width, contentWidth);
           }
         }
 
-        const width = Math.ceil(maxWidth);
+        // Add extra breathing room so the longest label does not clip.
+        const preferredWidth = Math.ceil(maxWidth + 24);
+        const minReadableWidth = 152;
+        const availableWidth = Math.max(0, Math.floor(strip.clientWidth - 16));
+        const width =
+          availableWidth > 0
+            ? Math.min(Math.max(preferredWidth, minReadableWidth), availableWidth)
+            : Math.max(preferredWidth, minReadableWidth);
         if (Number.isFinite(width) && width > 0) {
           // Primary variable used by CSS
           strip.style.setProperty("--settings-tab-width", `${width}px`);
@@ -6741,6 +6751,14 @@ class SettingsManager extends BaseManager {
     if (!document.documentElement.dataset.settingsTabsMinWidthBound) {
       document.documentElement.dataset.settingsTabsMinWidthBound = "1";
       document.addEventListener("md:icon-theme-change", () => {
+        this.updateSettingsTabsMinWidth();
+      });
+
+      window.addEventListener("resize", () => {
+        this.updateSettingsTabsMinWidth();
+      });
+
+      window.addEventListener("orientationchange", () => {
         this.updateSettingsTabsMinWidth();
       });
     }
