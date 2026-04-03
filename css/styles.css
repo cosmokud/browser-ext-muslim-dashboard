@@ -3300,13 +3300,14 @@ textarea.notes-editor:focus {
   }
 }
 
-/* Floating cards: top-right quick collapse button */
-.floating-collapse-btn {
+/* Floating cards: top-right quick controls */
+.floating-collapse-btn,
+.floating-reset-size-btn {
   position: absolute;
   top: 8px;
-  right: 8px;
   width: 10px;
   height: 10px;
+  right: 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -3328,19 +3329,26 @@ textarea.notes-editor:focus {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-.floating-collapse-btn:hover {
+.floating-reset-size-btn {
+  right: 24px;
+}
+
+.floating-collapse-btn:hover,
+.floating-reset-size-btn:hover {
   background: var(--glass-bg-hover);
   transform: scale(1.1);
   opacity: 1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
-.floating-collapse-btn svg {
+.floating-collapse-btn svg,
+.floating-reset-size-btn svg {
   display: block;
   pointer-events: none;
 }
 
-.floating-collapse-btn:focus-visible {
+.floating-collapse-btn:focus-visible,
+.floating-reset-size-btn:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 2px;
 }

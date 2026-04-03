@@ -204,45 +204,104 @@ class FloatingModeManager {
     const card = st.card;
     if (!card.classList.contains("floating-card")) return;
 
-    if (st._collapseBtn && st._collapseBtn.isConnected) return;
+    const hasCollapse = !!(st._collapseBtn && st._collapseBtn.isConnected);
+    const hasReset = !!(st._resetSizeBtn && st._resetSizeBtn.isConnected);
+    if (hasCollapse && hasReset) return;
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "floating-collapse-btn";
-    btn.setAttribute("title", "Return to layout");
-    btn.setAttribute("aria-label", "Return to layout");
-    // Use SVG minimize icon
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-
-    const onClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Explicit user action: disable floating and persist that preference.
-      try {
-        st.spaceSuspended = false;
-      } catch (err) {}
-      this.setEnabledDesired(key, false);
-      this.disableFloatingRuntime(key);
-      this.updateButton(key);
-      this.notifyLayoutChanged();
-    };
-
-    // Prevent drag initiation from the button.
+    // Prevent drag initiation from control buttons.
     const stop = (e) => {
       try {
         e.stopPropagation();
       } catch (err) {}
     };
 
-    btn.addEventListener("click", onClick);
-    btn.addEventListener("pointerdown", stop);
-    btn.addEventListener("mousedown", stop);
+    if (!hasReset) {
+      const resetBtn = document.createElement("button");
+      resetBtn.type = "button";
+      resetBtn.className = "floating-reset-size-btn";
+      resetBtn.setAttribute("title", "Reset size to default");
+      resetBtn.setAttribute("aria-label", "Reset size to default");
+      // Use a simple square glyph to indicate baseline/default size.
+      resetBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="6" y="6" width="12" height="12" rx="1.5"></rect></svg>`;
 
-    st._collapseBtn = btn;
-    try {
-      card.appendChild(btn);
-    } catch (e) {}
+      const onResetSize = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!card.classList.contains("floating-card")) return;
+
+        const defaults = this.getDefaultFloatingBox(key);
+        const maxFloatingWidth = Math.max(
+          280,
+          Math.floor(window.innerWidth - this.viewportPadding * 2),
+        );
+        const maxFloatingHeight = Math.max(
+          200,
+          Math.floor(window.innerHeight - this.viewportPadding * 2),
+        );
+
+        const nextWidth = this.clamp(
+          this.safeNumber(defaults.width, 420),
+          280,
+          maxFloatingWidth,
+        );
+        const nextHeight = this.clamp(
+          this.safeNumber(defaults.height, 520),
+          200,
+          maxFloatingHeight,
+        );
+
+        card.style.width = `${Math.round(nextWidth)}px`;
+        card.style.height = `${Math.round(nextHeight)}px`;
+
+        // Keep the reset geometry fully visible and persist immediately.
+        this.clampCardToViewport(key, { persist: true });
+        this.scheduleMinUpdate(key);
+        this.flushSave(key, { force: true });
+      };
+
+      resetBtn.addEventListener("click", onResetSize);
+      resetBtn.addEventListener("pointerdown", stop);
+      resetBtn.addEventListener("mousedown", stop);
+
+      st._resetSizeBtn = resetBtn;
+      try {
+        card.appendChild(resetBtn);
+      } catch (e) {}
+    }
+
+    if (!hasCollapse) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "floating-collapse-btn";
+      btn.setAttribute("title", "Return to layout");
+      btn.setAttribute("aria-label", "Return to layout");
+      // Use SVG minimize icon
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+
+      const onClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Explicit user action: disable floating and persist that preference.
+        try {
+          st.spaceSuspended = false;
+        } catch (err) {}
+        this.setEnabledDesired(key, false);
+        this.disableFloatingRuntime(key);
+        this.updateButton(key);
+        this.notifyLayoutChanged();
+      };
+
+      btn.addEventListener("click", onClick);
+      btn.addEventListener("pointerdown", stop);
+      btn.addEventListener("mousedown", stop);
+
+      st._collapseBtn = btn;
+      try {
+        card.appendChild(btn);
+      } catch (e) {}
+    }
   }
 
   removeCollapseButton(key) {
@@ -252,6 +311,11 @@ class FloatingModeManager {
       if (st._collapseBtn) st._collapseBtn.remove();
     } catch (e) {}
     st._collapseBtn = null;
+
+    try {
+      if (st._resetSizeBtn) st._resetSizeBtn.remove();
+    } catch (e) {}
+    st._resetSizeBtn = null;
   }
 
   createCollapseProxy(key, card) {
@@ -372,6 +436,44 @@ class FloatingModeManager {
     }
   }
 
+  getDefaultFloatingBox(key) {
+    const baseFallback = {
+      left: 40,
+      top: 120,
+      width: 420,
+      height: 520,
+      z: 10,
+    };
+
+    const perKeyFallback = {
+      quotes: { width: 640, height: 300 },
+      lunarPhase: { width: 420, height: 300 },
+      fasting: { width: 420, height: 300 },
+      flashcards: { width: 560, height: 360 },
+      adhkar: { width: 560, height: 420 },
+      hadith: { width: 720, height: 480 },
+      todoList: { width: 560, height: 360 },
+    };
+
+    let defaultsFromStorage = null;
+    try {
+      if (typeof this.storage?.getDefaultSettings === "function") {
+        defaultsFromStorage =
+          this.storage.getDefaultSettings()?.floating?.[key];
+      }
+    } catch (e) {
+      defaultsFromStorage = null;
+    }
+
+    return {
+      ...baseFallback,
+      ...(perKeyFallback[key] || {}),
+      ...(defaultsFromStorage && typeof defaultsFromStorage === "object"
+        ? defaultsFromStorage
+        : {}),
+    };
+  }
+
   persistBox(key, box) {
     // Persist in two places:
     // 1) settings.floating (for export/import and centralized config)
@@ -416,6 +518,8 @@ class FloatingModeManager {
         autoPositionChangedSinceLastSave: false,
         spaceSuspended: false,
         collapseTimer: null,
+        _collapseBtn: null,
+        _resetSizeBtn: null,
         _collapseProxy: null,
         _collapseProxyRemoveTimer: null,
         persistenceSuppressed: 0,
