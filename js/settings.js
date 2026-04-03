@@ -1663,6 +1663,8 @@ class SettingsManager extends BaseManager {
         heading.compactWeatherBackgroundEnabled === true;
     }
 
+    this.syncClockSurfaceToggleState(clockStyle);
+
     if (this.headerGreetingGlowEnabled) {
       this.headerGreetingGlowEnabled.checked =
         heading.greetingGlowEnabled === true;
@@ -2856,6 +2858,50 @@ class SettingsManager extends BaseManager {
     }
   }
 
+  getSelectedClockStyleValue() {
+    const selectedRadio = document.querySelector(
+      'input[name="clockStyle"]:checked',
+    );
+    return selectedRadio?.value || "default";
+  }
+
+  isClockSurfaceLockedByStyle(clockStyle) {
+    return clockStyle === "boxed" || clockStyle === "pill";
+  }
+
+  syncClockSurfaceToggleState(clockStyle = null) {
+    if (!this.headerTimeBgEnabled) return;
+
+    const selectedStyle = clockStyle || this.getSelectedClockStyleValue();
+    const locked = this.isClockSurfaceLockedByStyle(selectedStyle);
+
+    if (locked) {
+      this.headerTimeBgEnabled.checked = false;
+    }
+
+    this.headerTimeBgEnabled.disabled = locked;
+    this.headerTimeBgEnabled.setAttribute(
+      "aria-disabled",
+      locked ? "true" : "false",
+    );
+
+    const label = this.headerTimeBgEnabled.closest(".header-surface-cell");
+    if (label) {
+      if (!label.dataset.defaultTitle) {
+        label.dataset.defaultTitle = label.getAttribute("title") || "";
+      }
+
+      label.classList.toggle("disabled", locked);
+      label.setAttribute("aria-disabled", locked ? "true" : "false");
+      label.setAttribute(
+        "title",
+        locked
+          ? "Clock Surface is unavailable for Boxed and Pill clock styles"
+          : label.dataset.defaultTitle,
+      );
+    }
+  }
+
   updateHeaderSurfaceBackgroundsLockState() {
     const controls = [
       this.headerGreetingBgEnabled,
@@ -2874,6 +2920,8 @@ class SettingsManager extends BaseManager {
       this.headerSurfaceBackgroundsGroup.classList.remove("disabled");
       this.headerSurfaceBackgroundsGroup.setAttribute("aria-disabled", "false");
     }
+
+    this.syncClockSurfaceToggleState();
   }
 
   updateHeaderGlowColorLockState() {
@@ -2922,10 +2970,18 @@ class SettingsManager extends BaseManager {
     const settings = this.storage.getSettings();
     settings.heading = settings.heading || {};
 
+    const selectedClockStyle = this.getSelectedClockStyleValue();
+    const clockSurfaceLocked = this.isClockSurfaceLockedByStyle(
+      selectedClockStyle,
+    );
+
+    this.syncClockSurfaceToggleState(selectedClockStyle);
+
     settings.heading.showGreeting = this.showGreeting?.checked ?? true;
     settings.heading.showClock = this.showClock?.checked ?? true;
     settings.heading.showDate = this.showDate?.checked ?? true;
     settings.heading.showNextPrayer = this.showNextPrayer?.checked === true;
+    settings.heading.clockStyle = selectedClockStyle;
 
     settings.compactWeatherEnabled =
       this.compactWeatherEnabled?.checked ?? false;
@@ -2935,7 +2991,7 @@ class SettingsManager extends BaseManager {
     settings.heading.dateBackgroundEnabled =
       this.headerDateBgEnabled?.checked === true;
     settings.heading.timeBackgroundEnabled =
-      this.headerTimeBgEnabled?.checked === true;
+      clockSurfaceLocked ? false : this.headerTimeBgEnabled?.checked === true;
     settings.heading.nextPrayerBackgroundEnabled =
       this.headerNextPrayerBgEnabled?.checked === true;
     settings.heading.compactWeatherBackgroundEnabled =
@@ -5203,7 +5259,12 @@ class SettingsManager extends BaseManager {
     const clockStyleRadio = document.querySelector(
       'input[name="clockStyle"]:checked',
     );
-    settings.heading.clockStyle = clockStyleRadio?.value || "default";
+    const selectedClockStyle = clockStyleRadio?.value || "default";
+    const clockSurfaceLocked = this.isClockSurfaceLockedByStyle(
+      selectedClockStyle,
+    );
+
+    settings.heading.clockStyle = selectedClockStyle;
 
     // Date settings
     settings.heading.showDate = this.showDate?.checked ?? true;
@@ -5221,7 +5282,7 @@ class SettingsManager extends BaseManager {
     settings.heading.dateBackgroundEnabled =
       this.headerDateBgEnabled?.checked === true;
     settings.heading.timeBackgroundEnabled =
-      this.headerTimeBgEnabled?.checked === true;
+      clockSurfaceLocked ? false : this.headerTimeBgEnabled?.checked === true;
     settings.heading.nextPrayerBackgroundEnabled =
       this.headerNextPrayerBgEnabled?.checked === true;
     settings.heading.compactWeatherBackgroundEnabled =
@@ -7588,6 +7649,13 @@ class SettingsManager extends BaseManager {
     this.clockFormatRadios.forEach((radio) => {
       radio.addEventListener("change", () => {
         this.toggleAmPmOption(radio.value === "12h");
+      });
+    });
+
+    this.clockStyleRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.syncClockSurfaceToggleState(radio.value);
+        this.applyHeaderQuickControlsInstantly();
       });
     });
 

@@ -775,9 +775,28 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   font-weight: 700;
   letter-spacing: -2px;
   text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
-  display: inline-block;
+  display: inline-flex;
+  align-items: baseline;
   min-width: 5ch;
   text-align: right;
+}
+
+.current-time .time-hours,
+.current-time .time-separator,
+.current-time .time-minutes {
+  display: inline-block;
+  font: inherit;
+  line-height: 1;
+}
+
+.current-time .time-hours,
+.current-time .time-minutes {
+  font-variant-numeric: tabular-nums;
+}
+
+.current-time .time-separator {
+  margin: 0 0.03em;
+  opacity: 0.9;
 }
 
 .current-seconds {
@@ -11658,6 +11677,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   cursor: pointer;
 }
 
+.header-control-toggle.disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 .header-control-toggle input[type="checkbox"] {
   position: absolute;
   width: 1px;
@@ -11673,6 +11697,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .header-control-toggle input[type="checkbox"]:checked + .toggle-switch::after {
   left: 25px;
   background: var(--on-primary-text);
+}
+
+.header-control-toggle input[type="checkbox"]:disabled + .toggle-switch {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+}
+
+.header-control-toggle input[type="checkbox"]:disabled + .toggle-switch::after {
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .header-control-glow {
@@ -11944,6 +11977,92 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-shadow: 4px 6px 18px rgba(0, 0, 0, 0.55);
 }
 
+.style-preview .preview-hours,
+.style-preview .preview-colon,
+.style-preview .preview-minutes {
+  display: inline-block;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.style-preview .preview-colon {
+  margin: 0 2px;
+  opacity: 0.7;
+}
+
+.clock-preview-hour-focus .preview-hours {
+  font-size: 1.52rem;
+  font-weight: 820;
+}
+
+.clock-preview-hour-focus .preview-minutes {
+  font-size: 1.06rem;
+  font-weight: 500;
+  opacity: 0.82;
+}
+
+.clock-preview-minute-focus .preview-hours {
+  font-size: 1.02rem;
+  font-weight: 500;
+  opacity: 0.74;
+}
+
+.clock-preview-minute-focus .preview-minutes {
+  font-size: 1.58rem;
+  font-weight: 840;
+  color: var(--accent-gold);
+}
+
+.clock-preview-dual-tone .preview-hours {
+  color: var(--primary-light);
+}
+
+.clock-preview-dual-tone .preview-minutes {
+  color: var(--accent-gold);
+}
+
+.clock-preview-dual-tone .preview-colon {
+  color: var(--text-muted);
+}
+
+.clock-preview-split-capsule {
+  gap: 8px;
+  align-items: center;
+}
+
+.clock-preview-split-capsule .preview-hours,
+.clock-preview-split-capsule .preview-minutes {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.clock-preview-split-capsule .preview-colon {
+  display: none;
+}
+
+.clock-preview-retro-flip {
+  gap: 4px;
+}
+
+.clock-preview-retro-flip .preview-hours,
+.clock-preview-retro-flip .preview-minutes {
+  font-family: "Courier New", monospace;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.26);
+}
+
+.clock-preview-retro-flip .preview-minutes {
+  color: var(--accent-gold);
+}
+
 /* Clock style classes for actual display */
 .time-section.clock-style-default .current-time {
   font-weight: 700;
@@ -12015,6 +12134,94 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .time-section.clock-style-shadow .current-time {
   text-shadow: 5px 8px 22px rgba(0, 0, 0, 0.6);
+}
+
+.time-section.clock-style-hour-focus .current-time .time-hours {
+  font-size: 1.12em;
+  font-weight: 840;
+}
+
+.time-section.clock-style-hour-focus .current-time .time-minutes {
+  font-size: 0.78em;
+  font-weight: 500;
+  opacity: 0.78;
+}
+
+.time-section.clock-style-hour-focus .current-time .time-separator {
+  opacity: 0.55;
+}
+
+.time-section.clock-style-minute-focus .current-time .time-hours {
+  font-size: 0.76em;
+  font-weight: 480;
+  opacity: 0.68;
+}
+
+.time-section.clock-style-minute-focus .current-time .time-minutes {
+  font-size: 1.16em;
+  font-weight: 850;
+  color: var(--accent-gold);
+}
+
+.time-section.clock-style-minute-focus .current-time .time-separator {
+  color: var(--accent-gold);
+  opacity: 0.68;
+}
+
+.time-section.clock-style-dual-tone .current-time .time-hours {
+  color: var(--primary-light);
+  font-weight: 760;
+}
+
+.time-section.clock-style-dual-tone .current-time .time-minutes {
+  color: var(--accent-gold-light);
+  font-weight: 780;
+}
+
+.time-section.clock-style-dual-tone .current-time .time-separator {
+  color: var(--text-muted);
+}
+
+.time-section.clock-style-split-capsule .current-time {
+  gap: 0.34rem;
+  align-items: center;
+}
+
+.time-section.clock-style-split-capsule .current-time .time-hours,
+.time-section.clock-style-split-capsule .current-time .time-minutes {
+  padding: 2px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.09);
+  line-height: 1.05;
+}
+
+.time-section.clock-style-split-capsule .current-time .time-separator {
+  display: none;
+}
+
+.time-section.clock-style-retro-flip .current-time {
+  font-family: "Courier New", monospace;
+  gap: 0.1rem;
+}
+
+.time-section.clock-style-retro-flip .current-time .time-hours,
+.time-section.clock-style-retro-flip .current-time .time-minutes {
+  padding: 0.09em 0.25em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.32);
+}
+
+.time-section.clock-style-retro-flip .current-time .time-minutes {
+  color: var(--accent-gold);
+}
+
+.time-section.clock-style-retro-flip .current-time .time-separator {
+  opacity: 0.55;
 }
 
 /* Visibility Grid for Prayer Times settings */

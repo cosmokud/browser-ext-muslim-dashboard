@@ -2110,6 +2110,22 @@ class MuslimDashboard {
   }
 
   /**
+   * Render the clock as separate hour/minute parts so styles can emphasize them independently.
+   */
+  setCurrentTimeParts(hoursText, minutesText) {
+    if (!this.currentTime) return;
+
+    const safeHours = String(hoursText || "00");
+    const safeMinutes = String(minutesText || "00");
+
+    this.currentTime.innerHTML =
+      `<span class="time-hours">${safeHours}</span>` +
+      `<span class="time-separator">:</span>` +
+      `<span class="time-minutes">${safeMinutes}</span>`;
+    this.currentTime.setAttribute("aria-label", `${safeHours}:${safeMinutes}`);
+  }
+
+  /**
    * Update current time display
    */
   updateTime() {
@@ -2128,7 +2144,7 @@ class MuslimDashboard {
     if (!is24h) {
       const suffix = hours >= 12 ? "PM" : "AM";
       hours = hours % 12 || 12;
-      this.currentTime.textContent = `${hours}:${minutes}`;
+      this.setCurrentTimeParts(String(hours), minutes);
 
       if (this.currentAmPm) {
         if (showAmPm) {
@@ -2142,10 +2158,7 @@ class MuslimDashboard {
         }
       }
     } else {
-      this.currentTime.textContent = `${String(hours).padStart(
-        2,
-        "0",
-      )}:${minutes}`;
+      this.setCurrentTimeParts(String(hours).padStart(2, "0"), minutes);
       if (this.currentAmPm) {
         this.currentAmPm.textContent = "";
         this.currentAmPm.style.display = "none";
@@ -2629,6 +2642,8 @@ class MuslimDashboard {
 
     // Apply clock style
     const clockStyle = headingSettings.clockStyle || "default";
+    const clockSurfaceLocked =
+      clockStyle === "boxed" || clockStyle === "pill";
     if (timeSection) {
       [...timeSection.classList]
         .filter((c) => c.startsWith("clock-style-"))
@@ -2652,7 +2667,7 @@ class MuslimDashboard {
     );
     toggleHeaderSurface(
       timeMainRow,
-      headingSettings.timeBackgroundEnabled === true,
+      !clockSurfaceLocked && headingSettings.timeBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.headerNextPrayer,

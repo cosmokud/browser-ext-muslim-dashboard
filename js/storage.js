@@ -436,7 +436,7 @@ class StorageManager {
         showSeconds: true,
         showAmPm: true, // Only applies when clockFormat is '12h'
         showNextPrayer: false,
-        clockStyle: "default", // 'default', 'minimal', 'elegant'
+        clockStyle: "default", // 'default', 'minimal', 'elegant', 'classic', 'mono', 'boxed', 'pill', 'neon', 'underline', 'shadow', 'hour-focus', 'minute-focus', 'dual-tone', 'split-capsule', 'retro-flip'
 
         // Date settings
         showDate: true,
@@ -445,11 +445,11 @@ class StorageManager {
         showIslamicEvents: true,
 
         // Header surface backgrounds
-        greetingBackgroundEnabled: true,
-        dateBackgroundEnabled: true,
-        timeBackgroundEnabled: true,
-        nextPrayerBackgroundEnabled: true,
-        compactWeatherBackgroundEnabled: true,
+        greetingBackgroundEnabled: false,
+        dateBackgroundEnabled: false,
+        timeBackgroundEnabled: false,
+        nextPrayerBackgroundEnabled: false,
+        compactWeatherBackgroundEnabled: false,
 
         // Header glow settings
         greetingGlowEnabled: false,
