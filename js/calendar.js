@@ -535,7 +535,10 @@ class CalendarManager {
     }
 
     if (glassBorder) {
-      tip.style.setProperty("--calendar-fast-tooltip-glass-border", glassBorder);
+      tip.style.setProperty(
+        "--calendar-fast-tooltip-glass-border",
+        glassBorder,
+      );
     } else {
       tip.style.removeProperty("--calendar-fast-tooltip-glass-border");
     }
