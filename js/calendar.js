@@ -492,6 +492,55 @@ class CalendarManager {
     ).trim();
   }
 
+  _calendarTooltipThemeSource(dot) {
+    return (
+      dot?.closest("#calendarCard") ||
+      dot?.closest(".card") ||
+      this.container?.closest(".card") ||
+      document.documentElement
+    );
+  }
+
+  _readCssCustomValue(styles, propertyName) {
+    return String(styles?.getPropertyValue(propertyName) || "").trim();
+  }
+
+  _applyCalendarFastTooltipTheme(dot) {
+    const tip = this._ensureCalendarFastTooltip();
+    const source = this._calendarTooltipThemeSource(dot);
+    const sourceStyles = window.getComputedStyle(source);
+    const rootStyles = window.getComputedStyle(document.documentElement);
+
+    const resolveVar = (propertyName) =>
+      this._readCssCustomValue(sourceStyles, propertyName) ||
+      this._readCssCustomValue(rootStyles, propertyName);
+
+    const glassBg = resolveVar("--glass-bg");
+    const glassBgHover = resolveVar("--glass-bg-hover");
+    const glassBorder = resolveVar("--glass-border");
+
+    if (glassBg) {
+      tip.style.setProperty("--calendar-fast-tooltip-glass-bg", glassBg);
+    } else {
+      tip.style.removeProperty("--calendar-fast-tooltip-glass-bg");
+    }
+
+    if (glassBgHover) {
+      tip.style.setProperty(
+        "--calendar-fast-tooltip-glass-bg-hover",
+        glassBgHover,
+      );
+    } else {
+      tip.style.removeProperty("--calendar-fast-tooltip-glass-bg-hover");
+    }
+
+    if (glassBorder) {
+      tip.style.setProperty("--calendar-fast-tooltip-glass-border", glassBorder);
+    } else {
+      tip.style.removeProperty("--calendar-fast-tooltip-glass-border");
+    }
+  }
+
   _showCalendarFastTooltip(dot, clientX, clientY) {
     const text = this._tooltipTextForDot(dot);
     if (!text) {
@@ -500,6 +549,7 @@ class CalendarManager {
     }
 
     const tip = this._ensureCalendarFastTooltip();
+    this._applyCalendarFastTooltipTheme(dot);
     tip.textContent = text;
     tip.classList.add("active");
     tip.setAttribute("aria-hidden", "false");

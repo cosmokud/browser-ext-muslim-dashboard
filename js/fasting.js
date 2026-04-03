@@ -354,7 +354,6 @@ class FastingManager {
 
     this.subtitle.classList.add(mode);
     this.subtitle.setAttribute("data-fasting-tooltip", tooltip);
-    this.subtitle.setAttribute("title", tooltip);
     this.subtitle.setAttribute(
       "aria-label",
       `${this.subtitle.textContent}. ${tooltip}`,

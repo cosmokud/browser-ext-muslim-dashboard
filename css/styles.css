@@ -8014,14 +8014,35 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .calendar-fast-tooltip {
   --calendar-fast-tooltip-arrow-left: 50%;
+  --calendar-fast-tooltip-glass-bg: var(--glass-bg);
+  --calendar-fast-tooltip-glass-bg-hover: var(--glass-bg-hover);
+  --calendar-fast-tooltip-glass-border: var(--glass-border);
+  --calendar-fast-tooltip-border: color-mix(
+    in srgb,
+    var(--accent-gold) 24%,
+    var(--calendar-fast-tooltip-glass-border) 76%
+  );
+  --calendar-fast-tooltip-surface: color-mix(
+    in srgb,
+    var(--calendar-fast-tooltip-glass-bg) 78%,
+    var(--card-bg) 22%
+  );
+  --calendar-fast-tooltip-surface-soft: color-mix(
+    in srgb,
+    var(--calendar-fast-tooltip-glass-bg-hover) 70%,
+    var(--card-bg) 30%
+  );
   position: fixed;
   z-index: 12140;
   max-width: min(260px, calc(100vw - 24px));
   padding: 8px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  background: color-mix(in srgb, var(--card-bg) 74%, var(--glass-bg) 26%);
+  border: 1px solid var(--calendar-fast-tooltip-border);
+  background: linear-gradient(
+    165deg,
+    var(--calendar-fast-tooltip-surface) 0%,
+    var(--calendar-fast-tooltip-surface-soft) 100%
+  );
   color: var(--text-primary);
   font-size: 0.76rem;
   line-height: 1.35;
@@ -8048,11 +8069,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   bottom: -5px;
   width: 9px;
   height: 9px;
-  border-right: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  background: color-mix(in srgb, var(--card-bg) 74%, var(--glass-bg) 26%);
+  border-right: 1px solid var(--calendar-fast-tooltip-border);
+  border-bottom: 1px solid var(--calendar-fast-tooltip-border);
+  background: var(--calendar-fast-tooltip-surface);
   transform: translateX(-50%) rotate(45deg);
 }
 
@@ -8070,10 +8089,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .calendar-fast-tooltip.is-below::after {
   top: -5px;
   bottom: auto;
-  border-right: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
+  border-right: 1px solid var(--calendar-fast-tooltip-border);
+  border-bottom: 1px solid var(--calendar-fast-tooltip-border);
   transform: translateX(-50%) rotate(-135deg);
 }
 
@@ -10507,6 +10524,21 @@ body.sticky-note-resizing {
 
 .fasting-subtitle[data-fasting-tooltip] {
   cursor: help;
+  --fasting-tooltip-border: color-mix(
+    in srgb,
+    var(--accent-gold) 24%,
+    var(--glass-border) 76%
+  );
+  --fasting-tooltip-surface: color-mix(
+    in srgb,
+    var(--glass-bg) 80%,
+    var(--card-bg) 20%
+  );
+  --fasting-tooltip-surface-soft: color-mix(
+    in srgb,
+    var(--glass-bg-hover) 70%,
+    var(--card-bg) 30%
+  );
 }
 
 .fasting-subtitle[data-fasting-tooltip]::before,
@@ -10532,12 +10564,17 @@ body.sticky-note-resizing {
   text-align: left;
   padding: 8px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  background: color-mix(in srgb, var(--card-bg) 76%, var(--glass-bg) 24%);
+  border: 1px solid var(--fasting-tooltip-border);
+  background: linear-gradient(
+    165deg,
+    var(--fasting-tooltip-surface) 0%,
+    var(--fasting-tooltip-surface-soft) 100%
+  );
   color: var(--text-primary);
   font-size: 0.76rem;
   line-height: 1.35;
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
   box-shadow:
     0 10px 24px color-mix(in srgb, var(--primary-color) 26%, transparent),
     0 4px 14px color-mix(in srgb, black 20%, transparent);
@@ -10551,11 +10588,9 @@ body.sticky-note-resizing {
   bottom: calc(100% + 6px);
   width: 9px;
   height: 9px;
-  border-right: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--accent-gold) 24%, var(--glass-border) 76%);
-  background: color-mix(in srgb, var(--card-bg) 76%, var(--glass-bg) 24%);
+  border-right: 1px solid var(--fasting-tooltip-border);
+  border-bottom: 1px solid var(--fasting-tooltip-border);
+  background: var(--fasting-tooltip-surface);
   transform: translateX(-50%) rotate(45deg);
   z-index: 10;
 }

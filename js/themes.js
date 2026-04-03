@@ -672,7 +672,7 @@ class ThemeManager {
         textPrimary: "#102736",
         textSecondary: "#1f3d52",
         textMuted: "#3d6077",
-        textPlaceholder: "#5d7b91",
+        textPlaceholder: "#374a58",
         bodyBg: "#eef5f9",
       },
     },
