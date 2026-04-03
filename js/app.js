@@ -834,6 +834,9 @@ class MuslimDashboard {
     );
     this.settings.init();
     this.openSettingsFromUrlIfRequested();
+    window.addEventListener("hashchange", () => {
+      this.openSettingsFromUrlIfRequested();
+    });
 
     // Apply initial container width
     const settings = this.storage.getSettings();
@@ -2837,17 +2840,55 @@ class MuslimDashboard {
     }
   }
 
+  getSettingsTabFromHash() {
+    try {
+      const hashText = String(window.location.hash || "").replace(/^#/, "");
+      if (!hashText) return "";
+
+      const params = new URLSearchParams(hashText);
+      const raw =
+        params.get("settingsTab") || params.get("openSettingsTab") || "";
+      const tab = String(raw).trim();
+      if (!tab) return "";
+
+      const allowedTabs = new Set(["location", "prayer"]);
+      return allowedTabs.has(tab) ? tab : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   clearSettingsTabQueryFromUrl() {
     try {
       const url = new URL(window.location.href);
-      const hadSettingsTab =
+      let changed = false;
+
+      if (
         url.searchParams.has("settingsTab") ||
-        url.searchParams.has("openSettingsTab");
+        url.searchParams.has("openSettingsTab")
+      ) {
+        url.searchParams.delete("settingsTab");
+        url.searchParams.delete("openSettingsTab");
+        changed = true;
+      }
 
-      if (!hadSettingsTab) return;
+      const hashText = String(url.hash || "").replace(/^#/, "");
+      if (hashText) {
+        const hashParams = new URLSearchParams(hashText);
+        const hasSettingsTabInHash =
+          hashParams.has("settingsTab") || hashParams.has("openSettingsTab");
 
-      url.searchParams.delete("settingsTab");
-      url.searchParams.delete("openSettingsTab");
+        if (hasSettingsTabInHash) {
+          hashParams.delete("settingsTab");
+          hashParams.delete("openSettingsTab");
+          changed = true;
+
+          const nextHash = hashParams.toString();
+          url.hash = nextHash ? `#${nextHash}` : "";
+        }
+      }
+
+      if (!changed) return;
 
       const searchText = url.searchParams.toString();
       const nextUrl = `${url.pathname}${searchText ? `?${searchText}` : ""}${url.hash || ""}`;
@@ -2858,7 +2899,8 @@ class MuslimDashboard {
   }
 
   openSettingsFromUrlIfRequested() {
-    const requestedTab = this.getSettingsTabFromUrl();
+    const requestedTab =
+      this.getSettingsTabFromUrl() || this.getSettingsTabFromHash();
     if (!requestedTab || !this.settings) return;
 
     try {

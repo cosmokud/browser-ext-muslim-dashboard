@@ -80,6 +80,21 @@ document.addEventListener("DOMContentLoaded", () => {
       : pathWithQuery;
   }
 
+  function isDashboardIndexUrl(candidateUrl) {
+    if (!candidateUrl) return false;
+
+    try {
+      const candidate = new URL(candidateUrl);
+      const dashboardIndex = new URL(getDashboardUrl("index.html"));
+      return (
+        candidate.origin === dashboardIndex.origin &&
+        candidate.pathname === dashboardIndex.pathname
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   function closePopup() {
     try {
       window.close();
@@ -88,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function openUrlInCurrentTab(url) {
+  function openUrlInCurrentTab(url, options = {}) {
     if (!url) return;
 
     const fallbackNavigate = () => {
@@ -99,10 +114,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    const updateTabAndClose = (tabId = null) => {
+    const updateTabAndClose = (tabId = null, currentTabUrl = "") => {
       if (!(typeof chrome !== "undefined" && chrome.tabs?.update)) {
         fallbackNavigate();
         return;
+      }
+
+      const dashboardHashUrl =
+        typeof options.dashboardHashUrl === "string"
+          ? options.dashboardHashUrl
+          : "";
+
+      let targetUrl = url;
+      if (
+        dashboardHashUrl &&
+        isDashboardIndexUrl(url) &&
+        isDashboardIndexUrl(currentTabUrl)
+      ) {
+        targetUrl = dashboardHashUrl;
       }
 
       const onUpdated = () => {
@@ -117,11 +146,11 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       if (typeof tabId === "number") {
-        chrome.tabs.update(tabId, { url }, onUpdated);
+        chrome.tabs.update(tabId, { url: targetUrl }, onUpdated);
         return;
       }
 
-      chrome.tabs.update({ url }, onUpdated);
+      chrome.tabs.update({ url: targetUrl }, onUpdated);
     };
 
     try {
@@ -134,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const queryError = chrome.runtime?.lastError;
           if (queryError) {
             console.warn("Could not query active tab:", queryError.message);
-            updateTabAndClose(null);
+            updateTabAndClose(null, "");
             return;
           }
 
@@ -142,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const activeTabId =
             activeTab && typeof activeTab.id === "number" ? activeTab.id : null;
 
-          updateTabAndClose(activeTabId);
+          updateTabAndClose(activeTabId, activeTab?.url || "");
         });
         return;
       }
@@ -174,7 +203,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUrl = getDashboardUrl(
       `index.html?settingsTab=${encodeURIComponent(normalizedTab)}`,
     );
-    openUrlInCurrentTab(targetUrl);
+    const inPlaceTargetUrl = getDashboardUrl(
+      `index.html#openSettingsTab=${encodeURIComponent(normalizedTab)}`,
+    );
+
+    openUrlInCurrentTab(targetUrl, {
+      dashboardHashUrl: inPlaceTargetUrl,
+    });
   }
 
   function syncActionIcons() {
@@ -258,32 +293,54 @@ document.addEventListener("DOMContentLoaded", () => {
       220,
       Math.round(popupBlurModal.offsetWidth || 320),
     );
-    const popupHeight = Math.max(
-      220,
-      Math.round(popupBlurModal.offsetHeight || 420),
-    );
-
     let left = Math.round(anchorRect.right - popupWidth);
     left = Math.max(
       viewportPadding,
       Math.min(left, window.innerWidth - viewportPadding - popupWidth),
     );
 
-    const belowTop = Math.round(anchorRect.bottom + gap);
-    const aboveTop = Math.round(anchorRect.top - gap - popupHeight);
-    const canFitBelow =
-      belowTop + popupHeight <= window.innerHeight - viewportPadding;
-    const canFitAbove = aboveTop >= viewportPadding;
+    const availableBelow = Math.max(
+      0,
+      Math.floor(
+        window.innerHeight - viewportPadding - (anchorRect.bottom + gap),
+      ),
+    );
+    const availableAbove = Math.max(
+      0,
+      Math.floor(anchorRect.top - gap - viewportPadding),
+    );
 
-    let top = belowTop;
-    if (!canFitBelow && canFitAbove) {
-      top = aboveTop;
-    } else if (!canFitBelow && !canFitAbove) {
-      top = Math.max(
-        viewportPadding,
-        Math.min(top, window.innerHeight - viewportPadding - popupHeight),
-      );
-    }
+    const minPreferredHeight = 220;
+    const canFitBelow = availableBelow >= minPreferredHeight;
+    const canFitAbove = availableAbove >= minPreferredHeight;
+
+    const shouldPlaceAbove =
+      !canFitBelow && (canFitAbove || availableAbove > availableBelow);
+
+    const availableHeight = shouldPlaceAbove ? availableAbove : availableBelow;
+    const constrainedMaxHeight = Math.max(
+      160,
+      Math.min(
+        460,
+        availableHeight || window.innerHeight - viewportPadding * 2,
+      ),
+    );
+
+    popupBlurModal.style.maxHeight = `${constrainedMaxHeight}px`;
+
+    const popupHeight = Math.max(
+      160,
+      Math.round(popupBlurModal.offsetHeight || constrainedMaxHeight),
+    );
+
+    let top = shouldPlaceAbove
+      ? Math.round(anchorRect.top - gap - popupHeight)
+      : Math.round(anchorRect.bottom + gap);
+
+    top = Math.max(
+      viewportPadding,
+      Math.min(top, window.innerHeight - viewportPadding - popupHeight),
+    );
 
     popupBlurModal.style.left = `${left}px`;
     popupBlurModal.style.top = `${top}px`;

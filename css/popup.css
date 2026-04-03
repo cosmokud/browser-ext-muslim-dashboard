@@ -238,8 +238,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   width: 320px;
   right: -4px;
   top: calc(100% + 8px);
-  max-height: 460px;
+  max-height: min(460px, calc(100vh - 16px));
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .popup-blur-popup.blur-popup-open {
@@ -248,8 +249,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-blur-popup.blur-popup-portal {
   width: 320px;
-  max-height: 460px;
+  max-height: min(460px, calc(100vh - 16px));
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .popup-blur-popup::after {
