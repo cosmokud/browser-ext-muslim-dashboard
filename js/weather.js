@@ -1259,8 +1259,8 @@ class WeatherManager extends BaseManager {
       return;
     }
 
-    const isTruncated =
-      this.weatherLocation.scrollWidth - this.weatherLocation.clientWidth > 2;
+    const maxLocationCharsBeforeTruncate = 64;
+    const isTruncated = fullText.length > maxLocationCharsBeforeTruncate;
     this.weatherLocation.classList.toggle("is-truncated", isTruncated);
 
     if (isTruncated) {

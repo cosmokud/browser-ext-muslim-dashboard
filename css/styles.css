@@ -11355,7 +11355,10 @@ body.sticky-note-resizing {
 
 .weather-content {
   display: grid;
-  grid-template-columns: minmax(310px, 1fr) minmax(0, 26ch) minmax(310px, 1fr);
+  grid-template-columns: minmax(310px, 1fr) minmax(
+      0,
+      clamp(26ch, 35vw, 64ch)
+    ) minmax(310px, 1fr);
   align-items: center;
   gap: var(--spacing-xl);
   width: 100%;
@@ -11445,11 +11448,14 @@ body.sticky-note-resizing {
   grid-column: 2 / 3;
   justify-self: center;
   width: 100%;
-  max-width: 26ch;
+  max-width: 100%;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.1;
   text-align: center;
   text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
   font-variant-numeric: tabular-nums;
@@ -11458,6 +11464,11 @@ body.sticky-note-resizing {
 
 .weather-location.is-truncated {
   cursor: help;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .weather-location.is-truncated::before,
@@ -11839,9 +11850,18 @@ body.sidebar-mode .sidebar-zone .weather-location {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+body.sidebar-mode .sidebar-zone .weather-location.is-truncated {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  overflow-wrap: normal;
   word-break: normal;
 }
 
@@ -14929,19 +14949,22 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   z-index: 2;
 }
 
-.pq-recitation-float-toggle-btn,
-.pq-recitation-minimize-btn,
-.pq-recitation-close-btn {
-  width: 26px;
-  height: 26px;
-  font-size: 0.8rem;
+.pq-recitation-btn.pq-recitation-float-toggle-btn,
+.pq-recitation-btn.pq-recitation-close-btn {
+  width: 13px;
+  height: 13px;
+  min-width: 13px;
+  min-height: 13px;
+  font-size: 0.55rem;
   font-weight: 700;
   line-height: 1;
+  padding: 0;
 }
 
-.pq-recitation-controls:not(.pq-recitation-controls-floating)
-  .pq-recitation-minimize-btn {
-  display: none;
+.pq-recitation-controls.pq-recitation-controls-floating
+  .pq-recitation-floating-actions {
+  top: 8px;
+  right: 10px;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating {
@@ -14950,8 +14973,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin: 0;
   max-width: min(780px, calc(100vw - 24px));
   gap: var(--spacing-sm);
-  padding: 8px 10px;
-  padding-right: 98px;
+  row-gap: var(--spacing-xs);
+  justify-content: center;
+  padding: 10px 12px 8px;
+  padding-right: 66px;
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
   cursor: grab;
 }
@@ -14961,20 +14986,22 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-buttons {
-  margin-left: auto;
+  order: 2;
+  margin-left: 0;
+  justify-content: center;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-options {
-  order: 3;
-  flex: 1 0 100%;
-  width: 100%;
-  justify-content: flex-start;
-  gap: var(--spacing-xs);
-  margin-top: 2px;
-  padding-left: 0;
-  padding-top: var(--spacing-xs);
-  border-left: none;
-  border-top: 1px solid var(--glass-border);
+  order: 2;
+  flex: 0 1 auto;
+  width: auto;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: 0;
+  padding-left: var(--spacing-sm);
+  padding-top: 0;
+  border-left: 1px solid var(--glass-border);
+  border-top: none;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-volume-slider {
@@ -14982,7 +15009,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
-  max-width: min(64vw, 460px);
+  order: 1;
+  flex: 1 0 100%;
+  align-items: center;
+  text-align: center;
+  max-width: min(calc(100% - 8px), 640px);
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating.pq-recitation-controls-floating-opaque {
@@ -15004,8 +15035,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-close-btn svg,
 .pq-recitation-close-btn span {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: 9px;
+  height: 9px;
   fill: currentColor;
   color: inherit;
 }
@@ -15218,14 +15249,38 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     border-top: 1px solid var(--glass-border);
   }
 
+  .pq-recitation-controls.pq-recitation-controls-floating {
+    flex-direction: row;
+    align-items: center;
+    row-gap: var(--spacing-xs);
+    padding-right: 62px;
+  }
+
+  .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pq-recitation-controls.pq-recitation-controls-floating
+    .pq-recitation-options {
+    justify-content: center;
+    padding-left: var(--spacing-xs);
+    padding-top: 0;
+    border-top: none;
+  }
+
   .pq-recitation-reciter {
     max-width: none;
   }
 
   .pq-recitation-floating-actions {
-    position: static;
-    margin-left: auto;
-    margin-bottom: var(--spacing-xs);
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    margin-left: 0;
+    margin-bottom: 0;
   }
 
   .pq-recitation-controls.pq-recitation-controls-floating {

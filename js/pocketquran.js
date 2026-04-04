@@ -3051,11 +3051,12 @@ class PocketQuranManager extends BaseManager {
   /**
    * Play recitation for a specific ayah.
    */
-  async playAyah(surah, ayah) {
+  async playAyah(surah, ayah, { forceRestart = false } = {}) {
     if (!this._audioElement) return;
 
     // If same ayah is playing, just resume if paused
     if (
+      !forceRestart &&
       this._playingAyah?.surah === surah &&
       this._playingAyah?.ayah === ayah &&
       this._audioElement.paused
@@ -3747,9 +3748,6 @@ class PocketQuranManager extends BaseManager {
     const floatToggleBtn = this._headerControlsBox.querySelector(
       ".pq-recitation-float-toggle-btn",
     );
-    const minimizeBtn = this._headerControlsBox.querySelector(
-      ".pq-recitation-minimize-btn",
-    );
 
     if (floatToggleBtn) {
       const label = this._recitationFloatingMode
@@ -3765,17 +3763,6 @@ class PocketQuranManager extends BaseManager {
         "aria-pressed",
         this._recitationFloatingMode ? "true" : "false",
       );
-    }
-
-    if (minimizeBtn) {
-      const label = "Minimize floating panel (manual trigger only)";
-      const showMinimize =
-        this._recitationFloatingEnabled && this._recitationFloatingMode;
-      minimizeBtn.textContent = "−";
-      minimizeBtn.title = label;
-      minimizeBtn.setAttribute("aria-label", label);
-      minimizeBtn.hidden = !showMinimize;
-      minimizeBtn.disabled = !showMinimize;
     }
 
     this._headerControlsBox.classList.toggle(
@@ -3831,10 +3818,13 @@ class PocketQuranManager extends BaseManager {
     ) {
       try {
         this._audioElement.pause();
+        this._audioElement.currentTime = 0;
       } catch (e) {
         // no-op
       }
-      this.playAyah(targetAyah.surah, targetAyah.ayah);
+      this.playAyah(targetAyah.surah, targetAyah.ayah, {
+        forceRestart: true,
+      });
     }
 
     this.closeReciterModal();
@@ -3873,7 +3863,6 @@ class PocketQuranManager extends BaseManager {
         <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
-        <button type="button" class="pq-recitation-btn pq-recitation-minimize-btn" title="Minimize floating panel (manual trigger only)" aria-label="Minimize floating panel">−</button>
       </div>
       <div class="pq-recitation-info">
         <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
@@ -3976,15 +3965,6 @@ class PocketQuranManager extends BaseManager {
     if (floatToggleBtn) {
       floatToggleBtn.addEventListener("click", () => {
         this.toggleRecitationFloating();
-      });
-    }
-
-    const minimizeBtn = controlsBox.querySelector(
-      ".pq-recitation-minimize-btn",
-    );
-    if (minimizeBtn) {
-      minimizeBtn.addEventListener("click", () => {
-        this.minimizeRecitationFloating();
       });
     }
 
