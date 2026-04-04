@@ -11355,7 +11355,7 @@ body.sticky-note-resizing {
 
 .weather-content {
   display: grid;
-  grid-template-columns: minmax(310px, 1fr) auto minmax(310px, 1fr);
+  grid-template-columns: minmax(310px, 1fr) minmax(0, 26ch) minmax(310px, 1fr);
   align-items: center;
   gap: var(--spacing-xl);
   width: 100%;
@@ -11445,7 +11445,7 @@ body.sticky-note-resizing {
   grid-column: 2 / 3;
   justify-self: center;
   width: 100%;
-  max-width: min(100%, 26ch);
+  max-width: 26ch;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -11462,68 +11462,7 @@ body.sticky-note-resizing {
 
 .weather-location.is-truncated::before,
 .weather-location.is-truncated::after {
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.weather-location.is-truncated::after {
-  content: attr(data-full-location);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 14px);
-  transform: translate(-50%, 6px);
-  max-width: min(78vw, 560px);
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, #0f1728 82%, transparent 18%),
-    color-mix(in srgb, #1a2336 90%, transparent 10%)
-  );
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
-  color: var(--text-primary);
-  font-size: 0.86rem;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: 0;
-  text-align: left;
-  text-shadow: none;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  z-index: 40;
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-}
-
-.weather-location.is-truncated::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  width: 10px;
-  height: 10px;
-  border-left: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
-  border-top: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
-  background: color-mix(in srgb, #162337 94%, transparent 6%);
-  rotate: 225deg;
-  z-index: 39;
-}
-
-.weather-location.is-truncated:hover::before,
-.weather-location.is-truncated:hover::after,
-.weather-location.is-truncated:focus-visible::before,
-.weather-location.is-truncated:focus-visible::after {
-  opacity: 1;
-}
-
-.weather-location.is-truncated:hover::after,
-.weather-location.is-truncated:focus-visible::after {
-  transform: translate(-50%, 0);
+  content: none;
 }
 
 .weather-location.is-truncated:focus-visible {
@@ -14968,7 +14907,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  padding-right: calc(var(--spacing-md) + 86px);
+  padding-right: calc(var(--spacing-md) + 106px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--accent-gold);
   background: rgba(212, 175, 55, 0.1);
@@ -14986,17 +14925,23 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   z-index: 2;
 }
 
 .pq-recitation-float-toggle-btn,
-.pq-recitation-minimize-btn {
-  width: 30px;
-  height: 30px;
-  font-size: 0.9rem;
+.pq-recitation-minimize-btn,
+.pq-recitation-close-btn {
+  width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
+}
+
+.pq-recitation-controls:not(.pq-recitation-controls-floating)
+  .pq-recitation-minimize-btn {
+  display: none;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating {
@@ -15005,6 +14950,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin: 0;
   max-width: min(780px, calc(100vw - 24px));
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+  cursor: grab;
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating.pq-recitation-controls-dragging {
+  cursor: grabbing;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
@@ -15017,38 +14967,20 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-close-btn {
-  /* inherit base button visuals from .pq-recitation-btn (and .pq-stop-btn when present) */
   position: relative;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: inherit;
-  border: inherit;
-  color: inherit;
-  transition: inherit;
 }
 
 .pq-recitation-close-btn svg,
 .pq-recitation-close-btn span {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   fill: currentColor;
   color: inherit;
 }
 
 .pq-recitation-close-btn::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--spacing-sm) * -1);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 58%;
-  background: var(--glass-border);
-  opacity: 0.9;
-  border-radius: var(--radius-full);
+  display: none;
 }
 
 .pq-recitation-close-btn:focus {
@@ -15158,12 +15090,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   background: rgba(255, 107, 107, 0.2);
   border-color: #ff6b6b;
   color: #ff6b6b;
-}
-
-.pq-recitation-btn.pq-reciter-btn:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-light);
-  color: var(--text-primary);
 }
 
 .pq-recitation-options {
@@ -15276,9 +15202,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   }
 
   .pq-recitation-close-btn {
-    margin-left: 0;
-    align-self: center;
-    margin-top: var(--spacing-sm);
+    margin: 0;
+    align-self: auto;
   }
 
   .pq-recitation-close-btn::before {

@@ -1255,6 +1255,7 @@ class WeatherManager extends BaseManager {
     if (!fullText) {
       this.weatherLocation.classList.remove("is-truncated");
       this.weatherLocation.removeAttribute("tabindex");
+      this.weatherLocation.removeAttribute("title");
       return;
     }
 
@@ -1264,8 +1265,10 @@ class WeatherManager extends BaseManager {
 
     if (isTruncated) {
       this.weatherLocation.setAttribute("tabindex", "0");
+      this.weatherLocation.setAttribute("title", fullText);
     } else {
       this.weatherLocation.removeAttribute("tabindex");
+      this.weatherLocation.removeAttribute("title");
     }
   }
 

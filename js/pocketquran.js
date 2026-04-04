@@ -678,6 +678,8 @@ class PocketQuranManager extends BaseManager {
     this._recitationFloatingModeReason = null;
     this._recitationFloatingManualOnly = false;
     this._recitationVisibilityObserver = null;
+    this._recitationFloatingPosition = null;
+    this._recitationFloatingDrag = null;
 
     this.init();
 
@@ -3491,21 +3493,31 @@ class PocketQuranManager extends BaseManager {
       Math.round(rect.height || box.offsetHeight || 90),
     );
 
-    let left = margin;
-    let top = Math.max(margin, viewportHeight - panelHeight - margin);
+    const hasStoredPosition =
+      Number.isFinite(this._recitationFloatingPosition?.left) &&
+      Number.isFinite(this._recitationFloatingPosition?.top);
 
-    const attribution = document.getElementById("bg-attribution");
-    if (attribution) {
-      const attrRect = attribution.getBoundingClientRect();
-      const overlapsHoriz =
-        left < attrRect.right + margin &&
-        left + panelWidth > attrRect.left - margin;
-      const overlapsVert =
-        top < attrRect.bottom + margin &&
-        top + panelHeight > attrRect.top - margin;
+    let left = hasStoredPosition
+      ? this._recitationFloatingPosition.left
+      : margin;
+    let top = hasStoredPosition
+      ? this._recitationFloatingPosition.top
+      : Math.max(margin, viewportHeight - panelHeight - margin);
 
-      if (overlapsHoriz && overlapsVert) {
-        top = Math.max(margin, attrRect.top - panelHeight - margin);
+    if (!hasStoredPosition) {
+      const attribution = document.getElementById("bg-attribution");
+      if (attribution) {
+        const attrRect = attribution.getBoundingClientRect();
+        const overlapsHoriz =
+          left < attrRect.right + margin &&
+          left + panelWidth > attrRect.left - margin;
+        const overlapsVert =
+          top < attrRect.bottom + margin &&
+          top + panelHeight > attrRect.top - margin;
+
+        if (overlapsHoriz && overlapsVert) {
+          top = Math.max(margin, attrRect.top - panelHeight - margin);
+        }
       }
     }
 
@@ -3518,8 +3530,115 @@ class PocketQuranManager extends BaseManager {
       Math.min(top, viewportHeight - panelHeight - margin),
     );
 
-    box.style.left = `${Math.round(left)}px`;
-    box.style.top = `${Math.round(top)}px`;
+    this._recitationFloatingPosition = {
+      left: Math.round(left),
+      top: Math.round(top),
+    };
+
+    box.style.left = `${this._recitationFloatingPosition.left}px`;
+    box.style.top = `${this._recitationFloatingPosition.top}px`;
+  }
+
+  startRecitationFloatingDrag(event) {
+    if (!this._headerControlsBox || !this._recitationFloatingMode) return;
+
+    const box = this._headerControlsBox;
+    if (!(event instanceof PointerEvent)) return;
+
+    if (
+      event.button !== 0 &&
+      event.pointerType !== "touch" &&
+      event.pointerType !== "pen"
+    ) {
+      return;
+    }
+
+    const interactiveTarget = event.target?.closest?.(
+      "button, input, select, textarea, a, label, [role='button'], .pq-recitation-ayah, .pq-recitation-reciter, .pq-volume-control",
+    );
+    if (interactiveTarget) return;
+
+    const boxRect = box.getBoundingClientRect();
+    const parsedLeft = Number.parseFloat(box.style.left);
+    const parsedTop = Number.parseFloat(box.style.top);
+    const startLeft = Number.isFinite(parsedLeft) ? parsedLeft : boxRect.left;
+    const startTop = Number.isFinite(parsedTop) ? parsedTop : boxRect.top;
+
+    this.stopRecitationFloatingDrag();
+
+    const dragState = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLeft,
+      startTop,
+      onPointerMove: null,
+      onPointerUp: null,
+    };
+
+    dragState.onPointerMove = (moveEvent) => {
+      if (moveEvent.pointerId !== dragState.pointerId) return;
+      if (!this._headerControlsBox || !this._recitationFloatingMode) {
+        this.stopRecitationFloatingDrag();
+        return;
+      }
+
+      const deltaX = moveEvent.clientX - dragState.startX;
+      const deltaY = moveEvent.clientY - dragState.startY;
+
+      this._recitationFloatingPosition = {
+        left: dragState.startLeft + deltaX,
+        top: dragState.startTop + deltaY,
+      };
+      this.positionRecitationFloatingPanel();
+    };
+
+    dragState.onPointerUp = (upEvent) => {
+      if (upEvent.pointerId !== dragState.pointerId) return;
+      this.stopRecitationFloatingDrag();
+    };
+
+    this._recitationFloatingDrag = dragState;
+    box.classList.add("pq-recitation-controls-dragging");
+
+    if (typeof box.setPointerCapture === "function") {
+      try {
+        box.setPointerCapture(event.pointerId);
+      } catch (err) {
+        // Ignore unsupported capture failures.
+      }
+    }
+
+    window.addEventListener("pointermove", dragState.onPointerMove, {
+      passive: true,
+    });
+    window.addEventListener("pointerup", dragState.onPointerUp);
+    window.addEventListener("pointercancel", dragState.onPointerUp);
+
+    event.preventDefault();
+  }
+
+  stopRecitationFloatingDrag() {
+    const dragState = this._recitationFloatingDrag;
+    if (!dragState) return;
+
+    window.removeEventListener("pointermove", dragState.onPointerMove);
+    window.removeEventListener("pointerup", dragState.onPointerUp);
+    window.removeEventListener("pointercancel", dragState.onPointerUp);
+
+    const box = this._headerControlsBox;
+    if (box) {
+      box.classList.remove("pq-recitation-controls-dragging");
+      if (typeof box.releasePointerCapture === "function") {
+        try {
+          box.releasePointerCapture(dragState.pointerId);
+        } catch (err) {
+          // Ignore unsupported release failures.
+        }
+      }
+    }
+
+    this._recitationFloatingDrag = null;
   }
 
   enableRecitationFloating({ source = "manual" } = {}) {
@@ -3557,6 +3676,7 @@ class PocketQuranManager extends BaseManager {
   disableRecitationFloating({ preserveManualOnly = false } = {}) {
     if (!this._headerControlsBox) return;
 
+    this.stopRecitationFloatingDrag();
     this._headerControlsBox.classList.remove("pq-recitation-controls-floating");
     this._headerControlsBox.style.removeProperty("left");
     this._headerControlsBox.style.removeProperty("top");
@@ -3621,11 +3741,13 @@ class PocketQuranManager extends BaseManager {
 
     if (minimizeBtn) {
       const label = "Minimize floating panel (manual trigger only)";
+      const showMinimize =
+        this._recitationFloatingEnabled && this._recitationFloatingMode;
       minimizeBtn.textContent = "−";
       minimizeBtn.title = label;
       minimizeBtn.setAttribute("aria-label", label);
-      minimizeBtn.hidden =
-        !this._recitationFloatingEnabled || !this._recitationFloatingMode;
+      minimizeBtn.hidden = !showMinimize;
+      minimizeBtn.disabled = !showMinimize;
     }
 
     this._headerControlsBox.classList.toggle(
@@ -3703,6 +3825,9 @@ class PocketQuranManager extends BaseManager {
     controlsBox.innerHTML = `
       <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
         <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
+        <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
         <button type="button" class="pq-recitation-btn pq-recitation-minimize-btn" title="Minimize floating panel (manual trigger only)" aria-label="Minimize floating panel">−</button>
       </div>
       <div class="pq-recitation-info">
@@ -3754,17 +3879,15 @@ class PocketQuranManager extends BaseManager {
         }">
           <svg viewBox="0 -0.5 25 25" width="21" height="21" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10.7452 16.2194C10.995 15.889 10.9298 15.4186 10.5994 15.1688C10.269 14.919 9.79864 14.9842 9.54879 15.3146L10.7452 16.2194ZM6.72579 19.0476C6.47595 19.378 6.54124 19.8484 6.87162 20.0982C7.202 20.3481 7.67236 20.2828 7.92221 19.9524L6.72579 19.0476ZM6.574 19.5C6.574 19.9142 6.90979 20.25 7.324 20.25C7.73821 20.25 8.074 19.9142 8.074 19.5H6.574ZM8.074 5.5C8.074 5.08579 7.73821 4.75 7.324 4.75C6.90979 4.75 6.574 5.08579 6.574 5.5H8.074ZM6.72587 19.9525C6.97577 20.2828 7.44614 20.348 7.77648 20.0981C8.10682 19.8482 8.17203 19.3779 7.92213 19.0475L6.72587 19.9525ZM5.09813 15.3145C4.84823 14.9842 4.37786 14.919 4.04752 15.1689C3.71718 15.4188 3.65197 15.8891 3.90187 16.2195L5.09813 15.3145ZM11.088 4.75C10.6738 4.75 10.338 5.08579 10.338 5.5C10.338 5.91421 10.6738 6.25 11.088 6.25V4.75ZM20.5 6.25C20.9142 6.25 21.25 5.91421 21.25 5.5C21.25 5.08579 20.9142 4.75 20.5 4.75V6.25ZM11.088 7.55C10.6738 7.55 10.338 7.88579 10.338 8.3C10.338 8.71421 10.6738 9.05 11.088 9.05V7.55ZM18.617 9.05C19.0312 9.05 19.367 8.71421 19.367 8.3C19.367 7.88579 19.0312 7.55 18.617 7.55V9.05ZM11.088 10.35C10.6738 10.35 10.338 10.6858 10.338 11.1C10.338 11.5142 10.6738 11.85 11.088 11.85V10.35ZM16.735 11.85C17.1492 11.85 17.485 11.5142 17.485 11.1C17.485 10.6858 17.1492 10.35 16.735 10.35V11.85ZM9.54879 15.3146L6.72579 19.0476L7.92221 19.9524L10.7452 16.2194L9.54879 15.3146ZM8.074 19.5V5.5H6.574V19.5H8.074ZM7.92213 19.0475L5.09813 15.3145L3.90187 16.2195L6.72587 19.9525L7.92213 19.0475ZM11.088 6.25H20.5V4.75H11.088V6.25ZM11.088 9.05H18.617V7.55H11.088V9.05ZM11.088 11.85H16.735V10.35H11.088V11.85Z" fill="currentColor"></path> </g></svg>
         </button>
-        <button type="button" class="pq-recitation-btn pq-reciter-btn" title="Change reciter">
-          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-        </button> 
       </div>
-      <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-      </button>
     `;
 
     this._headerControlsBox = controlsBox;
     this.ensureRecitationControlsAttachedToHeader();
+
+    controlsBox.addEventListener("pointerdown", (event) => {
+      this.startRecitationFloatingDrag(event);
+    });
 
     // Add event listeners
     controlsBox
@@ -3783,7 +3906,7 @@ class PocketQuranManager extends BaseManager {
         this.togglePlayPause(target.surah, target.ayah);
       });
     controlsBox
-      .querySelector(".pq-stop-btn")
+      .querySelector(".pq-recitation-buttons .pq-stop-btn")
       .addEventListener("click", () => this.stopPlayback());
     controlsBox
       .querySelector(".pq-loop-btn")
@@ -3794,9 +3917,10 @@ class PocketQuranManager extends BaseManager {
     controlsBox
       .querySelector(".pq-autoscroll-btn")
       .addEventListener("click", () => this.toggleAutoScroll());
-    controlsBox
-      .querySelector(".pq-reciter-btn")
-      .addEventListener("click", () => this.openReciterModal());
+    const reciterBtn = controlsBox.querySelector(".pq-reciter-btn");
+    if (reciterBtn) {
+      reciterBtn.addEventListener("click", () => this.openReciterModal());
+    }
     controlsBox
       .querySelector(".pq-recitation-reciter")
       .addEventListener("click", () => this.openReciterModal());
@@ -3864,6 +3988,7 @@ class PocketQuranManager extends BaseManager {
    */
   hideHeaderControls() {
     this.unwatchRecitationControlsVisibility();
+    this.stopRecitationFloatingDrag();
 
     if (this._headerControlsBox) {
       this._headerControlsBox.classList.remove(
