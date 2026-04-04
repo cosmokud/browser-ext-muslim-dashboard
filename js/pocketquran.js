@@ -4167,17 +4167,19 @@ class PocketQuranManager extends BaseManager {
     const controlsBox = document.createElement("div");
     controlsBox.className = "pq-recitation-controls";
     controlsBox.innerHTML = `
-      <div class="pq-recitation-info">
-        <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
-          this._playingAyah?.surah ?? this._activeSurah,
-          this._playingAyah?.ayah ?? this._activeAyah ?? 1,
-        )}</span>
+      <div class="pq-recitation-controls-header">
         <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
           <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
           <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
         </div>
+      </div>
+      <div class="pq-recitation-info">
+        <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
+          this._playingAyah?.surah ?? this._activeSurah,
+          this._playingAyah?.ayah ?? this._activeAyah ?? 1,
+        )}</span>
         <span class="pq-recitation-reciter">${this.getActiveReciterName()}</span>
       </div>
       <div class="pq-recitation-buttons">

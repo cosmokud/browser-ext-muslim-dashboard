@@ -14937,13 +14937,23 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   max-width: 100%;
 }
 
+.pq-recitation-controls-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+
 .pq-recitation-floating-actions {
   position: static;
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 5px;
-  justify-self: end;
-  grid-column: 3;
+  margin-left: auto;
   z-index: 2;
 }
 
@@ -14962,6 +14972,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-controls.pq-recitation-controls-floating
   .pq-recitation-floating-actions {
   gap: 4px;
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating
+  .pq-recitation-controls-header {
+  margin-bottom: 0;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating {
@@ -15056,22 +15071,22 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-info {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  column-gap: var(--spacing-xs);
+  justify-content: center;
   row-gap: 2px;
+  flex: 1 1 auto;
   min-width: min(180px, 100%);
 }
 
 .pq-recitation-ayah {
-  grid-column: 2;
-  justify-self: center;
   font-weight: 600;
   color: var(--accent-gold);
   font-size: 0.9rem;
   cursor: pointer;
   text-align: center;
+  width: 100%;
 }
 
 .pq-recitation-ayah:hover {
@@ -15079,11 +15094,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-reciter {
-  grid-column: 1 / 4;
   text-align: center;
   font-size: 0.75rem;
   color: var(--text-muted);
   cursor: pointer;
+  width: 100%;
   /* Allow full reciter names to display (no ellipsis/truncation) */
   white-space: normal;
   overflow: visible;
