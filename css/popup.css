@@ -554,12 +554,88 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--spacing-xs);
+}
+
+.popup-pq-size-controls .popup-pq-size-label-main {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .popup-pq-size-controls .popup-pq-size-label-row .pocket-quran-control-label {
   margin: 0;
+}
+
+.popup-pq-size-controls .popup-pq-size-separator {
+  width: 1px;
+  height: 12px;
+  background: color-mix(in srgb, var(--accent-gold) 42%, transparent 58%);
+}
+
+.popup-pq-size-controls .popup-pq-visibility-toggle {
+  position: relative;
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.popup-pq-size-controls .popup-pq-visibility-toggle input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.popup-pq-size-controls .popup-pq-visibility-toggle-check {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.popup-pq-size-controls .popup-pq-visibility-toggle-check::after {
+  content: "✓";
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.popup-pq-size-controls
+  .popup-pq-visibility-toggle
+  input:checked
+  + .popup-pq-visibility-toggle-check {
+  background: color-mix(in srgb, var(--accent-gold) 36%, transparent 64%);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-gold) 70%,
+    var(--glass-border) 30%
+  );
+  color: var(--accent-gold);
+}
+
+.popup-pq-size-controls
+  .popup-pq-visibility-toggle
+  input:focus-visible
+  + .popup-pq-visibility-toggle-check {
+  outline: 2px solid color-mix(in srgb, var(--accent-gold) 52%, transparent 48%);
+  outline-offset: 2px;
 }
 
 .popup-pq-size-controls .pocket-quran-size-stepper {
@@ -576,8 +652,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-pq-size-controls .pocket-quran-size-value {
   min-width: 44px;
-  margin-left: auto;
-  text-align: right;
+  margin-left: 0;
+  text-align: left;
   white-space: nowrap;
   font-size: 0.74rem;
   line-height: 1.1;
@@ -591,6 +667,10 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+}
+
+.popup-pq-ayah-snippet[hidden] {
+  display: none !important;
 }
 
 .popup-pq-ayah-arabic {

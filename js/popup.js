@@ -78,9 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
     "popupPqAutoplayNextSurahBtn",
   );
   const popupPqAutoscrollBtn = document.getElementById("popupPqAutoscrollBtn");
+  const popupPqAyahSnippet = document.getElementById("popupPqAyahSnippet");
   const popupPqAyahArabic = document.getElementById("popupPqAyahArabic");
   const popupPqAyahTranslation = document.getElementById(
     "popupPqAyahTranslation",
+  );
+  const popupPqArabicVisibleToggle = document.getElementById(
+    "popupPqArabicVisibleToggle",
+  );
+  const popupPqTranslationVisibleToggle = document.getElementById(
+    "popupPqTranslationVisibleToggle",
   );
   const popupPqArabicSizeRange = document.getElementById(
     "popupPqArabicSizeRange",
@@ -433,6 +440,8 @@ document.addEventListener("DOMContentLoaded", () => {
       translationFontFamily: normalizePocketQuranTranslationFontFamily(
         merged.translationFontFamily,
       ),
+      showArabicText: merged.showArabicText !== false,
+      showTranslationText: merged.showTranslationText !== false,
     };
   }
 
@@ -455,6 +464,23 @@ document.addEventListener("DOMContentLoaded", () => {
       "--jump-progress",
       `${Math.max(0, Math.min(100, progress))}%`,
     );
+  }
+
+  function applyPocketQuranPopupAyahVisibility(
+    typography = popupPqTypographyState,
+  ) {
+    const showArabic = typography?.showArabicText !== false;
+    const showTranslation = typography?.showTranslationText !== false;
+
+    if (popupPqAyahArabic) {
+      popupPqAyahArabic.hidden = !showArabic;
+    }
+    if (popupPqAyahTranslation) {
+      popupPqAyahTranslation.hidden = !showTranslation;
+    }
+    if (popupPqAyahSnippet) {
+      popupPqAyahSnippet.hidden = !showArabic && !showTranslation;
+    }
   }
 
   function applyPocketQuranPopupTypography(settings = storage.getSettings()) {
@@ -511,6 +537,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (popupPqTranslationSizeValue) {
       popupPqTranslationSizeValue.textContent = `${typography.translationFontSize}px`;
     }
+    if (popupPqArabicVisibleToggle) {
+      popupPqArabicVisibleToggle.checked = typography.showArabicText !== false;
+    }
+    if (popupPqTranslationVisibleToggle) {
+      popupPqTranslationVisibleToggle.checked =
+        typography.showTranslationText !== false;
+    }
+
+    applyPocketQuranPopupAyahVisibility(typography);
 
     updatePopupViewportForTab("pocketQuran");
   }
@@ -1578,6 +1613,8 @@ document.addEventListener("DOMContentLoaded", () => {
       isAutoplay: pqSettings.reciterAutoplay === true,
       isAutoplayNextSurah: pqSettings.reciterAutoplayNextSurah === true,
       isAutoScroll: pqSettings.reciterAutoScroll === true,
+      showArabicText: pqSettings.showArabicText !== false,
+      showTranslationText: pqSettings.showTranslationText !== false,
       translationResourceId: clampNumber(
         pqSettings.translationResourceId,
         1,
@@ -1643,6 +1680,14 @@ document.addEventListener("DOMContentLoaded", () => {
       isAutoplay: rawState.isAutoplay === true,
       isAutoplayNextSurah: rawState.isAutoplayNextSurah === true,
       isAutoScroll: rawState.isAutoScroll === true,
+      showArabicText:
+        typeof rawState.showArabicText === "boolean"
+          ? rawState.showArabicText
+          : fallback.showArabicText,
+      showTranslationText:
+        typeof rawState.showTranslationText === "boolean"
+          ? rawState.showTranslationText
+          : fallback.showTranslationText,
       translationResourceId: clampNumber(
         rawState.translationResourceId,
         1,
@@ -3508,6 +3553,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const current = popupPqTypographyState?.translationFontSize || 18;
       persistPocketQuranPopupTypography({
         translationFontSize: clampNumber(current + 1, 8, 144, current),
+      });
+      applyPocketQuranPopupTypography(storage.getSettings());
+    });
+
+    popupPqArabicVisibleToggle?.addEventListener("change", () => {
+      persistPocketQuranPopupTypography({
+        showArabicText: popupPqArabicVisibleToggle.checked === true,
+      });
+      applyPocketQuranPopupTypography(storage.getSettings());
+    });
+
+    popupPqTranslationVisibleToggle?.addEventListener("change", () => {
+      persistPocketQuranPopupTypography({
+        showTranslationText: popupPqTranslationVisibleToggle.checked === true,
       });
       applyPocketQuranPopupTypography(storage.getSettings());
     });

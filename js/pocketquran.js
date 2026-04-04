@@ -597,6 +597,12 @@ class PocketQuranManager extends BaseManager {
     this.tajweedToggleBtn = document.getElementById("pocketQuranTajweedToggle");
 
     this.fontToggleBtn = document.getElementById("pocketQuranFontToggle");
+    this.arabicVisibilityToggleBtn = document.getElementById(
+      "pocketQuranArabicVisibilityToggle",
+    );
+    this.translationVisibilityToggleBtn = document.getElementById(
+      "pocketQuranTranslationVisibilityToggle",
+    );
 
     if (!this.card || !this.surahListEl || !this.contentEl) {
       return;
@@ -627,6 +633,8 @@ class PocketQuranManager extends BaseManager {
     // Arabic font state
     this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
     this._translationFontFamily = "Poppins";
+    this._showArabicText = true;
+    this._showTranslationText = true;
 
     // Font picker modal
     this._fontModal = null;
@@ -749,6 +757,27 @@ class PocketQuranManager extends BaseManager {
       syncInputs: true,
       persist: false,
     });
+
+    const requestedArabicVisibility = pq.showArabicText !== false;
+    const requestedTranslationVisibility = pq.showTranslationText !== false;
+    this.applyTextVisibility(
+      requestedArabicVisibility,
+      requestedTranslationVisibility,
+      {
+        persist: false,
+        recalculate: false,
+        allowBothOff: false,
+      },
+    );
+    if (
+      this._showArabicText !== requestedArabicVisibility ||
+      this._showTranslationText !== requestedTranslationVisibility
+    ) {
+      this.persistPocketQuranSettings({
+        showArabicText: this._showArabicText,
+        showTranslationText: this._showTranslationText,
+      });
+    }
 
     // Initialize Arabic font family from settings
     this.applyArabicFontFamily(pq.arabicFontFamily, {
@@ -1145,6 +1174,34 @@ class PocketQuranManager extends BaseManager {
     if (this.fontToggleBtn) {
       this.fontToggleBtn.addEventListener("click", () => {
         this.openFontPickerModal();
+      });
+    }
+
+    if (this.arabicVisibilityToggleBtn) {
+      this.arabicVisibilityToggleBtn.addEventListener("click", () => {
+        this.applyTextVisibility(
+          !this._showArabicText,
+          this._showTranslationText,
+          {
+            persist: true,
+            recalculate: true,
+            allowBothOff: false,
+          },
+        );
+      });
+    }
+
+    if (this.translationVisibilityToggleBtn) {
+      this.translationVisibilityToggleBtn.addEventListener("click", () => {
+        this.applyTextVisibility(
+          this._showArabicText,
+          !this._showTranslationText,
+          {
+            persist: true,
+            recalculate: true,
+            allowBothOff: false,
+          },
+        );
       });
     }
 
@@ -2391,6 +2448,83 @@ class PocketQuranManager extends BaseManager {
     );
   }
 
+  updateTextVisibilityToggleUI({ allowBothOff = false } = {}) {
+    const canDisableArabic = allowBothOff || this._showTranslationText;
+    const canDisableTranslation = allowBothOff || this._showArabicText;
+
+    if (this.arabicVisibilityToggleBtn) {
+      const isActive = this._showArabicText === true;
+      this.arabicVisibilityToggleBtn.classList.toggle("active", isActive);
+      this.arabicVisibilityToggleBtn.setAttribute(
+        "aria-pressed",
+        isActive ? "true" : "false",
+      );
+      this.arabicVisibilityToggleBtn.disabled = isActive && !canDisableArabic;
+      this.arabicVisibilityToggleBtn.title = isActive
+        ? "Hide Arabic text"
+        : "Show Arabic text";
+    }
+
+    if (this.translationVisibilityToggleBtn) {
+      const isActive = this._showTranslationText === true;
+      this.translationVisibilityToggleBtn.classList.toggle("active", isActive);
+      this.translationVisibilityToggleBtn.setAttribute(
+        "aria-pressed",
+        isActive ? "true" : "false",
+      );
+      this.translationVisibilityToggleBtn.disabled =
+        isActive && !canDisableTranslation;
+      this.translationVisibilityToggleBtn.title = isActive
+        ? "Hide translation text"
+        : "Show translation text";
+    }
+  }
+
+  applyTextVisibility(showArabicText, showTranslationText, opts = {}) {
+    const { persist = false, recalculate = true, allowBothOff = false } = opts;
+
+    const normalized = this.normalizeTextVisibilityState(
+      showArabicText,
+      showTranslationText,
+      allowBothOff,
+    );
+
+    const changed =
+      this._showArabicText !== normalized.showArabicText ||
+      this._showTranslationText !== normalized.showTranslationText;
+
+    this._showArabicText = normalized.showArabicText;
+    this._showTranslationText = normalized.showTranslationText;
+
+    if (this.card) {
+      this.card.classList.toggle("pq-hide-arabic-text", !this._showArabicText);
+      this.card.classList.toggle(
+        "pq-hide-translation-text",
+        !this._showTranslationText,
+      );
+    }
+
+    this.updateTextVisibilityToggleUI({ allowBothOff });
+
+    if (changed && recalculate) {
+      this._ayahHeights.clear();
+      this.recalculateVirtualization();
+    }
+
+    if (persist) {
+      this.persistPocketQuranSettings({
+        showArabicText: this._showArabicText,
+        showTranslationText: this._showTranslationText,
+      });
+    }
+
+    if (changed) {
+      this.publishPopupSyncState();
+    }
+
+    return changed;
+  }
+
   isTajweedAllowedForFont(fontFamily) {
     const f = this.normalizeArabicFontFamily(fontFamily);
     return !(f === "Noto Naskh Arabic" || f === "Amiri");
@@ -3523,6 +3657,11 @@ class PocketQuranManager extends BaseManager {
       persist: false,
       recalculate: true,
     });
+    this.applyTextVisibility(pq.showArabicText, pq.showTranslationText, {
+      persist: false,
+      recalculate: true,
+      allowBothOff: false,
+    });
 
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
@@ -4081,6 +4220,8 @@ class PocketQuranManager extends BaseManager {
       isAutoplay: this._isAutoplay === true,
       isAutoplayNextSurah: this._isAutoplayNextSurah === true,
       isAutoScroll: this._isAutoScroll === true,
+      showArabicText: this._showArabicText === true,
+      showTranslationText: this._showTranslationText === true,
       translationResourceId: this.normalizeTranslationId(
         this._activeTranslationId,
       ),
@@ -4949,12 +5090,47 @@ class PocketQuranManager extends BaseManager {
     return Math.min(max, Math.max(min, n));
   }
 
+  normalizeTextVisibilityState(
+    showArabicText,
+    showTranslationText,
+    allowBothOff = false,
+  ) {
+    const normalized = {
+      showArabicText: showArabicText !== false,
+      showTranslationText: showTranslationText !== false,
+    };
+
+    if (
+      allowBothOff ||
+      normalized.showArabicText ||
+      normalized.showTranslationText
+    ) {
+      return normalized;
+    }
+
+    return {
+      showArabicText: true,
+      showTranslationText: false,
+    };
+  }
+
   persistPocketQuranSettings(patch) {
     const settings = this.storage.getSettings();
-    settings.pocketQuran = {
+    const nextPocketQuran = {
       ...(settings.pocketQuran || {}),
       ...(patch || {}),
     };
+
+    const normalizedVisibility = this.normalizeTextVisibilityState(
+      nextPocketQuran.showArabicText,
+      nextPocketQuran.showTranslationText,
+      false,
+    );
+    nextPocketQuran.showArabicText = normalizedVisibility.showArabicText;
+    nextPocketQuran.showTranslationText =
+      normalizedVisibility.showTranslationText;
+
+    settings.pocketQuran = nextPocketQuran;
     this.storage.saveSettings(settings);
   }
 

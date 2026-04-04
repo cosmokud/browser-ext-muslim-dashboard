@@ -2071,6 +2071,36 @@
                             >ي</span
                           >
                         </button>
+
+                        <button
+                          type="button"
+                          class="pq-tajweed-toggle pq-text-visibility-toggle active"
+                          id="pocketQuranArabicVisibilityToggle"
+                          aria-pressed="true"
+                          aria-label="Toggle Arabic text visibility"
+                          title="Toggle Arabic text visibility"
+                        >
+                          <span
+                            class="pq-tajweed-toggle-icon"
+                            aria-hidden="true"
+                            >✓</span
+                          >
+                        </button>
+
+                        <button
+                          type="button"
+                          class="pq-tajweed-toggle pq-text-visibility-toggle active"
+                          id="pocketQuranTranslationVisibilityToggle"
+                          aria-pressed="true"
+                          aria-label="Toggle translation text visibility"
+                          title="Toggle translation text visibility"
+                        >
+                          <span
+                            class="pq-tajweed-toggle-icon"
+                            aria-hidden="true"
+                            >✓</span
+                          >
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2383,14 +2413,21 @@
             <div class="setting-group">
               <label class="setting-label">Location Method</label>
               <div class="setting-options location-method-options">
-                <label class="radio-option">
-                  <input
-                    type="radio"
-                    name="locationMethod"
-                    value="auto"
-                    checked
-                  />
-                  <span>Auto-detect</span>
+                <label class="radio-option radio-option-auto-detect">
+                  <span class="radio-option-primary">
+                    <input
+                      type="radio"
+                      name="locationMethod"
+                      value="auto"
+                      checked
+                    />
+                    <span>Auto-detect</span>
+                  </span>
+                  <span
+                    id="detectedLocationText"
+                    class="detected-location-text detected-location-text-inline"
+                    >Detecting...</span
+                  >
                 </label>
                 <div class="location-detect-row">
                   <button
@@ -2407,9 +2444,6 @@
                   >
                     🔄 Refresh Location
                   </button>
-                  <span id="detectedLocationText" class="detected-location-text"
-                    >Detecting...</span
-                  >
                 </div>
                 <label class="radio-option">
                   <input type="radio" name="locationMethod" value="manual" />

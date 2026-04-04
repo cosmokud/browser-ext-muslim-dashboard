@@ -6673,6 +6673,25 @@ html[data-theme-mode="light"]
   accent-color: var(--accent-gold);
 }
 
+.radio-option-auto-detect {
+  width: 100%;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.radio-option-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.radio-option-auto-detect .detected-location-text-inline {
+  margin-left: auto;
+  flex: 1 1 auto;
+  text-align: right;
+}
+
 .coordinates-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -8556,12 +8575,16 @@ html[data-theme-mode="light"]
 
 .detected-location-text {
   min-width: 0;
-  max-width: 280px;
+  max-width: 320px;
   font-size: 0.85rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.detected-location-text-inline {
+  max-width: clamp(140px, 50%, 420px);
 }
 
 .detect-location-btn:hover {
@@ -13926,6 +13949,18 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   cursor: text;
 }
 
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah-ar {
+  display: none !important;
+}
+
+#pocketQuranCard.pq-hide-translation-text .pocket-quran-ayah-tr {
+  display: none !important;
+}
+
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah-tr {
+  margin-top: 0;
+}
+
 /* Tajweed Mode Styles */
 .pocket-quran-ayah-ar.tajweed-mode {
   font-family: var(
@@ -13940,6 +13975,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-tajweed-toggle {
   --_action-btn-size: var(--action-btn-size);
   white-space: nowrap;
+}
+
+.pq-text-visibility-toggle {
+  font-size: 0.86rem;
+}
+
+.pq-text-visibility-toggle:not(.active) {
+  color: var(--text-muted);
 }
 
 .pq-tajweed-toggle:disabled {

@@ -375,8 +375,10 @@ class StorageManager {
       pocketQuran: {
         arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
+        showArabicText: true,
         translationFontSize: 18,
         translationFontFamily: "Poppins",
+        showTranslationText: true,
         translationResourceId: 85, // M.A.S. Abdel Haleem
         recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: true,
@@ -407,8 +409,10 @@ class StorageManager {
       pocketQuranPopup: {
         arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
+        showArabicText: true,
         translationFontSize: 18,
         translationFontFamily: "Poppins",
+        showTranslationText: true,
       },
 
       // Debug settings (visible only when ENABLE_DEBUG_MODE is true)
