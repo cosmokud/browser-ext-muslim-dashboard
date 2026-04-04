@@ -762,6 +762,7 @@ class FloatingModeManager {
         persistenceSuppressed: 0,
         resizeObserver: null,
         mutationObserver: null,
+        mutationDebounceTimer: null,
         saveTimer: null,
         minUpdateRaf: null,
         minUpdateTimer: null,
@@ -823,6 +824,10 @@ class FloatingModeManager {
         if (st.minUpdateTimer) {
           clearTimeout(st.minUpdateTimer);
           st.minUpdateTimer = null;
+        }
+        if (st.mutationDebounceTimer) {
+          clearTimeout(st.mutationDebounceTimer);
+          st.mutationDebounceTimer = null;
         }
       }
     });
@@ -1230,7 +1235,13 @@ class FloatingModeManager {
     if (typeof MutationObserver !== "undefined") {
       st.mutationObserver = new MutationObserver(() => {
         if (!card.classList.contains("floating-card")) return;
-        this.scheduleMinUpdate(key);
+
+        if (st.mutationDebounceTimer) return;
+        st.mutationDebounceTimer = window.setTimeout(() => {
+          st.mutationDebounceTimer = null;
+          if (!card.classList.contains("floating-card")) return;
+          this.scheduleMinUpdate(key);
+        }, 60);
       });
       st.mutationObserver.observe(card, {
         subtree: true,
@@ -1334,6 +1345,13 @@ class FloatingModeManager {
         clearTimeout(st.minUpdateTimer);
       } catch (e) {}
       st.minUpdateTimer = null;
+    }
+
+    if (st.mutationDebounceTimer) {
+      try {
+        clearTimeout(st.mutationDebounceTimer);
+      } catch (e) {}
+      st.mutationDebounceTimer = null;
     }
 
     const finalizeRestoreToTiling = () => {

@@ -1155,7 +1155,10 @@ class MuslimDashboard {
     });
 
     window.addEventListener("resize", repositionOpenBlurPopups);
-    window.addEventListener("scroll", repositionOpenBlurPopups, true);
+    window.addEventListener("scroll", repositionOpenBlurPopups, {
+      capture: true,
+      passive: true,
+    });
 
     const setupBlurMenu = ({ cardId, stateKey, blurPowerKey, opacityKey }) => {
       const card = document.getElementById(cardId);

@@ -32,6 +32,8 @@ class WeatherManager extends BaseManager {
     this._chartRaf = null;
     this._chartAnim = null;
     this._chartHoverIndex = -1;
+    this._chartVisibilityObserver = null;
+    this._chartInViewport = true;
 
     this.currentWeather = null;
     this.dailyForecast = null;
@@ -437,6 +439,41 @@ class WeatherManager extends BaseManager {
       this.weatherChart.addEventListener("mouseleave", () =>
         this._handleChartMouseLeave(),
       );
+    }
+
+    if (
+      !this._chartVisibilityObserver &&
+      this.weatherChartWrap &&
+      typeof IntersectionObserver !== "undefined"
+    ) {
+      this._chartVisibilityObserver = new IntersectionObserver(
+        (entries) => {
+          const isVisible = entries.some(
+            (entry) => entry.isIntersecting && entry.intersectionRatio > 0,
+          );
+
+          if (this._chartInViewport === isVisible) return;
+          this._chartInViewport = isVisible;
+
+          if (!isVisible) {
+            if (this._chartRaf) {
+              cancelAnimationFrame(this._chartRaf);
+              this._chartRaf = null;
+            }
+            this._chartAnim = null;
+            this._hideWeatherChartTooltip();
+            return;
+          }
+
+          this.renderHourlyChart();
+        },
+        {
+          root: null,
+          threshold: 0.02,
+        },
+      );
+
+      this._chartVisibilityObserver.observe(this.weatherChartWrap);
     }
 
     window.addEventListener("resize", this._onResize);
@@ -1126,6 +1163,12 @@ class WeatherManager extends BaseManager {
     }
 
     window.removeEventListener("resize", this._onResize);
+    window.removeEventListener("resize", this._onForecastResize);
+
+    if (this._chartVisibilityObserver) {
+      this._chartVisibilityObserver.disconnect();
+      this._chartVisibilityObserver = null;
+    }
   }
 
   /**
@@ -1316,6 +1359,8 @@ class WeatherManager extends BaseManager {
 
   renderHourlyChart() {
     if (!this.weatherChart || !this.hourlyForecast) return;
+    if (this._chartInViewport === false) return;
+
     const hourly = this.hourlyForecast;
     if (!Array.isArray(hourly.time) || hourly.time.length < 2) return;
 

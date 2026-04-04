@@ -583,17 +583,32 @@ class BackgroundManager extends BaseManager {
       scheduleHideBgAttr(delay);
     };
 
+    let bgAttrMoveRaf = null;
+    let latestMoveEvent = null;
+
+    const processBgAttrPointerMove = () => {
+      bgAttrMoveRaf = null;
+
+      const event = latestMoveEvent;
+      latestMoveEvent = null;
+      if (!event) return;
+
+      const nearCorner = isPointerNearBottomLeft(event);
+      if (nearCorner && !this._bgAttrPointerNearCorner) {
+        this._bgAttrPointerNearCorner = true;
+        showBgAttr();
+      } else if (!nearCorner && this._bgAttrPointerNearCorner) {
+        this._bgAttrPointerNearCorner = false;
+        maybeScheduleHideBgAttr();
+      }
+    };
+
     document.addEventListener(
       "mousemove",
       (event) => {
-        const nearCorner = isPointerNearBottomLeft(event);
-        if (nearCorner) {
-          this._bgAttrPointerNearCorner = true;
-          showBgAttr();
-        } else if (this._bgAttrPointerNearCorner) {
-          this._bgAttrPointerNearCorner = false;
-          maybeScheduleHideBgAttr();
-        }
+        latestMoveEvent = event;
+        if (bgAttrMoveRaf) return;
+        bgAttrMoveRaf = requestAnimationFrame(processBgAttrPointerMove);
       },
       { passive: true },
     );

@@ -40,6 +40,8 @@ class GridLayoutManager {
     this.dropTargetRaf = null;
     this.pendingDropTargetX = 0;
     this.pendingDropTargetY = 0;
+    this.dragRowRectsCache = [];
+    this.dragRowRectsCacheScrollY = 0;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
     this.containerResizeObserver = null;
@@ -1537,6 +1539,9 @@ class GridLayoutManager {
 
     // Setup auto-scroll
     this.setupAutoScroll();
+
+    // Cache row geometry for drag hit-testing; updated lazily when needed.
+    this.rebuildDragRowRectsCache();
   }
 
   /**
@@ -1625,6 +1630,63 @@ class GridLayoutManager {
     this.dropTargetRaf = null;
   }
 
+  getCurrentScrollY() {
+    return (
+      window.scrollY ||
+      window.pageYOffset ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
+  }
+
+  rebuildDragRowRectsCache() {
+    if (!this.grid) {
+      this.dragRowRectsCache = [];
+      this.dragRowRectsCacheScrollY = this.getCurrentScrollY();
+      return;
+    }
+
+    const rows = Array.from(this.grid.querySelectorAll(".grid-flex-row"));
+    this.dragRowRectsCacheScrollY = this.getCurrentScrollY();
+    this.dragRowRectsCache = rows.map((row, index) => {
+      const rect = row.getBoundingClientRect();
+      return {
+        row,
+        index,
+        top: rect.top,
+        bottom: rect.bottom,
+      };
+    });
+  }
+
+  getDragRowRectEntries() {
+    if (
+      !Array.isArray(this.dragRowRectsCache) ||
+      !this.dragRowRectsCache.length
+    ) {
+      this.rebuildDragRowRectsCache();
+      return this.dragRowRectsCache || [];
+    }
+
+    const currentScrollY = this.getCurrentScrollY();
+    const scrollDelta = currentScrollY - this.dragRowRectsCacheScrollY;
+    if (scrollDelta !== 0) {
+      this.dragRowRectsCache.forEach((entry) => {
+        entry.top -= scrollDelta;
+        entry.bottom -= scrollDelta;
+      });
+      this.dragRowRectsCacheScrollY = currentScrollY;
+    }
+
+    return this.dragRowRectsCache;
+  }
+
+  invalidateDragRowRectsCache() {
+    this.dragRowRectsCache = null;
+    this.dragRowRectsCacheScrollY = this.getCurrentScrollY();
+  }
+
   /**
    * Update drop target - find where to place the placeholder
    */
@@ -1647,41 +1709,55 @@ class GridLayoutManager {
     const draggedConfig = this.componentSpans[draggedId];
 
     // Find the row we're hovering over
-    const rows = this.grid.querySelectorAll(".grid-flex-row");
+    const rowEntries = this.getDragRowRectEntries();
+    if (!rowEntries.length) return;
+
     let targetRow = null;
     let targetRowIndex = -1;
-    let insertBefore = null;
-    let insertAfter = null;
+    let targetRowRect = null;
 
-    rows.forEach((row, index) => {
-      const rect = row.getBoundingClientRect();
+    rowEntries.forEach((entry) => {
       if (
-        clientY >= rect.top - 20 &&
-        clientY <= rect.bottom + 20 &&
-        row.style.display !== "none"
+        clientY >= entry.top - 20 &&
+        clientY <= entry.bottom + 20 &&
+        entry.row.style.display !== "none"
       ) {
-        targetRow = row;
-        targetRowIndex = index;
+        targetRow = entry.row;
+        targetRowIndex = entry.index;
+        targetRowRect = {
+          top: entry.top,
+          bottom: entry.bottom,
+          height: entry.bottom - entry.top,
+        };
       }
     });
 
     if (!targetRow) {
       // Check if we're above all rows or below
-      const firstRow = rows[0];
-      const lastRow = rows[rows.length - 1];
+      const firstRow = rowEntries[0];
+      const lastRow = rowEntries[rowEntries.length - 1];
 
-      if (firstRow && clientY < firstRow.getBoundingClientRect().top) {
-        targetRow = firstRow;
+      if (firstRow && clientY < firstRow.top) {
+        targetRow = firstRow.row;
         targetRowIndex = 0;
-      } else if (lastRow && clientY > lastRow.getBoundingClientRect().bottom) {
-        targetRow = lastRow;
-        targetRowIndex = rows.length - 1;
+        targetRowRect = {
+          top: firstRow.top,
+          bottom: firstRow.bottom,
+          height: firstRow.bottom - firstRow.top,
+        };
+      } else if (lastRow && clientY > lastRow.bottom) {
+        targetRow = lastRow.row;
+        targetRowIndex = rowEntries.length - 1;
+        targetRowRect = {
+          top: lastRow.top,
+          bottom: lastRow.bottom,
+          height: lastRow.bottom - lastRow.top,
+        };
       }
     }
 
-    if (!targetRow) return;
+    if (!targetRow || !targetRowRect) return;
 
-    const targetRowRect = targetRow.getBoundingClientRect();
     const targetLayoutRowIndex = Number.isFinite(
       parseInt(targetRow.dataset.rowIndex, 10),
     )
@@ -1793,6 +1869,8 @@ class GridLayoutManager {
       .querySelectorAll(".grid-flex-row")
       .forEach((r) => r.classList.remove("grid-row-target"));
     row.classList.add("grid-row-target");
+
+    this.invalidateDragRowRectsCache();
   }
 
   /**
@@ -1832,6 +1910,8 @@ class GridLayoutManager {
       .querySelectorAll(".grid-flex-row")
       .forEach((r) => r.classList.remove("grid-row-target"));
     newRow.classList.add("grid-row-target");
+
+    this.invalidateDragRowRectsCache();
   }
 
   /**
@@ -1877,6 +1957,7 @@ class GridLayoutManager {
     // Stop auto-scroll
     this.stopAutoScroll();
     this.cancelDropTargetUpdate();
+    this.invalidateDragRowRectsCache();
 
     // Restore smooth scroll behavior
     this.restoreSmoothScrollAfterDrag();
@@ -1980,6 +2061,7 @@ class GridLayoutManager {
     this.draggedItem = null;
     this.originalRow = null;
     this.sidebarDragOrigin = null;
+    this.invalidateDragRowRectsCache();
   }
 
   finalizeSidebarDrop(side) {
@@ -2208,6 +2290,7 @@ class GridLayoutManager {
 
     this.stopAutoScroll();
     this.cancelDropTargetUpdate();
+    this.invalidateDragRowRectsCache();
 
     // Reset dragged item
     this.draggedItem.classList.remove("grid-dragging");
@@ -2253,6 +2336,7 @@ class GridLayoutManager {
     this.draggedItem = null;
     this.originalRow = null;
     this.sidebarDragOrigin = null;
+    this.invalidateDragRowRectsCache();
   }
 
   /**

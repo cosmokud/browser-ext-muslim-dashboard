@@ -1351,7 +1351,10 @@ class StickyNotesManager {
     window.addEventListener(
       "scroll",
       () => this.repositionOpenNoteBlurPopups(),
-      true,
+      {
+        capture: true,
+        passive: true,
+      },
     );
   }
 
