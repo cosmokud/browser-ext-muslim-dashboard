@@ -9725,6 +9725,13 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   -webkit-backdrop-filter: none;
 }
 
+/* Match table editors in detached mode: let modal body own vertical scrolling. */
+.editor-detach-modal .flashcard-editor-body,
+.editor-detach-modal .quotes-editor-body {
+  max-height: none;
+  overflow: visible;
+}
+
 .editor-detach-modal .flashcard-editor-header > div,
 .editor-detach-modal .hadith-editor-table thead th,
 .editor-detach-modal .adhkar-editor-table thead th {

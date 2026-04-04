@@ -52,7 +52,7 @@ A beautiful, interactive, and fully responsive Chrome/Edge browser extension tha
 ### � Flashcards
 
 - Two built-in read-only default sets are included: `Default` and `99 Names`.
-- Import your own flashcards via CSV/JSON, export custom sets as JSON, create/edit sets (defaults are protected), and study or quiz yourself.
+- Import your own flashcards via CSV, export custom sets as CSV, create/edit sets (defaults are protected), and study or quiz yourself.
 
 ### �🖼️ Dynamic Backgrounds
 

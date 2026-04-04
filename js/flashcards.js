@@ -1,7 +1,7 @@
 /**
  * Flashcard Manager
  * - Loads bundled default cards from data/*.csv at runtime
- * - Supports up to 100 flashcard sets (CSV/JSON import)
+ * - Supports up to 100 flashcard sets (CSV import/export)
  * - Dashboard viewer + Settings tab editor (20 cards/page)
  */
 
@@ -943,7 +943,7 @@ class FlashcardManager extends BaseManager {
 
     if (!cards.length) {
       this.questionEl.textContent = "No flashcards yet";
-      this.answerEl.textContent = "Import CSV or JSON in Settings → Flashcards";
+      this.answerEl.textContent = "Import CSV in Settings → Flashcards";
       this.applyTextLanguageStyling(
         this.questionEl,
         this.questionEl.textContent,
@@ -1134,7 +1134,7 @@ class FlashcardManager extends BaseManager {
 
     if (this.settingsExportBtn) {
       this.settingsExportBtn.addEventListener("click", () => {
-        this.exportActiveSetJson();
+        this.exportActiveSetCsv();
       });
     }
 
@@ -1301,7 +1301,7 @@ class FlashcardManager extends BaseManager {
       this.settingsList.innerHTML = `
         <div class="quotes-empty">
           <div class="quotes-empty-title">No flashcards in this set</div>
-          <div class="quotes-empty-hint">Use “Add Card” or import CSV/JSON.</div>
+          <div class="quotes-empty-hint">Use “Add Card” or import CSV.</div>
         </div>
       `;
       return;
@@ -1815,8 +1815,7 @@ class FlashcardManager extends BaseManager {
       filename.endsWith(".json") || /^\s*[\[{]/.test(content);
 
     if (looksLikeJson) {
-      const parsed = JSON.parse(content);
-      return this.normalizeImportedCards(parsed);
+      throw new Error("Flashcards import supports CSV files only.");
     }
 
     return this.parseCsvTwoColumns(content);
@@ -1908,26 +1907,31 @@ class FlashcardManager extends BaseManager {
   }
 
   exportActiveSetJson() {
+    // Backward-compat alias: flashcards export is CSV-only.
+    this.exportActiveSetCsv();
+  }
+
+  exportActiveSetCsv() {
     const active = this.getActiveSet();
     if (!active) return;
 
-    const payload = this.normalizeImportedCards(active.cards || []);
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
+    const cards = (active.cards || []).map((raw) => ({
+      question: String(raw?.question ?? ""),
+      answer: String(raw?.answer ?? ""),
+    }));
+    const csv = this.cardsToCsv(cards);
+    const csvWithBom = `\uFEFF${csv}`;
+    const blob = new Blob([csvWithBom], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${this.slugify(active.name || "flashcards")}.json`;
+    a.download = `${this.slugify(active.name || "flashcards")}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 500);
-  }
-
-  exportActiveSetCsv() {
-    this.exportActiveSetJson();
   }
 
   deleteActiveSet() {
