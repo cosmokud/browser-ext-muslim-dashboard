@@ -377,7 +377,7 @@ class StorageManager {
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
         translationResourceId: 85, // M.A.S. Abdel Haleem
-        recitationFloatingEnabled: true,
+        recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: true,
         recitationFloatingAppearance: "opaque",
         lastSurahNumber: 1,

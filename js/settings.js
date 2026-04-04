@@ -1347,7 +1347,7 @@ class SettingsManager extends BaseManager {
 
     if (this.pocketQuranRecitationFloatingEnabled) {
       this.pocketQuranRecitationFloatingEnabled.checked =
-        pq.recitationFloatingEnabled !== false;
+        pq.recitationFloatingEnabled === true;
     }
 
     if (this.pocketQuranRecitationAutoDockOnVisible) {
@@ -5436,7 +5436,7 @@ class SettingsManager extends BaseManager {
       ),
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
         ? this.pocketQuranRecitationFloatingEnabled.checked
-        : existingPocketQuran.recitationFloatingEnabled !== false,
+        : existingPocketQuran.recitationFloatingEnabled === true,
       recitationAutoDockOnVisible: this.pocketQuranRecitationAutoDockOnVisible
         ? this.pocketQuranRecitationAutoDockOnVisible.checked
         : existingPocketQuran.recitationAutoDockOnVisible !== false,

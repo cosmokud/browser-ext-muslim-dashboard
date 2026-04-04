@@ -674,7 +674,7 @@ class PocketQuranManager extends BaseManager {
     this._playingAyah = null;
     this._reciterModal = null;
     this._headerControlsBox = null;
-    this._recitationFloatingEnabled = true;
+    this._recitationFloatingEnabled = false;
     this._recitationAutoDockOnVisible = true;
     this._recitationFloatingAppearance = "opaque";
     this._recitationFloatingMode = false;
@@ -2639,7 +2639,7 @@ class PocketQuranManager extends BaseManager {
     this._isSurahLooping = pq.reciterSurahLoop || false;
     this._isAutoplay = pq.reciterAutoplay || false;
     this._isAutoScroll = pq.reciterAutoScroll || false;
-    this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
       pq.recitationAutoDockOnVisible !== false;
     this._recitationFloatingAppearance =
@@ -3435,7 +3435,7 @@ class PocketQuranManager extends BaseManager {
         : this.storage.getSettings();
     const pq = normalized?.pocketQuran || {};
 
-    this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
       pq.recitationAutoDockOnVisible !== false;
     this._recitationFloatingAppearance =
@@ -3445,7 +3445,10 @@ class PocketQuranManager extends BaseManager {
 
     if (!this._recitationFloatingEnabled) {
       this.unwatchRecitationControlsVisibility();
-      if (this._recitationFloatingMode) {
+      if (
+        this._recitationFloatingMode &&
+        this._recitationFloatingModeReason === "auto"
+      ) {
         this.disableRecitationFloating({ preserveManualOnly: false });
       }
     } else if (this._headerControlsBox && !this._recitationFloatingMode) {
@@ -3813,7 +3816,7 @@ class PocketQuranManager extends BaseManager {
   }
 
   enableRecitationFloating({ source = "manual" } = {}) {
-    if (!this._recitationFloatingEnabled) return;
+    if (source !== "manual" && !this._recitationFloatingEnabled) return;
 
     if (!this._headerControlsBox) {
       this.showHeaderControls();
@@ -3888,8 +3891,6 @@ class PocketQuranManager extends BaseManager {
   }
 
   toggleRecitationFloating() {
-    if (!this._recitationFloatingEnabled) return;
-
     if (this._recitationFloatingMode) {
       this.disableRecitationFloating({ preserveManualOnly: true });
       return;
@@ -3910,8 +3911,6 @@ class PocketQuranManager extends BaseManager {
         ? "Dock recitation controls"
         : "Detach recitation controls";
 
-      floatToggleBtn.hidden = !this._recitationFloatingEnabled;
-      floatToggleBtn.disabled = !this._recitationFloatingEnabled;
       floatToggleBtn.textContent = this._recitationFloatingMode ? "↙" : "↗";
       floatToggleBtn.title = label;
       floatToggleBtn.setAttribute("aria-label", label);
