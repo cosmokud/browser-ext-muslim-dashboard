@@ -5974,6 +5974,16 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   font-family: var(--font-primary);
 }
 
+/* Keep only the custom clear button; hide native search clear affordances. */
+.settings-search-input::-webkit-search-decoration,
+.settings-search-input::-webkit-search-cancel-button,
+.settings-search-input::-webkit-search-results-button,
+.settings-search-input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 .settings-search-input::placeholder {
   color: color-mix(in srgb, var(--text-placeholder) 86%, transparent 14%);
   opacity: 1;
@@ -6546,6 +6556,19 @@ html[data-theme-mode="light"]
 .support-kofi-cta:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 3px;
+}
+
+/* Support card motion should run only in Highest Visual Fidelity mode. */
+html:not([data-highest-visual-fidelity="true"])
+  :is(
+    .support-kofi-card::before,
+    .support-feedback-card::before,
+    .support-kofi-badge,
+    .support-feedback-badge,
+    .support-kofi-cta,
+    .support-feedback-cta
+  ) {
+  animation: none !important;
 }
 
 /* Add spacing above CTAs to avoid cramped layout */
