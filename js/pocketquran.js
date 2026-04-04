@@ -678,6 +678,9 @@ class PocketQuranManager extends BaseManager {
     // Timer for restoring scroll-behavior after manual seeks
     this._restoreScrollBehaviorTimer = null;
 
+    // Pending rAF for post-refresh scroll restoration in content-only refresh flow
+    this._contentRefreshRestoreRaf = null;
+
     // Navigation debounce flags
     this._navProcessing = false;
 
@@ -1620,6 +1623,11 @@ class PocketQuranManager extends BaseManager {
 
     if (!this._activeVerses?.length) return;
 
+    if (this._contentRefreshRestoreRaf) {
+      cancelAnimationFrame(this._contentRefreshRestoreRaf);
+      this._contentRefreshRestoreRaf = null;
+    }
+
     const previousScrollTop = this._virtualContainer?.scrollTop || 0;
 
     this._programmaticScroll = null;
@@ -1631,20 +1639,81 @@ class PocketQuranManager extends BaseManager {
 
     if (!keepScrollPosition) return;
 
-    requestAnimationFrame(() => {
-      if (!this._virtualContainer) return;
+    const currentContainer = this._virtualContainer;
+    if (!currentContainer) return;
+
+    let canceledByUserInput = false;
+    const useCapture = true;
+
+    let detachCancelListeners = () => {};
+    const cancelPendingRestoreForUserInput = () => {
+      canceledByUserInput = true;
+      detachCancelListeners();
+
+      if (this._contentRefreshRestoreRaf) {
+        cancelAnimationFrame(this._contentRefreshRestoreRaf);
+        this._contentRefreshRestoreRaf = null;
+      }
+
+      if (this._virtualContainer === currentContainer) {
+        this._lastScrollTop = currentContainer.scrollTop;
+      }
+    };
+
+    currentContainer.addEventListener("wheel", cancelPendingRestoreForUserInput, {
+      passive: true,
+      capture: useCapture,
+    });
+    currentContainer.addEventListener(
+      "touchstart",
+      cancelPendingRestoreForUserInput,
+      {
+        passive: true,
+        capture: useCapture,
+      },
+    );
+    currentContainer.addEventListener(
+      "pointerdown",
+      cancelPendingRestoreForUserInput,
+      {
+        passive: true,
+        capture: useCapture,
+      },
+    );
+
+    detachCancelListeners = () => {
+      currentContainer.removeEventListener(
+        "wheel",
+        cancelPendingRestoreForUserInput,
+        useCapture,
+      );
+      currentContainer.removeEventListener(
+        "touchstart",
+        cancelPendingRestoreForUserInput,
+        useCapture,
+      );
+      currentContainer.removeEventListener(
+        "pointerdown",
+        cancelPendingRestoreForUserInput,
+        useCapture,
+      );
+    };
+
+    this._contentRefreshRestoreRaf = requestAnimationFrame(() => {
+      this._contentRefreshRestoreRaf = null;
+      detachCancelListeners();
+
+      if (canceledByUserInput) return;
+      if (!this._virtualContainer || this._virtualContainer !== currentContainer)
+        return;
 
       const maxScrollTop = Math.max(
         0,
-        this._virtualContainer.scrollHeight -
-          this._virtualContainer.clientHeight,
+        currentContainer.scrollHeight - currentContainer.clientHeight,
       );
 
-      this._virtualContainer.scrollTop = Math.min(
-        previousScrollTop,
-        maxScrollTop,
-      );
-      this._lastScrollTop = this._virtualContainer.scrollTop;
+      currentContainer.scrollTop = Math.min(previousScrollTop, maxScrollTop);
+      this._lastScrollTop = currentContainer.scrollTop;
       this.handleVirtualScroll();
     });
   }
