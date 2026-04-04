@@ -218,6 +218,10 @@ class SettingsManager extends BaseManager {
     this.detachedEditorModalTitle = null;
     this.detachedEditorCloseBtn = null;
     this._detachedEditorState = null;
+    this._detachedEditorViewportHandler = null;
+    this._detachedEditorViewportRaf = 0;
+    this._detachedEditorMutationObserver = null;
+    this._detachedEditorRefreshTimer = null;
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -6230,10 +6234,13 @@ class SettingsManager extends BaseManager {
       group,
       placeholder,
       onAfterClose: config.onAfterClose,
-      resizeCleanup: this.enableDetachedEditorColumnResize(group),
+      resizeCleanup: null,
     };
 
     this.applyDetachedEditorModalInitialWidth();
+    this.refreshDetachedEditorColumnResize();
+    this.bindDetachedEditorViewportRefresh();
+    this.bindDetachedEditorMutationRefresh();
   }
 
   getDetachedEditorRowCount(group) {
@@ -6280,6 +6287,111 @@ class SettingsManager extends BaseManager {
       "--detached-editor-width",
       `${targetWidth}px`,
     );
+  }
+
+  refreshDetachedEditorColumnResize() {
+    const state = this._detachedEditorState;
+    if (!state?.group) return;
+
+    if (typeof state.resizeCleanup === "function") {
+      try {
+        state.resizeCleanup();
+      } catch (e) {
+        // ignore
+      }
+      state.resizeCleanup = null;
+    }
+
+    state.resizeCleanup = this.enableDetachedEditorColumnResize(state.group);
+  }
+
+  scheduleDetachedEditorLayoutRefresh() {
+    if (!this._detachedEditorState) return;
+    if (this._detachedEditorRefreshTimer) return;
+
+    this._detachedEditorRefreshTimer = setTimeout(() => {
+      this._detachedEditorRefreshTimer = null;
+      if (!this._detachedEditorState) return;
+
+      this.applyDetachedEditorModalInitialWidth();
+      this.refreshDetachedEditorColumnResize();
+    }, 0);
+  }
+
+  bindDetachedEditorViewportRefresh() {
+    if (this._detachedEditorViewportHandler) {
+      window.removeEventListener("resize", this._detachedEditorViewportHandler);
+      window.removeEventListener(
+        "orientationchange",
+        this._detachedEditorViewportHandler,
+      );
+      this._detachedEditorViewportHandler = null;
+    }
+
+    this._detachedEditorViewportHandler = () => {
+      if (this._detachedEditorViewportRaf) return;
+
+      this._detachedEditorViewportRaf = window.requestAnimationFrame(() => {
+        this._detachedEditorViewportRaf = 0;
+        this.scheduleDetachedEditorLayoutRefresh();
+      });
+    };
+
+    window.addEventListener("resize", this._detachedEditorViewportHandler);
+    window.addEventListener(
+      "orientationchange",
+      this._detachedEditorViewportHandler,
+    );
+  }
+
+  isDetachedResizeArtifactNode(node) {
+    if (!(node instanceof Element)) return false;
+    if (node.classList.contains("editor-col-resize-handle")) return true;
+    if (node.classList.contains("editor-resize-colgroup")) return true;
+    if (
+      node.tagName === "COL" &&
+      node.parentElement?.classList?.contains("editor-resize-colgroup")
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  bindDetachedEditorMutationRefresh() {
+    if (this._detachedEditorMutationObserver) {
+      try {
+        this._detachedEditorMutationObserver.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      this._detachedEditorMutationObserver = null;
+    }
+
+    const state = this._detachedEditorState;
+    if (!state?.group) return;
+
+    this._detachedEditorMutationObserver = new MutationObserver((mutations) => {
+      if (!this._detachedEditorState) return;
+
+      const hasRelevantStructureChange = mutations.some((mutation) => {
+        if (mutation.type !== "childList") return false;
+        const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+        if (!nodes.length) return false;
+
+        return nodes.some((node) => {
+          if (this.isDetachedResizeArtifactNode(node)) return false;
+          return true;
+        });
+      });
+
+      if (!hasRelevantStructureChange) return;
+      this.scheduleDetachedEditorLayoutRefresh();
+    });
+
+    this._detachedEditorMutationObserver.observe(state.group, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   getEditorColumnMinWidth(cell, index, totalColumns) {
@@ -6332,8 +6444,6 @@ class SettingsManager extends BaseManager {
     const headerCells = Array.from(header.children || []);
     if (headerCells.length < 4) return null;
 
-    const rows = Array.from(group.querySelectorAll(".flashcard-row"));
-
     let widths = String(getComputedStyle(header).gridTemplateColumns || "")
       .split(/\s+/)
       .map((value) => parseFloat(value))
@@ -6346,7 +6456,7 @@ class SettingsManager extends BaseManager {
     const applyTemplate = () => {
       const template = widths.map((w) => `${Math.round(w)}px`).join(" ");
       header.style.gridTemplateColumns = template;
-      rows.forEach((row) => {
+      group.querySelectorAll(".flashcard-row").forEach((row) => {
         row.style.gridTemplateColumns = template;
       });
     };
@@ -6427,7 +6537,7 @@ class SettingsManager extends BaseManager {
       });
 
       header.style.removeProperty("grid-template-columns");
-      rows.forEach((row) => {
+      group.querySelectorAll(".flashcard-row").forEach((row) => {
         row.style.removeProperty("grid-template-columns");
       });
     };
@@ -6561,6 +6671,34 @@ class SettingsManager extends BaseManager {
     }
 
     if (!this._detachedEditorState) return;
+
+    if (this._detachedEditorMutationObserver) {
+      try {
+        this._detachedEditorMutationObserver.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      this._detachedEditorMutationObserver = null;
+    }
+
+    if (this._detachedEditorRefreshTimer) {
+      clearTimeout(this._detachedEditorRefreshTimer);
+      this._detachedEditorRefreshTimer = null;
+    }
+
+    if (this._detachedEditorViewportRaf) {
+      window.cancelAnimationFrame(this._detachedEditorViewportRaf);
+      this._detachedEditorViewportRaf = 0;
+    }
+
+    if (this._detachedEditorViewportHandler) {
+      window.removeEventListener("resize", this._detachedEditorViewportHandler);
+      window.removeEventListener(
+        "orientationchange",
+        this._detachedEditorViewportHandler,
+      );
+      this._detachedEditorViewportHandler = null;
+    }
 
     const { group, placeholder, onAfterClose, resizeCleanup } =
       this._detachedEditorState;

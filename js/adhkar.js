@@ -1851,16 +1851,19 @@ class AdhkarManager extends BaseManager {
           ? String(parsedRepeat)
           : "1";
       const titleValue =
-        c[titleField] ??
-        (selectedLang === "en" ? (c.title ?? c.title_en) : c.title_en) ??
-        "";
+        selectedLang === "en"
+          ? (c[titleField] ?? c.title_en ?? c.title ?? "")
+          : (c[titleField] ?? "");
       const textValue =
-        c[textField] ??
-        c[`translation_${selectedLang}`] ??
-        (selectedLang === "en"
-          ? (c.translation ?? c.text ?? c.english ?? c.text_en)
-          : (c.text_en ?? c.translation ?? c.text ?? c.english)) ??
-        "";
+        selectedLang === "en"
+          ? (c[textField] ??
+            c.translation_en ??
+            c.text_en ??
+            c.translation ??
+            c.text ??
+            c.english ??
+            "")
+          : (c[textField] ?? c[`translation_${selectedLang}`] ?? "");
 
       rows.push(`
         <tr class="adhkar-editor-row" data-index="${i}">

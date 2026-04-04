@@ -1498,16 +1498,18 @@ class HadithManager extends BaseManager {
       };
 
       const titleValue =
-        c[titleField] ??
-        (selectedLang === "en" ? (c.title ?? c.title_en) : c.title_en) ??
-        "";
+        selectedLang === "en"
+          ? (c[titleField] ?? c.title_en ?? c.title ?? "")
+          : (c[titleField] ?? "");
       const textValue =
-        c[textField] ??
-        c[`translation_${selectedLang}`] ??
-        (selectedLang === "en"
-          ? (c.text ?? c.translation ?? c.text_en)
-          : (c.text_en ?? c.text ?? c.translation)) ??
-        "";
+        selectedLang === "en"
+          ? (c[textField] ??
+            c.translation_en ??
+            c.text_en ??
+            c.text ??
+            c.translation ??
+            "")
+          : (c[textField] ?? c[`translation_${selectedLang}`] ?? "");
 
       rows.push(`
         <tr class="hadith-editor-row" data-index="${i}">
