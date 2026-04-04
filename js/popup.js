@@ -1754,16 +1754,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getPocketQuranCurrentTargetAyah(state = pocketQuranState) {
-    const source = state?.isPlaying === true ? state?.recitationAyah || {} : {};
-    const fallbackSurah = clampNumber(state?.activeSurah, 1, 114, 1);
-    const surah = clampNumber(source.surah, 1, 114, fallbackSurah);
-    const ayah = clampNumber(
-      source.ayah,
+    const activeSurah = clampNumber(state?.activeSurah, 1, 114, 1);
+    const activeAyah = clampNumber(
+      state?.activeAyah,
       1,
-      getPocketQuranSurahMaxAyah(surah),
-      clampNumber(state?.activeAyah, 1, getPocketQuranSurahMaxAyah(surah), 1),
+      getPocketQuranSurahMaxAyah(activeSurah),
+      1,
     );
-    return { surah, ayah };
+
+    const recitationSource =
+      state?.recitationAyah && typeof state.recitationAyah === "object"
+        ? state.recitationAyah
+        : null;
+
+    if (recitationSource) {
+      const surah = clampNumber(recitationSource.surah, 1, 114, activeSurah);
+      const ayah = clampNumber(
+        recitationSource.ayah,
+        1,
+        getPocketQuranSurahMaxAyah(surah),
+        activeAyah,
+      );
+      return { surah, ayah };
+    }
+
+    return { surah: activeSurah, ayah: activeAyah };
   }
 
   function formatPocketQuranAyahLabel(surah, ayah) {

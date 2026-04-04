@@ -3373,21 +3373,27 @@ class PocketQuranManager extends BaseManager {
   async playAyah(surah, ayah, { forceRestart = false } = {}) {
     if (!this._audioElement) return;
 
-    // If same ayah is playing, just resume if paused
-    if (
+    const cacheKey = this.buildRecitationCacheKey(surah, ayah);
+    const expectedCachedSrc = this._audioSrcCache?.get(cacheKey);
+    const currentAudioSrc = String(
+      this._audioElement.currentSrc || this._audioElement.src || "",
+    );
+    const canResumeRequestedAyah =
       !forceRestart &&
       this._playingAyah?.surah === surah &&
       this._playingAyah?.ayah === ayah &&
-      this._audioElement.paused
-    ) {
+      this._audioElement.paused &&
+      Boolean(expectedCachedSrc) &&
+      currentAudioSrc === expectedCachedSrc;
+
+    // If same ayah is playing, just resume if paused
+    if (canResumeRequestedAyah) {
       this.enforceSingleRecitationAudioOwner();
       this._audioElement.play();
       return;
     }
 
     try {
-      const cacheKey = this.buildRecitationCacheKey(surah, ayah);
-
       // If we already preloaded this ayah, swap to that audio element.
       const preloaded = this._preloadedAudios?.get(cacheKey);
       if (preloaded) {
@@ -4348,6 +4354,39 @@ class PocketQuranManager extends BaseManager {
     }
   }
 
+  async primePopupSelectionAudioTarget(surah, ayah) {
+    if (!this._audioElement) return;
+
+    try {
+      this._audioElement.pause();
+      this._audioElement.currentTime = 0;
+    } catch (e) {
+      // no-op
+    }
+
+    this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
+
+    try {
+      this._audioElement.removeAttribute("src");
+      this._audioElement.src = "";
+      this._audioElement.load();
+    } catch (e) {
+      // no-op
+    }
+
+    try {
+      const selectedSrc = await this.getOrFetchAyahAudioSrc(surah, ayah, {
+        timeoutMs: 10000,
+      });
+      if (selectedSrc) {
+        this._audioElement.src = selectedSrc;
+        this._audioElement.load();
+      }
+    } catch (e) {
+      // no-op
+    }
+  }
+
   async applyPopupAyahSelection(surahNumber, ayahNumber) {
     const targetSurah = this.clampNumber(
       surahNumber,
@@ -4378,7 +4417,6 @@ class PocketQuranManager extends BaseManager {
         this._audioElement.ended === false);
 
     this.scrollToAyah(targetAyah, { persist: true, smooth: true });
-    this._playingAyah = { surah: targetSurah, ayah: targetAyah };
 
     if (!this._headerControlsBox) {
       this.showHeaderControls();
@@ -4398,15 +4436,9 @@ class PocketQuranManager extends BaseManager {
       return;
     }
 
-    try {
-      if (this._audioElement) {
-        this._audioElement.pause();
-        this._audioElement.currentTime = 0;
-      }
-    } catch (e) {
-      // no-op
-    }
+    await this.primePopupSelectionAudioTarget(targetSurah, targetAyah);
 
+    this._playingAyah = { surah: targetSurah, ayah: targetAyah };
     this._isPlaying = false;
     this.updatePlaybackUI();
   }
