@@ -8,6 +8,7 @@
 class AdhkarManager extends BaseManager {
   static MAX_SETS = 100;
   static PAGE_SIZE = 20;
+  static DETACHED_PAGE_SIZE = 10;
 
   static NAV_ANIM_MS = 320;
   static SCRIPT_TOGGLE_ANIM_MS = 220;
@@ -179,6 +180,10 @@ class AdhkarManager extends BaseManager {
         titleEl.innerHTML = `${this._getIcon("📚", {
           size: 20,
         })} Select Adhkar Set`;
+      }
+
+      if (this._setModal.classList.contains("active")) {
+        this.renderSetSelectorModal();
       }
     }
   }
@@ -1812,11 +1817,12 @@ class AdhkarManager extends BaseManager {
     }
 
     const total = items.length;
-    const pages = Math.max(1, Math.ceil(total / AdhkarManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = Math.min(Math.max(1, this.settingsPage), pages);
 
-    const start = (this.settingsPage - 1) * AdhkarManager.PAGE_SIZE;
-    const end = Math.min(total, start + AdhkarManager.PAGE_SIZE);
+    const start = (this.settingsPage - 1) * pageSize;
+    const end = Math.min(total, start + pageSize);
 
     if (!items.length) {
       this.settingsList.innerHTML = `
@@ -1981,12 +1987,24 @@ class AdhkarManager extends BaseManager {
     items.forEach((t) => this.autoResizeTextarea(t));
   }
 
+  isSettingsEditorDetached() {
+    const group = document.getElementById("adhkarEditorGroup");
+    return !!group?.closest(".editor-detach-modal.active");
+  }
+
+  getSettingsPageSize() {
+    return this.isSettingsEditorDetached()
+      ? AdhkarManager.DETACHED_PAGE_SIZE
+      : AdhkarManager.PAGE_SIZE;
+  }
+
   renderPagination() {
     if (!this.settingsPagination) return;
 
     const active = this.getActiveSet();
     const total = active?.cards?.length || 0;
-    const pages = Math.max(1, Math.ceil(total / AdhkarManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
 
     if (pages <= 1) {
       this.settingsPagination.innerHTML = "";
@@ -2432,7 +2450,8 @@ class AdhkarManager extends BaseManager {
     this.saveSets(sets);
 
     const total = active.cards.length;
-    const pages = Math.max(1, Math.ceil(total / AdhkarManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = pages;
 
     this.renderSettings();
@@ -2507,7 +2526,7 @@ class AdhkarManager extends BaseManager {
 
     const pages = Math.max(
       1,
-      Math.ceil((active.cards.length || 0) / AdhkarManager.PAGE_SIZE),
+      Math.ceil((active.cards.length || 0) / this.getSettingsPageSize()),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 

@@ -848,7 +848,9 @@ class QuotesManager extends BaseManager {
     this.storage.saveUserQuotes(this.userQuotes);
 
     // Adjust current page if needed
-    const totalPages = Math.ceil(this.userQuotes.length / this.quotesPerPage);
+    const totalPages = Math.ceil(
+      this.userQuotes.length / this.getEditorPageSize(),
+    );
     if (this.currentPage > totalPages && totalPages > 0) {
       this.currentPage = totalPages;
     }
@@ -867,8 +869,9 @@ class QuotesManager extends BaseManager {
    * Get paginated quotes
    */
   getPaginatedQuotes() {
-    const startIndex = (this.currentPage - 1) * this.quotesPerPage;
-    const endIndex = startIndex + this.quotesPerPage;
+    const pageSize = this.getEditorPageSize();
+    const startIndex = (this.currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     return this.userQuotes.slice(startIndex, endIndex);
   }
 
@@ -876,7 +879,16 @@ class QuotesManager extends BaseManager {
    * Get total pages
    */
   getTotalPages() {
-    return Math.ceil(this.userQuotes.length / this.quotesPerPage);
+    return Math.ceil(this.userQuotes.length / this.getEditorPageSize());
+  }
+
+  isEditorDetached() {
+    const group = document.getElementById("quotesEditorGroup");
+    return !!group?.closest(".editor-detach-modal.active");
+  }
+
+  getEditorPageSize() {
+    return this.isEditorDetached() ? 10 : this.quotesPerPage;
   }
 
   /**
@@ -902,8 +914,10 @@ class QuotesManager extends BaseManager {
     const textField = `text_${selectedLang}`;
     const langLabel = selectedLang.toUpperCase();
 
+    const totalPages = Math.max(1, this.getTotalPages());
+    this.currentPage = Math.min(Math.max(1, this.currentPage), totalPages);
+    const pageSize = this.getEditorPageSize();
     const quotes = this.getPaginatedQuotes();
-    const totalPages = this.getTotalPages();
 
     // Clear container
     this.quotesListContainer.innerHTML = "";
@@ -919,8 +933,7 @@ class QuotesManager extends BaseManager {
     } else {
       const rows = quotes
         .map((quote, index) => {
-          const globalIndex =
-            (this.currentPage - 1) * this.quotesPerPage + index + 1;
+          const globalIndex = (this.currentPage - 1) * pageSize + index + 1;
           const localizedText = this.getQuoteLocalizedText(quote, selectedLang);
           const quoteLang = this.getQuoteLanguageCode(quote);
           const isArabic = quoteLang === "ar";

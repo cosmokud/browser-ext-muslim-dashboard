@@ -8,6 +8,7 @@
 class HadithManager extends BaseManager {
   static MAX_SETS = 100;
   static PAGE_SIZE = 20;
+  static DETACHED_PAGE_SIZE = 10;
 
   static NAV_ANIM_MS = 320;
   static FONT_SCALE_MIN = 0.5;
@@ -146,6 +147,10 @@ class HadithManager extends BaseManager {
       );
       if (titleIcon) {
         titleIcon.innerHTML = this._getIcon("📚", { size: 20 });
+      }
+
+      if (this._setModal.classList.contains("active")) {
+        this.renderSetSelectorModal();
       }
     }
   }
@@ -1465,11 +1470,12 @@ class HadithManager extends BaseManager {
     }
 
     const total = items.length;
-    const pages = Math.max(1, Math.ceil(total / HadithManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = Math.min(Math.max(1, this.settingsPage), pages);
 
-    const start = (this.settingsPage - 1) * HadithManager.PAGE_SIZE;
-    const end = Math.min(total, start + HadithManager.PAGE_SIZE);
+    const start = (this.settingsPage - 1) * pageSize;
+    const end = Math.min(total, start + pageSize);
 
     if (!items.length) {
       this.settingsList.innerHTML = `
@@ -1605,12 +1611,24 @@ class HadithManager extends BaseManager {
     items.forEach((t) => this.autoResizeTextarea(t));
   }
 
+  isSettingsEditorDetached() {
+    const group = document.getElementById("hadithEditorGroup");
+    return !!group?.closest(".editor-detach-modal.active");
+  }
+
+  getSettingsPageSize() {
+    return this.isSettingsEditorDetached()
+      ? HadithManager.DETACHED_PAGE_SIZE
+      : HadithManager.PAGE_SIZE;
+  }
+
   renderPagination() {
     if (!this.settingsPagination) return;
 
     const active = this.getActiveSet();
     const total = active?.cards?.length || 0;
-    const pages = Math.max(1, Math.ceil(total / HadithManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
 
     if (pages <= 1) {
       this.settingsPagination.innerHTML = "";
@@ -1910,7 +1928,8 @@ class HadithManager extends BaseManager {
     this.saveSets(sets);
 
     const total = items.length;
-    const pages = Math.max(1, Math.ceil(total / HadithManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = pages;
 
     this.renderSettings();
@@ -1940,7 +1959,7 @@ class HadithManager extends BaseManager {
 
     const pages = Math.max(
       1,
-      Math.ceil(items.length / HadithManager.PAGE_SIZE),
+      Math.ceil(items.length / this.getSettingsPageSize()),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 
@@ -2181,7 +2200,10 @@ class HadithManager extends BaseManager {
               ${this.escapeHtmlAttr(set.name || "Unnamed")}
               ${
                 locked
-                  ? '<span class="adhkar-set-item-lock" title="Protected">🔒</span>'
+                  ? `<span class="adhkar-set-item-lock" title="Default set — read only">${this._getIcon(
+                      "🔒",
+                      { size: 14 },
+                    )}</span>`
                   : ""
               }
             </div>

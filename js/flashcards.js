@@ -8,6 +8,7 @@
 class FlashcardManager extends BaseManager {
   static MAX_SETS = 100;
   static PAGE_SIZE = 20;
+  static DETACHED_PAGE_SIZE = 10;
 
   static FLIP_ANIM_MS = 320;
   static NAV_ANIM_MS = 320;
@@ -144,6 +145,7 @@ class FlashcardManager extends BaseManager {
       this.applyAutoAdvanceUI();
       this.applyModeToDashboard();
       this._updateSetSelectorButton();
+      this._updateSetModalIcons();
     });
   }
 
@@ -1288,11 +1290,12 @@ class FlashcardManager extends BaseManager {
     }
 
     const total = cards.length;
-    const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = Math.min(Math.max(1, this.settingsPage), pages);
 
-    const start = (this.settingsPage - 1) * FlashcardManager.PAGE_SIZE;
-    const end = Math.min(total, start + FlashcardManager.PAGE_SIZE);
+    const start = (this.settingsPage - 1) * pageSize;
+    const end = Math.min(total, start + pageSize);
 
     if (!cards.length) {
       this.settingsList.innerHTML = `
@@ -1641,12 +1644,24 @@ class FlashcardManager extends BaseManager {
     return Math.max(min, Math.min(max, value));
   }
 
+  isSettingsEditorDetached() {
+    const group = document.getElementById("flashcardsEditorGroup");
+    return !!group?.closest(".editor-detach-modal.active");
+  }
+
+  getSettingsPageSize() {
+    return this.isSettingsEditorDetached()
+      ? FlashcardManager.DETACHED_PAGE_SIZE
+      : FlashcardManager.PAGE_SIZE;
+  }
+
   renderPagination() {
     if (!this.settingsPagination) return;
 
     const active = this.getActiveSet();
     const total = active?.cards?.length || 0;
-    const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
 
     if (pages <= 1) {
       this.settingsPagination.innerHTML = "";
@@ -1963,7 +1978,8 @@ class FlashcardManager extends BaseManager {
     this.saveSets(sets);
 
     const total = active.cards.length;
-    const pages = Math.max(1, Math.ceil(total / FlashcardManager.PAGE_SIZE));
+    const pageSize = this.getSettingsPageSize();
+    const pages = Math.max(1, Math.ceil(total / pageSize));
     this.settingsPage = pages;
 
     this.renderSettings();
@@ -2011,7 +2027,7 @@ class FlashcardManager extends BaseManager {
     // Keep page in range
     const pages = Math.max(
       1,
-      Math.ceil((active.cards.length || 0) / FlashcardManager.PAGE_SIZE),
+      Math.ceil((active.cards.length || 0) / this.getSettingsPageSize()),
     );
     this.settingsPage = Math.min(this.settingsPage, pages);
 
@@ -2323,6 +2339,21 @@ class FlashcardManager extends BaseManager {
     const btn = this.cardEl?.querySelector(".flashcard-set-selector-btn");
     if (btn) {
       btn.innerHTML = this._getIcon("📚", { size: 18 });
+    }
+  }
+
+  _updateSetModalIcons() {
+    if (!this._setModal) return;
+
+    const titleEl = this._setModal.querySelector(".flashcard-set-modal-title");
+    if (titleEl) {
+      titleEl.innerHTML = `${this._getIcon("📚", {
+        size: 20,
+      })} Select Flashcard Set`;
+    }
+
+    if (this._setModal.classList.contains("active")) {
+      this.renderSetSelectorModal();
     }
   }
 

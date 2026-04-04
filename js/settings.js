@@ -222,6 +222,7 @@ class SettingsManager extends BaseManager {
     this._detachedEditorViewportRaf = 0;
     this._detachedEditorMutationObserver = null;
     this._detachedEditorRefreshTimer = null;
+    this._detachedEditorRefreshNeedsWidth = false;
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -6099,6 +6100,7 @@ class SettingsManager extends BaseManager {
         groupId: "quotesEditorGroup",
         title: "Quotes Editor",
         onBeforeOpen: () => this.quotes?.renderQuotesList?.(),
+        onAfterOpen: () => this.quotes?.renderQuotesList?.(),
         onAfterClose: () => this.quotes?.renderQuotesList?.(),
       },
       {
@@ -6106,6 +6108,7 @@ class SettingsManager extends BaseManager {
         groupId: "flashcardsEditorGroup",
         title: "Flashcards Editor",
         onBeforeOpen: () => this.flashcards?.renderSettings?.(),
+        onAfterOpen: () => this.flashcards?.renderSettings?.(),
         onAfterClose: () => this.flashcards?.renderSettings?.(),
       },
       {
@@ -6113,6 +6116,7 @@ class SettingsManager extends BaseManager {
         groupId: "hadithEditorGroup",
         title: "Hadith Editor",
         onBeforeOpen: () => this.hadith?.renderSettings?.(),
+        onAfterOpen: () => this.hadith?.renderSettings?.(),
         onAfterClose: () => this.hadith?.renderSettings?.(),
       },
       {
@@ -6120,6 +6124,7 @@ class SettingsManager extends BaseManager {
         groupId: "adhkarEditorGroup",
         title: "Adhkar Editor",
         onBeforeOpen: () => this.adhkar?.renderSettings?.(),
+        onAfterOpen: () => this.adhkar?.renderSettings?.(),
         onAfterClose: () => this.adhkar?.renderSettings?.(),
       },
     ];
@@ -6237,6 +6242,14 @@ class SettingsManager extends BaseManager {
       resizeCleanup: null,
     };
 
+    if (typeof config.onAfterOpen === "function") {
+      try {
+        config.onAfterOpen();
+      } catch (e) {
+        // ignore
+      }
+    }
+
     this.applyDetachedEditorModalInitialWidth();
     this.refreshDetachedEditorColumnResize();
     this.bindDetachedEditorViewportRefresh();
@@ -6305,15 +6318,23 @@ class SettingsManager extends BaseManager {
     state.resizeCleanup = this.enableDetachedEditorColumnResize(state.group);
   }
 
-  scheduleDetachedEditorLayoutRefresh() {
+  scheduleDetachedEditorLayoutRefresh({ includeWidth = false } = {}) {
     if (!this._detachedEditorState) return;
+    if (includeWidth) {
+      this._detachedEditorRefreshNeedsWidth = true;
+    }
     if (this._detachedEditorRefreshTimer) return;
 
     this._detachedEditorRefreshTimer = setTimeout(() => {
       this._detachedEditorRefreshTimer = null;
       if (!this._detachedEditorState) return;
 
-      this.applyDetachedEditorModalInitialWidth();
+      const shouldRefreshWidth = this._detachedEditorRefreshNeedsWidth;
+      this._detachedEditorRefreshNeedsWidth = false;
+
+      if (shouldRefreshWidth) {
+        this.applyDetachedEditorModalInitialWidth();
+      }
       this.refreshDetachedEditorColumnResize();
     }, 0);
   }
@@ -6333,7 +6354,7 @@ class SettingsManager extends BaseManager {
 
       this._detachedEditorViewportRaf = window.requestAnimationFrame(() => {
         this._detachedEditorViewportRaf = 0;
-        this.scheduleDetachedEditorLayoutRefresh();
+        this.scheduleDetachedEditorLayoutRefresh({ includeWidth: true });
       });
     };
 
@@ -6385,7 +6406,7 @@ class SettingsManager extends BaseManager {
       });
 
       if (!hasRelevantStructureChange) return;
-      this.scheduleDetachedEditorLayoutRefresh();
+      this.scheduleDetachedEditorLayoutRefresh({ includeWidth: false });
     });
 
     this._detachedEditorMutationObserver.observe(state.group, {
@@ -6685,6 +6706,7 @@ class SettingsManager extends BaseManager {
       clearTimeout(this._detachedEditorRefreshTimer);
       this._detachedEditorRefreshTimer = null;
     }
+    this._detachedEditorRefreshNeedsWidth = false;
 
     if (this._detachedEditorViewportRaf) {
       window.cancelAnimationFrame(this._detachedEditorViewportRaf);
