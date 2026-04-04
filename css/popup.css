@@ -525,8 +525,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   font-size: var(--popup-pq-arabic-size, 2rem);
   line-height: 1.95;
   color: var(--text-primary);
-  max-height: 148px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .popup-pq-ayah-translation {
@@ -534,8 +534,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   font-size: var(--popup-pq-translation-size, 1.05rem);
   line-height: 1.58;
   color: var(--text-secondary);
-  max-height: 124px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .popup-pq-selector-stack {
