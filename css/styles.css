@@ -278,13 +278,13 @@ html[data-performance-mode="true"]
 
 /* Dashboard quality: when Highest Visual Fidelity is disabled, keep visuals
    readable while removing the most expensive legacy animation stack. */
-html[data-highest-visual-fidelity="false"]:not(
-    [data-performance-mode="true"]
-  )
+html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   :is(
     .support-kofi-card::before,
     .support-feedback-card::before,
     .fasting-bar__fill,
+    .fasting-subtitle--recommendation,
+    .fasting-subtitle--forbidden,
     .pq-skeleton-shimmer::after,
     .location-display .location-icon,
     .weather-icon.weather-anim-sunny,
@@ -299,17 +299,13 @@ html[data-highest-visual-fidelity="false"]:not(
   animation: none !important;
 }
 
-html[data-highest-visual-fidelity="false"]:not(
-    [data-performance-mode="true"]
-  )
+html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   .pq-book-blur {
   -webkit-filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
   filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
 }
 
-html[data-highest-visual-fidelity="false"]:not(
-    [data-performance-mode="true"]
-  )
+html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   body.moment-mode
   .moment-mode-layout
   :is(
@@ -14974,7 +14970,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 80px;
   height: 4px;
   appearance: none;
-  background: var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-full);
   outline: none;
   cursor: pointer;

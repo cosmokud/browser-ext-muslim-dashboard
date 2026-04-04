@@ -2491,13 +2491,20 @@ class MuslimDashboard {
     let visibilityChanged = false;
     const setVisibility = (el, shouldHide) => {
       if (!el) return;
-      const nextDisplay = shouldHide ? "none" : "";
+      const currentDisplay = el.style.getPropertyValue("display");
+      const currentDisplayPriority = el.style.getPropertyPriority("display");
       const nextAria = shouldHide ? "true" : "false";
 
-      if (el.style.display !== nextDisplay) {
-        el.style.display = nextDisplay;
+      if (shouldHide) {
+        if (currentDisplay !== "none" || currentDisplayPriority !== "important") {
+          el.style.setProperty("display", "none", "important");
+          visibilityChanged = true;
+        }
+      } else if (currentDisplay) {
+        el.style.removeProperty("display");
         visibilityChanged = true;
       }
+
       if (el.getAttribute("aria-hidden") !== nextAria) {
         el.setAttribute("aria-hidden", nextAria);
         visibilityChanged = true;

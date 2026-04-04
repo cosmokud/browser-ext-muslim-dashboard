@@ -8124,7 +8124,13 @@ class SettingsManager extends BaseManager {
     const applyLiveDashboardVisibility = () => {
       const setPreviewVisibility = (el, shouldShow) => {
         if (!el) return;
-        el.style.display = shouldShow ? "" : "none";
+        if (shouldShow) {
+          if (el.style.getPropertyValue("display")) {
+            el.style.removeProperty("display");
+          }
+        } else {
+          el.style.setProperty("display", "none", "important");
+        }
         el.setAttribute("aria-hidden", shouldShow ? "false" : "true");
       };
 
