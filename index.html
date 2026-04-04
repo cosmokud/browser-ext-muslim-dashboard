@@ -2336,11 +2336,12 @@
             <button class="settings-tab" data-tab="prayer">
               🕌 Prayer Times
             </button>
-            <button class="settings-tab" data-tab="heading">🕐 Header</button>
-            <button class="settings-tab" data-tab="visibility">
-              🧩 Components
+            <button class="settings-tab" data-tab="fasting">
+              🥗 Fasting Times
             </button>
-            <button class="settings-tab" data-tab="moment">🕰️ Moment</button>
+            <button class="settings-tab" data-tab="pocketQuran">
+              📖 Pocket Quran
+            </button>
             <button class="settings-tab" data-tab="pinnedApps">
               📌 Pinned Apps
             </button>
@@ -2348,25 +2349,25 @@
               🔎 Search Bar
             </button>
             <button class="settings-tab" data-tab="weather">🌤️ Weather</button>
-            <button class="settings-tab" data-tab="fasting">
-              🥗 Fasting Times
-            </button>
+            <button class="settings-tab" data-tab="notes">📝 Notes</button>
             <button class="settings-tab" data-tab="quotes">💬 Quotes</button>
             <button class="settings-tab" data-tab="flashcards">
               📇 Flashcards
             </button>
             <button class="settings-tab" data-tab="hadith">📜 Hadith</button>
             <button class="settings-tab" data-tab="adhkar">📃 Adhkar</button>
-            <button class="settings-tab" data-tab="notes">📝 Notes</button>
-            <button class="settings-tab" data-tab="pocketQuran">
-              📖 Pocket Quran
-            </button>
             <button class="settings-tab" data-tab="background">
               🖼️ Background
             </button>
+            <button class="settings-tab" data-tab="heading">🕐 Header</button>
+            <button class="settings-tab" data-tab="visibility">
+              🧩 Components
+            </button>
+            <button class="settings-tab" data-tab="moment">🕰️ Moment</button>
             <button class="settings-tab" data-tab="themes">🎨 Themes</button>
             <button class="settings-tab" data-tab="credits">✨ Credits</button>
             <button class="settings-tab" data-tab="support">💝 Support</button>
+            <button class="settings-tab" data-tab="general">⚙️ General</button>
             <button
               class="settings-tab hidden"
               data-tab="debug"
@@ -2375,7 +2376,6 @@
             >
               🐞 Debug
             </button>
-            <button class="settings-tab" data-tab="general">⚙️ General</button>
           </div>
 
           <!-- Location Settings -->
@@ -3670,11 +3670,7 @@
                 </label>
 
                 <label class="style-option">
-                  <input
-                    type="radio"
-                    name="clockStyle"
-                    value="minute-focus"
-                  />
+                  <input type="radio" name="clockStyle" value="minute-focus" />
                   <div class="style-preview clock-preview-minute-focus">
                     <span class="preview-hours">14</span>
                     <span class="preview-colon">:</span>
@@ -3694,11 +3690,7 @@
                 </label>
 
                 <label class="style-option">
-                  <input
-                    type="radio"
-                    name="clockStyle"
-                    value="split-capsule"
-                  />
+                  <input type="radio" name="clockStyle" value="split-capsule" />
                   <div class="style-preview clock-preview-split-capsule">
                     <span class="preview-hours">14</span>
                     <span class="preview-minutes">30</span>
@@ -3943,11 +3935,7 @@
                     Floating
                   </button>
                   <label class="visibility-toggle-control">
-                    <input
-                      type="checkbox"
-                      id="visibilityLunarPhase"
-                      checked
-                    />
+                    <input type="checkbox" id="visibilityLunarPhase" checked />
                     <span class="toggle-switch"></span>
                   </label>
                 </div>
@@ -4577,7 +4565,10 @@
               <p class="setting-hint">
                 Edit quote text and source directly in the table below.
               </p>
-              <div class="flashcards-editor user-quotes-list" id="userQuotesList">
+              <div
+                class="flashcards-editor user-quotes-list"
+                id="userQuotesList"
+              >
                 <!-- Quotes table will be dynamically generated -->
               </div>
               <div class="flashcards-editor-footer">
