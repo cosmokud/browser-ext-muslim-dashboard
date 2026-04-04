@@ -403,6 +403,13 @@ class StorageManager {
         },
       },
 
+      pocketQuranPopup: {
+        arabicFontSize: 40,
+        arabicFontFamily: "KFGQPC Uthman Taha Naskh",
+        translationFontSize: 18,
+        translationFontFamily: "Poppins",
+      },
+
       // Debug settings (visible only when ENABLE_DEBUG_MODE is true)
       debug: {
         simulatedDateEnabled: false,

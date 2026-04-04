@@ -5085,6 +5085,103 @@
             </div>
 
             <div class="setting-group">
+              <label class="setting-label">Popup Quran Typography</label>
+              <p class="setting-hint">
+                These settings only affect the browser popup Quran player.
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <label
+                class="setting-label"
+                for="pocketQuranPopupArabicFontFamily"
+                >Popup Arabic Font Family</label
+              >
+              <p class="setting-hint">
+                Choose the Arabic font used in popup mode.
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranPopupArabicFontFamily"
+              >
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="KFGQPC Uthman Taha Naskh" selected>
+                  KFGQPC Uthman Taha Naskh
+                </option>
+                <option value="KFGQPC KSA Regular">KFGQPC KSA Regular</option>
+                <option value="KFGQPC Kufi Stylistic Regular">
+                  KFGQPC Kufi Stylistic Regular
+                </option>
+                <option value="KFGQPC AN Regular">KFGQPC AN Regular</option>
+                <option value="KFGQPC AlJalil Dot">KFGQPC AlJalil Dot</option>
+                <option value="KFGQPC Sindhi Naskh Regular">
+                  KFGQPC Sindhi Naskh Regular
+                </option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <label
+                class="setting-label"
+                for="pocketQuranPopupTranslationFontFamily"
+                >Popup Translation Font Family</label
+              >
+              <p class="setting-hint">
+                Choose the translation font used in popup mode.
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranPopupTranslationFontFamily"
+              >
+                <option value="Poppins" selected>Poppins</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Popup Arabic Text Size</label>
+              <p class="setting-hint">Adjust popup Arabic ayah size only.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranPopupArabicSize"
+                  min="8"
+                  max="144"
+                  value="40"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranPopupArabicSizeSettingValue"
+                  >40px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Popup Translation Text Size</label>
+              <p class="setting-hint">Adjust popup translation size only.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranPopupTranslationSize"
+                  min="8"
+                  max="144"
+                  value="18"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranPopupTranslationSizeSettingValue"
+                  >18px</span
+                >
+              </div>
+            </div>
+
+            <div class="setting-group">
               <label class="setting-label">Translation</label>
               <p class="setting-hint">
                 Select a translation (provided by quran.com).

@@ -61,6 +61,26 @@ class SettingsManager extends BaseManager {
     "Courier New",
   ];
 
+  static POCKET_QURAN_ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
+
+  static POCKET_QURAN_POPUP_TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
+
   constructor(
     storage,
     prayerTimes,
@@ -640,6 +660,24 @@ class SettingsManager extends BaseManager {
     );
     this.pocketQuranTranslationSizeValue = document.getElementById(
       "pocketQuranTranslationSizeSettingValue",
+    );
+    this.pocketQuranPopupArabicSize = document.getElementById(
+      "pocketQuranPopupArabicSize",
+    );
+    this.pocketQuranPopupArabicSizeValue = document.getElementById(
+      "pocketQuranPopupArabicSizeSettingValue",
+    );
+    this.pocketQuranPopupTranslationSize = document.getElementById(
+      "pocketQuranPopupTranslationSize",
+    );
+    this.pocketQuranPopupTranslationSizeValue = document.getElementById(
+      "pocketQuranPopupTranslationSizeSettingValue",
+    );
+    this.pocketQuranPopupArabicFontFamily = document.getElementById(
+      "pocketQuranPopupArabicFontFamily",
+    );
+    this.pocketQuranPopupTranslationFontFamily = document.getElementById(
+      "pocketQuranPopupTranslationFontFamily",
     );
     this.pocketQuranTranslationPickerBtn = document.getElementById(
       "pocketQuranTranslationPickerBtn",
@@ -1243,6 +1281,7 @@ class SettingsManager extends BaseManager {
 
     // Pocket Quran settings
     const pq = settings.pocketQuran || {};
+    const pqPopup = settings.pocketQuranPopup || {};
 
     if (this.pocketQuranArabicSize) {
       const clamped = this.clampNumber(pq.arabicFontSize, 8, 144, 40);
@@ -1254,6 +1293,42 @@ class SettingsManager extends BaseManager {
       const clamped = this.clampNumber(pq.translationFontSize, 8, 144, 18);
       this.pocketQuranTranslationSize.value = String(clamped);
       this.updatePocketQuranTranslationSizeLabel();
+    }
+
+    if (this.pocketQuranPopupArabicSize) {
+      const clamped = this.clampNumber(
+        pqPopup.arabicFontSize,
+        8,
+        144,
+        this.clampNumber(pq.arabicFontSize, 8, 144, 40),
+      );
+      this.pocketQuranPopupArabicSize.value = String(clamped);
+      this.updatePocketQuranPopupArabicSizeLabel();
+    }
+
+    if (this.pocketQuranPopupTranslationSize) {
+      const clamped = this.clampNumber(
+        pqPopup.translationFontSize,
+        8,
+        144,
+        this.clampNumber(pq.translationFontSize, 8, 144, 18),
+      );
+      this.pocketQuranPopupTranslationSize.value = String(clamped);
+      this.updatePocketQuranPopupTranslationSizeLabel();
+    }
+
+    if (this.pocketQuranPopupArabicFontFamily) {
+      this.pocketQuranPopupArabicFontFamily.value =
+        this.normalizePocketQuranArabicFontFamily(
+          pqPopup.arabicFontFamily || pq.arabicFontFamily,
+        );
+    }
+
+    if (this.pocketQuranPopupTranslationFontFamily) {
+      this.pocketQuranPopupTranslationFontFamily.value =
+        this.normalizePocketQuranPopupTranslationFontFamily(
+          pqPopup.translationFontFamily,
+        );
     }
 
     if (this.pocketQuranTranslationSelect) {
@@ -1471,6 +1546,42 @@ class SettingsManager extends BaseManager {
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
+  }
+
+  updatePocketQuranPopupArabicSizeLabel() {
+    if (
+      !this.pocketQuranPopupArabicSize ||
+      !this.pocketQuranPopupArabicSizeValue
+    )
+      return;
+
+    const clamped = this.clampNumber(
+      parseInt(this.pocketQuranPopupArabicSize.value, 10),
+      8,
+      144,
+      40,
+    );
+
+    this.pocketQuranPopupArabicSize.value = String(clamped);
+    this.pocketQuranPopupArabicSizeValue.textContent = `${clamped}px`;
+  }
+
+  updatePocketQuranPopupTranslationSizeLabel() {
+    if (
+      !this.pocketQuranPopupTranslationSize ||
+      !this.pocketQuranPopupTranslationSizeValue
+    )
+      return;
+
+    const clamped = this.clampNumber(
+      parseInt(this.pocketQuranPopupTranslationSize.value, 10),
+      8,
+      144,
+      18,
+    );
+
+    this.pocketQuranPopupTranslationSize.value = String(clamped);
+    this.pocketQuranPopupTranslationSizeValue.textContent = `${clamped}px`;
   }
 
   updateRangeProgress(rangeEl) {
@@ -5337,6 +5448,43 @@ class SettingsManager extends BaseManager {
           : "opaque",
     };
 
+    const existingPocketQuranPopup =
+      settings.pocketQuranPopup && typeof settings.pocketQuranPopup === "object"
+        ? settings.pocketQuranPopup
+        : {};
+
+    settings.pocketQuranPopup = {
+      ...existingPocketQuranPopup,
+      arabicFontSize: this.clampNumber(
+        parseInt(this.pocketQuranPopupArabicSize?.value, 10),
+        8,
+        144,
+        existingPocketQuranPopup.arabicFontSize ??
+          existingPocketQuran.arabicFontSize ??
+          40,
+      ),
+      translationFontSize: this.clampNumber(
+        parseInt(this.pocketQuranPopupTranslationSize?.value, 10),
+        8,
+        144,
+        existingPocketQuranPopup.translationFontSize ??
+          existingPocketQuran.translationFontSize ??
+          18,
+      ),
+      arabicFontFamily: this.normalizePocketQuranArabicFontFamily(
+        this.pocketQuranPopupArabicFontFamily?.value ||
+          existingPocketQuranPopup.arabicFontFamily ||
+          existingPocketQuran.arabicFontFamily ||
+          "KFGQPC Uthman Taha Naskh",
+      ),
+      translationFontFamily:
+        this.normalizePocketQuranPopupTranslationFontFamily(
+          this.pocketQuranPopupTranslationFontFamily?.value ||
+            existingPocketQuranPopup.translationFontFamily ||
+            "Poppins",
+        ),
+    };
+
     settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(
       this.notesCardFontFamily?.value || settings.notesCardFontFamily,
     );
@@ -7338,6 +7486,28 @@ class SettingsManager extends BaseManager {
     scheduleHide(2500);
   }
 
+  normalizePocketQuranArabicFontFamily(value) {
+    const normalized = String(value || "").trim();
+    if (
+      SettingsManager.POCKET_QURAN_ARABIC_FONT_FAMILIES.includes(normalized)
+    ) {
+      return normalized;
+    }
+    return "KFGQPC Uthman Taha Naskh";
+  }
+
+  normalizePocketQuranPopupTranslationFontFamily(value) {
+    const normalized = String(value || "").trim();
+    if (
+      SettingsManager.POCKET_QURAN_POPUP_TRANSLATION_FONT_FAMILIES.includes(
+        normalized,
+      )
+    ) {
+      return normalized;
+    }
+    return "Poppins";
+  }
+
   normalizeNotesCardFontFamily(value) {
     const normalized = String(value || "").trim();
     if (SettingsManager.NOTES_CARD_FONT_FAMILIES.includes(normalized)) {
@@ -7830,6 +8000,16 @@ class SettingsManager extends BaseManager {
     if (this.pocketQuranTranslationSize) {
       this.pocketQuranTranslationSize.addEventListener("input", () => {
         this.updatePocketQuranTranslationSizeLabel();
+      });
+    }
+    if (this.pocketQuranPopupArabicSize) {
+      this.pocketQuranPopupArabicSize.addEventListener("input", () => {
+        this.updatePocketQuranPopupArabicSizeLabel();
+      });
+    }
+    if (this.pocketQuranPopupTranslationSize) {
+      this.pocketQuranPopupTranslationSize.addEventListener("input", () => {
+        this.updatePocketQuranPopupTranslationSizeLabel();
       });
     }
 

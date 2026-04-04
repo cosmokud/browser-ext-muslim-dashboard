@@ -342,9 +342,6 @@
               <span class="card-icon">📖</span>
               Pocket Quran
             </h2>
-            <span class="popup-pq-playback-state" id="popupPqPlaybackState"
-              >Paused</span
-            >
           </div>
 
           <div
@@ -361,7 +358,13 @@
                 aria-label="Choose surah and ayah"
                 >Loading ayah…</span
               >
-              <span class="pq-recitation-reciter" id="popupPqRecitationReciter"
+              <span
+                class="pq-recitation-reciter"
+                id="popupPqRecitationReciter"
+                role="button"
+                tabindex="0"
+                title="Choose reciter"
+                aria-label="Choose reciter"
                 >Loading reciter…</span
               >
             </div>
@@ -501,6 +504,93 @@
             </div>
           </div>
 
+          <div
+            class="pocket-quran-size-controls popup-pq-size-controls"
+            aria-label="Popup Quran text size"
+          >
+            <div class="pocket-quran-size-control popup-pq-size-control">
+              <label
+                class="pocket-quran-control-label"
+                for="popupPqArabicSizeRange"
+                >Arabic</label
+              >
+              <div class="pocket-quran-size-stepper">
+                <button
+                  type="button"
+                  class="pocket-quran-size-step-btn"
+                  id="popupPqArabicSizeDecreaseBtn"
+                  aria-label="Decrease Arabic text size"
+                  title="Decrease Arabic text size"
+                >
+                  -
+                </button>
+                <input
+                  class="pocket-quran-size-range"
+                  id="popupPqArabicSizeRange"
+                  type="range"
+                  min="8"
+                  max="144"
+                  value="40"
+                  aria-label="Arabic text size"
+                />
+                <button
+                  type="button"
+                  class="pocket-quran-size-step-btn"
+                  id="popupPqArabicSizeIncreaseBtn"
+                  aria-label="Increase Arabic text size"
+                  title="Increase Arabic text size"
+                >
+                  +
+                </button>
+              </div>
+              <span class="pocket-quran-size-value" id="popupPqArabicSizeValue"
+                >40px</span
+              >
+            </div>
+
+            <div class="pocket-quran-size-control popup-pq-size-control">
+              <label
+                class="pocket-quran-control-label"
+                for="popupPqTranslationSizeRange"
+                >Translation</label
+              >
+              <div class="pocket-quran-size-stepper">
+                <button
+                  type="button"
+                  class="pocket-quran-size-step-btn"
+                  id="popupPqTranslationSizeDecreaseBtn"
+                  aria-label="Decrease translation text size"
+                  title="Decrease translation text size"
+                >
+                  -
+                </button>
+                <input
+                  class="pocket-quran-size-range"
+                  id="popupPqTranslationSizeRange"
+                  type="range"
+                  min="8"
+                  max="144"
+                  value="18"
+                  aria-label="Translation text size"
+                />
+                <button
+                  type="button"
+                  class="pocket-quran-size-step-btn"
+                  id="popupPqTranslationSizeIncreaseBtn"
+                  aria-label="Increase translation text size"
+                  title="Increase translation text size"
+                >
+                  +
+                </button>
+              </div>
+              <span
+                class="pocket-quran-size-value"
+                id="popupPqTranslationSizeValue"
+                >18px</span
+              >
+            </div>
+          </div>
+
           <div class="popup-pq-ayah-snippet" id="popupPqAyahSnippet">
             <div class="popup-pq-ayah-arabic" id="popupPqAyahArabic">
               Loading current ayah...
@@ -509,92 +599,118 @@
               Loading translation...
             </div>
           </div>
+
+          <div class="popup-pq-selector-stack">
+            <section
+              class="popup-pq-embedded-panel"
+              id="popupPqAyahPanel"
+              hidden
+            >
+              <div class="popup-pq-embedded-panel-header">
+                <h3 class="popup-pq-embedded-panel-title">
+                  Select Surah and Ayah
+                </h3>
+                <button
+                  type="button"
+                  class="popup-pq-embedded-panel-close"
+                  id="popupPqAyahPanelClose"
+                  aria-label="Close Surah and Ayah selector"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="popup-pq-embedded-panel-body">
+                <div class="popup-pq-modal-section">
+                  <label
+                    class="popup-pq-modal-label"
+                    for="popupPqSurahSearchInput"
+                    >Search Surah</label
+                  >
+                  <input
+                    class="popup-pq-modal-search"
+                    id="popupPqSurahSearchInput"
+                    type="search"
+                    placeholder="Search by number, English, or Arabic name"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+
+                <div class="popup-pq-modal-section">
+                  <label class="popup-pq-modal-label" for="popupPqSurahList"
+                    >Surah</label
+                  >
+                  <div
+                    class="popup-pq-surah-list-wrap"
+                    id="popupPqSurahListWrap"
+                  >
+                    <div
+                      class="pocket-quran-dropdown-list popup-pq-surah-list"
+                      id="popupPqSurahList"
+                    ></div>
+                    <div
+                      class="pocket-quran-dropdown popup-pq-ayah-popover"
+                      id="popupPqAyahPopover"
+                      role="listbox"
+                      aria-label="Ayah list"
+                      hidden
+                    >
+                      <div
+                        class="pocket-quran-dropdown-list popup-pq-ayah-list"
+                        id="popupPqAyahList"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="popup-pq-embedded-panel"
+              id="popupPqReciterPanel"
+              hidden
+            >
+              <div class="popup-pq-embedded-panel-header">
+                <h3 class="popup-pq-embedded-panel-title">Select Reciter</h3>
+                <button
+                  type="button"
+                  class="popup-pq-embedded-panel-close"
+                  id="popupPqReciterPanelClose"
+                  aria-label="Close reciter selector"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="popup-pq-embedded-panel-body">
+                <div class="popup-pq-modal-section">
+                  <label
+                    class="popup-pq-modal-label"
+                    for="popupPqReciterSearchInput"
+                    >Search Reciter</label
+                  >
+                  <input
+                    class="popup-pq-modal-search"
+                    id="popupPqReciterSearchInput"
+                    type="search"
+                    placeholder="Search by name or style"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+                <div class="popup-pq-modal-section">
+                  <div
+                    class="pq-translation-items popup-pq-reciter-list"
+                    id="popupPqReciterList"
+                  ></div>
+                </div>
+              </div>
+            </section>
+          </div>
         </section>
       </section>
     </main>
-
-    <div
-      class="popup-pq-modal-overlay"
-      id="popupPqAyahModal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="popupPqAyahModalTitle"
-      hidden
-    >
-      <div class="popup-pq-modal-content">
-        <div class="popup-pq-modal-header">
-          <h2 class="popup-pq-modal-title" id="popupPqAyahModalTitle">
-            Select Surah and Ayah
-          </h2>
-          <button
-            type="button"
-            class="popup-pq-modal-close"
-            id="popupPqAyahModalClose"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-
-        <div class="popup-pq-modal-body">
-          <div class="popup-pq-modal-section">
-            <label class="popup-pq-modal-label" for="popupPqSurahSearchInput"
-              >Search Surah</label
-            >
-            <input
-              class="popup-pq-modal-search"
-              id="popupPqSurahSearchInput"
-              type="search"
-              placeholder="Search by number, English, or Arabic name"
-              autocomplete="off"
-              spellcheck="false"
-            />
-          </div>
-
-          <div class="popup-pq-modal-section">
-            <label class="popup-pq-modal-label" for="popupPqSurahSelect"
-              >Surah</label
-            >
-            <select
-              class="popup-pq-modal-select"
-              id="popupPqSurahSelect"
-              size="8"
-              aria-label="Surah picker"
-            ></select>
-          </div>
-
-          <div class="popup-pq-modal-section" id="popupPqAyahSelectWrap" hidden>
-            <label class="popup-pq-modal-label" for="popupPqAyahSelect"
-              >Ayah</label
-            >
-            <select
-              class="popup-pq-modal-select popup-pq-ayah-select"
-              id="popupPqAyahSelect"
-              size="10"
-              aria-label="Ayah picker"
-            ></select>
-          </div>
-        </div>
-
-        <div class="popup-pq-modal-actions">
-          <button
-            type="button"
-            class="popup-pq-modal-btn"
-            id="popupPqAyahCancelBtn"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="popup-pq-modal-btn popup-pq-modal-btn-primary"
-            id="popupPqAyahApplyBtn"
-            disabled
-          >
-            Select Ayah
-          </button>
-        </div>
-      </div>
-    </div>
 
     <script src="js/praytimes.js"></script>
     <script src="js/storage.js"></script>

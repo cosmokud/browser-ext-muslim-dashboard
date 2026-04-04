@@ -4089,6 +4089,9 @@ class PocketQuranManager extends BaseManager {
         case "selectAyah":
           await this.applyPopupAyahSelection(payload.surah, payload.ayah);
           break;
+        case "selectReciter":
+          this.selectReciter(payload.reciterId);
+          break;
         default:
           return;
       }
