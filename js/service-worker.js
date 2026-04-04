@@ -11,11 +11,6 @@ const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
 const FASTING_ALARM_NAME = "md_fasting_suhur";
 const BADGE_TICK_ALARM_NAME = "md_badge_tick";
-const QURAN_PLAYBACK_MESSAGE_TYPES = {
-  started: "md_pq_playback_started",
-  paused: "md_pq_playback_paused",
-  forcePause: "md_pq_force_pause",
-};
 
 // If a device sleeps, Chrome may deliver missed alarms immediately on wake.
 // Suppress notifications that are *too late* to avoid spamming.
@@ -25,10 +20,6 @@ const STORAGE_KEYS = {
   settings: "md_settings",
   lastLocation: "md_lastLocation",
 };
-
-let quranPlaybackOwnerId = null;
-let quranPlaybackOwnerSource = "";
-let quranPlaybackOwnerUpdatedAt = 0;
 
 const PRAYER_DEFS = [
   { key: "fajr", name: "Fajr" },
@@ -122,61 +113,6 @@ function clampNumber(value, min, max, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
-}
-
-function normalizePlaybackOwnerId(value) {
-  const ownerId = String(value || "").trim();
-  return ownerId || null;
-}
-
-function broadcastQuranPlaybackPauseExceptOwner(ownerId, source = "") {
-  if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) return;
-
-  try {
-    chrome.runtime.sendMessage(
-      {
-        type: QURAN_PLAYBACK_MESSAGE_TYPES.forcePause,
-        ownerId,
-        source,
-        updatedAt: Date.now(),
-      },
-      () => {
-        // No receiver is expected sometimes (e.g., no open extension page).
-        const err = chrome.runtime?.lastError;
-        if (err) {
-          return;
-        }
-      },
-    );
-  } catch (e) {
-    // ignore
-  }
-}
-
-function handleQuranPlaybackStarted(message) {
-  const ownerId = normalizePlaybackOwnerId(message?.ownerId);
-  if (!ownerId) return;
-
-  const source = String(message?.source || "").trim();
-  const ownerChanged = quranPlaybackOwnerId !== ownerId;
-
-  quranPlaybackOwnerId = ownerId;
-  quranPlaybackOwnerSource = source;
-  quranPlaybackOwnerUpdatedAt = Date.now();
-
-  if (ownerChanged) {
-    broadcastQuranPlaybackPauseExceptOwner(ownerId, source);
-  }
-}
-
-function handleQuranPlaybackPaused(message) {
-  const ownerId = normalizePlaybackOwnerId(message?.ownerId);
-  if (!ownerId) return;
-  if (quranPlaybackOwnerId !== ownerId) return;
-
-  quranPlaybackOwnerId = null;
-  quranPlaybackOwnerSource = "";
-  quranPlaybackOwnerUpdatedAt = Date.now();
 }
 
 function isStaleAlarm(alarm, maxLateMs) {
@@ -1100,24 +1036,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 // Listen for manual reschedule request from settings
 chrome.runtime.onMessage?.addListener?.((message) => {
-  const messageType = message?.type;
-
-  if (messageType === QURAN_PLAYBACK_MESSAGE_TYPES.started) {
-    handleQuranPlaybackStarted(message);
-    return;
-  }
-
-  if (messageType === QURAN_PLAYBACK_MESSAGE_TYPES.paused) {
-    handleQuranPlaybackPaused(message);
-    return;
-  }
-
-  if (messageType === "md_reschedule_fasting") {
+  if (message?.type === "md_reschedule_fasting") {
     scheduleFastingNotifications();
     return;
   }
 
-  if (messageType === "md_update_prayer_badge") {
+  if (message?.type === "md_update_prayer_badge") {
     updateActionPrayerCountdownBadge();
   }
 });
