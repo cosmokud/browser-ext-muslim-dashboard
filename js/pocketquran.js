@@ -4020,7 +4020,9 @@ class PocketQuranManager extends BaseManager {
   }
 
   handlePopupCommandStorageEvent(event) {
-    if (!event || event.storageArea !== localStorage) return;
+    if (!event || (event.storageArea && event.storageArea !== localStorage)) {
+      return;
+    }
 
     const commandStorageKey = `${this.storage.prefix}${this._popupSyncCommandKey}`;
     if (event.key !== commandStorageKey || !event.newValue) return;
