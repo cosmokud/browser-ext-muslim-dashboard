@@ -8542,6 +8542,28 @@ html[data-theme-mode="light"]
   color: var(--on-primary-text);
 }
 
+.location-detect-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-left: calc(var(--spacing-lg) + 4px);
+}
+
+.location-detect-row .detect-location-btn {
+  margin-top: 0;
+}
+
+.detected-location-text {
+  min-width: 0;
+  max-width: 280px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .detect-location-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);

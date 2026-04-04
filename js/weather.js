@@ -340,10 +340,6 @@ class WeatherManager extends BaseManager {
     const showLocationName = settings.compactWeatherShowLocationName === true;
     const locationName =
       typeof weather.location === "string" ? weather.location.trim() : "";
-    const fullLocationName =
-      typeof weather.locationFull === "string"
-        ? weather.locationFull.trim()
-        : locationName;
     const weatherInfo = this.weatherCodes[weather.weatherCode] || {
       icon: "🌡️",
       desc: "Unknown",
@@ -389,7 +385,7 @@ class WeatherManager extends BaseManager {
     }
     if (locationEl) {
       locationEl.textContent = locationName;
-      locationEl.title = fullLocationName || locationName;
+      locationEl.removeAttribute("title");
     }
 
     // Apply mode class
@@ -772,34 +768,35 @@ class WeatherManager extends BaseManager {
     return city || normalized;
   }
 
-  async _reverseGeocodeLocationParts(latitude, longitude) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
-      const res = await fetch(url, {
-        headers: {
-          "Accept-Language": "en",
-        },
-      });
-      if (!res.ok) {
-        return { city: "", full: "" };
+  _getDashboardDisplayCity(settings = null) {
+    const activeSettings = settings || this.storage.getSettings() || {};
+    const useManualLocation = activeSettings.locationMethod === "manual";
+    const locationTextEl = document.getElementById("locationText");
+    const locationDisplayText = String(locationTextEl?.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (locationDisplayText) {
+      const lowered = locationDisplayText.toLowerCase();
+      const isTransientText =
+        lowered.includes("detecting") ||
+        lowered.includes("requesting permission") ||
+        lowered.includes("loading");
+      if (!isTransientText) {
+        return this._extractCityLikeName(locationDisplayText);
       }
-
-      const data = await res.json();
-      const address = data?.address || {};
-      const city = String(
-        address.city ||
-          address.town ||
-          address.village ||
-          address.county ||
-          address.state ||
-          "",
-      ).trim();
-      const full = String(data?.display_name || "").trim();
-
-      return { city, full };
-    } catch {
-      return { city: "", full: "" };
     }
+
+    if (!useManualLocation) {
+      const lastLocation = this.storage.getLastLocation();
+      const lastCity = this._extractCityLikeName(lastLocation?.city || "");
+      if (lastCity) {
+        return lastCity;
+      }
+      return "";
+    }
+
+    return this._extractCityLikeName(activeSettings.city || "");
   }
 
   async _geocodeCity(city) {
@@ -815,34 +812,10 @@ class WeatherManager extends BaseManager {
     return {
       latitude: first.latitude,
       longitude: first.longitude,
-      city: this._formatPlaceName(first) || first.name,
+      city: this._extractCityLikeName(
+        first.name || this._formatPlaceName(first),
+      ),
     };
-  }
-
-  async _reverseGeocodeName(latitude, longitude) {
-    try {
-      const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=en&format=json`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        const first = data?.results?.[0];
-        const name = this._formatPlaceName(first);
-        if (name) return name;
-      }
-    } catch {
-      // ignore
-    }
-
-    // fallback (best effort)
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
-      const res = await fetch(url);
-      if (!res.ok) return "";
-      const data = await res.json();
-      return data?.display_name || "";
-    } catch {
-      return "";
-    }
   }
 
   async _getBrowserLocation() {
@@ -861,7 +834,7 @@ class WeatherManager extends BaseManager {
       const longitude = this._toNumber(pos?.coords?.longitude);
       if (latitude === null || longitude === null) return null;
 
-      const city = (await this._reverseGeocodeName(latitude, longitude)) || "";
+      const city = this._getDashboardDisplayCity(this.storage.getSettings());
       return { latitude, longitude, city };
     } catch {
       return null;
@@ -870,14 +843,14 @@ class WeatherManager extends BaseManager {
 
   async _resolveWeatherLocation(settings) {
     const mode = settings.weatherLocationMode || "dashboard";
+    const useManualLocation = settings.locationMethod === "manual";
 
     if (mode === "custom") {
       const latitude = this._toNumber(settings.weatherLatitude);
       const longitude = this._toNumber(settings.weatherLongitude);
       const cityName = (settings.weatherCity || "").trim();
       if (latitude !== null && longitude !== null) {
-        const city =
-          cityName || (await this._reverseGeocodeName(latitude, longitude));
+        const city = cityName || this._getDashboardDisplayCity(settings);
         return { latitude, longitude, city: city || "" };
       }
 
@@ -888,11 +861,30 @@ class WeatherManager extends BaseManager {
     }
 
     // dashboard location
-    const latitude = this._toNumber(settings.latitude);
-    const longitude = this._toNumber(settings.longitude);
-    const city = (settings.city || "").trim();
-    if (latitude !== null && longitude !== null) {
-      return { latitude, longitude, city };
+    if (useManualLocation) {
+      const latitude = this._toNumber(settings.latitude);
+      const longitude = this._toNumber(settings.longitude);
+      const city =
+        this._extractCityLikeName(settings.city || "") ||
+        this._getDashboardDisplayCity(settings);
+
+      if (latitude !== null && longitude !== null) {
+        return { latitude, longitude, city };
+      }
+    }
+
+    const lastLocation = this.storage.getLastLocation();
+    const lastLatitude = this._toNumber(lastLocation?.latitude);
+    const lastLongitude = this._toNumber(lastLocation?.longitude);
+    if (lastLatitude !== null && lastLongitude !== null) {
+      const city =
+        this._getDashboardDisplayCity(settings) ||
+        this._extractCityLikeName(lastLocation?.city || "");
+      return {
+        latitude: lastLatitude,
+        longitude: lastLongitude,
+        city,
+      };
     }
 
     return await this._getBrowserLocation();
@@ -1008,37 +1000,10 @@ class WeatherManager extends BaseManager {
       }
       const current = data.current || data.current_weather || {};
 
-      const reverseLocationParts = await this._reverseGeocodeLocationParts(
-        location.latitude,
-        location.longitude,
-      );
-
-      let fullLocationName = String(reverseLocationParts.full || "").trim();
-      if (
-        !fullLocationName &&
-        usedCache &&
-        cached &&
-        cached.url === url &&
-        cached.locationName
-      ) {
-        fullLocationName = String(cached.locationName).trim();
-      }
-      if (!fullLocationName) {
-        fullLocationName = String(
-          (await this._reverseGeocodeName(
-            location.latitude,
-            location.longitude,
-          )) ||
-            location.city ||
-            `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`,
-        ).trim();
-      }
-
       const displayLocationName =
-        reverseLocationParts.city ||
+        this._getDashboardDisplayCity(settings) ||
         this._extractCityLikeName(location.city) ||
-        this._extractCityLikeName(fullLocationName) ||
-        fullLocationName;
+        `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
 
       // Try to derive reasonable current values when API uses different field names
       const hourly = data.hourly || {};
@@ -1103,24 +1068,11 @@ class WeatherManager extends BaseManager {
         unit: unit,
         windUnit: windUnit,
         location: displayLocationName,
-        locationFull: fullLocationName || displayLocationName,
       };
 
       this.dailyForecast = data.daily || null;
       this.hourlyForecast = data.hourly || null;
       this.lastFetch = Date.now();
-
-      // Update cached locationName lazily (so cache-only runs still get it).
-      if (
-        cached &&
-        cached.url === url &&
-        cached.locationName !== fullLocationName
-      ) {
-        this._setWeatherForecastCache({
-          ...cached,
-          locationName: fullLocationName,
-        });
-      }
 
       // keep selection in-range
       const dayCount = this.dailyForecast?.time?.length || 0;
@@ -1265,7 +1217,7 @@ class WeatherManager extends BaseManager {
       this.weatherDesc.textContent = weatherInfo.desc;
     }
 
-    this.setWeatherLocationText(weather.location, weather.locationFull);
+    this.setWeatherLocationText(weather.location);
 
     if (this.weatherFeelsLike) {
       this.weatherFeelsLike.textContent =
@@ -1294,20 +1246,15 @@ class WeatherManager extends BaseManager {
     this.renderHourlyChart();
   }
 
-  setWeatherLocationText(locationText, tooltipText = null) {
+  setWeatherLocationText(locationText) {
     if (!this.weatherLocation) return;
 
     const displayText = String(locationText || "").trim();
-    const fullText = String(tooltipText || displayText).trim();
     this.weatherLocation.textContent = displayText;
-
-    if (fullText) {
-      this.weatherLocation.setAttribute("data-full-location", fullText);
-      this.weatherLocation.setAttribute("aria-label", fullText);
-    } else {
-      this.weatherLocation.removeAttribute("data-full-location");
-      this.weatherLocation.removeAttribute("aria-label");
-    }
+    this.weatherLocation.removeAttribute("data-full-location");
+    this.weatherLocation.removeAttribute("aria-label");
+    this.weatherLocation.removeAttribute("title");
+    this.weatherLocation.removeAttribute("tabindex");
 
     this.updateWeatherLocationTruncation();
   }
@@ -1315,26 +1262,19 @@ class WeatherManager extends BaseManager {
   updateWeatherLocationTruncation() {
     if (!this.weatherLocation) return;
 
-    const fullText =
-      this.weatherLocation.getAttribute("data-full-location") || "";
-    if (!fullText) {
+    const displayText = String(this.weatherLocation.textContent || "").trim();
+    if (!displayText) {
       this.weatherLocation.classList.remove("is-truncated");
-      this.weatherLocation.removeAttribute("tabindex");
       this.weatherLocation.removeAttribute("title");
       return;
     }
 
     const maxLocationCharsBeforeTruncate = 64;
-    const isTruncated = fullText.length > maxLocationCharsBeforeTruncate;
+    const isTruncated = displayText.length > maxLocationCharsBeforeTruncate;
     this.weatherLocation.classList.toggle("is-truncated", isTruncated);
 
-    if (isTruncated) {
-      this.weatherLocation.setAttribute("tabindex", "0");
-      this.weatherLocation.setAttribute("title", fullText);
-    } else {
-      this.weatherLocation.removeAttribute("tabindex");
-      this.weatherLocation.removeAttribute("title");
-    }
+    this.weatherLocation.removeAttribute("title");
+    this.weatherLocation.removeAttribute("tabindex");
   }
 
   render7DayForecast() {

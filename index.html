@@ -2382,7 +2382,7 @@
           <div class="settings-panel active" id="locationPanel">
             <div class="setting-group">
               <label class="setting-label">Location Method</label>
-              <div class="setting-options">
+              <div class="setting-options location-method-options">
                 <label class="radio-option">
                   <input
                     type="radio"
@@ -2392,17 +2392,30 @@
                   />
                   <span>Auto-detect</span>
                 </label>
+                <div class="location-detect-row">
+                  <button
+                    class="setting-btn detect-location-btn"
+                    id="requestLocationBtn"
+                    type="button"
+                  >
+                    🌍 Request Location Permission
+                  </button>
+                  <button
+                    class="setting-btn"
+                    id="refreshLocationBtn"
+                    type="button"
+                  >
+                    🔄 Refresh Location
+                  </button>
+                  <span id="detectedLocationText" class="detected-location-text"
+                    >Detecting...</span
+                  >
+                </div>
                 <label class="radio-option">
                   <input type="radio" name="locationMethod" value="manual" />
                   <span>Manual Entry</span>
                 </label>
               </div>
-              <button
-                class="setting-btn detect-location-btn"
-                id="requestLocationBtn"
-              >
-                🌍 Request Location Permission
-              </button>
             </div>
             <div
               class="setting-group manual-location-fields"
@@ -5391,7 +5404,7 @@
               class="setting-group"
               id="pocketQuranSettingArabicFontFamilyCard"
             >
-              <label class="setting-label">Arabic Font Family (Card)</label>
+              <label class="setting-label">Arabic Font Family</label>
               <p class="setting-hint">
                 Open the Arabic font picker used by the Pocket Quran card.
               </p>
@@ -5416,7 +5429,7 @@
               <label
                 class="setting-label"
                 for="pocketQuranTranslationFontFamily"
-                >Translation Font Family (Card)</label
+                >Translation Font Family</label
               >
               <p class="setting-hint">
                 Choose the translation font used in the Pocket Quran card.
@@ -5648,20 +5661,20 @@
                 instantly.
               </p>
 
-              <div class="import-export-btns">
-                <button
-                  class="setting-btn"
-                  id="pocketQuranResetAllTajweedColorsBtn"
-                  type="button"
-                >
-                  Reset all to default
-                </button>
-              </div>
-
               <div
                 class="pq-tajweed-settings"
                 id="pocketQuranTajweedColors"
               ></div>
+            </div>
+
+            <div class="import-export-btns">
+              <button
+                class="setting-btn"
+                id="pocketQuranResetAllTajweedColorsBtn"
+                type="button"
+              >
+                Reset all to default
+              </button>
             </div>
 
             <div class="setting-group" id="pocketQuranSettingBookmarks">

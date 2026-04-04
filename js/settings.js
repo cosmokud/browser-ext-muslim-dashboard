@@ -148,6 +148,9 @@ class SettingsManager extends BaseManager {
     this.pasteCoordsBtn = document.getElementById("pasteCoordsBtn");
     this.citySearchResults = document.getElementById("citySearchResults");
     this.requestLocationBtn = document.getElementById("requestLocationBtn");
+    this.refreshLocationBtn = document.getElementById("refreshLocationBtn");
+    this.detectedLocationText = document.getElementById("detectedLocationText");
+    this._locationTextObserver = null;
 
     // Prayer elements
     this.calculationMethod = document.getElementById("calculationMethod");
@@ -1138,6 +1141,8 @@ class SettingsManager extends BaseManager {
     if (this.latitudeInput) this.latitudeInput.value = settings.latitude || "";
     if (this.longitudeInput)
       this.longitudeInput.value = settings.longitude || "";
+    this.bindDetectedLocationTextSync();
+    this.updateDetectedLocationText();
 
     // Prayer settings
     if (this.calculationMethod)
@@ -6420,12 +6425,92 @@ class SettingsManager extends BaseManager {
     }
   }
 
+  getDetectedLocationText() {
+    const locationTextEl = document.getElementById("locationText");
+    const locationText = String(locationTextEl?.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (locationText) {
+      const lowered = locationText.toLowerCase();
+      const isTransientText =
+        lowered.includes("detecting") ||
+        lowered.includes("requesting permission") ||
+        lowered.includes("loading");
+
+      if (!isTransientText) {
+        return locationText;
+      }
+    }
+
+    const lastLocation = this.storage.getLastLocation();
+    const lastCity = String(lastLocation?.city || "").trim();
+    if (lastCity) {
+      return lastCity;
+    }
+
+    return "Not detected yet";
+  }
+
+  updateDetectedLocationText() {
+    if (!this.detectedLocationText) return;
+
+    const detectedText = this.getDetectedLocationText();
+    this.detectedLocationText.textContent = detectedText;
+    this.detectedLocationText.title = detectedText;
+  }
+
+  bindDetectedLocationTextSync() {
+    if (this._locationTextObserver || typeof MutationObserver === "undefined") {
+      return;
+    }
+
+    const locationTextEl = document.getElementById("locationText");
+    if (!locationTextEl) return;
+
+    this._locationTextObserver = new MutationObserver(() => {
+      this.updateDetectedLocationText();
+    });
+
+    this._locationTextObserver.observe(locationTextEl, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
+
+  async refreshDetectedLocation() {
+    const stopRefresh = this._startRefreshButton(this.refreshLocationBtn, {
+      label: "Refreshing...",
+    });
+
+    try {
+      await this.requestLocation({ refreshWeather: true, showToast: false });
+      this.showToast("Location refreshed", "success");
+    } catch (e) {
+      this.showToast("Unable to refresh location", "error");
+    } finally {
+      stopRefresh();
+      this.updateDetectedLocationText();
+    }
+  }
+
   /**
    * Request location permission
    */
-  async requestLocation() {
+  async requestLocation({ refreshWeather = true, showToast = false } = {}) {
     if (this.prayerTimes) {
       await this.prayerTimes.requestLocation();
+    }
+
+    this.updateDetectedLocationText();
+
+    if (refreshWeather && this.weather) {
+      this.weather.fetchWeather({ force: true });
+    }
+
+    if (showToast) {
+      this.showToast("Location updated", "success");
     }
   }
 
@@ -7914,13 +7999,21 @@ class SettingsManager extends BaseManager {
     this.locationMethodRadios.forEach((radio) => {
       radio.addEventListener("change", () => {
         this.toggleManualLocation(radio.value === "manual");
+        this.updateDetectedLocationText();
       });
     });
 
     // Request location permission
     if (this.requestLocationBtn) {
       this.requestLocationBtn.addEventListener("click", () =>
-        this.requestLocation(),
+        this.requestLocation({ refreshWeather: true, showToast: true }),
+      );
+    }
+
+    // Refresh detected location
+    if (this.refreshLocationBtn) {
+      this.refreshLocationBtn.addEventListener("click", () =>
+        this.refreshDetectedLocation(),
       );
     }
 
