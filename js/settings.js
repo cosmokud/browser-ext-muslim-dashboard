@@ -6414,6 +6414,8 @@ class SettingsManager extends BaseManager {
         this.manualLocationFields.classList.remove("active");
       }
     }
+
+    this.updateDetectedLocationTextVisibility();
   }
 
   /**
@@ -6452,12 +6454,26 @@ class SettingsManager extends BaseManager {
     return "Not detected yet";
   }
 
+  updateDetectedLocationTextVisibility() {
+    if (!this.detectedLocationText) return;
+
+    const selectedRadio = document.querySelector(
+      'input[name="locationMethod"]:checked',
+    );
+    const isManual =
+      selectedRadio?.value === "manual" ||
+      this.manualLocationFields?.classList.contains("active");
+
+    this.detectedLocationText.hidden = isManual;
+  }
+
   updateDetectedLocationText() {
     if (!this.detectedLocationText) return;
 
     const detectedText = this.getDetectedLocationText();
     this.detectedLocationText.textContent = detectedText;
     this.detectedLocationText.title = detectedText;
+    this.updateDetectedLocationTextVisibility();
   }
 
   bindDetectedLocationTextSync() {
