@@ -2903,8 +2903,7 @@ class PocketQuranManager extends BaseManager {
     this._isAutoplayNextSurah = pq.reciterAutoplayNextSurah === true;
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
-    this._recitationAutoDockOnVisible =
-      pq.recitationAutoDockOnVisible === true;
+    this._recitationAutoDockOnVisible = pq.recitationAutoDockOnVisible === true;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
@@ -3773,8 +3772,7 @@ class PocketQuranManager extends BaseManager {
     });
 
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
-    this._recitationAutoDockOnVisible =
-      pq.recitationAutoDockOnVisible === true;
+    this._recitationAutoDockOnVisible = pq.recitationAutoDockOnVisible === true;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
