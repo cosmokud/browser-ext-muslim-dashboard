@@ -1270,12 +1270,16 @@ class PocketQuranManager extends BaseManager {
    * - An absolutely positioned content div for rendered ayahs
    * Note: In Quran Focus Mode, CSS overrides make the container fill available height
    */
-  initVirtualization() {
+  initVirtualization(opts = {}) {
+    const { preserveHeights = false } = opts;
+
     if (!this.contentEl || !this._activeVerses?.length) return;
 
     // Clear previous content
     this.contentEl.innerHTML = "";
-    this._ayahHeights.clear();
+    if (!preserveHeights) {
+      this._ayahHeights.clear();
+    }
     this._renderedRange = { start: 0, end: 0 };
 
     // Create virtual scroll container (CSS handles height - fixed in normal mode, flex in focus mode)
@@ -2507,6 +2511,8 @@ class PocketQuranManager extends BaseManager {
     this.updateTextVisibilityToggleUI({ allowBothOff });
 
     if (changed && recalculate) {
+      const previousAvgAyahHeight =
+        this._avgAyahHeight || PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
       const previousContainer = this._virtualContainer;
       const previousScrollableHeight = Math.max(
         0,
@@ -2518,32 +2524,59 @@ class PocketQuranManager extends BaseManager {
           ? (previousContainer?.scrollTop || 0) / previousScrollableHeight
           : 0;
 
-      this._ayahHeights.clear();
-      this._avgAyahHeight = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
+      const nextEstimatedAyahHeight = this.getEstimatedAyahHeightForVisibility(
+        this._showArabicText,
+        this._showTranslationText,
+      );
+      const estimatedScale =
+        previousAvgAyahHeight > 0
+          ? nextEstimatedAyahHeight / previousAvgAyahHeight
+          : 1;
+
+      if (this._ayahHeights?.size) {
+        const scaledHeights = new Map();
+        this._ayahHeights.forEach((height, index) => {
+          const numericHeight = Number(height);
+          if (Number.isFinite(numericHeight) && numericHeight > 0) {
+            scaledHeights.set(
+              index,
+              Math.max(48, numericHeight * estimatedScale),
+            );
+          }
+        });
+        this._ayahHeights = scaledHeights;
+      } else {
+        this._ayahHeights.clear();
+      }
+
+      this._avgAyahHeight = nextEstimatedAyahHeight;
       this._programmaticScroll = null;
 
       if (this._activeVerses?.length) {
-        // Rebuild virtualization to avoid stale spacer height after visibility mode changes.
-        this.initVirtualization();
+        // Rebuild virtualization to avoid stale spacer state after visibility mode changes.
+        this.initVirtualization({ preserveHeights: true });
 
-        requestAnimationFrame(() => {
-          if (!this._virtualContainer) return;
-
+        if (this._virtualContainer) {
           const nextScrollableHeight = Math.max(
             0,
             this._virtualContainer.scrollHeight -
               this._virtualContainer.clientHeight,
           );
 
+          this._virtualContainer.style.scrollBehavior = "auto";
+
           if (nextScrollableHeight > 0 && previousScrollRatio > 0) {
             this._virtualContainer.scrollTop = Math.min(
               nextScrollableHeight,
               previousScrollRatio * nextScrollableHeight,
             );
+          } else {
+            this._virtualContainer.scrollTop = 0;
           }
 
-          this.handleVirtualScroll();
-        });
+          this._lastScrollTop = this._virtualContainer.scrollTop;
+          this.recalculateVirtualization();
+        }
       } else {
         this.recalculateVirtualization();
       }
@@ -5170,6 +5203,15 @@ class PocketQuranManager extends BaseManager {
       showArabicText: true,
       showTranslationText: false,
     };
+  }
+
+  getEstimatedAyahHeightForVisibility(showArabicText, showTranslationText) {
+    const base = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
+
+    if (showArabicText && showTranslationText) return base;
+    if (showArabicText) return Math.round(base * 0.65);
+    if (showTranslationText) return Math.round(base * 0.58);
+    return Math.round(base * 0.5);
   }
 
   persistPocketQuranSettings(patch) {

@@ -14348,6 +14348,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  overflow-anchor: none;
   border-radius: var(--radius-lg);
   /* Custom scrollbar styling */
   scrollbar-width: thin;
