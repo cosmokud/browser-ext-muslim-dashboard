@@ -13961,10 +13961,17 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin-top: 0;
 }
 
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 #pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah,
 #pocketQuranCard.pq-hide-translation-text .pocket-quran-ayah {
   padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-md);
+  min-height: calc(102px + (var(--spacing-xs) * 2) + (var(--spacing-md) * 2));
 }
 
 #pocketQuranCard.pq-hide-arabic-text .pq-ayah-controls-stack,
