@@ -378,6 +378,7 @@ class StorageManager {
         translationFontSize: 18,
         translationResourceId: 85, // M.A.S. Abdel Haleem
         recitationFloatingEnabled: true,
+        recitationFloatingAppearance: "opaque",
         lastSurahNumber: 1,
         lastAyahNumber: 1,
         tajweedMode: false,

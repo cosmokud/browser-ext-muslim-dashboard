@@ -653,6 +653,10 @@ class SettingsManager extends BaseManager {
     this.pocketQuranRecitationFloatingEnabled = document.getElementById(
       "pocketQuranRecitationFloatingEnabled",
     );
+    this.pocketQuranRecitationFloatingAppearanceRadios =
+      document.querySelectorAll(
+        'input[name="pocketQuranRecitationFloatingAppearance"]',
+      );
 
     this.pocketQuranTajweedColors = document.getElementById(
       "pocketQuranTajweedColors",
@@ -1267,6 +1271,13 @@ class SettingsManager extends BaseManager {
       this.pocketQuranRecitationFloatingEnabled.checked =
         pq.recitationFloatingEnabled !== false;
     }
+
+    const floatingAppearance =
+      pq.recitationFloatingAppearance === "theme" ? "theme" : "opaque";
+    const floatingAppearanceRadio = document.querySelector(
+      `input[name="pocketQuranRecitationFloatingAppearance"][value="${floatingAppearance}"]`,
+    );
+    if (floatingAppearanceRadio) floatingAppearanceRadio.checked = true;
 
     // Pocket Quran Tajweed colors
     this.renderPocketQuranTajweedColorPickers(pq.tajweedColors);
@@ -5307,6 +5318,12 @@ class SettingsManager extends BaseManager {
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
         ? this.pocketQuranRecitationFloatingEnabled.checked
         : existingPocketQuran.recitationFloatingEnabled !== false,
+      recitationFloatingAppearance:
+        document.querySelector(
+          'input[name="pocketQuranRecitationFloatingAppearance"]:checked',
+        )?.value === "theme"
+          ? "theme"
+          : "opaque",
     };
 
     settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(

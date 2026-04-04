@@ -14949,6 +14949,9 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   z-index: 10020;
   margin: 0;
   max-width: min(780px, calc(100vw - 24px));
+  gap: var(--spacing-sm);
+  padding: 8px 10px;
+  padding-right: 98px;
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
   cursor: grab;
 }
@@ -14957,8 +14960,36 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   cursor: grabbing;
 }
 
+.pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-buttons {
+  margin-left: auto;
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-options {
+  order: 3;
+  flex: 1 0 100%;
+  width: 100%;
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  margin-top: 2px;
+  padding-left: 0;
+  padding-top: var(--spacing-xs);
+  border-left: none;
+  border-top: 1px solid var(--glass-border);
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating .pq-volume-slider {
+  width: 72px;
+}
+
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
   max-width: min(64vw, 460px);
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating.pq-recitation-controls-floating-opaque {
+  background: var(--modal-popover-bg);
+  border-color: color-mix(in srgb, var(--accent-gold) 44%, var(--glass-border));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .pq-recitation-controls.pq-recitation-controls-manual-only

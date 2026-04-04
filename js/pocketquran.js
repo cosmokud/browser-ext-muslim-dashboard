@@ -674,6 +674,7 @@ class PocketQuranManager extends BaseManager {
     this._reciterModal = null;
     this._headerControlsBox = null;
     this._recitationFloatingEnabled = true;
+    this._recitationFloatingAppearance = "opaque";
     this._recitationFloatingMode = false;
     this._recitationFloatingModeReason = null;
     this._recitationFloatingManualOnly = false;
@@ -2618,6 +2619,10 @@ class PocketQuranManager extends BaseManager {
     this._isAutoplay = pq.reciterAutoplay || false;
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationFloatingAppearance =
+      this.normalizeRecitationFloatingAppearance(
+        pq.recitationFloatingAppearance,
+      );
     this._recitationFloatingManualOnly = false;
 
     // Small caches to smooth autoplay transitions.
@@ -3353,6 +3358,10 @@ class PocketQuranManager extends BaseManager {
     const pq = normalized?.pocketQuran || {};
 
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationFloatingAppearance =
+      this.normalizeRecitationFloatingAppearance(
+        pq.recitationFloatingAppearance,
+      );
 
     if (!this._recitationFloatingEnabled) {
       this.unwatchRecitationControlsVisibility();
@@ -3364,6 +3373,7 @@ class PocketQuranManager extends BaseManager {
       this.maybeAutoFloatRecitationControls();
     }
 
+    this.syncRecitationFloatingAppearanceClass();
     this.updateRecitationFloatingButtons();
   }
 
@@ -3641,6 +3651,19 @@ class PocketQuranManager extends BaseManager {
     this._recitationFloatingDrag = null;
   }
 
+  syncRecitationFloatingAppearanceClass() {
+    if (!this._headerControlsBox) return;
+
+    const useOpaqueMode =
+      this._recitationFloatingMode &&
+      this._recitationFloatingAppearance === "opaque";
+
+    this._headerControlsBox.classList.toggle(
+      "pq-recitation-controls-floating-opaque",
+      useOpaqueMode,
+    );
+  }
+
   enableRecitationFloating({ source = "manual" } = {}) {
     if (!this._recitationFloatingEnabled) return;
 
@@ -3651,6 +3674,7 @@ class PocketQuranManager extends BaseManager {
 
     if (this._recitationFloatingMode) {
       this._recitationFloatingModeReason = source;
+      this.syncRecitationFloatingAppearanceClass();
       this.positionRecitationFloatingPanel();
       this.updateRecitationFloatingButtons();
       return;
@@ -3669,6 +3693,7 @@ class PocketQuranManager extends BaseManager {
     this._recitationFloatingMode = true;
     this._recitationFloatingModeReason = source;
 
+    this.syncRecitationFloatingAppearanceClass();
     this.positionRecitationFloatingPanel();
     this.updateRecitationFloatingButtons();
   }
@@ -3678,6 +3703,9 @@ class PocketQuranManager extends BaseManager {
 
     this.stopRecitationFloatingDrag();
     this._headerControlsBox.classList.remove("pq-recitation-controls-floating");
+    this._headerControlsBox.classList.remove(
+      "pq-recitation-controls-floating-opaque",
+    );
     this._headerControlsBox.style.removeProperty("left");
     this._headerControlsBox.style.removeProperty("top");
 
@@ -3785,11 +3813,28 @@ class PocketQuranManager extends BaseManager {
 
     this.resetRecitationCaches();
 
-    // If currently playing, restart with new reciter
-    if (this._isPlaying && this._playingAyah) {
-      const { surah, ayah } = this._playingAyah;
-      this._audioElement.pause();
-      this.playAyah(surah, ayah);
+    const isActivelyPlaying =
+      this._isPlaying ||
+      (this._audioElement &&
+        this._audioElement.paused === false &&
+        this._audioElement.ended === false);
+
+    const targetAyah = this._playingAyah || {
+      surah: this._activeSurah,
+      ayah: this._activeAyah,
+    };
+
+    if (
+      isActivelyPlaying &&
+      Number.isFinite(targetAyah?.surah) &&
+      Number.isFinite(targetAyah?.ayah)
+    ) {
+      try {
+        this._audioElement.pause();
+      } catch (e) {
+        // no-op
+      }
+      this.playAyah(targetAyah.surah, targetAyah.ayah);
     }
 
     this.closeReciterModal();
@@ -3993,6 +4038,9 @@ class PocketQuranManager extends BaseManager {
     if (this._headerControlsBox) {
       this._headerControlsBox.classList.remove(
         "pq-recitation-controls-floating",
+      );
+      this._headerControlsBox.classList.remove(
+        "pq-recitation-controls-floating-opaque",
       );
       this._headerControlsBox.style.removeProperty("left");
       this._headerControlsBox.style.removeProperty("top");
@@ -4403,6 +4451,10 @@ class PocketQuranManager extends BaseManager {
     const n = parseInt(value, 10);
     if (Number.isFinite(n) && PocketQuranManager.TRANSLATIONS[n]) return n;
     return 85;
+  }
+
+  normalizeRecitationFloatingAppearance(value) {
+    return value === "theme" ? "theme" : "opaque";
   }
 
   clampNumber(value, min, max, fallback) {
