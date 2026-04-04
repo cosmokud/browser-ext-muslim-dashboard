@@ -218,7 +218,6 @@ class SettingsManager extends BaseManager {
     this.detachedEditorModalTitle = null;
     this.detachedEditorCloseBtn = null;
     this._detachedEditorState = null;
-    this._detachedEditorResizeHandler = null;
 
     // Background elements
     this.bgInterval = document.getElementById("bgInterval");
@@ -6156,16 +6155,6 @@ class SettingsManager extends BaseManager {
       ".editor-detach-modal-close",
     );
 
-    if (this.detachedEditorModalBody?.dataset.bound !== "1") {
-      this.detachedEditorModalBody.dataset.bound = "1";
-      this.detachedEditorModalBody.addEventListener("input", () =>
-        this.updateDetachedEditorModalWidth(),
-      );
-      this.detachedEditorModalBody.addEventListener("click", () =>
-        this.updateDetachedEditorModalWidth(),
-      );
-    }
-
     if (this.detachedEditorCloseBtn?.dataset.bound !== "1") {
       this.detachedEditorCloseBtn.dataset.bound = "1";
       this.detachedEditorCloseBtn.addEventListener("click", () =>
@@ -6216,7 +6205,6 @@ class SettingsManager extends BaseManager {
     }
 
     if (this._detachedEditorState?.groupId === config.groupId) {
-      this.updateDetachedEditorModalWidth();
       return;
     }
 
@@ -6244,20 +6232,10 @@ class SettingsManager extends BaseManager {
       onAfterClose: config.onAfterClose,
     };
 
-    this.updateDetachedEditorModalWidth();
-
-    if (!this._detachedEditorResizeHandler) {
-      this._detachedEditorResizeHandler = () =>
-        this.updateDetachedEditorModalWidth();
-      window.addEventListener("resize", this._detachedEditorResizeHandler);
-      window.addEventListener(
-        "orientationchange",
-        this._detachedEditorResizeHandler,
-      );
-    }
+    this.applyDetachedEditorModalInitialWidth();
   }
 
-  updateDetachedEditorModalWidth() {
+  applyDetachedEditorModalInitialWidth() {
     if (!this._detachedEditorState?.group || !this.detachedEditorModalContent)
       return;
 
@@ -6267,13 +6245,16 @@ class SettingsManager extends BaseManager {
         ".hadith-editor-table-wrap, .adhkar-editor-table-wrap, .flashcard-editor-body, .flashcards-editor, .adhkar-editor, .user-quotes-list",
       ) || group;
 
+    const viewportWidth =
+      window.innerWidth || document.documentElement?.clientWidth || 1200;
+    const minWidth = Math.floor(viewportWidth * 0.75);
+    const maxWidth = Math.floor(viewportWidth * 0.96);
     const measured = Math.max(
       surface.scrollWidth || 0,
       group.scrollWidth || 0,
       760,
     );
-    const viewportCap = Math.max(720, Math.floor(window.innerWidth * 0.96));
-    const targetWidth = Math.min(viewportCap, measured + 72);
+    const targetWidth = Math.max(minWidth, Math.min(maxWidth, measured + 72));
 
     this.detachedEditorModalContent.style.setProperty(
       "--detached-editor-width",
@@ -6301,15 +6282,6 @@ class SettingsManager extends BaseManager {
       } catch (e) {
         // ignore
       }
-    }
-
-    if (this._detachedEditorResizeHandler) {
-      window.removeEventListener("resize", this._detachedEditorResizeHandler);
-      window.removeEventListener(
-        "orientationchange",
-        this._detachedEditorResizeHandler,
-      );
-      this._detachedEditorResizeHandler = null;
     }
 
     this._detachedEditorState = null;

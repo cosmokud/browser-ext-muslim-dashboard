@@ -960,7 +960,6 @@ class QuotesManager extends BaseManager {
         .join("");
 
       this.quotesListContainer.innerHTML = `
-        <div class="quotes-editor-lang-note">Editing key: ${this.escapeHtml(textField)}</div>
         <div class="flashcard-editor-header quotes-editor-header">
           <div>#</div>
           <div>Text (${langLabel})</div>

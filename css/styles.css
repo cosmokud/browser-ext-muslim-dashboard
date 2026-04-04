@@ -9600,12 +9600,6 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   min-height: 56px;
 }
 
-.quotes-editor-lang-note {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  margin-bottom: var(--spacing-sm);
-}
-
 .quotes-editor-header,
 .quote-editor-row {
   grid-template-columns: 42px minmax(260px, 2fr) minmax(220px, 1fr) 34px;
@@ -9652,16 +9646,19 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .editor-detach-modal-content {
-  width: min(96vw, var(--detached-editor-width, 1200px));
+  width: max(75vw, min(96vw, var(--detached-editor-width, 75vw)));
+  min-width: 75vw;
   max-width: 96vw;
   max-height: 96vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--glass-border);
+  background: var(--modal-popover-bg);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 20%, transparent 80%);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .editor-detach-modal-header {
@@ -9670,8 +9667,11 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   justify-content: space-between;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--text-primary) 18%, transparent 82%);
+  background: color-mix(in srgb, var(--modal-popover-bg) 88%, #000 12%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .editor-detach-modal-title {
@@ -9701,6 +9701,9 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 .editor-detach-modal-body {
   padding: var(--spacing-md);
   overflow: auto;
+  background: var(--modal-popover-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .editor-detach-modal-body .setting-group {
@@ -9709,6 +9712,17 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .editor-detach-modal-body .editor-detach-btn {
   display: none;
+}
+
+.editor-detach-modal .setting-input,
+.editor-detach-modal .setting-select,
+.editor-detach-modal .setting-textarea,
+.editor-detach-modal .flashcards-editor,
+.editor-detach-modal .adhkar-editor {
+  background: color-mix(in srgb, var(--modal-popover-bg) 94%, #000 6%);
+  border-color: color-mix(in srgb, var(--text-primary) 20%, transparent 80%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Pagination */
