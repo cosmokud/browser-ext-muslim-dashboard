@@ -699,7 +699,7 @@ class PocketQuranManager extends BaseManager {
     this._reciterModal = null;
     this._headerControlsBox = null;
     this._recitationFloatingEnabled = false;
-    this._recitationAutoDockOnVisible = true;
+    this._recitationAutoDockOnVisible = false;
     this._recitationFloatingAppearance = "opaque";
     this._recitationFloatingMode = false;
     this._recitationFloatingModeReason = null;
@@ -2904,7 +2904,7 @@ class PocketQuranManager extends BaseManager {
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
-      pq.recitationAutoDockOnVisible !== false;
+      pq.recitationAutoDockOnVisible === true;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
@@ -3774,7 +3774,7 @@ class PocketQuranManager extends BaseManager {
 
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
-      pq.recitationAutoDockOnVisible !== false;
+      pq.recitationAutoDockOnVisible === true;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,

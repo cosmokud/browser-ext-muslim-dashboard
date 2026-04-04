@@ -146,6 +146,9 @@ class FlashcardManager extends BaseManager {
       this.applyModeToDashboard();
       this._updateSetSelectorButton();
       this._updateSetModalIcons();
+      if (this.settingsSetSelect) {
+        this.renderSettings();
+      }
     });
   }
 
@@ -1201,7 +1204,9 @@ class FlashcardManager extends BaseManager {
     sets.forEach((s) => {
       const opt = document.createElement("option");
       opt.value = s.id;
-      opt.textContent = this.isProtectedSetId(s.id) ? `🔒 ${s.name}` : s.name;
+      opt.textContent = this.isProtectedSetId(s.id)
+        ? this._getLockedOptionLabel(s.name)
+        : s.name;
       this.settingsSetSelect.appendChild(opt);
     });
 

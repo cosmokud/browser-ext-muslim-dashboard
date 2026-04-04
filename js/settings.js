@@ -1388,7 +1388,7 @@ class SettingsManager extends BaseManager {
 
     if (this.pocketQuranRecitationAutoDockOnVisible) {
       this.pocketQuranRecitationAutoDockOnVisible.checked =
-        pq.recitationAutoDockOnVisible !== false;
+        pq.recitationAutoDockOnVisible === true;
     }
 
     const floatingAppearance =
@@ -5480,7 +5480,7 @@ class SettingsManager extends BaseManager {
         : existingPocketQuran.recitationFloatingEnabled === true,
       recitationAutoDockOnVisible: this.pocketQuranRecitationAutoDockOnVisible
         ? this.pocketQuranRecitationAutoDockOnVisible.checked
-        : existingPocketQuran.recitationAutoDockOnVisible !== false,
+        : existingPocketQuran.recitationAutoDockOnVisible === true,
       recitationFloatingAppearance:
         document.querySelector(
           'input[name="pocketQuranRecitationFloatingAppearance"]:checked',

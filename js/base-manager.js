@@ -15,6 +15,16 @@ class BaseManager {
   }
 
   /**
+   * Native <option> cannot render inline SVG, so use a text-style lock marker
+   * in Lucide themes to avoid colored emoji clashing with the icon theme.
+   */
+  _getLockedOptionLabel(label) {
+    const theme = window.dashboard?.iconThemes?.getCurrentTheme?.() || "emoji";
+    const lockPrefix = theme === "emoji" ? "🔒" : "🔒︎";
+    return `${lockPrefix} ${label}`;
+  }
+
+  /**
    * Close modal overlays only when clicking backdrop.
    */
   _bindOverlayCloseBehavior(overlayEl, closeFn) {
