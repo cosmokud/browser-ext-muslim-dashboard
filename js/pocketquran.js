@@ -713,10 +713,24 @@ class PocketQuranManager extends BaseManager {
     this._onPopupCommandStorage = (event) => {
       this.handlePopupCommandStorageEvent(event);
     };
+    this._globalPlaybackInstanceId = `dashboard-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+    this._onGlobalPlaybackRuntimeMessage = (message) => {
+      this.handleGlobalPlaybackRuntimeMessage(message);
+    };
+    this._suppressPopupSyncPublish = false;
 
     this.init();
 
     window.addEventListener("storage", this._onPopupCommandStorage);
+
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.runtime?.onMessage?.addListener
+    ) {
+      chrome.runtime.onMessage.addListener(
+        this._onGlobalPlaybackRuntimeMessage,
+      );
+    }
 
     document.addEventListener("md:settings-applied", (event) => {
       this.handleSettingsApplied(event?.detail?.settings);
@@ -2815,11 +2829,13 @@ class PocketQuranManager extends BaseManager {
     this._onAudioError = (e) => {
       console.error("PocketQuran: Audio error", e);
       this._isPlaying = false;
+      this.notifyGlobalPlaybackPaused();
       this.updatePlaybackUI();
     };
     this._onAudioPlaying = (event) => {
       this.enforceSingleRecitationAudioOwner();
       this._isPlaying = true;
+      this.notifyGlobalPlaybackStarted();
       this.updatePlaybackUI();
     };
     this._onAudioPause = (event) => {
@@ -2828,6 +2844,7 @@ class PocketQuranManager extends BaseManager {
         sourceAudio || this._audioElement,
       );
       this._isPlaying = false;
+      this.notifyGlobalPlaybackPaused();
       this.updatePlaybackUI();
     };
 
@@ -2899,6 +2916,81 @@ class PocketQuranManager extends BaseManager {
     const ownerKey = "__MD_PQ_ACTIVE_AUDIO__";
     if (window[ownerKey] === audio) {
       window[ownerKey] = null;
+    }
+  }
+
+  notifyGlobalPlaybackRuntime(type) {
+    if (
+      typeof chrome === "undefined" ||
+      !chrome.runtime?.sendMessage ||
+      !type
+    ) {
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(
+        {
+          type,
+          ownerId: this._globalPlaybackInstanceId,
+          source: "dashboard",
+          updatedAt: Date.now(),
+        },
+        () => {
+          const err = chrome.runtime?.lastError;
+          if (err) {
+            return;
+          }
+        },
+      );
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  notifyGlobalPlaybackStarted() {
+    this.notifyGlobalPlaybackRuntime("md_pq_playback_started");
+  }
+
+  notifyGlobalPlaybackPaused() {
+    this.notifyGlobalPlaybackRuntime("md_pq_playback_paused");
+  }
+
+  handleGlobalPlaybackRuntimeMessage(message) {
+    if (message?.type !== "md_pq_force_pause") return;
+
+    const ownerId = String(message?.ownerId || "").trim();
+    if (!ownerId || ownerId === this._globalPlaybackInstanceId) return;
+
+    this.pausePlaybackForGlobalSync({ resetTime: true });
+  }
+
+  pausePlaybackForGlobalSync({ resetTime = true } = {}) {
+    if (!this._audioElement) return;
+
+    const isActivelyPlaying =
+      this._isPlaying === true ||
+      (this._audioElement.paused === false &&
+        this._audioElement.ended === false);
+    if (!isActivelyPlaying) return;
+
+    try {
+      this._audioElement.pause();
+      if (resetTime) {
+        this._audioElement.currentTime = 0;
+      }
+    } catch (e) {
+      // no-op
+    }
+
+    this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
+    this._isPlaying = false;
+
+    this._suppressPopupSyncPublish = true;
+    try {
+      this.updatePlaybackUI();
+    } finally {
+      this._suppressPopupSyncPublish = false;
     }
   }
 
@@ -3390,6 +3482,7 @@ class PocketQuranManager extends BaseManager {
     this._isPlaying = false;
     this._playingAyah = null;
     this._isAutoplay = false;
+    this.notifyGlobalPlaybackPaused();
 
     this.resetRecitationCaches();
 
@@ -3416,6 +3509,7 @@ class PocketQuranManager extends BaseManager {
     this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
     this._isPlaying = false;
     this._playingAyah = null;
+    this.notifyGlobalPlaybackPaused();
     // Intentionally do NOT change this._isAutoplay: keep user's autoplay setting.
     this.resetRecitationCaches();
 
@@ -3479,6 +3573,7 @@ class PocketQuranManager extends BaseManager {
     // Normal end
     this._isPlaying = false;
     this._playingAyah = null;
+    this.notifyGlobalPlaybackPaused();
 
     if (
       this._recitationFloatingMode &&
@@ -4230,7 +4325,7 @@ class PocketQuranManager extends BaseManager {
   }
 
   publishPopupSyncState() {
-    if (!this.storage) return;
+    if (!this.storage || this._suppressPopupSyncPublish) return;
 
     try {
       this.storage.set(this._popupSyncStateKey, this.buildPopupSyncState());

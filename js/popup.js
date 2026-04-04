@@ -174,6 +174,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourcePopup = "popup";
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
+  const pocketQuranPlaybackMessageTypes = {
+    started: "md_pq_playback_started",
+    paused: "md_pq_playback_paused",
+    forcePause: "md_pq_force_pause",
+  };
+  const pocketQuranPopupPlaybackInstanceId = `popup-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
   const pocketQuranArabicFontFamilies = [
     "Noto Naskh Arabic",
     "Amiri",
@@ -2355,6 +2361,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function notifyPocketQuranGlobalPlayback(type) {
+    if (
+      typeof chrome === "undefined" ||
+      !chrome.runtime?.sendMessage ||
+      !type
+    ) {
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(
+        {
+          type,
+          ownerId: pocketQuranPopupPlaybackInstanceId,
+          source: "popup",
+          updatedAt: Date.now(),
+        },
+        () => {
+          const err = chrome.runtime?.lastError;
+          if (err) {
+            return;
+          }
+        },
+      );
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function notifyPocketQuranGlobalPlaybackStarted() {
+    notifyPocketQuranGlobalPlayback(pocketQuranPlaybackMessageTypes.started);
+  }
+
+  function notifyPocketQuranGlobalPlaybackPaused() {
+    notifyPocketQuranGlobalPlayback(pocketQuranPlaybackMessageTypes.paused);
+  }
+
   function resolvePocketQuranAudioUrl(value) {
     const raw = String(value || "").trim();
     if (!raw) return null;
@@ -2405,11 +2448,20 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.preload = "auto";
     audio.volume = clampNumber(pocketQuranState?.volume, 0, 1, 1);
 
+    audio.addEventListener("playing", () => {
+      notifyPocketQuranGlobalPlaybackStarted();
+    });
+
+    audio.addEventListener("pause", () => {
+      notifyPocketQuranGlobalPlaybackPaused();
+    });
+
     audio.addEventListener("ended", () => {
       void handlePocketQuranLocalAudioEnded();
     });
 
     audio.addEventListener("error", () => {
+      notifyPocketQuranGlobalPlaybackPaused();
       pocketQuranState = normalizePocketQuranState(
         {
           ...(pocketQuranState ||
@@ -2456,6 +2508,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
+    notifyPocketQuranGlobalPlaybackPaused();
     pocketQuranLocalPlaybackActive = false;
   }
 
@@ -2492,6 +2545,56 @@ document.addEventListener("DOMContentLoaded", () => {
     if (clearAutoplay) {
       persistPocketQuranSettingsPatch({ reciterAutoplay: false });
     }
+
+    notifyPocketQuranGlobalPlaybackPaused();
+  }
+
+  function pausePocketQuranLocalPlaybackForExternalSync() {
+    if (pocketQuranLocalAudio) {
+      try {
+        pocketQuranLocalAudio.pause();
+        pocketQuranLocalAudio.currentTime = 0;
+      } catch (e) {
+        // no-op
+      }
+    }
+
+    const baseState =
+      pocketQuranState || buildPocketQuranFallbackState(storage.getSettings());
+
+    pocketQuranState = normalizePocketQuranState(
+      {
+        ...baseState,
+        isPlaying: false,
+      },
+      storage.getSettings(),
+    );
+
+    pocketQuranLocalPlaybackActive = false;
+    renderPocketQuranControls();
+  }
+
+  function handlePocketQuranPlaybackRuntimeMessage(message) {
+    if (message?.type !== pocketQuranPlaybackMessageTypes.forcePause) {
+      return;
+    }
+
+    const ownerId = String(message?.ownerId || "").trim();
+    if (!ownerId || ownerId === pocketQuranPopupPlaybackInstanceId) {
+      return;
+    }
+
+    const isLocallyPlaying =
+      pocketQuranLocalPlaybackActive ||
+      (pocketQuranLocalAudio &&
+        pocketQuranLocalAudio.paused === false &&
+        pocketQuranLocalAudio.ended === false);
+
+    if (!isLocallyPlaying) {
+      return;
+    }
+
+    pausePocketQuranLocalPlaybackForExternalSync();
   }
 
   async function playPocketQuranAyahLocally(
@@ -4427,6 +4530,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("storage", handleStorageChange);
 
+  if (typeof chrome !== "undefined" && chrome.runtime?.onMessage?.addListener) {
+    chrome.runtime.onMessage.addListener(
+      handlePocketQuranPlaybackRuntimeMessage,
+    );
+  }
+
   if (typeof chrome !== "undefined" && chrome.storage?.onChanged?.addListener) {
     chrome.storage.onChanged.addListener(handleChromeStorageChange);
   }
@@ -4435,6 +4544,14 @@ document.addEventListener("DOMContentLoaded", () => {
     stopSoftResync();
     clearPocketQuranResyncTimers();
     deactivatePocketQuranLocalPlayback({ publishStoppedState: true });
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.runtime?.onMessage?.removeListener
+    ) {
+      chrome.runtime.onMessage.removeListener(
+        handlePocketQuranPlaybackRuntimeMessage,
+      );
+    }
     if (
       typeof chrome !== "undefined" &&
       chrome.storage?.onChanged?.removeListener
