@@ -52,9 +52,56 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-popup-reset-color]"),
   );
 
+  const popupTabButtons = Array.from(
+    document.querySelectorAll("[data-popup-tab]"),
+  );
+  const popupTabPanels = Array.from(
+    document.querySelectorAll("[data-popup-tab-panel]"),
+  );
+
+  const popupPqPlaybackState = document.getElementById("popupPqPlaybackState");
+  const popupPqRecitationAyah = document.getElementById(
+    "popupPqRecitationAyah",
+  );
+  const popupPqRecitationReciter = document.getElementById(
+    "popupPqRecitationReciter",
+  );
+  const popupPqPlayPauseBtn = document.getElementById("popupPqPlayPauseBtn");
+  const popupPqPrevBtn = document.getElementById("popupPqPrevBtn");
+  const popupPqNextBtn = document.getElementById("popupPqNextBtn");
+  const popupPqStopBtn = document.getElementById("popupPqStopBtn");
+  const popupPqVolumeSlider = document.getElementById("popupPqVolumeSlider");
+  const popupPqLoopSurahBtn = document.getElementById("popupPqLoopSurahBtn");
+  const popupPqLoopAyahBtn = document.getElementById("popupPqLoopAyahBtn");
+  const popupPqAutoplayBtn = document.getElementById("popupPqAutoplayBtn");
+  const popupPqAutoscrollBtn = document.getElementById("popupPqAutoscrollBtn");
+  const popupPqAyahArabic = document.getElementById("popupPqAyahArabic");
+  const popupPqAyahTranslation = document.getElementById(
+    "popupPqAyahTranslation",
+  );
+
+  const popupPqAyahModal = document.getElementById("popupPqAyahModal");
+  const popupPqAyahModalClose = document.getElementById(
+    "popupPqAyahModalClose",
+  );
+  const popupPqAyahCancelBtn = document.getElementById("popupPqAyahCancelBtn");
+  const popupPqAyahApplyBtn = document.getElementById("popupPqAyahApplyBtn");
+  const popupPqSurahSearchInput = document.getElementById(
+    "popupPqSurahSearchInput",
+  );
+  const popupPqSurahSelect = document.getElementById("popupPqSurahSelect");
+  const popupPqAyahSelectWrap = document.getElementById(
+    "popupPqAyahSelectWrap",
+  );
+  const popupPqAyahSelect = document.getElementById("popupPqAyahSelect");
+
   const settingsStorageKey = `${storage.prefix}settings`;
   const locationStorageKey = `${storage.prefix}lastLocation`;
   const popupBlurStorageKey = "popupBlurSettings";
+  const popupTabStorageKey = "popupActiveTab";
+  const pocketQuranPopupStateKey = "pocketQuran_popupState";
+  const pocketQuranPopupCommandKey = "pocketQuran_popupCommand";
+  const pocketQuranApiBase = "https://api.quran.com/api/v4";
   const popupBlurDefaults = {
     glassState: "dashboard",
     customBlurEnabled: false,
@@ -73,6 +120,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let popupBlurSettings = null;
   let popupBlurPortalled = false;
   let popupBlurPositionRaf = null;
+  let pocketQuranState = null;
+  let pocketQuranChapters = [];
+  const pocketQuranVersesCache = new Map();
+  let pocketQuranSnippetRequestId = 0;
+  const popupPqModalState = {
+    selectedSurah: null,
+    selectedAyah: null,
+  };
 
   function getDashboardUrl(pathWithQuery = "index.html") {
     return typeof chrome !== "undefined" && chrome.runtime?.getURL
@@ -1145,6 +1200,755 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const pocketQuranCommandTypes = {
+    togglePlayPause: "togglePlayPause",
+    playPreviousAyah: "playPreviousAyah",
+    playNextAyah: "playNextAyah",
+    stopPlayback: "stopPlayback",
+    setVolume: "setVolume",
+    toggleLoopAyah: "toggleLoopAyah",
+    toggleLoopSurah: "toggleLoopSurah",
+    toggleAutoplay: "toggleAutoplay",
+    toggleAutoScroll: "toggleAutoScroll",
+    selectAyah: "selectAyah",
+  };
+
+  function setActivePopupTab(tabName, opts = {}) {
+    const { persist = true } = opts;
+    const normalizedTab = tabName === "pocketQuran" ? "pocketQuran" : "prayer";
+
+    popupTabButtons.forEach((button) => {
+      if (!button) return;
+      const isActive = button.dataset.popupTab === normalizedTab;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-selected", isActive ? "true" : "false");
+      button.tabIndex = isActive ? 0 : -1;
+    });
+
+    popupTabPanels.forEach((panel) => {
+      if (!panel) return;
+      const isActive = panel.dataset.popupTabPanel === normalizedTab;
+      panel.classList.toggle("active", isActive);
+      panel.hidden = !isActive;
+    });
+
+    if (persist) {
+      storage.set(popupTabStorageKey, normalizedTab);
+    }
+  }
+
+  function setupPopupTabs() {
+    if (!popupTabButtons.length || !popupTabPanels.length) return;
+
+    const savedTab = storage.get(popupTabStorageKey, "prayer");
+    setActivePopupTab(savedTab, { persist: false });
+
+    popupTabButtons.forEach((button, index) => {
+      button.addEventListener("click", () => {
+        setActivePopupTab(button.dataset.popupTab, { persist: true });
+      });
+
+      button.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+        event.preventDefault();
+
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const nextIndex =
+          (index + direction + popupTabButtons.length) % popupTabButtons.length;
+        const nextButton = popupTabButtons[nextIndex];
+        if (!nextButton) return;
+        nextButton.focus();
+        setActivePopupTab(nextButton.dataset.popupTab, { persist: true });
+      });
+    });
+  }
+
+  function getPocketQuranChapterById(surah) {
+    const id = clampNumber(surah, 1, 114, 1);
+    return pocketQuranChapters.find((chapter) => chapter.id === id) || null;
+  }
+
+  function getPocketQuranSurahMaxAyah(surah) {
+    const chapter = getPocketQuranChapterById(surah);
+    return clampNumber(chapter?.verses_count, 1, 286, 286);
+  }
+
+  function buildPocketQuranFallbackState(settings = storage.getSettings()) {
+    const pqSettings = settings?.pocketQuran || {};
+    const activeSurah = clampNumber(pqSettings.lastSurahNumber, 1, 114, 1);
+    const activeAyah = clampNumber(
+      pqSettings.lastAyahNumber,
+      1,
+      getPocketQuranSurahMaxAyah(activeSurah),
+      1,
+    );
+
+    return {
+      activeSurah,
+      activeAyah,
+      recitationAyah: {
+        surah: activeSurah,
+        ayah: activeAyah,
+      },
+      isPlaying: false,
+      reciterId: pqSettings.reciterId || 7,
+      reciterName: "Loading reciter...",
+      volume: clampNumber(pqSettings.reciterVolume, 0, 1, 1),
+      isLooping: pqSettings.reciterLoop === true,
+      isSurahLooping: pqSettings.reciterSurahLoop === true,
+      isAutoplay: pqSettings.reciterAutoplay === true,
+      isAutoScroll: pqSettings.reciterAutoScroll === true,
+      translationResourceId: clampNumber(
+        pqSettings.translationResourceId,
+        1,
+        10000,
+        85,
+      ),
+    };
+  }
+
+  function normalizePocketQuranState(
+    rawState,
+    settings = storage.getSettings(),
+  ) {
+    const fallback = buildPocketQuranFallbackState(settings);
+    if (!rawState || typeof rawState !== "object") return fallback;
+
+    const activeSurah = clampNumber(
+      rawState.activeSurah,
+      1,
+      114,
+      fallback.activeSurah,
+    );
+    const activeAyah = clampNumber(
+      rawState.activeAyah,
+      1,
+      getPocketQuranSurahMaxAyah(activeSurah),
+      fallback.activeAyah,
+    );
+
+    const recitationSource =
+      rawState.recitationAyah && typeof rawState.recitationAyah === "object"
+        ? rawState.recitationAyah
+        : fallback.recitationAyah;
+    const recitationSurah = clampNumber(
+      recitationSource.surah,
+      1,
+      114,
+      activeSurah,
+    );
+    const recitationAyah = clampNumber(
+      recitationSource.ayah,
+      1,
+      getPocketQuranSurahMaxAyah(recitationSurah),
+      activeAyah,
+    );
+
+    return {
+      activeSurah,
+      activeAyah,
+      recitationAyah: {
+        surah: recitationSurah,
+        ayah: recitationAyah,
+      },
+      isPlaying: rawState.isPlaying === true,
+      reciterId: clampNumber(rawState.reciterId, 1, 10000, fallback.reciterId),
+      reciterName:
+        typeof rawState.reciterName === "string" && rawState.reciterName.trim()
+          ? rawState.reciterName.trim()
+          : fallback.reciterName,
+      volume: clampNumber(rawState.volume, 0, 1, fallback.volume),
+      isLooping: rawState.isLooping === true,
+      isSurahLooping: rawState.isSurahLooping === true,
+      isAutoplay: rawState.isAutoplay === true,
+      isAutoScroll: rawState.isAutoScroll === true,
+      translationResourceId: clampNumber(
+        rawState.translationResourceId,
+        1,
+        10000,
+        fallback.translationResourceId,
+      ),
+    };
+  }
+
+  function getPocketQuranCurrentTargetAyah(state = pocketQuranState) {
+    const source = state?.recitationAyah || {};
+    const fallbackSurah = clampNumber(state?.activeSurah, 1, 114, 1);
+    const surah = clampNumber(source.surah, 1, 114, fallbackSurah);
+    const ayah = clampNumber(
+      source.ayah,
+      1,
+      getPocketQuranSurahMaxAyah(surah),
+      clampNumber(state?.activeAyah, 1, getPocketQuranSurahMaxAyah(surah), 1),
+    );
+    return { surah, ayah };
+  }
+
+  function formatPocketQuranAyahLabel(surah, ayah) {
+    const chapter = getPocketQuranChapterById(surah);
+    const surahName = chapter?.name_simple || `Surah ${surah}`;
+    return `${surah}. ${surahName} · Ayah ${ayah}`;
+  }
+
+  function decodeHtmlString(value) {
+    const source = String(value || "").trim();
+    if (!source) return "";
+    const parser = document.createElement("textarea");
+    parser.innerHTML = source.replace(/<[^>]*>/g, " ");
+    return parser.value.replace(/\s+/g, " ").trim();
+  }
+
+  async function ensurePocketQuranChaptersLoaded(forceFetch = false) {
+    if (!forceFetch && pocketQuranChapters.length > 0)
+      return pocketQuranChapters;
+
+    const cached = storage.get("pocketQuran_chapters_cache", null);
+    const cachedAt = storage.get("pocketQuran_chapters_cache_at", 0);
+    const freshEnough = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+
+    if (
+      !forceFetch &&
+      freshEnough &&
+      Array.isArray(cached) &&
+      cached.length > 0
+    ) {
+      pocketQuranChapters = cached
+        .map((chapter) => ({
+          id: clampNumber(chapter?.id, 1, 114, 1),
+          name_simple: String(chapter?.name_simple || "").trim(),
+          name_arabic: String(chapter?.name_arabic || "").trim(),
+          verses_count: clampNumber(chapter?.verses_count, 1, 286, 286),
+        }))
+        .sort((left, right) => left.id - right.id);
+      return pocketQuranChapters;
+    }
+
+    try {
+      const response = await fetch(
+        `${pocketQuranApiBase}/chapters?language=en`,
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const chapters = Array.isArray(data?.chapters) ? data.chapters : [];
+
+      pocketQuranChapters = chapters
+        .map((chapter) => ({
+          id: clampNumber(chapter?.id, 1, 114, 1),
+          name_simple: String(chapter?.name_simple || "").trim(),
+          name_arabic: String(chapter?.name_arabic || "").trim(),
+          verses_count: clampNumber(chapter?.verses_count, 1, 286, 286),
+        }))
+        .sort((left, right) => left.id - right.id);
+
+      if (pocketQuranChapters.length > 0) {
+        storage.set("pocketQuran_chapters_cache", pocketQuranChapters);
+        storage.set("pocketQuran_chapters_cache_at", Date.now());
+      }
+    } catch (error) {
+      if (!Array.isArray(cached) || cached.length === 0) {
+        pocketQuranChapters = [];
+      }
+    }
+
+    return pocketQuranChapters;
+  }
+
+  async function fetchPocketQuranSurahVerses(surah, translationId) {
+    const surahId = clampNumber(surah, 1, 114, 1);
+    const tid = clampNumber(translationId, 1, 10000, 85);
+    const cacheKey = `${surahId}|${tid}`;
+
+    if (pocketQuranVersesCache.has(cacheKey)) {
+      return pocketQuranVersesCache.get(cacheKey);
+    }
+
+    const url = `${pocketQuranApiBase}/verses/by_chapter/${surahId}?fields=text_uthmani,verse_number,verse_key&translations=${tid}&per_page=300`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const verses = Array.isArray(data?.verses) ? data.verses : [];
+    pocketQuranVersesCache.set(cacheKey, verses);
+    return verses;
+  }
+
+  function setPocketQuranPlayPauseIcon(isPlaying) {
+    if (!popupPqPlayPauseBtn) return;
+
+    popupPqPlayPauseBtn.innerHTML = isPlaying
+      ? '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+  }
+
+  async function updatePocketQuranAyahSnippet() {
+    if (!popupPqAyahArabic || !popupPqAyahTranslation || !pocketQuranState)
+      return;
+
+    const requestId = ++pocketQuranSnippetRequestId;
+    const target = getPocketQuranCurrentTargetAyah();
+    const translationId = clampNumber(
+      pocketQuranState.translationResourceId,
+      1,
+      10000,
+      85,
+    );
+
+    popupPqAyahArabic.textContent = "Loading current ayah...";
+    popupPqAyahTranslation.textContent = "Loading translation...";
+
+    try {
+      const verses = await fetchPocketQuranSurahVerses(
+        target.surah,
+        translationId,
+      );
+      if (requestId !== pocketQuranSnippetRequestId) return;
+
+      const verse = verses.find(
+        (entry) => clampNumber(entry?.verse_number, 1, 286, 1) === target.ayah,
+      );
+
+      const arabic = String(verse?.text_uthmani || "").trim();
+      const translation = decodeHtmlString(verse?.translations?.[0]?.text);
+
+      popupPqAyahArabic.textContent = arabic || "Arabic text unavailable.";
+      popupPqAyahTranslation.textContent =
+        translation || "Translation unavailable for this ayah.";
+    } catch (error) {
+      if (requestId !== pocketQuranSnippetRequestId) return;
+      popupPqAyahArabic.textContent = "Unable to load Arabic ayah text.";
+      popupPqAyahTranslation.textContent = "Unable to load ayah translation.";
+    }
+  }
+
+  function renderPocketQuranControls() {
+    if (!popupPqRecitationAyah || !pocketQuranState) return;
+
+    const target = getPocketQuranCurrentTargetAyah();
+    const isPlaying = pocketQuranState.isPlaying === true;
+
+    popupPqRecitationAyah.textContent = formatPocketQuranAyahLabel(
+      target.surah,
+      target.ayah,
+    );
+
+    if (popupPqRecitationReciter) {
+      popupPqRecitationReciter.textContent =
+        pocketQuranState.reciterName || "Unknown Reciter";
+    }
+
+    if (popupPqPlaybackState) {
+      popupPqPlaybackState.textContent = isPlaying ? "Playing" : "Paused";
+      popupPqPlaybackState.classList.toggle("playing", isPlaying);
+    }
+
+    setPocketQuranPlayPauseIcon(isPlaying);
+
+    if (popupPqVolumeSlider) {
+      popupPqVolumeSlider.value = String(
+        Math.round(clampNumber(pocketQuranState.volume, 0, 1, 1) * 100),
+      );
+    }
+
+    popupPqLoopAyahBtn?.classList.toggle(
+      "active",
+      pocketQuranState.isLooping === true,
+    );
+    popupPqLoopSurahBtn?.classList.toggle(
+      "active",
+      pocketQuranState.isSurahLooping === true,
+    );
+    popupPqAutoplayBtn?.classList.toggle(
+      "active",
+      pocketQuranState.isAutoplay === true,
+    );
+    popupPqAutoscrollBtn?.classList.toggle(
+      "active",
+      pocketQuranState.isAutoScroll === true,
+    );
+    popupPqAutoscrollBtn?.setAttribute(
+      "aria-pressed",
+      pocketQuranState.isAutoScroll === true ? "true" : "false",
+    );
+
+    void updatePocketQuranAyahSnippet();
+  }
+
+  function setLocalPocketQuranTargetAyah(surah, ayah) {
+    const normalizedSurah = clampNumber(surah, 1, 114, 1);
+    const normalizedAyah = clampNumber(
+      ayah,
+      1,
+      getPocketQuranSurahMaxAyah(normalizedSurah),
+      1,
+    );
+
+    const sourceState =
+      pocketQuranState || buildPocketQuranFallbackState(storage.getSettings());
+
+    pocketQuranState = normalizePocketQuranState(
+      {
+        ...sourceState,
+        activeSurah: normalizedSurah,
+        activeAyah: normalizedAyah,
+        recitationAyah: {
+          surah: normalizedSurah,
+          ayah: normalizedAyah,
+        },
+      },
+      storage.getSettings(),
+    );
+
+    renderPocketQuranControls();
+  }
+
+  function sendPocketQuranCommand(action, payload = {}) {
+    const command = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+      action,
+      payload,
+      issuedAt: Date.now(),
+    };
+
+    storage.set(pocketQuranPopupCommandKey, command);
+  }
+
+  async function refreshPocketQuranState(settings = storage.getSettings()) {
+    await ensurePocketQuranChaptersLoaded();
+    const rawState = storage.get(pocketQuranPopupStateKey, null);
+    pocketQuranState = normalizePocketQuranState(rawState, settings);
+    renderPocketQuranControls();
+  }
+
+  function updatePocketQuranModalApplyState() {
+    if (!popupPqAyahApplyBtn) return;
+    const canApply =
+      Number.isFinite(popupPqModalState.selectedSurah) &&
+      Number.isFinite(popupPqModalState.selectedAyah);
+    popupPqAyahApplyBtn.disabled = !canApply;
+  }
+
+  function renderPocketQuranAyahOptions() {
+    if (!popupPqAyahSelectWrap || !popupPqAyahSelect) return;
+
+    const surah = clampNumber(popupPqModalState.selectedSurah, 1, 114, NaN);
+    if (!Number.isFinite(surah)) {
+      popupPqAyahSelectWrap.hidden = true;
+      popupPqAyahSelect.innerHTML = "";
+      popupPqModalState.selectedAyah = null;
+      updatePocketQuranModalApplyState();
+      return;
+    }
+
+    const maxAyah = getPocketQuranSurahMaxAyah(surah);
+    const target = getPocketQuranCurrentTargetAyah();
+    const fallbackAyah = target.surah === surah ? target.ayah : 1;
+    const selectedAyah = clampNumber(
+      popupPqModalState.selectedAyah,
+      1,
+      maxAyah,
+      fallbackAyah,
+    );
+
+    const options = [];
+    for (let ayah = 1; ayah <= maxAyah; ayah += 1) {
+      const isSelected = ayah === selectedAyah;
+      options.push(
+        `<option value="${ayah}" ${isSelected ? "selected" : ""}>Ayah ${ayah}</option>`,
+      );
+    }
+
+    popupPqAyahSelect.innerHTML = options.join("");
+    popupPqModalState.selectedAyah = selectedAyah;
+    popupPqAyahSelectWrap.hidden = false;
+    updatePocketQuranModalApplyState();
+  }
+
+  function renderPocketQuranSurahOptions() {
+    if (!popupPqSurahSelect) return;
+
+    const query = String(popupPqSurahSearchInput?.value || "")
+      .trim()
+      .toLowerCase();
+
+    const filtered = !query
+      ? pocketQuranChapters
+      : pocketQuranChapters.filter((chapter) => {
+          const idText = String(chapter.id);
+          const english = String(chapter.name_simple || "").toLowerCase();
+          const arabic = String(chapter.name_arabic || "");
+          return (
+            idText.includes(query) ||
+            english.includes(query) ||
+            arabic.includes(query)
+          );
+        });
+
+    if (!filtered.length) {
+      popupPqSurahSelect.innerHTML =
+        '<option value="" disabled selected>No matching surah found</option>';
+      popupPqModalState.selectedSurah = null;
+      renderPocketQuranAyahOptions();
+      return;
+    }
+
+    const selectedSurah = clampNumber(
+      popupPqModalState.selectedSurah,
+      1,
+      114,
+      filtered[0].id,
+    );
+
+    popupPqSurahSelect.innerHTML = filtered
+      .map((chapter) => {
+        const selectedAttr = chapter.id === selectedSurah ? " selected" : "";
+        const label =
+          `${chapter.id}. ${chapter.name_simple} ${chapter.name_arabic}`.trim();
+        return `<option value="${chapter.id}"${selectedAttr}>${label}</option>`;
+      })
+      .join("");
+
+    popupPqModalState.selectedSurah = selectedSurah;
+    renderPocketQuranAyahOptions();
+  }
+
+  async function openPocketQuranAyahModal() {
+    if (!popupPqAyahModal) return;
+
+    await ensurePocketQuranChaptersLoaded();
+
+    const target = getPocketQuranCurrentTargetAyah();
+    popupPqModalState.selectedSurah = target.surah;
+    popupPqModalState.selectedAyah = target.ayah;
+
+    if (popupPqSurahSearchInput) {
+      popupPqSurahSearchInput.value = "";
+    }
+
+    renderPocketQuranSurahOptions();
+
+    popupPqAyahModal.hidden = false;
+    requestAnimationFrame(() => {
+      popupPqSurahSearchInput?.focus();
+    });
+  }
+
+  function closePocketQuranAyahModal() {
+    if (!popupPqAyahModal) return;
+    popupPqAyahModal.hidden = true;
+  }
+
+  function applyPocketQuranModalSelection() {
+    const surah = clampNumber(popupPqModalState.selectedSurah, 1, 114, NaN);
+    const ayah = clampNumber(
+      popupPqModalState.selectedAyah,
+      1,
+      getPocketQuranSurahMaxAyah(surah),
+      NaN,
+    );
+
+    if (!Number.isFinite(surah) || !Number.isFinite(ayah)) return;
+
+    setLocalPocketQuranTargetAyah(surah, ayah);
+    sendPocketQuranCommand(pocketQuranCommandTypes.selectAyah, {
+      surah,
+      ayah,
+    });
+
+    closePocketQuranAyahModal();
+  }
+
+  function setupPocketQuranAyahModal() {
+    if (!popupPqAyahModal) return;
+
+    popupPqAyahModalClose?.addEventListener("click", () => {
+      closePocketQuranAyahModal();
+    });
+
+    popupPqAyahCancelBtn?.addEventListener("click", () => {
+      closePocketQuranAyahModal();
+    });
+
+    popupPqAyahApplyBtn?.addEventListener("click", () => {
+      applyPocketQuranModalSelection();
+    });
+
+    popupPqAyahModal.addEventListener("click", (event) => {
+      if (event.target === popupPqAyahModal) {
+        closePocketQuranAyahModal();
+      }
+    });
+
+    popupPqSurahSearchInput?.addEventListener("input", () => {
+      renderPocketQuranSurahOptions();
+    });
+
+    popupPqSurahSelect?.addEventListener("change", () => {
+      popupPqModalState.selectedSurah = clampNumber(
+        parseInt(popupPqSurahSelect.value, 10),
+        1,
+        114,
+        NaN,
+      );
+      popupPqModalState.selectedAyah = 1;
+      renderPocketQuranAyahOptions();
+    });
+
+    popupPqAyahSelect?.addEventListener("change", () => {
+      popupPqModalState.selectedAyah = clampNumber(
+        parseInt(popupPqAyahSelect.value, 10),
+        1,
+        getPocketQuranSurahMaxAyah(popupPqModalState.selectedSurah),
+        NaN,
+      );
+      updatePocketQuranModalApplyState();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (popupPqAyahModal.hidden) return;
+      closePocketQuranAyahModal();
+    });
+  }
+
+  function setupPocketQuranControls() {
+    if (!popupPqPlayPauseBtn) return;
+
+    popupPqPlayPauseBtn.addEventListener("click", () => {
+      const nextPlaying = !(pocketQuranState?.isPlaying === true);
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isPlaying: nextPlaying,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.togglePlayPause);
+    });
+
+    popupPqPrevBtn?.addEventListener("click", () => {
+      const target = getPocketQuranCurrentTargetAyah();
+      const previousAyah = clampNumber(
+        target.ayah - 1,
+        1,
+        getPocketQuranSurahMaxAyah(target.surah),
+        target.ayah,
+      );
+      setLocalPocketQuranTargetAyah(target.surah, previousAyah);
+      sendPocketQuranCommand(pocketQuranCommandTypes.playPreviousAyah);
+    });
+
+    popupPqNextBtn?.addEventListener("click", () => {
+      const target = getPocketQuranCurrentTargetAyah();
+      const nextAyah = clampNumber(
+        target.ayah + 1,
+        1,
+        getPocketQuranSurahMaxAyah(target.surah),
+        target.ayah,
+      );
+      setLocalPocketQuranTargetAyah(target.surah, nextAyah);
+      sendPocketQuranCommand(pocketQuranCommandTypes.playNextAyah);
+    });
+
+    popupPqStopBtn?.addEventListener("click", () => {
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isPlaying: false,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.stopPlayback);
+    });
+
+    popupPqVolumeSlider?.addEventListener("input", () => {
+      const volume = clampNumber(
+        parseInt(popupPqVolumeSlider.value, 10) / 100,
+        0,
+        1,
+        1,
+      );
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          volume,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.setVolume, { volume });
+    });
+
+    popupPqLoopAyahBtn?.addEventListener("click", () => {
+      const nextLoop = !(pocketQuranState?.isLooping === true);
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isLooping: nextLoop,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.toggleLoopAyah);
+    });
+
+    popupPqLoopSurahBtn?.addEventListener("click", () => {
+      const nextLoop = !(pocketQuranState?.isSurahLooping === true);
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isSurahLooping: nextLoop,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.toggleLoopSurah);
+    });
+
+    popupPqAutoplayBtn?.addEventListener("click", () => {
+      const nextAutoplay = !(pocketQuranState?.isAutoplay === true);
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isAutoplay: nextAutoplay,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.toggleAutoplay);
+    });
+
+    popupPqAutoscrollBtn?.addEventListener("click", () => {
+      const nextAutoScroll = !(pocketQuranState?.isAutoScroll === true);
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isAutoScroll: nextAutoScroll,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      sendPocketQuranCommand(pocketQuranCommandTypes.toggleAutoScroll);
+    });
+
+    bindShortcut(popupPqRecitationAyah, () => {
+      void openPocketQuranAyahModal();
+    });
+  }
+
   function isFiniteNumber(value) {
     const numericValue = Number(value);
     return Number.isFinite(numericValue);
@@ -1268,6 +2072,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     applyThemeAndIconSettings();
 
+    await refreshPocketQuranState(settings);
+
     const isPrayerVisible = settings.componentVisibility?.prayerTimes !== false;
     setPopupVisibility(isPrayerVisible);
 
@@ -1280,6 +2086,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleStorageChange(event) {
     const changedKey = event?.key;
+    const pocketQuranStateStorageEventKey = `${storage.prefix}${pocketQuranPopupStateKey}`;
+
+    if (changedKey === pocketQuranStateStorageEventKey) {
+      void refreshPocketQuranState();
+      return;
+    }
 
     if (
       changedKey === null ||
@@ -1313,6 +2125,9 @@ document.addEventListener("DOMContentLoaded", () => {
     resyncIntervalId = null;
   }
 
+  setupPopupTabs();
+  setupPocketQuranControls();
+  setupPocketQuranAyahModal();
   setupPopupBlurModal();
 
   bindShortcut(openDashboardButton, () => openDashboardSettingsTab("prayer"));

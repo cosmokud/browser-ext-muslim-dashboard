@@ -334,3 +334,312 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 .popup-blur-actions #popupBlurResetBtn {
   min-width: 94px;
 }
+
+.popup-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+}
+
+.popup-tab-btn {
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.popup-tab-btn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.popup-tab-btn.active {
+  background: color-mix(in srgb, var(--accent-gold) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent-gold) 55%, var(--glass-border));
+  color: var(--text-primary);
+}
+
+.popup-tab-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.28);
+}
+
+.popup-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.popup-tab-panel[hidden] {
+  display: none !important;
+}
+
+.popup-quran-card {
+  animation: none;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.popup-quran-header {
+  margin-bottom: 0;
+  align-items: center;
+}
+
+.popup-quran-header .card-title {
+  font-size: 1.05rem;
+}
+
+.popup-pq-playback-state {
+  padding: 0.18rem 0.62rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.popup-pq-playback-state.playing {
+  color: #000;
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.popup-pq-recitation-controls {
+  width: 100%;
+  justify-content: flex-start;
+  row-gap: var(--spacing-sm);
+}
+
+.popup-pq-recitation-controls .pq-recitation-floating-actions {
+  display: none;
+}
+
+.popup-pq-recitation-controls .pq-recitation-info {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.popup-pq-recitation-controls .pq-recitation-ayah {
+  width: 100%;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-pq-recitation-controls .pq-recitation-reciter {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popup-pq-recitation-controls .pq-recitation-buttons {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.popup-pq-recitation-controls .pq-recitation-options {
+  width: 100%;
+  justify-content: center;
+  border-left: none;
+  border-top: 1px solid var(--glass-border);
+  padding-left: 0;
+  padding-top: var(--spacing-sm);
+  gap: var(--spacing-xs);
+}
+
+.popup-pq-recitation-controls .pq-volume-slider {
+  width: 96px;
+}
+
+.popup-pq-ayah-snippet {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-subtle);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.popup-pq-ayah-arabic {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-arabic);
+  font-size: 1.08rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+  max-height: 94px;
+  overflow-y: auto;
+}
+
+.popup-pq-ayah-translation {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  max-height: 84px;
+  overflow-y: auto;
+}
+
+.popup-pq-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.56);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.popup-pq-modal-overlay[hidden] {
+  display: none !important;
+}
+
+.popup-pq-modal-content {
+  width: min(100%, 390px);
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--modal-popover-bg, var(--glass-bg));
+  box-shadow: var(--glass-shadow);
+}
+
+.popup-pq-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.popup-pq-modal-title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.popup-pq-modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1.12rem;
+  line-height: 1;
+}
+
+.popup-pq-modal-body {
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.popup-pq-modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.popup-pq-modal-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popup-pq-modal-search {
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-subtle);
+  color: var(--text-primary);
+  padding: 0 0.7rem;
+  font-size: 0.86rem;
+}
+
+.popup-pq-modal-search:focus-visible,
+.popup-pq-modal-select:focus-visible,
+.popup-pq-modal-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.24);
+}
+
+.popup-pq-modal-select {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-subtle);
+  color: var(--text-primary);
+  padding: 0.4rem;
+  font-size: 0.84rem;
+  min-height: 170px;
+}
+
+.popup-pq-ayah-select {
+  min-height: 194px;
+}
+
+.popup-pq-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.popup-pq-modal-btn {
+  min-height: 34px;
+  padding: 0 0.88rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.popup-pq-modal-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.popup-pq-modal-btn-primary {
+  background: var(--accent-gold);
+  color: #000;
+  border-color: var(--accent-gold);
+}

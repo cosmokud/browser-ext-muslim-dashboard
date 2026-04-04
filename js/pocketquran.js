@@ -686,7 +686,16 @@ class PocketQuranManager extends BaseManager {
     this._recitationFloatingPosition = null;
     this._recitationFloatingDrag = null;
 
+    this._popupSyncStateKey = "pocketQuran_popupState";
+    this._popupSyncCommandKey = "pocketQuran_popupCommand";
+    this._lastPopupCommandId = null;
+    this._onPopupCommandStorage = (event) => {
+      this.handlePopupCommandStorageEvent(event);
+    };
+
     this.init();
+
+    window.addEventListener("storage", this._onPopupCommandStorage);
 
     document.addEventListener("md:settings-applied", (event) => {
       this.handleSettingsApplied(event?.detail?.settings);
@@ -1644,6 +1653,7 @@ class PocketQuranManager extends BaseManager {
     }
 
     this.updateAyahDropdownActiveState();
+    this.publishPopupSyncState();
   }
 
   /**
@@ -2008,6 +2018,7 @@ class PocketQuranManager extends BaseManager {
         this._chapters = cached;
         this.renderSurahList();
         this.updateSurahInputValue({ force: true });
+        this.publishPopupSyncState();
         return;
       }
 
@@ -2029,6 +2040,7 @@ class PocketQuranManager extends BaseManager {
 
       this.renderSurahList();
       this.updateSurahInputValue({ force: true });
+      this.publishPopupSyncState();
     } catch (e) {
       console.error("PocketQuran: failed to load chapters", e);
       this._chapters = [];
@@ -2036,6 +2048,7 @@ class PocketQuranManager extends BaseManager {
       this.renderError(
         "Could not load Surah list. Check your internet connection.",
       );
+      this.publishPopupSyncState();
     }
   }
 
@@ -2122,6 +2135,7 @@ class PocketQuranManager extends BaseManager {
     if (surah === this._activeSurah && versesAlreadyRendered) {
       this.updateSurahActiveState();
       this.updateSurahInputValue({ force: true });
+      this.publishPopupSyncState();
       return;
     }
 
@@ -2150,6 +2164,8 @@ class PocketQuranManager extends BaseManager {
         });
       });
     }
+
+    this.publishPopupSyncState();
   }
 
   async loadSurah(surah, opts = {}) {
@@ -2668,6 +2684,7 @@ class PocketQuranManager extends BaseManager {
 
     // Create reciter modal
     this.createReciterModal();
+    this.publishPopupSyncState();
   }
 
   attachAudioListeners(audio) {
@@ -3888,6 +3905,198 @@ class PocketQuranManager extends BaseManager {
     return `${surahPrefix}${surahName} · ${ayahPart}`;
   }
 
+  buildPopupSyncState() {
+    const activeSurah = this.clampNumber(this._activeSurah, 1, 114, 1);
+    const chapter = this._chapters?.find((c) => c.id === activeSurah);
+    const maxAyah =
+      (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
+    const activeAyah = this.clampNumber(this._activeAyah, 1, maxAyah, 1);
+
+    const recitationTarget = this._playingAyah || {
+      surah: activeSurah,
+      ayah: activeAyah,
+    };
+    const recitationSurah = this.clampNumber(
+      recitationTarget?.surah,
+      1,
+      114,
+      activeSurah,
+    );
+    const recitationChapter = this._chapters?.find(
+      (c) => c.id === recitationSurah,
+    );
+    const recitationMaxAyah =
+      (Number.isFinite(recitationChapter?.verses_count) &&
+        recitationChapter.verses_count) ||
+      286;
+    const recitationAyah = this.clampNumber(
+      recitationTarget?.ayah,
+      1,
+      recitationMaxAyah,
+      activeAyah,
+    );
+
+    return {
+      source: "dashboard",
+      updatedAt: Date.now(),
+      activeSurah,
+      activeAyah,
+      recitationAyah: {
+        surah: recitationSurah,
+        ayah: recitationAyah,
+      },
+      isPlaying: this._isPlaying === true,
+      reciterId: this._activeReciterId,
+      reciterName: this.getActiveReciterName(),
+      volume: this.clampNumber(this._volume, 0, 1, 1),
+      isLooping: this._isLooping === true,
+      isSurahLooping: this._isSurahLooping === true,
+      isAutoplay: this._isAutoplay === true,
+      isAutoScroll: this._isAutoScroll === true,
+      translationResourceId: this.normalizeTranslationId(
+        this._activeTranslationId,
+      ),
+    };
+  }
+
+  publishPopupSyncState() {
+    if (!this.storage) return;
+
+    try {
+      this.storage.set(this._popupSyncStateKey, this.buildPopupSyncState());
+    } catch (e) {
+      // no-op
+    }
+  }
+
+  async applyPopupAyahSelection(surahNumber, ayahNumber) {
+    const targetSurah = this.clampNumber(
+      surahNumber,
+      1,
+      114,
+      this._activeSurah,
+    );
+
+    if (targetSurah !== this._activeSurah) {
+      await this.setActiveSurah(targetSurah, {
+        preserveAyah: false,
+        autoScroll: false,
+        preserveDashboardScroll: true,
+      });
+    }
+
+    const targetAyah = this.clampNumber(
+      ayahNumber,
+      1,
+      this.getActiveSurahAyahCount() || 286,
+      this._activeAyah,
+    );
+
+    const wasPlaying = this._isPlaying === true;
+
+    this.scrollToAyah(targetAyah, { persist: true, smooth: true });
+    this._playingAyah = { surah: targetSurah, ayah: targetAyah };
+
+    if (!this._headerControlsBox) {
+      this.showHeaderControls();
+    }
+
+    if (wasPlaying) {
+      await this.playAyah(targetSurah, targetAyah, { forceRestart: true });
+      return;
+    }
+
+    try {
+      if (this._audioElement) {
+        this._audioElement.pause();
+        this._audioElement.currentTime = 0;
+      }
+    } catch (e) {
+      // no-op
+    }
+
+    this._isPlaying = false;
+    this.updatePlaybackUI();
+  }
+
+  handlePopupCommandStorageEvent(event) {
+    if (!event || event.storageArea !== localStorage) return;
+
+    const commandStorageKey = `${this.storage.prefix}${this._popupSyncCommandKey}`;
+    if (event.key !== commandStorageKey || !event.newValue) return;
+
+    let command = null;
+    try {
+      command = JSON.parse(event.newValue);
+    } catch (e) {
+      return;
+    }
+
+    if (!command || typeof command !== "object") return;
+
+    const commandId = command.id == null ? "" : String(command.id);
+    if (commandId && commandId === this._lastPopupCommandId) return;
+
+    this._lastPopupCommandId = commandId || null;
+    void this.handlePopupCommand(command);
+  }
+
+  async handlePopupCommand(command) {
+    if (!command || typeof command !== "object") return;
+
+    const action = String(command.action || "").trim();
+    const payload =
+      command.payload && typeof command.payload === "object"
+        ? command.payload
+        : {};
+
+    if (!action) return;
+
+    try {
+      switch (action) {
+        case "togglePlayPause": {
+          const target = this._playingAyah || {
+            surah: this._activeSurah,
+            ayah: this._activeAyah,
+          };
+          this.togglePlayPause(target.surah, target.ayah);
+          break;
+        }
+        case "playPreviousAyah":
+          this.playPreviousAyah();
+          break;
+        case "playNextAyah":
+          this.playNextAyah();
+          break;
+        case "stopPlayback":
+          this.stopPlayback();
+          break;
+        case "setVolume":
+          this.setVolume(this.clampNumber(payload.volume, 0, 1, this._volume));
+          break;
+        case "toggleLoopAyah":
+          this.toggleLoop();
+          break;
+        case "toggleLoopSurah":
+          this.toggleSurahLoop();
+          break;
+        case "toggleAutoplay":
+          this.toggleAutoplay();
+          break;
+        case "toggleAutoScroll":
+          this.toggleAutoScroll();
+          break;
+        case "selectAyah":
+          await this.applyPopupAyahSelection(payload.surah, payload.ayah);
+          break;
+        default:
+          return;
+      }
+    } finally {
+      this.publishPopupSyncState();
+    }
+  }
+
   /**
    * Select a reciter.
    */
@@ -4220,6 +4429,8 @@ class PocketQuranManager extends BaseManager {
 
     // Update ayah play buttons
     this.updateAyahPlayButtons();
+
+    this.publishPopupSyncState();
   }
 
   /**
