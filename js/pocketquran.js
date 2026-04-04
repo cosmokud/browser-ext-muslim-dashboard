@@ -4030,7 +4030,11 @@ class PocketQuranManager extends BaseManager {
       this._activeAyah,
     );
 
-    const wasPlaying = this._isPlaying === true;
+    const isActivelyPlaying =
+      this._isPlaying === true ||
+      (this._audioElement &&
+        this._audioElement.paused === false &&
+        this._audioElement.ended === false);
 
     this.scrollToAyah(targetAyah, { persist: true, smooth: true });
     this._playingAyah = { surah: targetSurah, ayah: targetAyah };
@@ -4039,7 +4043,16 @@ class PocketQuranManager extends BaseManager {
       this.showHeaderControls();
     }
 
-    if (wasPlaying) {
+    if (isActivelyPlaying) {
+      try {
+        if (this._audioElement) {
+          this._audioElement.pause();
+          this._audioElement.currentTime = 0;
+        }
+      } catch (e) {
+        // no-op
+      }
+
       await this.playAyah(targetSurah, targetAyah, { forceRestart: true });
       return;
     }

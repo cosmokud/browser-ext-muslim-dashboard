@@ -2502,7 +2502,22 @@ document.addEventListener("DOMContentLoaded", () => {
           lastAyahNumber: targetAyah,
         });
 
-        if (state.isPlaying === true) {
+        const isActivelyPlaying =
+          state.isPlaying === true ||
+          (pocketQuranLocalAudio &&
+            pocketQuranLocalAudio.paused === false &&
+            pocketQuranLocalAudio.ended === false);
+
+        if (isActivelyPlaying) {
+          if (pocketQuranLocalAudio) {
+            try {
+              pocketQuranLocalAudio.pause();
+              pocketQuranLocalAudio.currentTime = 0;
+            } catch (e) {
+              // no-op
+            }
+          }
+
           await playPocketQuranAyahLocally(targetSurah, targetAyah, {
             forceRestart: true,
           });
