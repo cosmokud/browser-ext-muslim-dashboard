@@ -13649,8 +13649,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-sm);
+  padding: 0.45rem 0.6rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.08);
@@ -13658,24 +13658,33 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
 }
 
+.pocket-quran-surah-picker,
 .pocket-quran-ayah-nav {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: calc(var(--spacing-xs) + 2px);
+  flex: 1 1 220px;
+  min-width: 0;
 }
 
 .pocket-quran-surah-picker > .pocket-quran-control-label,
 .pocket-quran-ayah-nav > .pocket-quran-control-label {
   margin: 0;
   white-space: nowrap;
-  min-width: 52px;
+  min-width: 44px;
 }
 
 .pocket-quran-surah-picker > .pocket-quran-combobox,
 .pocket-quran-ayah-nav > .pocket-quran-combobox {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+#pocketQuranAyahCombobox {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .pocket-quran-ayah-row {
@@ -13718,7 +13727,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-input {
-  width: 60px;
+  width: 52px;
   text-align: center;
 }
 
@@ -13756,9 +13765,9 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   margin-left: auto;
-  padding: 0.45rem 0.6rem;
+  padding: 0.38rem 0.5rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.06);
@@ -13773,7 +13782,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pocket-quran-size-control {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   min-width: 0;
 }
 
@@ -13797,11 +13806,17 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  line-height: 1;
+  line-height: 0;
   transition:
     transform var(--transition-fast),
     background var(--transition-fast),
     border-color var(--transition-fast);
+}
+
+.pocket-quran-size-step-symbol {
+  display: inline-block;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .pocket-quran-size-step-btn:hover {
@@ -13824,9 +13839,9 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-size-range {
-  width: 88px;
-  min-width: 88px;
-  flex: 0 0 88px;
+  width: 76px;
+  min-width: 76px;
+  flex: 0 0 76px;
 }
 
 .pocket-quran-size-value {
