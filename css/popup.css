@@ -428,17 +428,17 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   width: 100%;
   min-width: 0;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.35rem;
 }
 
 .popup-pq-recitation-controls .pq-recitation-ayah {
-  width: auto;
-  max-width: 52%;
+  width: 100%;
+  max-width: 100%;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   justify-content: center;
   align-items: center;
   font-size: 0.92rem;
@@ -447,10 +447,19 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   text-overflow: ellipsis;
 }
 
+.popup-pq-reciter-volume-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+}
+
 .popup-pq-recitation-controls .pq-recitation-reciter {
-  width: auto;
-  max-width: 42%;
-  text-align: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -508,15 +517,16 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-recitation-controls .popup-pq-volume-control {
-  order: 3;
-  width: 100%;
-  justify-content: center;
+  order: initial;
+  width: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
   padding-top: 0;
   border-top: none;
 }
 
 .popup-pq-recitation-controls .pq-volume-slider {
-  width: 96px;
+  width: 90px;
 }
 
 .popup-pq-size-controls {
@@ -540,6 +550,18 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   gap: 4px;
 }
 
+.popup-pq-size-controls .popup-pq-size-label-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+}
+
+.popup-pq-size-controls .popup-pq-size-label-row .pocket-quran-control-label {
+  margin: 0;
+}
+
 .popup-pq-size-controls .pocket-quran-size-stepper {
   width: 100%;
   flex: 1 1 auto;
@@ -553,9 +575,12 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-size-controls .pocket-quran-size-value {
-  min-width: 0;
-  align-self: flex-end;
+  min-width: 44px;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
   font-size: 0.74rem;
+  line-height: 1.1;
 }
 
 .popup-pq-ayah-snippet {
