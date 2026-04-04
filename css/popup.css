@@ -10,19 +10,6 @@ body {
   background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
 }
 
-html.popup-pocket-quran-tab,
-body.popup-pocket-quran-tab {
-  width: 560px;
-  min-height: 700px !important;
-  max-height: min(92vh, 860px) !important;
-}
-
-body.popup-pocket-quran-tab .popup-shell {
-  max-height: calc(min(92vh, 860px) - 18px);
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   width: 0;
@@ -39,11 +26,6 @@ body.popup-prayer-times {
   overflow: hidden;
   background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
   background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
-}
-
-body.popup-prayer-times.popup-pocket-quran-tab {
-  min-height: 700px !important;
-  max-height: min(92vh, 860px) !important;
 }
 
 body.popup-prayer-times .card:hover {
@@ -897,11 +879,4 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   background: var(--accent-gold);
   color: #000;
   border-color: var(--accent-gold);
-}
-
-@media (max-width: 620px) {
-  html.popup-pocket-quran-tab,
-  body.popup-pocket-quran-tab {
-    width: min(96vw, 560px);
-  }
 }

@@ -1413,12 +1413,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function updatePopupViewportForTab(tabName) {
-    const isPocketQuranTab = tabName === "pocketQuran";
-    document.documentElement?.classList.toggle(
-      "popup-pocket-quran-tab",
-      isPocketQuranTab,
-    );
-    document.body?.classList.toggle("popup-pocket-quran-tab", isPocketQuranTab);
+    // Chromium extension popups can be unstable when trying to resize per-tab.
+    // Keep popup dimensions static.
+    return;
   }
 
   function setActivePopupTab(tabName, opts = {}) {
