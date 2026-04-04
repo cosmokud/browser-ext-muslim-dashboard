@@ -3496,7 +3496,11 @@ class PocketQuranManager extends BaseManager {
     this._recitationAutoDockObserver = new IntersectionObserver(
       (entries) => {
         const entry = Array.isArray(entries) ? entries[0] : null;
-        if (!entry || !this._headerControlsBox || !this._recitationFloatingMode) {
+        if (
+          !entry ||
+          !this._headerControlsBox ||
+          !this._recitationFloatingMode
+        ) {
           return;
         }
 
@@ -3526,7 +3530,8 @@ class PocketQuranManager extends BaseManager {
       return;
     }
 
-    const target = this.card?.querySelector(".pocket-quran-header") || this.card;
+    const target =
+      this.card?.querySelector(".pocket-quran-header") || this.card;
     if (!target) return;
 
     this.ensureRecitationAutoDockObserver();

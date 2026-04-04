@@ -11355,10 +11355,9 @@ body.sticky-note-resizing {
 
 .weather-content {
   display: grid;
-  grid-template-columns: minmax(310px, 1fr) minmax(
-      0,
-      clamp(26ch, 35vw, 64ch)
-    ) minmax(310px, 1fr);
+  grid-template-columns:
+    minmax(310px, 1fr) minmax(0, clamp(26ch, 35vw, 64ch))
+    minmax(310px, 1fr);
   align-items: center;
   gap: var(--spacing-xl);
   width: 100%;
