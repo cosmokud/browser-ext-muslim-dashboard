@@ -282,6 +282,10 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   :is(
     .support-kofi-card::before,
     .support-feedback-card::before,
+    .support-kofi-badge,
+    .support-feedback-badge,
+    .support-kofi-cta,
+    .support-feedback-cta,
     .fasting-bar__fill,
     .fasting-subtitle--recommendation,
     .fasting-subtitle--forbidden,
@@ -6408,6 +6412,34 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
   animation: supportKofiFloat 2.6s ease-in-out infinite;
   z-index: 1;
+}
+
+.support-feedback-badge-github {
+  font-size: 0;
+}
+
+.support-feedback-badge-github .support-feedback-github-icon {
+  width: 62%;
+  height: 62%;
+  display: none;
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.support-feedback-badge-github .support-feedback-github-icon--dark {
+  display: block;
+}
+
+html[data-theme-mode="light"]
+  .support-feedback-badge-github
+  .support-feedback-github-icon--dark {
+  display: none;
+}
+
+html[data-theme-mode="light"]
+  .support-feedback-badge-github
+  .support-feedback-github-icon--light {
+  display: block;
 }
 
 .support-feedback-body {
