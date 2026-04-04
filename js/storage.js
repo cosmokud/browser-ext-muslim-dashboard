@@ -376,6 +376,7 @@ class StorageManager {
         arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
+        translationFontFamily: "Poppins",
         translationResourceId: 85, // M.A.S. Abdel Haleem
         recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: true,
@@ -407,7 +408,7 @@ class StorageManager {
         arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
-        translationFontFamily: "Amiri",
+        translationFontFamily: "Poppins",
       },
 
       // Debug settings (visible only when ENABLE_DEBUG_MODE is true)

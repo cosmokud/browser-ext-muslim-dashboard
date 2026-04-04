@@ -12724,6 +12724,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   grid-column: 1 / -1;
   --pq-arabic-size: 32px;
   --pq-translation-size: 18px;
+  --pq-translation-font-family: var(--font-primary);
 }
 
 .pocket-quran-header {
@@ -13892,6 +13893,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-ayah-tr {
   margin-top: var(--spacing-sm);
+  font-family: var(--pq-translation-font-family, var(--font-primary));
   font-size: var(--pq-translation-size);
   color: var(--text-secondary);
   padding-left: 56px;

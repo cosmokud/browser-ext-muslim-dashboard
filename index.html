@@ -5085,6 +5085,64 @@
             </div>
 
             <div class="setting-group">
+              <label class="setting-label">Reciter</label>
+              <p class="setting-hint">
+                Select a reciter for the Pocket Quran card playback.
+              </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranReciterPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqReciterModal"
+              >
+                <span id="pocketQuranReciterPickerLabel">Select reciter…</span>
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Arabic Font Family (Card)</label>
+              <p class="setting-hint">
+                Open the Arabic font picker used by the Pocket Quran card.
+              </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranArabicFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranArabicFontPickerLabel"
+                  >Select Arabic font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+            <div class="setting-group">
+              <label
+                class="setting-label"
+                for="pocketQuranTranslationFontFamily"
+                >Translation Font Family (Card)</label
+              >
+              <p class="setting-hint">
+                Choose the translation font used in the Pocket Quran card.
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranTranslationFontFamily"
+              >
+                <option value="Poppins" selected>Poppins</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
               <label class="setting-label">Popup Quran Typography</label>
               <p class="setting-hint">
                 These settings only affect the browser popup Quran player.
@@ -5134,9 +5192,9 @@
                 class="setting-select"
                 id="pocketQuranPopupTranslationFontFamily"
               >
-                <option value="Poppins">Poppins</option>
+                <option value="Poppins" selected>Poppins</option>
                 <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
-                <option value="Amiri" selected>Amiri</option>
+                <option value="Amiri">Amiri</option>
                 <option value="Georgia">Georgia</option>
                 <option value="Cascadia Code">Cascadia Code</option>
                 <option value="Courier New">Courier New</option>

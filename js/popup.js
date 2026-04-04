@@ -392,7 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pocketQuranPopupTranslationFontFamilies.includes(normalized)) {
       return normalized;
     }
-    return "Amiri";
+    return "Poppins";
   }
 
   function resolvePocketQuranPopupTypography(

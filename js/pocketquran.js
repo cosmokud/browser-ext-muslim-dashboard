@@ -205,6 +205,15 @@ class PocketQuranManager extends BaseManager {
     "KFGQPC Sindhi Naskh Regular",
   ];
 
+  static TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
+
   static DEFAULT_TAJWEED_COLORS = {
     ham_wasl: "#aaaaaa",
     slnt: "#aaaaaa",
@@ -617,6 +626,7 @@ class PocketQuranManager extends BaseManager {
 
     // Arabic font state
     this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+    this._translationFontFamily = "Poppins";
 
     // Font picker modal
     this._fontModal = null;
@@ -740,6 +750,12 @@ class PocketQuranManager extends BaseManager {
 
     // Initialize Arabic font family from settings
     this.applyArabicFontFamily(pq.arabicFontFamily, {
+      persist: false,
+      recalculate: false,
+    });
+
+    // Initialize translation font family from settings
+    this.applyTranslationFontFamily(pq.translationFontFamily, {
       persist: false,
       recalculate: false,
     });
@@ -3497,6 +3513,15 @@ class PocketQuranManager extends BaseManager {
         : this.storage.getSettings();
     const pq = normalized?.pocketQuran || {};
 
+    this.applyArabicFontFamily(pq.arabicFontFamily, {
+      persist: false,
+      recalculate: true,
+    });
+    this.applyTranslationFontFamily(pq.translationFontFamily, {
+      persist: false,
+      recalculate: true,
+    });
+
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
       pq.recitationAutoDockOnVisible !== false;
@@ -4229,6 +4254,14 @@ class PocketQuranManager extends BaseManager {
     this._activeReciterId = id;
     this.persistPocketQuranSettings({ reciterId: id });
 
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:pq-reciter-selected", {
+          detail: { reciterId: id },
+        }),
+      );
+    } catch (e) {}
+
     this.resetRecitationCaches();
 
     const isActivelyPlaying =
@@ -4936,10 +4969,31 @@ class PocketQuranManager extends BaseManager {
     return "KFGQPC Uthman Taha Naskh";
   }
 
+  normalizeTranslationFontFamily(value) {
+    const v = String(value || "").trim();
+    if (PocketQuranManager.TRANSLATION_FONT_FAMILIES.includes(v)) return v;
+    return "Poppins";
+  }
+
+  resolveTranslationFontCssValue(fontFamily) {
+    if (fontFamily === "Georgia") {
+      return '"Georgia", serif';
+    }
+    if (fontFamily === "Courier New") {
+      return '"Courier New", monospace';
+    }
+    if (fontFamily === "Cascadia Code") {
+      return '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+    return `"${fontFamily}", var(--font-primary)`;
+  }
+
   applyArabicFontFamily(fontFamily, opts = {}) {
     const { persist = false, recalculate = true } = opts;
 
     const normalized = this.normalizeArabicFontFamily(fontFamily);
+    const previous = this._arabicFontFamily;
+    const fontChanged = previous !== normalized;
     this._arabicFontFamily = normalized;
 
     if (this.card) {
@@ -4953,13 +5007,58 @@ class PocketQuranManager extends BaseManager {
 
     this.syncTajweedAvailabilityForFont();
 
-    if (recalculate) {
+    if (recalculate && fontChanged) {
       this._ayahHeights.clear();
       this.recalculateVirtualization();
     }
 
     if (persist) {
       this.persistPocketQuranSettings({ arabicFontFamily: normalized });
+    }
+
+    if (fontChanged) {
+      try {
+        document.dispatchEvent(
+          new CustomEvent("md:pq-arabic-font-selected", {
+            detail: { fontFamily: normalized },
+          }),
+        );
+      } catch (e) {}
+    }
+  }
+
+  applyTranslationFontFamily(fontFamily, opts = {}) {
+    const { persist = false, recalculate = true } = opts;
+
+    const normalized = this.normalizeTranslationFontFamily(fontFamily);
+    const previous = this._translationFontFamily;
+    const fontChanged = previous !== normalized;
+    this._translationFontFamily = normalized;
+
+    if (this.card) {
+      this.card.style.setProperty(
+        "--pq-translation-font-family",
+        this.resolveTranslationFontCssValue(normalized),
+      );
+    }
+
+    if (recalculate && fontChanged) {
+      this._ayahHeights.clear();
+      this.recalculateVirtualization();
+    }
+
+    if (persist) {
+      this.persistPocketQuranSettings({ translationFontFamily: normalized });
+    }
+
+    if (fontChanged) {
+      try {
+        document.dispatchEvent(
+          new CustomEvent("md:pq-translation-font-selected", {
+            detail: { fontFamily: normalized },
+          }),
+        );
+      } catch (e) {}
     }
   }
 
