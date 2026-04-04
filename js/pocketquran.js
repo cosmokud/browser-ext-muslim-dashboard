@@ -1615,6 +1615,40 @@ class PocketQuranManager extends BaseManager {
     this.renderVisibleAyahs(start, end);
   }
 
+  refreshPocketQuranContentArea(opts = {}) {
+    const { keepScrollPosition = true } = opts;
+
+    if (!this._activeVerses?.length) return;
+
+    const previousScrollTop = this._virtualContainer?.scrollTop || 0;
+
+    this._programmaticScroll = null;
+    this._ayahHeights.clear();
+    this._avgAyahHeight = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
+
+    // Rebuild only the virtualized Quran content region.
+    this.initVirtualization();
+
+    if (!keepScrollPosition) return;
+
+    requestAnimationFrame(() => {
+      if (!this._virtualContainer) return;
+
+      const maxScrollTop = Math.max(
+        0,
+        this._virtualContainer.scrollHeight -
+          this._virtualContainer.clientHeight,
+      );
+
+      this._virtualContainer.scrollTop = Math.min(
+        previousScrollTop,
+        maxScrollTop,
+      );
+      this._lastScrollTop = this._virtualContainer.scrollTop;
+      this.handleVirtualScroll();
+    });
+  }
+
   /**
    * Scroll to a specific ayah number (1-indexed).
    * Uses a two-pass approach: first render the ayahs, measure them,
@@ -2507,8 +2541,7 @@ class PocketQuranManager extends BaseManager {
     this.updateTextVisibilityToggleUI({ allowBothOff });
 
     if (changed && recalculate) {
-      this._ayahHeights.clear();
-      this.recalculateVirtualization();
+      this.refreshPocketQuranContentArea({ keepScrollPosition: true });
     }
 
     if (persist) {
