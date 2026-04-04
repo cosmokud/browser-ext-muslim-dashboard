@@ -14937,57 +14937,40 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   max-width: 100%;
 }
 
-.pq-recitation-controls-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  flex: 0 0 100%;
-  width: 100%;
-  min-width: 0;
-  margin-bottom: 2px;
-}
-
 .pq-recitation-floating-actions {
   position: static;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: var(--spacing-xs);
   margin-left: auto;
+  flex: 0 0 auto;
   z-index: 2;
-}
-
-.pq-recitation-btn.pq-recitation-float-toggle-btn,
-.pq-recitation-btn.pq-recitation-close-btn {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1;
-  padding: 0;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating
   .pq-recitation-floating-actions {
-  gap: 4px;
-}
-
-.pq-recitation-controls.pq-recitation-controls-floating
-  .pq-recitation-controls-header {
-  margin-bottom: 0;
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  margin-left: 0;
+  z-index: 3;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating {
+  --pq-floating-actions-safe-width: 86px;
+  --pq-floating-actions-safe-height: 44px;
   position: fixed;
   z-index: 10020;
   margin: 0;
   max-width: min(680px, calc(100vw - 16px));
-  gap: 6px;
-  row-gap: 6px;
-  justify-content: center;
-  padding: 6px 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-xs);
+  justify-content: flex-start;
+  padding: calc(var(--spacing-xs) + var(--pq-floating-actions-safe-height))
+    calc(var(--spacing-xs) + var(--pq-floating-actions-safe-width))
+    var(--spacing-xs) var(--spacing-xs);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
   cursor: grab;
 }
@@ -14998,31 +14981,44 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-buttons {
   order: 2;
+  width: 100%;
   margin-left: 0;
   justify-content: center;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-options {
-  order: 2;
-  flex: 0 1 auto;
-  width: auto;
+  order: 3;
+  flex: 0 0 auto;
+  width: 100%;
   justify-content: center;
-  gap: var(--spacing-xs);
+  row-gap: var(--spacing-sm);
+  column-gap: var(--spacing-xs);
   margin-top: 0;
-  padding-left: var(--spacing-xs);
-  padding-top: 0;
-  border-left: 1px solid var(--glass-border);
-  border-top: none;
+  padding-left: 0;
+  padding-top: var(--spacing-xs);
+  border-left: none;
+  border-top: 1px solid var(--glass-border);
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating
+  .pq-recitation-options
+  .pq-volume-control {
+  flex: 0 0 100%;
+  justify-content: center;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-volume-slider {
-  width: 72px;
+  width: 110px;
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
   order: 1;
-  flex: 0 1 auto;
-  max-width: min(56vw, 360px);
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  padding-right: calc(
+    var(--pq-floating-actions-safe-width) - var(--spacing-xs)
+  );
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating.pq-recitation-controls-floating-opaque {
@@ -15044,8 +15040,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-close-btn svg,
 .pq-recitation-close-btn span {
   display: block;
-  width: 11px;
-  height: 11px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
   color: inherit;
 }
@@ -15173,6 +15169,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-options {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   padding-left: var(--spacing-sm);
   border-left: 1px solid var(--glass-border);
@@ -15259,48 +15256,29 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
   .pq-recitation-options {
     justify-content: center;
+    align-items: center;
     padding-left: 0;
     padding-top: var(--spacing-sm);
     border-left: none;
     border-top: 1px solid var(--glass-border);
   }
 
+  .pq-recitation-options .pq-volume-control {
+    justify-content: center;
+  }
+
   .pq-recitation-controls.pq-recitation-controls-floating {
-    flex-direction: row;
-    align-items: center;
-    row-gap: var(--spacing-xs);
+    --pq-floating-actions-safe-width: 82px;
+    --pq-floating-actions-safe-height: 42px;
+    max-width: calc(100vw - 20px);
   }
 
   .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
-    width: auto;
-    max-width: min(64vw, 320px);
-  }
-
-  .pq-recitation-controls.pq-recitation-controls-floating
-    .pq-recitation-options {
-    justify-content: center;
-    padding-left: var(--spacing-xs);
-    padding-top: 0;
-    border-top: none;
+    max-width: none;
   }
 
   .pq-recitation-reciter {
     max-width: none;
-  }
-
-  .pq-recitation-floating-actions {
-    position: static;
-    margin-left: 0;
-    margin-bottom: 0;
-  }
-
-  .pq-recitation-controls.pq-recitation-controls-floating {
-    max-width: calc(100vw - 20px);
-  }
-
-  .pq-recitation-close-btn {
-    margin: 0;
-    align-self: auto;
   }
 
   .pq-recitation-close-btn::before {

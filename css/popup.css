@@ -406,6 +406,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-pq-recitation-controls {
   width: 100%;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: flex-start;
   row-gap: var(--spacing-sm);
 }
@@ -444,18 +446,30 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-recitation-controls .pq-recitation-buttons {
+  width: 100%;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.popup-pq-recitation-controls .pq-recitation-options {
+.popup-pq-recitation-controls .popup-pq-volume-control {
   width: 100%;
   justify-content: center;
-  border-left: none;
-  border-top: 1px solid var(--glass-border);
-  padding-left: 0;
   padding-top: var(--spacing-sm);
-  gap: var(--spacing-xs);
+  border-top: 1px solid var(--glass-border);
+}
+
+.popup-pq-recitation-controls .pq-recitation-options {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-left: none;
+  border-top: none;
+  padding-left: 0;
+  padding-top: 0;
+  row-gap: var(--spacing-xs);
+  column-gap: var(--spacing-xs);
 }
 
 .popup-pq-recitation-controls .pq-volume-slider {
