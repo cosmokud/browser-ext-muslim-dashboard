@@ -15123,6 +15123,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pq-recitation-btn.pq-loop-btn,
 .pq-recitation-btn.pq-autoplay-btn,
+.pq-recitation-btn.pq-autoplay-next-surah-btn,
 .pq-recitation-btn.pq-autoscroll-btn {
   background: var(--glass-bg-subtle);
 }

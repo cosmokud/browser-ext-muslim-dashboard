@@ -667,6 +667,7 @@ class PocketQuranManager extends BaseManager {
     this._audioElement = null;
     this._isPlaying = false;
     this._isAutoplay = false;
+    this._isAutoplayNextSurah = false;
     this._isAutoScroll = false;
     this._isLooping = false;
     this._isSurahLooping = false;
@@ -2638,6 +2639,7 @@ class PocketQuranManager extends BaseManager {
     this._isLooping = pq.reciterLoop || false;
     this._isSurahLooping = pq.reciterSurahLoop || false;
     this._isAutoplay = pq.reciterAutoplay || false;
+    this._isAutoplayNextSurah = pq.reciterAutoplayNextSurah === true;
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible =
@@ -3311,6 +3313,11 @@ class PocketQuranManager extends BaseManager {
           return;
         }
 
+        if (this._isAutoplayNextSurah) {
+          void this.playNextSurahFromAutoplay(surah);
+          return;
+        }
+
         // End of surah — stop audio but keep autoplay preference enabled.
         this.finishPlaybackAtSurahEnd();
       }
@@ -3355,6 +3362,50 @@ class PocketQuranManager extends BaseManager {
 
     if (ayah < max) {
       this.playAyah(surah, ayah + 1);
+    }
+  }
+
+  getNextSurahNumber(currentSurah) {
+    const surah = this.clampNumber(currentSurah, 1, 114, 1);
+
+    if (Array.isArray(this._chapters) && this._chapters.length > 0) {
+      const currentIndex = this._chapters.findIndex((chapter) => {
+        return this.clampNumber(chapter?.id, 1, 114, NaN) === surah;
+      });
+
+      if (currentIndex >= 0 && currentIndex < this._chapters.length - 1) {
+        return this.clampNumber(
+          this._chapters[currentIndex + 1]?.id,
+          1,
+          114,
+          null,
+        );
+      }
+    }
+
+    return surah < 114 ? surah + 1 : null;
+  }
+
+  async playNextSurahFromAutoplay(currentSurah) {
+    const nextSurah = this.getNextSurahNumber(currentSurah);
+    if (!Number.isFinite(nextSurah)) {
+      this.finishPlaybackAtSurahEnd();
+      return;
+    }
+
+    try {
+      if (this._activeSurah !== nextSurah) {
+        await this.setActiveSurah(nextSurah, {
+          preserveAyah: false,
+          autoScroll: false,
+          preserveDashboardScroll: true,
+        });
+      }
+
+      await this.playAyah(nextSurah, 1, { forceRestart: true });
+    } catch (e) {
+      console.error("PocketQuran: failed to autoplay next surah", e);
+      this.finishPlaybackAtSurahEnd();
     }
   }
 
@@ -3405,6 +3456,17 @@ class PocketQuranManager extends BaseManager {
         this._prefetchAheadCount,
       );
     }
+  }
+
+  /**
+   * Toggle autoplay next-surah mode.
+   */
+  toggleAutoplayNextSurah() {
+    this._isAutoplayNextSurah = !this._isAutoplayNextSurah;
+    this.persistPocketQuranSettings({
+      reciterAutoplayNextSurah: this._isAutoplayNextSurah,
+    });
+    this.updatePlaybackUI();
   }
 
   /**
@@ -3990,6 +4052,7 @@ class PocketQuranManager extends BaseManager {
       isLooping: this._isLooping === true,
       isSurahLooping: this._isSurahLooping === true,
       isAutoplay: this._isAutoplay === true,
+      isAutoplayNextSurah: this._isAutoplayNextSurah === true,
       isAutoScroll: this._isAutoScroll === true,
       translationResourceId: this.normalizeTranslationId(
         this._activeTranslationId,
@@ -4136,6 +4199,9 @@ class PocketQuranManager extends BaseManager {
         case "toggleAutoplay":
           this.toggleAutoplay();
           break;
+        case "toggleAutoplayNextSurah":
+          this.toggleAutoplayNextSurah();
+          break;
         case "toggleAutoScroll":
           this.toggleAutoScroll();
           break;
@@ -4270,6 +4336,13 @@ class PocketQuranManager extends BaseManager {
         }" title="Autoplay through surah">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
         </button>
+        <button type="button" class="pq-recitation-btn pq-autoplay-next-surah-btn ${
+          this._isAutoplayNextSurah ? "active" : ""
+        }" title="Auto Play Next Surah" aria-pressed="${
+          this._isAutoplayNextSurah ? "true" : "false"
+        }">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5.5 3A1.5 1.5 0 0 0 4 4.5v10.26c0 .6.67.95 1.17.62L8.5 13.3l3.33 2.08a.75.75 0 0 0 1.17-.62V4.5A1.5 1.5 0 0 0 11.5 3h-6z"/><path fill="currentColor" d="M15.28 7.47a.75.75 0 0 1 1.06 0l3.2 3.2a1.9 1.9 0 0 1 0 2.68l-3.2 3.2a.75.75 0 1 1-1.06-1.06L18.47 12l-3.2-3.2a.75.75 0 0 1 0-1.06z"/><path fill="currentColor" d="M11 18.25h8a.75.75 0 0 1 0 1.5h-8a.75.75 0 0 1 0-1.5z"/></svg>
+        </button>
         <button type="button" class="pq-recitation-btn pq-autoscroll-btn ${
           this._isAutoScroll ? "active" : ""
         }" title="Auto-scroll to next ayah" aria-pressed="${
@@ -4319,6 +4392,9 @@ class PocketQuranManager extends BaseManager {
     controlsBox
       .querySelector(".pq-autoplay-btn")
       .addEventListener("click", () => this.toggleAutoplay());
+    controlsBox
+      .querySelector(".pq-autoplay-next-surah-btn")
+      .addEventListener("click", () => this.toggleAutoplayNextSurah());
     controlsBox
       .querySelector(".pq-autoscroll-btn")
       .addEventListener("click", () => this.toggleAutoScroll());
@@ -4440,6 +4516,20 @@ class PocketQuranManager extends BaseManager {
         this._headerControlsBox.querySelector(".pq-autoplay-btn");
       if (autoplayBtn) {
         autoplayBtn.classList.toggle("active", this._isAutoplay);
+      }
+
+      const autoplayNextSurahBtn = this._headerControlsBox.querySelector(
+        ".pq-autoplay-next-surah-btn",
+      );
+      if (autoplayNextSurahBtn) {
+        autoplayNextSurahBtn.classList.toggle(
+          "active",
+          this._isAutoplayNextSurah,
+        );
+        autoplayNextSurahBtn.setAttribute(
+          "aria-pressed",
+          this._isAutoplayNextSurah ? "true" : "false",
+        );
       }
 
       const autoscrollBtn =
