@@ -98,6 +98,243 @@ class FloatingModeManager {
     return null;
   }
 
+  _getGridLayoutManager() {
+    try {
+      return window.dashboard?.gridLayout || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  _getComponentSpanMeta(componentId) {
+    const grid = this._getGridLayoutManager();
+    const dynamicMeta = grid?.componentSpans?.[componentId];
+    if (dynamicMeta && typeof dynamicMeta === "object") {
+      const span = Number(dynamicMeta.span);
+      const minSpan = Number(dynamicMeta.minSpan);
+      return {
+        span: Number.isFinite(span) ? span : 6,
+        minSpan: Number.isFinite(minSpan)
+          ? minSpan
+          : Number.isFinite(span)
+            ? span
+            : 6,
+      };
+    }
+
+    const fallbackMeta = {
+      header: { span: 6, minSpan: 6 },
+      pinnedAppsSection: { span: 6, minSpan: 6 },
+      searchBarSection: { span: 6, minSpan: 6 },
+      quoteSection: { span: 6, minSpan: 6 },
+      weatherCard: { span: 6, minSpan: 6 },
+      hadithCard: { span: 6, minSpan: 6 },
+      notesCard: { span: 6, minSpan: 6 },
+      pocketQuranCard: { span: 6, minSpan: 6 },
+      prayerTimesCard: { span: 2, minSpan: 2 },
+      calendarCard: { span: 2, minSpan: 2 },
+      qiblaCard: { span: 2, minSpan: 2 },
+      lunarPhaseCard: { span: 2, minSpan: 2 },
+      fastingCard: { span: 2, minSpan: 2 },
+      flashcardCard: { span: 2, minSpan: 2 },
+      adhkarCard: { span: 2, minSpan: 2 },
+      todoCard: { span: 2, minSpan: 2 },
+    };
+
+    return fallbackMeta[componentId] || { span: 6, minSpan: 6 };
+  }
+
+  _isFullWidthGridComponent(componentId) {
+    const meta = this._getComponentSpanMeta(componentId);
+    return meta.span >= 6 || meta.minSpan >= 6;
+  }
+
+  _getComponentLayoutMode(componentId) {
+    if (!componentId) return "full-width";
+    return this._isFullWidthGridComponent(componentId)
+      ? "full-width"
+      : "three-item";
+  }
+
+  _canFitIntoThreeItemRow(row, componentId) {
+    if (!Array.isArray(row) || !componentId) return false;
+    if (this._isFullWidthGridComponent(componentId)) return false;
+    if (row.length >= 3) return false;
+    if (row.some((id) => this._isFullWidthGridComponent(id))) return false;
+
+    const nextSpan = this._getComponentSpanMeta(componentId).span;
+    const currentSpan = row.reduce(
+      (sum, id) => sum + this._getComponentSpanMeta(id).span,
+      0,
+    );
+
+    return currentSpan + nextSpan <= 6;
+  }
+
+  _captureFloatingLayoutAnchor(key, card) {
+    const st = this.runtime.get(key);
+    if (!st) return;
+
+    const rows = this._getGridLayoutRowsSnapshot();
+    const componentId =
+      card?.dataset?.gridId || this.targets?.[key]?.cardId || card?.id || null;
+
+    st.componentId = componentId;
+    st.layoutModeAtFloat = this._getComponentLayoutMode(componentId);
+    st.layoutSnapshotAtFloat = Array.isArray(rows) ? JSON.stringify(rows) : "";
+    st.lastKnownRowIndex = -1;
+    st.lastKnownIndexInRow = -1;
+    st.lastKnownRowLength = 0;
+
+    if (!Array.isArray(rows) || !componentId) return;
+
+    const rowIndex = rows.findIndex(
+      (row) => Array.isArray(row) && row.includes(componentId),
+    );
+
+    st.lastKnownRowIndex = rowIndex;
+
+    if (rowIndex >= 0) {
+      const row = rows[rowIndex];
+      st.lastKnownIndexInRow = row.indexOf(componentId);
+      st.lastKnownRowLength = row.length;
+    }
+  }
+
+  _restoreCardWithLayoutRules(key, card, st) {
+    const grid = this._getGridLayoutManager();
+    if (!grid || !Array.isArray(grid.rows)) return false;
+    if (typeof grid.applyLayout !== "function") return false;
+
+    const componentId =
+      st?.componentId ||
+      card?.dataset?.gridId ||
+      this.targets?.[key]?.cardId ||
+      card?.id;
+    if (!componentId) return false;
+
+    const currentRows = JSON.parse(JSON.stringify(grid.rows));
+    const currentHash = JSON.stringify(currentRows);
+    const layoutChanged =
+      typeof st?.layoutSnapshotAtFloat === "string" &&
+      st.layoutSnapshotAtFloat.length > 0 &&
+      st.layoutSnapshotAtFloat !== currentHash;
+
+    let anchorRowIndex = currentRows.findIndex(
+      (row) => Array.isArray(row) && row.includes(componentId),
+    );
+    if (anchorRowIndex < 0 && Number.isInteger(st?.lastKnownRowIndex)) {
+      anchorRowIndex = st.lastKnownRowIndex;
+    }
+    if (anchorRowIndex < 0) {
+      anchorRowIndex = currentRows.length > 0 ? currentRows.length - 1 : 0;
+    }
+
+    let preferredIndexInRow = -1;
+    if (anchorRowIndex >= 0 && Array.isArray(currentRows[anchorRowIndex])) {
+      preferredIndexInRow = currentRows[anchorRowIndex].indexOf(componentId);
+    }
+    if (preferredIndexInRow < 0 && Number.isInteger(st?.lastKnownIndexInRow)) {
+      preferredIndexInRow = st.lastKnownIndexInRow;
+    }
+
+    const rows = currentRows.map((row) =>
+      Array.isArray(row) ? row.filter((id) => id !== componentId) : [],
+    );
+    if (rows.length === 0) rows.push([]);
+
+    const safeAnchorIndex = Math.max(
+      0,
+      Math.min(anchorRowIndex, rows.length - 1),
+    );
+    const anchorRow = rows[safeAnchorIndex] || [];
+
+    const layoutMode =
+      st?.layoutModeAtFloat || this._getComponentLayoutMode(componentId);
+
+    if (layoutMode === "full-width") {
+      const previousPlaceTaken = anchorRow.length > 0;
+
+      if (previousPlaceTaken) {
+        const insertIndex = Math.max(0, Math.min(safeAnchorIndex, rows.length));
+        rows.splice(insertIndex, 0, [componentId]);
+      } else {
+        rows[safeAnchorIndex] = [componentId];
+      }
+    } else {
+      const canUseAnchorRow = this._canFitIntoThreeItemRow(
+        anchorRow,
+        componentId,
+      );
+
+      if (layoutChanged && !canUseAnchorRow) {
+        const insertIndex = Math.max(
+          0,
+          Math.min(safeAnchorIndex + 1, rows.length),
+        );
+        rows.splice(insertIndex, 0, [componentId]);
+      } else if (canUseAnchorRow) {
+        const insertIndex =
+          Number.isInteger(preferredIndexInRow) && preferredIndexInRow >= 0
+            ? Math.min(preferredIndexInRow, anchorRow.length)
+            : anchorRow.length;
+        anchorRow.splice(insertIndex, 0, componentId);
+      } else {
+        const insertIndex = Math.max(
+          0,
+          Math.min(safeAnchorIndex + 1, rows.length),
+        );
+        rows.splice(insertIndex, 0, [componentId]);
+      }
+    }
+
+    const dedupedRows = [];
+    const seen = new Set();
+    for (const row of rows) {
+      if (!Array.isArray(row)) continue;
+
+      const nextRow = [];
+      for (const id of row) {
+        if (!id || seen.has(id)) continue;
+        nextRow.push(id);
+        seen.add(id);
+      }
+
+      if (nextRow.length > 0) {
+        dedupedRows.push(nextRow);
+      }
+    }
+
+    if (!seen.has(componentId)) {
+      const fallbackIndex = Math.max(
+        0,
+        Math.min(
+          Number.isInteger(st?.lastKnownRowIndex)
+            ? st.lastKnownRowIndex
+            : dedupedRows.length,
+          dedupedRows.length,
+        ),
+      );
+      dedupedRows.splice(fallbackIndex, 0, [componentId]);
+    }
+
+    card.classList.remove("floating-card");
+
+    grid.rows = dedupedRows;
+    grid.activeRows = JSON.parse(JSON.stringify(dedupedRows));
+    grid.applyLayout(dedupedRows);
+
+    if (typeof grid.updateFlexBasisForCurrentDOM === "function") {
+      grid.updateFlexBasisForCurrentDOM();
+    }
+
+    if (typeof grid.saveLayout === "function") {
+      grid.saveLayout();
+    }
+
+    return true;
+  }
+
   _resolveGridLayoutInsertionPoint(key, card) {
     const contentGrid = document.querySelector(".content-grid");
     if (!contentGrid) return null;
@@ -530,6 +767,14 @@ class FloatingModeManager {
         minUpdateTimer: null,
         dragPersistRaf: null,
         dragPersistLastAt: 0,
+        componentId: card.dataset?.gridId || card.id || null,
+        layoutModeAtFloat: this._getComponentLayoutMode(
+          card.dataset?.gridId || card.id || null,
+        ),
+        layoutSnapshotAtFloat: "",
+        lastKnownRowIndex: -1,
+        lastKnownIndexInRow: -1,
+        lastKnownRowLength: 0,
       });
 
       if (button) {
@@ -802,6 +1047,8 @@ class FloatingModeManager {
     }
 
     // Record original position and insert placeholder
+    this._captureFloatingLayoutAnchor(key, card);
+
     st.originalParent = card.parentNode;
     st.originalNextSibling = card.nextSibling;
 
@@ -1100,25 +1347,15 @@ class FloatingModeManager {
 
       const gridLayoutActive = this._isGridLayoutActive();
 
-      // STRATEGY PRIORITY:
-      // When grid layout is active, ALWAYS use the grid configuration as the source
-      // of truth for positioning. The placeholder may have drifted or been repositioned
-      // when GridLayoutManager rebuilt the layout.
-
-      // Strategy 1 (PRIMARY): When grid layout is active, restore into the correct
-      // row wrapper based on the current GridLayoutManager rows configuration.
-      // This is the most reliable method as it uses the authoritative layout data.
+      // Strategy 1 (PRIMARY): Apply explicit layout rules for floating -> tiling restore.
+      // This prevents components from jumping to the top when edit-mode layout changed.
       if (!inserted && gridLayoutActive) {
         try {
-          const point = this._resolveGridLayoutInsertionPoint(key, card);
-          if (point && point.parent) {
-            if (point.before && point.before.isConnected) {
-              point.parent.insertBefore(card, point.before);
-            } else {
-              point.parent.appendChild(card);
-            }
-            inserted = true;
+          if (placeholder && placeholder.parentNode) {
+            placeholder.remove();
           }
+
+          inserted = this._restoreCardWithLayoutRules(key, card, st);
         } catch (e) {
           // Fallback strategies below
         }
@@ -1156,18 +1393,7 @@ class FloatingModeManager {
           ) {
             st.originalParent.insertBefore(card, st.originalNextSibling);
           } else {
-            // Insert at original parent, but need to find correct position
-            // by looking for the card's expected grid position
-            const gridOrder = this._getGridPositionOrder(key);
-            const insertRef = this._findInsertReferenceByOrder(
-              st.originalParent,
-              gridOrder,
-            );
-            if (insertRef) {
-              st.originalParent.insertBefore(card, insertRef);
-            } else {
-              st.originalParent.appendChild(card);
-            }
+            st.originalParent.appendChild(card);
           }
           inserted = true;
         } catch (e) {
@@ -1175,21 +1401,12 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 4: Find content-grid and insert at correct position
+      // Strategy 4: Find content-grid and append
       if (!inserted) {
         try {
           const contentGrid = document.querySelector(".content-grid");
           if (contentGrid) {
-            const gridOrder = this._getGridPositionOrder(key);
-            const insertRef = this._findInsertReferenceByOrder(
-              contentGrid,
-              gridOrder,
-            );
-            if (insertRef) {
-              contentGrid.insertBefore(card, insertRef);
-            } else {
-              contentGrid.appendChild(card);
-            }
+            contentGrid.appendChild(card);
             inserted = true;
           }
         } catch (e) {
@@ -1227,6 +1444,11 @@ class FloatingModeManager {
       card.style.minHeight = "";
       card.style.maxWidth = "";
       card.style.maxHeight = "";
+
+      st.layoutSnapshotAtFloat = "";
+      st.lastKnownRowIndex = -1;
+      st.lastKnownIndexInRow = -1;
+      st.lastKnownRowLength = 0;
 
       // Fade in quickly once the card is in place.
       if (inserted && !prefersReducedMotion) {
