@@ -772,6 +772,36 @@ class WeatherManager extends BaseManager {
     return city || normalized;
   }
 
+  async _reverseGeocodeLocationParts(latitude, longitude) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+      const res = await fetch(url, {
+        headers: {
+          "Accept-Language": "en",
+        },
+      });
+      if (!res.ok) {
+        return { city: "", full: "" };
+      }
+
+      const data = await res.json();
+      const address = data?.address || {};
+      const city = String(
+        address.city ||
+          address.town ||
+          address.village ||
+          address.county ||
+          address.state ||
+          "",
+      ).trim();
+      const full = String(data?.display_name || "").trim();
+
+      return { city, full };
+    } catch {
+      return { city: "", full: "" };
+    }
+  }
+
   async _geocodeCity(city) {
     if (!city) return null;
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
@@ -978,22 +1008,37 @@ class WeatherManager extends BaseManager {
       }
       const current = data.current || data.current_weather || {};
 
-      let locationName = null;
-      if (usedCache && cached && cached.url === url && cached.locationName) {
-        locationName = cached.locationName;
+      const reverseLocationParts = await this._reverseGeocodeLocationParts(
+        location.latitude,
+        location.longitude,
+      );
+
+      let fullLocationName = String(reverseLocationParts.full || "").trim();
+      if (
+        !fullLocationName &&
+        usedCache &&
+        cached &&
+        cached.url === url &&
+        cached.locationName
+      ) {
+        fullLocationName = String(cached.locationName).trim();
       }
-      if (!locationName) {
-        locationName =
-          location.city ||
+      if (!fullLocationName) {
+        fullLocationName = String(
           (await this._reverseGeocodeName(
             location.latitude,
             location.longitude,
           )) ||
-          `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
+            location.city ||
+            `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`,
+        ).trim();
       }
 
-      const fullLocationName = String(locationName || "").trim();
-      const displayLocationName = this._extractCityLikeName(fullLocationName);
+      const displayLocationName =
+        reverseLocationParts.city ||
+        this._extractCityLikeName(location.city) ||
+        this._extractCityLikeName(fullLocationName) ||
+        fullLocationName;
 
       // Try to derive reasonable current values when API uses different field names
       const hourly = data.hourly || {};
@@ -1069,11 +1114,11 @@ class WeatherManager extends BaseManager {
       if (
         cached &&
         cached.url === url &&
-        cached.locationName !== locationName
+        cached.locationName !== fullLocationName
       ) {
         this._setWeatherForecastCache({
           ...cached,
-          locationName,
+          locationName: fullLocationName,
         });
       }
 
