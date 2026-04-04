@@ -6230,9 +6230,17 @@ class SettingsManager extends BaseManager {
       group,
       placeholder,
       onAfterClose: config.onAfterClose,
+      resizeCleanup: this.enableDetachedEditorColumnResize(group),
     };
 
     this.applyDetachedEditorModalInitialWidth();
+  }
+
+  getDetachedEditorRowCount(group) {
+    if (!group) return 0;
+    return group.querySelectorAll(
+      ".quote-editor-row, .flashcard-row, .hadith-editor-row, .adhkar-editor-row",
+    ).length;
   }
 
   applyDetachedEditorModalInitialWidth() {
@@ -6245,21 +6253,306 @@ class SettingsManager extends BaseManager {
         ".hadith-editor-table-wrap, .adhkar-editor-table-wrap, .flashcard-editor-body, .flashcards-editor, .adhkar-editor, .user-quotes-list",
       ) || group;
 
+    const rowCount = this.getDetachedEditorRowCount(group);
     const viewportWidth =
       window.innerWidth || document.documentElement?.clientWidth || 1200;
-    const minWidth = Math.floor(viewportWidth * 0.75);
+    const minWidth = Math.max(520, Math.floor(viewportWidth * 0.36));
     const maxWidth = Math.floor(viewportWidth * 0.96);
+
+    // Size detached editors from row density first, then cap with content width.
+    const normalizedRows = Math.max(1, Math.min(rowCount || 1, 30));
+    const baseRatio = Math.min(0.78, 0.42 + normalizedRows * 0.011);
+    const baseWidth = Math.floor(viewportWidth * baseRatio);
+
     const measured = Math.max(
       surface.scrollWidth || 0,
       group.scrollWidth || 0,
       760,
     );
-    const targetWidth = Math.max(minWidth, Math.min(maxWidth, measured + 72));
+    const softCap = baseWidth + Math.max(120, Math.floor(normalizedRows * 6));
+    const preferredWidth = Math.min(measured + 72, softCap);
+    const targetWidth = Math.max(
+      minWidth,
+      Math.min(maxWidth, Math.max(baseWidth, preferredWidth)),
+    );
 
     this.detachedEditorModalContent.style.setProperty(
       "--detached-editor-width",
       `${targetWidth}px`,
     );
+  }
+
+  getEditorColumnMinWidth(cell, index, totalColumns) {
+    const cls = String(cell?.className || "").toLowerCase();
+    const label = String(cell?.textContent || "").toLowerCase();
+
+    if (index === 0) return 42;
+    if (index === totalColumns - 1) return 34;
+    if (cls.includes("col-actions")) return 34;
+    if (cls.includes("col-id")) return 48;
+    if (cls.includes("text-lang") || label.includes("text")) return 220;
+    if (cls.includes("question") || cls.includes("answer")) return 180;
+    if (cls.includes("narrator") || cls.includes("reference")) return 120;
+    if (cls.includes("title") || label.includes("title")) return 140;
+    if (cls.includes("arabic") || cls.includes("romanization")) return 150;
+    return 110;
+  }
+
+  enableDetachedEditorColumnResize(group) {
+    if (!group) return null;
+    const cleanups = [];
+
+    const gridHeader = group.querySelector(".flashcard-editor-header");
+    if (gridHeader) {
+      const cleanup = this.enableDetachedGridColumnResize(gridHeader, group);
+      if (typeof cleanup === "function") cleanups.push(cleanup);
+    }
+
+    const table = group.querySelector(".hadith-editor-table, .adhkar-editor-table");
+    if (table) {
+      const cleanup = this.enableDetachedTableColumnResize(table);
+      if (typeof cleanup === "function") cleanups.push(cleanup);
+    }
+
+    if (!cleanups.length) return null;
+    return () => {
+      cleanups.forEach((fn) => {
+        try {
+          fn();
+        } catch (e) {
+          // ignore
+        }
+      });
+    };
+  }
+
+  enableDetachedGridColumnResize(header, group) {
+    if (!header || !group) return null;
+
+    const headerCells = Array.from(header.children || []);
+    if (headerCells.length < 4) return null;
+
+    const rows = Array.from(group.querySelectorAll(".flashcard-row"));
+
+    let widths = String(getComputedStyle(header).gridTemplateColumns || "")
+      .split(/\s+/)
+      .map((value) => parseFloat(value))
+      .filter((value) => Number.isFinite(value) && value > 0);
+
+    if (widths.length !== headerCells.length) {
+      widths = headerCells.map((cell) => Math.max(40, cell.getBoundingClientRect().width));
+    }
+
+    const applyTemplate = () => {
+      const template = widths.map((w) => `${Math.round(w)}px`).join(" ");
+      header.style.gridTemplateColumns = template;
+      rows.forEach((row) => {
+        row.style.gridTemplateColumns = template;
+      });
+    };
+
+    applyTemplate();
+
+    const handles = [];
+    const listeners = [];
+
+    for (let i = 1; i < headerCells.length - 2; i += 1) {
+      const cell = headerCells[i];
+      if (!cell) continue;
+
+      const handle = document.createElement("span");
+      handle.className = "editor-col-resize-handle";
+      handle.setAttribute("role", "separator");
+      handle.setAttribute("aria-orientation", "vertical");
+      handle.setAttribute("aria-label", "Resize columns");
+
+      const onPointerDown = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const startX = event.clientX;
+        const startLeft = widths[i];
+        const startRight = widths[i + 1];
+        const minLeft = this.getEditorColumnMinWidth(
+          headerCells[i],
+          i,
+          headerCells.length,
+        );
+        const minRight = this.getEditorColumnMinWidth(
+          headerCells[i + 1],
+          i + 1,
+          headerCells.length,
+        );
+
+        handle.classList.add("is-dragging");
+
+        const onPointerMove = (moveEvent) => {
+          const deltaX = moveEvent.clientX - startX;
+          const total = startLeft + startRight;
+          const nextLeft = Math.max(
+            minLeft,
+            Math.min(startLeft + deltaX, total - minRight),
+          );
+          const nextRight = total - nextLeft;
+
+          widths[i] = nextLeft;
+          widths[i + 1] = nextRight;
+          applyTemplate();
+        };
+
+        const onPointerUp = () => {
+          handle.classList.remove("is-dragging");
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      };
+
+      handle.addEventListener("pointerdown", onPointerDown);
+      listeners.push({ handle, onPointerDown });
+      cell.appendChild(handle);
+      handles.push(handle);
+    }
+
+    return () => {
+      listeners.forEach(({ handle, onPointerDown }) => {
+        try {
+          handle.removeEventListener("pointerdown", onPointerDown);
+          handle.remove();
+        } catch (e) {
+          // ignore
+        }
+      });
+
+      header.style.removeProperty("grid-template-columns");
+      rows.forEach((row) => {
+        row.style.removeProperty("grid-template-columns");
+      });
+    };
+  }
+
+  enableDetachedTableColumnResize(table) {
+    if (!table) return null;
+
+    const headerCells = Array.from(table.querySelectorAll("thead th"));
+    if (headerCells.length < 3) return null;
+
+    const colgroup = document.createElement("colgroup");
+    colgroup.className = "editor-resize-colgroup";
+
+    const widths = headerCells.map((cell, index) => {
+      const measured = Math.max(40, Math.round(cell.getBoundingClientRect().width));
+      const min = this.getEditorColumnMinWidth(cell, index, headerCells.length);
+      return Math.max(min, measured);
+    });
+
+    widths.forEach((width) => {
+      const col = document.createElement("col");
+      col.style.width = `${Math.round(width)}px`;
+      colgroup.appendChild(col);
+    });
+
+    table.insertBefore(colgroup, table.firstChild);
+    const cols = Array.from(colgroup.children);
+
+    const prevLayout = table.style.tableLayout;
+    const prevWidth = table.style.width;
+
+    table.style.tableLayout = "fixed";
+
+    const applyWidths = () => {
+      cols.forEach((col, index) => {
+        col.style.width = `${Math.round(widths[index])}px`;
+      });
+      table.style.width = `${Math.round(widths.reduce((acc, val) => acc + val, 0))}px`;
+    };
+
+    applyWidths();
+
+    const listeners = [];
+
+    for (let i = 1; i < headerCells.length - 1; i += 1) {
+      const leftCell = headerCells[i];
+      const rightCell = headerCells[i + 1];
+      if (!leftCell || !rightCell) continue;
+      if (
+        String(leftCell.className || "").includes("col-actions") ||
+        String(rightCell.className || "").includes("col-actions")
+      ) {
+        continue;
+      }
+
+      const handle = document.createElement("span");
+      handle.className = "editor-col-resize-handle";
+      handle.setAttribute("role", "separator");
+      handle.setAttribute("aria-orientation", "vertical");
+      handle.setAttribute("aria-label", "Resize columns");
+
+      const onPointerDown = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const startX = event.clientX;
+        const startLeft = widths[i];
+        const startRight = widths[i + 1];
+        const minLeft = this.getEditorColumnMinWidth(
+          leftCell,
+          i,
+          headerCells.length,
+        );
+        const minRight = this.getEditorColumnMinWidth(
+          rightCell,
+          i + 1,
+          headerCells.length,
+        );
+
+        handle.classList.add("is-dragging");
+
+        const onPointerMove = (moveEvent) => {
+          const deltaX = moveEvent.clientX - startX;
+          const total = startLeft + startRight;
+          const nextLeft = Math.max(
+            minLeft,
+            Math.min(startLeft + deltaX, total - minRight),
+          );
+          const nextRight = total - nextLeft;
+
+          widths[i] = nextLeft;
+          widths[i + 1] = nextRight;
+          applyWidths();
+        };
+
+        const onPointerUp = () => {
+          handle.classList.remove("is-dragging");
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      };
+
+      handle.addEventListener("pointerdown", onPointerDown);
+      listeners.push({ handle, onPointerDown });
+      leftCell.appendChild(handle);
+    }
+
+    return () => {
+      listeners.forEach(({ handle, onPointerDown }) => {
+        try {
+          handle.removeEventListener("pointerdown", onPointerDown);
+          handle.remove();
+        } catch (e) {
+          // ignore
+        }
+      });
+
+      colgroup.remove();
+      table.style.tableLayout = prevLayout;
+      table.style.width = prevWidth;
+    };
   }
 
   closeDetachedEditorModal({ skipAfterCloseRefresh = false } = {}) {
@@ -6269,7 +6562,16 @@ class SettingsManager extends BaseManager {
 
     if (!this._detachedEditorState) return;
 
-    const { group, placeholder, onAfterClose } = this._detachedEditorState;
+    const { group, placeholder, onAfterClose, resizeCleanup } =
+      this._detachedEditorState;
+
+    if (typeof resizeCleanup === "function") {
+      try {
+        resizeCleanup();
+      } catch (e) {
+        // ignore
+      }
+    }
 
     if (placeholder?.parentElement && group) {
       placeholder.parentElement.insertBefore(group, placeholder);

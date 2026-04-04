@@ -9646,8 +9646,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .editor-detach-modal-content {
-  width: max(75vw, min(96vw, var(--detached-editor-width, 75vw)));
-  min-width: 75vw;
+  width: min(96vw, var(--detached-editor-width, 960px));
+  min-width: min(560px, 92vw);
   max-width: 96vw;
   max-height: 96vh;
   display: flex;
@@ -9723,6 +9723,42 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border-color: color-mix(in srgb, var(--text-primary) 20%, transparent 80%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+.editor-detach-modal .flashcard-editor-header > div,
+.editor-detach-modal .hadith-editor-table thead th,
+.editor-detach-modal .adhkar-editor-table thead th {
+  position: relative;
+}
+
+.editor-col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 3;
+}
+
+.editor-col-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 16%;
+  bottom: 16%;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-muted) 60%, transparent 40%);
+  opacity: 0.55;
+  transition: opacity var(--transition-fast);
+}
+
+.editor-col-resize-handle:hover::before,
+.editor-col-resize-handle.is-dragging::before {
+  opacity: 0.95;
 }
 
 /* Pagination */
@@ -15556,7 +15592,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .hadith-col-text-lang {
-  width: 320px;
+  width: 380px;
+}
+
+.hadith-col-narrator {
+  width: 150px;
+}
+
+.hadith-col-reference {
+  width: 140px;
 }
 
 .hadith-col-actions {
@@ -16168,7 +16212,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 13050;
   opacity: 0;
   visibility: hidden;
   transition:
