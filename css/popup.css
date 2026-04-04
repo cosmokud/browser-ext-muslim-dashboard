@@ -740,6 +740,15 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   overflow-y: visible;
 }
 
+.popup-pq-ayah-arabic.tajweed-mode {
+  line-height: 2.2;
+}
+
+.popup-pq-ayah-arabic .end {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
 .popup-pq-ayah-translation {
   font-family: var(--popup-pq-translation-font-family, var(--font-primary));
   font-size: var(--popup-pq-translation-size, 1.05rem);

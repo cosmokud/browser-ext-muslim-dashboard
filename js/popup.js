@@ -234,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranLocalCommandQueue = Promise.resolve();
   const pocketQuranLocalAudioUrlCache = new Map();
   const pocketQuranVersesCache = new Map();
+  const pocketQuranTajweedVersesCache = new Map();
   let pocketQuranSnippetRequestId = 0;
   let pocketQuranResyncTimeoutIds = [];
   const popupPqSelectionState = {
@@ -1865,6 +1866,52 @@ document.addEventListener("DOMContentLoaded", () => {
     return verses;
   }
 
+  function parsePocketQuranTajweedHtml(tajweedText) {
+    const source = String(tajweedText || "").trim();
+    if (!source) return "";
+
+    return source
+      .replace(/<tajweed\s+class=([^>]+)>/gi, (match, className) => {
+        const cleaned = String(className || "")
+          .trim()
+          .replace(/^['\"]|['\"]$/g, "")
+          .replace(/[^a-zA-Z0-9_-]/g, "");
+
+        return cleaned ? `<span class="${cleaned}">` : "<span>";
+      })
+      .replace(/<\/tajweed>/gi, "</span>");
+  }
+
+  async function fetchPocketQuranSurahTajweedVerses(surah) {
+    const surahId = clampNumber(surah, 1, 114, 1);
+
+    if (pocketQuranTajweedVersesCache.has(surahId)) {
+      return pocketQuranTajweedVersesCache.get(surahId);
+    }
+
+    const url = `${pocketQuranApiBase}/quran/verses/uthmani_tajweed?chapter_number=${surahId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const verses = Array.isArray(data?.verses) ? data.verses : [];
+    pocketQuranTajweedVersesCache.set(surahId, verses);
+    return verses;
+  }
+
+  function getPocketQuranTajweedHtmlForAyah(tajweedVerses, surah, ayah) {
+    if (!Array.isArray(tajweedVerses) || !tajweedVerses.length) return "";
+
+    const verseKey = `${clampNumber(surah, 1, 114, 1)}:${clampNumber(ayah, 1, 286, 1)}`;
+    const verse = tajweedVerses.find((entry) => {
+      return String(entry?.verse_key || "") === verseKey;
+    });
+
+    return parsePocketQuranTajweedHtml(verse?.text_uthmani_tajweed);
+  }
+
   async function ensurePocketQuranRecitersLoaded(forceFetch = false) {
     if (!forceFetch && pocketQuranReciters.length > 0) {
       return pocketQuranReciters;
@@ -2083,6 +2130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       85,
     );
 
+    popupPqAyahArabic.classList.remove("tajweed-mode");
     popupPqAyahArabic.textContent = "Loading current ayah...";
     popupPqAyahTranslation.textContent = "Loading translation...";
     updatePopupViewportForTab("pocketQuran");
@@ -2101,12 +2149,40 @@ document.addEventListener("DOMContentLoaded", () => {
       const arabic = String(verse?.text_uthmani || "").trim();
       const translation = decodeHtmlString(verse?.translations?.[0]?.text);
 
-      popupPqAyahArabic.textContent = arabic || "Arabic text unavailable.";
+      let renderedTajweedHtml = "";
+      if (pocketQuranState.isTajweedMode === true) {
+        try {
+          const tajweedVerses = await fetchPocketQuranSurahTajweedVerses(
+            target.surah,
+          );
+          if (requestId !== pocketQuranSnippetRequestId) return;
+          renderedTajweedHtml = getPocketQuranTajweedHtmlForAyah(
+            tajweedVerses,
+            target.surah,
+            target.ayah,
+          );
+        } catch (e) {
+          renderedTajweedHtml = "";
+        }
+      }
+
+      popupPqAyahArabic.classList.toggle(
+        "tajweed-mode",
+        Boolean(renderedTajweedHtml),
+      );
+
+      if (renderedTajweedHtml) {
+        popupPqAyahArabic.innerHTML = renderedTajweedHtml;
+      } else {
+        popupPqAyahArabic.textContent = arabic || "Arabic text unavailable.";
+      }
+
       popupPqAyahTranslation.textContent =
         translation || "Translation unavailable for this ayah.";
       updatePopupViewportForTab("pocketQuran");
     } catch (error) {
       if (requestId !== pocketQuranSnippetRequestId) return;
+      popupPqAyahArabic.classList.remove("tajweed-mode");
       popupPqAyahArabic.textContent = "Unable to load Arabic ayah text.";
       popupPqAyahTranslation.textContent = "Unable to load ayah translation.";
       updatePopupViewportForTab("pocketQuran");
