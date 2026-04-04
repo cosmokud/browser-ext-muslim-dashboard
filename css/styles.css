@@ -6675,8 +6675,8 @@ html[data-theme-mode="light"]
 
 .radio-option-auto-detect {
   width: 100%;
-  justify-content: space-between;
-  gap: var(--spacing-md);
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
 }
 
 .radio-option-primary {
@@ -6687,9 +6687,9 @@ html[data-theme-mode="light"]
 }
 
 .radio-option-auto-detect .detected-location-text-inline {
-  margin-left: auto;
-  flex: 1 1 auto;
-  text-align: right;
+  margin-left: 0;
+  flex: 0 1 auto;
+  text-align: left;
 }
 
 .coordinates-group {
