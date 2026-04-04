@@ -630,6 +630,8 @@ class PocketQuranManager extends BaseManager {
 
     // Font picker modal
     this._fontModal = null;
+    this._fontPickerTarget = "card";
+    this._fontPickerCurrentFont = null;
 
     // Verse caching
     this._versesCache = new Map();
@@ -5103,9 +5105,17 @@ class PocketQuranManager extends BaseManager {
     });
   }
 
-  openFontPickerModal() {
+  openFontPickerModal(opts = {}) {
     const modal = document.getElementById("pqFontModal");
     if (!modal) return;
+
+    const target = opts?.target === "popup" ? "popup" : "card";
+    const requestedCurrentFont =
+      target === "popup" ? opts?.currentFont : this._arabicFontFamily;
+
+    this._fontPickerTarget = target;
+    this._fontPickerCurrentFont =
+      this.normalizeArabicFontFamily(requestedCurrentFont);
 
     const searchInput = modal.querySelector(".pq-font-search");
     if (searchInput) searchInput.value = "";
@@ -5123,6 +5133,8 @@ class PocketQuranManager extends BaseManager {
   closeFontPickerModal() {
     const modal = document.getElementById("pqFontModal");
     if (modal) modal.classList.remove("active");
+    this._fontPickerTarget = "card";
+    this._fontPickerCurrentFont = null;
   }
 
   renderFontList(query = "") {
@@ -5139,7 +5151,11 @@ class PocketQuranManager extends BaseManager {
       f.toLowerCase().includes(q),
     );
 
-    const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    const current = this.normalizeArabicFontFamily(
+      this._fontPickerTarget === "popup"
+        ? this._fontPickerCurrentFont || this._arabicFontFamily
+        : this._arabicFontFamily,
+    );
     let html = "";
     for (const f of fonts) {
       const isActive = f === current;
@@ -5169,6 +5185,21 @@ class PocketQuranManager extends BaseManager {
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
       btn.addEventListener("click", () => {
         const font = btn.getAttribute("data-font-family");
+
+        if (this._fontPickerTarget === "popup") {
+          const normalized = this.normalizeArabicFontFamily(font);
+          this._fontPickerCurrentFont = normalized;
+          try {
+            document.dispatchEvent(
+              new CustomEvent("md:pq-popup-arabic-font-selected", {
+                detail: { fontFamily: normalized },
+              }),
+            );
+          } catch (e) {}
+          this.closeFontPickerModal();
+          return;
+        }
+
         this.applyArabicFontFamily(font, { persist: true, recalculate: true });
         this.closeFontPickerModal();
       });

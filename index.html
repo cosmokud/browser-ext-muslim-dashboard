@@ -5044,7 +5044,10 @@
 
           <!-- Pocket Quran Settings -->
           <div class="settings-panel" id="pocketQuranPanel">
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingDefaultArabicTextSize"
+            >
               <label class="setting-label">Default Arabic Text Size</label>
               <p class="setting-hint">Choose a default Arabic font size.</p>
               <div class="custom-width-slider">
@@ -5063,7 +5066,10 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingDefaultTranslationTextSize"
+            >
               <label class="setting-label">Default Translation Text Size</label>
               <p class="setting-hint">
                 Choose a default translation font size.
@@ -5084,7 +5090,7 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="pocketQuranSettingReciter">
               <label class="setting-label">Reciter</label>
               <p class="setting-hint">
                 Select a reciter for the Pocket Quran card playback.
@@ -5101,7 +5107,10 @@
               </button>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingArabicFontFamilyCard"
+            >
               <label class="setting-label">Arabic Font Family (Card)</label>
               <p class="setting-hint">
                 Open the Arabic font picker used by the Pocket Quran card.
@@ -5120,7 +5129,10 @@
               </button>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingTranslationFontFamilyCard"
+            >
               <label
                 class="setting-label"
                 for="pocketQuranTranslationFontFamily"
@@ -5142,25 +5154,32 @@
               </select>
             </div>
 
-            <div class="setting-group">
-              <label class="setting-label">Popup Quran Typography</label>
-              <p class="setting-hint">
-                These settings only affect the browser popup Quran player.
-              </p>
-            </div>
-
-            <div class="setting-group">
-              <label
-                class="setting-label"
-                for="pocketQuranPopupArabicFontFamily"
-                >Popup Arabic Font Family</label
-              >
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupArabicFontFamily"
+            >
+              <label class="setting-label">Popup Arabic Font Family</label>
               <p class="setting-hint">
                 Choose the Arabic font used in popup mode.
               </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranPopupArabicFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranPopupArabicFontPickerLabel"
+                  >Select Arabic font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
               <select
                 class="setting-select"
                 id="pocketQuranPopupArabicFontFamily"
+                hidden
+                aria-hidden="true"
+                tabindex="-1"
               >
                 <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
                 <option value="Amiri">Amiri</option>
@@ -5179,7 +5198,10 @@
               </select>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupTranslationFontFamily"
+            >
               <label
                 class="setting-label"
                 for="pocketQuranPopupTranslationFontFamily"
@@ -5201,7 +5223,10 @@
               </select>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupArabicTextSize"
+            >
               <label class="setting-label">Popup Arabic Text Size</label>
               <p class="setting-hint">Adjust popup Arabic ayah size only.</p>
               <div class="custom-width-slider">
@@ -5220,7 +5245,10 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupTranslationTextSize"
+            >
               <label class="setting-label">Popup Translation Text Size</label>
               <p class="setting-hint">Adjust popup translation size only.</p>
               <div class="custom-width-slider">
@@ -5239,7 +5267,7 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="pocketQuranSettingTranslation">
               <label class="setting-label">Translation</label>
               <p class="setting-hint">
                 Select a translation (provided by quran.com).
@@ -5565,7 +5593,10 @@
               </select>
             </div>
 
-            <div class="setting-group">
+            <div
+              class="setting-group"
+              id="pocketQuranSettingRecitationFloatingControls"
+            >
               <label class="setting-label">Recitation Floating Controls</label>
               <p class="setting-hint">
                 Auto-float recitation controls when playback is active and the
@@ -5610,7 +5641,7 @@
               </div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="pocketQuranSettingTajweedColors">
               <label class="setting-label">Tajweed Colors</label>
               <p class="setting-hint">
                 Customize the color used for each Tajweed rule. Changes apply
@@ -5633,7 +5664,7 @@
               ></div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="pocketQuranSettingBookmarks">
               <label class="setting-label">Bookmarks</label>
               <p class="setting-hint">
                 Export or import your ayah bookmarks and categories.

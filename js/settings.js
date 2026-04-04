@@ -676,6 +676,12 @@ class SettingsManager extends BaseManager {
     this.pocketQuranPopupArabicFontFamily = document.getElementById(
       "pocketQuranPopupArabicFontFamily",
     );
+    this.pocketQuranPopupArabicFontPickerBtn = document.getElementById(
+      "pocketQuranPopupArabicFontPickerBtn",
+    );
+    this.pocketQuranPopupArabicFontPickerLabel = document.getElementById(
+      "pocketQuranPopupArabicFontPickerLabel",
+    );
     this.pocketQuranPopupTranslationFontFamily = document.getElementById(
       "pocketQuranPopupTranslationFontFamily",
     );
@@ -1367,6 +1373,7 @@ class SettingsManager extends BaseManager {
 
     this.updatePocketQuranReciterPickerLabel();
     this.updatePocketQuranArabicFontPickerLabel();
+    this.updatePocketQuranPopupArabicFontPickerLabel();
     this.updatePocketQuranTranslationPickerLabel();
 
     if (this.pocketQuranRecitationFloatingEnabled) {
@@ -8113,6 +8120,23 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.pocketQuranPopupArabicFontPickerBtn) {
+      this.pocketQuranPopupArabicFontPickerBtn.addEventListener("click", () => {
+        try {
+          if (window.dashboard?.pocketQuran?.openFontPickerModal) {
+            window.dashboard.pocketQuran.openFontPickerModal({
+              target: "popup",
+              currentFont: this.normalizePocketQuranArabicFontFamily(
+                this.pocketQuranPopupArabicFontFamily?.value,
+              ),
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
+    }
+
     // Pocket Quran translation picker: open the existing pqTranslationModal
     if (this.pocketQuranTranslationPickerBtn) {
       this.pocketQuranTranslationPickerBtn.addEventListener("click", () => {
@@ -8157,6 +8181,19 @@ class SettingsManager extends BaseManager {
 
     document.addEventListener("md:pq-arabic-font-selected", () => {
       this.updatePocketQuranArabicFontPickerLabel();
+    });
+
+    document.addEventListener("md:pq-popup-arabic-font-selected", (e) => {
+      const normalized = this.normalizePocketQuranArabicFontFamily(
+        e?.detail?.fontFamily,
+      );
+
+      if (this.pocketQuranPopupArabicFontFamily) {
+        this.pocketQuranPopupArabicFontFamily.value = normalized;
+      }
+
+      this.updatePocketQuranPopupArabicFontPickerLabel();
+      this.scheduleAutoSave(120);
     });
 
     document.addEventListener("md:pq-translation-font-selected", (e) => {
@@ -8860,6 +8897,29 @@ class SettingsManager extends BaseManager {
 
     labelEl.textContent = font;
     btn.title = `Current Arabic font: ${font}`;
+  }
+
+  updatePocketQuranPopupArabicFontPickerLabel() {
+    const btn = this.pocketQuranPopupArabicFontPickerBtn;
+    const labelEl = this.pocketQuranPopupArabicFontPickerLabel;
+    if (!btn || !labelEl) return;
+
+    const settings = this.storage.getSettings() || {};
+    const pq = settings.pocketQuran || {};
+    const pqPopup = settings.pocketQuranPopup || {};
+
+    const font = this.normalizePocketQuranArabicFontFamily(
+      this.pocketQuranPopupArabicFontFamily?.value ||
+        pqPopup.arabicFontFamily ||
+        pq.arabicFontFamily,
+    );
+
+    if (this.pocketQuranPopupArabicFontFamily) {
+      this.pocketQuranPopupArabicFontFamily.value = font;
+    }
+
+    labelEl.textContent = font;
+    btn.title = `Current popup Arabic font: ${font}`;
   }
 
   updatePocketQuranTranslationPickerLabel() {
