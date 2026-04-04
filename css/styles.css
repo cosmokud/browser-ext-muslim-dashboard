@@ -13961,6 +13961,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin-top: 0;
 }
 
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah {
+  min-height: clamp(124px, 20vh, 176px);
+  padding-bottom: calc(var(--spacing-md) + 48px);
+}
+
+#pocketQuranCard.pq-hide-arabic-text .pq-ayah-controls-stack {
+  bottom: var(--spacing-sm);
+}
+
 /* Tajweed Mode Styles */
 .pocket-quran-ayah-ar.tajweed-mode {
   font-family: var(
@@ -13983,6 +13992,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pq-text-visibility-toggle:not(.active) {
   color: var(--text-muted);
+}
+
+.pq-text-visibility-icon svg {
+  display: block;
 }
 
 .pq-tajweed-toggle:disabled {

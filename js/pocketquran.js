@@ -4220,6 +4220,7 @@ class PocketQuranManager extends BaseManager {
       isAutoplay: this._isAutoplay === true,
       isAutoplayNextSurah: this._isAutoplayNextSurah === true,
       isAutoScroll: this._isAutoScroll === true,
+      isTajweedMode: this._isTajweedMode === true,
       showArabicText: this._showArabicText === true,
       showTranslationText: this._showTranslationText === true,
       translationResourceId: this.normalizeTranslationId(
@@ -4373,11 +4374,30 @@ class PocketQuranManager extends BaseManager {
         case "toggleAutoScroll":
           this.toggleAutoScroll();
           break;
+        case "toggleTajweed": {
+          const desiredTajweedMode =
+            typeof payload.desiredIsTajweedMode === "boolean"
+              ? payload.desiredIsTajweedMode
+              : null;
+
+          if (
+            desiredTajweedMode == null ||
+            desiredTajweedMode !== (this._isTajweedMode === true)
+          ) {
+            await this.toggleTajweedMode();
+          }
+          break;
+        }
         case "selectAyah":
           await this.applyPopupAyahSelection(payload.surah, payload.ayah);
           break;
         case "selectReciter":
           this.selectReciter(payload.reciterId);
+          break;
+        case "selectTranslation":
+          this.selectTranslation(
+            payload.translationResourceId ?? payload.translationId,
+          );
           break;
         default:
           return;

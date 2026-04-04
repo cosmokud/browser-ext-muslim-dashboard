@@ -563,10 +563,35 @@
                     <span class="popup-pq-visibility-toggle-check"></span>
                   </label>
                   <label
-                    class="pocket-quran-control-label"
+                    class="pocket-quran-control-label popup-pq-size-label-link"
+                    id="popupPqArabicSizeLabel"
                     for="popupPqArabicSizeRange"
+                    role="button"
+                    tabindex="0"
+                    title="Change Arabic font"
                     >Arabic</label
                   >
+                  <button
+                    type="button"
+                    class="popup-pq-mini-tajweed-toggle"
+                    id="popupPqMiniTajweedToggle"
+                    aria-pressed="false"
+                    aria-label="Toggle Tajweed color-coded Arabic text"
+                    title="Toggle Tajweed color-coded Arabic text"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M6.25 4.5A2.75 2.75 0 0 0 3.5 7.25v9.5A2.75 2.75 0 0 0 6.25 19.5h11.5a2.75 2.75 0 0 0 2.75-2.75v-9.5A2.75 2.75 0 0 0 17.75 4.5H6.25zm1.4 3.05a.9.9 0 0 1 1.8 0v3.3a.9.9 0 0 1-1.8 0v-3.3zm3.95 0a.9.9 0 0 1 1.8 0v5.95a.9.9 0 1 1-1.8 0V7.55zm3.95 0a.9.9 0 1 1 1.8 0v2.1a.9.9 0 0 1-1.8 0v-2.1z"
+                      />
+                    </svg>
+                  </button>
                   <span
                     class="popup-pq-size-separator"
                     aria-hidden="true"
@@ -626,8 +651,12 @@
                     <span class="popup-pq-visibility-toggle-check"></span>
                   </label>
                   <label
-                    class="pocket-quran-control-label"
+                    class="pocket-quran-control-label popup-pq-size-label-link"
+                    id="popupPqTranslationSizeLabel"
                     for="popupPqTranslationSizeRange"
+                    role="button"
+                    tabindex="0"
+                    title="Change translation"
                     >Translation</label
                   >
                   <span
@@ -794,6 +823,94 @@
                   <div
                     class="pq-translation-items popup-pq-reciter-list"
                     id="popupPqReciterList"
+                  ></div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="popup-pq-embedded-panel"
+              id="popupPqTranslationPanel"
+              hidden
+            >
+              <div class="popup-pq-embedded-panel-header">
+                <h3 class="popup-pq-embedded-panel-title">
+                  Select Translation
+                </h3>
+                <button
+                  type="button"
+                  class="popup-pq-embedded-panel-close"
+                  id="popupPqTranslationPanelClose"
+                  aria-label="Close translation selector"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="popup-pq-embedded-panel-body">
+                <div class="popup-pq-modal-section">
+                  <label
+                    class="popup-pq-modal-label"
+                    for="popupPqTranslationSearchInput"
+                    >Search Translation</label
+                  >
+                  <input
+                    class="popup-pq-modal-search"
+                    id="popupPqTranslationSearchInput"
+                    type="search"
+                    placeholder="Search by language or translator"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+                <div class="popup-pq-modal-section">
+                  <div
+                    class="pq-translation-list popup-pq-translation-list"
+                    id="popupPqTranslationList"
+                  ></div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="popup-pq-embedded-panel"
+              id="popupPqFontPanel"
+              hidden
+            >
+              <div class="popup-pq-embedded-panel-header">
+                <h3 class="popup-pq-embedded-panel-title">
+                  Select Arabic Font
+                </h3>
+                <button
+                  type="button"
+                  class="popup-pq-embedded-panel-close"
+                  id="popupPqFontPanelClose"
+                  aria-label="Close Arabic font selector"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="popup-pq-embedded-panel-body">
+                <div class="popup-pq-modal-section">
+                  <label
+                    class="popup-pq-modal-label"
+                    for="popupPqFontSearchInput"
+                    >Search Arabic Font</label
+                  >
+                  <input
+                    class="popup-pq-modal-search"
+                    id="popupPqFontSearchInput"
+                    type="search"
+                    placeholder="Search Arabic font"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                </div>
+                <div class="popup-pq-modal-section">
+                  <div
+                    class="pq-translation-items popup-pq-reciter-list popup-pq-font-list"
+                    id="popupPqFontList"
                   ></div>
                 </div>
               </div>
