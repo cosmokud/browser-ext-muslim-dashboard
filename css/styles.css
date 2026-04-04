@@ -13958,18 +13958,20 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 #pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah-tr {
-  margin-top: auto;
+  margin-top: 0;
 }
 
-#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah {
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(124px, 20vh, 176px);
-  padding-bottom: calc(var(--spacing-md) + 48px);
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah,
+#pocketQuranCard.pq-hide-translation-text .pocket-quran-ayah {
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
 }
 
-#pocketQuranCard.pq-hide-arabic-text .pq-ayah-controls-stack {
-  bottom: var(--spacing-sm);
+#pocketQuranCard.pq-hide-arabic-text .pq-ayah-controls-stack,
+#pocketQuranCard.pq-hide-translation-text .pq-ayah-controls-stack {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
 }
 
 /* Tajweed Mode Styles */
