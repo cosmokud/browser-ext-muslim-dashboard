@@ -186,6 +186,7 @@ class StorageManager {
         glassEnabled: true,
         glassOpacity: 50,
         componentOpacity: 0,
+        highestVisualFidelityEnabled: false,
         customAccent: null,
         customPalettes: {},
       },
@@ -636,6 +637,26 @@ class StorageManager {
       merged[mapping.opacityKey] = glassOpacity;
     });
 
+    if (
+      !merged.theme ||
+      typeof merged.theme !== "object" ||
+      Array.isArray(merged.theme)
+    ) {
+      merged.theme = { ...defaults.theme };
+    }
+
+    merged.performanceModeEnabled = merged.performanceModeEnabled === true;
+    merged.theme.highestVisualFidelityEnabled =
+      merged.theme.highestVisualFidelityEnabled === true;
+
+    // Dashboard quality rule: Performance Mode wins if both are true.
+    if (
+      merged.performanceModeEnabled &&
+      merged.theme.highestVisualFidelityEnabled
+    ) {
+      merged.theme.highestVisualFidelityEnabled = false;
+    }
+
     return merged;
   }
 
@@ -643,12 +664,36 @@ class StorageManager {
    * Save settings
    */
   saveSettings(settings) {
-    const ok = this.set("settings", settings);
+    const defaults = this.getDefaultSettings();
+    const normalizedSettings =
+      settings && typeof settings === "object" && !Array.isArray(settings)
+        ? { ...settings }
+        : { ...defaults };
+
+    const rawTheme = normalizedSettings.theme;
+    normalizedSettings.theme =
+      rawTheme && typeof rawTheme === "object" && !Array.isArray(rawTheme)
+        ? { ...defaults.theme, ...rawTheme }
+        : { ...defaults.theme };
+
+    normalizedSettings.performanceModeEnabled =
+      normalizedSettings.performanceModeEnabled === true;
+    normalizedSettings.theme.highestVisualFidelityEnabled =
+      normalizedSettings.theme.highestVisualFidelityEnabled === true;
+
+    if (
+      normalizedSettings.performanceModeEnabled &&
+      normalizedSettings.theme.highestVisualFidelityEnabled
+    ) {
+      normalizedSettings.theme.highestVisualFidelityEnabled = false;
+    }
+
+    const ok = this.set("settings", normalizedSettings);
 
     // Mirror settings to chrome.storage for MV3 background service worker.
     try {
       if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
-        chrome.storage.local.set({ md_settings: settings });
+        chrome.storage.local.set({ md_settings: normalizedSettings });
       }
     } catch (e) {
       // ignore

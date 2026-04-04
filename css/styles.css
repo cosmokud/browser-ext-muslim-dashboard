@@ -276,6 +276,54 @@ html[data-performance-mode="true"]
   box-shadow: var(--glass-shadow) !important;
 }
 
+/* Dashboard quality: when Highest Visual Fidelity is disabled, keep visuals
+   readable while removing the most expensive legacy animation stack. */
+html[data-highest-visual-fidelity="false"]:not(
+    [data-performance-mode="true"]
+  )
+  :is(
+    .support-kofi-card::before,
+    .support-feedback-card::before,
+    .fasting-bar__fill,
+    .pq-skeleton-shimmer::after,
+    .location-display .location-icon,
+    .weather-icon.weather-anim-sunny,
+    .weather-icon.weather-anim-cloudy,
+    .weather-icon.weather-anim-rainy,
+    .sidebar-placeholder-icon,
+    .sidebar-mode-btn.active,
+    .layout-edit-btn.active,
+    .quran-focus-btn.active,
+    .moment-mode-btn.active
+  ) {
+  animation: none !important;
+}
+
+html[data-highest-visual-fidelity="false"]:not(
+    [data-performance-mode="true"]
+  )
+  .pq-book-blur {
+  -webkit-filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
+  filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
+}
+
+html[data-highest-visual-fidelity="false"]:not(
+    [data-performance-mode="true"]
+  )
+  body.moment-mode
+  .moment-mode-layout
+  :is(
+    #momentPrayerSlot,
+    #momentFastingSlot,
+    #momentQuoteSlot,
+    #momentPinnedAppsSlot,
+    #momentSearchSlot,
+    #momentClockSlot
+  )::before {
+  -webkit-filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
+  filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
+}
+
 /* App-wide theme-aware scrollbars */
 * {
   scrollbar-width: thin;

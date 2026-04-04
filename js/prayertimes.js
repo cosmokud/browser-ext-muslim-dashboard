@@ -13,6 +13,8 @@ class PrayerTimesManager {
     this.countdownInterval = null;
     this.locationPermissionRequested = false;
     this.prayerDisplayDay = null;
+    this.countdownLastMinute = null;
+    this.countdownLastVisibilityKey = "";
 
     // All available prayer times
     this.allPrayers = [
@@ -496,6 +498,9 @@ class PrayerTimesManager {
       clearInterval(this.countdownInterval);
     }
 
+    this.countdownLastMinute = null;
+    this.countdownLastVisibilityKey = "";
+
     this.updateCountdown();
     this.countdownInterval = setInterval(() => {
       this.updateCountdown();
@@ -507,12 +512,23 @@ class PrayerTimesManager {
    */
   updateCountdown() {
     const settings = this.storage.getSettings();
-    const visibility = settings.prayerVisibility;
-    this.refreshPrayerListForDay(visibility);
+    const visibility = settings.prayerVisibility || {};
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const currentSeconds = now.getSeconds();
+    const visibilityKey = JSON.stringify(visibility);
+
+    const shouldRefreshPrayerUi =
+      this.countdownLastMinute !== currentMinutes ||
+      this.countdownLastVisibilityKey !== visibilityKey;
+
+    if (shouldRefreshPrayerUi) {
+      this.refreshPrayerListForDay(visibility);
+      this.highlightPrayer(visibility);
+      this.countdownLastMinute = currentMinutes;
+      this.countdownLastVisibilityKey = visibilityKey;
+    }
 
     // Get visible prayers with their times
     const visiblePrayers = this.allPrayers
@@ -572,9 +588,6 @@ class PrayerTimesManager {
         )}:${this.padZero(minutes)}:${this.padZero(seconds)}`;
       }
     }
-
-    // Update highlights
-    this.highlightPrayer(visibility);
   }
 
   /**

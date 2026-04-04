@@ -297,6 +297,9 @@ class SettingsManager extends BaseManager {
     this.themePerformanceModeEnabled = document.getElementById(
       "themePerformanceModeEnabled",
     );
+    this.themeHighestVisualFidelityEnabled = document.getElementById(
+      "themeHighestVisualFidelityEnabled",
+    );
 
     // Icon theme picker
     this.iconThemePicker = document.getElementById("iconThemePicker");
@@ -699,8 +702,16 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
+    const dashboardQualityState = this.resolveDashboardQualityState(
+      settings.performanceModeEnabled === true,
+      settings?.theme?.highestVisualFidelityEnabled === true,
+      "performance",
+    );
+    this.applyHighestVisualFidelity(
+      dashboardQualityState.highestVisualFidelityEnabled,
+    );
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
-    this.applyPerformanceMode(settings.performanceModeEnabled === true);
+    this.applyPerformanceMode(dashboardQualityState.performanceModeEnabled);
 
     // Clean up any stale inline zoom left by the removed Dashboard Scale feature.
     const root = document.documentElement;
@@ -2580,12 +2591,59 @@ class SettingsManager extends BaseManager {
     }
   }
 
+  resolveDashboardQualityState(
+    performanceModeEnabled,
+    highestVisualFidelityEnabled,
+    preferredMode = "performance",
+  ) {
+    let performance = performanceModeEnabled === true;
+    let highest = highestVisualFidelityEnabled === true;
+
+    if (performance && highest) {
+      if (preferredMode === "highest") {
+        performance = false;
+      } else {
+        highest = false;
+      }
+    }
+
+    return {
+      performanceModeEnabled: performance,
+      highestVisualFidelityEnabled: highest,
+    };
+  }
+
+  isHighestVisualFidelityEnabled() {
+    if (typeof window !== "undefined") {
+      if (typeof window.__MD_HIGHEST_VISUAL_FIDELITY__ === "boolean") {
+        return window.__MD_HIGHEST_VISUAL_FIDELITY__ === true;
+      }
+    }
+
+    try {
+      return (
+        this.storage.getSettings()?.theme?.highestVisualFidelityEnabled === true
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   applyUiBlurPower(powerPercent) {
     const clamped = this.clampNumber(powerPercent, 0, 200, 100);
-    const multiplier = clamped / 100;
+    const baseMultiplier = clamped / 100;
+    const highestVisualFidelityEnabled = this.isHighestVisualFidelityEnabled();
+    const effectiveMultiplier = highestVisualFidelityEnabled
+      ? baseMultiplier
+      : Number((baseMultiplier * 0.72).toFixed(3));
+
+    document.documentElement.style.setProperty(
+      "--ui-blur-base-multiplier",
+      String(baseMultiplier),
+    );
     document.documentElement.style.setProperty(
       "--ui-blur-multiplier",
-      String(multiplier),
+      String(effectiveMultiplier),
     );
 
     // Notify components that render UI outside their card's DOM subtree
@@ -2593,10 +2651,64 @@ class SettingsManager extends BaseManager {
     try {
       document.dispatchEvent(
         new CustomEvent("md:ui-blur-update", {
-          detail: { multiplier },
+          detail: {
+            multiplier: effectiveMultiplier,
+            baseMultiplier,
+            highestVisualFidelityEnabled,
+          },
         }),
       );
     } catch (e) {}
+  }
+
+  applyHighestVisualFidelity(enabled) {
+    const isEnabled = enabled === true;
+    const root = document.documentElement;
+    const body = document.body;
+
+    if (root) {
+      root.dataset.highestVisualFidelity = isEnabled ? "true" : "false";
+      root.classList.toggle("highest-visual-fidelity", isEnabled);
+    }
+
+    if (body) {
+      body.classList.toggle("highest-visual-fidelity", isEnabled);
+    }
+
+    window.__MD_HIGHEST_VISUAL_FIDELITY__ = isEnabled;
+
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:highest-visual-fidelity-change", {
+          detail: { enabled: isEnabled },
+        }),
+      );
+    } catch (e) {}
+  }
+
+  applyDashboardQualityState(preferredMode = "performance") {
+    const resolved = this.resolveDashboardQualityState(
+      this.themePerformanceModeEnabled?.checked === true,
+      this.themeHighestVisualFidelityEnabled?.checked === true,
+      preferredMode,
+    );
+
+    if (this.themePerformanceModeEnabled) {
+      this.themePerformanceModeEnabled.checked =
+        resolved.performanceModeEnabled;
+    }
+    if (this.themeHighestVisualFidelityEnabled) {
+      this.themeHighestVisualFidelityEnabled.checked =
+        resolved.highestVisualFidelityEnabled;
+    }
+
+    this.applyHighestVisualFidelity(resolved.highestVisualFidelityEnabled);
+    this.applyPerformanceMode(resolved.performanceModeEnabled);
+    this.applyUiBlurPower(
+      this.themeBlurPower?.value ?? this.storage.getSettings()?.uiBlurPower,
+    );
+
+    return resolved;
   }
 
   applyPerformanceMode(enabled) {
@@ -2787,11 +2899,25 @@ class SettingsManager extends BaseManager {
       this.toggleThemeCustomWidth(false);
     }
 
+    const dashboardQualityState = this.resolveDashboardQualityState(
+      settings.performanceModeEnabled === true,
+      themeSettings.highestVisualFidelityEnabled === true,
+      "performance",
+    );
+
     if (this.themePerformanceModeEnabled) {
       this.themePerformanceModeEnabled.checked =
-        settings.performanceModeEnabled === true;
+        dashboardQualityState.performanceModeEnabled;
     }
-    this.applyPerformanceMode(settings.performanceModeEnabled === true);
+    if (this.themeHighestVisualFidelityEnabled) {
+      this.themeHighestVisualFidelityEnabled.checked =
+        dashboardQualityState.highestVisualFidelityEnabled;
+    }
+    this.applyHighestVisualFidelity(
+      dashboardQualityState.highestVisualFidelityEnabled,
+    );
+    this.applyPerformanceMode(dashboardQualityState.performanceModeEnabled);
+    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
 
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";
@@ -3974,7 +4100,13 @@ class SettingsManager extends BaseManager {
 
     if (this.themePerformanceModeEnabled) {
       this.themePerformanceModeEnabled.addEventListener("change", () => {
-        this.applyPerformanceMode(this.themePerformanceModeEnabled.checked);
+        this.applyDashboardQualityState("performance");
+      });
+    }
+
+    if (this.themeHighestVisualFidelityEnabled) {
+      this.themeHighestVisualFidelityEnabled.addEventListener("change", () => {
+        this.applyDashboardQualityState("highest");
       });
     }
   }
@@ -4018,6 +4150,20 @@ class SettingsManager extends BaseManager {
       window.dashboard?.themes?.getCustomPalettes?.() ||
       settings.theme?.customPalettes ||
       {};
+    const dashboardQualityState = this.resolveDashboardQualityState(
+      this.themePerformanceModeEnabled?.checked === true,
+      this.themeHighestVisualFidelityEnabled?.checked === true,
+      "performance",
+    );
+
+    if (this.themePerformanceModeEnabled) {
+      this.themePerformanceModeEnabled.checked =
+        dashboardQualityState.performanceModeEnabled;
+    }
+    if (this.themeHighestVisualFidelityEnabled) {
+      this.themeHighestVisualFidelityEnabled.checked =
+        dashboardQualityState.highestVisualFidelityEnabled;
+    }
 
     // Save theme settings
     settings.theme = {
@@ -4026,6 +4172,8 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
+      highestVisualFidelityEnabled:
+        dashboardQualityState.highestVisualFidelityEnabled,
       customAccent: customAccent,
       customPalettes: customPalettes,
     };
@@ -4049,8 +4197,7 @@ class SettingsManager extends BaseManager {
       );
     }
 
-    settings.performanceModeEnabled =
-      this.themePerformanceModeEnabled?.checked === true;
+    settings.performanceModeEnabled = dashboardQualityState.performanceModeEnabled;
 
     // Apply theme manager settings
     if (window.dashboard?.themes) {
@@ -5520,9 +5667,20 @@ class SettingsManager extends BaseManager {
       settings.containerWidthCustom,
     );
 
+    const dashboardQualityState = this.resolveDashboardQualityState(
+      settings.performanceModeEnabled === true,
+      settings?.theme?.highestVisualFidelityEnabled === true,
+      "performance",
+    );
+    this.applyHighestVisualFidelity(
+      dashboardQualityState.highestVisualFidelityEnabled,
+    );
+
     // Apply UI blur power
     this.applyUiBlurPower(settings.uiBlurPower ?? 100);
-    this.applyPerformanceMode(settings.performanceModeEnabled === true);
+
+    // Apply performance mode last so its CSS hard-overrides remain authoritative.
+    this.applyPerformanceMode(dashboardQualityState.performanceModeEnabled);
 
     // Update weather unit
     if (this.weather) {

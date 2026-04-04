@@ -37,6 +37,9 @@ class GridLayoutManager {
     this.scrollBehaviorOverridden = false;
     this.autoScrollVelocity = 0;
     this.scrollInterval = null;
+    this.dropTargetRaf = null;
+    this.pendingDropTargetX = 0;
+    this.pendingDropTargetY = 0;
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
     this.containerResizeObserver = null;
@@ -1599,8 +1602,27 @@ class GridLayoutManager {
     this.draggedItem.style.left = `${clientX - this.dragOffsetX}px`;
     this.draggedItem.style.top = `${clientY - this.dragOffsetY}px`;
 
-    // Find drop target
-    this.updateDropTarget(clientX, clientY);
+    // Find drop target (throttled to animation frames)
+    this.scheduleDropTargetUpdate(clientX, clientY);
+  }
+
+  scheduleDropTargetUpdate(clientX, clientY) {
+    this.pendingDropTargetX = clientX;
+    this.pendingDropTargetY = clientY;
+
+    if (this.dropTargetRaf) return;
+
+    this.dropTargetRaf = requestAnimationFrame(() => {
+      this.dropTargetRaf = null;
+      if (!this.isDragging || !this.draggedItem) return;
+      this.updateDropTarget(this.pendingDropTargetX, this.pendingDropTargetY);
+    });
+  }
+
+  cancelDropTargetUpdate() {
+    if (!this.dropTargetRaf) return;
+    cancelAnimationFrame(this.dropTargetRaf);
+    this.dropTargetRaf = null;
   }
 
   /**
@@ -1854,6 +1876,7 @@ class GridLayoutManager {
 
     // Stop auto-scroll
     this.stopAutoScroll();
+    this.cancelDropTargetUpdate();
 
     // Restore smooth scroll behavior
     this.restoreSmoothScrollAfterDrag();
@@ -2184,6 +2207,7 @@ class GridLayoutManager {
     this.clearSidebarDropTarget();
 
     this.stopAutoScroll();
+    this.cancelDropTargetUpdate();
 
     // Reset dragged item
     this.draggedItem.classList.remove("grid-dragging");
@@ -2372,6 +2396,8 @@ class GridLayoutManager {
     if (this.viewportResizeTimer) {
       clearTimeout(this.viewportResizeTimer);
     }
+
+    this.cancelDropTargetUpdate();
 
     // Remove event listeners
     window.removeEventListener("resize", this.handleViewportResize);

@@ -1094,22 +1094,33 @@ class MuslimDashboard {
     };
 
     const repositionOpenBlurPopups = () => {
-      if (blurPopupPositionRaf) cancelAnimationFrame(blurPopupPositionRaf);
+      if (blurPopupPositionRaf) return;
+
       blurPopupPositionRaf = requestAnimationFrame(() => {
-        document
-          .querySelectorAll(".card-blur-menu.blur-menu-open")
-          .forEach((menu) => {
-            const cardId = menu.dataset.cardId;
-            if (!cardId) return;
-            const popup = blurPopupByCardId.get(cardId);
-            if (!popup) return;
-            positionBlurPopup(menu, popup);
-          });
+        blurPopupPositionRaf = null;
+
+        const openMenus = document.querySelectorAll(
+          ".card-blur-menu.blur-menu-open",
+        );
+        if (!openMenus.length) return;
+
+        openMenus.forEach((menu) => {
+          const cardId = menu.dataset.cardId;
+          if (!cardId) return;
+          const popup = blurPopupByCardId.get(cardId);
+          if (!popup) return;
+          positionBlurPopup(menu, popup);
+        });
       });
     };
 
     // Close all open blur menus
     const closeAllBlurMenus = () => {
+      if (blurPopupPositionRaf) {
+        cancelAnimationFrame(blurPopupPositionRaf);
+        blurPopupPositionRaf = null;
+      }
+
       document
         .querySelectorAll(".card-blur-menu.blur-menu-open")
         .forEach((menu) => {

@@ -79,6 +79,16 @@ class WeatherManager extends BaseManager {
       this.renderHourlyChart();
     });
 
+    // Keep chart animation behavior in sync with highest visual fidelity mode.
+    document.addEventListener("md:highest-visual-fidelity-change", () => {
+      if (this._chartRaf) {
+        cancelAnimationFrame(this._chartRaf);
+        this._chartRaf = null;
+      }
+      this._chartAnim = null;
+      this.renderHourlyChart();
+    });
+
     // Weather code to icon/description mapping (WMO codes)
     this.weatherCodes = {
       0: { icon: "☀️", desc: "Clear sky" },
@@ -136,6 +146,22 @@ class WeatherManager extends BaseManager {
 
     try {
       return this.storage.getSettings()?.performanceModeEnabled === true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  isHighestVisualFidelityEnabled() {
+    if (typeof window !== "undefined") {
+      if (typeof window.__MD_HIGHEST_VISUAL_FIDELITY__ === "boolean") {
+        return window.__MD_HIGHEST_VISUAL_FIDELITY__ === true;
+      }
+    }
+
+    try {
+      return (
+        this.storage.getSettings()?.theme?.highestVisualFidelityEnabled === true
+      );
     } catch (e) {
       return false;
     }
@@ -645,7 +671,10 @@ class WeatherManager extends BaseManager {
       this._chartRaf = null;
     }
 
-    if (this.isPerformanceModeEnabled()) {
+    if (
+      this.isPerformanceModeEnabled() ||
+      !this.isHighestVisualFidelityEnabled()
+    ) {
       this._chartAnim = null;
       return;
     }
@@ -1492,8 +1521,10 @@ class WeatherManager extends BaseManager {
     const nowMs = performance.now();
     const anim = this._chartAnim;
     const performanceModeEnabled = this.isPerformanceModeEnabled();
+    const highestVisualFidelityEnabled = this.isHighestVisualFidelityEnabled();
     const shouldAnimate =
       !performanceModeEnabled &&
+      highestVisualFidelityEnabled &&
       !!anim &&
       anim.metric === metric &&
       nowMs - anim.start < anim.duration + points * anim.stagger + 60;

@@ -810,24 +810,32 @@ class StickyNotesManager {
   }
 
   repositionOpenNoteBlurPopups() {
-    if (this.noteBlurPopupPositionRaf) {
-      cancelAnimationFrame(this.noteBlurPopupPositionRaf);
-    }
+    if (this.noteBlurPopupPositionRaf) return;
 
     this.noteBlurPopupPositionRaf = requestAnimationFrame(() => {
-      document
-        .querySelectorAll(".sticky-note-blur-menu.blur-menu-open")
-        .forEach((menu) => {
-          const noteId = String(menu.dataset.noteId || "").trim();
-          if (!noteId) return;
-          const popup = this.noteBlurPopupByNoteId.get(noteId);
-          if (!popup) return;
-          this.positionNoteBlurPopup(menu, popup);
-        });
+      this.noteBlurPopupPositionRaf = null;
+
+      const openMenus = document.querySelectorAll(
+        ".sticky-note-blur-menu.blur-menu-open",
+      );
+      if (!openMenus.length) return;
+
+      openMenus.forEach((menu) => {
+        const noteId = String(menu.dataset.noteId || "").trim();
+        if (!noteId) return;
+        const popup = this.noteBlurPopupByNoteId.get(noteId);
+        if (!popup) return;
+        this.positionNoteBlurPopup(menu, popup);
+      });
     });
   }
 
   closeAllNoteBlurMenus() {
+    if (this.noteBlurPopupPositionRaf) {
+      cancelAnimationFrame(this.noteBlurPopupPositionRaf);
+      this.noteBlurPopupPositionRaf = null;
+    }
+
     document
       .querySelectorAll(".sticky-note-blur-menu.blur-menu-open")
       .forEach((menu) => {
