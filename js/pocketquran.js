@@ -2523,10 +2523,7 @@ class PocketQuranManager extends BaseManager {
       const previousScrollTop = previousContainer?.scrollTop || 0;
       const measuredAnchorIndex = this.getFirstVisibleRenderedAyahIndex();
       const estimatedAnchorIndex = this.getAyahAtOffset(previousScrollTop);
-      const maxAnchorIndex = Math.max(
-        0,
-        (this._activeVerses?.length || 1) - 1,
-      );
+      const maxAnchorIndex = Math.max(0, (this._activeVerses?.length || 1) - 1);
       const anchorIndex = Math.min(
         maxAnchorIndex,
         Math.max(
