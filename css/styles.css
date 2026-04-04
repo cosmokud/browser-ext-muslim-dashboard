@@ -258,6 +258,24 @@ html[data-performance-mode="true"] * {
   -webkit-filter: none !important;
 }
 
+html[data-performance-mode="true"]
+  :is(
+    #prayerTimesCard,
+    #fastingCard,
+    #calendarCard,
+    #flashcardCard,
+    #adhkarCard,
+    #hadithCard,
+    #pocketQuranCard,
+    #todoCard,
+    #qiblaCard,
+    #lunarPhaseCard,
+    #weatherCard
+  ):hover {
+  transform: none !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
 /* App-wide theme-aware scrollbars */
 * {
   scrollbar-width: thin;

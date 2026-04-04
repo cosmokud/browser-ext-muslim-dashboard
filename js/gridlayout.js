@@ -2029,6 +2029,29 @@ class GridLayoutManager {
    * Update rows array from current DOM state
    */
   updateRowsFromDOM() {
+    const floatingTargets = window.dashboard?.floating?.targets || {};
+    const floatingPlaceholderFallback = {
+      quotes: "quoteSection",
+      prayerTimes: "prayerTimesCard",
+      hijriCalendar: "calendarCard",
+      qiblaDirection: "qiblaCard",
+      lunarPhase: "lunarPhaseCard",
+      fasting: "fastingCard",
+      flashcards: "flashcardCard",
+      adhkar: "adhkarCard",
+      hadith: "hadithCard",
+      todoList: "todoCard",
+    };
+
+    const resolveFloatingPlaceholderId = (floatingKey) => {
+      if (!floatingKey) return null;
+
+      const fromTargets = floatingTargets[floatingKey]?.cardId;
+      if (fromTargets) return fromTargets;
+
+      return floatingPlaceholderFallback[floatingKey] || null;
+    };
+
     this.rows = [];
     const rowElements = this.grid.querySelectorAll(".grid-flex-row");
 
@@ -2037,8 +2060,14 @@ class GridLayoutManager {
       row.dataset.rowIndex = index;
 
       Array.from(row.children).forEach((child) => {
-        const id = child.dataset.gridId;
-        if (id && this.componentSpans[id]) {
+        let id = child.dataset.gridId;
+
+        if (!id && child.hasAttribute("data-floating-placeholder")) {
+          const floatingKey = child.getAttribute("data-floating-placeholder");
+          id = resolveFloatingPlaceholderId(floatingKey);
+        }
+
+        if (id && this.componentSpans[id] && !rowIds.includes(id)) {
           rowIds.push(id);
         }
       });
