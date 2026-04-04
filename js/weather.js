@@ -51,6 +51,7 @@ class WeatherManager extends BaseManager {
       if (this._resizeTimer) window.clearTimeout(this._resizeTimer);
       this._resizeTimer = window.setTimeout(() => {
         this.renderHourlyChart();
+        this.updateWeatherLocationTruncation();
       }, 120);
     };
 
@@ -60,6 +61,7 @@ class WeatherManager extends BaseManager {
         window.clearTimeout(this._forecastResizeTimer);
       this._forecastResizeTimer = window.setTimeout(() => {
         this.applyForecastFlexLayout();
+        this.updateWeatherLocationTruncation();
       }, 80);
     };
 
@@ -1088,9 +1090,7 @@ class WeatherManager extends BaseManager {
       const suffix = message ? `: ${String(message).slice(0, 120)}` : "";
       this.weatherDesc.textContent = `Unable to load weather${suffix}`;
     }
-    if (this.weatherLocation) {
-      this.weatherLocation.textContent = "";
-    }
+    this.setWeatherLocationText("");
 
     if (this.weatherForecast) {
       this.weatherForecast.innerHTML = "";
@@ -1119,9 +1119,7 @@ class WeatherManager extends BaseManager {
     if (this.weatherDesc) {
       this.weatherDesc.textContent = "Loading weather...";
     }
-    if (this.weatherLocation) {
-      this.weatherLocation.textContent = "Detecting location...";
-    }
+    this.setWeatherLocationText("Detecting location...");
     if (this.weatherFeelsLike) {
       this.weatherFeelsLike.textContent = "Feels like --°";
     }
@@ -1203,9 +1201,7 @@ class WeatherManager extends BaseManager {
       this.weatherDesc.textContent = weatherInfo.desc;
     }
 
-    if (this.weatherLocation) {
-      this.weatherLocation.textContent = weather.location;
-    }
+    this.setWeatherLocationText(weather.location);
 
     if (this.weatherFeelsLike) {
       this.weatherFeelsLike.textContent =
@@ -1232,6 +1228,45 @@ class WeatherManager extends BaseManager {
     this.render7DayForecast();
     this.updateMetricTabs();
     this.renderHourlyChart();
+  }
+
+  setWeatherLocationText(locationText) {
+    if (!this.weatherLocation) return;
+
+    const fullText = String(locationText || "").trim();
+    this.weatherLocation.textContent = fullText;
+
+    if (fullText) {
+      this.weatherLocation.setAttribute("data-full-location", fullText);
+      this.weatherLocation.setAttribute("aria-label", fullText);
+    } else {
+      this.weatherLocation.removeAttribute("data-full-location");
+      this.weatherLocation.removeAttribute("aria-label");
+    }
+
+    this.updateWeatherLocationTruncation();
+  }
+
+  updateWeatherLocationTruncation() {
+    if (!this.weatherLocation) return;
+
+    const fullText =
+      this.weatherLocation.getAttribute("data-full-location") || "";
+    if (!fullText) {
+      this.weatherLocation.classList.remove("is-truncated");
+      this.weatherLocation.removeAttribute("tabindex");
+      return;
+    }
+
+    const isTruncated =
+      this.weatherLocation.scrollWidth - this.weatherLocation.clientWidth > 2;
+    this.weatherLocation.classList.toggle("is-truncated", isTruncated);
+
+    if (isTruncated) {
+      this.weatherLocation.setAttribute("tabindex", "0");
+    } else {
+      this.weatherLocation.removeAttribute("tabindex");
+    }
   }
 
   render7DayForecast() {

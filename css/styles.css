@@ -3038,7 +3038,7 @@ textarea.notes-editor:focus {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   overflow-x: auto;
   overflow-y: hidden;
   white-space: pre;
@@ -4535,7 +4535,7 @@ textarea.notes-editor:focus {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   cursor: pointer;
@@ -5428,7 +5428,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   cursor: pointer;
@@ -5468,7 +5468,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   cursor: pointer;
@@ -6051,7 +6051,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   padding: 8px;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
 }
 
 .settings-tab {
@@ -7833,7 +7833,7 @@ html[data-theme-mode="light"]
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
@@ -8904,7 +8904,7 @@ html[data-theme-mode="light"]
   max-height: 100%; /* don't overflow the scene */
   align-self: center;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border-width: 1px;
   border-style: solid;
   border-color: rgba(255, 255, 255, 0.06);
@@ -11167,7 +11167,7 @@ body.sticky-note-resizing {
 .fasting-bar {
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.06);
   animation: fastingBarIn 420ms ease both;
 }
@@ -11222,7 +11222,7 @@ body.sticky-note-resizing {
 .fasting-bar__badge {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 2px 8px;
   border-radius: var(--radius-xl);
@@ -11402,16 +11402,104 @@ body.sticky-note-resizing {
 }
 
 .weather-location {
+  position: relative;
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: -1px;
   color: var(--text-primary);
   grid-column: 2 / 3;
   justify-self: center;
+  width: 100%;
+  max-width: min(100%, 26ch);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: center;
   text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+.weather-location.is-truncated {
+  cursor: help;
+}
+
+.weather-location.is-truncated::before,
+.weather-location.is-truncated::after {
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.weather-location.is-truncated::after {
+  content: attr(data-full-location);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translate(-50%, 6px);
+  max-width: min(78vw, 560px);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, #0f1728 82%, transparent 18%),
+    color-mix(in srgb, #1a2336 90%, transparent 10%)
+  );
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-align: left;
+  text-shadow: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  z-index: 40;
+  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+}
+
+.weather-location.is-truncated::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
+  border-top: 1px solid color-mix(in srgb, var(--glass-border) 88%, white 12%);
+  background: color-mix(in srgb, #162337 94%, transparent 6%);
+  rotate: 225deg;
+  z-index: 39;
+}
+
+.weather-location.is-truncated:hover::before,
+.weather-location.is-truncated:hover::after,
+.weather-location.is-truncated:focus-visible::before,
+.weather-location.is-truncated:focus-visible::after {
+  opacity: 1;
+}
+
+.weather-location.is-truncated:hover::after,
+.weather-location.is-truncated:focus-visible::after {
+  transform: translate(-50%, 0);
+}
+
+.weather-location.is-truncated:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--accent-gold) 74%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
 }
 
 .weather-details {
@@ -11774,7 +11862,13 @@ body.sidebar-mode .sidebar-zone .weather-location {
   grid-column: 1;
   justify-self: center;
   font-size: 1.8rem;
-  word-break: break-word;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
 }
 
 body.sidebar-mode .sidebar-zone .weather-details {
@@ -14834,10 +14928,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 /* Header recitation controls */
 .pq-recitation-controls {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
+  padding-right: calc(var(--spacing-md) + 86px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--accent-gold);
   background: rgba(212, 175, 55, 0.1);
@@ -14848,6 +14944,43 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: fit-content;
   max-width: 100%;
 }
+
+.pq-recitation-floating-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.pq-recitation-float-toggle-btn,
+.pq-recitation-minimize-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating {
+  position: fixed;
+  z-index: 10020;
+  margin: 0;
+  max-width: min(780px, calc(100vw - 24px));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-info {
+  max-width: min(64vw, 460px);
+}
+
+.pq-recitation-controls.pq-recitation-controls-manual-only
+  .pq-recitation-float-toggle-btn {
+  border-color: color-mix(in srgb, var(--accent-gold) 58%, var(--glass-border));
+}
+
 .pq-recitation-close-btn {
   /* inherit base button visuals from .pq-recitation-btn (and .pq-stop-btn when present) */
   position: relative;
@@ -15017,7 +15150,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   width: 80px;
   height: 4px;
   appearance: none;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-subtle);
   border-radius: var(--radius-full);
   outline: none;
   cursor: pointer;
@@ -15062,6 +15195,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     flex-direction: column;
     align-items: stretch;
     gap: var(--spacing-sm);
+    padding-right: var(--spacing-md);
   }
 
   /* Reset header-specific margin/width to prevent right alignment on small screens */
@@ -15094,6 +15228,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
   .pq-recitation-reciter {
     max-width: none;
+  }
+
+  .pq-recitation-floating-actions {
+    position: static;
+    margin-left: auto;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .pq-recitation-controls.pq-recitation-controls-floating {
+    max-width: calc(100vw - 20px);
   }
 
   .pq-recitation-close-btn {

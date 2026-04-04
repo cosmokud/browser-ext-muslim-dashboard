@@ -396,9 +396,7 @@ class SettingsManager extends BaseManager {
     this.headerDateGlowOpacityValue = document.getElementById(
       "headerDateGlowOpacityValue",
     );
-    this.headerDateGlowRadius = document.getElementById(
-      "headerDateGlowRadius",
-    );
+    this.headerDateGlowRadius = document.getElementById("headerDateGlowRadius");
     this.headerDateGlowRadiusValue = document.getElementById(
       "headerDateGlowRadiusValue",
     );
@@ -418,9 +416,7 @@ class SettingsManager extends BaseManager {
     this.headerTimeGlowOpacityValue = document.getElementById(
       "headerTimeGlowOpacityValue",
     );
-    this.headerTimeGlowRadius = document.getElementById(
-      "headerTimeGlowRadius",
-    );
+    this.headerTimeGlowRadius = document.getElementById("headerTimeGlowRadius");
     this.headerTimeGlowRadiusValue = document.getElementById(
       "headerTimeGlowRadiusValue",
     );
@@ -654,6 +650,9 @@ class SettingsManager extends BaseManager {
     this.pocketQuranTranslationSelect = document.getElementById(
       "pocketQuranTranslationSelect",
     );
+    this.pocketQuranRecitationFloatingEnabled = document.getElementById(
+      "pocketQuranRecitationFloatingEnabled",
+    );
 
     this.pocketQuranTajweedColors = document.getElementById(
       "pocketQuranTajweedColors",
@@ -752,7 +751,10 @@ class SettingsManager extends BaseManager {
         const availableWidth = Math.max(0, Math.floor(strip.clientWidth - 16));
         const width =
           availableWidth > 0
-            ? Math.min(Math.max(preferredWidth, minReadableWidth), availableWidth)
+            ? Math.min(
+                Math.max(preferredWidth, minReadableWidth),
+                availableWidth,
+              )
             : Math.max(preferredWidth, minReadableWidth);
         if (Number.isFinite(width) && width > 0) {
           // Primary variable used by CSS
@@ -838,7 +840,9 @@ class SettingsManager extends BaseManager {
       const panelId = `${tab.dataset.tab}Panel`;
       const tabText = this.normalizeSettingsSearchText(tab.textContent);
       const matches =
-        !query || tabText.includes(query) || panelMatchMap.get(panelId) === true;
+        !query ||
+        tabText.includes(query) ||
+        panelMatchMap.get(panelId) === true;
 
       tab.classList.toggle("settings-search-filtered-out", !matches);
       tab.classList.toggle("settings-search-match-tab", query && matches);
@@ -894,7 +898,10 @@ class SettingsManager extends BaseManager {
   }
 
   setupSettingsSearchEventListeners() {
-    if (this.settingsSearchInput && this.settingsSearchInput.dataset.bound !== "1") {
+    if (
+      this.settingsSearchInput &&
+      this.settingsSearchInput.dataset.bound !== "1"
+    ) {
       this.settingsSearchInput.dataset.bound = "1";
 
       this.settingsSearchInput.addEventListener("input", () => {
@@ -1255,6 +1262,11 @@ class SettingsManager extends BaseManager {
     }
 
     this.updatePocketQuranTranslationPickerLabel();
+
+    if (this.pocketQuranRecitationFloatingEnabled) {
+      this.pocketQuranRecitationFloatingEnabled.checked =
+        pq.recitationFloatingEnabled !== false;
+    }
 
     // Pocket Quran Tajweed colors
     this.renderPocketQuranTajweedColorPickers(pq.tajweedColors);
@@ -3089,10 +3101,7 @@ class SettingsManager extends BaseManager {
 
       if (config.radius) {
         config.radius.disabled = !enabled;
-        config.radius.setAttribute(
-          "aria-disabled",
-          enabled ? "false" : "true",
-        );
+        config.radius.setAttribute("aria-disabled", enabled ? "false" : "true");
       }
 
       if (!enabled && config.popover?.classList.contains("open")) {
@@ -3112,9 +3121,8 @@ class SettingsManager extends BaseManager {
     settings.heading = settings.heading || {};
 
     const selectedClockStyle = this.getSelectedClockStyleValue();
-    const clockSurfaceLocked = this.isClockSurfaceLockedByStyle(
-      selectedClockStyle,
-    );
+    const clockSurfaceLocked =
+      this.isClockSurfaceLockedByStyle(selectedClockStyle);
 
     this.syncClockSurfaceToggleState(selectedClockStyle);
 
@@ -3131,8 +3139,9 @@ class SettingsManager extends BaseManager {
       this.headerGreetingBgEnabled?.checked === true;
     settings.heading.dateBackgroundEnabled =
       this.headerDateBgEnabled?.checked === true;
-    settings.heading.timeBackgroundEnabled =
-      clockSurfaceLocked ? false : this.headerTimeBgEnabled?.checked === true;
+    settings.heading.timeBackgroundEnabled = clockSurfaceLocked
+      ? false
+      : this.headerTimeBgEnabled?.checked === true;
     settings.heading.nextPrayerBackgroundEnabled =
       this.headerNextPrayerBgEnabled?.checked === true;
     settings.heading.compactWeatherBackgroundEnabled =
@@ -4197,7 +4206,8 @@ class SettingsManager extends BaseManager {
       );
     }
 
-    settings.performanceModeEnabled = dashboardQualityState.performanceModeEnabled;
+    settings.performanceModeEnabled =
+      dashboardQualityState.performanceModeEnabled;
 
     // Apply theme manager settings
     if (window.dashboard?.themes) {
@@ -4875,10 +4885,7 @@ class SettingsManager extends BaseManager {
       .slice(0, Math.max(0, maxSets - protectedSetsOrdered.length));
 
     // Keep only custom sets in storage; protected defaults are loaded from bundled files at runtime.
-    this.storage.set(
-      "flashcardSets",
-      cleanedCustomSets,
-    );
+    this.storage.set("flashcardSets", cleanedCustomSets);
 
     // Flashcards active set (optional)
     const incomingActiveSetId = data.flashcards?.activeSetId;
@@ -5297,6 +5304,9 @@ class SettingsManager extends BaseManager {
         10000,
         existingPocketQuran.translationResourceId ?? 85,
       ),
+      recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
+        ? this.pocketQuranRecitationFloatingEnabled.checked
+        : existingPocketQuran.recitationFloatingEnabled !== false,
     };
 
     settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(
@@ -5402,9 +5412,8 @@ class SettingsManager extends BaseManager {
       'input[name="clockStyle"]:checked',
     );
     const selectedClockStyle = clockStyleRadio?.value || "default";
-    const clockSurfaceLocked = this.isClockSurfaceLockedByStyle(
-      selectedClockStyle,
-    );
+    const clockSurfaceLocked =
+      this.isClockSurfaceLockedByStyle(selectedClockStyle);
 
     settings.heading.clockStyle = selectedClockStyle;
 
@@ -5423,8 +5432,9 @@ class SettingsManager extends BaseManager {
       this.headerGreetingBgEnabled?.checked === true;
     settings.heading.dateBackgroundEnabled =
       this.headerDateBgEnabled?.checked === true;
-    settings.heading.timeBackgroundEnabled =
-      clockSurfaceLocked ? false : this.headerTimeBgEnabled?.checked === true;
+    settings.heading.timeBackgroundEnabled = clockSurfaceLocked
+      ? false
+      : this.headerTimeBgEnabled?.checked === true;
     settings.heading.nextPrayerBackgroundEnabled =
       this.headerNextPrayerBgEnabled?.checked === true;
     settings.heading.compactWeatherBackgroundEnabled =
@@ -6390,7 +6400,8 @@ class SettingsManager extends BaseManager {
 
     this.detachedEditorModalBody.appendChild(group);
     this.detachedEditorModal.classList.add("active");
-    this.detachedEditorModalTitle.textContent = config.title || "Detached Editor";
+    this.detachedEditorModalTitle.textContent =
+      config.title || "Detached Editor";
 
     this._detachedEditorState = {
       groupId: config.groupId,
@@ -6599,7 +6610,9 @@ class SettingsManager extends BaseManager {
       if (typeof cleanup === "function") cleanups.push(cleanup);
     }
 
-    const table = group.querySelector(".hadith-editor-table, .adhkar-editor-table");
+    const table = group.querySelector(
+      ".hadith-editor-table, .adhkar-editor-table",
+    );
     if (table) {
       const cleanup = this.enableDetachedTableColumnResize(table);
       if (typeof cleanup === "function") cleanups.push(cleanup);
@@ -6629,7 +6642,9 @@ class SettingsManager extends BaseManager {
       .filter((value) => Number.isFinite(value) && value > 0);
 
     if (widths.length !== headerCells.length) {
-      widths = headerCells.map((cell) => Math.max(40, cell.getBoundingClientRect().width));
+      widths = headerCells.map((cell) =>
+        Math.max(40, cell.getBoundingClientRect().width),
+      );
     }
 
     const applyTemplate = () => {
@@ -6732,7 +6747,10 @@ class SettingsManager extends BaseManager {
     colgroup.className = "editor-resize-colgroup";
 
     const widths = headerCells.map((cell, index) => {
-      const measured = Math.max(40, Math.round(cell.getBoundingClientRect().width));
+      const measured = Math.max(
+        40,
+        Math.round(cell.getBoundingClientRect().width),
+      );
       const min = this.getEditorColumnMinWidth(cell, index, headerCells.length);
       return Math.max(min, measured);
     });

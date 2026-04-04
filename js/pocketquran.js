@@ -673,8 +673,23 @@ class PocketQuranManager extends BaseManager {
     this._playingAyah = null;
     this._reciterModal = null;
     this._headerControlsBox = null;
+    this._recitationFloatingEnabled = true;
+    this._recitationFloatingMode = false;
+    this._recitationFloatingModeReason = null;
+    this._recitationFloatingManualOnly = false;
+    this._recitationVisibilityObserver = null;
 
     this.init();
+
+    document.addEventListener("md:settings-applied", (event) => {
+      this.handleSettingsApplied(event?.detail?.settings);
+    });
+
+    window.addEventListener("resize", () => {
+      if (this._recitationFloatingMode) {
+        this.positionRecitationFloatingPanel();
+      }
+    });
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -2600,6 +2615,8 @@ class PocketQuranManager extends BaseManager {
     this._isLooping = pq.reciterLoop || false;
     this._isAutoplay = pq.reciterAutoplay || false;
     this._isAutoScroll = pq.reciterAutoScroll || false;
+    this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationFloatingManualOnly = false;
 
     // Small caches to smooth autoplay transitions.
     // Src cache avoids repeating the /by_ayah metadata request + blob URL setup.
@@ -3153,6 +3170,14 @@ class PocketQuranManager extends BaseManager {
 
     this.resetRecitationCaches();
 
+    if (
+      this._recitationFloatingMode &&
+      this._recitationFloatingModeReason === "auto"
+    ) {
+      this.disableRecitationFloating({ preserveManualOnly: true });
+    }
+    this._recitationFloatingManualOnly = false;
+
     this.updatePlaybackUI();
   }
 
@@ -3169,6 +3194,14 @@ class PocketQuranManager extends BaseManager {
     this._playingAyah = null;
     // Intentionally do NOT change this._isAutoplay: keep user's autoplay setting.
     this.resetRecitationCaches();
+
+    if (
+      this._recitationFloatingMode &&
+      this._recitationFloatingModeReason === "auto"
+    ) {
+      this.disableRecitationFloating({ preserveManualOnly: true });
+    }
+    this._recitationFloatingManualOnly = false;
 
     this.updatePlaybackUI();
   }
@@ -3211,6 +3244,15 @@ class PocketQuranManager extends BaseManager {
     // Normal end
     this._isPlaying = false;
     this._playingAyah = null;
+
+    if (
+      this._recitationFloatingMode &&
+      this._recitationFloatingModeReason === "auto"
+    ) {
+      this.disableRecitationFloating({ preserveManualOnly: true });
+    }
+    this._recitationFloatingManualOnly = false;
+
     this.updatePlaybackUI();
   }
 
@@ -3301,6 +3343,297 @@ class PocketQuranManager extends BaseManager {
     }
   }
 
+  handleSettingsApplied(settings) {
+    const normalized =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
+    const pq = normalized?.pocketQuran || {};
+
+    this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+
+    if (!this._recitationFloatingEnabled) {
+      this.unwatchRecitationControlsVisibility();
+      if (this._recitationFloatingMode) {
+        this.disableRecitationFloating({ preserveManualOnly: false });
+      }
+    } else if (this._headerControlsBox && !this._recitationFloatingMode) {
+      this.watchRecitationControlsVisibility();
+      this.maybeAutoFloatRecitationControls();
+    }
+
+    this.updateRecitationFloatingButtons();
+  }
+
+  shouldAutoFloatRecitationControls() {
+    return (
+      this._recitationFloatingEnabled &&
+      this._isPlaying &&
+      !this._recitationFloatingManualOnly
+    );
+  }
+
+  isElementMeaningfullyVisible(element) {
+    if (!element) return false;
+
+    const rect = element.getBoundingClientRect();
+    const width = Math.max(0, rect.width);
+    const height = Math.max(0, rect.height);
+    if (!width || !height) return false;
+
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight || 0;
+
+    const visibleWidth =
+      Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0);
+    const visibleHeight =
+      Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+
+    if (visibleWidth <= 0 || visibleHeight <= 0) return false;
+
+    const visibleArea = visibleWidth * visibleHeight;
+    const totalArea = width * height;
+    return visibleArea / totalArea >= 0.2;
+  }
+
+  ensureRecitationVisibilityObserver() {
+    if (this._recitationVisibilityObserver) return;
+    if (typeof IntersectionObserver !== "function") return;
+
+    this._recitationVisibilityObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = Array.isArray(entries) ? entries[0] : null;
+        if (
+          !entry ||
+          !this._headerControlsBox ||
+          this._recitationFloatingMode
+        ) {
+          return;
+        }
+
+        const isVisible =
+          entry.isIntersecting === true && entry.intersectionRatio >= 0.2;
+        if (!isVisible) {
+          this.maybeAutoFloatRecitationControls();
+        }
+      },
+      {
+        threshold: [0, 0.2, 0.4, 0.6, 1],
+      },
+    );
+  }
+
+  watchRecitationControlsVisibility() {
+    if (
+      !this._headerControlsBox ||
+      this._recitationFloatingMode ||
+      !this._recitationFloatingEnabled
+    ) {
+      return;
+    }
+
+    this.ensureRecitationVisibilityObserver();
+    if (!this._recitationVisibilityObserver) return;
+
+    this._recitationVisibilityObserver.disconnect();
+    this._recitationVisibilityObserver.observe(this._headerControlsBox);
+  }
+
+  unwatchRecitationControlsVisibility() {
+    if (this._recitationVisibilityObserver) {
+      this._recitationVisibilityObserver.disconnect();
+    }
+  }
+
+  maybeAutoFloatRecitationControls() {
+    if (!this.shouldAutoFloatRecitationControls()) return;
+    if (!this._headerControlsBox || this._recitationFloatingMode) return;
+    if (this.isElementMeaningfullyVisible(this._headerControlsBox)) return;
+
+    this.enableRecitationFloating({ source: "auto" });
+  }
+
+  ensureRecitationControlsAttachedToHeader() {
+    const header = this.card?.querySelector(".pocket-quran-header");
+    if (!header || !this._headerControlsBox) return false;
+
+    const title = header.querySelector(".card-title");
+    if (title) {
+      title.after(this._headerControlsBox);
+    } else {
+      header.appendChild(this._headerControlsBox);
+    }
+
+    header.classList.add("pq-has-recitation-controls");
+    return true;
+  }
+
+  positionRecitationFloatingPanel() {
+    if (!this._headerControlsBox || !this._recitationFloatingMode) return;
+
+    const box = this._headerControlsBox;
+    const margin = 12;
+
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight || 0;
+
+    const rect = box.getBoundingClientRect();
+    const panelWidth = Math.max(
+      260,
+      Math.round(rect.width || box.offsetWidth || 360),
+    );
+    const panelHeight = Math.max(
+      80,
+      Math.round(rect.height || box.offsetHeight || 90),
+    );
+
+    let left = margin;
+    let top = Math.max(margin, viewportHeight - panelHeight - margin);
+
+    const attribution = document.getElementById("bg-attribution");
+    if (attribution) {
+      const attrRect = attribution.getBoundingClientRect();
+      const overlapsHoriz =
+        left < attrRect.right + margin &&
+        left + panelWidth > attrRect.left - margin;
+      const overlapsVert =
+        top < attrRect.bottom + margin &&
+        top + panelHeight > attrRect.top - margin;
+
+      if (overlapsHoriz && overlapsVert) {
+        top = Math.max(margin, attrRect.top - panelHeight - margin);
+      }
+    }
+
+    left = Math.max(
+      margin,
+      Math.min(left, viewportWidth - panelWidth - margin),
+    );
+    top = Math.max(
+      margin,
+      Math.min(top, viewportHeight - panelHeight - margin),
+    );
+
+    box.style.left = `${Math.round(left)}px`;
+    box.style.top = `${Math.round(top)}px`;
+  }
+
+  enableRecitationFloating({ source = "manual" } = {}) {
+    if (!this._recitationFloatingEnabled) return;
+
+    if (!this._headerControlsBox) {
+      this.showHeaderControls();
+    }
+    if (!this._headerControlsBox) return;
+
+    if (this._recitationFloatingMode) {
+      this._recitationFloatingModeReason = source;
+      this.positionRecitationFloatingPanel();
+      this.updateRecitationFloatingButtons();
+      return;
+    }
+
+    this.unwatchRecitationControlsVisibility();
+
+    const header = this.card?.querySelector(".pocket-quran-header");
+    if (header) {
+      header.classList.remove("pq-has-recitation-controls");
+    }
+
+    document.body.appendChild(this._headerControlsBox);
+    this._headerControlsBox.classList.add("pq-recitation-controls-floating");
+
+    this._recitationFloatingMode = true;
+    this._recitationFloatingModeReason = source;
+
+    this.positionRecitationFloatingPanel();
+    this.updateRecitationFloatingButtons();
+  }
+
+  disableRecitationFloating({ preserveManualOnly = false } = {}) {
+    if (!this._headerControlsBox) return;
+
+    this._headerControlsBox.classList.remove("pq-recitation-controls-floating");
+    this._headerControlsBox.style.removeProperty("left");
+    this._headerControlsBox.style.removeProperty("top");
+
+    this._recitationFloatingMode = false;
+    this._recitationFloatingModeReason = null;
+    if (!preserveManualOnly) {
+      this._recitationFloatingManualOnly = false;
+    }
+
+    this.ensureRecitationControlsAttachedToHeader();
+
+    if (this._recitationFloatingEnabled) {
+      this.watchRecitationControlsVisibility();
+      this.maybeAutoFloatRecitationControls();
+    }
+
+    this.updateRecitationFloatingButtons();
+  }
+
+  minimizeRecitationFloating() {
+    this._recitationFloatingManualOnly = true;
+    this.disableRecitationFloating({ preserveManualOnly: true });
+  }
+
+  toggleRecitationFloating() {
+    if (!this._recitationFloatingEnabled) return;
+
+    if (this._recitationFloatingMode) {
+      this.disableRecitationFloating({ preserveManualOnly: true });
+      return;
+    }
+
+    this.enableRecitationFloating({ source: "manual" });
+  }
+
+  updateRecitationFloatingButtons() {
+    if (!this._headerControlsBox) return;
+
+    const floatToggleBtn = this._headerControlsBox.querySelector(
+      ".pq-recitation-float-toggle-btn",
+    );
+    const minimizeBtn = this._headerControlsBox.querySelector(
+      ".pq-recitation-minimize-btn",
+    );
+
+    if (floatToggleBtn) {
+      const label = this._recitationFloatingMode
+        ? "Dock recitation controls"
+        : "Detach recitation controls";
+
+      floatToggleBtn.hidden = !this._recitationFloatingEnabled;
+      floatToggleBtn.disabled = !this._recitationFloatingEnabled;
+      floatToggleBtn.textContent = this._recitationFloatingMode ? "↙" : "↗";
+      floatToggleBtn.title = label;
+      floatToggleBtn.setAttribute("aria-label", label);
+      floatToggleBtn.setAttribute(
+        "aria-pressed",
+        this._recitationFloatingMode ? "true" : "false",
+      );
+    }
+
+    if (minimizeBtn) {
+      const label = "Minimize floating panel (manual trigger only)";
+      minimizeBtn.textContent = "−";
+      minimizeBtn.title = label;
+      minimizeBtn.setAttribute("aria-label", label);
+      minimizeBtn.hidden =
+        !this._recitationFloatingEnabled || !this._recitationFloatingMode;
+    }
+
+    this._headerControlsBox.classList.toggle(
+      "pq-recitation-controls-manual-only",
+      this._recitationFloatingManualOnly,
+    );
+  }
+
   getSurahNameSimple(surah) {
     const id = parseInt(surah, 10);
     const chapter = this._chapters?.find((c) => c.id === id);
@@ -3348,19 +3681,30 @@ class PocketQuranManager extends BaseManager {
     const header = this.card?.querySelector(".pocket-quran-header");
     if (!header) return;
 
-    // Keep DOM stable: if controls already exist, just ensure layout + refresh text.
-    if (this._headerControlsBox && header.contains(this._headerControlsBox)) {
-      header.classList.add("pq-has-recitation-controls");
-      this.updatePlaybackUI();
-      return;
-    }
+    // Keep DOM stable: if controls already exist, just refresh state.
+    if (this._headerControlsBox) {
+      if (
+        this._recitationFloatingMode ||
+        header.contains(this._headerControlsBox)
+      ) {
+        if (!this._recitationFloatingMode) {
+          header.classList.add("pq-has-recitation-controls");
+        }
+        this.updateRecitationFloatingButtons();
+        this.updatePlaybackUI();
+        return;
+      }
 
-    // Remove existing controls
-    this.hideHeaderControls();
+      this.hideHeaderControls();
+    }
 
     const controlsBox = document.createElement("div");
     controlsBox.className = "pq-recitation-controls";
     controlsBox.innerHTML = `
+      <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
+        <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
+        <button type="button" class="pq-recitation-btn pq-recitation-minimize-btn" title="Minimize floating panel (manual trigger only)" aria-label="Minimize floating panel">−</button>
+      </div>
       <div class="pq-recitation-info">
         <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
           this._playingAyah?.surah ?? this._activeSurah,
@@ -3419,17 +3763,8 @@ class PocketQuranManager extends BaseManager {
       </button>
     `;
 
-    // Insert after the title
-    const title = header.querySelector(".card-title");
-    if (title) {
-      title.after(controlsBox);
-    } else {
-      header.appendChild(controlsBox);
-    }
-
-    header.classList.add("pq-has-recitation-controls");
-
     this._headerControlsBox = controlsBox;
+    this.ensureRecitationControlsAttachedToHeader();
 
     // Add event listeners
     controlsBox
@@ -3466,6 +3801,24 @@ class PocketQuranManager extends BaseManager {
       .querySelector(".pq-recitation-reciter")
       .addEventListener("click", () => this.openReciterModal());
 
+    const floatToggleBtn = controlsBox.querySelector(
+      ".pq-recitation-float-toggle-btn",
+    );
+    if (floatToggleBtn) {
+      floatToggleBtn.addEventListener("click", () => {
+        this.toggleRecitationFloating();
+      });
+    }
+
+    const minimizeBtn = controlsBox.querySelector(
+      ".pq-recitation-minimize-btn",
+    );
+    if (minimizeBtn) {
+      minimizeBtn.addEventListener("click", () => {
+        this.minimizeRecitationFloating();
+      });
+    }
+
     const ayahInfoEl = controlsBox.querySelector(".pq-recitation-ayah");
     if (ayahInfoEl) {
       ayahInfoEl.addEventListener("click", async () => {
@@ -3500,16 +3853,31 @@ class PocketQuranManager extends BaseManager {
     volumeSlider.addEventListener("input", (e) => {
       this.setVolume(parseInt(e.target.value, 10) / 100);
     });
+
+    this.updateRecitationFloatingButtons();
+    this.watchRecitationControlsVisibility();
+    this.maybeAutoFloatRecitationControls();
   }
 
   /**
    * Hide the header controls box.
    */
   hideHeaderControls() {
+    this.unwatchRecitationControlsVisibility();
+
     if (this._headerControlsBox) {
+      this._headerControlsBox.classList.remove(
+        "pq-recitation-controls-floating",
+      );
+      this._headerControlsBox.style.removeProperty("left");
+      this._headerControlsBox.style.removeProperty("top");
       this._headerControlsBox.remove();
       this._headerControlsBox = null;
     }
+
+    this._recitationFloatingMode = false;
+    this._recitationFloatingModeReason = null;
+    this._recitationFloatingManualOnly = false;
 
     const header = this.card?.querySelector(".pocket-quran-header");
     if (header) {
@@ -3569,6 +3937,15 @@ class PocketQuranManager extends BaseManager {
       );
       if (reciterInfo) {
         reciterInfo.textContent = this.getActiveReciterName();
+      }
+
+      this.updateRecitationFloatingButtons();
+
+      if (this._recitationFloatingMode) {
+        this.positionRecitationFloatingPanel();
+      } else if (this._recitationFloatingEnabled) {
+        this.watchRecitationControlsVisibility();
+        this.maybeAutoFloatRecitationControls();
       }
     }
 
