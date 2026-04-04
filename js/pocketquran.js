@@ -3604,7 +3604,8 @@ class PocketQuranManager extends BaseManager {
    */
   playPreviousAyah() {
     const fallback = { surah: this._activeSurah, ayah: this._activeAyah };
-    const { surah, ayah } = this._playingAyah || fallback;
+    const { surah, ayah } =
+      this._isPlaying && this._playingAyah ? this._playingAyah : fallback;
     if (ayah > 1) {
       this.playAyah(surah, ayah - 1);
     }
@@ -3615,7 +3616,8 @@ class PocketQuranManager extends BaseManager {
    */
   playNextAyah() {
     const fallback = { surah: this._activeSurah, ayah: this._activeAyah };
-    const { surah, ayah } = this._playingAyah || fallback;
+    const { surah, ayah } =
+      this._isPlaying && this._playingAyah ? this._playingAyah : fallback;
     const chapter = this._chapters.find((c) => c.id === surah);
     const max =
       (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
@@ -4447,19 +4449,130 @@ class PocketQuranManager extends BaseManager {
     try {
       switch (action) {
         case "togglePlayPause": {
-          const target = this._playingAyah || {
-            surah: this._activeSurah,
-            ayah: this._activeAyah,
-          };
-          this.togglePlayPause(target.surah, target.ayah);
+          const fallbackTarget =
+            this._isPlaying && this._playingAyah
+              ? this._playingAyah
+              : {
+                  surah: this._activeSurah,
+                  ayah: this._activeAyah,
+                };
+          const targetSurah = this.clampNumber(
+            payload.surah,
+            1,
+            114,
+            fallbackTarget.surah,
+          );
+          const targetChapter = this._chapters.find(
+            (c) => c.id === targetSurah,
+          );
+          const targetMaxAyah =
+            (Number.isFinite(targetChapter?.verses_count) &&
+              targetChapter.verses_count) ||
+            286;
+          const targetAyah = this.clampNumber(
+            payload.ayah,
+            1,
+            targetMaxAyah,
+            fallbackTarget.ayah,
+          );
+          const desiredIsPlaying =
+            typeof payload.desiredIsPlaying === "boolean"
+              ? payload.desiredIsPlaying
+              : null;
+
+          if (desiredIsPlaying === true) {
+            this.enableAutoplayOnFirstPlayIfNeeded();
+            this.playAyah(targetSurah, targetAyah);
+            break;
+          }
+
+          if (desiredIsPlaying === false) {
+            try {
+              if (this._audioElement) {
+                this._audioElement.pause();
+              }
+            } catch (e) {
+              // no-op
+            }
+            this._isPlaying = false;
+            this._playingAyah = { surah: targetSurah, ayah: targetAyah };
+            this.updatePlaybackUI();
+            break;
+          }
+
+          this.togglePlayPause(targetSurah, targetAyah);
           break;
         }
-        case "playPreviousAyah":
-          this.playPreviousAyah();
+        case "playPreviousAyah": {
+          const fallbackTarget =
+            this._isPlaying && this._playingAyah
+              ? this._playingAyah
+              : {
+                  surah: this._activeSurah,
+                  ayah: this._activeAyah,
+                };
+          const targetSurah = this.clampNumber(
+            payload.surah,
+            1,
+            114,
+            fallbackTarget.surah,
+          );
+          const targetChapter = this._chapters.find(
+            (c) => c.id === targetSurah,
+          );
+          const targetMaxAyah =
+            (Number.isFinite(targetChapter?.verses_count) &&
+              targetChapter.verses_count) ||
+            286;
+          const explicitAyah = this.clampNumber(
+            payload.ayah,
+            1,
+            targetMaxAyah,
+            NaN,
+          );
+
+          if (Number.isFinite(explicitAyah)) {
+            this.playAyah(targetSurah, explicitAyah);
+          } else {
+            this.playPreviousAyah();
+          }
           break;
-        case "playNextAyah":
-          this.playNextAyah();
+        }
+        case "playNextAyah": {
+          const fallbackTarget =
+            this._isPlaying && this._playingAyah
+              ? this._playingAyah
+              : {
+                  surah: this._activeSurah,
+                  ayah: this._activeAyah,
+                };
+          const targetSurah = this.clampNumber(
+            payload.surah,
+            1,
+            114,
+            fallbackTarget.surah,
+          );
+          const targetChapter = this._chapters.find(
+            (c) => c.id === targetSurah,
+          );
+          const targetMaxAyah =
+            (Number.isFinite(targetChapter?.verses_count) &&
+              targetChapter.verses_count) ||
+            286;
+          const explicitAyah = this.clampNumber(
+            payload.ayah,
+            1,
+            targetMaxAyah,
+            NaN,
+          );
+
+          if (Number.isFinite(explicitAyah)) {
+            this.playAyah(targetSurah, explicitAyah);
+          } else {
+            this.playNextAyah();
+          }
           break;
+        }
         case "stopPlayback":
           this.stopPlayback();
           break;
