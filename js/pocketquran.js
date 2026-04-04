@@ -1660,10 +1660,14 @@ class PocketQuranManager extends BaseManager {
       }
     };
 
-    currentContainer.addEventListener("wheel", cancelPendingRestoreForUserInput, {
-      passive: true,
-      capture: useCapture,
-    });
+    currentContainer.addEventListener(
+      "wheel",
+      cancelPendingRestoreForUserInput,
+      {
+        passive: true,
+        capture: useCapture,
+      },
+    );
     currentContainer.addEventListener(
       "touchstart",
       cancelPendingRestoreForUserInput,
@@ -1704,7 +1708,10 @@ class PocketQuranManager extends BaseManager {
       detachCancelListeners();
 
       if (canceledByUserInput) return;
-      if (!this._virtualContainer || this._virtualContainer !== currentContainer)
+      if (
+        !this._virtualContainer ||
+        this._virtualContainer !== currentContainer
+      )
         return;
 
       const maxScrollTop = Math.max(
