@@ -12,7 +12,6 @@
 
 ### Changed
 
-- Set first-run Blur Power default to 200%.
 - Improved theme system with theme-aware modals/popovers, header surface background options, glass opacity controls, component opacity controls, accent/background/font color controls, and storage normalization for blur-related settings.
 - Enhanced favicon import flow in pinned apps/search with better URL normalization and clearer import hints.
 - Refined flashcard, fasting, and calendar layouts for better readability and responsiveness.
