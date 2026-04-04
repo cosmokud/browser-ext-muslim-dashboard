@@ -1792,9 +1792,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function decodeHtmlString(value) {
     const source = String(value || "").trim();
     if (!source) return "";
-    const parser = document.createElement("textarea");
-    parser.innerHTML = source.replace(/<[^>]*>/g, " ");
-    return parser.value.replace(/\s+/g, " ").trim();
+    try {
+      const parser = document.createElement("div");
+      parser.innerHTML = source;
+
+      // Keep popup snippet behavior consistent with the main Pocket Quran card.
+      const footnotes = parser.querySelectorAll(
+        "sup[foot_note], sup.foot_note, sup",
+      );
+      footnotes.forEach((fn) => fn.remove());
+
+      return (parser.textContent || "").replace(/\s+/g, " ").trim();
+    } catch (e) {
+      return source
+        .replace(/<sup[^>]*>.*?<\/sup>/gi, "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
   }
 
   function escapeHtml(value) {
