@@ -88,6 +88,7 @@
 
   /* Glass effect */
   --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.04);
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -1441,6 +1442,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard {
   --notes-card-font-family: var(--font-primary);
+  --notes-card-readable-bg: var(--glass-bg-subtle);
   font-family: var(--notes-card-font-family);
 }
 
@@ -1631,7 +1633,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   min-width: clamp(180px, 26vw, 260px);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--notes-card-readable-bg);
   padding: 9px 36px 9px 10px;
   cursor: pointer;
   scroll-snap-align: start;
@@ -1705,7 +1707,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  background: var(--notes-card-readable-bg);
   color: var(--text-primary);
   padding: 0 0.85rem;
   font-size: 0.92rem;
@@ -1778,7 +1780,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: 8px;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  background: var(--glass-bg);
+  background: var(--notes-card-readable-bg);
 }
 
 #notesCard .mdnotes-pane-label {
@@ -1789,7 +1791,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: 8px 11px;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  background: var(--glass-bg);
+  background: var(--notes-card-readable-bg);
   color: var(--text-muted);
   min-width: 0;
 }
@@ -1885,7 +1887,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   min-height: 360px;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  background: var(--notes-card-readable-bg);
   overflow: visible;
   display: flex;
   flex-direction: column;
@@ -14946,13 +14948,19 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: 36px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  background: var(--glass-bg-subtle);
   color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.pq-recitation-btn.pq-loop-btn,
+.pq-recitation-btn.pq-autoplay-btn,
+.pq-recitation-btn.pq-autoscroll-btn {
+  background: var(--glass-bg-subtle);
 }
 
 .pq-recitation-btn:hover {
