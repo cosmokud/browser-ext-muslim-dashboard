@@ -73,9 +73,9 @@ class SettingsManager extends BaseManager {
   ];
 
   static POCKET_QURAN_POPUP_TRANSLATION_FONT_FAMILIES = [
+    "Amiri",
     "Poppins",
     "Noto Naskh Arabic",
-    "Amiri",
     "Georgia",
     "Cascadia Code",
     "Courier New",
@@ -5481,7 +5481,7 @@ class SettingsManager extends BaseManager {
         this.normalizePocketQuranPopupTranslationFontFamily(
           this.pocketQuranPopupTranslationFontFamily?.value ||
             existingPocketQuranPopup.translationFontFamily ||
-            "Poppins",
+            "Amiri",
         ),
     };
 
@@ -7505,7 +7505,7 @@ class SettingsManager extends BaseManager {
     ) {
       return normalized;
     }
-    return "Poppins";
+    return "Amiri";
   }
 
   normalizeNotesCardFontFamily(value) {

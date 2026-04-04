@@ -407,7 +407,7 @@ class StorageManager {
         arabicFontSize: 40,
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         translationFontSize: 18,
-        translationFontFamily: "Poppins",
+        translationFontFamily: "Amiri",
       },
 
       // Debug settings (visible only when ENABLE_DEBUG_MODE is true)

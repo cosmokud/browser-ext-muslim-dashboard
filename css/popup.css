@@ -383,6 +383,11 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   gap: var(--spacing-xs);
 }
 
+.popup-tab-panel.popup-quran-panel.active {
+  height: auto;
+  min-height: max-content;
+}
+
 .popup-tab-panel[hidden] {
   display: none !important;
 }
@@ -625,6 +630,12 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   justify-content: space-between;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-xs);
+}
+
+.popup-pq-surah-toolbar[hidden],
+.popup-pq-surah-list[hidden],
+.popup-pq-ayah-list[hidden] {
+  display: none !important;
 }
 
 .popup-pq-surah-back-btn {
