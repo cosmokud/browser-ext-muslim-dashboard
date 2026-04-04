@@ -418,6 +418,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-recitation-controls .pq-recitation-info {
+  order: 1;
   width: 100%;
   min-width: 0;
   display: flex;
@@ -447,19 +448,22 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-recitation-controls .pq-recitation-buttons {
+  order: 3;
   width: 100%;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .popup-pq-recitation-controls .popup-pq-volume-control {
+  order: 2;
   width: 100%;
   justify-content: center;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--glass-border);
+  padding-top: 0;
+  border-top: none;
 }
 
 .popup-pq-recitation-controls .pq-recitation-options {
+  order: 4;
   display: flex;
   flex-wrap: wrap;
   width: 100%;

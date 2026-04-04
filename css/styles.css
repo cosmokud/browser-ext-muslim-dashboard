@@ -12731,6 +12731,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   gap: var(--spacing-md);
 }
 
+.pocket-quran-header .card-header-actions {
+  margin-left: auto;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
 .pocket-quran-header-meta {
   margin-top: 2px;
   padding: 0.45rem 0.75rem;
@@ -14931,7 +14937,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-buttons {
+  order: 3;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.pq-recitation-controls.pq-recitation-controls-floating .pq-volume-control {
   order: 2;
+  flex: 0 0 auto;
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
@@ -14939,7 +14954,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-options {
-  order: 3;
+  order: 4;
   flex: 0 0 auto;
   width: 100%;
   max-width: 520px;
@@ -14954,13 +14969,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-top: 1px solid var(--glass-border);
 }
 
-.pq-recitation-controls.pq-recitation-controls-floating
-  .pq-recitation-options
-  .pq-volume-control {
-  flex: 0 0 100%;
-  justify-content: center;
-}
-
 .pq-recitation-controls.pq-recitation-controls-floating .pq-volume-slider {
   width: 110px;
 }
@@ -14972,16 +14980,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   max-width: 520px;
   margin: 0 auto;
   align-items: center;
-}
-
-.pq-recitation-controls:not(.pq-recitation-controls-floating)
-  .pq-floating-inline-btn {
-  display: none;
-}
-
-.pq-recitation-controls.pq-recitation-controls-floating
-  .pq-floating-inline-btn {
-  display: inline-flex;
 }
 
 .pq-recitation-controls:not(.pq-recitation-controls-floating)
@@ -15018,6 +15016,17 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   position: relative;
 }
 
+.pq-recitation-btn.pq-recitation-close-btn {
+  color: #ff6b6b;
+  border-color: color-mix(in srgb, #ff6b6b 64%, var(--glass-border) 36%);
+}
+
+.pq-recitation-btn.pq-recitation-close-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
 .pq-recitation-close-btn svg,
 .pq-recitation-close-btn span {
   display: block;
@@ -15033,7 +15042,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pq-recitation-close-btn:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
 }
 
 @keyframes pqSlideIn {
@@ -15188,6 +15197,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
+  margin-top: -5px;
   border-radius: var(--radius-full);
   background: var(--accent-gold);
   border: none;
@@ -15262,7 +15272,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     border-top: 1px solid var(--glass-border);
   }
 
-  .pq-recitation-options .pq-volume-control {
+  .pq-recitation-controls .pq-volume-control {
     justify-content: center;
   }
 
