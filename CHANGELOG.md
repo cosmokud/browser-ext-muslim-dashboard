@@ -1,4 +1,4 @@
-## [0.1.2] - 2026-04-04
+## [0.1.2] - 2026-04-05
 
 ### Added
 
@@ -6,23 +6,35 @@
 - Added TipTap-backed NotesManager enhancements, including alignment controls, toolbar improvements, better focus retention, link/image URL prompts, and improved delete confirmations.
 - Added fasting/calendar enhancements: fasting markers and tooltips, Ashura and Laylat al-Qadr visibility options, and Ramadan-only marker logic during Ramadan.
 - Added Performance Mode to reduce animation and effect cost for smoother operation on lower-end devices.
+- Added Highest Visual Fidelity quality mode to preserve richer motion/effects while allowing controlled fallbacks.
 - Added flashcard editor improvements including default-set notices and a custom-set creation path.
+- Added popup tab navigation for Prayer Times and Pocket Quran, including expanded Pocket Quran controls (ayah list/selection, autoplay-next-surah, and loading-state-aware recitation actions).
+- Added floating recitation controls with draggable positioning, visibility toggles, appearance options, and optional auto-dock behavior.
+- Added Pocket Quran display controls for Tajweed mode, Arabic/translation visibility toggles, and per-script font family/size settings.
+- Added location detection actions in settings and reverse-geocoding support to improve weather location naming.
 - Added open-source governance documents: Code of Conduct, Contributing guide, and Security policy.
 - Added tag-triggered GitHub Actions deploy workflow for automated release creation and artifact upload.
 
 ### Changed
 
 - Improved theme system with theme-aware modals/popovers, header surface background options, glass opacity controls, component opacity controls, accent/background/font color controls, and storage normalization for blur-related settings.
+- Improved Pocket Quran popup/card rendering with virtualization updates, stronger ayah visibility/scroll behavior, content refresh scroll restoration, and more consistent HTML decoding.
+- Refined recitation controls and popup layout across multiple iterations for better readability, responsiveness, and state consistency.
 - Enhanced favicon import flow in pinned apps/search with better URL normalization and clearer import hints.
 - Refined flashcard, fasting, and calendar layouts for better readability and responsiveness.
+- Enhanced settings visibility handling, locked-option labels, and event-listener/performance behavior (passive listeners and debounce usage).
+- Improved accessibility and UX polish in key controls, including SVG-based text-size icons and better floating/grid restoration behavior.
 - Standardized page size to 10 items for Adhkar, Flashcard, and Hadith managers.
 - Updated webstore packaging to auto-disable debug mode and emit versioned archives named `muslim-dashboard-v<version>.zip`.
 
 ### Fixed
 
 - Fixed multiple notes editor edge cases around caret behavior, selection scrolling, inline code handling, list boundaries, and markdown preview synchronization.
+- Fixed Pocket Quran Arabic/translation layout edge cases for spacing, hiding behavior, and flexible text presentation.
+- Fixed recitation playback/selection edge cases while stabilizing control interactions in popup and dashboard contexts.
 - Fixed translation and data cleanup issues including Indonesian text updates, Arabic diacritic corrections, and romanization formatting fixes.
 - Fixed styling and compatibility issues across theme palettes, blur normalization, and card surface rendering.
+- Reverted unstable global playback synchronization between popup and service worker to keep playback behavior reliable.
 - Removed deprecated dashboard scale behavior after temporary rollout.
 - Reverted unstable liquid glass experiments to keep 0.1.2 stable.
 
