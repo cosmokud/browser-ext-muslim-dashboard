@@ -1270,16 +1270,12 @@ class PocketQuranManager extends BaseManager {
    * - An absolutely positioned content div for rendered ayahs
    * Note: In Quran Focus Mode, CSS overrides make the container fill available height
    */
-  initVirtualization(opts = {}) {
-    const { preserveHeights = false } = opts;
-
+  initVirtualization() {
     if (!this.contentEl || !this._activeVerses?.length) return;
 
     // Clear previous content
     this.contentEl.innerHTML = "";
-    if (!preserveHeights) {
-      this._ayahHeights.clear();
-    }
+    this._ayahHeights.clear();
     this._renderedRange = { start: 0, end: 0 };
 
     // Create virtual scroll container (CSS handles height - fixed in normal mode, flex in focus mode)
@@ -1450,13 +1446,8 @@ class PocketQuranManager extends BaseManager {
       this._scrollDirection = scrollTop > this._lastScrollTop ? "down" : "up";
       this._lastScrollTop = scrollTop;
 
-      // Find the ayah at current scroll position.
-      // Prefer DOM geometry to avoid estimate drift after major layout changes.
-      const estimatedFirstVisibleIndex = this.getAyahAtOffset(scrollTop);
-      const domVisibleIndex = this.getFirstVisibleRenderedAyahIndex();
-      const firstVisibleIndex = Number.isFinite(domVisibleIndex)
-        ? domVisibleIndex
-        : estimatedFirstVisibleIndex;
+      // Find the ayah at current scroll position
+      const firstVisibleIndex = this.getAyahAtOffset(scrollTop);
 
       // Calculate visible range with buffer
       const buffer = PocketQuranManager.BUFFER_AYAHS;
@@ -1505,7 +1496,10 @@ class PocketQuranManager extends BaseManager {
       }
 
       // Update active ayah for UI
-      const activeIndex = firstVisibleIndex;
+      const domVisibleIndex = this.getFirstVisibleRenderedAyahIndex();
+      const activeIndex = Number.isFinite(domVisibleIndex)
+        ? domVisibleIndex
+        : firstVisibleIndex;
 
       this._activeAyah = activeIndex + 1;
       if (this.ayahInput && document.activeElement !== this.ayahInput) {
@@ -1605,11 +1599,7 @@ class PocketQuranManager extends BaseManager {
     if (!this._virtualContainer || !this._activeVerses?.length) return;
 
     const scrollTop = this._virtualContainer.scrollTop;
-    const estimatedFirstVisible = this.getAyahAtOffset(scrollTop);
-    const domVisible = this.getFirstVisibleRenderedAyahIndex();
-    const firstVisible = Number.isFinite(domVisible)
-      ? domVisible
-      : estimatedFirstVisible;
+    const firstVisible = this.getAyahAtOffset(scrollTop);
 
     this.updateTotalHeight();
 
@@ -2517,81 +2507,8 @@ class PocketQuranManager extends BaseManager {
     this.updateTextVisibilityToggleUI({ allowBothOff });
 
     if (changed && recalculate) {
-      const previousAvgAyahHeight =
-        this._avgAyahHeight || PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
-      const previousContainer = this._virtualContainer;
-      const previousScrollTop = previousContainer?.scrollTop || 0;
-      const measuredAnchorIndex = this.getFirstVisibleRenderedAyahIndex();
-      const estimatedAnchorIndex = this.getAyahAtOffset(previousScrollTop);
-      const maxAnchorIndex = Math.max(0, (this._activeVerses?.length || 1) - 1);
-      const anchorIndex = Math.min(
-        maxAnchorIndex,
-        Math.max(
-          0,
-          Number.isFinite(measuredAnchorIndex)
-            ? measuredAnchorIndex
-            : estimatedAnchorIndex,
-        ),
-      );
-      const anchorOffsetWithinAyah = Math.max(
-        0,
-        previousScrollTop - this.getAyahOffset(anchorIndex),
-      );
-
-      const nextEstimatedAyahHeight = this.getEstimatedAyahHeightForVisibility(
-        this._showArabicText,
-        this._showTranslationText,
-      );
-      const estimatedScale =
-        previousAvgAyahHeight > 0
-          ? nextEstimatedAyahHeight / previousAvgAyahHeight
-          : 1;
-
-      if (this._ayahHeights?.size) {
-        const scaledHeights = new Map();
-        this._ayahHeights.forEach((height, index) => {
-          const numericHeight = Number(height);
-          if (Number.isFinite(numericHeight) && numericHeight > 0) {
-            scaledHeights.set(
-              index,
-              Math.max(48, numericHeight * estimatedScale),
-            );
-          }
-        });
-        this._ayahHeights = scaledHeights;
-      } else {
-        this._ayahHeights.clear();
-      }
-
-      this._avgAyahHeight = nextEstimatedAyahHeight;
-      this._programmaticScroll = null;
-
-      if (this._activeVerses?.length) {
-        // Rebuild virtualization to avoid stale spacer state after visibility mode changes.
-        this.initVirtualization({ preserveHeights: true });
-
-        if (this._virtualContainer) {
-          const nextScrollableHeight = Math.max(
-            0,
-            this._virtualContainer.scrollHeight -
-              this._virtualContainer.clientHeight,
-          );
-
-          this._virtualContainer.style.scrollBehavior = "auto";
-
-          const nextAnchorOffset =
-            this.getAyahOffset(anchorIndex) + anchorOffsetWithinAyah;
-          this._virtualContainer.scrollTop = Math.min(
-            nextScrollableHeight,
-            Math.max(0, nextAnchorOffset),
-          );
-
-          this._lastScrollTop = this._virtualContainer.scrollTop;
-          this.recalculateVirtualization();
-        }
-      } else {
-        this.recalculateVirtualization();
-      }
+      this._ayahHeights.clear();
+      this.recalculateVirtualization();
     }
 
     if (persist) {
@@ -5215,15 +5132,6 @@ class PocketQuranManager extends BaseManager {
       showArabicText: true,
       showTranslationText: false,
     };
-  }
-
-  getEstimatedAyahHeightForVisibility(showArabicText, showTranslationText) {
-    const base = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
-
-    if (showArabicText && showTranslationText) return base;
-    if (showArabicText) return Math.round(base * 0.65);
-    if (showTranslationText) return Math.round(base * 0.58);
-    return Math.round(base * 0.5);
   }
 
   persistPocketQuranSettings(patch) {
