@@ -401,6 +401,23 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   min-height: 0;
 }
 
+.popup-quran-card.popup-pq-controls-locked {
+  cursor: progress;
+}
+
+.popup-quran-card.popup-pq-controls-locked > .popup-pq-recitation-controls,
+.popup-quran-card.popup-pq-controls-locked > .popup-pq-size-controls,
+.popup-quran-card.popup-pq-controls-locked > .popup-pq-ayah-snippet,
+.popup-quran-card.popup-pq-controls-locked > .popup-pq-selector-stack {
+  opacity: 0.5;
+  filter: grayscale(0.75);
+  pointer-events: none;
+  user-select: none;
+  transition:
+    opacity var(--transition-fast),
+    filter var(--transition-fast);
+}
+
 .popup-quran-header {
   margin-bottom: 0;
   align-items: center;

@@ -239,6 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranSnippetRenderedKey = "";
   let pocketQuranSnippetInFlightKey = "";
   let pocketQuranResyncTimeoutIds = [];
+  let pocketQuranPendingAyahSelection = null;
+  let pocketQuranAyahSelectionLoadTimeoutId = null;
   const popupPqSelectionState = {
     selectedSurah: null,
     selectedAyah: null,
@@ -2316,6 +2318,110 @@ document.addEventListener("DOMContentLoaded", () => {
     pocketQuranResyncTimeoutIds = [];
   }
 
+  function clearPocketQuranAyahSelectionLoadTimeout() {
+    if (!pocketQuranAyahSelectionLoadTimeoutId) return;
+    clearTimeout(pocketQuranAyahSelectionLoadTimeoutId);
+    pocketQuranAyahSelectionLoadTimeoutId = null;
+  }
+
+  function setPocketQuranPopupControlsLoading(isLoading) {
+    if (!popupPocketQuranCard) return;
+
+    popupPocketQuranCard.classList.toggle(
+      "popup-pq-controls-locked",
+      isLoading,
+    );
+    popupPocketQuranCard.setAttribute(
+      "aria-busy",
+      isLoading ? "true" : "false",
+    );
+
+    try {
+      if ("inert" in popupPocketQuranCard) {
+        popupPocketQuranCard.inert = isLoading;
+      }
+    } catch (e) {
+      // no-op
+    }
+  }
+
+  function finishPocketQuranAyahSelectionLoading() {
+    pocketQuranPendingAyahSelection = null;
+    clearPocketQuranAyahSelectionLoadTimeout();
+    setPocketQuranPopupControlsLoading(false);
+  }
+
+  function startPocketQuranAyahSelectionLoading(surah, ayah, command = null) {
+    const targetSurah = clampNumber(surah, 1, 114, 1);
+    const targetAyah = clampNumber(
+      ayah,
+      1,
+      getPocketQuranSurahMaxAyah(targetSurah),
+      1,
+    );
+
+    pocketQuranPendingAyahSelection = {
+      surah: targetSurah,
+      ayah: targetAyah,
+      issuedAt: Number(command?.issuedAt) || Date.now(),
+    };
+
+    clearPocketQuranAyahSelectionLoadTimeout();
+    setPocketQuranPopupControlsLoading(true);
+
+    pocketQuranAyahSelectionLoadTimeoutId = setTimeout(() => {
+      finishPocketQuranAyahSelectionLoading();
+    }, 12000);
+  }
+
+  function maybeCompletePocketQuranAyahSelectionLoading(rawState) {
+    if (!pocketQuranPendingAyahSelection) return;
+
+    const updatedAt = Number(rawState?.updatedAt);
+    if (!Number.isFinite(updatedAt)) return;
+    if (updatedAt < pocketQuranPendingAyahSelection.issuedAt) return;
+
+    const pendingSurah = pocketQuranPendingAyahSelection.surah;
+    const pendingAyah = pocketQuranPendingAyahSelection.ayah;
+
+    const activeSurah = clampNumber(
+      rawState?.activeSurah,
+      1,
+      114,
+      pendingSurah,
+    );
+    const activeAyah = clampNumber(
+      rawState?.activeAyah,
+      1,
+      getPocketQuranSurahMaxAyah(activeSurah),
+      pendingAyah,
+    );
+
+    const recitationSource =
+      rawState?.recitationAyah && typeof rawState.recitationAyah === "object"
+        ? rawState.recitationAyah
+        : {};
+
+    const recitationSurah = clampNumber(
+      recitationSource.surah,
+      1,
+      114,
+      activeSurah,
+    );
+    const recitationAyah = clampNumber(
+      recitationSource.ayah,
+      1,
+      getPocketQuranSurahMaxAyah(recitationSurah),
+      activeAyah,
+    );
+
+    if (recitationSurah !== pendingSurah || recitationAyah !== pendingAyah) {
+      return;
+    }
+
+    finishPocketQuranAyahSelectionLoading();
+  }
+
   function schedulePocketQuranStateReconcile() {
     clearPocketQuranResyncTimers();
 
@@ -3165,12 +3271,14 @@ document.addEventListener("DOMContentLoaded", () => {
     storage.set(pocketQuranPopupCommandKey, command);
     schedulePocketQuranStateReconcile();
     void dispatchPocketQuranCommandWithFallback(command);
+    return command;
   }
 
   async function refreshPocketQuranState(settings = storage.getSettings()) {
     await ensurePocketQuranChaptersLoaded();
     void ensurePocketQuranRecitersLoaded();
     const rawState = storage.get(pocketQuranPopupStateKey, null);
+    maybeCompletePocketQuranAyahSelectionLoading(rawState);
 
     const stateSource =
       rawState && typeof rawState.source === "string" ? rawState.source : "";
@@ -3808,12 +3916,19 @@ document.addEventListener("DOMContentLoaded", () => {
       popupPqSelectionState.selectedAyah = ayah;
 
       setLocalPocketQuranTargetAyah(surah, ayah);
-      sendPocketQuranCommand(pocketQuranCommandTypes.selectAyah, {
-        surah,
-        ayah,
-      });
-
+      const selectAyahCommand = sendPocketQuranCommand(
+        pocketQuranCommandTypes.selectAyah,
+        {
+          surah,
+          ayah,
+        },
+      );
       closePocketQuranAyahPanel();
+      startPocketQuranAyahSelectionLoading(surah, ayah, selectAyahCommand);
+
+      if (!selectAyahCommand) {
+        finishPocketQuranAyahSelectionLoading();
+      }
     });
 
     popupPqReciterList?.addEventListener("click", (event) => {
