@@ -13961,10 +13961,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin-top: 0;
 }
 
-#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah {
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah,
+#pocketQuranCard.pq-hide-translation-text .pocket-quran-ayah {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+#pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah-tr,
+#pocketQuranCard.pq-hide-translation-text .pocket-quran-ayah-ar {
+  padding-bottom: 0;
 }
 
 #pocketQuranCard.pq-hide-arabic-text .pocket-quran-ayah,
