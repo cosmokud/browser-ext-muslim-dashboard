@@ -15079,6 +15079,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   align-items: center;
 }
 
+.pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-ayah,
+.pq-recitation-controls.pq-recitation-controls-floating .pq-recitation-reciter {
+  width: auto;
+  max-width: 100%;
+  display: inline-block;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .pq-recitation-controls:not(.pq-recitation-controls-floating)
   .pq-recitation-info {
   min-width: 200px;
