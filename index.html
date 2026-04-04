@@ -5044,229 +5044,6 @@
 
           <!-- Pocket Quran Settings -->
           <div class="settings-panel" id="pocketQuranPanel">
-            <div
-              class="setting-group"
-              id="pocketQuranSettingDefaultArabicTextSize"
-            >
-              <label class="setting-label">Default Arabic Text Size</label>
-              <p class="setting-hint">Choose a default Arabic font size.</p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranArabicSize"
-                  min="8"
-                  max="144"
-                  value="40"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranArabicSizeSettingValue"
-                  >40px</span
-                >
-              </div>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingDefaultTranslationTextSize"
-            >
-              <label class="setting-label">Default Translation Text Size</label>
-              <p class="setting-hint">
-                Choose a default translation font size.
-              </p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranTranslationSize"
-                  min="8"
-                  max="144"
-                  value="18"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranTranslationSizeSettingValue"
-                  >18px</span
-                >
-              </div>
-            </div>
-
-            <div class="setting-group" id="pocketQuranSettingReciter">
-              <label class="setting-label">Reciter</label>
-              <p class="setting-hint">
-                Select a reciter for the Pocket Quran card playback.
-              </p>
-              <button
-                type="button"
-                class="setting-select pq-translation-picker"
-                id="pocketQuranReciterPickerBtn"
-                aria-haspopup="dialog"
-                aria-controls="pqReciterModal"
-              >
-                <span id="pocketQuranReciterPickerLabel">Select reciter…</span>
-                <span aria-hidden="true">▾</span>
-              </button>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingArabicFontFamilyCard"
-            >
-              <label class="setting-label">Arabic Font Family (Card)</label>
-              <p class="setting-hint">
-                Open the Arabic font picker used by the Pocket Quran card.
-              </p>
-              <button
-                type="button"
-                class="setting-select pq-translation-picker"
-                id="pocketQuranArabicFontPickerBtn"
-                aria-haspopup="dialog"
-                aria-controls="pqFontModal"
-              >
-                <span id="pocketQuranArabicFontPickerLabel"
-                  >Select Arabic font…</span
-                >
-                <span aria-hidden="true">▾</span>
-              </button>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingTranslationFontFamilyCard"
-            >
-              <label
-                class="setting-label"
-                for="pocketQuranTranslationFontFamily"
-                >Translation Font Family (Card)</label
-              >
-              <p class="setting-hint">
-                Choose the translation font used in the Pocket Quran card.
-              </p>
-              <select
-                class="setting-select"
-                id="pocketQuranTranslationFontFamily"
-              >
-                <option value="Poppins" selected>Poppins</option>
-                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
-                <option value="Amiri">Amiri</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Cascadia Code">Cascadia Code</option>
-                <option value="Courier New">Courier New</option>
-              </select>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingPopupArabicFontFamily"
-            >
-              <label class="setting-label">Popup Arabic Font Family</label>
-              <p class="setting-hint">
-                Choose the Arabic font used in popup mode.
-              </p>
-              <button
-                type="button"
-                class="setting-select pq-translation-picker"
-                id="pocketQuranPopupArabicFontPickerBtn"
-                aria-haspopup="dialog"
-                aria-controls="pqFontModal"
-              >
-                <span id="pocketQuranPopupArabicFontPickerLabel"
-                  >Select Arabic font…</span
-                >
-                <span aria-hidden="true">▾</span>
-              </button>
-              <select
-                class="setting-select"
-                id="pocketQuranPopupArabicFontFamily"
-                hidden
-                aria-hidden="true"
-                tabindex="-1"
-              >
-                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
-                <option value="Amiri">Amiri</option>
-                <option value="KFGQPC Uthman Taha Naskh" selected>
-                  KFGQPC Uthman Taha Naskh
-                </option>
-                <option value="KFGQPC KSA Regular">KFGQPC KSA Regular</option>
-                <option value="KFGQPC Kufi Stylistic Regular">
-                  KFGQPC Kufi Stylistic Regular
-                </option>
-                <option value="KFGQPC AN Regular">KFGQPC AN Regular</option>
-                <option value="KFGQPC AlJalil Dot">KFGQPC AlJalil Dot</option>
-                <option value="KFGQPC Sindhi Naskh Regular">
-                  KFGQPC Sindhi Naskh Regular
-                </option>
-              </select>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingPopupTranslationFontFamily"
-            >
-              <label
-                class="setting-label"
-                for="pocketQuranPopupTranslationFontFamily"
-                >Popup Translation Font Family</label
-              >
-              <p class="setting-hint">
-                Choose the translation font used in popup mode.
-              </p>
-              <select
-                class="setting-select"
-                id="pocketQuranPopupTranslationFontFamily"
-              >
-                <option value="Poppins" selected>Poppins</option>
-                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
-                <option value="Amiri">Amiri</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Cascadia Code">Cascadia Code</option>
-                <option value="Courier New">Courier New</option>
-              </select>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingPopupArabicTextSize"
-            >
-              <label class="setting-label">Popup Arabic Text Size</label>
-              <p class="setting-hint">Adjust popup Arabic ayah size only.</p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranPopupArabicSize"
-                  min="8"
-                  max="144"
-                  value="40"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranPopupArabicSizeSettingValue"
-                  >40px</span
-                >
-              </div>
-            </div>
-
-            <div
-              class="setting-group"
-              id="pocketQuranSettingPopupTranslationTextSize"
-            >
-              <label class="setting-label">Popup Translation Text Size</label>
-              <p class="setting-hint">Adjust popup translation size only.</p>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="pocketQuranPopupTranslationSize"
-                  min="8"
-                  max="144"
-                  value="18"
-                />
-                <span
-                  class="custom-width-value"
-                  id="pocketQuranPopupTranslationSizeSettingValue"
-                  >18px</span
-                >
-              </div>
-            </div>
-
             <div class="setting-group" id="pocketQuranSettingTranslation">
               <label class="setting-label">Translation</label>
               <p class="setting-hint">
@@ -5591,6 +5368,229 @@
                   <option value="125">Shaykh Abu Rahimah Mikael Aykyuni</option>
                 </optgroup>
               </select>
+            </div>
+
+            <div class="setting-group" id="pocketQuranSettingReciter">
+              <label class="setting-label">Reciter</label>
+              <p class="setting-hint">
+                Select a reciter for the Pocket Quran card playback.
+              </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranReciterPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqReciterModal"
+              >
+                <span id="pocketQuranReciterPickerLabel">Select reciter…</span>
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingArabicFontFamilyCard"
+            >
+              <label class="setting-label">Arabic Font Family (Card)</label>
+              <p class="setting-hint">
+                Open the Arabic font picker used by the Pocket Quran card.
+              </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranArabicFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranArabicFontPickerLabel"
+                  >Select Arabic font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingTranslationFontFamilyCard"
+            >
+              <label
+                class="setting-label"
+                for="pocketQuranTranslationFontFamily"
+                >Translation Font Family (Card)</label
+              >
+              <p class="setting-hint">
+                Choose the translation font used in the Pocket Quran card.
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranTranslationFontFamily"
+              >
+                <option value="Poppins" selected>Poppins</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingDefaultArabicTextSize"
+            >
+              <label class="setting-label">Default Arabic Text Size</label>
+              <p class="setting-hint">Choose a default Arabic font size.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranArabicSize"
+                  min="8"
+                  max="144"
+                  value="40"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranArabicSizeSettingValue"
+                  >40px</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingDefaultTranslationTextSize"
+            >
+              <label class="setting-label">Default Translation Text Size</label>
+              <p class="setting-hint">
+                Choose a default translation font size.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranTranslationSize"
+                  min="8"
+                  max="144"
+                  value="18"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranTranslationSizeSettingValue"
+                  >18px</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupArabicFontFamily"
+            >
+              <label class="setting-label">Popup Arabic Font Family</label>
+              <p class="setting-hint">
+                Choose the Arabic font used in popup mode.
+              </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranPopupArabicFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranPopupArabicFontPickerLabel"
+                  >Select Arabic font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
+              <select
+                class="setting-select"
+                id="pocketQuranPopupArabicFontFamily"
+                hidden
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="KFGQPC Uthman Taha Naskh" selected>
+                  KFGQPC Uthman Taha Naskh
+                </option>
+                <option value="KFGQPC KSA Regular">KFGQPC KSA Regular</option>
+                <option value="KFGQPC Kufi Stylistic Regular">
+                  KFGQPC Kufi Stylistic Regular
+                </option>
+                <option value="KFGQPC AN Regular">KFGQPC AN Regular</option>
+                <option value="KFGQPC AlJalil Dot">KFGQPC AlJalil Dot</option>
+                <option value="KFGQPC Sindhi Naskh Regular">
+                  KFGQPC Sindhi Naskh Regular
+                </option>
+              </select>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupTranslationFontFamily"
+            >
+              <label
+                class="setting-label"
+                for="pocketQuranPopupTranslationFontFamily"
+                >Popup Translation Font Family</label
+              >
+              <p class="setting-hint">
+                Choose the translation font used in popup mode.
+              </p>
+              <select
+                class="setting-select"
+                id="pocketQuranPopupTranslationFontFamily"
+              >
+                <option value="Poppins" selected>Poppins</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Amiri">Amiri</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Cascadia Code">Cascadia Code</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupArabicTextSize"
+            >
+              <label class="setting-label">Popup Arabic Text Size</label>
+              <p class="setting-hint">Adjust popup Arabic ayah size only.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranPopupArabicSize"
+                  min="8"
+                  max="144"
+                  value="40"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranPopupArabicSizeSettingValue"
+                  >40px</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="setting-group"
+              id="pocketQuranSettingPopupTranslationTextSize"
+            >
+              <label class="setting-label">Popup Translation Text Size</label>
+              <p class="setting-hint">Adjust popup translation size only.</p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="pocketQuranPopupTranslationSize"
+                  min="8"
+                  max="144"
+                  value="18"
+                />
+                <span
+                  class="custom-width-value"
+                  id="pocketQuranPopupTranslationSizeSettingValue"
+                  >18px</span
+                >
+              </div>
             </div>
 
             <div

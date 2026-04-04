@@ -14036,64 +14036,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   color: var(--pq-tajweed-ghn, #ff7e1e);
 }
 
-/* Pocket Quran settings: enforce requested dashboard settings order */
-#pocketQuranPanel.settings-panel.active {
-  display: flex;
-  flex-direction: column;
-}
-
-#pocketQuranSettingTranslation {
-  order: 1;
-}
-
-#pocketQuranSettingReciter {
-  order: 2;
-}
-
-#pocketQuranSettingArabicFontFamilyCard {
-  order: 3;
-}
-
-#pocketQuranSettingTranslationFontFamilyCard {
-  order: 4;
-}
-
-#pocketQuranSettingDefaultArabicTextSize {
-  order: 5;
-}
-
-#pocketQuranSettingDefaultTranslationTextSize {
-  order: 6;
-}
-
-#pocketQuranSettingPopupArabicFontFamily {
-  order: 7;
-}
-
-#pocketQuranSettingPopupTranslationFontFamily {
-  order: 8;
-}
-
-#pocketQuranSettingPopupArabicTextSize {
-  order: 9;
-}
-
-#pocketQuranSettingPopupTranslationTextSize {
-  order: 10;
-}
-
-#pocketQuranSettingRecitationFloatingControls {
-  order: 11;
-}
-
-#pocketQuranSettingTajweedColors {
-  order: 12;
-}
-
-#pocketQuranSettingBookmarks {
-  order: 13;
-}
-
 /* Pocket Quran settings: Tajweed colors */
 .pq-tajweed-settings {
   display: flex;
