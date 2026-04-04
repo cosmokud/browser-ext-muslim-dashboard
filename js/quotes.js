@@ -888,7 +888,7 @@ class QuotesManager extends BaseManager {
   }
 
   getEditorPageSize() {
-    return this.isEditorDetached() ? 10 : this.quotesPerPage;
+    return 10;
   }
 
   /**

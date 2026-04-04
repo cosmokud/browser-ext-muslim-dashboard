@@ -2,12 +2,12 @@
  * Flashcard Manager
  * - Loads bundled default cards from data/*.csv at runtime
  * - Supports up to 100 flashcard sets (CSV import/export)
- * - Dashboard viewer + Settings tab editor (20 cards/page)
+ * - Dashboard viewer + Settings tab editor (10 cards/page)
  */
 
 class FlashcardManager extends BaseManager {
   static MAX_SETS = 100;
-  static PAGE_SIZE = 20;
+  static PAGE_SIZE = 10;
   static DETACHED_PAGE_SIZE = 10;
 
   static FLIP_ANIM_MS = 320;

@@ -2,12 +2,12 @@
  * Adhkar Manager
  * - Loads bundled default adhkar sets from data/*.json at runtime
  * - Supports up to 100 adhkar sets (JSON import)
- * - Dashboard reader + Settings tab editor (20 items/page)
+ * - Dashboard reader + Settings tab editor (10 items/page)
  */
 
 class AdhkarManager extends BaseManager {
   static MAX_SETS = 100;
-  static PAGE_SIZE = 20;
+  static PAGE_SIZE = 10;
   static DETACHED_PAGE_SIZE = 10;
 
   static NAV_ANIM_MS = 320;
