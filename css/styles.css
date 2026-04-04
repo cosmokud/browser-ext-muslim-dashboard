@@ -13813,10 +13813,17 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     border-color var(--transition-fast);
 }
 
-.pocket-quran-size-step-symbol {
-  display: inline-block;
-  line-height: 1;
-  transform: translateY(-1px);
+.pocket-quran-size-step-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex: 0 0 auto;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 .pocket-quran-size-step-btn:hover {
