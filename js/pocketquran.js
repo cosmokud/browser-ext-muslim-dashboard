@@ -2507,8 +2507,46 @@ class PocketQuranManager extends BaseManager {
     this.updateTextVisibilityToggleUI({ allowBothOff });
 
     if (changed && recalculate) {
+      const previousContainer = this._virtualContainer;
+      const previousScrollableHeight = Math.max(
+        0,
+        (previousContainer?.scrollHeight || 0) -
+          (previousContainer?.clientHeight || 0),
+      );
+      const previousScrollRatio =
+        previousScrollableHeight > 0
+          ? (previousContainer?.scrollTop || 0) / previousScrollableHeight
+          : 0;
+
       this._ayahHeights.clear();
-      this.recalculateVirtualization();
+      this._avgAyahHeight = PocketQuranManager.ESTIMATED_AYAH_HEIGHT;
+      this._programmaticScroll = null;
+
+      if (this._activeVerses?.length) {
+        // Rebuild virtualization to avoid stale spacer height after visibility mode changes.
+        this.initVirtualization();
+
+        requestAnimationFrame(() => {
+          if (!this._virtualContainer) return;
+
+          const nextScrollableHeight = Math.max(
+            0,
+            this._virtualContainer.scrollHeight -
+              this._virtualContainer.clientHeight,
+          );
+
+          if (nextScrollableHeight > 0 && previousScrollRatio > 0) {
+            this._virtualContainer.scrollTop = Math.min(
+              nextScrollableHeight,
+              previousScrollRatio * nextScrollableHeight,
+            );
+          }
+
+          this.handleVirtualScroll();
+        });
+      } else {
+        this.recalculateVirtualization();
+      }
     }
 
     if (persist) {
