@@ -2663,11 +2663,16 @@ class PocketQuranManager extends BaseManager {
       this._isPlaying = false;
       this.updatePlaybackUI();
     };
-    this._onAudioPlaying = () => {
+    this._onAudioPlaying = (event) => {
+      this.enforceSingleRecitationAudioOwner();
       this._isPlaying = true;
       this.updatePlaybackUI();
     };
-    this._onAudioPause = () => {
+    this._onAudioPause = (event) => {
+      const sourceAudio = event?.currentTarget || event?.target || null;
+      this.clearRecitationAudioOwnerIfCurrent(
+        sourceAudio || this._audioElement,
+      );
       this._isPlaying = false;
       this.updatePlaybackUI();
     };
@@ -2716,6 +2721,31 @@ class PocketQuranManager extends BaseManager {
     this._audioElement.preload = "auto";
     this._audioElement.volume = this._volume;
     this.attachAudioListeners(this._audioElement);
+  }
+
+  enforceSingleRecitationAudioOwner() {
+    if (typeof window === "undefined") return;
+    const ownerKey = "__MD_PQ_ACTIVE_AUDIO__";
+    const activeAudio = window[ownerKey];
+
+    if (activeAudio && activeAudio !== this._audioElement) {
+      try {
+        activeAudio.pause();
+      } catch (e) {}
+      try {
+        activeAudio.currentTime = 0;
+      } catch (e) {}
+    }
+
+    window[ownerKey] = this._audioElement;
+  }
+
+  clearRecitationAudioOwnerIfCurrent(audio = this._audioElement) {
+    if (typeof window === "undefined") return;
+    const ownerKey = "__MD_PQ_ACTIVE_AUDIO__";
+    if (window[ownerKey] === audio) {
+      window[ownerKey] = null;
+    }
   }
 
   buildRecitationCacheKey(surah, ayah) {
@@ -2934,10 +2964,12 @@ class PocketQuranManager extends BaseManager {
       this._audioElement.volume = this._volume;
 
       try {
+        this.enforceSingleRecitationAudioOwner();
         this._audioElement.currentTime = 0;
       } catch (e) {}
 
       try {
+        this.enforceSingleRecitationAudioOwner();
         this._audioElement.play();
       } catch (e) {}
 
@@ -2968,6 +3000,7 @@ class PocketQuranManager extends BaseManager {
       }
 
       try {
+        this.enforceSingleRecitationAudioOwner();
         this._audioElement.play();
       } catch (e) {}
 
@@ -3085,6 +3118,7 @@ class PocketQuranManager extends BaseManager {
       this._playingAyah?.ayah === ayah &&
       this._audioElement.paused
     ) {
+      this.enforceSingleRecitationAudioOwner();
       this._audioElement.play();
       return;
     }
@@ -3122,12 +3156,14 @@ class PocketQuranManager extends BaseManager {
       }
 
       try {
+        this.enforceSingleRecitationAudioOwner();
         await this._audioElement.play();
       } catch (e) {
         // Fallback: chapter recitation URL (usually download.quranicaudio.com)
         const chapterUrl = await this.getChapterRecitationAudioUrl(surah);
         if (chapterUrl) {
           this._audioElement.src = chapterUrl;
+          this.enforceSingleRecitationAudioOwner();
           await this._audioElement.play();
         } else {
           throw e;
@@ -3196,6 +3232,7 @@ class PocketQuranManager extends BaseManager {
 
     this._audioElement.pause();
     this._audioElement.currentTime = 0;
+    this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
     this._isPlaying = false;
     this._playingAyah = null;
     this._isAutoplay = false;
@@ -3222,6 +3259,7 @@ class PocketQuranManager extends BaseManager {
 
     this._audioElement.pause();
     this._audioElement.currentTime = 0;
+    this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
     this._isPlaying = false;
     this._playingAyah = null;
     // Intentionally do NOT change this._isAutoplay: keep user's autoplay setting.
@@ -3245,6 +3283,7 @@ class PocketQuranManager extends BaseManager {
     if (this._isLooping && this._playingAyah) {
       // Loop: replay the same ayah
       this._audioElement.currentTime = 0;
+      this.enforceSingleRecitationAudioOwner();
       this._audioElement.play();
       return;
     }
@@ -4226,12 +4265,10 @@ class PocketQuranManager extends BaseManager {
         }">
           <svg viewBox="0 -0.5 25 25" width="21" height="21" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10.7452 16.2194C10.995 15.889 10.9298 15.4186 10.5994 15.1688C10.269 14.919 9.79864 14.9842 9.54879 15.3146L10.7452 16.2194ZM6.72579 19.0476C6.47595 19.378 6.54124 19.8484 6.87162 20.0982C7.202 20.3481 7.67236 20.2828 7.92221 19.9524L6.72579 19.0476ZM6.574 19.5C6.574 19.9142 6.90979 20.25 7.324 20.25C7.73821 20.25 8.074 19.9142 8.074 19.5H6.574ZM8.074 5.5C8.074 5.08579 7.73821 4.75 7.324 4.75C6.90979 4.75 6.574 5.08579 6.574 5.5H8.074ZM6.72587 19.9525C6.97577 20.2828 7.44614 20.348 7.77648 20.0981C8.10682 19.8482 8.17203 19.3779 7.92213 19.0475L6.72587 19.9525ZM5.09813 15.3145C4.84823 14.9842 4.37786 14.919 4.04752 15.1689C3.71718 15.4188 3.65197 15.8891 3.90187 16.2195L5.09813 15.3145ZM11.088 4.75C10.6738 4.75 10.338 5.08579 10.338 5.5C10.338 5.91421 10.6738 6.25 11.088 6.25V4.75ZM20.5 6.25C20.9142 6.25 21.25 5.91421 21.25 5.5C21.25 5.08579 20.9142 4.75 20.5 4.75V6.25ZM11.088 7.55C10.6738 7.55 10.338 7.88579 10.338 8.3C10.338 8.71421 10.6738 9.05 11.088 9.05V7.55ZM18.617 9.05C19.0312 9.05 19.367 8.71421 19.367 8.3C19.367 7.88579 19.0312 7.55 18.617 7.55V9.05ZM11.088 10.35C10.6738 10.35 10.338 10.6858 10.338 11.1C10.338 11.5142 10.6738 11.85 11.088 11.85V10.35ZM16.735 11.85C17.1492 11.85 17.485 11.5142 17.485 11.1C17.485 10.6858 17.1492 10.35 16.735 10.35V11.85ZM9.54879 15.3146L6.72579 19.0476L7.92221 19.9524L10.7452 16.2194L9.54879 15.3146ZM8.074 19.5V5.5H6.574V19.5H8.074ZM7.92213 19.0475L5.09813 15.3145L3.90187 16.2195L6.72587 19.9525L7.92213 19.0475ZM11.088 6.25H20.5V4.75H11.088V6.25ZM11.088 9.05H18.617V7.55H11.088V9.05ZM11.088 11.85H16.735V10.35H11.088V11.85Z" fill="currentColor"></path> </g></svg>
         </button>
-        <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
-          <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
-          <button type="button" class="pq-recitation-btn pq-recitation-close-btn" title="Close" aria-label="Close recitation controls">
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          </button>
-        </div>
+        <button type="button" class="pq-recitation-btn pq-autoscroll-btn active pq-floating-inline-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
+        <button type="button" class="pq-recitation-btn pq-autoscroll-btn active pq-floating-inline-btn pq-recitation-close-btn" title="Close" aria-label="Close recitation controls">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
       </div>
     `;
 

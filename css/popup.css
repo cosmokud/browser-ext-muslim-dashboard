@@ -615,6 +615,36 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
 }
 
+.popup-pq-surah-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.popup-pq-surah-back-btn {
+  min-height: 30px;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup-pq-surah-back-btn:hover {
+  background: var(--glass-bg-hover);
+}
+
+.popup-pq-surah-toolbar-label {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
 .popup-pq-surah-list-wrap {
   position: relative;
   min-height: 120px;
@@ -634,9 +664,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   height: 100%;
 }
 
-.popup-pq-surah-list-wrap.popup-pq-surah-list-wrap-has-ayah-popover
+.popup-pq-surah-list-wrap.popup-pq-surah-list-wrap-ayah-mode
   .popup-pq-surah-list {
-  padding-right: 88px;
+  gap: 6px;
 }
 
 .popup-pq-surah-list .pocket-quran-surah-item {
@@ -676,27 +706,11 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   font-size: 1.02rem;
 }
 
-.popup-pq-ayah-popover {
-  top: 6px;
-  left: auto;
-  right: 6px;
-  z-index: 6;
-  width: 74px;
-  max-height: calc(100% - 12px);
-  min-height: 160px;
-}
-
-.popup-pq-ayah-list {
-  max-height: calc(100% - 2px);
-  padding: 4px;
-  gap: 3px;
-}
-
-.popup-pq-ayah-list .pocket-quran-ayah-option {
-  text-align: center;
-  font-size: 0.78rem;
-  padding: 0.42rem 0.2rem;
-  min-height: 30px;
+.popup-pq-surah-list.popup-pq-ayah-list-mode .pocket-quran-ayah-option {
+  text-align: left;
+  font-size: 0.84rem;
+  min-height: 32px;
+  padding: 0.5rem 0.68rem;
 }
 
 .popup-pq-reciter-list {
