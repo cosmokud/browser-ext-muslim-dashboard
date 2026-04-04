@@ -1,4 +1,4 @@
-## [0.1.2] - 2026-04-03
+## [0.1.2] - 2026-04-04
 
 ### Added
 
@@ -7,6 +7,8 @@
 - Added fasting/calendar enhancements: fasting markers and tooltips, Ashura and Laylat al-Qadr visibility options, and Ramadan-only marker logic during Ramadan.
 - Added Performance Mode to reduce animation and effect cost for smoother operation on lower-end devices.
 - Added flashcard editor improvements including default-set notices and a custom-set creation path.
+- Added open-source governance documents: Code of Conduct, Contributing guide, and Security policy.
+- Added tag-triggered GitHub Actions deploy workflow for automated release creation and artifact upload.
 
 ### Changed
 
@@ -14,6 +16,8 @@
 - Improved theme system with theme-aware modals/popovers, header surface background options, glass opacity controls, component opacity controls, accent/background/font color controls, and storage normalization for blur-related settings.
 - Enhanced favicon import flow in pinned apps/search with better URL normalization and clearer import hints.
 - Refined flashcard, fasting, and calendar layouts for better readability and responsiveness.
+- Standardized page size to 10 items for Adhkar, Flashcard, and Hadith managers.
+- Updated webstore packaging to auto-disable debug mode and emit versioned archives named `muslim-dashboard-v<version>.zip`.
 
 ### Fixed
 

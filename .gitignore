@@ -1,5 +1,4 @@
 /dist
-/.VSCodeCounter
-/memory-bank
 /scripts
-sources/hisn.html
+.venv/
+.vscode/

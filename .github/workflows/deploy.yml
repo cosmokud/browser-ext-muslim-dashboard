@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v.*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate tag format
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v\.?\d+\.\d+\.\d+$') {
+            throw "Unsupported tag format: $tag. Expected v0.1.2 or v.0.1.2"
+          }
+
+      - name: Read manifest version
+        id: manifest
+        shell: pwsh
+        run: |
+          $manifest = Get-Content -LiteralPath "manifest.json" -Raw | ConvertFrom-Json
+          if (-not $manifest.version) {
+            throw "manifest.json does not define a version"
+          }
+
+          $zipName = "muslim-dashboard-v$($manifest.version).zip"
+          "version=$($manifest.version)" >> $env:GITHUB_OUTPUT
+          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+
+      - name: Build webstore package
+        shell: pwsh
+        run: .\build-webstore.ps1
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webstore-package-${{ steps.manifest.outputs.version }}
+          path: dist/${{ steps.manifest.outputs.zip_name }}
+          if-no-files-found: error
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/${{ steps.manifest.outputs.zip_name }}

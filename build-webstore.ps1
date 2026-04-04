@@ -6,7 +6,24 @@ Set-StrictMode -Version Latest
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $distRoot = Join-Path $repoRoot "dist"
 $packageRoot = Join-Path $distRoot "chrome-webstore"
-$zipPath = Join-Path $distRoot "chrome-webstore.zip"
+
+$manifestPath = Join-Path $repoRoot "manifest.json"
+if (-not (Test-Path -LiteralPath $manifestPath)) {
+  throw "Missing required file: $manifestPath"
+}
+
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$manifestVersion = [string]$manifest.version
+if ([string]::IsNullOrWhiteSpace($manifestVersion)) {
+  throw "manifest.json is missing the required version field."
+}
+
+if ($manifestVersion -notmatch '^\d+\.\d+\.\d+$') {
+  throw "Unsupported manifest version format: $manifestVersion. Expected semantic version like 0.1.2"
+}
+
+$zipName = "muslim-dashboard-v$manifestVersion.zip"
+$zipPath = Join-Path $distRoot $zipName
 
 $topLevelFiles = @(
   "manifest.json",
@@ -30,39 +47,48 @@ if (-not (Test-Path -LiteralPath $configPath)) {
 
 $debugAssignments = @()
 $configLines = Get-Content -LiteralPath $configPath
+$updatedConfigLines = @()
+$configWasUpdated = $false
+
 foreach ($line in $configLines) {
+  $effectiveLine = $line
   $trimmedLine = $line.Trim()
   if (
-    $trimmedLine.StartsWith("//") -or
-    $trimmedLine.StartsWith("/*") -or
-    $trimmedLine.StartsWith("*")
+    -not (
+      $trimmedLine.StartsWith("//") -or
+      $trimmedLine.StartsWith("/*") -or
+      $trimmedLine.StartsWith("*")
+    )
   ) {
-    continue
+    $assignmentMatch = [regex]::Match(
+      $line,
+      'globalThis\.ENABLE_DEBUG_MODE\s*=\s*(true|false)\s*;'
+    )
+    if ($assignmentMatch.Success) {
+      $assignmentValue = $assignmentMatch.Groups[1].Value.ToLowerInvariant()
+      if ($assignmentValue -eq "true") {
+        $effectiveLine = [regex]::Replace(
+          $line,
+          'globalThis\.ENABLE_DEBUG_MODE\s*=\s*true\s*;',
+          'globalThis.ENABLE_DEBUG_MODE = false;'
+        )
+        $assignmentValue = "false"
+        $configWasUpdated = $true
+      }
+      $debugAssignments += $assignmentValue
+    }
   }
 
-  $assignmentMatch = [regex]::Match(
-    $line,
-    'globalThis\.ENABLE_DEBUG_MODE\s*=\s*(true|false)\s*;'
-  )
-  if ($assignmentMatch.Success) {
-    $debugAssignments += $assignmentMatch.Groups[1].Value.ToLowerInvariant()
-  }
+  $updatedConfigLines += $effectiveLine
 }
 
 if ($debugAssignments.Count -eq 0) {
   throw "Missing debug mode assignment in js/config.js. Expected: globalThis.ENABLE_DEBUG_MODE = false;"
 }
 
-$hasDebugEnabled = $false
-foreach ($assignment in $debugAssignments) {
-  if ($assignment -eq "true") {
-    $hasDebugEnabled = $true
-    break
-  }
-}
-
-if ($hasDebugEnabled) {
-  throw "Debug mode is enabled in js/config.js. Set globalThis.ENABLE_DEBUG_MODE = false; before building webstore package."
+if ($configWasUpdated) {
+  Set-Content -LiteralPath $configPath -Value $updatedConfigLines -Encoding UTF8
+  Write-Host "Auto-disabled debug mode in js/config.js for release packaging."
 }
 
 $lastDebugValue = $debugAssignments[$debugAssignments.Count - 1]

@@ -1,197 +1,141 @@
-# 🕌 Muslim Dashboard - Islamic New Tab Extension
+# Muslim Dashboard
 
-A beautiful, interactive, and fully responsive Chrome/Edge browser extension that transforms your new tab page into a comprehensive Islamic dashboard.
+Muslim Dashboard is a browser extension that replaces the new tab page with an Islamic productivity and reflection workspace. It combines prayer and calendar tools, Quran and Hadith reading, study modules, personalization controls, and day-to-day utilities in a single interface.
 
-## ✨ Features
+The project targets Chromium-based browsers with Manifest V3.
 
-### 🕋 Prayer Times
+## Feature Inventory
 
-- **Automatic Location Detection**: Uses GPS to detect your location automatically
-- **Manual City Search**: Enter any city name to get prayer times
-- **Multiple Calculation Methods**:
-  - Muslim World League (MWL)
-  - ISNA (North America)
-  - Egyptian General Authority
-  - Umm Al-Qura (Makkah)
-  - University of Islamic Sciences (Karachi)
-  - Institute of Geophysics (Tehran)
-  - Shia Ithna-Ashari (Jafari)
-- **Asr Juristic Methods**: Standard (Shafi'i/Maliki/Hanbali) and Hanafi
-- **Time Adjustments**: Fine-tune each prayer time by minutes
-- **Next Prayer Countdown**: Real-time countdown to the next prayer
+### Core Islamic tools
 
-### 🧭 Qibla Direction
+- Prayer Times with automatic geolocation and manual city/coordinates entry.
+- Multiple prayer calculation methods, including regional presets and a custom-angle mode.
+- Asr juristic method selection, high-latitude adjustment modes, and midnight calculation variants.
+- Per-prayer minute offsets and configurable prayer visibility.
+- Real-time next-prayer countdown in both the dashboard header and prayer card.
+- Qibla compass with directional bearing.
+- Calendar card with Hijri and Gregorian views, month navigation, and current-date details.
+- Fasting card with day progress and date-aware fasting context.
+- Lunar phase card with current phase and metadata.
 
-- Compass showing the direction of the Ka'bah from your location
-- Degree display with cardinal direction
-- Device orientation support for mobile devices
+### Quran, Hadith, and Adhkar
 
-### 📅 Hijri Calendar
+- Pocket Quran reader with surah and ayah navigation.
+- Quran translation and recitation support.
+- Tajweed display mode and Arabic font options for Quran reading.
+- Adjustable Arabic and translation font sizes.
+- Hadith card with bundled datasets and pagination controls.
+- Adhkar card with multiple bundled collections, script/romanization toggle, repeat metadata, and auto-advance controls.
 
-- Toggle between Hijri (Islamic) and Gregorian calendar
-- Automatic Islamic date calculation
-- Special Islamic event notifications
-- Hijri date adjustment support
+### Learning and productivity modules
 
-### ✅ To-Do List
+- Flashcards with bundled datasets (including 99 Names) and custom-set workflows.
+- Flashcard study controls: flip, jump-to-index, autoplay, quiz/study behavior, and Arabic font scaling.
+- CSV import/export for custom flashcard sets.
+- To-Do list with create/read/update/delete, filters, pagination, and clear-completed actions.
+- Notes module with rich-text editing, markdown-oriented workflows, list and checklist support, table actions, link/image insertion, and undo/redo.
+- Sticky notes support for lightweight freeform note capture.
 
-- Full CRUD functionality (Create, Read, Update, Delete)
-- Filter tasks: All, Active, Completed
-- Persistent storage using browser localStorage
-- Clear completed tasks with one click
-- Beautiful animations
+### Personalization and layout
 
-### 📖 Islamic Quotes
+- Dynamic backgrounds with category and rotation configuration.
+- Theme system with palette controls, glass/blur tuning, component opacity, and color customization.
+- Icon theme system for dashboard icon styling.
+- Card-level blur/glass controls for selected modules.
+- Multiple dashboard modes: grid layout, sidebar mode, floating cards, moment mode, and Quran focus mode.
+- Drag-and-drop layout editing with persisted card placement.
+- Performance mode to reduce animation/effect cost on lower-end hardware.
 
-- 100+ quotes from Quran and authentic Hadith
-- Random quote display with refresh button
-- Add your own custom quotes
-- Choose to display default quotes, custom quotes, or both
-- Smooth fade transitions
+### Navigation and discovery
 
-### � Flashcards
+- Pinned Apps strip with add/edit/remove, favicon handling, and reorder support.
+- Search Bar with configurable engines and custom engine management.
+- Unified content search across quotes, adhkar, hadith, notes, and todo content.
 
-- Two built-in read-only default sets are included: `Default` and `99 Names`.
-- Import your own flashcards via CSV, export custom sets as CSV, create/edit sets (defaults are protected), and study or quiz yourself.
+### Extension platform features
 
-### �🖼️ Dynamic Backgrounds
+- Dedicated popup page focused on prayer times.
+- Service worker integration for extension background tasks and prayer-related notifications.
+- Local persistent settings and user data storage.
+- Localized data bundles in JSON/CSV for quotes, adhkar, flashcards, and hadith content.
 
-- High-resolution nature backgrounds from Unsplash
-- Multiple categories: Nature, Mosques, Landscapes, Mountains, Ocean, Forests, Sky
-- Configurable rotation interval (15 min to daily)
-- Smooth crossfade transitions
+## Installation (Unpacked)
 
-### ⚙️ Comprehensive Settings
+### Google Chrome
 
-- Location settings with auto-detect or manual entry
-- Prayer calculation customization
-- Quote source management
-- Background preferences
-- All settings persist across sessions
-
-## 🚀 Installation
-
-### Chrome
-
-1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top right)
-4. Click "Load unpacked"
-5. Select the `browser-ext-muslim-dashboard` folder
-6. Open a new tab to see your Muslim Dashboard!
+1. Clone this repository.
+2. Open `chrome://extensions/`.
+3. Enable Developer mode.
+4. Click Load unpacked.
+5. Select the repository root folder.
 
 ### Microsoft Edge
 
-1. Download or clone this repository
-2. Open Edge and go to `edge://extensions/`
-3. Enable "Developer mode" (toggle in left sidebar)
-4. Click "Load unpacked"
-5. Select the `browser-ext-muslim-dashboard` folder
-6. Open a new tab to see your Muslim Dashboard!
+1. Clone this repository.
+2. Open `edge://extensions/`.
+3. Enable Developer mode.
+4. Click Load unpacked.
+5. Select the repository root folder.
 
-### Chrome Web Store Package
+## Build and Package for Web Store
 
-Use the packaging script instead of zipping the repository root.
+Use the PowerShell packaging script rather than manually zipping the repository.
 
-1. Run `.\build-webstore.ps1` from the project root in PowerShell
-2. Upload `dist/chrome-webstore.zip` to the Chrome Web Store
-3. The package includes runtime assets only and excludes source-only files such as `sources/hisn.html`
+### Command
 
-## 📁 Project Structure
-
-```
-browser-ext-muslim-dashboard/
-├── manifest.json          # Extension configuration
-├── index.html             # Main dashboard HTML
-├── css/
-│   └── styles.css         # All styles with animations
-├── js/
-│   ├── app.js             # Main application orchestrator
-│   ├── praytimes.js       # Prayer times calculation library
-│   ├── prayertimes.js     # Prayer times manager
-│   ├── hijri.js           # Hijri calendar converter
-│   ├── qibla.js           # Qibla direction calculator
-│   ├── quotes.js          # Quotes manager
-│   ├── todo.js            # Todo list manager
-│   ├── backgrounds.js     # Background rotation manager
-│   ├── settings.js        # Settings modal manager
-│   └── storage.js         # LocalStorage wrapper
-├── data/
-│   ├── quotes_default.json # 100+ default Islamic quotes
-│   └── quotes_user.json   # User custom quotes
-├── icons/
-│   ├── icon.svg           # Vector icon
-│   ├── icon16.png         # 16x16 icon
-│   ├── icon32.png         # 32x32 icon
-│   ├── icon48.png         # 48x48 icon
-│   └── icon128.png        # 128x128 icon
-└── README.md              # This file
+```powershell
+.\build-webstore.ps1
 ```
 
-## 🎨 Design Features
+### What the script does
 
-- **Glassmorphism UI**: Modern frosted glass effect with backdrop blur
-- **Responsive Design**: Works on all screen sizes
-- **Smooth Animations**: CSS animations for all interactions
-- **Dark Theme**: Easy on the eyes for any time of day
-- **Arabic Typography**: Proper Arabic font support
+1. Reads `manifest.json` to determine the extension version.
+2. Ensures `js/config.js` contains a debug assignment and automatically forces `globalThis.ENABLE_DEBUG_MODE = false;` for release packaging.
+3. Creates a clean `dist/chrome-webstore/` package directory.
+4. Copies only runtime files and runtime directories needed by the extension.
+5. Runs safety checks to detect remote script/style/font/code-import references inside packaged assets.
+6. Produces a versioned archive in `dist/` named:
 
-## 🔧 Customization
+```text
+muslim-dashboard-v<manifest-version>.zip
+```
 
-### Adding Custom Quotes
+Example: `muslim-dashboard-v0.1.2.zip`
 
-1. Click the settings button (⚙️) in the bottom right
-2. Go to the "Quotes" tab
-3. Enter your quote text and source
-4. Click "Add Quote"
+### Build output
 
-### Adjusting Prayer Times
+- `dist/chrome-webstore/` (staged package contents)
+- `dist/muslim-dashboard-v<manifest-version>.zip` (upload-ready archive)
 
-1. Open Settings → Prayer tab
-2. Select your preferred calculation method
-3. Use the adjustment fields to fine-tune times (in minutes)
-4. Click "Save Settings"
+## Repository Structure
 
-### Changing Background
+```text
+.
+|- manifest.json
+|- index.html
+|- popup.html
+|- build-webstore.ps1
+|- js/
+|- css/
+|- data/
+|- assets/
+|- fonts/
+|- icons/
+|- dist/
+```
 
-1. Open Settings → Background tab
-2. Choose your preferred category
-3. Set rotation interval
-4. Click "Change Background Now" for immediate change
+## Data and External Services
 
-## 🌐 API Credits
+- Weather data: Open-Meteo APIs.
+- Geocoding: OpenStreetMap Nominatim and Open-Meteo geocoding.
+- Quran APIs/recitation sources are accessed via host permissions declared in `manifest.json`.
 
-- **Background Images**: [Unsplash](https://unsplash.com/) (Free to use)
-- **Geocoding**: [OpenStreetMap Nominatim](https://nominatim.org/)
-- **Prayer Times Algorithm**: Based on [PrayTimes.org](https://praytimes.org/)
+## Governance and Community Files
 
-## 📜 Islamic Sources
+- Code of Conduct: `CODE_OF_CONDUCT.md`
+- Contributing Guide: `CONTRIBUTING.md`
+- Security Policy: `SECURITY.md`
 
-The default quotes are sourced from:
+## Changelog
 
-- The Holy Quran
-- Sahih Bukhari
-- Sahih Muslim
-- Sunan at-Tirmidhi
-- Sunan Abu Dawud
-- Sunan Ibn Majah
-- Sunan an-Nasa'i
-- Musnad Ahmad
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📃 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🤲 Dua
-
-May Allah accept this work and make it beneficial for the Ummah. Ameen.
-
----
-
-**Made with ❤️ for the Muslim community worldwide**
-
-_As-salamu alaykum wa Rahmatullahi wa Barakatuh_ 🌙
+Release history and notable updates are documented in `CHANGELOG.md`.
