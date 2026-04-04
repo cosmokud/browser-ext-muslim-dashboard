@@ -653,6 +653,9 @@ class SettingsManager extends BaseManager {
     this.pocketQuranRecitationFloatingEnabled = document.getElementById(
       "pocketQuranRecitationFloatingEnabled",
     );
+    this.pocketQuranRecitationAutoDockOnVisible = document.getElementById(
+      "pocketQuranRecitationAutoDockOnVisible",
+    );
     this.pocketQuranRecitationFloatingAppearanceRadios =
       document.querySelectorAll(
         'input[name="pocketQuranRecitationFloatingAppearance"]',
@@ -1270,6 +1273,11 @@ class SettingsManager extends BaseManager {
     if (this.pocketQuranRecitationFloatingEnabled) {
       this.pocketQuranRecitationFloatingEnabled.checked =
         pq.recitationFloatingEnabled !== false;
+    }
+
+    if (this.pocketQuranRecitationAutoDockOnVisible) {
+      this.pocketQuranRecitationAutoDockOnVisible.checked =
+        pq.recitationAutoDockOnVisible !== false;
     }
 
     const floatingAppearance =
@@ -5318,6 +5326,9 @@ class SettingsManager extends BaseManager {
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
         ? this.pocketQuranRecitationFloatingEnabled.checked
         : existingPocketQuran.recitationFloatingEnabled !== false,
+      recitationAutoDockOnVisible: this.pocketQuranRecitationAutoDockOnVisible
+        ? this.pocketQuranRecitationAutoDockOnVisible.checked
+        : existingPocketQuran.recitationAutoDockOnVisible !== false,
       recitationFloatingAppearance:
         document.querySelector(
           'input[name="pocketQuranRecitationFloatingAppearance"]:checked',

@@ -340,6 +340,10 @@ class WeatherManager extends BaseManager {
     const showLocationName = settings.compactWeatherShowLocationName === true;
     const locationName =
       typeof weather.location === "string" ? weather.location.trim() : "";
+    const fullLocationName =
+      typeof weather.locationFull === "string"
+        ? weather.locationFull.trim()
+        : locationName;
     const weatherInfo = this.weatherCodes[weather.weatherCode] || {
       icon: "🌡️",
       desc: "Unknown",
@@ -385,7 +389,7 @@ class WeatherManager extends BaseManager {
     }
     if (locationEl) {
       locationEl.textContent = locationName;
-      locationEl.title = locationName;
+      locationEl.title = fullLocationName || locationName;
     }
 
     // Apply mode class
@@ -757,6 +761,17 @@ class WeatherManager extends BaseManager {
     return parts.join(", ");
   }
 
+  _extractCityLikeName(locationText) {
+    const normalized = String(locationText || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!normalized) return "";
+
+    const [firstPart] = normalized.split(",");
+    const city = String(firstPart || "").trim();
+    return city || normalized;
+  }
+
   async _geocodeCity(city) {
     if (!city) return null;
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
@@ -977,6 +992,9 @@ class WeatherManager extends BaseManager {
           `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`;
       }
 
+      const fullLocationName = String(locationName || "").trim();
+      const displayLocationName = this._extractCityLikeName(fullLocationName);
+
       // Try to derive reasonable current values when API uses different field names
       const hourly = data.hourly || {};
       const pickNearestHourly = (arr) => {
@@ -1039,7 +1057,8 @@ class WeatherManager extends BaseManager {
         weatherCode: derivedWeatherCode,
         unit: unit,
         windUnit: windUnit,
-        location: locationName,
+        location: displayLocationName,
+        locationFull: fullLocationName || displayLocationName,
       };
 
       this.dailyForecast = data.daily || null;
@@ -1201,7 +1220,7 @@ class WeatherManager extends BaseManager {
       this.weatherDesc.textContent = weatherInfo.desc;
     }
 
-    this.setWeatherLocationText(weather.location);
+    this.setWeatherLocationText(weather.location, weather.locationFull);
 
     if (this.weatherFeelsLike) {
       this.weatherFeelsLike.textContent =
@@ -1230,11 +1249,12 @@ class WeatherManager extends BaseManager {
     this.renderHourlyChart();
   }
 
-  setWeatherLocationText(locationText) {
+  setWeatherLocationText(locationText, tooltipText = null) {
     if (!this.weatherLocation) return;
 
-    const fullText = String(locationText || "").trim();
-    this.weatherLocation.textContent = fullText;
+    const displayText = String(locationText || "").trim();
+    const fullText = String(tooltipText || displayText).trim();
+    this.weatherLocation.textContent = displayText;
 
     if (fullText) {
       this.weatherLocation.setAttribute("data-full-location", fullText);

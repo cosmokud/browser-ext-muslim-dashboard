@@ -669,16 +669,20 @@ class PocketQuranManager extends BaseManager {
     this._isAutoplay = false;
     this._isAutoScroll = false;
     this._isLooping = false;
+    this._isSurahLooping = false;
     this._volume = 1;
     this._playingAyah = null;
     this._reciterModal = null;
     this._headerControlsBox = null;
     this._recitationFloatingEnabled = true;
+    this._recitationAutoDockOnVisible = true;
     this._recitationFloatingAppearance = "opaque";
     this._recitationFloatingMode = false;
     this._recitationFloatingModeReason = null;
     this._recitationFloatingManualOnly = false;
     this._recitationVisibilityObserver = null;
+    this._recitationAutoDockObserver = null;
+    this._recitationAutoDockAwaitingReturn = false;
     this._recitationFloatingPosition = null;
     this._recitationFloatingDrag = null;
 
@@ -2616,9 +2620,12 @@ class PocketQuranManager extends BaseManager {
     this._activeReciterId = pq.reciterId || 7; // Default: Mishary Rashid Alafasy
     this._volume = this.clampNumber(pq.reciterVolume, 0, 1, 1);
     this._isLooping = pq.reciterLoop || false;
+    this._isSurahLooping = pq.reciterSurahLoop || false;
     this._isAutoplay = pq.reciterAutoplay || false;
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationAutoDockOnVisible =
+      pq.recitationAutoDockOnVisible !== false;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
@@ -3243,6 +3250,11 @@ class PocketQuranManager extends BaseManager {
         // Fallback: normal async path (fetches metadata if needed)
         this.playAyah(surah, nextAyah);
       } else {
+        if (this._isSurahLooping) {
+          this.playAyah(surah, 1, { forceRestart: true });
+          return;
+        }
+
         // End of surah — stop audio but keep autoplay preference enabled.
         this.finishPlaybackAtSurahEnd();
       }
@@ -3311,6 +3323,15 @@ class PocketQuranManager extends BaseManager {
   }
 
   /**
+   * Toggle surah loop mode.
+   */
+  toggleSurahLoop() {
+    this._isSurahLooping = !this._isSurahLooping;
+    this.persistPocketQuranSettings({ reciterSurahLoop: this._isSurahLooping });
+    this.updatePlaybackUI();
+  }
+
+  /**
    * Toggle autoplay mode.
    */
   toggleAutoplay() {
@@ -3359,6 +3380,8 @@ class PocketQuranManager extends BaseManager {
     const pq = normalized?.pocketQuran || {};
 
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled !== false;
+    this._recitationAutoDockOnVisible =
+      pq.recitationAutoDockOnVisible !== false;
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
@@ -3372,6 +3395,12 @@ class PocketQuranManager extends BaseManager {
     } else if (this._headerControlsBox && !this._recitationFloatingMode) {
       this.watchRecitationControlsVisibility();
       this.maybeAutoFloatRecitationControls();
+    }
+
+    if (this._recitationFloatingMode && this._recitationAutoDockOnVisible) {
+      this.watchRecitationAutoDockVisibility();
+    } else {
+      this.unwatchRecitationAutoDockVisibility();
     }
 
     this.syncRecitationFloatingAppearanceClass();
@@ -3458,6 +3487,63 @@ class PocketQuranManager extends BaseManager {
     if (this._recitationVisibilityObserver) {
       this._recitationVisibilityObserver.disconnect();
     }
+  }
+
+  ensureRecitationAutoDockObserver() {
+    if (this._recitationAutoDockObserver) return;
+    if (typeof IntersectionObserver !== "function") return;
+
+    this._recitationAutoDockObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = Array.isArray(entries) ? entries[0] : null;
+        if (!entry || !this._headerControlsBox || !this._recitationFloatingMode) {
+          return;
+        }
+
+        const isVisible =
+          entry.isIntersecting === true && entry.intersectionRatio >= 0.2;
+
+        if (!isVisible) {
+          this._recitationAutoDockAwaitingReturn = true;
+          return;
+        }
+
+        if (
+          this._recitationAutoDockOnVisible &&
+          this._recitationAutoDockAwaitingReturn
+        ) {
+          this.disableRecitationFloating({ preserveManualOnly: true });
+        }
+      },
+      {
+        threshold: [0, 0.2, 0.4, 0.6, 1],
+      },
+    );
+  }
+
+  watchRecitationAutoDockVisibility() {
+    if (!this._recitationFloatingMode || !this._recitationAutoDockOnVisible) {
+      return;
+    }
+
+    const target = this.card?.querySelector(".pocket-quran-header") || this.card;
+    if (!target) return;
+
+    this.ensureRecitationAutoDockObserver();
+    if (!this._recitationAutoDockObserver) return;
+
+    this._recitationAutoDockObserver.disconnect();
+    this._recitationAutoDockObserver.observe(target);
+
+    this._recitationAutoDockAwaitingReturn =
+      !this.isElementMeaningfullyVisible(target);
+  }
+
+  unwatchRecitationAutoDockVisibility() {
+    if (this._recitationAutoDockObserver) {
+      this._recitationAutoDockObserver.disconnect();
+    }
+    this._recitationAutoDockAwaitingReturn = false;
   }
 
   maybeAutoFloatRecitationControls() {
@@ -3677,6 +3763,9 @@ class PocketQuranManager extends BaseManager {
       this._recitationFloatingModeReason = source;
       this.syncRecitationFloatingAppearanceClass();
       this.positionRecitationFloatingPanel();
+      if (this._recitationAutoDockOnVisible) {
+        this.watchRecitationAutoDockVisibility();
+      }
       this.updateRecitationFloatingButtons();
       return;
     }
@@ -3696,6 +3785,11 @@ class PocketQuranManager extends BaseManager {
 
     this.syncRecitationFloatingAppearanceClass();
     this.positionRecitationFloatingPanel();
+    if (this._recitationAutoDockOnVisible) {
+      this.watchRecitationAutoDockVisibility();
+    } else {
+      this.unwatchRecitationAutoDockVisibility();
+    }
     this.updateRecitationFloatingButtons();
   }
 
@@ -3709,6 +3803,7 @@ class PocketQuranManager extends BaseManager {
     );
     this._headerControlsBox.style.removeProperty("left");
     this._headerControlsBox.style.removeProperty("top");
+    this.unwatchRecitationAutoDockVisibility();
 
     this._recitationFloatingMode = false;
     this._recitationFloatingModeReason = null;
@@ -3858,17 +3953,17 @@ class PocketQuranManager extends BaseManager {
     const controlsBox = document.createElement("div");
     controlsBox.className = "pq-recitation-controls";
     controlsBox.innerHTML = `
-      <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
-        <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
-        <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </div>
       <div class="pq-recitation-info">
         <span class="pq-recitation-ayah">${this.formatRecitationAyahLabel(
           this._playingAyah?.surah ?? this._activeSurah,
           this._playingAyah?.ayah ?? this._activeAyah ?? 1,
         )}</span>
+        <div class="pq-recitation-floating-actions" aria-label="Recitation floating actions">
+          <button type="button" class="pq-recitation-btn pq-recitation-float-toggle-btn" title="Detach recitation controls" aria-label="Detach recitation controls" aria-pressed="false">↗</button>
+          <button type="button" class="pq-recitation-close-btn pq-recitation-btn pq-stop-btn" title="Close" aria-label="Close recitation controls">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
         <span class="pq-recitation-reciter">${this.getActiveReciterName()}</span>
       </div>
       <div class="pq-recitation-buttons">
@@ -3896,7 +3991,12 @@ class PocketQuranManager extends BaseManager {
             this._volume * 100,
           )}" />
         </div>
-        <button type="button" class="pq-recitation-btn pq-loop-btn ${
+        <button type="button" class="pq-recitation-btn pq-loop-btn pq-loop-surah-btn ${
+          this._isSurahLooping ? "active" : ""
+        }" title="Loop surah">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/><path fill="currentColor" d="M17.4 3.2h3.4v1.6H19v1.8h-1.6z"/></svg>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-loop-btn pq-loop-ayah-btn ${
           this._isLooping ? "active" : ""
         }" title="Loop current ayah">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
@@ -3943,8 +4043,11 @@ class PocketQuranManager extends BaseManager {
       .querySelector(".pq-recitation-buttons .pq-stop-btn")
       .addEventListener("click", () => this.stopPlayback());
     controlsBox
-      .querySelector(".pq-loop-btn")
+      .querySelector(".pq-loop-ayah-btn")
       .addEventListener("click", () => this.toggleLoop());
+    controlsBox
+      .querySelector(".pq-loop-surah-btn")
+      .addEventListener("click", () => this.toggleSurahLoop());
     controlsBox
       .querySelector(".pq-autoplay-btn")
       .addEventListener("click", () => this.toggleAutoplay());
@@ -4013,6 +4116,7 @@ class PocketQuranManager extends BaseManager {
    */
   hideHeaderControls() {
     this.unwatchRecitationControlsVisibility();
+    this.unwatchRecitationAutoDockVisibility();
     this.stopRecitationFloatingDrag();
 
     if (this._headerControlsBox) {
@@ -4052,9 +4156,16 @@ class PocketQuranManager extends BaseManager {
           : '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
       }
 
-      const loopBtn = this._headerControlsBox.querySelector(".pq-loop-btn");
-      if (loopBtn) {
-        loopBtn.classList.toggle("active", this._isLooping);
+      const loopAyahBtn =
+        this._headerControlsBox.querySelector(".pq-loop-ayah-btn");
+      if (loopAyahBtn) {
+        loopAyahBtn.classList.toggle("active", this._isLooping);
+      }
+
+      const loopSurahBtn =
+        this._headerControlsBox.querySelector(".pq-loop-surah-btn");
+      if (loopSurahBtn) {
+        loopSurahBtn.classList.toggle("active", this._isSurahLooping);
       }
 
       const autoplayBtn =
