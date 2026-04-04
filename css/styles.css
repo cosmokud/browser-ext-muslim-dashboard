@@ -285,6 +285,7 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
     .fasting-bar__fill,
     .fasting-subtitle--recommendation,
     .fasting-subtitle--forbidden,
+    .pq-ayah-play-btn.playing,
     .pq-skeleton-shimmer::after,
     .location-display .location-icon,
     .weather-icon.weather-anim-sunny,
@@ -318,6 +319,12 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   )::before {
   -webkit-filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
   filter: blur(calc(36px * var(--ui-blur-multiplier, 1)));
+}
+
+html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
+  .pq-recitation-controls {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* App-wide theme-aware scrollbars */
