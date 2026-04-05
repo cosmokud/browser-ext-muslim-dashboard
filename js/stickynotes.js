@@ -62,6 +62,10 @@ class StickyNotesManager {
       { name: "Kraft Paper", bg: "rgba(232, 209, 164, 0.95)", text: "#3c2f18" },
       { name: "Sticky Blue", bg: "rgba(77, 137, 217, 0.95)", text: "#ffffff" },
       { name: "Slate", bg: "rgba(206, 213, 224, 0.95)", text: "#243243" },
+      { name: "Coral Pop", bg: "rgba(255, 154, 138, 0.95)", text: "#40241b" },
+      { name: "Neon Lime", bg: "rgba(210, 251, 112, 0.95)", text: "#2a3a0f" },
+      { name: "Teal Wave", bg: "rgba(128, 226, 205, 0.95)", text: "#123a33" },
+      { name: "Violet Pop", bg: "rgba(193, 168, 246, 0.95)", text: "#2f2550" },
       {
         name: "Custom",
         bg: "linear-gradient(135deg, rgba(255, 246, 165, 0.95), rgba(183, 244, 209, 0.95), rgba(168, 217, 255, 0.95))",
