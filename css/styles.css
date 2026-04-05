@@ -3439,6 +3439,25 @@ textarea.notes-editor:focus {
   outline-offset: 2px;
 }
 
+/* Auto-hide floating action buttons until card hover/focus on desktop pointers. */
+@media (hover: hover) and (pointer: fine) {
+  .floating-card .floating-collapse-btn,
+  .floating-card .floating-reset-size-btn {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px) scale(0.96);
+  }
+
+  .floating-card:hover .floating-collapse-btn,
+  .floating-card:hover .floating-reset-size-btn,
+  .floating-card:focus-within .floating-collapse-btn,
+  .floating-card:focus-within .floating-reset-size-btn {
+    opacity: 0.85;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .floating-card.floating-collapse-out,
   .tiling-collapse-in {

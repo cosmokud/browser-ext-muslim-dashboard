@@ -1090,6 +1090,13 @@ class GridLayoutManager {
         }
       });
 
+      // Keep empty rows from reserving vertical gap when all row items are hidden.
+      if (visibleItems.length === 0) {
+        rowWrapper.style.display = "none";
+      } else {
+        rowWrapper.style.display = "";
+      }
+
       fragment.appendChild(rowWrapper);
     });
 
