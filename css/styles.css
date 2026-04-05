@@ -520,6 +520,79 @@ body.sidebar-mode .main-container {
   width: 100%;
 }
 
+/* Sidebar width resizing handles (Layout Editor Mode only) */
+.sidebar-slot > .grid-draggable.sidebar-resizable-host {
+  position: relative;
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  cursor: ew-resize;
+  touch-action: none;
+  transition: opacity var(--transition-fast);
+}
+
+.sidebar-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--accent-gold) 55%, transparent);
+}
+
+.sidebar-resize-handle-left {
+  left: 0;
+}
+
+.sidebar-resize-handle-left::before {
+  left: 4px;
+}
+
+.sidebar-resize-handle-right {
+  right: 0;
+}
+
+.sidebar-resize-handle-right::before {
+  right: 4px;
+}
+
+body.grid-edit-mode
+  .sidebar-zone
+  .sidebar-slot
+  > .grid-draggable.sidebar-detached
+  > .sidebar-resize-handle {
+  opacity: 0.48;
+  pointer-events: auto;
+}
+
+body.grid-edit-mode
+  .sidebar-zone
+  .sidebar-slot
+  > .grid-draggable.sidebar-detached:hover
+  > .sidebar-resize-handle,
+body.grid-edit-mode
+  .sidebar-zone
+  .sidebar-slot
+  > .grid-draggable.sidebar-detached.sidebar-resizing
+  > .sidebar-resize-handle {
+  opacity: 0.85;
+}
+
+body.grid-edit-mode
+  .sidebar-zone
+  .sidebar-slot
+  > .grid-draggable.sidebar-detached.sidebar-resizing {
+  transition: none !important;
+}
+
 /* Drop target highlight (set by JS during drag) */
 .sidebar-zone.sidebar-drop-target {
   outline: 2px dashed rgba(255, 255, 255, 0.35);

@@ -45,6 +45,8 @@ class GridLayoutManager {
     this.viewportResizeTimer = null;
     this.lastViewportWidth = 0;
     this.containerResizeObserver = null;
+    this.isSidebarResizing = false;
+    this.sidebarResizeState = null;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -117,6 +119,8 @@ class GridLayoutManager {
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleWheel = this.handleWheel.bind(this);
     this.handleViewportResize = this.handleViewportResize.bind(this);
+    this.handleSidebarResizeDoubleClick =
+      this.handleSidebarResizeDoubleClick.bind(this);
   }
 
   /**
@@ -173,6 +177,191 @@ class GridLayoutManager {
 
   getSidebarStateStorageKey() {
     return "sidebarModeSidebars";
+  }
+
+  getSidebarWidthStorageKey() {
+    return "sidebarModeComponentWidths";
+  }
+
+  getSidebarWidthMapFromSettings() {
+    const settings = this.storage.getSettings();
+    const raw = settings[this.getSidebarWidthStorageKey()];
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return {};
+    }
+
+    const normalized = {};
+    Object.entries(raw).forEach(([id, width]) => {
+      const value = Number(width);
+      if (!id || !Number.isFinite(value) || value <= 0) return;
+      normalized[id] = Math.round(value);
+    });
+
+    return normalized;
+  }
+
+  saveSidebarWidthMapToSettings(widthMap) {
+    const settings = this.storage.getSettings();
+    settings[this.getSidebarWidthStorageKey()] = { ...(widthMap || {}) };
+    this.storage.saveSettings(settings);
+  }
+
+  getSidebarComponentId(el) {
+    if (!el) return "";
+    return String(el.dataset.gridId || el.id || "").trim();
+  }
+
+  getSavedSidebarComponentWidth(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return null;
+
+    const widthMap = this.getSidebarWidthMapFromSettings();
+    const value = Number(widthMap[id]);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  setSavedSidebarComponentWidth(componentId, widthPx) {
+    const id = String(componentId || "").trim();
+    const value = Number(widthPx);
+    if (!id || !Number.isFinite(value) || value <= 0) return;
+
+    const widthMap = this.getSidebarWidthMapFromSettings();
+    widthMap[id] = Math.round(value);
+    this.saveSidebarWidthMapToSettings(widthMap);
+  }
+
+  clearSavedSidebarComponentWidth(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return;
+
+    const widthMap = this.getSidebarWidthMapFromSettings();
+    if (!Object.prototype.hasOwnProperty.call(widthMap, id)) return;
+
+    delete widthMap[id];
+    this.saveSidebarWidthMapToSettings(widthMap);
+  }
+
+  getSidebarMinResizeWidth(el) {
+    const componentId = this.getSidebarComponentId(el);
+    const configuredMin = Number(this.componentMinWidths[componentId]);
+    const fallbackMin = 220;
+    if (!Number.isFinite(configuredMin) || configuredMin <= 0) {
+      return fallbackMin;
+    }
+
+    return Math.max(180, Math.min(420, Math.round(configuredMin)));
+  }
+
+  getSidebarMaxResizeWidth(el) {
+    if (!el) return this.getSidebarMinResizeWidth(el);
+
+    const slot = el.closest(".sidebar-slot");
+    const zone = slot ? slot.closest(".sidebar-zone") : null;
+    const slotWidth = Math.round((slot && slot.clientWidth) || 0);
+    const zoneWidth = Math.round((zone && zone.clientWidth) || 0);
+    const currentWidth = Math.round(el.getBoundingClientRect().width || 0);
+
+    return Math.max(
+      slotWidth,
+      zoneWidth,
+      currentWidth,
+      this.getSidebarMinResizeWidth(el),
+    );
+  }
+
+  applySidebarWidthToElement(el, widthPx, { persist = true } = {}) {
+    if (!el) return;
+
+    const width = Number(widthPx);
+    if (!Number.isFinite(width) || width <= 0) return;
+
+    const minWidth = this.getSidebarMinResizeWidth(el);
+    const maxWidth = this.getSidebarMaxResizeWidth(el);
+    const clampedWidth = Math.round(
+      Math.min(maxWidth, Math.max(minWidth, width)),
+    );
+
+    el.style.width = `${clampedWidth}px`;
+    el.style.maxWidth = `${clampedWidth}px`;
+    el.style.marginLeft = "auto";
+    el.style.marginRight = "auto";
+    el.classList.add("sidebar-custom-width");
+    el.dataset.sidebarCustomWidth = String(clampedWidth);
+
+    if (persist) {
+      const componentId = this.getSidebarComponentId(el);
+      if (componentId) {
+        this.setSavedSidebarComponentWidth(componentId, clampedWidth);
+      }
+    }
+  }
+
+  resetSidebarWidthForElement(el, { keepSaved = true } = {}) {
+    if (!el) return;
+
+    el.style.removeProperty("width");
+    el.style.removeProperty("max-width");
+    el.style.removeProperty("margin-left");
+    el.style.removeProperty("margin-right");
+    el.classList.remove("sidebar-custom-width");
+    delete el.dataset.sidebarCustomWidth;
+
+    if (!keepSaved) {
+      const componentId = this.getSidebarComponentId(el);
+      if (componentId) {
+        this.clearSavedSidebarComponentWidth(componentId);
+      }
+    }
+  }
+
+  applySavedSidebarWidthToElement(el) {
+    if (!el) return;
+
+    const componentId = this.getSidebarComponentId(el);
+    const savedWidth = this.getSavedSidebarComponentWidth(componentId);
+    if (savedWidth) {
+      this.applySidebarWidthToElement(el, savedWidth, { persist: false });
+      return;
+    }
+
+    this.resetSidebarWidthForElement(el, { keepSaved: true });
+  }
+
+  ensureSidebarResizeHandles(el) {
+    if (!el) return;
+    el.classList.add("sidebar-resizable-host");
+
+    const hasLeft = !!el.querySelector(":scope > .sidebar-resize-handle-left");
+    const hasRight = !!el.querySelector(
+      ":scope > .sidebar-resize-handle-right",
+    );
+
+    const makeHandle = (side) => {
+      const handle = document.createElement("div");
+      handle.className = `sidebar-resize-handle sidebar-resize-handle-${side}`;
+      handle.setAttribute("aria-hidden", "true");
+      return handle;
+    };
+
+    if (!hasLeft) {
+      el.appendChild(makeHandle("left"));
+    }
+    if (!hasRight) {
+      el.appendChild(makeHandle("right"));
+    }
+  }
+
+  removeSidebarResizeHandles(el) {
+    if (!el) return;
+
+    Array.from(el.querySelectorAll(":scope > .sidebar-resize-handle")).forEach(
+      (handle) => {
+        try {
+          handle.remove();
+        } catch (e) {}
+      },
+    );
+    el.classList.remove("sidebar-resizable-host", "sidebar-resizing");
   }
 
   loadLayoutForMode(mode) {
@@ -295,6 +484,8 @@ class GridLayoutManager {
         (slot) => {
           const child = slot.querySelector(":scope > .grid-draggable");
           if (child) {
+            this.resetSidebarWidthForElement(child, { keepSaved: true });
+            this.removeSidebarResizeHandles(child);
             child.classList.remove("sidebar-detached");
             this.grid.appendChild(child);
           }
@@ -329,6 +520,7 @@ class GridLayoutManager {
     el.style.flex = "";
     el.style.maxWidth = "";
     el.style.minWidth = "";
+    this.ensureSidebarResizeHandles(el);
 
     const slot = document.createElement("div");
     slot.className = "sidebar-slot";
@@ -341,6 +533,8 @@ class GridLayoutManager {
     } else {
       zone.appendChild(slot);
     }
+
+    this.applySavedSidebarWidthToElement(el);
 
     return true;
   }
@@ -1362,8 +1556,18 @@ class GridLayoutManager {
     const leftZone = document.getElementById("sidebarLeftZone");
     const rightZone = document.getElementById("sidebarRightZone");
     if (leftZone) leftZone.addEventListener("mousedown", this.handleMouseDown);
+    if (leftZone)
+      leftZone.addEventListener(
+        "dblclick",
+        this.handleSidebarResizeDoubleClick,
+      );
     if (rightZone)
       rightZone.addEventListener("mousedown", this.handleMouseDown);
+    if (rightZone)
+      rightZone.addEventListener(
+        "dblclick",
+        this.handleSidebarResizeDoubleClick,
+      );
 
     // Touch events
     this.grid.addEventListener("touchstart", this.handleTouchStart, {
@@ -1384,6 +1588,95 @@ class GridLayoutManager {
 
     // Keyboard support for accessibility
     document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  tryStartSidebarResizeFromMouseEvent(e) {
+    if (!this.isEditModeEnabled || this.isEditModeLocked) return false;
+
+    const handle = e.target?.closest?.(".sidebar-resize-handle");
+    if (!handle) return false;
+
+    const el = handle.closest(".grid-draggable.sidebar-detached");
+    if (!el || !el.closest(".sidebar-slot")) {
+      return false;
+    }
+
+    // Let dblclick handle width reset; don't start a second drag-resize.
+    if (e.detail >= 2) {
+      e.preventDefault();
+      e.stopPropagation();
+      return true;
+    }
+
+    const side = handle.classList.contains("sidebar-resize-handle-left")
+      ? "left"
+      : "right";
+    const rect = el.getBoundingClientRect();
+
+    this.isSidebarResizing = true;
+    this.sidebarResizeState = {
+      el,
+      side,
+      startX: e.clientX,
+      startWidth: rect.width,
+    };
+
+    el.classList.add("sidebar-resizing");
+    document.body.classList.add("sidebar-resizing");
+
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+
+  handleSidebarResizeDoubleClick(e) {
+    if (!this.isEditModeEnabled || this.isEditModeLocked) return;
+
+    const handle = e.target?.closest?.(".sidebar-resize-handle");
+    if (!handle) return;
+
+    const el = handle.closest(".grid-draggable.sidebar-detached");
+    if (!el) return;
+
+    this.resetSidebarWidthForElement(el, { keepSaved: false });
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  updateSidebarResize(clientX) {
+    if (!this.isSidebarResizing || !this.sidebarResizeState) return;
+
+    const { el, side, startX, startWidth } = this.sidebarResizeState;
+    if (!el || !el.isConnected) {
+      this.endSidebarResize();
+      return;
+    }
+
+    const delta = side === "right" ? clientX - startX : startX - clientX;
+    const nextWidth = startWidth + delta * 2;
+
+    this.applySidebarWidthToElement(el, nextWidth, { persist: false });
+  }
+
+  endSidebarResize() {
+    if (!this.isSidebarResizing || !this.sidebarResizeState) {
+      return false;
+    }
+
+    const { el } = this.sidebarResizeState;
+    if (el && el.isConnected) {
+      const finalWidth = Math.round(el.getBoundingClientRect().width || 0);
+      if (finalWidth > 0) {
+        this.applySidebarWidthToElement(el, finalWidth, { persist: true });
+      }
+      el.classList.remove("sidebar-resizing");
+    }
+
+    document.body.classList.remove("sidebar-resizing");
+    this.isSidebarResizing = false;
+    this.sidebarResizeState = null;
+    return true;
   }
 
   /**
@@ -1432,6 +1725,10 @@ class GridLayoutManager {
     // Only allow dragging when layout edit mode is enabled
     if (!this.isEditModeEnabled) return;
 
+    if (this.tryStartSidebarResizeFromMouseEvent(e)) {
+      return;
+    }
+
     const draggable = this.getDraggableFromTarget(e.target);
     if (!draggable) return;
 
@@ -1447,6 +1744,8 @@ class GridLayoutManager {
 
     // Only allow dragging when layout edit mode is enabled
     if (!this.isEditModeEnabled) return;
+
+    if (e.target?.closest?.(".sidebar-resize-handle")) return;
 
     const touch = e.touches[0];
     const draggable = this.getDraggableFromTarget(touch.target);
@@ -1587,6 +1886,12 @@ class GridLayoutManager {
    * Handle mouse move - update drag position
    */
   handleMouseMove(e) {
+    if (this.isSidebarResizing) {
+      this.updateSidebarResize(e.clientX);
+      e.preventDefault();
+      return;
+    }
+
     if (!this.isDragging) return;
     this.updateDrag(e.clientX, e.clientY);
   }
@@ -1939,6 +2244,11 @@ class GridLayoutManager {
    * Handle mouse up - end drag
    */
   handleMouseUp(e) {
+    if (this.isSidebarResizing) {
+      this.endSidebarResize();
+      return;
+    }
+
     if (!this.isDragging) return;
 
     // Ensure sidebar target is up-to-date at release time
@@ -2015,6 +2325,8 @@ class GridLayoutManager {
   finalizeDrop(targetRow, insertIndex) {
     if (!this.draggedItem || !this.placeholder) return;
 
+    const movedOutFromSidebar = !!this.sidebarDragOrigin;
+
     this.clearSidebarDropTarget();
 
     // Reset dragged item styles
@@ -2032,6 +2344,11 @@ class GridLayoutManager {
     targetRow.insertBefore(this.draggedItem, this.placeholder);
     this.placeholder.remove();
     this.placeholder = null;
+
+    if (movedOutFromSidebar) {
+      this.resetSidebarWidthForElement(this.draggedItem, { keepSaved: true });
+      this.removeSidebarResizeHandles(this.draggedItem);
+    }
 
     // Clean up empty rows and temporary rows
     this.grid.querySelectorAll(".grid-flex-row").forEach((row) => {
@@ -2295,6 +2612,11 @@ class GridLayoutManager {
    * Handle keyboard events for accessibility
    */
   handleKeyDown(e) {
+    if (e.key === "Escape" && this.isSidebarResizing) {
+      this.endSidebarResize();
+      return;
+    }
+
     // Escape cancels drag
     if (e.key === "Escape" && this.isDragging) {
       this.cancelDrag();
@@ -2379,6 +2701,7 @@ class GridLayoutManager {
       settings.gridLayoutSidebar = JSON.parse(JSON.stringify(defaultRows));
       settings.gridLayout = JSON.parse(JSON.stringify(defaultRows));
       settings[this.getSidebarStateStorageKey()] = { left: [], right: [] };
+      settings[this.getSidebarWidthStorageKey()] = {};
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore
@@ -2517,12 +2840,31 @@ class GridLayoutManager {
       this.grid.removeEventListener("mousedown", this.handleMouseDown);
       this.grid.removeEventListener("touchstart", this.handleTouchStart);
     }
+    const leftZone = document.getElementById("sidebarLeftZone");
+    const rightZone = document.getElementById("sidebarRightZone");
+    if (leftZone) {
+      leftZone.removeEventListener("mousedown", this.handleMouseDown);
+      leftZone.removeEventListener("touchstart", this.handleTouchStart);
+      leftZone.removeEventListener(
+        "dblclick",
+        this.handleSidebarResizeDoubleClick,
+      );
+    }
+    if (rightZone) {
+      rightZone.removeEventListener("mousedown", this.handleMouseDown);
+      rightZone.removeEventListener("touchstart", this.handleTouchStart);
+      rightZone.removeEventListener(
+        "dblclick",
+        this.handleSidebarResizeDoubleClick,
+      );
+    }
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
     document.removeEventListener("touchmove", this.handleTouchMove);
     document.removeEventListener("touchend", this.handleTouchEnd);
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("wheel", this.handleWheel);
+    document.body.classList.remove("sidebar-resizing");
   }
 }
 
