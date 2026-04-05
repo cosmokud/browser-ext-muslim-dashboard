@@ -26,7 +26,7 @@ class StickyNotesManager {
     this.cancelDeleteBtn = null;
     this.pendingDeleteId = null;
 
-    // Color presets for notes (first item is the default 'Glass' style matching other section cards)
+    // Color presets for notes (top-left remains the dashboard-linked glass default)
     this.colorPresets = [
       {
         name: "Glass (Default)",
@@ -36,20 +36,35 @@ class StickyNotesManager {
         blur: 20,
         transparency: 1,
       },
-      { name: "Yellow", bg: "rgba(255, 235, 59, 0.95)", text: "#333" },
-      { name: "Pink", bg: "rgba(255, 182, 193, 0.95)", text: "#333" },
-      { name: "Blue", bg: "rgba(135, 206, 250, 0.95)", text: "#333" },
-      { name: "Green", bg: "rgba(144, 238, 144, 0.95)", text: "#333" },
-      { name: "Purple", bg: "rgba(221, 160, 221, 0.95)", text: "#333" },
-      { name: "Orange", bg: "rgba(255, 200, 124, 0.95)", text: "#333" },
-      { name: "Coral", bg: "rgba(255, 127, 80, 0.95)", text: "#fff" },
-      { name: "Teal", bg: "rgba(64, 224, 208, 0.95)", text: "#333" },
-      { name: "Mint", bg: "rgba(209, 237, 223, 0.95)", text: "#333" },
-      { name: "Lavender", bg: "rgba(234, 220, 255, 0.95)", text: "#333" },
-      { name: "Midnight", bg: "rgba(12, 16, 30, 0.95)", text: "#fff" },
-      { name: "Sand", bg: "rgba(245, 238, 224, 0.95)", text: "#333" },
-      { name: "Glass Dark", bg: "rgba(30, 30, 30, 0.85)", text: "#fff" },
-      { name: "Glass Light", bg: "rgba(255, 255, 255, 0.25)", text: "#fff" },
+      { name: "Neon Rose", bg: "rgba(255, 126, 185, 0.95)", text: "#2b2030" },
+      { name: "Candy Pink", bg: "rgba(255, 101, 163, 0.95)", text: "#2b1b2c" },
+      { name: "Aqua Pop", bg: "rgba(122, 252, 255, 0.95)", text: "#12363a" },
+      {
+        name: "Butter Cream",
+        bg: "rgba(254, 255, 156, 0.95)",
+        text: "#3a3415",
+      },
+      { name: "Highlighter", bg: "rgba(255, 247, 64, 0.95)", text: "#3a2f07" },
+      { name: "Mint Breeze", bg: "rgba(167, 248, 239, 0.95)", text: "#123737" },
+      { name: "Lime Glow", bg: "rgba(247, 250, 109, 0.95)", text: "#35320d" },
+      { name: "Soft Lilac", bg: "rgba(213, 179, 255, 0.95)", text: "#2e2440" },
+      { name: "Sun Gold", bg: "rgba(255, 208, 0, 0.95)", text: "#3b2b00" },
+      { name: "Blush Pop", bg: "rgba(240, 134, 190, 0.95)", text: "#3a2333" },
+      { name: "Pistachio", bg: "rgba(205, 252, 147, 0.95)", text: "#23370f" },
+      { name: "Bubblegum", bg: "rgba(255, 126, 205, 0.95)", text: "#3a2134" },
+      { name: "Sky Mist", bg: "rgba(113, 215, 255, 0.95)", text: "#123248" },
+      { name: "Orchid Tint", bg: "rgba(206, 129, 255, 0.95)", text: "#2f1f43" },
+      { name: "Lemon Tint", bg: "rgba(255, 246, 139, 0.95)", text: "#3a3213" },
+      { name: "Tape Mauve", bg: "rgba(219, 150, 185, 0.95)", text: "#332338" },
+      { name: "Sticky Blue", bg: "rgba(22, 92, 175, 0.95)", text: "#ffffff" },
+      { name: "Graph Teal", bg: "rgba(0, 200, 195, 0.95)", text: "#083534" },
+      {
+        name: "Custom",
+        bg: "linear-gradient(135deg, rgba(255, 126, 185, 0.95), rgba(122, 252, 255, 0.95), rgba(255, 247, 64, 0.95))",
+        text: "#2b2030",
+        custom: true,
+        defaultHex: "#ff7eb9",
+      },
     ];
 
     this.init();
@@ -437,14 +452,21 @@ class StickyNotesManager {
                   (c, i) => `
                 <button class="color-preset ${
                   note.color.name === c.name ? "active" : ""
-                }"
+                } ${c.custom ? "color-preset-custom" : ""}"
                   data-color-index="${i}"
-                        style="background: ${this.getColorPresetSwatchBackground(c)}"
+                        style="background: ${this.getColorPresetSwatchBackground(c, note)}"
                         title="${c.name}"></button>
               `,
                 )
                 .join("")}
             </div>
+            <input
+              class="color-preset-custom-input"
+              type="color"
+              value="${this.getNoteCustomColorHex(note)}"
+              aria-label="Pick custom sticky note color"
+              tabindex="-1"
+            />
           </div>
           <div class="sticky-note-dropdown-divider"></div>
           <div
@@ -659,6 +681,89 @@ class StickyNotesManager {
     return Math.min(max, Math.max(min, numeric));
   }
 
+  normalizeHexColor(value, fallback = "#ff7eb9") {
+    const normalize = (input) => {
+      if (typeof input !== "string") return null;
+      const match = input.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+      if (!match) return null;
+
+      let raw = match[1].toLowerCase();
+      if (raw.length === 3) {
+        raw = raw
+          .split("")
+          .map((ch) => ch + ch)
+          .join("");
+      }
+      return `#${raw}`;
+    };
+
+    return normalize(value) || normalize(fallback) || "#ff7eb9";
+  }
+
+  extractHexFromColorString(value) {
+    if (typeof value !== "string") return null;
+    const raw = value.trim();
+
+    const hexMatch = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+    if (hexMatch) {
+      return this.normalizeHexColor(raw);
+    }
+
+    const rgbMatch = raw.match(
+      /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([\d.]+))?\s*\)$/i,
+    );
+    if (!rgbMatch) return null;
+
+    const toHex = (num) =>
+      this.clampNumber(Number(num), 0, 255, 0).toString(16).padStart(2, "0");
+
+    return `#${toHex(rgbMatch[1])}${toHex(rgbMatch[2])}${toHex(rgbMatch[3])}`;
+  }
+
+  hexToRgb(hex) {
+    const normalized = this.normalizeHexColor(hex);
+    const raw = normalized.slice(1);
+    return {
+      r: parseInt(raw.slice(0, 2), 16),
+      g: parseInt(raw.slice(2, 4), 16),
+      b: parseInt(raw.slice(4, 6), 16),
+    };
+  }
+
+  getReadableTextColorForHex(hex) {
+    const { r, g, b } = this.hexToRgb(hex);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 150 ? "#1f1f1f" : "#ffffff";
+  }
+
+  getNoteCustomColorHex(note) {
+    const customPreset = this.colorPresets.find((preset) => preset?.custom);
+    const fallbackHex = this.normalizeHexColor(customPreset?.defaultHex);
+
+    if (note?.color?.customHex) {
+      return this.normalizeHexColor(note.color.customHex, fallbackHex);
+    }
+
+    const derivedHex = this.extractHexFromColorString(note?.color?.bg);
+    if (derivedHex) {
+      return this.normalizeHexColor(derivedHex, fallbackHex);
+    }
+
+    return fallbackHex;
+  }
+
+  buildCustomColorPreset(hex) {
+    const normalizedHex = this.normalizeHexColor(hex);
+    const { r, g, b } = this.hexToRgb(normalizedHex);
+    return {
+      name: "Custom",
+      bg: `rgba(${r}, ${g}, ${b}, 0.95)`,
+      text: this.getReadableTextColorForHex(normalizedHex),
+      custom: true,
+      customHex: normalizedHex,
+    };
+  }
+
   getDashboardGlassEnabled() {
     try {
       const themes = window.dashboard?.themes;
@@ -715,7 +820,14 @@ class StickyNotesManager {
     }
   }
 
-  getColorPresetSwatchBackground(color) {
+  getColorPresetSwatchBackground(color, note = null) {
+    if (color?.custom) {
+      if (note?.color?.custom === true && note?.color?.bg) {
+        return note.color.bg;
+      }
+      return color?.bg;
+    }
+
     if (!color?.glass) {
       return color?.bg;
     }
@@ -1240,11 +1352,46 @@ class StickyNotesManager {
     }
 
     // Color preset selection
+    const customColorInput = dropdown.querySelector(
+      ".color-preset-custom-input",
+    );
+    if (customColorInput) {
+      customColorInput.addEventListener("click", (e) => e.stopPropagation());
+      customColorInput.addEventListener("change", (e) => {
+        e.stopPropagation();
+        this.updateNoteColor(
+          note.id,
+          this.buildCustomColorPreset(e.target.value),
+        );
+      });
+    }
+
     dropdown.querySelectorAll(".color-preset").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const index = parseInt(btn.dataset.colorIndex);
-        this.updateNoteColor(note.id, this.colorPresets[index]);
+        const index = parseInt(btn.dataset.colorIndex, 10);
+        const preset = this.colorPresets[index];
+        if (!preset) return;
+
+        if (preset.custom) {
+          if (!customColorInput) return;
+
+          const currentNote = this.notes.find((n) => n.id === note.id) || note;
+          customColorInput.value = this.getNoteCustomColorHex(currentNote);
+
+          try {
+            if (typeof customColorInput.showPicker === "function") {
+              customColorInput.showPicker();
+            } else {
+              customColorInput.click();
+            }
+          } catch (pickerError) {
+            customColorInput.click();
+          }
+          return;
+        }
+
+        this.updateNoteColor(note.id, preset);
       });
     });
 
@@ -1605,14 +1752,17 @@ class StickyNotesManager {
   updateNoteColor(noteId, color) {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
-      note.color = color;
+      note.color =
+        color && typeof color === "object"
+          ? { ...color }
+          : { ...this.colorPresets[0] };
 
       // If this preset indicates a glass style, apply blur-menu defaults.
-      if (color.glass) {
+      if (note.color?.glass) {
         note.blurState = "dashboard";
         note.blurPowerEnabled = false;
         note.blurPower = this.clampNumber(
-          Math.round((this.clampNumber(color.blur, 0, 20, 20) / 20) * 200),
+          Math.round((this.clampNumber(note.color.blur, 0, 20, 20) / 20) * 200),
           0,
           200,
           note.blurPower || 100,
@@ -1620,7 +1770,7 @@ class StickyNotesManager {
         note.glassOpacity = this.clampNumber(
           Math.round(
             this.clampNumber(
-              color.transparency,
+              note.color.transparency,
               0.2,
               1,
               note.transparency || 1,
@@ -1633,7 +1783,7 @@ class StickyNotesManager {
       }
 
       this.applyNoteBlurState(noteId, { save: false });
-      this.updateColorPresetUI(noteId, color);
+      this.updateColorPresetUI(noteId, note.color);
 
       this.saveNotes();
     }
@@ -1645,13 +1795,28 @@ class StickyNotesManager {
   updateColorPresetUI(noteId, color) {
     const noteEl = document.getElementById(`sticky-note-${noteId}`);
     if (noteEl) {
+      const note = this.notes.find((n) => n.id === noteId);
       noteEl.querySelectorAll(".color-preset").forEach((btn) => {
-        const index = parseInt(btn.dataset.colorIndex);
-        btn.classList.toggle(
-          "active",
-          this.colorPresets[index].name === color.name,
-        );
+        const index = parseInt(btn.dataset.colorIndex, 10);
+        const preset = this.colorPresets[index];
+        if (!preset) return;
+
+        btn.classList.toggle("active", preset.name === color?.name);
+
+        if (preset.custom) {
+          btn.style.background = this.getColorPresetSwatchBackground(
+            preset,
+            note,
+          );
+        }
       });
+
+      const customColorInput = noteEl.querySelector(
+        ".color-preset-custom-input",
+      );
+      if (customColorInput && note) {
+        customColorInput.value = this.getNoteCustomColorHex(note);
+      }
     }
   }
 

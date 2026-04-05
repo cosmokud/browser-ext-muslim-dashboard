@@ -1182,6 +1182,28 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   contain: layout style;
 }
 
+#quoteSection.floating-card {
+  display: flex;
+  align-items: stretch;
+}
+
+#quoteSection.floating-card .quote-container {
+  width: 100%;
+  min-height: 100%;
+  flex: 1 1 auto;
+}
+
+#quoteSection.floating-card .quote-container:not(.quote-style-banner) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#quoteSection.floating-card .quote-container.quote-style-banner {
+  align-content: center;
+}
+
 /* Animation that preserves backdrop-filter visibility during entrance.
    Uses a very small initial opacity to ensure blur renders immediately,
    then fades in smoothly. This avoids the "blur pop" on page load. */
@@ -10904,6 +10926,32 @@ html[data-theme-mode="light"]
 .color-preset.active {
   border-color: var(--accent-gold);
   box-shadow: 0 0 0 2px var(--accent-gold);
+}
+
+.color-preset-custom {
+  position: relative;
+  overflow: hidden;
+}
+
+.color-preset-custom::after {
+  content: "+";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.color-preset-custom-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .sticky-note-dropdown-divider {
