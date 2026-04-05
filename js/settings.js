@@ -5317,11 +5317,7 @@ class SettingsManager extends BaseManager {
     }
 
     const settings = this.storage.getSettings();
-    const currentDisplayedBgUrl =
-      this.backgrounds &&
-      typeof this.backgrounds.getCurrentImageUrl === "function"
-        ? this.backgrounds.getCurrentImageUrl()
-        : "";
+    const previousBackgroundSyncState = this.getBackgroundSyncState(settings);
 
     // Location settings
     const locationRadio = document.querySelector(
@@ -5571,7 +5567,16 @@ class SettingsManager extends BaseManager {
     // Apply changes live
     this.applySettings(settings);
 
-    if (source === "manual") {
+    const shouldSyncBackgroundAfterManualSave =
+      source === "manual" &&
+      this.didBackgroundSettingsChange(previousBackgroundSyncState, settings);
+
+    if (shouldSyncBackgroundAfterManualSave) {
+      const currentDisplayedBgUrl =
+        this.backgrounds &&
+        typeof this.backgrounds.getCurrentImageUrl === "function"
+          ? this.backgrounds.getCurrentImageUrl()
+          : "";
       this.syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl);
     }
 
@@ -5584,6 +5589,51 @@ class SettingsManager extends BaseManager {
     }
 
     return true;
+  }
+
+  getBackgroundSyncState(settings = {}) {
+    const category =
+      typeof settings.bgCategory === "string" && settings.bgCategory
+        ? settings.bgCategory
+        : "nature";
+    const isCustomInterval = settings.bgInterval === "custom";
+
+    if (isCustomInterval) {
+      return {
+        bgCategory: category,
+        bgInterval: "custom",
+        bgIntervalCustom: this.clampNumber(
+          parseInt(settings.bgIntervalCustom, 10),
+          1,
+          10080,
+          60,
+        ),
+      };
+    }
+
+    return {
+      bgCategory: category,
+      bgInterval: this.clampNumber(
+        parseInt(settings.bgInterval, 10),
+        1,
+        10080,
+        60,
+      ),
+      bgIntervalCustom: null,
+    };
+  }
+
+  didBackgroundSettingsChange(previousState, nextSettings) {
+    if (!previousState || typeof previousState !== "object") {
+      return true;
+    }
+
+    const nextState = this.getBackgroundSyncState(nextSettings);
+    return (
+      previousState.bgCategory !== nextState.bgCategory ||
+      previousState.bgInterval !== nextState.bgInterval ||
+      previousState.bgIntervalCustom !== nextState.bgIntervalCustom
+    );
   }
 
   syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl = "") {
