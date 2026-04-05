@@ -243,10 +243,7 @@ class QuotesManager extends BaseManager {
       const autoPlayState = autoPlayEnabled ? "on" : "off";
 
       pauseBtn.innerHTML = autoPlayIcon;
-      pauseBtn.setAttribute(
-        "aria-pressed",
-        autoPlayEnabled ? "true" : "false",
-      );
+      pauseBtn.setAttribute("aria-pressed", autoPlayEnabled ? "true" : "false");
       pauseBtn.setAttribute(
         "aria-label",
         `Toggle quote auto play (currently ${autoPlayState})`,
