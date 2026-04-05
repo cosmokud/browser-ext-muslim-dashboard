@@ -172,11 +172,27 @@ class QuotesManager extends BaseManager {
     }
   }
 
-  createQuoteControlButtons() {
+  getQuoteTopActionsContainer() {
     const container = this.quoteContainer;
-    if (!container) return;
+    if (!container) return null;
 
-    let pauseBtn = container.querySelector(".quote-pause-btn");
+    let actionsGroup = container.querySelector(".quote-top-actions");
+    if (!actionsGroup) {
+      actionsGroup = document.createElement("div");
+      actionsGroup.className = "quote-top-actions";
+      actionsGroup.setAttribute("role", "group");
+      actionsGroup.setAttribute("aria-label", "Quote controls");
+      container.appendChild(actionsGroup);
+    }
+
+    return actionsGroup;
+  }
+
+  createQuoteControlButtons() {
+    const actionsGroup = this.getQuoteTopActionsContainer();
+    if (!actionsGroup) return;
+
+    let pauseBtn = this.quoteContainer?.querySelector(".quote-pause-btn");
     if (!pauseBtn) {
       pauseBtn = document.createElement("button");
       pauseBtn.type = "button";
@@ -185,10 +201,12 @@ class QuotesManager extends BaseManager {
         e.preventDefault();
         this.setQuoteAutoRotatePaused(!this.quoteAutoRotatePaused);
       });
-      container.appendChild(pauseBtn);
+    }
+    if (pauseBtn.parentElement !== actionsGroup) {
+      actionsGroup.appendChild(pauseBtn);
     }
 
-    let shuffleBtn = container.querySelector(".quote-shuffle-btn");
+    let shuffleBtn = this.quoteContainer?.querySelector(".quote-shuffle-btn");
     if (!shuffleBtn) {
       shuffleBtn = document.createElement("button");
       shuffleBtn.type = "button";
@@ -197,7 +215,9 @@ class QuotesManager extends BaseManager {
         e.preventDefault();
         this.setQuoteShuffleEnabled(!this.quoteShuffleEnabled);
       });
-      container.appendChild(shuffleBtn);
+    }
+    if (shuffleBtn.parentElement !== actionsGroup) {
+      actionsGroup.appendChild(shuffleBtn);
     }
 
     this.quotePauseBtn = pauseBtn;
@@ -1589,26 +1609,30 @@ class QuotesManager extends BaseManager {
   }
 
   createLanguageSelectorButton() {
-    const container = this.quoteContainer;
-    if (!container) return;
+    const actionsGroup = this.getQuoteTopActionsContainer();
+    if (!actionsGroup) return;
 
-    if (container.querySelector(".quote-lang-selector-btn")) return;
+    let btn = this.quoteContainer?.querySelector(".quote-lang-selector-btn");
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
-    const langIcon = this._getIcon("🌐", { size: 16 });
-    btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">Lang</span>`;
-    btn.title = "Select quote language";
-    btn.setAttribute("aria-label", "Select quote language");
-    btn.style.display = "none";
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adhkar-lang-selector-btn quote-lang-selector-btn";
+      const langIcon = this._getIcon("🌐", { size: 16 });
+      btn.innerHTML = `<span class="lang-icon" aria-hidden="true">${langIcon}</span><span class="lang-label">Lang</span>`;
+      btn.title = "Select quote language";
+      btn.setAttribute("aria-label", "Select quote language");
+      btn.style.display = "none";
 
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.openLanguageSelectorModal();
-    });
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openLanguageSelectorModal();
+      });
+    }
 
-    container.appendChild(btn);
+    if (btn.parentElement !== actionsGroup) {
+      actionsGroup.appendChild(btn);
+    }
   }
 
   updateLanguageSelectorButton() {

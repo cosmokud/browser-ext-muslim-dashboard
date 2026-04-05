@@ -181,6 +181,16 @@ class IconThemeManager {
       colorful: "#22c55e",
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
     },
+    "🔀": {
+      name: "shuffle",
+      colorful: "#0ea5e9",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h2c6 0 10-8 16-8h2"/><path d="M2 6h2c6 0 10 8 16 8h2"/></svg>',
+    },
+    "🔀︎": {
+      name: "shuffle",
+      colorful: "#0ea5e9",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h2c6 0 10-8 16-8h2"/><path d="M2 6h2c6 0 10 8 16 8h2"/></svg>',
+    },
     "❓": {
       name: "help-circle",
       colorful: "#8b5cf6",

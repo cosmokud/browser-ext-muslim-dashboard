@@ -157,21 +157,34 @@ class ContentSearchManager extends BaseManager {
     const container = document.querySelector("#quoteSection .quote-container");
     if (!container) return;
 
-    if (container.querySelector(".quote-search-btn")) return;
+    let actionsGroup = container.querySelector(".quote-top-actions");
+    if (!actionsGroup) {
+      actionsGroup = document.createElement("div");
+      actionsGroup.className = "quote-top-actions";
+      actionsGroup.setAttribute("role", "group");
+      actionsGroup.setAttribute("aria-label", "Quote controls");
+      container.appendChild(actionsGroup);
+    }
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "adhkar-set-selector-btn quote-search-btn";
-    btn.innerHTML = this._getIcon("🔎", { size: 16 });
-    btn.title = "Search quotes";
-    btn.setAttribute("aria-label", "Search quotes");
+    let btn = container.querySelector(".quote-search-btn");
 
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.open("quotes");
-    });
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adhkar-set-selector-btn quote-search-btn";
+      btn.innerHTML = this._getIcon("🔎", { size: 16 });
+      btn.title = "Search quotes";
+      btn.setAttribute("aria-label", "Search quotes");
 
-    container.appendChild(btn);
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.open("quotes");
+      });
+    }
+
+    if (btn.parentElement !== actionsGroup) {
+      actionsGroup.appendChild(btn);
+    }
   }
 
   createCardSearchButton({ cardId, context, insertAtStart = false }) {
