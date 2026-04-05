@@ -6939,14 +6939,32 @@ html[data-theme-mode="light"]
 }
 
 .setting-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 0.9rem;
+  line-height: 1.2;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.setting-btn .icon-theme-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.setting-btn .icon-theme-svg.icon-inline {
+  vertical-align: middle;
 }
 
 .setting-btn-row {
@@ -10153,11 +10171,13 @@ html[data-theme-mode="light"]
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
 .custom-bg-count {
   font-size: 0.85rem;
   color: var(--text-muted);
+  margin-left: auto;
 }
 
 .empty-hint {
