@@ -10128,6 +10128,9 @@ html[data-theme-mode="light"]
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .custom-bg-item {

@@ -262,6 +262,8 @@ class SettingsManager extends BaseManager {
     this.customBgCount = document.getElementById("customBgCount");
     this._activeBgPoolCategory = "";
     this._activeBgPoolImages = [];
+    this._backgroundThumbUrlCache = new Map();
+    this._backgroundThumbObserver = null;
 
     // General settings elements
     this.containerWidth = document.getElementById("containerWidth");
@@ -4383,23 +4385,62 @@ class SettingsManager extends BaseManager {
     settings.performanceModeEnabled =
       dashboardQualityState.performanceModeEnabled;
 
-    // Apply theme manager settings
-    if (window.dashboard?.themes) {
-      window.dashboard.themes.setTheme(activeTheme, true);
-      window.dashboard.themes.setMode(mode, true);
-      window.dashboard.themes.setGlassEnabled(glassEnabled, true);
-      if (typeof window.dashboard.themes.setGlassOpacity === "function") {
-        window.dashboard.themes.setGlassOpacity(glassOpacity, true);
-      }
+    // Apply theme manager settings only when values actually changed.
+    const themeManager = window.dashboard?.themes;
+    if (themeManager) {
+      const currentTheme =
+        typeof themeManager.getCurrentTheme === "function"
+          ? themeManager.getCurrentTheme()
+          : null;
+      const currentMode =
+        typeof themeManager.getCurrentMode === "function"
+          ? themeManager.getCurrentMode()
+          : null;
+      const currentGlassEnabled =
+        typeof themeManager.isGlassEnabled === "function"
+          ? themeManager.isGlassEnabled()
+          : null;
+      const currentGlassOpacity =
+        typeof themeManager.getGlassOpacity === "function"
+          ? themeManager.getGlassOpacity()
+          : null;
+      const currentComponentOpacity =
+        typeof themeManager.getMainGridComponentOpacity === "function"
+          ? themeManager.getMainGridComponentOpacity()
+          : null;
+
       if (
-        typeof window.dashboard.themes.setMainGridComponentOpacity ===
-        "function"
+        currentTheme !== activeTheme &&
+        typeof themeManager.setTheme === "function"
       ) {
-        window.dashboard.themes.setMainGridComponentOpacity(
-          componentOpacity,
-          true,
-        );
+        themeManager.setTheme(activeTheme, false);
       }
+
+      if (currentMode !== mode && typeof themeManager.setMode === "function") {
+        themeManager.setMode(mode, false);
+      }
+
+      if (
+        currentGlassEnabled !== glassEnabled &&
+        typeof themeManager.setGlassEnabled === "function"
+      ) {
+        themeManager.setGlassEnabled(glassEnabled, false);
+      }
+
+      if (
+        currentGlassOpacity !== glassOpacity &&
+        typeof themeManager.setGlassOpacity === "function"
+      ) {
+        themeManager.setGlassOpacity(glassOpacity, false);
+      }
+
+      if (
+        currentComponentOpacity !== componentOpacity &&
+        typeof themeManager.setMainGridComponentOpacity === "function"
+      ) {
+        themeManager.setMainGridComponentOpacity(componentOpacity, false);
+      }
+
       if (typeof window.dashboard.applyHeadingSettings === "function") {
         window.dashboard.applyHeadingSettings();
       }
@@ -4436,6 +4477,103 @@ class SettingsManager extends BaseManager {
 
   normalizeBackgroundImageUrl(url) {
     return String(url || "").trim();
+  }
+
+  getBackgroundThumbnailPlaceholder() {
+    return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+  }
+
+  getBackgroundThumbnailUrl(imageUrl) {
+    const normalized = this.normalizeBackgroundImageUrl(imageUrl);
+    if (!normalized) {
+      return this.getBackgroundThumbnailPlaceholder();
+    }
+
+    const cached = this._backgroundThumbUrlCache?.get(normalized);
+    if (cached) {
+      return cached;
+    }
+
+    let thumbUrl = normalized;
+    if (/^https?:\/\//i.test(normalized)) {
+      try {
+        const parsed = new URL(normalized);
+        if (/(^|\.)images\.unsplash\.com$/i.test(parsed.hostname)) {
+          parsed.searchParams.set("auto", "format");
+          parsed.searchParams.set("fit", "crop");
+          parsed.searchParams.set("crop", "entropy");
+          parsed.searchParams.set("w", "320");
+          parsed.searchParams.set("h", "200");
+          parsed.searchParams.set("q", "45");
+          thumbUrl = parsed.toString();
+        }
+      } catch (e) {
+        thumbUrl = normalized;
+      }
+    }
+
+    if (this._backgroundThumbUrlCache) {
+      this._backgroundThumbUrlCache.set(normalized, thumbUrl);
+    }
+
+    return thumbUrl;
+  }
+
+  resetBackgroundThumbObserver() {
+    if (this._backgroundThumbObserver) {
+      this._backgroundThumbObserver.disconnect();
+      this._backgroundThumbObserver = null;
+    }
+  }
+
+  ensureBackgroundThumbObserver() {
+    if (this._backgroundThumbObserver) {
+      return;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    this._backgroundThumbObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          const img = entry.target;
+          const thumbSrc = img?.dataset?.thumbSrc;
+          if (thumbSrc) {
+            img.src = thumbSrc;
+            img.dataset.thumbLoaded = "1";
+          }
+
+          observer.unobserve(img);
+        });
+      },
+      {
+        root: this.customBgList || null,
+        rootMargin: "120px 0px",
+        threshold: 0.01,
+      },
+    );
+  }
+
+  observeBackgroundThumbImage(imgEl) {
+    if (!(imgEl instanceof HTMLImageElement)) {
+      return;
+    }
+
+    this.ensureBackgroundThumbObserver();
+    if (this._backgroundThumbObserver) {
+      this._backgroundThumbObserver.observe(imgEl);
+      return;
+    }
+
+    const thumbSrc = imgEl.dataset.thumbSrc;
+    if (thumbSrc) {
+      imgEl.src = thumbSrc;
+      imgEl.dataset.thumbLoaded = "1";
+    }
   }
 
   getBackgroundImageSelectionMap(settings = null) {
@@ -4553,6 +4691,8 @@ class SettingsManager extends BaseManager {
   renderBackgroundImagePool() {
     if (!this.customBgList) return;
 
+    this.resetBackgroundThumbObserver();
+
     const settings = this.storage.getSettings();
     const selectedCategory =
       this.bgCategory?.value || settings.bgCategory || "nature";
@@ -4609,6 +4749,7 @@ class SettingsManager extends BaseManager {
     const selectedSet = new Set(selectedUrls);
 
     const fragment = document.createDocumentFragment();
+    const thumbsToObserve = [];
     let selectedCount = 0;
 
     images.forEach((entry, index) => {
@@ -4622,10 +4763,14 @@ class SettingsManager extends BaseManager {
       item.setAttribute("aria-pressed", isSelected ? "true" : "false");
 
       const thumb = document.createElement("img");
-      thumb.src = entry.url;
+      thumb.src = this.getBackgroundThumbnailPlaceholder();
+      thumb.dataset.thumbSrc = this.getBackgroundThumbnailUrl(entry.url);
       thumb.alt = `Background ${index + 1}`;
       thumb.className = "custom-bg-thumb";
       thumb.loading = "lazy";
+      thumb.decoding = "async";
+      thumb.fetchPriority = "low";
+      thumbsToObserve.push(thumb);
 
       const check = document.createElement("span");
       check.className = "custom-bg-item-check";
@@ -4642,6 +4787,9 @@ class SettingsManager extends BaseManager {
     });
 
     this.customBgList.replaceChildren(fragment);
+    thumbsToObserve.forEach((thumb) => {
+      this.observeBackgroundThumbImage(thumb);
+    });
     this.updateBackgroundPoolCount(selectedCount, images.length);
   }
 
@@ -5775,6 +5923,10 @@ class SettingsManager extends BaseManager {
     // Save to storage
     this.storage.saveSettings(settings);
 
+    if (closeModal) {
+      this.closeModal();
+    }
+
     // Apply immediate preview (if dashboard exists)
     if (
       window.dashboard &&
@@ -5792,10 +5944,6 @@ class SettingsManager extends BaseManager {
 
     if (showToast) {
       this.showToast("Settings saved successfully!", "success");
-    }
-
-    if (closeModal) {
-      this.closeModal();
     }
 
     return true;
@@ -6142,6 +6290,35 @@ class SettingsManager extends BaseManager {
     this.applyLiveUpdates(settings);
   }
 
+  runDeferredUiTask(task) {
+    if (typeof task !== "function") return;
+
+    if (
+      typeof window !== "undefined" &&
+      typeof window.requestIdleCallback === "function"
+    ) {
+      window.requestIdleCallback(
+        () => {
+          try {
+            task();
+          } catch (e) {
+            // ignore deferred UI task errors
+          }
+        },
+        { timeout: 450 },
+      );
+      return;
+    }
+
+    setTimeout(() => {
+      try {
+        task();
+      } catch (e) {
+        // ignore deferred UI task errors
+      }
+    }, 0);
+  }
+
   /**
    * Apply live updates to all components without page reload
    * This replaces the previous window.location.reload() approach
@@ -6202,83 +6379,69 @@ class SettingsManager extends BaseManager {
         window.dashboard.gridLayout.recalculateLayout();
       }
 
-      // Refresh quotes if settings changed
-      if (window.dashboard && window.dashboard.quotes) {
-        try {
+      this.runDeferredUiTask(() => {
+        if (window.dashboard && window.dashboard.quotes) {
           window.dashboard.quotes.refreshQuote();
-        } catch (e) {
-          // Quote refresh is non-critical
         }
-      }
+      });
 
-      // Refresh lunar phase display
-      if (window.dashboard && window.dashboard.lunarPhase) {
-        try {
+      this.runDeferredUiTask(() => {
+        if (window.dashboard && window.dashboard.lunarPhase) {
           window.dashboard.lunarPhase.refresh();
-        } catch (e) {
-          // Lunar phase refresh is non-critical
         }
-      }
+      });
 
-      // Refresh fasting display
-      if (window.dashboard && window.dashboard.fasting) {
-        try {
+      this.runDeferredUiTask(() => {
+        if (window.dashboard && window.dashboard.fasting) {
           window.dashboard.fasting.render();
-        } catch (e) {
-          // Fasting refresh is non-critical
         }
-      }
+      });
 
-      // Update calendar
-      if (window.dashboard && window.dashboard.calendar) {
-        try {
+      this.runDeferredUiTask(() => {
+        if (window.dashboard && window.dashboard.calendar) {
           window.dashboard.calendar.render();
-        } catch (e) {
-          // Calendar refresh is non-critical
         }
-      }
+      });
 
-      // Update Pocket Quran translation
-      if (window.dashboard && window.dashboard.pocketQuran) {
-        try {
-          const pqSettings = settings.pocketQuran || {};
-          if (pqSettings.translationResourceId) {
-            window.dashboard.pocketQuran.reloadTranslation(
-              pqSettings.translationResourceId,
-            );
-          }
-          if (
-            pqSettings.arabicFontFamily &&
-            typeof window.dashboard.pocketQuran.applyArabicFontFamily ===
-              "function"
-          ) {
-            window.dashboard.pocketQuran.applyArabicFontFamily(
-              pqSettings.arabicFontFamily,
-              { persist: false, recalculate: true },
-            );
-          }
-          if (
-            pqSettings.translationFontFamily &&
-            typeof window.dashboard.pocketQuran.applyTranslationFontFamily ===
-              "function"
-          ) {
-            window.dashboard.pocketQuran.applyTranslationFontFamily(
-              pqSettings.translationFontFamily,
-              { persist: false, recalculate: true },
-            );
-          }
-          // Also apply font sizes
-          if (pqSettings.arabicFontSize || pqSettings.translationFontSize) {
-            window.dashboard.pocketQuran.applyFontSizes(
-              pqSettings.arabicFontSize ?? 32,
-              pqSettings.translationFontSize ?? 18,
-              { syncInputs: true, persist: false },
-            );
-          }
-        } catch (e) {
-          // Pocket Quran refresh is non-critical
+      this.runDeferredUiTask(() => {
+        if (!window.dashboard || !window.dashboard.pocketQuran) {
+          return;
         }
-      }
+
+        const pqSettings = settings.pocketQuran || {};
+        if (pqSettings.translationResourceId) {
+          window.dashboard.pocketQuran.reloadTranslation(
+            pqSettings.translationResourceId,
+          );
+        }
+        if (
+          pqSettings.arabicFontFamily &&
+          typeof window.dashboard.pocketQuran.applyArabicFontFamily ===
+            "function"
+        ) {
+          window.dashboard.pocketQuran.applyArabicFontFamily(
+            pqSettings.arabicFontFamily,
+            { persist: false, recalculate: true },
+          );
+        }
+        if (
+          pqSettings.translationFontFamily &&
+          typeof window.dashboard.pocketQuran.applyTranslationFontFamily ===
+            "function"
+        ) {
+          window.dashboard.pocketQuran.applyTranslationFontFamily(
+            pqSettings.translationFontFamily,
+            { persist: false, recalculate: true },
+          );
+        }
+        if (pqSettings.arabicFontSize || pqSettings.translationFontSize) {
+          window.dashboard.pocketQuran.applyFontSizes(
+            pqSettings.arabicFontSize ?? 32,
+            pqSettings.translationFontSize ?? 18,
+            { syncInputs: true, persist: false },
+          );
+        }
+      });
 
       // Notify that settings have been applied (for any listeners)
       try {
@@ -7516,6 +7679,7 @@ class SettingsManager extends BaseManager {
   closeModal() {
     this.clearScheduledAutoSave();
     this.closeDetachedEditorModal();
+    this.resetBackgroundThumbObserver();
 
     if (this.modal) {
       this.modal.classList.remove("active");
