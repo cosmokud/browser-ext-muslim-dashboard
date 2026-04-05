@@ -3335,6 +3335,14 @@ textarea.notes-editor:focus {
   transform: none; /* avoid hover lift changing position while dragging */
 }
 
+/* Hide the native corner resize grip on detached floating cards. */
+.floating-card::-webkit-resizer {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 /* Subtle floating -> tiling transition (no large movement)
    Phase 1 (still floating): fade out + tiny shrink
    Phase 2 (in grid): quick fade in + tiny "settle" */
