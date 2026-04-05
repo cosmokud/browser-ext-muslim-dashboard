@@ -479,6 +479,21 @@ body.sidebar-mode .sidebar-column::-webkit-scrollbar-thumb:hover {
   background-color: var(--primary-light);
 }
 
+/* Keep sidebar scrolling behavior but hide only sidebar scrollbar UI */
+body.sidebar-mode #sidebarLeft,
+body.sidebar-mode #sidebarRight {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-gutter: auto;
+}
+
+body.sidebar-mode #sidebarLeft::-webkit-scrollbar,
+body.sidebar-mode #sidebarRight::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* Middle column should keep the normal page scroll behavior */
 body.sidebar-mode .main-container {
   max-width: none;
