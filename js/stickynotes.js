@@ -26,6 +26,13 @@ class StickyNotesManager {
     this.cancelDeleteBtn = null;
     this.pendingDeleteId = null;
 
+    // Custom color picker performance controls.
+    this.customColorPreviewTimers = new Map();
+    this.customColorSaveTimers = new Map();
+    this.customColorPreviewLatestHex = new Map();
+    this.customColorPreviewDelayMs = 80;
+    this.customColorSaveDelayMs = 220;
+
     // Color presets for notes (top-left remains the dashboard-linked glass default)
     this.colorPresets = [
       {
@@ -772,6 +779,98 @@ class StickyNotesManager {
     };
   }
 
+  clearCustomColorSaveTimer(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    const timer = this.customColorSaveTimers.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.customColorSaveTimers.delete(id);
+    }
+  }
+
+  scheduleCustomColorSave(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    this.clearCustomColorSaveTimer(id);
+    const timer = setTimeout(() => {
+      this.customColorSaveTimers.delete(id);
+      this.saveNotes();
+    }, this.customColorSaveDelayMs);
+
+    this.customColorSaveTimers.set(id, timer);
+  }
+
+  clearCustomColorPreviewState(noteId) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    const previewTimer = this.customColorPreviewTimers.get(id);
+    if (previewTimer) {
+      clearTimeout(previewTimer);
+      this.customColorPreviewTimers.delete(id);
+    }
+
+    this.customColorPreviewLatestHex.delete(id);
+    this.clearCustomColorSaveTimer(id);
+  }
+
+  queueCustomColorPreview(noteId, hex) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    this.customColorPreviewLatestHex.set(id, this.normalizeHexColor(hex));
+
+    if (this.customColorPreviewTimers.has(id)) return;
+
+    const timer = setTimeout(() => {
+      this.customColorPreviewTimers.delete(id);
+
+      const latestHex = this.customColorPreviewLatestHex.get(id);
+      this.customColorPreviewLatestHex.delete(id);
+
+      this.updateNoteColor(id, this.buildCustomColorPreset(latestHex), {
+        save: false,
+      });
+      this.scheduleCustomColorSave(id);
+    }, this.customColorPreviewDelayMs);
+
+    this.customColorPreviewTimers.set(id, timer);
+  }
+
+  flushCustomColorPreview(noteId, { save = true, hex = null } = {}) {
+    const id = String(noteId || "").trim();
+    if (!id) return;
+
+    const previewTimer = this.customColorPreviewTimers.get(id);
+    if (previewTimer) {
+      clearTimeout(previewTimer);
+      this.customColorPreviewTimers.delete(id);
+    }
+
+    if (hex !== null && hex !== undefined) {
+      this.customColorPreviewLatestHex.set(id, this.normalizeHexColor(hex));
+    }
+
+    const note = this.notes.find((n) => String(n.id) === id);
+    const resolvedHex = this.normalizeHexColor(
+      this.customColorPreviewLatestHex.get(id) ||
+        this.getNoteCustomColorHex(note),
+    );
+    this.customColorPreviewLatestHex.delete(id);
+    this.clearCustomColorSaveTimer(id);
+
+    this.updateNoteColor(id, this.buildCustomColorPreset(resolvedHex), {
+      save,
+    });
+
+    if (!save) {
+      this.scheduleCustomColorSave(id);
+    }
+  }
+
   getDashboardGlassEnabled() {
     try {
       const themes = window.dashboard?.themes;
@@ -1365,12 +1464,16 @@ class StickyNotesManager {
     );
     if (customColorInput) {
       customColorInput.addEventListener("click", (e) => e.stopPropagation());
+      customColorInput.addEventListener("input", (e) => {
+        e.stopPropagation();
+        this.queueCustomColorPreview(note.id, e.target.value);
+      });
       customColorInput.addEventListener("change", (e) => {
         e.stopPropagation();
-        this.updateNoteColor(
-          note.id,
-          this.buildCustomColorPreset(e.target.value),
-        );
+        this.flushCustomColorPreview(note.id, {
+          save: true,
+          hex: e.target.value,
+        });
       });
     }
 
@@ -1399,6 +1502,7 @@ class StickyNotesManager {
           return;
         }
 
+        this.clearCustomColorPreviewState(note.id);
         this.updateNoteColor(note.id, preset);
       });
     });
@@ -1757,7 +1861,7 @@ class StickyNotesManager {
   /**
    * Update note color
    */
-  updateNoteColor(noteId, color) {
+  updateNoteColor(noteId, color, { save = true } = {}) {
     const note = this.notes.find((n) => n.id === noteId);
     if (note) {
       note.color =
@@ -1793,7 +1897,7 @@ class StickyNotesManager {
       this.applyNoteBlurState(noteId, { save: false });
       this.updateColorPresetUI(noteId, note.color);
 
-      this.saveNotes();
+      if (save) this.saveNotes();
     }
   }
 
@@ -1892,6 +1996,8 @@ class StickyNotesManager {
   deleteNote(noteId) {
     const id = String(noteId || "").trim();
     if (!id) return;
+
+    this.clearCustomColorPreviewState(id);
 
     const menu = document.querySelector(
       `.sticky-note-blur-menu[data-note-id="${id}"]`,
