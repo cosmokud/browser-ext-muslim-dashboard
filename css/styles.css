@@ -17621,6 +17621,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   position: relative;
 }
 
+body.layout-edit-toggle-no-anim .grid-flex-row,
+body.layout-edit-toggle-no-anim .grid-draggable,
+body.layout-edit-toggle-no-anim .grid-draggable::before,
+body.layout-edit-toggle-no-anim .sidebar-slot,
+body.layout-edit-toggle-no-anim .sidebar-slot .grid-draggable,
+body.layout-edit-toggle-no-anim .sidebar-resize-handle {
+  transition: none !important;
+  animation: none !important;
+}
+
 /* Edit mode enabled - allow dragging */
 .grid-edit-mode .grid-draggable {
   cursor: grab;
@@ -17751,11 +17761,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 /* Full-width components always take 100% */
-.grid-flex-row > .header,
-.grid-flex-row > #pinnedAppsSection,
-.grid-flex-row > #searchBarSection,
-.grid-flex-row > #quoteSection,
-.grid-flex-row > #pocketQuranCard {
+.grid-flex-row > .header:not(.middle-custom-width),
+.grid-flex-row > #pinnedAppsSection:not(.middle-custom-width),
+.grid-flex-row > #searchBarSection:not(.middle-custom-width),
+.grid-flex-row > #quoteSection:not(.middle-custom-width),
+.grid-flex-row > #pocketQuranCard:not(.middle-custom-width) {
   flex: 1 1 100% !important;
   max-width: 100% !important;
 }

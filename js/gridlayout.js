@@ -1119,6 +1119,7 @@ class GridLayoutManager {
       return;
     }
 
+    this.temporarilyDisableLayoutToggleAnimations();
     this.isEditModeEnabled = !this.isEditModeEnabled;
 
     // Save state to settings
@@ -1188,6 +1189,17 @@ class GridLayoutManager {
     }
     // Also add to body so sidebar CSS selectors work
     document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+  }
+
+  temporarilyDisableLayoutToggleAnimations() {
+    document.body.classList.add("layout-edit-toggle-no-anim");
+
+    // Two RAFs keeps transitions disabled for this style/class flip only.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.remove("layout-edit-toggle-no-anim");
+      });
+    });
   }
 
   syncSidebarModeForEditState() {
@@ -2946,6 +2958,33 @@ class GridLayoutManager {
     } catch (e) {}
 
     this.applyLayout(this.rows);
+    this.updateSidebarZoneCounts();
+    this.updateFlexBasisForCurrentDOM();
+  }
+
+  resetAllCustomComponentWidths() {
+    // Clear saved size overrides for both sidebar-docked and middle/grid components.
+    try {
+      const settings = this.storage.getSettings();
+      settings[this.getSidebarWidthStorageKey()] = {};
+      settings[this.getMiddleWidthStorageKey()] = {};
+      this.storage.saveSettings(settings);
+    } catch (e) {
+      // ignore
+    }
+
+    const allDraggables = Array.from(
+      document.querySelectorAll(".grid-draggable"),
+    );
+
+    allDraggables.forEach((el) => {
+      this.resetSidebarWidthForElement(el, { keepSaved: true });
+      this.resetMiddleWidthForElement(el, {
+        keepSaved: true,
+        restoreDefaultFlex: !el.classList.contains("sidebar-detached"),
+      });
+    });
+
     this.updateSidebarZoneCounts();
     this.updateFlexBasisForCurrentDOM();
   }

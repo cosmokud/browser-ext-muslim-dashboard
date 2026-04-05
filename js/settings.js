@@ -9784,6 +9784,35 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    const resetComponentSizesBtn = document.getElementById(
+      "resetComponentSizesBtn",
+    );
+    if (resetComponentSizesBtn) {
+      resetComponentSizesBtn.addEventListener("click", () => {
+        if (window.dashboard && window.dashboard.gridLayout) {
+          const stopRefresh = this._startRefreshButton(resetComponentSizesBtn, {
+            label: "Resetting…",
+          });
+          const startedAt = Date.now();
+
+          try {
+            if (
+              typeof window.dashboard.gridLayout
+                .resetAllCustomComponentWidths === "function"
+            ) {
+              window.dashboard.gridLayout.resetAllCustomComponentWidths();
+            }
+            this.showToast("Component sizes reset to default!", "success");
+          } finally {
+            const minDuration = 900;
+            const elapsed = Date.now() - startedAt;
+            const delay = Math.max(0, minDuration - elapsed);
+            setTimeout(() => stopRefresh(), delay);
+          }
+        }
+      });
+    }
+
     // Reset / Nuke confirmation modal wiring
     const resolveResetNukeConfirm = (confirmed) => {
       if (!this._resetNukeConfirmResolve) return;
