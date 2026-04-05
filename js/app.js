@@ -1917,6 +1917,18 @@ class MuslimDashboard {
 
       // Add focus mode class to body for full viewport styling
       document.body.classList.add("quran-focus-mode");
+
+      // Switch Pocket Quran sizing to focus-mode width scope so main-layout
+      // custom width does not leak into focus mode.
+      try {
+        if (
+          pocketQuranCard &&
+          this.gridLayout &&
+          typeof this.gridLayout.applySavedMiddleWidthToElement === "function"
+        ) {
+          this.gridLayout.applySavedMiddleWidthToElement(pocketQuranCard);
+        }
+      } catch (e) {}
     };
 
     const exitFocusMode = () => {
@@ -1987,6 +1999,13 @@ class MuslimDashboard {
             this.gridLayout.isSidebarModeEnabled ? "sidebar" : "normal",
           );
           this.gridLayout.applyLayout();
+
+          // Restore main-layout width scope after leaving focus mode.
+          if (
+            typeof this.gridLayout.applySavedMiddleWidthsFromDOM === "function"
+          ) {
+            this.gridLayout.applySavedMiddleWidthsFromDOM();
+          }
         }
       } catch (e) {}
 

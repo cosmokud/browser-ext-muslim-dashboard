@@ -183,7 +183,21 @@ class GridLayoutManager {
     return "sidebarModeComponentWidths";
   }
 
-  getMiddleWidthStorageKey() {
+  getFocusModeMiddleWidthStorageKey() {
+    return "quranFocusMiddleComponentWidths";
+  }
+
+  getMiddleWidthStorageKey(componentId = "") {
+    const id = String(componentId || "").trim();
+    const isFocusModeActive =
+      !!document.body && document.body.classList.contains("quran-focus-mode");
+    const isQuranFocusPocketQuran =
+      id === "pocketQuranCard" && isFocusModeActive;
+
+    if (isQuranFocusPocketQuran) {
+      return this.getFocusModeMiddleWidthStorageKey();
+    }
+
     return "sidebarMiddleComponentWidths";
   }
 
@@ -210,9 +224,9 @@ class GridLayoutManager {
     this.storage.saveSettings(settings);
   }
 
-  getMiddleWidthMapFromSettings() {
+  getMiddleWidthMapFromSettings(componentId = "") {
     const settings = this.storage.getSettings();
-    const raw = settings[this.getMiddleWidthStorageKey()];
+    const raw = settings[this.getMiddleWidthStorageKey(componentId)];
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       return {};
     }
@@ -227,9 +241,11 @@ class GridLayoutManager {
     return normalized;
   }
 
-  saveMiddleWidthMapToSettings(widthMap) {
+  saveMiddleWidthMapToSettings(widthMap, componentId = "") {
     const settings = this.storage.getSettings();
-    settings[this.getMiddleWidthStorageKey()] = { ...(widthMap || {}) };
+    settings[this.getMiddleWidthStorageKey(componentId)] = {
+      ...(widthMap || {}),
+    };
     this.storage.saveSettings(settings);
   }
 
@@ -272,7 +288,7 @@ class GridLayoutManager {
     const id = String(componentId || "").trim();
     if (!id) return null;
 
-    const widthMap = this.getMiddleWidthMapFromSettings();
+    const widthMap = this.getMiddleWidthMapFromSettings(id);
     const value = Number(widthMap[id]);
     return Number.isFinite(value) && value > 0 ? value : null;
   }
@@ -282,20 +298,20 @@ class GridLayoutManager {
     const value = Number(widthPx);
     if (!id || !Number.isFinite(value) || value <= 0) return;
 
-    const widthMap = this.getMiddleWidthMapFromSettings();
+    const widthMap = this.getMiddleWidthMapFromSettings(id);
     widthMap[id] = Math.round(value);
-    this.saveMiddleWidthMapToSettings(widthMap);
+    this.saveMiddleWidthMapToSettings(widthMap, id);
   }
 
   clearSavedMiddleComponentWidth(componentId) {
     const id = String(componentId || "").trim();
     if (!id) return;
 
-    const widthMap = this.getMiddleWidthMapFromSettings();
+    const widthMap = this.getMiddleWidthMapFromSettings(id);
     if (!Object.prototype.hasOwnProperty.call(widthMap, id)) return;
 
     delete widthMap[id];
-    this.saveMiddleWidthMapToSettings(widthMap);
+    this.saveMiddleWidthMapToSettings(widthMap, id);
   }
 
   getSidebarMinResizeWidth(el) {
@@ -2947,6 +2963,7 @@ class GridLayoutManager {
       settings[this.getSidebarStateStorageKey()] = { left: [], right: [] };
       settings[this.getSidebarWidthStorageKey()] = {};
       settings[this.getMiddleWidthStorageKey()] = {};
+      settings[this.getFocusModeMiddleWidthStorageKey()] = {};
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore
@@ -2968,6 +2985,7 @@ class GridLayoutManager {
       const settings = this.storage.getSettings();
       settings[this.getSidebarWidthStorageKey()] = {};
       settings[this.getMiddleWidthStorageKey()] = {};
+      settings[this.getFocusModeMiddleWidthStorageKey()] = {};
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore

@@ -17645,6 +17645,12 @@ body.layout-edit-toggle-no-anim .sidebar-resize-handle {
     0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
+.grid-edit-mode #pinnedAppsSection.grid-draggable:hover:not(.grid-dragging),
+.grid-edit-mode #searchBarSection.grid-draggable:hover:not(.grid-dragging),
+.grid-edit-mode #quoteSection.grid-draggable:hover:not(.grid-dragging) {
+  border-radius: var(--radius-lg);
+}
+
 /* Visual drag handle indicator */
 .grid-draggable::before {
   content: "";
