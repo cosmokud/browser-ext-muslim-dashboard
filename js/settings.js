@@ -9765,14 +9765,22 @@ class SettingsManager extends BaseManager {
     const resetGridLayoutBtn = document.getElementById("resetGridLayoutBtn");
     if (resetGridLayoutBtn) {
       resetGridLayoutBtn.addEventListener("click", () => {
-        if (window.dashboard && window.dashboard.gridLayout) {
+        const dashboard = window.dashboard;
+        if (dashboard && (dashboard.gridLayout || dashboard.floating)) {
           const stopRefresh = this._startRefreshButton(resetGridLayoutBtn, {
             label: "Resetting…",
           });
           const startedAt = Date.now();
 
           try {
-            window.dashboard.gridLayout.resetToDefault();
+            if (typeof dashboard.floating?.resetToDefault === "function") {
+              dashboard.floating.resetToDefault();
+            }
+
+            if (typeof dashboard.gridLayout?.resetToDefault === "function") {
+              dashboard.gridLayout.resetToDefault();
+            }
+
             this.showToast("Layout reset to default!", "success");
           } finally {
             const minDuration = 900;

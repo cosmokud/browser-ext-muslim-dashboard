@@ -3599,14 +3599,14 @@ textarea.notes-editor:focus {
   }
 }
 
-/* Floating cards: top-right quick controls */
+/* Floating cards: top-left quick controls */
 .floating-collapse-btn,
 .floating-reset-size-btn {
   position: absolute;
   top: 8px;
   width: 10px;
   height: 10px;
-  right: 8px;
+  left: 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -3629,7 +3629,7 @@ textarea.notes-editor:focus {
 }
 
 .floating-reset-size-btn {
-  right: 24px;
+  left: 24px;
 }
 
 .floating-collapse-btn:hover,

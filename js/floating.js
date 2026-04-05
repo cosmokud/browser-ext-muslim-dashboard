@@ -1002,6 +1002,57 @@ class FloatingModeManager {
     this.saveSettings(settings);
   }
 
+  resetToDefault() {
+    let defaults = {};
+    try {
+      defaults =
+        typeof this.storage?.getDefaultSettings === "function"
+          ? this.storage.getDefaultSettings()
+          : {};
+    } catch (e) {
+      defaults = {};
+    }
+
+    const defaultFloating =
+      defaults && typeof defaults.floating === "object" && defaults.floating
+        ? defaults.floating
+        : {};
+
+    const settings = this.getSettings();
+    settings.floating = settings.floating || {};
+
+    for (const key of Object.keys(this.targets)) {
+      const defaultBoxForKey =
+        defaultFloating && typeof defaultFloating[key] === "object"
+          ? defaultFloating[key]
+          : this.getDefaultFloatingBox(key);
+
+      settings.floating[key] = {
+        ...(defaultBoxForKey || {}),
+        enabled: false,
+      };
+
+      try {
+        this.storage.remove(this.getBoxStorageKey(key));
+      } catch (e) {}
+
+      const st = this.runtime.get(key);
+      if (st) {
+        st.spaceSuspended = false;
+        st.userMovedSinceLastSave = false;
+        st.autoPositionChangedSinceLastSave = false;
+      }
+    }
+
+    this.saveSettings(settings);
+
+    for (const key of this.runtime.keys()) {
+      this.applyOne(key);
+    }
+
+    this.notifyLayoutChanged();
+  }
+
   toggle(key) {
     const desired = this.isEnabledDesired(key);
     this.setEnabledDesired(key, !desired);
