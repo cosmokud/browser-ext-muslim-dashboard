@@ -727,6 +727,7 @@ class GridLayoutManager {
 
       const toggleBtn = document.getElementById("layoutEditBtn");
       this.updateEditModeUI(toggleBtn);
+      this.syncSidebarModeForEditState();
       return;
     }
 
@@ -751,10 +752,12 @@ class GridLayoutManager {
     // Show toast notification
     this.showToast(
       this.isEditModeEnabled
-        ? "Layout edit mode enabled - drag components to reposition"
-        : "Layout edit mode disabled",
+        ? "Layout Editor Mode enabled - drag components to reposition"
+        : "Layout Editor Mode disabled",
       this.isEditModeEnabled ? "success" : "info",
     );
+
+    this.syncSidebarModeForEditState();
   }
 
   /**
@@ -772,10 +775,10 @@ class GridLayoutManager {
     toggleBtn.classList.toggle("is-locked", this.isEditModeLocked);
 
     const tooltipText = this.isEditModeLocked
-      ? "Layout Edit Mode locked while Quran Focus Mode or Moment Mode is active"
+      ? "Layout Editor Mode locked while Quran Focus Mode or Moment Mode is active"
       : this.isEditModeEnabled
-        ? "Disable Layout Edit Mode"
-        : "Enable Layout Edit Mode";
+        ? "Disable Layout Editor Mode"
+        : "Enable Layout Editor Mode";
 
     toggleBtn.setAttribute(
       "aria-pressed",
@@ -792,6 +795,17 @@ class GridLayoutManager {
     }
     // Also add to body so sidebar CSS selectors work
     document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+  }
+
+  syncSidebarModeForEditState() {
+    try {
+      if (
+        window.dashboard &&
+        typeof window.dashboard.syncSidebarModeWithLayoutEditMode === "function"
+      ) {
+        window.dashboard.syncSidebarModeWithLayoutEditMode();
+      }
+    } catch (e) {}
   }
 
   /**
@@ -2437,6 +2451,7 @@ class GridLayoutManager {
 
     const toggleBtn = document.getElementById("layoutEditBtn");
     this.updateEditModeUI(toggleBtn);
+    this.syncSidebarModeForEditState();
   }
 
   /**

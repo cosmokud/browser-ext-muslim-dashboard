@@ -678,7 +678,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
     color-mix(in srgb, var(--settings-light) 60%, var(--primary-light) 40%)
   );
   color: var(--on-primary-text);
-  border-color: color-mix(in srgb, var(--settings-light) 60%, transparent);
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--settings-light) 78%, transparent);
   box-shadow:
     0 4px 16px color-mix(in srgb, var(--settings-color) 56%, transparent),
     0 0 0 2px color-mix(in srgb, var(--settings-light) 30%, transparent);
@@ -4663,7 +4664,7 @@ textarea.notes-editor:focus {
   height: 48px;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, #2e7d32, #4caf50);
-  border: none;
+  border: 1px solid rgba(99, 190, 104, 0.28);
   color: var(--text-primary);
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
@@ -4685,6 +4686,8 @@ textarea.notes-editor:focus {
 
 .quran-focus-btn.active {
   background: linear-gradient(135deg, #3f8f44, #63be68);
+  border-width: 2px;
+  border-color: rgba(195, 252, 204, 0.9);
   box-shadow:
     0 4px 16px rgba(63, 143, 68, 0.48),
     0 0 0 2px rgba(99, 190, 104, 0.24);

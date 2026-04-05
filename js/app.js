@@ -44,6 +44,7 @@ class MuslimDashboard {
     this.gridLayout = null; // Will be initialized after DOM
     // Sidebar mode (3-column layout)
     this.sidebarModeEnabled = false;
+    this.MIN_SIDEBAR_MODE_WIDTH = 2144;
 
     // Dashboard mode coordination (ensures modes are mutually exclusive)
     this._setSidebarModeEnabled = null;
@@ -569,19 +570,31 @@ class MuslimDashboard {
     }, startupDelay);
   }
 
+  isSidebarWidthSupported() {
+    try {
+      return window.innerWidth >= this.MIN_SIDEBAR_MODE_WIDTH;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  syncSidebarModeWithLayoutEditMode() {
+    const canUseSidebarLayout =
+      !!(
+        this.gridLayout &&
+        typeof this.gridLayout.isEditMode === "function" &&
+        this.gridLayout.isEditMode()
+      ) &&
+      !this._quranFocusModeActive &&
+      !this._momentModeActive &&
+      this.isSidebarWidthSupported();
+
+    if (typeof this._setSidebarModeEnabled === "function") {
+      this._setSidebarModeEnabled(canUseSidebarLayout);
+    }
+  }
+
   initSidebarMode() {
-    const btn = document.getElementById("sidebarModeBtn");
-    if (!btn) return;
-
-    const MIN_SIDEBAR_MODE_WIDTH = 2144; // px
-    const isSidebarWidthSupported = () => {
-      try {
-        return window.innerWidth >= MIN_SIDEBAR_MODE_WIDTH;
-      } catch (e) {
-        return false;
-      }
-    };
-
     const setEnabled = (enabled) => {
       const next = enabled === true;
 
@@ -607,13 +620,8 @@ class MuslimDashboard {
         } catch (e) {}
       }
 
-      // Guard: sidebar mode requires enough viewport width.
-      if (next && !isSidebarWidthSupported()) {
-        this.showToast(
-          "Your screen width doesn't support sidebar mode",
-          "info",
-        );
-
+      // Guard: sidebar layout requires enough viewport width.
+      if (next && !this.isSidebarWidthSupported()) {
         try {
           const s = this.storage.getSettings();
           s.sidebarModeEnabled = false;
@@ -621,7 +629,7 @@ class MuslimDashboard {
           this.storage.saveSettings(s);
         } catch (e) {}
 
-        return;
+        return false;
       }
 
       // Enable: toggle CSS first (so sidebars are visible), then swap layout state.
@@ -629,8 +637,6 @@ class MuslimDashboard {
       if (next) {
         this.sidebarModeEnabled = true;
         document.body.classList.add("sidebar-mode");
-        btn.classList.add("active");
-        btn.setAttribute("aria-pressed", "true");
 
         try {
           const s = this.storage.getSettings();
@@ -656,66 +662,34 @@ class MuslimDashboard {
 
         this.sidebarModeEnabled = false;
         document.body.classList.remove("sidebar-mode");
-        btn.classList.remove("active");
-        btn.setAttribute("aria-pressed", "false");
 
         try {
           const s = this.storage.getSettings();
           s.sidebarModeEnabled = false;
-          if (s.lastDashboardMode === "sidebar") s.lastDashboardMode = "normal";
+          if (s.lastDashboardMode === "sidebar") {
+            s.lastDashboardMode = "normal";
+          }
           this.storage.saveSettings(s);
         } catch (e) {}
       }
+
+      return true;
     };
 
     // Expose setter for other modes to call.
     this._setSidebarModeEnabled = setEnabled;
 
-    // Restore last state from settings
-    try {
-      const s = this.storage.getSettings();
-      // Enforce exclusivity on startup: if Quran focus or Moment mode is the active/last mode,
-      // do not also restore sidebar mode.
-      const focusInitial =
-        s.quranFocusModeEnabled === true ||
-        s.lastDashboardMode === "quranFocus";
-      const momentInitial =
-        globalThis.ENABLE_DEBUG_MODE === true &&
-        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
-      const initial =
-        !focusInitial &&
-        !momentInitial &&
-        (s.sidebarModeEnabled === true || s.lastDashboardMode === "sidebar");
+    // Start in normal layout, then allow Layout Edit Mode to opt into sidebars
+    // when screen width supports it.
+    setEnabled(false);
+    this.syncSidebarModeWithLayoutEditMode();
 
-      if (initial && !isSidebarWidthSupported()) {
-        this.showToast(
-          "Your screen width doesn't support sidebar mode",
-          "info",
-        );
-        setEnabled(false);
-      } else {
-        setEnabled(initial);
-      }
-    } catch (e) {
-      setEnabled(false);
-    }
-
-    btn.addEventListener("click", () => {
-      setEnabled(!this.sidebarModeEnabled);
-    });
-
-    // Auto-exit sidebar mode on resize if it becomes unsupported.
+    // Keep sidebar availability in sync with viewport width while edit mode is active.
     let resizeTimer = null;
     window.addEventListener("resize", () => {
       if (resizeTimer) clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        if (this.sidebarModeEnabled && !isSidebarWidthSupported()) {
-          setEnabled(false);
-          this.showToast(
-            "It's no longer possible to stay in sidebars mode with your current screen width.",
-            "info",
-          );
-        }
+        this.syncSidebarModeWithLayoutEditMode();
       }, 120);
     });
   }
@@ -863,7 +837,7 @@ class MuslimDashboard {
       console.warn("GridLayoutManager init failed:", e);
     }
 
-    // Initialize sidebar mode toggle (FAB button)
+    // Initialize sidebar layout controller (used by Layout Edit Mode).
     this.initSidebarMode();
 
     // Apply heading settings
@@ -1943,8 +1917,7 @@ class MuslimDashboard {
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
 
-      const restoreMode =
-        this._dashboardModeBeforeFocus === "sidebar" ? "sidebar" : "normal";
+      const restoreMode = "normal";
 
       try {
         const s = this.storage.getSettings();
@@ -2022,14 +1995,8 @@ class MuslimDashboard {
         window.dispatchEvent(new Event("resize"));
       } catch (e) {}
 
-      // If the user came from sidebar mode, restore it after focus cleanup.
-      if (restoreMode === "sidebar") {
-        try {
-          if (typeof this._setSidebarModeEnabled === "function") {
-            this._setSidebarModeEnabled(true);
-          }
-        } catch (e) {}
-      }
+      // Sidebar behavior is now owned by Layout Edit Mode.
+      this.syncSidebarModeWithLayoutEditMode();
     };
 
     // Expose setter for other modes to call.
@@ -2496,7 +2463,10 @@ class MuslimDashboard {
       const nextAria = shouldHide ? "true" : "false";
 
       if (shouldHide) {
-        if (currentDisplay !== "none" || currentDisplayPriority !== "important") {
+        if (
+          currentDisplay !== "none" ||
+          currentDisplayPriority !== "important"
+        ) {
           el.style.setProperty("display", "none", "important");
           visibilityChanged = true;
         }
@@ -2666,8 +2636,7 @@ class MuslimDashboard {
 
     // Apply clock style
     const clockStyle = headingSettings.clockStyle || "default";
-    const clockSurfaceLocked =
-      clockStyle === "boxed" || clockStyle === "pill";
+    const clockSurfaceLocked = clockStyle === "boxed" || clockStyle === "pill";
     if (timeSection) {
       [...timeSection.classList]
         .filter((c) => c.startsWith("clock-style-"))
