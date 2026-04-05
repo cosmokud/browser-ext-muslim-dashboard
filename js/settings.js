@@ -5317,6 +5317,11 @@ class SettingsManager extends BaseManager {
     }
 
     const settings = this.storage.getSettings();
+    const currentDisplayedBgUrl =
+      this.backgrounds &&
+      typeof this.backgrounds.getCurrentImageUrl === "function"
+        ? this.backgrounds.getCurrentImageUrl()
+        : "";
 
     // Location settings
     const locationRadio = document.querySelector(
@@ -5566,6 +5571,10 @@ class SettingsManager extends BaseManager {
     // Apply changes live
     this.applySettings(settings);
 
+    if (source === "manual") {
+      this.syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl);
+    }
+
     if (showToast) {
       this.showToast("Settings saved successfully!", "success");
     }
@@ -5575,6 +5584,49 @@ class SettingsManager extends BaseManager {
     }
 
     return true;
+  }
+
+  syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl = "") {
+    if (!this.backgrounds) return;
+
+    const selectedCategory = settings.bgCategory || "nature";
+    if (typeof this.backgrounds.getImagesForCategory !== "function") {
+      return;
+    }
+
+    const images = this.backgrounds.getImagesForCategory(
+      selectedCategory,
+      settings,
+    );
+    if (!Array.isArray(images) || images.length === 0) {
+      return;
+    }
+
+    const currentUrl = String(currentDisplayedBgUrl || "").trim();
+    if (
+      currentUrl &&
+      typeof this.backgrounds.findImageIndexByUrl === "function"
+    ) {
+      const indexInCategory = this.backgrounds.findImageIndexByUrl(
+        images,
+        currentUrl,
+      );
+
+      if (indexInCategory >= 0) {
+        if (settings.currentBgIndex !== indexInCategory) {
+          settings.currentBgIndex = indexInCategory;
+          this.storage.saveSettings(settings);
+        }
+        return;
+      }
+    }
+
+    if (typeof this.backgrounds.updateCategory === "function") {
+      this.backgrounds.updateCategory(selectedCategory);
+      const refreshed = this.storage.getSettings();
+      settings.currentBgIndex = refreshed.currentBgIndex;
+      settings.lastBgChange = refreshed.lastBgChange;
+    }
   }
 
   /**
@@ -8819,7 +8871,6 @@ class SettingsManager extends BaseManager {
           this.storage.saveSettings(settings);
         }
         if (this.backgrounds) {
-          this.backgrounds.updateCategory(this.bgCategory?.value || "nature");
           this.backgrounds.changeBackground();
         }
         this.showToast("Background changed!", "success");

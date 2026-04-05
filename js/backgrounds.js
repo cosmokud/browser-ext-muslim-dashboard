@@ -10,6 +10,7 @@ class BackgroundManager extends BaseManager {
     this.bg1 = document.getElementById("bg1");
     this.bg2 = document.getElementById("bg2");
     this.currentBg = 1;
+    this.currentImageUrl = "";
     this.intervalId = null;
 
     // Listen for icon theme changes
@@ -335,24 +336,66 @@ class BackgroundManager extends BaseManager {
   /**
    * Get images array for a category
    */
+  _getSpecialCategoryType(category) {
+    return category === "allWithCustom" ||
+      category === "allNoCustom" ||
+      category === "custom"
+      ? category
+      : null;
+  }
+
+  _getCustomBackgrounds(settings) {
+    return Array.isArray(settings?.customBackgrounds)
+      ? settings.customBackgrounds
+      : [];
+  }
+
+  _normalizeImageUrl(url) {
+    return String(url || "").trim();
+  }
+
   getImagesForCategory(category, settings) {
-    if (category === "allNoCustom" || category === "allWithCustom") {
-      const allBuiltIn = Object.values(this.backgrounds).flat();
+    const specialCategory = this._getSpecialCategoryType(category);
+    const allBuiltIn = Object.values(this.backgrounds).flat();
+    const customBgs = this._getCustomBackgrounds(settings);
 
-      if (category === "allNoCustom") {
-        return allBuiltIn.length > 0 ? allBuiltIn : this.backgrounds.nature;
-      }
+    if (specialCategory === "allNoCustom") {
+      return allBuiltIn.length > 0 ? allBuiltIn : this.backgrounds.nature;
+    }
 
-      const customBgs = settings.customBackgrounds || [];
+    if (specialCategory === "allWithCustom") {
       const merged = [...allBuiltIn, ...customBgs];
       return merged.length > 0 ? merged : this.backgrounds.nature;
     }
 
-    if (category === "custom") {
-      const customBgs = settings.customBackgrounds || [];
+    if (specialCategory === "custom") {
       return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
     }
+
     return this.backgrounds[category] || this.backgrounds.nature;
+  }
+
+  _getImageUrlByIndex(images, index) {
+    if (!Array.isArray(images)) return "";
+    if (!Number.isInteger(index) || index < 0 || index >= images.length) {
+      return "";
+    }
+    return this._normalizeImageUrl(this.normalizeImage(images[index]).url);
+  }
+
+  findImageIndexByUrl(images, imageUrl) {
+    if (!Array.isArray(images) || images.length === 0) return -1;
+
+    const target = this._normalizeImageUrl(imageUrl);
+    if (!target) return -1;
+
+    for (let i = 0; i < images.length; i += 1) {
+      if (this._getImageUrlByIndex(images, i) === target) {
+        return i;
+      }
+    }
+
+    return -1;
   }
 
   _getRandomIndex(length, excludeIndex = -1) {
@@ -371,6 +414,50 @@ class BackgroundManager extends BaseManager {
     return index;
   }
 
+  _getRandomIndexAvoidingImage(images, options = {}) {
+    if (!Array.isArray(images) || images.length === 0) return 0;
+
+    const { excludeIndex = -1, excludeUrl = "" } = options;
+    const normalizedExcludeUrl = this._normalizeImageUrl(excludeUrl);
+    const candidates = [];
+
+    for (let i = 0; i < images.length; i += 1) {
+      const matchesIndex = Number.isInteger(excludeIndex) && i === excludeIndex;
+      const matchesUrl =
+        normalizedExcludeUrl &&
+        this._getImageUrlByIndex(images, i) === normalizedExcludeUrl;
+
+      if (!matchesIndex && !matchesUrl) {
+        candidates.push(i);
+      }
+    }
+
+    if (candidates.length === 0) {
+      return this._getRandomIndex(images.length, excludeIndex);
+    }
+
+    const randomPos = Math.floor(Math.random() * candidates.length);
+    return candidates[randomPos];
+  }
+
+  getCurrentImageUrl(settings = null) {
+    const displayed = this._normalizeImageUrl(this.currentImageUrl);
+    if (displayed) {
+      return displayed;
+    }
+
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
+    const category = resolvedSettings.bgCategory || "nature";
+    const images = this.getImagesForCategory(category, resolvedSettings);
+    const index = Number.isInteger(resolvedSettings.currentBgIndex)
+      ? resolvedSettings.currentBgIndex
+      : -1;
+    return this._getImageUrlByIndex(images, index);
+  }
+
   /**
    * Load background image
    */
@@ -385,6 +472,7 @@ class BackgroundManager extends BaseManager {
     if (index < 0 || index >= images.length) {
       index = -1;
     }
+    const previousImageUrl = this._getImageUrlByIndex(images, index);
 
     const lastChange = settings.lastBgChange;
     const intervalValue =
@@ -398,7 +486,10 @@ class BackgroundManager extends BaseManager {
     const shouldRotate =
       !lastChange || now - lastChange >= interval || index === -1;
     if (shouldRotate) {
-      index = this._getRandomIndex(images.length, index);
+      index = this._getRandomIndexAvoidingImage(images, {
+        excludeIndex: index,
+        excludeUrl: previousImageUrl,
+      });
       settings.currentBgIndex = index;
       settings.lastBgChange = now;
       this.storage.saveSettings(settings);
@@ -712,6 +803,7 @@ class BackgroundManager extends BaseManager {
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
       this.currentBg = this.currentBg === 1 ? 2 : 1;
+      this.currentImageUrl = this._normalizeImageUrl(imgObj.url);
       this.updateAttribution(imgObj);
     };
     img.onerror = () => {
@@ -720,6 +812,7 @@ class BackgroundManager extends BaseManager {
         "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
+      this.currentImageUrl = "";
       this.updateAttribution(imgObj);
     };
     img.src = fullUrl;
@@ -752,7 +845,11 @@ class BackgroundManager extends BaseManager {
     const currentIndex = Number.isInteger(settings.currentBgIndex)
       ? settings.currentBgIndex
       : -1;
-    const index = this._getRandomIndex(images.length, currentIndex);
+    const currentImageUrl = this.getCurrentImageUrl(settings);
+    const index = this._getRandomIndexAvoidingImage(images, {
+      excludeIndex: currentIndex,
+      excludeUrl: currentImageUrl,
+    });
     settings.currentBgIndex = index;
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
@@ -766,10 +863,25 @@ class BackgroundManager extends BaseManager {
    */
   updateCategory(category) {
     const settings = this.storage.getSettings();
+    const previousCategory = settings.bgCategory || "nature";
+    const previousImages = this.getImagesForCategory(
+      previousCategory,
+      settings,
+    );
+    const previousIndex = Number.isInteger(settings.currentBgIndex)
+      ? settings.currentBgIndex
+      : -1;
+    const previousImageUrl =
+      this._getImageUrlByIndex(previousImages, previousIndex) ||
+      this.getCurrentImageUrl(settings);
+
     settings.bgCategory = category;
     const images = this.getImagesForCategory(category, settings);
     if (images.length > 0) {
-      const index = this._getRandomIndex(images.length);
+      const index = this._getRandomIndexAvoidingImage(images, {
+        excludeIndex: previousCategory === category ? previousIndex : -1,
+        excludeUrl: previousImageUrl,
+      });
       settings.currentBgIndex = index;
       settings.lastBgChange = Date.now();
       this.storage.saveSettings(settings);
