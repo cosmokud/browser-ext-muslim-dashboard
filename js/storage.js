@@ -157,9 +157,11 @@ class StorageManager {
       bgInterval: 60, // minutes
       bgIntervalCustom: null, // custom interval in minutes
       bgCategory: "nature",
+      bgDisplayMode: "fill", // fill, fit, stretch, tile, center, span
+      bgShuffle: true, // true = random order, false = ordered cycling
       lastBgChange: null,
       currentBgIndex: 0,
-      customBackgrounds: [], // up to 20 custom backgrounds (base64)
+      customBackgrounds: [], // up to 30 custom background references
       backgroundImageSelections: {}, // per-category selected image URLs
       notesCardFontFamily: "Poppins",
 
@@ -555,6 +557,34 @@ class StorageManager {
       merged.backgroundImageSelections,
     );
 
+    const allowedBgDisplayModes = new Set([
+      "fill",
+      "fit",
+      "stretch",
+      "tile",
+      "center",
+      "span",
+    ]);
+    const normalizedBgDisplayMode = String(merged.bgDisplayMode || "").trim();
+    merged.bgDisplayMode = allowedBgDisplayModes.has(normalizedBgDisplayMode)
+      ? normalizedBgDisplayMode
+      : defaults.bgDisplayMode;
+    merged.bgShuffle = merged.bgShuffle !== false;
+
+    if (Array.isArray(merged.customBackgrounds)) {
+      const dedupedRefs = [];
+      const seen = new Set();
+      merged.customBackgrounds.forEach((entry) => {
+        const normalized = String(entry || "").trim();
+        if (!normalized || seen.has(normalized)) return;
+        seen.add(normalized);
+        dedupedRefs.push(normalized);
+      });
+      merged.customBackgrounds = dedupedRefs.slice(0, 30);
+    } else {
+      merged.customBackgrounds = [];
+    }
+
     // Normalize blur settings for all supported card-blur-btn components,
     // and migrate legacy override keys when present.
     const blurMappings = [
@@ -739,6 +769,38 @@ class StorageManager {
       this.normalizeBackgroundImageSelections(
         normalizedSettings.backgroundImageSelections,
       );
+
+    const allowedBgDisplayModes = new Set([
+      "fill",
+      "fit",
+      "stretch",
+      "tile",
+      "center",
+      "span",
+    ]);
+    const normalizedBgDisplayMode = String(
+      normalizedSettings.bgDisplayMode || "",
+    ).trim();
+    normalizedSettings.bgDisplayMode = allowedBgDisplayModes.has(
+      normalizedBgDisplayMode,
+    )
+      ? normalizedBgDisplayMode
+      : defaults.bgDisplayMode;
+    normalizedSettings.bgShuffle = normalizedSettings.bgShuffle !== false;
+
+    if (Array.isArray(normalizedSettings.customBackgrounds)) {
+      const dedupedRefs = [];
+      const seen = new Set();
+      normalizedSettings.customBackgrounds.forEach((entry) => {
+        const normalized = String(entry || "").trim();
+        if (!normalized || seen.has(normalized)) return;
+        seen.add(normalized);
+        dedupedRefs.push(normalized);
+      });
+      normalizedSettings.customBackgrounds = dedupedRefs.slice(0, 30);
+    } else {
+      normalizedSettings.customBackgrounds = [];
+    }
 
     const ok = this.set("settings", normalizedSettings);
 

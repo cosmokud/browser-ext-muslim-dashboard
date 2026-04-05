@@ -43,7 +43,7 @@ class SettingsManager extends BaseManager {
     ghn: "Ghunnah",
   };
 
-  static CUSTOM_BACKGROUND_LIMIT = 20;
+  static CUSTOM_BACKGROUND_LIMIT = 30;
 
   static NOTES_CARD_FONT_FAMILIES = [
     "Poppins",
@@ -251,6 +251,8 @@ class SettingsManager extends BaseManager {
     this.bgInterval = document.getElementById("bgInterval");
     this.bgIntervalCustom = document.getElementById("bgIntervalCustom");
     this.customIntervalGroup = document.getElementById("customIntervalGroup");
+    this.bgDisplayMode = document.getElementById("bgDisplayMode");
+    this.bgShuffle = document.getElementById("bgShuffle");
     this.bgCategory = document.getElementById("bgCategory");
     this.changeBackgroundBtn = document.getElementById("changeBackgroundBtn");
     this.customBgGroup = document.getElementById("customBgGroup");
@@ -275,7 +277,9 @@ class SettingsManager extends BaseManager {
     this._customBackgroundMediaLoadPromise = null;
     this._customBackgroundMediaSyncPromise = null;
     this._customBackgroundMediaLoaded = false;
+    this._customBackgroundTokenPrefix = "mdcbg:id:";
     this._customBackgroundThumbByImageUrl = new Map();
+    this._customBackgroundImageByToken = new Map();
     this._backgroundSettingsDirty = false;
 
     // General settings elements
@@ -1292,8 +1296,17 @@ class SettingsManager extends BaseManager {
     const normalizedBgCategory = this.normalizeBackgroundCategory(
       settings.bgCategory,
     );
+    const normalizedBgDisplayMode = this.normalizeBackgroundDisplayMode(
+      settings.bgDisplayMode,
+    );
     if (this.bgCategory) {
       this.bgCategory.value = normalizedBgCategory;
+    }
+    if (this.bgDisplayMode) {
+      this.bgDisplayMode.value = normalizedBgDisplayMode;
+    }
+    if (this.bgShuffle) {
+      this.bgShuffle.checked = settings.bgShuffle !== false;
     }
     this.updateBackgroundPoolAddButtonVisibility();
     this.renderBackgroundImagePool();
@@ -4513,6 +4526,42 @@ class SettingsManager extends BaseManager {
     return normalized;
   }
 
+  normalizeBackgroundDisplayMode(mode) {
+    const normalized = String(mode || "")
+      .trim()
+      .toLowerCase();
+    const allowed = new Set([
+      "fill",
+      "fit",
+      "stretch",
+      "tile",
+      "center",
+      "span",
+    ]);
+    return allowed.has(normalized) ? normalized : "fill";
+  }
+
+  isCustomBackgroundToken(value) {
+    const normalized = this.normalizeBackgroundImageUrl(value);
+    const prefix = this._customBackgroundTokenPrefix || "mdcbg:id:";
+    return normalized.startsWith(prefix) && normalized.length > prefix.length;
+  }
+
+  getCustomBackgroundTokenById(id) {
+    const normalized = String(id || "").trim();
+    if (!/^[a-z0-9_\-]+$/i.test(normalized)) return "";
+    const prefix = this._customBackgroundTokenPrefix || "mdcbg:id:";
+    return `${prefix}${normalized}`;
+  }
+
+  getCustomBackgroundIdFromToken(token) {
+    const normalized = this.normalizeBackgroundImageUrl(token);
+    if (!this.isCustomBackgroundToken(normalized)) return "";
+
+    const prefix = this._customBackgroundTokenPrefix || "mdcbg:id:";
+    return normalized.slice(prefix.length);
+  }
+
   isCustomBackgroundMediaStoreAvailable() {
     return (
       typeof window !== "undefined" && typeof window.indexedDB !== "undefined"
@@ -4621,6 +4670,7 @@ class SettingsManager extends BaseManager {
     this._customBackgroundMediaLoadPromise = (async () => {
       if (force) {
         this._customBackgroundThumbByImageUrl.clear();
+        this._customBackgroundImageByToken.clear();
       }
 
       const db = await this.openCustomBackgroundMediaDb();
@@ -4640,7 +4690,10 @@ class SettingsManager extends BaseManager {
         );
 
         this._customBackgroundThumbByImageUrl.clear();
+        this._customBackgroundImageByToken.clear();
         (Array.isArray(records) ? records : []).forEach((record) => {
+          const id = String(record?.id || "").trim();
+          const token = this.getCustomBackgroundTokenById(id);
           const imageDataUrl = this.normalizeBackgroundImageUrl(
             record?.imageDataUrl,
           );
@@ -4648,7 +4701,11 @@ class SettingsManager extends BaseManager {
             record?.thumbnailDataUrl,
           );
 
-          if (!imageDataUrl || !imageDataUrl.startsWith("data:image")) {
+          if (
+            !token ||
+            !imageDataUrl ||
+            !imageDataUrl.startsWith("data:image")
+          ) {
             return;
           }
 
@@ -4657,10 +4714,13 @@ class SettingsManager extends BaseManager {
               ? thumbnailDataUrl
               : imageDataUrl;
 
+          this._customBackgroundImageByToken.set(token, imageDataUrl);
+          this._customBackgroundThumbByImageUrl.set(token, resolvedThumb);
           this._customBackgroundThumbByImageUrl.set(
             imageDataUrl,
             resolvedThumb,
           );
+          this._backgroundThumbUrlCache?.set(token, resolvedThumb);
           this._backgroundThumbUrlCache?.set(imageDataUrl, resolvedThumb);
         });
 
@@ -4681,7 +4741,7 @@ class SettingsManager extends BaseManager {
   async saveCustomBackgroundMediaToIndexedDb(imageDataUrl, thumbnailDataUrl) {
     const normalizedImage = this.normalizeBackgroundImageUrl(imageDataUrl);
     if (!normalizedImage || !normalizedImage.startsWith("data:image")) {
-      return false;
+      return "";
     }
 
     const normalizedThumb = this.normalizeBackgroundImageUrl(thumbnailDataUrl);
@@ -4691,15 +4751,19 @@ class SettingsManager extends BaseManager {
         : normalizedImage;
 
     const db = await this.openCustomBackgroundMediaDb();
-    if (!db) {
-      this._customBackgroundThumbByImageUrl.set(normalizedImage, resolvedThumb);
-      this._backgroundThumbUrlCache?.set(normalizedImage, resolvedThumb);
-      return false;
+    const id = this.getCustomBackgroundMediaId(normalizedImage);
+    const token = this.getCustomBackgroundTokenById(id);
+    if (!id || !token) {
+      return "";
     }
 
-    const id = this.getCustomBackgroundMediaId(normalizedImage);
-    if (!id) {
-      return false;
+    if (!db) {
+      this._customBackgroundImageByToken.set(token, normalizedImage);
+      this._customBackgroundThumbByImageUrl.set(token, resolvedThumb);
+      this._customBackgroundThumbByImageUrl.set(normalizedImage, resolvedThumb);
+      this._backgroundThumbUrlCache?.set(token, resolvedThumb);
+      this._backgroundThumbUrlCache?.set(normalizedImage, resolvedThumb);
+      return token;
     }
 
     try {
@@ -4726,18 +4790,25 @@ class SettingsManager extends BaseManager {
 
       await this.customBackgroundTxDonePromise(tx);
 
+      this._customBackgroundImageByToken.set(token, normalizedImage);
+      this._customBackgroundThumbByImageUrl.set(token, resolvedThumb);
       this._customBackgroundThumbByImageUrl.set(normalizedImage, resolvedThumb);
+      this._backgroundThumbUrlCache?.set(token, resolvedThumb);
       this._backgroundThumbUrlCache?.set(normalizedImage, resolvedThumb);
-      return true;
+      return token;
     } catch (e) {
+      this._customBackgroundImageByToken.set(token, normalizedImage);
+      this._customBackgroundThumbByImageUrl.set(token, resolvedThumb);
       this._customBackgroundThumbByImageUrl.set(normalizedImage, resolvedThumb);
+      this._backgroundThumbUrlCache?.set(token, resolvedThumb);
       this._backgroundThumbUrlCache?.set(normalizedImage, resolvedThumb);
-      return false;
+      return token;
     }
   }
 
   async clearCustomBackgroundMediaIndexedDb() {
     this._customBackgroundThumbByImageUrl.clear();
+    this._customBackgroundImageByToken.clear();
 
     const db = await this.openCustomBackgroundMediaDb();
     if (!db) return;
@@ -4813,26 +4884,122 @@ class SettingsManager extends BaseManager {
         ? settings
         : this.storage.getSettings();
 
-    const customBackgrounds = Array.isArray(resolvedSettings?.customBackgrounds)
-      ? resolvedSettings.customBackgrounds
-          .map((value) => this.normalizeBackgroundImageUrl(value))
-          .filter((value) => value.startsWith("data:image"))
-      : [];
-
     this._customBackgroundMediaSyncPromise = (async () => {
       await this.loadCustomBackgroundMediaFromIndexedDb();
 
-      for (const imageDataUrl of customBackgrounds) {
-        if (this._customBackgroundThumbByImageUrl.has(imageDataUrl)) {
+      const rawEntries = Array.isArray(resolvedSettings?.customBackgrounds)
+        ? resolvedSettings.customBackgrounds
+        : [];
+      const replacementMap = new Map();
+      const normalizedRefs = [];
+      const seenRefs = new Set();
+
+      for (const entry of rawEntries) {
+        const normalizedEntry = this.normalizeBackgroundImageUrl(entry);
+        if (!normalizedEntry) continue;
+
+        if (this.isCustomBackgroundToken(normalizedEntry)) {
+          if (seenRefs.has(normalizedEntry)) continue;
+          seenRefs.add(normalizedEntry);
+          normalizedRefs.push(normalizedEntry);
+          continue;
+        }
+
+        if (!normalizedEntry.startsWith("data:image")) {
           continue;
         }
 
         const thumbnailDataUrl =
-          await this.buildCustomBackgroundThumbnailDataUrl(imageDataUrl);
-        await this.saveCustomBackgroundMediaToIndexedDb(
-          imageDataUrl,
+          await this.buildCustomBackgroundThumbnailDataUrl(normalizedEntry);
+        const token = await this.saveCustomBackgroundMediaToIndexedDb(
+          normalizedEntry,
           thumbnailDataUrl,
         );
+        if (!token) continue;
+
+        replacementMap.set(normalizedEntry, token);
+        if (seenRefs.has(token)) continue;
+        seenRefs.add(token);
+        normalizedRefs.push(token);
+      }
+
+      const cappedRefs = normalizedRefs.slice(
+        0,
+        SettingsManager.CUSTOM_BACKGROUND_LIMIT,
+      );
+
+      const currentRefs = rawEntries
+        .map((entry) => this.normalizeBackgroundImageUrl(entry))
+        .filter(Boolean);
+
+      const refsChanged =
+        currentRefs.length !== cappedRefs.length ||
+        currentRefs.some((value, index) => value !== cappedRefs[index]);
+
+      let settingsChanged = false;
+      if (refsChanged) {
+        resolvedSettings.customBackgrounds = cappedRefs;
+        settingsChanged = true;
+      }
+
+      const validCustomRefSet = new Set(cappedRefs);
+      const selectionMap =
+        this.getBackgroundImageSelectionMap(resolvedSettings);
+      let selectionChanged = false;
+
+      Object.keys(selectionMap).forEach((category) => {
+        const urls = Array.isArray(selectionMap[category])
+          ? selectionMap[category]
+          : [];
+
+        const nextUrls = [];
+        const seenUrls = new Set();
+
+        urls.forEach((entry) => {
+          const normalizedUrl = this.normalizeBackgroundImageUrl(entry);
+          if (!normalizedUrl) {
+            selectionChanged = true;
+            return;
+          }
+
+          const replaced = replacementMap.get(normalizedUrl) || normalizedUrl;
+          if (
+            this.isCustomBackgroundToken(replaced) &&
+            !validCustomRefSet.has(replaced)
+          ) {
+            selectionChanged = true;
+            return;
+          }
+
+          if (seenUrls.has(replaced)) {
+            selectionChanged = true;
+            return;
+          }
+
+          if (replaced !== normalizedUrl) {
+            selectionChanged = true;
+          }
+
+          seenUrls.add(replaced);
+          nextUrls.push(replaced);
+        });
+
+        if (
+          nextUrls.length !== urls.length ||
+          nextUrls.some((value, index) => value !== urls[index])
+        ) {
+          selectionMap[category] = nextUrls;
+          selectionChanged = true;
+        }
+      });
+
+      if (selectionChanged) {
+        resolvedSettings.backgroundImageSelections = selectionMap;
+        settingsChanged = true;
+      }
+
+      if (settingsChanged) {
+        this.storage.saveSettings(resolvedSettings);
       }
 
       this.applyCustomBackgroundThumbsToRenderedPool();
@@ -4873,6 +5040,9 @@ class SettingsManager extends BaseManager {
     let thumbUrl = normalized;
     if (!/^https?:\/\//i.test(normalized)) {
       thumbUrl = customThumbFromMap || normalized;
+      if (this.isCustomBackgroundToken(normalized) && !customThumbFromMap) {
+        thumbUrl = this.getBackgroundThumbnailPlaceholder();
+      }
     }
 
     if (/^https?:\/\//i.test(normalized)) {
@@ -4989,6 +5159,9 @@ class SettingsManager extends BaseManager {
       );
       if (customThumb) {
         return customThumb;
+      }
+      if (this.isCustomBackgroundToken(normalized)) {
+        return this.getBackgroundThumbnailPlaceholder();
       }
       return normalized;
     }
@@ -5504,17 +5677,9 @@ class SettingsManager extends BaseManager {
    */
   async addCustomBackground(file) {
     const settings = this.storage.getSettings();
-    const customBgs = Array.isArray(settings.customBackgrounds)
+    const customBgRefs = Array.isArray(settings.customBackgrounds)
       ? settings.customBackgrounds
       : [];
-
-    if (customBgs.length >= SettingsManager.CUSTOM_BACKGROUND_LIMIT) {
-      this.showToast(
-        `Maximum ${SettingsManager.CUSTOM_BACKGROUND_LIMIT} custom backgrounds allowed`,
-        "error",
-      );
-      return false;
-    }
 
     let base64 = "";
     try {
@@ -5531,33 +5696,55 @@ class SettingsManager extends BaseManager {
       return false;
     }
 
-    // Check size (limit to ~2MB per image after base64 encoding)
-    if (base64.length > 2800000) {
-      this.showToast("Image too large. Please use smaller images.", "error");
+    const thumbnailDataUrl =
+      await this.buildCustomBackgroundThumbnailDataUrl(base64);
+    const token = await this.saveCustomBackgroundMediaToIndexedDb(
+      base64,
+      thumbnailDataUrl,
+    );
+    if (!token) {
+      this.showToast("Failed to save background.", "error");
       return false;
     }
 
-    customBgs.push(base64);
-    settings.customBackgrounds = customBgs;
+    const alreadyExists = customBgRefs.includes(token);
+    if (
+      !alreadyExists &&
+      customBgRefs.length >= SettingsManager.CUSTOM_BACKGROUND_LIMIT
+    ) {
+      this.showToast(
+        `Maximum ${SettingsManager.CUSTOM_BACKGROUND_LIMIT} custom backgrounds allowed`,
+        "error",
+      );
+      return false;
+    }
+
+    if (!alreadyExists) {
+      customBgRefs.push(token);
+    }
+    settings.customBackgrounds = customBgRefs.slice(
+      0,
+      SettingsManager.CUSTOM_BACKGROUND_LIMIT,
+    );
 
     const selectionMap = this.getBackgroundImageSelectionMap(settings);
     const customSelection = Array.isArray(selectionMap.custom)
       ? selectionMap.custom.slice()
       : [];
-    if (!customSelection.includes(base64)) {
-      customSelection.push(base64);
+    if (!customSelection.includes(token)) {
+      customSelection.push(token);
     }
     selectionMap.custom = customSelection;
     settings.backgroundImageSelections = selectionMap;
 
-    const thumbnailDataUrl =
-      await this.buildCustomBackgroundThumbnailDataUrl(base64);
-    await this.saveCustomBackgroundMediaToIndexedDb(base64, thumbnailDataUrl);
-
     this.storage.saveSettings(settings);
+    void this.syncCustomBackgroundMediaFromSettings(settings);
     this.renderBackgroundImagePool();
     this._backgroundSettingsDirty = true;
-    this.showToast("Background added!", "success");
+    this.showToast(
+      alreadyExists ? "Background already in pool." : "Background added!",
+      "success",
+    );
     return true;
   }
 
@@ -6026,7 +6213,10 @@ class SettingsManager extends BaseManager {
     // Backgrounds (full export supports overriding these explicitly)
     if (Array.isArray(data.customBackgrounds)) {
       const filtered = data.customBackgrounds
-        .filter((x) => typeof x === "string" && x.startsWith("data:image"))
+        .map((x) => this.normalizeBackgroundImageUrl(x))
+        .filter(
+          (x) => this.isCustomBackgroundToken(x) || x.startsWith("data:image"),
+        )
         .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT);
       settings.customBackgrounds = filtered;
     }
@@ -6477,6 +6667,10 @@ class SettingsManager extends BaseManager {
     settings.bgCategory = this.normalizeBackgroundCategory(
       this.bgCategory?.value || "nature",
     );
+    settings.bgDisplayMode = this.normalizeBackgroundDisplayMode(
+      this.bgDisplayMode?.value || settings.bgDisplayMode || "fill",
+    );
+    settings.bgShuffle = this.bgShuffle?.checked !== false;
 
     // Theme settings (container width, blur power, and theme selection are now in Themes panel)
     this.saveThemeSettings(settings);
@@ -6960,6 +7154,12 @@ class SettingsManager extends BaseManager {
           ? settings.bgIntervalCustom
           : settings.bgInterval;
       this.backgrounds.updateInterval(interval);
+      if (typeof this.backgrounds.updateDisplayMode === "function") {
+        this.backgrounds.updateDisplayMode(settings.bgDisplayMode || "fill");
+      }
+      if (typeof this.backgrounds.updateShuffleMode === "function") {
+        this.backgrounds.updateShuffleMode(settings.bgShuffle !== false);
+      }
     }
 
     // Apply container width
@@ -9219,6 +9419,28 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.bgDisplayMode) {
+      this.bgDisplayMode.addEventListener("change", () => {
+        const mode = this.normalizeBackgroundDisplayMode(
+          this.bgDisplayMode.value,
+        );
+        if (this.backgrounds?.updateDisplayMode) {
+          this.backgrounds.updateDisplayMode(mode);
+        }
+        this._backgroundSettingsDirty = true;
+      });
+    }
+
+    if (this.bgShuffle) {
+      this.bgShuffle.addEventListener("change", () => {
+        const enabled = this.bgShuffle.checked !== false;
+        if (this.backgrounds?.updateShuffleMode) {
+          this.backgrounds.updateShuffleMode(enabled);
+        }
+        this._backgroundSettingsDirty = true;
+      });
+    }
+
     // Compact weather toggle
     if (this.compactWeatherEnabled) {
       this.compactWeatherEnabled.addEventListener("change", (e) => {
@@ -9456,11 +9678,9 @@ class SettingsManager extends BaseManager {
 
     if (this.customBgInput) {
       this.customBgInput.addEventListener("change", async (e) => {
-        const files = e.target.files;
-        if (files && files.length > 0) {
-          for (let i = 0; i < files.length; i++) {
-            await this.addCustomBackground(files[i]);
-          }
+        const file = e.target.files?.[0];
+        if (file) {
+          await this.addCustomBackground(file);
           e.target.value = ""; // Reset input
         }
       });
@@ -9582,7 +9802,11 @@ class SettingsManager extends BaseManager {
         current.customBackgrounds,
       )
         ? current.customBackgrounds
-            .filter((x) => typeof x === "string" && x.startsWith("data:image"))
+            .map((x) => this.normalizeBackgroundImageUrl(x))
+            .filter(
+              (x) =>
+                this.isCustomBackgroundToken(x) || x.startsWith("data:image"),
+            )
             .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT)
         : [];
 
@@ -9941,10 +10165,20 @@ class SettingsManager extends BaseManager {
             settings.bgCategory = this.normalizeBackgroundCategory(
               this.bgCategory.value,
             );
-            this.storage.saveSettings(settings);
           }
+          settings.bgDisplayMode = this.normalizeBackgroundDisplayMode(
+            this.bgDisplayMode?.value || settings.bgDisplayMode || "fill",
+          );
+          settings.bgShuffle = this.bgShuffle?.checked !== false;
+          this.storage.saveSettings(settings);
 
           if (this.backgrounds) {
+            if (typeof this.backgrounds.updateDisplayMode === "function") {
+              this.backgrounds.updateDisplayMode(settings.bgDisplayMode);
+            }
+            if (typeof this.backgrounds.updateShuffleMode === "function") {
+              this.backgrounds.updateShuffleMode(settings.bgShuffle);
+            }
             if (typeof this.backgrounds.updateCategory === "function") {
               this.backgrounds.updateCategory(settings.bgCategory || "nature");
             } else if (

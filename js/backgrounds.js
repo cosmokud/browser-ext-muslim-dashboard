@@ -12,6 +12,14 @@ class BackgroundManager extends BaseManager {
     this.currentBg = 1;
     this.currentImageUrl = "";
     this.intervalId = null;
+    this.backgroundDisplayMode = "fill";
+    this.backgroundShuffle = true;
+    this._setBackgroundRequestId = 0;
+    this._customBackgroundTokenPrefix = "mdcbg:id:";
+    this._customBackgroundMediaDbName = "md-custom-background-media-v1";
+    this._customBackgroundMediaStoreName = "media";
+    this._customBackgroundMediaDbPromise = null;
+    this._customBackgroundResolvedUrlCache = new Map();
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -308,6 +316,7 @@ class BackgroundManager extends BaseManager {
         },
       ],
     };
+
     // Create the attribution element that is shown at bottom-left of the page
     this.createAttributionEl();
   }
@@ -329,6 +338,8 @@ class BackgroundManager extends BaseManager {
    */
   init() {
     const settings = this.storage.getSettings();
+    this.updateDisplayMode(settings.bgDisplayMode || "fill");
+    this.updateShuffleMode(settings.bgShuffle !== false);
     this.loadBackground(settings);
     this.startRotation(settings.bgInterval);
   }
@@ -351,14 +362,269 @@ class BackgroundManager extends BaseManager {
     return normalized;
   }
 
+  normalizeBackgroundDisplayMode(mode) {
+    const normalized = String(mode || "")
+      .trim()
+      .toLowerCase();
+    const allowed = new Set([
+      "fill",
+      "fit",
+      "stretch",
+      "tile",
+      "center",
+      "span",
+    ]);
+    return allowed.has(normalized) ? normalized : "fill";
+  }
+
+  isShuffleEnabled(settings = null) {
+    if (settings && typeof settings === "object") {
+      return settings.bgShuffle !== false;
+    }
+
+    return this.backgroundShuffle !== false;
+  }
+
+  _getNextOrderedIndex(images, currentIndex) {
+    if (!Array.isArray(images) || images.length === 0) return -1;
+    if (!Number.isInteger(currentIndex) || currentIndex < 0) return 0;
+    if (currentIndex >= images.length - 1) return 0;
+    return currentIndex + 1;
+  }
+
+  _getDisplayStyleForMode(mode) {
+    switch (this.normalizeBackgroundDisplayMode(mode)) {
+      case "fit":
+        return {
+          size: "contain",
+          position: "center center",
+          repeat: "no-repeat",
+        };
+      case "stretch":
+        return {
+          size: "100% 100%",
+          position: "center center",
+          repeat: "no-repeat",
+        };
+      case "tile":
+        return {
+          size: "auto",
+          position: "top left",
+          repeat: "repeat",
+        };
+      case "center":
+        return {
+          size: "auto",
+          position: "center center",
+          repeat: "no-repeat",
+        };
+      case "span":
+        return {
+          size: "100% auto",
+          position: "center center",
+          repeat: "no-repeat",
+        };
+      case "fill":
+      default:
+        return {
+          size: "cover",
+          position: "center center",
+          repeat: "no-repeat",
+        };
+    }
+  }
+
+  applyBackgroundDisplayMode(mode = null) {
+    const resolvedMode =
+      mode === null
+        ? this.backgroundDisplayMode
+        : this.normalizeBackgroundDisplayMode(mode);
+
+    this.backgroundDisplayMode = resolvedMode;
+    const style = this._getDisplayStyleForMode(resolvedMode);
+    [this.bg1, this.bg2].forEach((el) => {
+      if (!el) return;
+      el.style.backgroundSize = style.size;
+      el.style.backgroundPosition = style.position;
+      el.style.backgroundRepeat = style.repeat;
+    });
+  }
+
+  updateDisplayMode(mode) {
+    this.applyBackgroundDisplayMode(mode);
+  }
+
+  updateShuffleMode(enabled) {
+    this.backgroundShuffle = enabled !== false;
+  }
+
+  isCustomBackgroundToken(url) {
+    const normalized = this._normalizeImageUrl(url);
+    const prefix = this._customBackgroundTokenPrefix || "mdcbg:id:";
+    return normalized.startsWith(prefix) && normalized.length > prefix.length;
+  }
+
+  getCustomBackgroundIdFromToken(token) {
+    const normalized = this._normalizeImageUrl(token);
+    if (!this.isCustomBackgroundToken(normalized)) return "";
+
+    const prefix = this._customBackgroundTokenPrefix || "mdcbg:id:";
+    return normalized.slice(prefix.length);
+  }
+
+  isCustomBackgroundMediaStoreAvailable() {
+    return (
+      typeof window !== "undefined" && typeof window.indexedDB !== "undefined"
+    );
+  }
+
+  customBackgroundDbRequestToPromise(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () =>
+        reject(request.error || new Error("IndexedDB request failed"));
+    });
+  }
+
+  openCustomBackgroundMediaDb() {
+    if (!this.isCustomBackgroundMediaStoreAvailable()) {
+      return Promise.resolve(null);
+    }
+
+    if (this._customBackgroundMediaDbPromise) {
+      return this._customBackgroundMediaDbPromise;
+    }
+
+    this._customBackgroundMediaDbPromise = new Promise((resolve) => {
+      const request = window.indexedDB.open(
+        this._customBackgroundMediaDbName,
+        1,
+      );
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target?.result;
+        if (!db) return;
+
+        if (
+          !db.objectStoreNames.contains(this._customBackgroundMediaStoreName)
+        ) {
+          db.createObjectStore(this._customBackgroundMediaStoreName, {
+            keyPath: "id",
+          });
+        }
+      };
+
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db) {
+          resolve(null);
+          return;
+        }
+
+        db.onversionchange = () => {
+          try {
+            db.close();
+          } catch (e) {}
+          this._customBackgroundMediaDbPromise = null;
+        };
+
+        resolve(db);
+      };
+
+      request.onerror = () => {
+        this._customBackgroundMediaDbPromise = null;
+        resolve(null);
+      };
+    });
+
+    return this._customBackgroundMediaDbPromise;
+  }
+
+  async resolveCustomBackgroundTokenUrl(tokenUrl) {
+    const normalizedToken = this._normalizeImageUrl(tokenUrl);
+    if (!this.isCustomBackgroundToken(normalizedToken)) {
+      return normalizedToken;
+    }
+
+    const cached = this._customBackgroundResolvedUrlCache.get(normalizedToken);
+    if (cached) {
+      return cached;
+    }
+
+    const mediaId = this.getCustomBackgroundIdFromToken(normalizedToken);
+    if (!mediaId) {
+      return "";
+    }
+
+    const db = await this.openCustomBackgroundMediaDb();
+    if (!db) {
+      return "";
+    }
+
+    try {
+      const tx = db.transaction(
+        this._customBackgroundMediaStoreName,
+        "readonly",
+      );
+      const store = tx.objectStore(this._customBackgroundMediaStoreName);
+      const record = await this.customBackgroundDbRequestToPromise(
+        store.get(mediaId),
+      );
+      const imageDataUrl = this._normalizeImageUrl(record?.imageDataUrl);
+      if (!imageDataUrl || !imageDataUrl.startsWith("data:image")) {
+        return "";
+      }
+
+      this._customBackgroundResolvedUrlCache.set(normalizedToken, imageDataUrl);
+      return imageDataUrl;
+    } catch (e) {
+      return "";
+    }
+  }
+
+  async resolveBackgroundImageUrl(imageUrl) {
+    const normalizedUrl = this._normalizeImageUrl(imageUrl);
+    if (!normalizedUrl) return "";
+
+    if (this.isCustomBackgroundToken(normalizedUrl)) {
+      return this.resolveCustomBackgroundTokenUrl(normalizedUrl);
+    }
+
+    return normalizedUrl;
+  }
+
   _getSpecialCategoryType(category) {
     return category === "all" || category === "custom" ? category : null;
   }
 
   _getCustomBackgrounds(settings) {
-    return Array.isArray(settings?.customBackgrounds)
-      ? settings.customBackgrounds
-      : [];
+    if (!Array.isArray(settings?.customBackgrounds)) {
+      return [];
+    }
+
+    const normalized = [];
+    const seen = new Set();
+    settings.customBackgrounds.forEach((entry) => {
+      if (typeof entry === "string") {
+        const url = this._normalizeImageUrl(entry);
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        normalized.push(url);
+        return;
+      }
+
+      if (entry && typeof entry === "object") {
+        const url = this._normalizeImageUrl(entry.url);
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        normalized.push({
+          ...entry,
+          url,
+        });
+      }
+    });
+
+    return normalized;
   }
 
   _normalizeImageUrl(url) {
@@ -437,10 +703,17 @@ class BackgroundManager extends BaseManager {
     }
 
     const selectedSet = new Set(selectedUrls);
-    return allImages.filter((image) => {
+    const filtered = allImages.filter((image) => {
       const url = this._normalizeImageUrl(this.normalizeImage(image).url);
       return selectedSet.has(url);
     });
+
+    // Fallback for migrated/legacy selection maps where URL formats changed.
+    if (filtered.length === 0 && allImages.length > 0) {
+      return allImages;
+    }
+
+    return filtered;
   }
 
   _getImageUrlByIndex(images, index) {
@@ -535,6 +808,11 @@ class BackgroundManager extends BaseManager {
     const category = this.normalizeBackgroundCategory(
       settings.bgCategory || "nature",
     );
+    this.updateDisplayMode(
+      settings.bgDisplayMode || this.backgroundDisplayMode,
+    );
+    this.updateShuffleMode(settings.bgShuffle !== false);
+
     const images = this.getImagesForCategory(category, settings);
     if (images.length === 0) return;
 
@@ -558,10 +836,14 @@ class BackgroundManager extends BaseManager {
     const shouldRotate =
       !lastChange || now - lastChange >= interval || index === -1;
     if (shouldRotate) {
-      index = this._getRandomIndexAvoidingImage(images, {
-        excludeIndex: index,
-        excludeUrl: previousImageUrl,
-      });
+      if (this.isShuffleEnabled(settings)) {
+        index = this._getRandomIndexAvoidingImage(images, {
+          excludeIndex: index,
+          excludeUrl: previousImageUrl,
+        });
+      } else {
+        index = this._getNextOrderedIndex(images, index);
+      }
       settings.currentBgIndex = index;
       settings.lastBgChange = now;
       this.storage.saveSettings(settings);
@@ -860,18 +1142,39 @@ class BackgroundManager extends BaseManager {
   /**
    * Set background with fade transition
    */
-  setBackground(image) {
+  async setBackground(image) {
     const imgObj = this.normalizeImage(image);
-    const fullUrl = this.getImageUrl(imgObj.url);
+    const requestId = (this._setBackgroundRequestId || 0) + 1;
+    this._setBackgroundRequestId = requestId;
+
+    const sourceUrl = await this.resolveBackgroundImageUrl(imgObj.url);
+    if (requestId !== this._setBackgroundRequestId) {
+      return;
+    }
+
+    const fullUrl = this.getImageUrl(sourceUrl);
     const targetBg = this.currentBg === 1 ? this.bg2 : this.bg1;
     const currentBgEl = this.currentBg === 1 ? this.bg1 : this.bg2;
+
+    if (!fullUrl) {
+      targetBg.style.background =
+        "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
+      targetBg.classList.add("active");
+      currentBgEl.classList.remove("active");
+      this.currentImageUrl = "";
+      this.updateAttribution(imgObj);
+      return;
+    }
 
     // Preload image
     const img = new Image();
     img.onload = () => {
+      if (requestId !== this._setBackgroundRequestId) {
+        return;
+      }
+
+      this.applyBackgroundDisplayMode(this.backgroundDisplayMode);
       targetBg.style.backgroundImage = `url(${fullUrl})`;
-      targetBg.style.backgroundSize = "cover";
-      targetBg.style.backgroundPosition = "center center";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
       this.currentBg = this.currentBg === 1 ? 2 : 1;
@@ -879,6 +1182,10 @@ class BackgroundManager extends BaseManager {
       this.updateAttribution(imgObj);
     };
     img.onerror = () => {
+      if (requestId !== this._setBackgroundRequestId) {
+        return;
+      }
+
       // Use fallback gradient if image fails
       targetBg.style.background =
         "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
@@ -913,6 +1220,11 @@ class BackgroundManager extends BaseManager {
     const category = this.normalizeBackgroundCategory(
       settings.bgCategory || "nature",
     );
+    this.updateDisplayMode(
+      settings.bgDisplayMode || this.backgroundDisplayMode,
+    );
+    this.updateShuffleMode(settings.bgShuffle !== false);
+
     const images = this.getImagesForCategory(category, settings);
     if (images.length === 0) return;
 
@@ -920,10 +1232,12 @@ class BackgroundManager extends BaseManager {
       ? settings.currentBgIndex
       : -1;
     const currentImageUrl = this.getCurrentImageUrl(settings);
-    const index = this._getRandomIndexAvoidingImage(images, {
-      excludeIndex: currentIndex,
-      excludeUrl: currentImageUrl,
-    });
+    const index = this.isShuffleEnabled(settings)
+      ? this._getRandomIndexAvoidingImage(images, {
+          excludeIndex: currentIndex,
+          excludeUrl: currentImageUrl,
+        })
+      : this._getNextOrderedIndex(images, currentIndex);
     settings.currentBgIndex = index;
     settings.lastBgChange = Date.now();
     this.storage.saveSettings(settings);
@@ -938,6 +1252,11 @@ class BackgroundManager extends BaseManager {
   updateCategory(category) {
     const settings = this.storage.getSettings();
     const normalizedCategory = this.normalizeBackgroundCategory(category);
+    this.updateDisplayMode(
+      settings.bgDisplayMode || this.backgroundDisplayMode,
+    );
+    this.updateShuffleMode(settings.bgShuffle !== false);
+
     const previousCategory = this.normalizeBackgroundCategory(
       settings.bgCategory || "nature",
     );
@@ -955,11 +1274,15 @@ class BackgroundManager extends BaseManager {
     settings.bgCategory = normalizedCategory;
     const images = this.getImagesForCategory(normalizedCategory, settings);
     if (images.length > 0) {
-      const index = this._getRandomIndexAvoidingImage(images, {
-        excludeIndex:
-          previousCategory === normalizedCategory ? previousIndex : -1,
-        excludeUrl: previousImageUrl,
-      });
+      const index = this.isShuffleEnabled(settings)
+        ? this._getRandomIndexAvoidingImage(images, {
+            excludeIndex:
+              previousCategory === normalizedCategory ? previousIndex : -1,
+            excludeUrl: previousImageUrl,
+          })
+        : previousCategory === normalizedCategory
+          ? this._getNextOrderedIndex(images, previousIndex)
+          : 0;
       settings.currentBgIndex = index;
       settings.lastBgChange = Date.now();
       this.storage.saveSettings(settings);

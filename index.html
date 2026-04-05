@@ -5876,6 +5876,26 @@
               />
             </div>
             <div class="setting-group">
+              <label class="setting-label">Background Display Mode</label>
+              <select class="setting-select" id="bgDisplayMode">
+                <option value="fill" selected>Fill</option>
+                <option value="fit">Fit</option>
+                <option value="stretch">Stretch</option>
+                <option value="tile">Tile</option>
+                <option value="center">Center</option>
+                <option value="span">Span</option>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label class="checkbox-option" for="bgShuffle">
+                <input type="checkbox" id="bgShuffle" checked />
+                <span>Shuffle Background Order</span>
+              </label>
+              <p class="setting-hint">
+                Turn off shuffle to cycle backgrounds in fixed order.
+              </p>
+            </div>
+            <div class="setting-group">
               <label class="setting-label">Background Category</label>
               <select class="setting-select" id="bgCategory">
                 <option value="all">All Backgrounds</option>
@@ -5918,7 +5938,6 @@
                 id="customBgInput"
                 accept="image/*"
                 style="display: none"
-                multiple
               />
               <div class="custom-bg-list bg-pool-list" id="customBgList">
                 <!-- Background pool items will be shown here -->
