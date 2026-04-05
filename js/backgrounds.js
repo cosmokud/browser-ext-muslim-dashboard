@@ -9,10 +9,13 @@ class BackgroundManager extends BaseManager {
     this.storage = storage;
     this.bg1 = document.getElementById("bg1");
     this.bg2 = document.getElementById("bg2");
+    this.backgroundOverlayEl = document.querySelector(".background-overlay");
     this.currentBg = 1;
     this.currentImageUrl = "";
     this.intervalId = null;
     this.backgroundDisplayMode = "fill";
+    this.backgroundDim = 100;
+    this.backgroundBlur = 0;
     this.backgroundShuffle = true;
     this._setBackgroundRequestId = 0;
     this._customBackgroundTokenPrefix = "mdcbg:id:";
@@ -339,6 +342,8 @@ class BackgroundManager extends BaseManager {
   init() {
     const settings = this.storage.getSettings();
     this.updateDisplayMode(settings.bgDisplayMode || "fill");
+    this.updateDim(settings.bgDim);
+    this.updateBlur(settings.bgBlur);
     this.updateShuffleMode(settings.bgShuffle !== false);
     this.loadBackground(settings);
     this.startRotation(settings.bgInterval);
@@ -375,6 +380,18 @@ class BackgroundManager extends BaseManager {
       "span",
     ]);
     return allowed.has(normalized) ? normalized : "fill";
+  }
+
+  normalizeBackgroundDim(value, fallback = 100) {
+    const parsed = Number(value);
+    const safe = Number.isFinite(parsed) ? parsed : fallback;
+    return Math.min(100, Math.max(0, Math.round(safe)));
+  }
+
+  normalizeBackgroundBlur(value, fallback = 0) {
+    const parsed = Number(value);
+    const safe = Number.isFinite(parsed) ? parsed : fallback;
+    return Math.min(40, Math.max(0, Math.round(safe)));
   }
 
   isShuffleEnabled(settings = null) {
@@ -452,6 +469,39 @@ class BackgroundManager extends BaseManager {
 
   updateDisplayMode(mode) {
     this.applyBackgroundDisplayMode(mode);
+  }
+
+  applyBackgroundVisualEffects({ dim, blur } = {}) {
+    const resolvedDim =
+      dim === undefined
+        ? this.backgroundDim
+        : this.normalizeBackgroundDim(dim, this.backgroundDim);
+    const resolvedBlur =
+      blur === undefined
+        ? this.backgroundBlur
+        : this.normalizeBackgroundBlur(blur, this.backgroundBlur);
+
+    this.backgroundDim = resolvedDim;
+    this.backgroundBlur = resolvedBlur;
+
+    if (this.backgroundOverlayEl) {
+      this.backgroundOverlayEl.style.opacity = String(resolvedDim / 100);
+    }
+
+    const blurCss = resolvedBlur > 0 ? `blur(${resolvedBlur}px)` : "none";
+    [this.bg1, this.bg2].forEach((el) => {
+      if (!el) return;
+      el.style.filter = blurCss;
+      el.style.webkitFilter = blurCss;
+    });
+  }
+
+  updateDim(dim) {
+    this.applyBackgroundVisualEffects({ dim });
+  }
+
+  updateBlur(blur) {
+    this.applyBackgroundVisualEffects({ blur });
   }
 
   updateShuffleMode(enabled) {
@@ -811,6 +861,8 @@ class BackgroundManager extends BaseManager {
     this.updateDisplayMode(
       settings.bgDisplayMode || this.backgroundDisplayMode,
     );
+    this.updateDim(settings.bgDim);
+    this.updateBlur(settings.bgBlur);
     this.updateShuffleMode(settings.bgShuffle !== false);
 
     const images = this.getImagesForCategory(category, settings);
@@ -1223,6 +1275,8 @@ class BackgroundManager extends BaseManager {
     this.updateDisplayMode(
       settings.bgDisplayMode || this.backgroundDisplayMode,
     );
+    this.updateDim(settings.bgDim);
+    this.updateBlur(settings.bgBlur);
     this.updateShuffleMode(settings.bgShuffle !== false);
 
     const images = this.getImagesForCategory(category, settings);
@@ -1255,6 +1309,8 @@ class BackgroundManager extends BaseManager {
     this.updateDisplayMode(
       settings.bgDisplayMode || this.backgroundDisplayMode,
     );
+    this.updateDim(settings.bgDim);
+    this.updateBlur(settings.bgBlur);
     this.updateShuffleMode(settings.bgShuffle !== false);
 
     const previousCategory = this.normalizeBackgroundCategory(

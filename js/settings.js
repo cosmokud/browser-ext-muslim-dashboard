@@ -252,6 +252,10 @@ class SettingsManager extends BaseManager {
     this.bgIntervalCustom = document.getElementById("bgIntervalCustom");
     this.customIntervalGroup = document.getElementById("customIntervalGroup");
     this.bgDisplayMode = document.getElementById("bgDisplayMode");
+    this.bgDim = document.getElementById("bgDim");
+    this.bgDimValue = document.getElementById("bgDimValue");
+    this.bgBlur = document.getElementById("bgBlur");
+    this.bgBlurValue = document.getElementById("bgBlurValue");
     this.bgShuffle = document.getElementById("bgShuffle");
     this.bgCategory = document.getElementById("bgCategory");
     this.changeBackgroundBtn = document.getElementById("changeBackgroundBtn");
@@ -1300,11 +1304,21 @@ class SettingsManager extends BaseManager {
     const normalizedBgDisplayMode = this.normalizeBackgroundDisplayMode(
       settings.bgDisplayMode,
     );
+    const normalizedBgDim = this.normalizeBackgroundDim(settings.bgDim, 100);
+    const normalizedBgBlur = this.normalizeBackgroundBlur(settings.bgBlur, 0);
     if (this.bgCategory) {
       this.bgCategory.value = normalizedBgCategory;
     }
     if (this.bgDisplayMode) {
       this.bgDisplayMode.value = normalizedBgDisplayMode;
+    }
+    if (this.bgDim) {
+      this.bgDim.value = String(normalizedBgDim);
+      this.updateBackgroundDimLabel();
+    }
+    if (this.bgBlur) {
+      this.bgBlur.value = String(normalizedBgBlur);
+      this.updateBackgroundBlurLabel();
     }
     if (this.bgShuffle) {
       this.bgShuffle.checked = settings.bgShuffle !== false;
@@ -2809,6 +2823,22 @@ class SettingsManager extends BaseManager {
       );
       this.uiBlurPower.value = String(clamped);
       this.uiBlurPowerValue.textContent = clamped + "%";
+    }
+  }
+
+  updateBackgroundDimLabel() {
+    if (this.bgDimValue && this.bgDim) {
+      const clamped = this.normalizeBackgroundDim(this.bgDim.value, 100);
+      this.bgDim.value = String(clamped);
+      this.bgDimValue.textContent = clamped + "%";
+    }
+  }
+
+  updateBackgroundBlurLabel() {
+    if (this.bgBlurValue && this.bgBlur) {
+      const clamped = this.normalizeBackgroundBlur(this.bgBlur.value, 0);
+      this.bgBlur.value = String(clamped);
+      this.bgBlurValue.textContent = clamped + "px";
     }
   }
 
@@ -4540,6 +4570,14 @@ class SettingsManager extends BaseManager {
       "span",
     ]);
     return allowed.has(normalized) ? normalized : "fill";
+  }
+
+  normalizeBackgroundDim(value, fallback = 100) {
+    return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
+  }
+
+  normalizeBackgroundBlur(value, fallback = 0) {
+    return this.clampNumber(parseInt(value, 10), 0, 40, fallback);
   }
 
   isCustomBackgroundToken(value) {
@@ -6671,6 +6709,14 @@ class SettingsManager extends BaseManager {
     settings.bgDisplayMode = this.normalizeBackgroundDisplayMode(
       this.bgDisplayMode?.value || settings.bgDisplayMode || "fill",
     );
+    settings.bgDim = this.normalizeBackgroundDim(
+      this.bgDim?.value ?? settings.bgDim,
+      100,
+    );
+    settings.bgBlur = this.normalizeBackgroundBlur(
+      this.bgBlur?.value ?? settings.bgBlur,
+      0,
+    );
     settings.bgShuffle = this.bgShuffle?.checked !== false;
 
     // Theme settings (container width, blur power, and theme selection are now in Themes panel)
@@ -7157,6 +7203,12 @@ class SettingsManager extends BaseManager {
       this.backgrounds.updateInterval(interval);
       if (typeof this.backgrounds.updateDisplayMode === "function") {
         this.backgrounds.updateDisplayMode(settings.bgDisplayMode || "fill");
+      }
+      if (typeof this.backgrounds.updateDim === "function") {
+        this.backgrounds.updateDim(settings.bgDim);
+      }
+      if (typeof this.backgrounds.updateBlur === "function") {
+        this.backgrounds.updateBlur(settings.bgBlur);
       }
       if (typeof this.backgrounds.updateShuffleMode === "function") {
         this.backgrounds.updateShuffleMode(settings.bgShuffle !== false);
@@ -9442,6 +9494,28 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.bgDim) {
+      this.bgDim.addEventListener("input", () => {
+        this.updateBackgroundDimLabel();
+        const dim = this.normalizeBackgroundDim(this.bgDim.value, 100);
+        if (this.backgrounds?.updateDim) {
+          this.backgrounds.updateDim(dim);
+        }
+        this._backgroundSettingsDirty = true;
+      });
+    }
+
+    if (this.bgBlur) {
+      this.bgBlur.addEventListener("input", () => {
+        this.updateBackgroundBlurLabel();
+        const blur = this.normalizeBackgroundBlur(this.bgBlur.value, 0);
+        if (this.backgrounds?.updateBlur) {
+          this.backgrounds.updateBlur(blur);
+        }
+        this._backgroundSettingsDirty = true;
+      });
+    }
+
     // Compact weather toggle
     if (this.compactWeatherEnabled) {
       this.compactWeatherEnabled.addEventListener("change", (e) => {
@@ -10170,12 +10244,26 @@ class SettingsManager extends BaseManager {
           settings.bgDisplayMode = this.normalizeBackgroundDisplayMode(
             this.bgDisplayMode?.value || settings.bgDisplayMode || "fill",
           );
+          settings.bgDim = this.normalizeBackgroundDim(
+            this.bgDim?.value ?? settings.bgDim,
+            100,
+          );
+          settings.bgBlur = this.normalizeBackgroundBlur(
+            this.bgBlur?.value ?? settings.bgBlur,
+            0,
+          );
           settings.bgShuffle = this.bgShuffle?.checked !== false;
           this.storage.saveSettings(settings);
 
           if (this.backgrounds) {
             if (typeof this.backgrounds.updateDisplayMode === "function") {
               this.backgrounds.updateDisplayMode(settings.bgDisplayMode);
+            }
+            if (typeof this.backgrounds.updateDim === "function") {
+              this.backgrounds.updateDim(settings.bgDim);
+            }
+            if (typeof this.backgrounds.updateBlur === "function") {
+              this.backgrounds.updateBlur(settings.bgBlur);
             }
             if (typeof this.backgrounds.updateShuffleMode === "function") {
               this.backgrounds.updateShuffleMode(settings.bgShuffle);

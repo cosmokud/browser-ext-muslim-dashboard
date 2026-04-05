@@ -5887,6 +5887,26 @@
               </select>
             </div>
             <div class="setting-group">
+              <label class="setting-label">Background Dim</label>
+              <p class="setting-hint">
+                Darkens the background for better foreground readability.
+              </p>
+              <div class="custom-width-slider">
+                <input type="range" id="bgDim" min="0" max="100" value="100" />
+                <span class="custom-width-value" id="bgDimValue">100%</span>
+              </div>
+            </div>
+            <div class="setting-group">
+              <label class="setting-label">Background Blur</label>
+              <p class="setting-hint">
+                Adds blur to the background image layer.
+              </p>
+              <div class="custom-width-slider">
+                <input type="range" id="bgBlur" min="0" max="40" value="0" />
+                <span class="custom-width-value" id="bgBlurValue">0px</span>
+              </div>
+            </div>
+            <div class="setting-group">
               <label class="checkbox-option" for="bgShuffle">
                 <input type="checkbox" id="bgShuffle" checked />
                 <span>Shuffle Background Order</span>

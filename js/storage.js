@@ -158,6 +158,8 @@ class StorageManager {
       bgIntervalCustom: null, // custom interval in minutes
       bgCategory: "nature",
       bgDisplayMode: "fill", // fill, fit, stretch, tile, center, span
+      bgDim: 100, // background overlay intensity percentage
+      bgBlur: 0, // background image blur radius in px
       bgShuffle: true, // true = random order, false = ordered cycling
       lastBgChange: null,
       currentBgIndex: 0,
@@ -569,6 +571,18 @@ class StorageManager {
     merged.bgDisplayMode = allowedBgDisplayModes.has(normalizedBgDisplayMode)
       ? normalizedBgDisplayMode
       : defaults.bgDisplayMode;
+    let mergedBgDim = Number(merged.bgDim);
+    if (!Number.isFinite(mergedBgDim)) {
+      mergedBgDim = defaults.bgDim;
+    }
+    merged.bgDim = Math.min(100, Math.max(0, Math.round(mergedBgDim)));
+
+    let mergedBgBlur = Number(merged.bgBlur);
+    if (!Number.isFinite(mergedBgBlur)) {
+      mergedBgBlur = defaults.bgBlur;
+    }
+    merged.bgBlur = Math.min(40, Math.max(0, Math.round(mergedBgBlur)));
+
     merged.bgShuffle = merged.bgShuffle !== false;
 
     if (Array.isArray(merged.customBackgrounds)) {
@@ -786,6 +800,24 @@ class StorageManager {
     )
       ? normalizedBgDisplayMode
       : defaults.bgDisplayMode;
+    let normalizedBgDim = Number(normalizedSettings.bgDim);
+    if (!Number.isFinite(normalizedBgDim)) {
+      normalizedBgDim = defaults.bgDim;
+    }
+    normalizedSettings.bgDim = Math.min(
+      100,
+      Math.max(0, Math.round(normalizedBgDim)),
+    );
+
+    let normalizedBgBlur = Number(normalizedSettings.bgBlur);
+    if (!Number.isFinite(normalizedBgBlur)) {
+      normalizedBgBlur = defaults.bgBlur;
+    }
+    normalizedSettings.bgBlur = Math.min(
+      40,
+      Math.max(0, Math.round(normalizedBgBlur)),
+    );
+
     normalizedSettings.bgShuffle = normalizedSettings.bgShuffle !== false;
 
     if (Array.isArray(normalizedSettings.customBackgrounds)) {
