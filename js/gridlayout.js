@@ -18,6 +18,7 @@ class GridLayoutManager {
     this.isDragging = false;
     this.isEditModeEnabled = false; // Drag-drop mode disabled by default
     this.isEditModeLocked = false;
+    this.isQuranFocusModeContext = false;
 
     // Sidebar mode (3-column layout) drag-drop support
     this.isSidebarModeEnabled = false;
@@ -183,16 +184,60 @@ class GridLayoutManager {
     return "sidebarModeComponentWidths";
   }
 
+  getMainEditModeStorageKey() {
+    return "gridEditModeEnabled";
+  }
+
+  getFocusEditModeStorageKey() {
+    return "gridEditModeEnabledQuranFocus";
+  }
+
+  isQuranFocusModeContextActive() {
+    const bodyHasFocusClass =
+      !!document.body && document.body.classList.contains("quran-focus-mode");
+
+    if (!bodyHasFocusClass && this.isQuranFocusModeContext) {
+      const dashboardFocusActive =
+        !!window.dashboard && window.dashboard._quranFocusModeActive === true;
+      if (!dashboardFocusActive) {
+        this.isQuranFocusModeContext = false;
+      }
+    }
+
+    return this.isQuranFocusModeContext || bodyHasFocusClass;
+  }
+
+  getEditModeStorageKey() {
+    return this.isQuranFocusModeContextActive()
+      ? this.getFocusEditModeStorageKey()
+      : this.getMainEditModeStorageKey();
+  }
+
+  setQuranFocusModeActive(active) {
+    this.isQuranFocusModeContext = active === true;
+
+    // Focus mode and main layout keep separate edit-mode state.
+    const settings = this.storage.getSettings();
+    const editModeStorageKey = this.getEditModeStorageKey();
+    this.isEditModeEnabled = settings[editModeStorageKey] === true;
+
+    const toggleBtn = document.getElementById("layoutEditBtn");
+    this.updateEditModeUI(toggleBtn);
+    this.clearSidebarDropTarget();
+  }
+
+  isSidebarDropAllowed() {
+    return this.isSidebarModeEnabled && !this.isQuranFocusModeContextActive();
+  }
+
   getFocusModeMiddleWidthStorageKey() {
     return "quranFocusMiddleComponentWidths";
   }
 
   getMiddleWidthStorageKey(componentId = "") {
     const id = String(componentId || "").trim();
-    const isFocusModeActive =
-      !!document.body && document.body.classList.contains("quran-focus-mode");
     const isQuranFocusPocketQuran =
-      id === "pocketQuranCard" && isFocusModeActive;
+      id === "pocketQuranCard" && this.isQuranFocusModeContextActive();
 
     if (isQuranFocusPocketQuran) {
       return this.getFocusModeMiddleWidthStorageKey();
@@ -1061,7 +1106,8 @@ class GridLayoutManager {
 
     // Load edit mode state from settings (default OFF)
     const settings = this.storage.getSettings();
-    this.isEditModeEnabled = settings.gridEditModeEnabled === true;
+    this.isEditModeEnabled =
+      settings[this.getMainEditModeStorageKey()] === true;
 
     // Calculate initial responsive layout based on viewport
     this.lastViewportWidth = this.getLayoutWidth();
@@ -1119,6 +1165,7 @@ class GridLayoutManager {
    */
   toggleEditMode() {
     const wasEditModeEnabled = this.isEditModeEnabled;
+    const editModeStorageKey = this.getEditModeStorageKey();
 
     if (this.isEditModeLocked) {
       // Safety: if lock is active, ensure edit mode is off.
@@ -1126,7 +1173,7 @@ class GridLayoutManager {
         this.isEditModeEnabled = false;
 
         const settings = this.storage.getSettings();
-        settings.gridEditModeEnabled = false;
+        settings[editModeStorageKey] = false;
         this.storage.saveSettings(settings);
       }
 
@@ -1140,7 +1187,7 @@ class GridLayoutManager {
 
     // Save state to settings
     const settings = this.storage.getSettings();
-    settings.gridEditModeEnabled = this.isEditModeEnabled;
+    settings[editModeStorageKey] = this.isEditModeEnabled;
     this.storage.saveSettings(settings);
 
     // Update UI
@@ -1957,6 +2004,14 @@ class GridLayoutManager {
       return null;
     }
 
+    // In Quran Focus + Layout Editor, Pocket Quran can be resized only.
+    if (
+      this.isQuranFocusModeContextActive() &&
+      this.getSidebarComponentId(draggable) === "pocketQuranCard"
+    ) {
+      return null;
+    }
+
     // Allow dragging items currently docked in sidebars (edit mode only)
     const isSidebarItem = draggable.classList.contains("sidebar-detached");
     if (
@@ -2277,7 +2332,7 @@ class GridLayoutManager {
    */
   updateDropTarget(clientX, clientY) {
     // Sidebar mode: treat sidebars as drop targets.
-    if (this.isSidebarModeEnabled) {
+    if (this.isSidebarDropAllowed()) {
       this.updateSidebarDropTarget(clientX, clientY);
 
       // If we're not in edit mode, do NOT reposition placeholder within the grid.
@@ -2288,6 +2343,8 @@ class GridLayoutManager {
           .forEach((r) => r.classList.remove("grid-row-target"));
         return;
       }
+    } else {
+      this.clearSidebarDropTarget();
     }
 
     const draggedId = this.draggedItem.dataset.gridId;
@@ -2511,7 +2568,7 @@ class GridLayoutManager {
     if (!this.isDragging) return;
 
     // Ensure sidebar target is up-to-date at release time
-    if (this.isSidebarModeEnabled) {
+    if (this.isSidebarDropAllowed()) {
       this.updateSidebarDropTarget(e.clientX, e.clientY);
     }
 
@@ -2530,7 +2587,7 @@ class GridLayoutManager {
     if (!this.isDragging) return;
 
     // Ensure sidebar target is up-to-date at release time
-    if (this.isSidebarModeEnabled) {
+    if (this.isSidebarDropAllowed()) {
       const touch = (e.changedTouches && e.changedTouches[0]) || null;
       if (touch) this.updateSidebarDropTarget(touch.clientX, touch.clientY);
     }
@@ -2553,7 +2610,7 @@ class GridLayoutManager {
     this.restoreSmoothScrollAfterDrag();
 
     // Sidebar drop takes precedence (no grid animation)
-    if (this.isSidebarModeEnabled && this.sidebarDropTarget) {
+    if (this.isSidebarDropAllowed() && this.sidebarDropTarget) {
       this.finalizeSidebarDrop(this.sidebarDropTarget);
       return;
     }
@@ -3048,17 +3105,18 @@ class GridLayoutManager {
   }
 
   /**
-   * Lock/unlock edit mode (used by Quran Focus Mode)
+   * Lock/unlock edit mode (used by mode managers like Moment Mode)
    */
   setEditModeLocked(locked) {
     const next = locked === true;
     this.isEditModeLocked = next;
+    const editModeStorageKey = this.getEditModeStorageKey();
 
     if (this.isEditModeLocked && this.isEditModeEnabled) {
       this.isEditModeEnabled = false;
 
       const settings = this.storage.getSettings();
-      settings.gridEditModeEnabled = false;
+      settings[editModeStorageKey] = false;
       this.storage.saveSettings(settings);
     }
 

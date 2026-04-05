@@ -579,6 +579,16 @@ class MuslimDashboard {
   }
 
   syncSidebarModeWithLayoutEditMode() {
+    const focusModeClassActive =
+      !!document.body && document.body.classList.contains("quran-focus-mode");
+    if (!focusModeClassActive && this._quranFocusModeActive === true) {
+      // Recover from stale in-memory state if class cleanup has already happened.
+      this._quranFocusModeActive = false;
+    }
+
+    const focusModeActive =
+      focusModeClassActive || this._quranFocusModeActive === true;
+
     const isEditModeEnabled = !!(
       this.gridLayout &&
       typeof this.gridLayout.isEditMode === "function" &&
@@ -589,7 +599,7 @@ class MuslimDashboard {
 
     const canUseSidebarLayout =
       wantsSidebarLayout &&
-      !this._quranFocusModeActive &&
+      !focusModeActive &&
       !this._momentModeActive &&
       this.isSidebarWidthSupported();
 
@@ -1831,21 +1841,6 @@ class MuslimDashboard {
         }
       } catch (e) {}
 
-      // Disable and lock layout editing while Quran Focus Mode is active.
-      try {
-        if (
-          this.gridLayout &&
-          typeof this.gridLayout.setEditModeLocked === "function"
-        ) {
-          this.gridLayout.setEditModeLocked(true);
-        } else if (
-          this.gridLayout &&
-          typeof this.gridLayout.disableEditMode === "function"
-        ) {
-          this.gridLayout.disableEditMode();
-        }
-      } catch (e) {}
-
       this._quranFocusModeActive = true;
       focusBtn.setAttribute("aria-pressed", "true");
       focusBtn.classList.add("active");
@@ -1918,6 +1913,16 @@ class MuslimDashboard {
       // Add focus mode class to body for full viewport styling
       document.body.classList.add("quran-focus-mode");
 
+      // Focus mode uses its own edit-mode state (separate from main layout).
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setQuranFocusModeActive === "function"
+        ) {
+          this.gridLayout.setQuranFocusModeActive(true);
+        }
+      } catch (e) {}
+
       // Switch Pocket Quran sizing to focus-mode width scope so main-layout
       // custom width does not leak into focus mode.
       try {
@@ -1933,16 +1938,6 @@ class MuslimDashboard {
 
     const exitFocusMode = () => {
       this._quranFocusModeActive = false;
-
-      // Unlock layout editing when Quran Focus Mode exits.
-      try {
-        if (
-          this.gridLayout &&
-          typeof this.gridLayout.setEditModeLocked === "function"
-        ) {
-          this.gridLayout.setEditModeLocked(false);
-        }
-      } catch (e) {}
 
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
@@ -1960,6 +1955,16 @@ class MuslimDashboard {
 
       // Remove focus mode class so normal styling returns.
       document.body.classList.remove("quran-focus-mode");
+
+      // Return to main-layout edit-mode state after leaving focus mode.
+      try {
+        if (
+          this.gridLayout &&
+          typeof this.gridLayout.setQuranFocusModeActive === "function"
+        ) {
+          this.gridLayout.setQuranFocusModeActive(false);
+        }
+      } catch (e) {}
 
       // Undo the temporary, forced focus-mode hiding without reloading the page.
       // This keeps Pocket Quran recitation (audio) running.
