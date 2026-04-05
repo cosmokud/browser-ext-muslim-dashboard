@@ -4876,18 +4876,19 @@ body.quran-focus-mode #pocketQuranCard {
    preserving all existing focus-mode behavior. */
 body.quran-focus-mode #pocketQuranCard.quran-focus-floating-width {
   position: fixed !important;
-  left: 50%;
+  left: 0;
   top: var(--spacing-lg);
-  right: auto;
+  right: 0;
   bottom: auto;
-  transform: translateX(-50%);
+  transform: none !important;
   width: var(--quran-focus-pocket-width, calc(100vw - var(--spacing-lg) * 2));
-  max-width: var(
-    --quran-focus-pocket-width,
+  max-width: min(
+    var(--quran-focus-pocket-width, calc(100vw - var(--spacing-lg) * 2)),
     calc(100vw - var(--spacing-lg) * 2)
   );
   flex: 0 0 auto !important;
-  margin: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   z-index: 25;
 }
 

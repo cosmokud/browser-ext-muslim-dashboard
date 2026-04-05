@@ -249,6 +249,14 @@ class GridLayoutManager {
     const width = Math.round(Number(widthPx) || 0);
     if (!Number.isFinite(width) || width <= 0) return;
 
+    // Clear any stale drag offsets/transforms so focus-mode centering stays
+    // stable when edit mode is toggled on/off after a resize.
+    el.style.removeProperty("left");
+    el.style.removeProperty("right");
+    el.style.removeProperty("top");
+    el.style.removeProperty("bottom");
+    el.style.removeProperty("transform");
+
     el.classList.add("quran-focus-floating-width");
     el.style.setProperty("--quran-focus-pocket-width", `${width}px`);
   }
@@ -257,6 +265,11 @@ class GridLayoutManager {
     if (!el) return;
     el.classList.remove("quran-focus-floating-width");
     el.style.removeProperty("--quran-focus-pocket-width");
+    el.style.removeProperty("left");
+    el.style.removeProperty("right");
+    el.style.removeProperty("top");
+    el.style.removeProperty("bottom");
+    el.style.removeProperty("transform");
   }
 
   getFocusModeMiddleWidthStorageKey() {
@@ -514,8 +527,8 @@ class GridLayoutManager {
     el.style.flex = `0 0 ${clampedWidth}px`;
     if (this.isFocusModePocketQuranElement(el)) {
       this.applyQuranFocusFloatingWidthStyles(el, clampedWidth);
-      el.style.marginLeft = "0";
-      el.style.marginRight = "0";
+      el.style.marginLeft = "auto";
+      el.style.marginRight = "auto";
     } else {
       this.clearQuranFocusFloatingWidthStyles(el);
       el.style.marginLeft = "auto";
@@ -1249,6 +1262,13 @@ class GridLayoutManager {
     }
     // Also add to body so sidebar CSS selectors work
     document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+
+    if (this.isQuranFocusModeContextActive()) {
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      if (pocketQuranCard) {
+        this.applySavedMiddleWidthToElement(pocketQuranCard);
+      }
+    }
 
     // Show toast notification
     this.showToast(
