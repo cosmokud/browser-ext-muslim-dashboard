@@ -1251,15 +1251,35 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 /* Quotes: content search button (top-right of quoteSection) */
-.quote-search-btn {
+.quote-search-btn,
+.quote-pause-btn,
+.quote-shuffle-btn {
   position: absolute;
   top: var(--spacing-md);
-  right: var(--spacing-md);
   z-index: 2;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity var(--transition-normal);
+}
+
+.quote-search-btn {
+  right: var(--spacing-md);
+}
+
+.quote-pause-btn {
+  right: calc(
+    var(--spacing-md) + var(--action-btn-size) + var(--spacing-xs) +
+      var(--action-btn-size) + var(--spacing-xs)
+  );
+}
+
+.quote-shuffle-btn {
+  right: calc(
+    var(--spacing-md) + var(--action-btn-size) + var(--spacing-xs) +
+      var(--action-btn-size) + var(--spacing-xs) + var(--action-btn-size) +
+      var(--spacing-xs)
+  );
 }
 
 .quote-section:hover .quote-lang-selector-btn {
@@ -1272,6 +1292,20 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+.quote-section:hover .quote-pause-btn,
+.quote-section:hover .quote-shuffle-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.quote-pause-btn[aria-pressed="true"],
+.quote-shuffle-btn[aria-pressed="true"] {
+  background: var(--action-btn-bg-hover);
+  border-color: var(--action-btn-focus-ring);
+  box-shadow: var(--action-btn-shadow-hover);
 }
 
 .quote-refresh:hover {
@@ -13075,6 +13109,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .quote-pause-btn,
+  .quote-shuffle-btn,
   .pocket-quran-toggle-group > button
 ) {
   --_action-btn-size: var(--action-btn-size);
@@ -13113,6 +13149,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .quote-pause-btn,
+    .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   ):hover:not(:disabled) {
   background: var(--action-btn-bg-hover);
@@ -13126,6 +13164,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .quote-pause-btn,
+    .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   ):active:not(:disabled) {
   transform: translateY(0);
@@ -13138,6 +13178,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .quote-pause-btn,
+  .quote-shuffle-btn,
   .pocket-quran-toggle-group > button
 ):focus-visible {
   outline: 2px solid var(--action-btn-focus-ring);
@@ -13150,6 +13192,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   .card-header-actions > .card-blur-menu > .card-blur-btn,
   .quote-search-btn,
   .quote-lang-selector-btn,
+  .quote-pause-btn,
+  .quote-shuffle-btn,
   .pocket-quran-toggle-group > button
 ):disabled {
   opacity: 0.52;
@@ -13165,6 +13209,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .quote-pause-btn,
+    .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   ) {
   backdrop-filter: none;
@@ -13177,6 +13223,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .quote-pause-btn,
+    .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   )
   .icon-theme-svg
@@ -13187,6 +13235,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > .card-blur-menu > .card-blur-btn,
     .quote-search-btn,
     .quote-lang-selector-btn,
+    .quote-pause-btn,
+    .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   )
   svg {

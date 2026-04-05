@@ -152,6 +152,8 @@ class StorageManager {
       useUserQuotes: true,
       quotesPerPage: 10,
       quoteLayoutStyle: "classic", // 'classic', 'minimal', 'elegant', 'card', 'banner'
+      quoteAutoRotatePaused: false,
+      quoteShuffleEnabled: true,
 
       // Background settings
       bgInterval: 60, // minutes
@@ -585,6 +587,9 @@ class StorageManager {
 
     merged.bgShuffle = merged.bgShuffle !== false;
 
+    merged.quoteAutoRotatePaused = merged.quoteAutoRotatePaused === true;
+    merged.quoteShuffleEnabled = merged.quoteShuffleEnabled !== false;
+
     if (Array.isArray(merged.customBackgrounds)) {
       const dedupedRefs = [];
       const seen = new Set();
@@ -819,6 +824,11 @@ class StorageManager {
     );
 
     normalizedSettings.bgShuffle = normalizedSettings.bgShuffle !== false;
+
+    normalizedSettings.quoteAutoRotatePaused =
+      normalizedSettings.quoteAutoRotatePaused === true;
+    normalizedSettings.quoteShuffleEnabled =
+      normalizedSettings.quoteShuffleEnabled !== false;
 
     if (Array.isArray(normalizedSettings.customBackgrounds)) {
       const dedupedRefs = [];

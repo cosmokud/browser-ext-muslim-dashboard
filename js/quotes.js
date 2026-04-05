@@ -29,6 +29,9 @@ class QuotesManager extends BaseManager {
     this.autoRotateMs = 60 * 1000;
     this.autoRotateTimer = null;
     this._hoverPauseAutoRotate = false;
+    this.quoteAutoRotatePaused = false;
+    this.quoteShuffleEnabled = true;
+    this._sequentialQuoteCursor = -1;
 
     // Track running animations so we can cancel cleanly
     this._activeAnimations = [];
@@ -39,6 +42,8 @@ class QuotesManager extends BaseManager {
     this.quotePrev = document.getElementById("quotePrev");
     this.quoteNext = document.getElementById("quoteNext");
     this.quoteSection = document.getElementById("quoteSection");
+    this.quotePauseBtn = null;
+    this.quoteShuffleBtn = null;
 
     this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
 
@@ -57,6 +62,7 @@ class QuotesManager extends BaseManager {
     document.addEventListener("md:icon-theme-change", () => {
       this.updateLanguageSelectorButton();
       this.updateEditorLanguagePickerButton();
+      this.updateQuoteControlButtons();
     });
   }
 
@@ -67,11 +73,14 @@ class QuotesManager extends BaseManager {
     await this.loadDefaultQuotes();
     this.loadUserQuotes();
     this.applyLayoutStyle();
+    this.syncQuoteBehaviorFromSettings({ applyTimer: false });
 
     // Default quotes language selector UI (top-right of quoteSection)
     this.createLanguageSelectorButton();
+    this.createQuoteControlButtons();
     this.createLanguageSelectorModal();
     this.updateLanguageSelectorButton();
+    this.updateQuoteControlButtons();
 
     this.displayRandomQuote();
     this.setupEventListeners();
@@ -100,6 +109,139 @@ class QuotesManager extends BaseManager {
 
     // Add the selected style class
     this.quoteContainer.classList.add(`quote-style-${style}`);
+  }
+
+  syncQuoteBehaviorFromSettings({ applyTimer = true } = {}) {
+    const settings = this.storage.getSettings();
+    this.quoteAutoRotatePaused = settings?.quoteAutoRotatePaused === true;
+    this.quoteShuffleEnabled = settings?.quoteShuffleEnabled !== false;
+
+    if (this.quoteShuffleEnabled) {
+      this._sequentialQuoteCursor = -1;
+    } else {
+      const quotes = this.getAvailableQuotes();
+      this._sequentialQuoteCursor = quotes.indexOf(this.currentQuote);
+    }
+
+    this.updateQuoteControlButtons();
+
+    if (!applyTimer) return;
+    if (this.quoteAutoRotatePaused) {
+      this.stopAutoRotate();
+    } else {
+      this.startAutoRotate();
+    }
+  }
+
+  persistQuoteBehaviorSettings() {
+    const settings = this.storage.getSettings();
+    settings.quoteAutoRotatePaused = this.quoteAutoRotatePaused === true;
+    settings.quoteShuffleEnabled = this.quoteShuffleEnabled !== false;
+    this.storage.saveSettings(settings);
+  }
+
+  setQuoteAutoRotatePaused(paused, { persist = true } = {}) {
+    this.quoteAutoRotatePaused = paused === true;
+    this.updateQuoteControlButtons();
+
+    if (persist) {
+      this.persistQuoteBehaviorSettings();
+    }
+
+    if (this.quoteAutoRotatePaused) {
+      this.stopAutoRotate();
+    } else {
+      this.startAutoRotate();
+    }
+  }
+
+  setQuoteShuffleEnabled(enabled, { persist = true } = {}) {
+    this.quoteShuffleEnabled = enabled !== false;
+
+    if (this.quoteShuffleEnabled) {
+      this._sequentialQuoteCursor = -1;
+    } else {
+      const quotes = this.getAvailableQuotes();
+      this._sequentialQuoteCursor = quotes.indexOf(this.currentQuote);
+    }
+
+    this.updateQuoteControlButtons();
+
+    if (persist) {
+      this.persistQuoteBehaviorSettings();
+    }
+  }
+
+  createQuoteControlButtons() {
+    const container = this.quoteContainer;
+    if (!container) return;
+
+    let pauseBtn = container.querySelector(".quote-pause-btn");
+    if (!pauseBtn) {
+      pauseBtn = document.createElement("button");
+      pauseBtn.type = "button";
+      pauseBtn.className = "adhkar-set-selector-btn quote-pause-btn";
+      pauseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.setQuoteAutoRotatePaused(!this.quoteAutoRotatePaused);
+      });
+      container.appendChild(pauseBtn);
+    }
+
+    let shuffleBtn = container.querySelector(".quote-shuffle-btn");
+    if (!shuffleBtn) {
+      shuffleBtn = document.createElement("button");
+      shuffleBtn.type = "button";
+      shuffleBtn.className = "adhkar-set-selector-btn quote-shuffle-btn";
+      shuffleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.setQuoteShuffleEnabled(!this.quoteShuffleEnabled);
+      });
+      container.appendChild(shuffleBtn);
+    }
+
+    this.quotePauseBtn = pauseBtn;
+    this.quoteShuffleBtn = shuffleBtn;
+    this.updateQuoteControlButtons();
+  }
+
+  updateQuoteControlButtons() {
+    const pauseBtn =
+      this.quotePauseBtn ||
+      this.quoteContainer?.querySelector(".quote-pause-btn");
+    const shuffleBtn =
+      this.quoteShuffleBtn ||
+      this.quoteContainer?.querySelector(".quote-shuffle-btn");
+
+    this.quotePauseBtn = pauseBtn || null;
+    this.quoteShuffleBtn = shuffleBtn || null;
+
+    if (pauseBtn) {
+      const isPaused = this.quoteAutoRotatePaused === true;
+      const pauseIcon = this._getIcon(isPaused ? "▶" : "⏸", { size: 16 });
+      const pauseTitle = isPaused
+        ? "Resume quote auto-rotation"
+        : "Pause quote auto-rotation";
+
+      pauseBtn.innerHTML = pauseIcon;
+      pauseBtn.setAttribute("aria-pressed", isPaused ? "true" : "false");
+      pauseBtn.setAttribute("aria-label", pauseTitle);
+      pauseBtn.title = pauseTitle;
+    }
+
+    if (shuffleBtn) {
+      const shuffleOn = this.quoteShuffleEnabled !== false;
+      const shuffleIcon = this._getIcon("🔀", { size: 16 });
+      const shuffleTitle = `Shuffle quotes: ${shuffleOn ? "on" : "off"}`;
+
+      shuffleBtn.innerHTML = shuffleIcon;
+      shuffleBtn.setAttribute("aria-pressed", shuffleOn ? "true" : "false");
+      shuffleBtn.setAttribute(
+        "aria-label",
+        `Toggle quote shuffle (currently ${shuffleOn ? "on" : "off"})`,
+      );
+      shuffleBtn.title = shuffleTitle;
+    }
   }
 
   /**
@@ -483,10 +625,25 @@ class QuotesManager extends BaseManager {
       return;
     }
 
-    // Get random quote different from current
+    // Shuffle mode: random quote; non-shuffle mode: deterministic sequential quote.
     let newQuote;
     if (quotes.length === 1) {
       newQuote = quotes[0];
+      this._sequentialQuoteCursor = 0;
+    } else if (this.quoteShuffleEnabled === false) {
+      const currentIndex = quotes.indexOf(this.currentQuote);
+      let nextIndex =
+        currentIndex >= 0 ? currentIndex + 1 : this._sequentialQuoteCursor + 1;
+
+      if (!Number.isInteger(nextIndex) || nextIndex < 0) {
+        nextIndex = 0;
+      }
+      if (nextIndex >= quotes.length) {
+        nextIndex = 0;
+      }
+
+      newQuote = quotes[nextIndex];
+      this._sequentialQuoteCursor = nextIndex;
     } else {
       do {
         const randomIndex = Math.floor(Math.random() * quotes.length);
@@ -505,6 +662,15 @@ class QuotesManager extends BaseManager {
     }
 
     this.currentQuote = quote;
+
+    if (this.quoteShuffleEnabled === false) {
+      const quotes = this.getAvailableQuotes();
+      const currentIndex = quotes.indexOf(quote);
+      if (currentIndex >= 0) {
+        this._sequentialQuoteCursor = currentIndex;
+      }
+    }
+
     this.animateQuote(quote);
   }
 
@@ -691,7 +857,7 @@ class QuotesManager extends BaseManager {
    */
   startAutoRotate() {
     this.stopAutoRotate();
-    if (this._hoverPauseAutoRotate) return;
+    if (this._hoverPauseAutoRotate || this.quoteAutoRotatePaused) return;
     this.autoRotateTimer = setInterval(() => {
       this.displayRandomQuote();
     }, this.autoRotateMs);
@@ -1291,6 +1457,7 @@ class QuotesManager extends BaseManager {
       document.addEventListener("md:settings-applied", () => {
         this.updateLanguageSelectorButton();
         this.updateEditorLanguagePickerButton();
+        this.syncQuoteBehaviorFromSettings({ applyTimer: true });
       });
     }
   }
