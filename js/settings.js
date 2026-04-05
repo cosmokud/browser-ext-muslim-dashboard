@@ -264,6 +264,11 @@ class SettingsManager extends BaseManager {
     this._activeBgPoolImages = [];
     this._backgroundThumbUrlCache = new Map();
     this._backgroundThumbObserver = null;
+    this._backgroundThumbBlobUrlCache = new Map();
+    this._backgroundThumbPendingLoads = new Map();
+    this._backgroundThumbCacheName = "md-background-thumbs-v1";
+    this._backgroundThumbCacheMaxEntries = 220;
+    this._backgroundThumbBlobUrlMaxEntries = 140;
 
     // General settings elements
     this.containerWidth = document.getElementById("containerWidth");
@@ -4519,6 +4524,194 @@ class SettingsManager extends BaseManager {
     return thumbUrl;
   }
 
+  isBackgroundThumbCacheAvailable() {
+    return (
+      typeof window !== "undefined" &&
+      typeof window.caches !== "undefined" &&
+      typeof window.fetch === "function"
+    );
+  }
+
+  isBackgroundThumbRemoteUrl(url) {
+    return /^https?:\/\//i.test(String(url || ""));
+  }
+
+  async openBackgroundThumbCache() {
+    if (!this.isBackgroundThumbCacheAvailable()) {
+      return null;
+    }
+
+    try {
+      return await window.caches.open(this._backgroundThumbCacheName);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async pruneBackgroundThumbCache(cache) {
+    if (!cache) return;
+
+    try {
+      const keys = await cache.keys();
+      const maxEntries = this._backgroundThumbCacheMaxEntries || 220;
+      if (keys.length <= maxEntries) return;
+
+      const excess = keys.length - maxEntries;
+      for (let i = 0; i < excess; i += 1) {
+        await cache.delete(keys[i]);
+      }
+    } catch (e) {
+      // ignore cache pruning errors
+    }
+  }
+
+  revokeBackgroundThumbBlobUrl(url) {
+    if (!url || typeof url !== "string") return;
+    if (!url.startsWith("blob:")) return;
+
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  enforceBackgroundThumbBlobUrlLimit() {
+    const cache = this._backgroundThumbBlobUrlCache;
+    if (!(cache instanceof Map)) return;
+
+    const maxEntries = this._backgroundThumbBlobUrlMaxEntries || 140;
+    while (cache.size > maxEntries) {
+      const oldestKey = cache.keys().next().value;
+      const oldestValue = cache.get(oldestKey);
+      cache.delete(oldestKey);
+      this.revokeBackgroundThumbBlobUrl(oldestValue);
+    }
+  }
+
+  clearBackgroundThumbBlobUrlCache() {
+    if (this._backgroundThumbBlobUrlCache instanceof Map) {
+      this._backgroundThumbBlobUrlCache.forEach((blobUrl) => {
+        this.revokeBackgroundThumbBlobUrl(blobUrl);
+      });
+      this._backgroundThumbBlobUrlCache.clear();
+    }
+
+    if (this._backgroundThumbPendingLoads instanceof Map) {
+      this._backgroundThumbPendingLoads.clear();
+    }
+  }
+
+  async resolveBackgroundThumbSrc(thumbSrc) {
+    const normalized = this.normalizeBackgroundImageUrl(thumbSrc);
+    if (!normalized) {
+      return this.getBackgroundThumbnailPlaceholder();
+    }
+
+    if (!this.isBackgroundThumbRemoteUrl(normalized)) {
+      return normalized;
+    }
+
+    const existingBlobUrl = this._backgroundThumbBlobUrlCache?.get(normalized);
+    if (existingBlobUrl) {
+      return existingBlobUrl;
+    }
+
+    const pending = this._backgroundThumbPendingLoads?.get(normalized);
+    if (pending) {
+      return pending;
+    }
+
+    const loadPromise = (async () => {
+      const cache = await this.openBackgroundThumbCache();
+      if (!cache) {
+        return normalized;
+      }
+
+      const request = new Request(normalized, {
+        mode: "cors",
+        credentials: "omit",
+      });
+
+      let response = null;
+      try {
+        response = await cache.match(request);
+      } catch (e) {
+        response = null;
+      }
+
+      if (!response) {
+        try {
+          response = await fetch(request, { cache: "force-cache" });
+          if (response && (response.ok || response.type === "opaque")) {
+            try {
+              await cache.put(request, response.clone());
+              void this.pruneBackgroundThumbCache(cache);
+            } catch (e) {
+              // ignore cache write failures
+            }
+          }
+        } catch (e) {
+          response = null;
+        }
+      }
+
+      if (!response || response.type === "opaque" || !response.ok) {
+        return normalized;
+      }
+
+      let blob;
+      try {
+        blob = await response.blob();
+      } catch (e) {
+        return normalized;
+      }
+
+      if (!blob || blob.size <= 0) {
+        return normalized;
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      this._backgroundThumbBlobUrlCache.set(normalized, blobUrl);
+      this.enforceBackgroundThumbBlobUrlLimit();
+      return blobUrl;
+    })()
+      .catch(() => normalized)
+      .finally(() => {
+        this._backgroundThumbPendingLoads?.delete(normalized);
+      });
+
+    this._backgroundThumbPendingLoads?.set(normalized, loadPromise);
+    return loadPromise;
+  }
+
+  loadBackgroundThumbImage(imgEl) {
+    if (!(imgEl instanceof HTMLImageElement)) {
+      return;
+    }
+
+    const thumbSrc = this.normalizeBackgroundImageUrl(imgEl.dataset.thumbSrc);
+    if (!thumbSrc || imgEl.dataset.thumbLoaded === "1") {
+      return;
+    }
+
+    imgEl.dataset.thumbLoaded = "pending";
+    void this.resolveBackgroundThumbSrc(thumbSrc)
+      .then((resolvedSrc) => {
+        if (!imgEl.isConnected) {
+          return;
+        }
+
+        imgEl.src = resolvedSrc;
+        imgEl.dataset.thumbLoaded = "1";
+      })
+      .catch(() => {
+        if (!imgEl.isConnected) return;
+        imgEl.src = thumbSrc;
+        imgEl.dataset.thumbLoaded = "1";
+      });
+  }
+
   resetBackgroundThumbObserver() {
     if (this._backgroundThumbObserver) {
       this._backgroundThumbObserver.disconnect();
@@ -4541,11 +4734,7 @@ class SettingsManager extends BaseManager {
           if (!entry.isIntersecting) return;
 
           const img = entry.target;
-          const thumbSrc = img?.dataset?.thumbSrc;
-          if (thumbSrc) {
-            img.src = thumbSrc;
-            img.dataset.thumbLoaded = "1";
-          }
+          this.loadBackgroundThumbImage(img);
 
           observer.unobserve(img);
         });
@@ -4569,11 +4758,7 @@ class SettingsManager extends BaseManager {
       return;
     }
 
-    const thumbSrc = imgEl.dataset.thumbSrc;
-    if (thumbSrc) {
-      imgEl.src = thumbSrc;
-      imgEl.dataset.thumbLoaded = "1";
-    }
+    this.loadBackgroundThumbImage(imgEl);
   }
 
   getBackgroundImageSelectionMap(settings = null) {
@@ -7680,6 +7865,7 @@ class SettingsManager extends BaseManager {
     this.clearScheduledAutoSave();
     this.closeDetachedEditorModal();
     this.resetBackgroundThumbObserver();
+    this.clearBackgroundThumbBlobUrlCache();
 
     if (this.modal) {
       this.modal.classList.remove("active");
