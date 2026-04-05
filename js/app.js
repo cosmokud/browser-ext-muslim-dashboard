@@ -1801,6 +1801,24 @@ class MuslimDashboard {
       ].filter(Boolean);
     };
 
+    const runFocusEnterAnimation = () => {
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      if (!pocketQuranCard) return;
+
+      pocketQuranCard.classList.remove("quran-focus-entering");
+      void pocketQuranCard.offsetWidth;
+      pocketQuranCard.classList.add("quran-focus-entering");
+
+      const clearEnterClass = () => {
+        pocketQuranCard.classList.remove("quran-focus-entering");
+      };
+
+      pocketQuranCard.addEventListener("animationend", clearEnterClass, {
+        once: true,
+      });
+      setTimeout(clearEnterClass, 520);
+    };
+
     const enterFocusMode = (opts = {}) => {
       // Enforce mutual exclusivity: focus mode cannot coexist with sidebar mode.
       // Capture the previous mode so exiting focus can restore it.
@@ -1934,6 +1952,8 @@ class MuslimDashboard {
           this.gridLayout.applySavedMiddleWidthToElement(pocketQuranCard);
         }
       } catch (e) {}
+
+      runFocusEnterAnimation();
     };
 
     const exitFocusMode = () => {
@@ -1941,6 +1961,9 @@ class MuslimDashboard {
 
       focusBtn.setAttribute("aria-pressed", "false");
       focusBtn.classList.remove("active");
+
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      pocketQuranCard?.classList.remove("quran-focus-entering");
 
       const restoreMode = "normal";
 

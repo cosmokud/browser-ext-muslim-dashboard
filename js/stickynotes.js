@@ -332,6 +332,14 @@ class StickyNotesManager {
     const existingNotes = this.notes.length;
     const offsetX = (existingNotes % 10) * 30 + 50;
     const offsetY = (existingNotes % 10) * 30 + 50;
+    const selectedColor = options.color || this.colorPresets[0];
+    const inferredBlurState =
+      options.blurState ||
+      (options.glassEffect === false
+        ? "off"
+        : selectedColor?.glass === true
+          ? "dashboard"
+          : "on");
 
     const note = {
       id,
@@ -341,7 +349,7 @@ class StickyNotesManager {
       width: options.width || 280,
       height: options.height || 220,
       zIndex: this.maxZIndex,
-      color: options.color || this.colorPresets[0],
+      color: selectedColor,
       glassEffect:
         options.glassEffect !== undefined ? options.glassEffect : true,
       blur:
@@ -353,17 +361,11 @@ class StickyNotesManager {
           ? options.transparency
           : this.colorPresets[0].transparency || 1,
       // New blur settings model (copied from card blur behavior)
-      blurState:
-        options.blurState ||
-        (options.glassEffect === false
-          ? "off"
-          : options.blurState === "dashboard"
-            ? "dashboard"
-            : "on"),
+      blurState: inferredBlurState,
       blurPowerEnabled:
         typeof options.blurPowerEnabled === "boolean"
           ? options.blurPowerEnabled
-          : true,
+          : inferredBlurState === "on",
       blurPower: this.clampNumber(
         options.blurPower !== undefined
           ? Number(options.blurPower)
@@ -437,7 +439,7 @@ class StickyNotesManager {
                   note.color.name === c.name ? "active" : ""
                 }"
                   data-color-index="${i}"
-                        style="background: ${c.bg}"
+                        style="background: ${this.getColorPresetSwatchBackground(c)}"
                         title="${c.name}"></button>
               `,
                 )
@@ -659,6 +661,11 @@ class StickyNotesManager {
 
   getDashboardGlassEnabled() {
     try {
+      const themes = window.dashboard?.themes;
+      if (themes && typeof themes.isGlassEnabled === "function") {
+        return themes.isGlassEnabled();
+      }
+
       const settings = this.storage?.getSettings?.();
       return settings?.theme?.glassEnabled !== false;
     } catch (e) {
@@ -677,11 +684,87 @@ class StickyNotesManager {
 
   getDashboardGlassOpacity() {
     try {
+      const themes = window.dashboard?.themes;
+      if (themes && typeof themes.getGlassOpacity === "function") {
+        return this.clampNumber(themes.getGlassOpacity(), 0, 100, 35);
+      }
+
       const settings = this.storage?.getSettings?.();
       return this.clampNumber(settings?.theme?.glassOpacity, 0, 100, 35);
     } catch (e) {
       return 35;
     }
+  }
+
+  getDashboardComponentOpacity() {
+    try {
+      const themes = window.dashboard?.themes;
+      if (themes && typeof themes.getMainGridComponentOpacity === "function") {
+        return this.clampNumber(
+          themes.getMainGridComponentOpacity(),
+          0,
+          100,
+          0,
+        );
+      }
+
+      const settings = this.storage?.getSettings?.();
+      return this.clampNumber(settings?.theme?.componentOpacity, 0, 100, 0);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  getColorPresetSwatchBackground(color) {
+    if (!color?.glass) {
+      return color?.bg;
+    }
+
+    let bg = color.bg;
+
+    if (typeof bg === "string" && bg.trim().startsWith("var(")) {
+      const match = bg.match(/var\((--[^)]+)\)/);
+      if (match) {
+        try {
+          const computed = getComputedStyle(document.documentElement)
+            .getPropertyValue(match[1])
+            .trim();
+          if (computed) bg = computed;
+        } catch (e) {
+          // Keep the original swatch background if computed-style lookup fails.
+        }
+      }
+    }
+
+    if (!this.getDashboardGlassEnabled()) {
+      return bg;
+    }
+
+    const componentOpacity = this.clampNumber(
+      this.getDashboardComponentOpacity(),
+      0,
+      100,
+      0,
+    );
+    const adjusted = this.adjustAlpha(bg, componentOpacity / 100);
+    return adjusted || bg;
+  }
+
+  refreshDefaultColorPresetSwatches(noteId = null) {
+    const defaultPresetIndex = this.colorPresets.findIndex(
+      (preset) => preset?.glass === true,
+    );
+    if (defaultPresetIndex < 0) return;
+
+    const defaultPreset = this.colorPresets[defaultPresetIndex];
+    const background = this.getColorPresetSwatchBackground(defaultPreset);
+    const selector = noteId
+      ? `#sticky-note-${noteId} .color-preset[data-color-index="${defaultPresetIndex}"]`
+      : `.sticky-note .color-preset[data-color-index="${defaultPresetIndex}"]`;
+
+    document.querySelectorAll(selector).forEach((btn) => {
+      btn.style.background = background;
+    });
   }
 
   getThemedIcon(emoji, size = 16) {
@@ -694,9 +777,23 @@ class StickyNotesManager {
   normalizeNoteBlurSettings(note) {
     if (!note || typeof note !== "object") return null;
 
+    const isLegacyDefaultGlassState =
+      note.color?.glass === true &&
+      note.blurState === "on" &&
+      this.clampNumber(note.blurPower, 0, 200, 100) === 200 &&
+      this.clampNumber(note.glassOpacity, 0, 100, 100) === 100;
+    if (isLegacyDefaultGlassState) {
+      note.blurState = "dashboard";
+    }
+
     const validStates = new Set(["off", "dashboard", "on"]);
     if (!validStates.has(note.blurState)) {
-      note.blurState = note.glassEffect === false ? "off" : "on";
+      note.blurState =
+        note.color?.glass === true
+          ? "dashboard"
+          : note.glassEffect === false
+            ? "off"
+            : "on";
     }
 
     const legacyBlurPower = Math.round(
@@ -709,7 +806,7 @@ class StickyNotesManager {
       note.glassOpacity,
       0,
       100,
-      Math.round(this.clampNumber(note.transparency, 0.2, 1, 1) * 100),
+      Math.round(this.clampNumber(note.transparency, 0, 1, 1) * 100),
     );
 
     return note;
@@ -728,6 +825,7 @@ class StickyNotesManager {
     const dashboardGlassEnabled = this.getDashboardGlassEnabled();
     const dashboardBlurPower = this.getDashboardBlurPower();
     const dashboardGlassOpacity = this.getDashboardGlassOpacity();
+    const dashboardComponentOpacity = this.getDashboardComponentOpacity();
 
     let effectiveGlass = false;
     if (state === "on") {
@@ -742,8 +840,11 @@ class StickyNotesManager {
         ? note.blurPower
         : dashboardBlurPower;
 
+    const dashboardLinkedOpacity = note.color?.glass
+      ? dashboardComponentOpacity
+      : dashboardGlassOpacity;
     const effectiveOpacity =
-      state === "on" ? note.glassOpacity : dashboardGlassOpacity;
+      state === "on" ? note.glassOpacity : dashboardLinkedOpacity;
 
     // Keep legacy fields in sync so existing rendering logic remains intact.
     note.glassEffect = effectiveGlass;
@@ -751,10 +852,11 @@ class StickyNotesManager {
       ? this.clampNumber(Math.round((effectiveBlurPower / 200) * 20), 0, 20, 10)
       : 0;
     note.transparency = effectiveGlass
-      ? this.clampNumber(effectiveOpacity / 100, 0.2, 1, 1)
+      ? this.clampNumber(effectiveOpacity / 100, 0, 1, 1)
       : this.clampNumber(note.transparency, 0.2, 1, 1);
 
     this.refreshNoteStyles(id);
+    this.refreshDefaultColorPresetSwatches(id);
     if (save) this.saveNotes();
   }
 
@@ -1329,6 +1431,7 @@ class StickyNotesManager {
           this.applyNoteBlurState(note.id, { save: false });
         }
       });
+      this.refreshDefaultColorPresetSwatches();
       this.repositionOpenNoteBlurPopups();
     });
 
@@ -1340,6 +1443,7 @@ class StickyNotesManager {
           this.applyNoteBlurState(note.id, { save: false });
         }
       });
+      this.refreshDefaultColorPresetSwatches();
       this.repositionOpenNoteBlurPopups();
     });
 
@@ -1505,8 +1609,8 @@ class StickyNotesManager {
 
       // If this preset indicates a glass style, apply blur-menu defaults.
       if (color.glass) {
-        note.blurState = "on";
-        note.blurPowerEnabled = true;
+        note.blurState = "dashboard";
+        note.blurPowerEnabled = false;
         note.blurPower = this.clampNumber(
           Math.round((this.clampNumber(color.blur, 0, 20, 20) / 20) * 200),
           0,
