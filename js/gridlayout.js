@@ -909,6 +909,8 @@ class GridLayoutManager {
    * Toggle drag-and-drop edit mode
    */
   toggleEditMode() {
+    const wasEditModeEnabled = this.isEditModeEnabled;
+
     if (this.isEditModeLocked) {
       // Safety: if lock is active, ensure edit mode is off.
       if (this.isEditModeEnabled) {
@@ -950,6 +952,13 @@ class GridLayoutManager {
         : "Layout Editor Mode disabled",
       this.isEditModeEnabled ? "success" : "info",
     );
+
+    // Keep the current layout snapshot stable when leaving edit mode.
+    if (wasEditModeEnabled && !this.isEditModeEnabled) {
+      try {
+        this.saveLayout();
+      } catch (e) {}
+    }
 
     this.syncSidebarModeForEditState();
   }

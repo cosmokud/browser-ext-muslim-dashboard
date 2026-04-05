@@ -541,11 +541,18 @@ body.sidebar-mode .main-container {
 .sidebar-resize-handle::before {
   content: "";
   position: absolute;
-  top: 14px;
-  bottom: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
   width: 2px;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--accent-gold) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.3) 80%,
+    transparent 100%
+  );
 }
 
 .sidebar-resize-handle-left {
@@ -569,7 +576,7 @@ body.grid-edit-mode
   .sidebar-slot
   > .grid-draggable.sidebar-detached
   > .sidebar-resize-handle {
-  opacity: 0.48;
+  opacity: 0;
   pointer-events: auto;
 }
 
@@ -583,7 +590,7 @@ body.grid-edit-mode
   .sidebar-slot
   > .grid-draggable.sidebar-detached.sidebar-resizing
   > .sidebar-resize-handle {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 body.grid-edit-mode

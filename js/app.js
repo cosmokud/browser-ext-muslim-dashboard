@@ -579,12 +579,16 @@ class MuslimDashboard {
   }
 
   syncSidebarModeWithLayoutEditMode() {
+    const isEditModeEnabled = !!(
+      this.gridLayout &&
+      typeof this.gridLayout.isEditMode === "function" &&
+      this.gridLayout.isEditMode()
+    );
+    const keepCurrentSidebarLayout = this.sidebarModeEnabled === true;
+    const wantsSidebarLayout = isEditModeEnabled || keepCurrentSidebarLayout;
+
     const canUseSidebarLayout =
-      !!(
-        this.gridLayout &&
-        typeof this.gridLayout.isEditMode === "function" &&
-        this.gridLayout.isEditMode()
-      ) &&
+      wantsSidebarLayout &&
       !this._quranFocusModeActive &&
       !this._momentModeActive &&
       this.isSidebarWidthSupported();
@@ -679,9 +683,23 @@ class MuslimDashboard {
     // Expose setter for other modes to call.
     this._setSidebarModeEnabled = setEnabled;
 
-    // Start in normal layout, then allow Layout Edit Mode to opt into sidebars
-    // when screen width supports it.
-    setEnabled(false);
+    // Restore the previously active layout shape when valid; Layout Editor Mode
+    // can still opt into sidebars automatically.
+    let shouldStartInSidebarLayout = false;
+    try {
+      const s = this.storage.getSettings();
+      const focusInitial =
+        s.quranFocusModeEnabled === true ||
+        s.lastDashboardMode === "quranFocus";
+      const momentInitial =
+        globalThis.ENABLE_DEBUG_MODE === true &&
+        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
+
+      shouldStartInSidebarLayout =
+        !focusInitial && !momentInitial && s.sidebarModeEnabled === true;
+    } catch (e) {}
+
+    setEnabled(shouldStartInSidebarLayout);
     this.syncSidebarModeWithLayoutEditMode();
 
     // Keep sidebar availability in sync with viewport width while edit mode is active.
