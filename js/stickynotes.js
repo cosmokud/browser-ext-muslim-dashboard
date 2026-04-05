@@ -632,8 +632,8 @@ class StickyNotesManager {
         ? Number(((effectiveBlurPower / 200) * 30).toFixed(2))
         : this.clampNumber(note.blur, 0, 30, 0);
       styles += `backdrop-filter: blur(${blurValue}px); -webkit-backdrop-filter: blur(${blurValue}px);`;
-      // apply glass border and subtle glass shadow on top of the default note shadow
-      styles += `border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow), 0 10px 40px rgba(0,0,0,0.3);`;
+      // Keep the note sleek by avoiding theme-driven borders while preserving depth.
+      styles += `box-shadow: var(--glass-shadow), 0 10px 40px rgba(0,0,0,0.3);`;
     }
 
     return styles;

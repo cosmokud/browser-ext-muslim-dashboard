@@ -555,6 +555,84 @@ class FloatingModeManager {
     st._resetSizeBtn = null;
   }
 
+  getResizeDirectionForPointer(card, clientX, clientY) {
+    if (!card) return null;
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+
+    const rect = card.getBoundingClientRect();
+    const edge = 12;
+
+    const nearLeft = clientX - rect.left <= edge;
+    const nearRight = rect.right - clientX <= edge;
+    const nearBottom = rect.bottom - clientY <= edge;
+
+    if (nearBottom && nearLeft) return "sw";
+    if (nearBottom && nearRight) return "se";
+    if (nearBottom) return "s";
+    if (nearLeft) return "w";
+    if (nearRight) return "e";
+
+    return null;
+  }
+
+  getResizeCursor(direction) {
+    const cursorByDirection = {
+      e: "e-resize",
+      w: "w-resize",
+      s: "s-resize",
+      se: "se-resize",
+      sw: "sw-resize",
+    };
+    return cursorByDirection[String(direction || "")] || "";
+  }
+
+  ensureResizeHandles(key) {
+    const st = this.runtime.get(key);
+    if (!st || !st.card) return;
+    const card = st.card;
+    if (!card.classList.contains("floating-card")) return;
+
+    const existingHandles = Array.isArray(st._resizeHandles)
+      ? st._resizeHandles.filter((handle) => handle?.isConnected)
+      : [];
+    if (existingHandles.length > 0) {
+      st._resizeHandles = existingHandles;
+      return;
+    }
+
+    const handleDefs = ["w", "e", "s", "sw", "se"];
+    st._resizeHandles = handleDefs
+      .map((direction) => {
+        const handle = document.createElement("div");
+        handle.className = `floating-resize-handle floating-resize-handle-${direction}`;
+        handle.dataset.resizeDir = direction;
+        handle.setAttribute("aria-hidden", "true");
+        handle.tabIndex = -1;
+        try {
+          card.appendChild(handle);
+          return handle;
+        } catch (e) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }
+
+  removeResizeHandles(key) {
+    const st = this.runtime.get(key);
+    if (!st) return;
+
+    if (Array.isArray(st._resizeHandles)) {
+      st._resizeHandles.forEach((handle) => {
+        try {
+          handle?.remove();
+        } catch (e) {}
+      });
+    }
+
+    st._resizeHandles = null;
+  }
+
   createCollapseProxy(key, card) {
     if (!card) return null;
 
@@ -750,6 +828,7 @@ class FloatingModeManager {
         originalParent: null,
         originalNextSibling: null,
         dragging: null,
+        resizing: null,
         userResizing: false,
         userMovedSinceLastSave: false,
         autoPositionChangedSinceLastSave: false,
@@ -768,6 +847,15 @@ class FloatingModeManager {
         minUpdateTimer: null,
         dragPersistRaf: null,
         dragPersistLastAt: 0,
+        _floatingHandle: null,
+        _onPointerDown: null,
+        _onCardPointerDownForResize: null,
+        _onCardPointerMoveForResizeCursor: null,
+        _onCardPointerLeaveForResizeCursor: null,
+        _onAnyPointerUpClearResize: null,
+        _onResizePointerMove: null,
+        _onResizePointerUp: null,
+        _resizeHandles: null,
         componentId: card.dataset?.gridId || card.id || null,
         layoutModeAtFloat: this._getComponentLayoutMode(
           card.dataset?.gridId || card.id || null,
@@ -1071,6 +1159,7 @@ class FloatingModeManager {
     card.classList.add("floating-card");
 
     this.ensureCollapseButton(key);
+    this.ensureResizeHandles(key);
 
     this.notifyLayoutChanged();
 
@@ -1102,8 +1191,8 @@ class FloatingModeManager {
     card.style.height = `${height}px`;
     card.style.zIndex = String(z);
 
-    // Native resizing
-    card.style.resize = "both";
+    // Use custom edge resize handles (sides + bottom corners) for consistent UX.
+    card.style.resize = "none";
     card.style.overflow = key === "notesCard" ? "visible" : "hidden";
 
     // Prevent resizing below content (no scrollbars). Will be refined dynamically.
@@ -1123,6 +1212,11 @@ class FloatingModeManager {
     const onPointerDown = (e) => {
       if (!card.classList.contains("floating-card")) return;
       if (e.button !== undefined && e.button !== 0) return;
+      if (st.resizing) return;
+
+      if (e.target && e.target.closest(".floating-resize-handle")) {
+        return;
+      }
 
       // Don't hijack interactions
       if (
@@ -1160,26 +1254,192 @@ class FloatingModeManager {
       document.addEventListener("pointercancel", onPointerUp, { once: true });
     };
 
-    // Track native resize handle drags (bottom-right) to treat resulting clamps
-    // as user-driven (and thus persistable).
+    const onResizePointerMove = (e) => {
+      if (!st.resizing || !card.classList.contains("floating-card")) return;
+      if (
+        typeof st.resizing.pointerId === "number" &&
+        typeof e.pointerId === "number" &&
+        e.pointerId !== st.resizing.pointerId
+      ) {
+        return;
+      }
+
+      const dx = e.clientX - st.resizing.startX;
+      const dy = e.clientY - st.resizing.startY;
+      const direction = st.resizing.direction;
+
+      const pad = this.viewportPadding;
+      const maxRight = window.innerWidth - pad;
+      const maxBottom = window.innerHeight - pad;
+
+      const minWidth = Math.max(
+        280,
+        this.safeNumber(parseFloat(card.style.minWidth), 280),
+      );
+      const minHeight = Math.max(
+        200,
+        this.safeNumber(parseFloat(card.style.minHeight), 200),
+      );
+      const maxWidth = Math.max(
+        minWidth,
+        Math.floor(window.innerWidth - pad * 2),
+      );
+      const maxHeight = Math.max(
+        minHeight,
+        Math.floor(window.innerHeight - pad * 2),
+      );
+
+      let nextLeft = st.resizing.startLeft;
+      let nextWidth = st.resizing.startWidth;
+      let nextHeight = st.resizing.startHeight;
+
+      if (direction.includes("w")) {
+        const startRight = st.resizing.startLeft + st.resizing.startWidth;
+        const maxLeft = startRight - minWidth;
+        const rawLeft = st.resizing.startLeft + dx;
+        nextLeft = this.clamp(rawLeft, pad, maxLeft);
+        nextWidth = this.clamp(startRight - nextLeft, minWidth, maxWidth);
+        nextLeft = startRight - nextWidth;
+      }
+
+      if (direction.includes("e")) {
+        const maxWidthByRightEdge = Math.max(
+          minWidth,
+          Math.floor(maxRight - st.resizing.startLeft),
+        );
+        nextWidth = this.clamp(
+          st.resizing.startWidth + dx,
+          minWidth,
+          Math.min(maxWidth, maxWidthByRightEdge),
+        );
+      }
+
+      if (direction.includes("s")) {
+        const maxHeightByBottomEdge = Math.max(
+          minHeight,
+          Math.floor(maxBottom - st.resizing.startTop),
+        );
+        nextHeight = this.clamp(
+          st.resizing.startHeight + dy,
+          minHeight,
+          Math.min(maxHeight, maxHeightByBottomEdge),
+        );
+      }
+
+      if (
+        Math.abs(nextLeft - st.resizing.startLeft) > 0.5 ||
+        Math.abs(nextWidth - st.resizing.startWidth) > 0.5 ||
+        Math.abs(nextHeight - st.resizing.startHeight) > 0.5
+      ) {
+        st.userMovedSinceLastSave = true;
+      }
+
+      card.style.left = `${Math.round(nextLeft)}px`;
+      card.style.width = `${Math.round(nextWidth)}px`;
+      card.style.height = `${Math.round(nextHeight)}px`;
+
+      this.scheduleSave(key);
+    };
+
+    const onResizePointerUp = (e) => {
+      if (st.resizing) {
+        if (
+          typeof st.resizing.pointerId === "number" &&
+          typeof e?.pointerId === "number" &&
+          e.pointerId !== st.resizing.pointerId
+        ) {
+          return;
+        }
+
+        document.removeEventListener("pointermove", onResizePointerMove);
+        document.removeEventListener("pointerup", onResizePointerUp);
+        document.removeEventListener("pointercancel", onResizePointerUp);
+
+        st.resizing = null;
+        st.userResizing = false;
+
+        // User-driven: clamp + persist final geometry.
+        this.clampCardToViewport(key, { persist: true });
+        this.scheduleMinUpdate(key);
+        this.flushSave(key, { force: true });
+      }
+    };
+
     const onCardPointerDownForResize = (e) => {
       if (!card.classList.contains("floating-card")) return;
       if (e.button !== undefined && e.button !== 0) return;
       if (typeof e.clientX !== "number" || typeof e.clientY !== "number")
         return;
+      if (st.dragging || st.resizing) return;
+
+      const interactiveTarget = e.target?.closest(
+        ".floating-collapse-btn, .floating-reset-size-btn, button, a, input, textarea, select, [role='button']",
+      );
+      if (interactiveTarget) return;
+
+      const handleDir = String(
+        e.target?.closest(".floating-resize-handle")?.dataset?.resizeDir || "",
+      ).trim();
+      const direction =
+        handleDir ||
+        this.getResizeDirectionForPointer(card, e.clientX, e.clientY);
+      if (!direction) return;
+
+      e.preventDefault();
+      e.stopPropagation();
 
       const rect = card.getBoundingClientRect();
-      const edge = 18; // px
-      const nearRight = rect.right - e.clientX <= edge;
-      const nearBottom = rect.bottom - e.clientY <= edge;
+      const styleLeft = parseFloat(card.style.left);
+      const styleTop = parseFloat(card.style.top);
+      const styleWidth = parseFloat(card.style.width);
+      const styleHeight = parseFloat(card.style.height);
 
-      if (nearRight && nearBottom) {
-        st.userResizing = true;
-      }
+      st.userResizing = true;
+      st.userMovedSinceLastSave = false;
+      st.resizing = {
+        pointerId: typeof e.pointerId === "number" ? e.pointerId : null,
+        direction,
+        startX: e.clientX,
+        startY: e.clientY,
+        startLeft: Number.isFinite(styleLeft) ? styleLeft : rect.left,
+        startTop: Number.isFinite(styleTop) ? styleTop : rect.top,
+        startWidth: Number.isFinite(styleWidth) ? styleWidth : rect.width,
+        startHeight: Number.isFinite(styleHeight) ? styleHeight : rect.height,
+      };
+
+      this.bumpZIndex(key);
+
+      try {
+        card.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      document.addEventListener("pointermove", onResizePointerMove);
+      document.addEventListener("pointerup", onResizePointerUp);
+      document.addEventListener("pointercancel", onResizePointerUp);
+    };
+
+    const onCardPointerMoveForResizeCursor = (e) => {
+      if (!card.classList.contains("floating-card")) return;
+      if (st.dragging || st.resizing) return;
+
+      const direction = this.getResizeDirectionForPointer(
+        card,
+        e.clientX,
+        e.clientY,
+      );
+      const cursor = this.getResizeCursor(direction);
+      card.style.cursor = cursor;
+    };
+
+    const onCardPointerLeaveForResizeCursor = () => {
+      if (st.dragging || st.resizing) return;
+      card.style.cursor = "";
     };
 
     const onAnyPointerUpClearResize = () => {
-      st.userResizing = false;
+      if (!st.resizing) {
+        st.userResizing = false;
+      }
     };
 
     const onPointerMove = (e) => {
@@ -1214,9 +1474,15 @@ class FloatingModeManager {
     st._floatingHandle = handle;
     st._onPointerDown = onPointerDown;
     st._onCardPointerDownForResize = onCardPointerDownForResize;
+    st._onCardPointerMoveForResizeCursor = onCardPointerMoveForResizeCursor;
+    st._onCardPointerLeaveForResizeCursor = onCardPointerLeaveForResizeCursor;
     st._onAnyPointerUpClearResize = onAnyPointerUpClearResize;
+    st._onResizePointerMove = onResizePointerMove;
+    st._onResizePointerUp = onResizePointerUp;
     handle.addEventListener("pointerdown", onPointerDown);
     card.addEventListener("pointerdown", onCardPointerDownForResize);
+    card.addEventListener("pointermove", onCardPointerMoveForResizeCursor);
+    card.addEventListener("pointerleave", onCardPointerLeaveForResizeCursor);
     document.addEventListener("pointerup", onAnyPointerUpClearResize);
     document.addEventListener("pointercancel", onAnyPointerUpClearResize);
 
@@ -1302,6 +1568,22 @@ class FloatingModeManager {
     } catch (e) {}
 
     try {
+      if (st.card && st._onCardPointerMoveForResizeCursor) {
+        st.card.removeEventListener(
+          "pointermove",
+          st._onCardPointerMoveForResizeCursor,
+        );
+      }
+      if (st.card && st._onCardPointerLeaveForResizeCursor) {
+        st.card.removeEventListener(
+          "pointerleave",
+          st._onCardPointerLeaveForResizeCursor,
+        );
+      }
+      st.card.style.cursor = "";
+    } catch (e) {}
+
+    try {
       if (st._onAnyPointerUpClearResize) {
         document.removeEventListener(
           "pointerup",
@@ -1312,12 +1594,26 @@ class FloatingModeManager {
           st._onAnyPointerUpClearResize,
         );
       }
+
+      if (st._onResizePointerMove) {
+        document.removeEventListener("pointermove", st._onResizePointerMove);
+      }
+      if (st._onResizePointerUp) {
+        document.removeEventListener("pointerup", st._onResizePointerUp);
+        document.removeEventListener("pointercancel", st._onResizePointerUp);
+      }
     } catch (e) {}
 
     st._floatingHandle = null;
     st._onPointerDown = null;
     st._onCardPointerDownForResize = null;
+    st._onCardPointerMoveForResizeCursor = null;
+    st._onCardPointerLeaveForResizeCursor = null;
     st._onAnyPointerUpClearResize = null;
+    st._onResizePointerMove = null;
+    st._onResizePointerUp = null;
+    st.resizing = null;
+    st.userResizing = false;
 
     if (st.resizeObserver) {
       try {
@@ -1357,6 +1653,7 @@ class FloatingModeManager {
     const finalizeRestoreToTiling = () => {
       // Button only exists in floating mode
       this.removeCollapseButton(key);
+      this.removeResizeHandles(key);
 
       // Restore to original position using placeholder (while still floating),
       // then clear floating styles so it participates in the tiling layout.

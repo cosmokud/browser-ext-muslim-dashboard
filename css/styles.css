@@ -3448,6 +3448,92 @@ textarea.notes-editor:focus {
   background: transparent;
 }
 
+.floating-card .floating-resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 3;
+  touch-action: none;
+}
+
+.floating-card .floating-resize-handle-e {
+  top: 12px;
+  bottom: 12px;
+  right: 0;
+  width: 10px;
+  cursor: e-resize;
+}
+
+.floating-card .floating-resize-handle-w {
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 10px;
+  cursor: w-resize;
+}
+
+.floating-card .floating-resize-handle-s {
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 10px;
+  cursor: s-resize;
+}
+
+.floating-card .floating-resize-handle-se {
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+}
+
+.floating-card .floating-resize-handle-sw {
+  left: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: sw-resize;
+}
+
+.floating-card:hover .floating-resize-handle-s::before,
+.floating-card:hover .floating-resize-handle-se::before,
+.floating-card:hover .floating-resize-handle-sw::before {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--glass-border) 72%, transparent 28%);
+}
+
+.floating-card:hover .floating-resize-handle-s::before {
+  left: 50%;
+  top: 4px;
+  width: 36px;
+  height: 2px;
+  transform: translateX(-50%);
+}
+
+.floating-card:hover .floating-resize-handle-se::before,
+.floating-card:hover .floating-resize-handle-sw::before {
+  width: 10px;
+  height: 10px;
+  border: 2px solid
+    color-mix(in srgb, var(--glass-border) 78%, rgba(0, 0, 0, 0.18) 22%);
+  border-top: none;
+  background: transparent;
+}
+
+.floating-card:hover .floating-resize-handle-se::before {
+  right: 2px;
+  bottom: 2px;
+  border-left: none;
+}
+
+.floating-card:hover .floating-resize-handle-sw::before {
+  left: 2px;
+  bottom: 2px;
+  border-right: none;
+}
+
 /* Subtle floating -> tiling transition (no large movement)
    Phase 1 (still floating): fade out + tiny shrink
    Phase 2 (in grid): quick fade in + tiny "settle" */

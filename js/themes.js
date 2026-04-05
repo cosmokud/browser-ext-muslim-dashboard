@@ -1281,7 +1281,6 @@ class ThemeManager {
     if (!colors || typeof colors !== "object") return;
 
     const mainContainer = document.querySelector(".main-container");
-    if (!mainContainer) return;
 
     const applyToComponent = (component, bgColor, hoverColor, borderColor) => {
       // Keep explicit per-card overrides from readability menus authoritative.
@@ -1312,7 +1311,12 @@ class ThemeManager {
 
     ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
       const component = document.getElementById(componentId);
-      if (!component || !mainContainer.contains(component)) return;
+      if (!component) return;
+
+      const isInMainLayout =
+        !!mainContainer && mainContainer.contains(component);
+      const isFloating = component.classList.contains("floating-card");
+      if (!isInMainLayout && !isFloating) return;
 
       applyToComponent(component, bgColor, hoverColor, borderColor);
     });
