@@ -336,12 +336,23 @@ class BackgroundManager extends BaseManager {
   /**
    * Get images array for a category
    */
+  normalizeBackgroundCategory(category) {
+    const normalized = String(category || "").trim();
+    if (!normalized) return "nature";
+
+    if (
+      normalized === "allWithCustom" ||
+      normalized === "allNoCustom" ||
+      normalized === "all"
+    ) {
+      return "all";
+    }
+
+    return normalized;
+  }
+
   _getSpecialCategoryType(category) {
-    return category === "allWithCustom" ||
-      category === "allNoCustom" ||
-      category === "custom"
-      ? category
-      : null;
+    return category === "all" || category === "custom" ? category : null;
   }
 
   _getCustomBackgrounds(settings) {
@@ -355,12 +366,13 @@ class BackgroundManager extends BaseManager {
   }
 
   _getSelectedBackgroundUrlsForCategory(category, settings) {
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
     const map = settings?.backgroundImageSelections;
     if (!map || typeof map !== "object" || Array.isArray(map)) {
       return null;
     }
 
-    const rawUrls = map[category];
+    const rawUrls = map[normalizedCategory];
     if (!Array.isArray(rawUrls)) {
       return null;
     }
@@ -380,19 +392,16 @@ class BackgroundManager extends BaseManager {
   }
 
   getAllImagesForCategory(category, settings) {
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
     const resolvedSettings =
       settings && typeof settings === "object"
         ? settings
         : this.storage.getSettings();
-    const specialCategory = this._getSpecialCategoryType(category);
+    const specialCategory = this._getSpecialCategoryType(normalizedCategory);
     const allBuiltIn = Object.values(this.backgrounds).flat();
     const customBgs = this._getCustomBackgrounds(resolvedSettings);
 
-    if (specialCategory === "allNoCustom") {
-      return allBuiltIn.length > 0 ? allBuiltIn : this.backgrounds.nature;
-    }
-
-    if (specialCategory === "allWithCustom") {
+    if (specialCategory === "all") {
       const merged = [...allBuiltIn, ...customBgs];
       return merged.length > 0 ? merged : this.backgrounds.nature;
     }
@@ -401,17 +410,21 @@ class BackgroundManager extends BaseManager {
       return customBgs;
     }
 
-    return this.backgrounds[category] || this.backgrounds.nature;
+    return this.backgrounds[normalizedCategory] || this.backgrounds.nature;
   }
 
   getImagesForCategory(category, settings) {
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
     const resolvedSettings =
       settings && typeof settings === "object"
         ? settings
         : this.storage.getSettings();
-    const allImages = this.getAllImagesForCategory(category, resolvedSettings);
+    const allImages = this.getAllImagesForCategory(
+      normalizedCategory,
+      resolvedSettings,
+    );
     const selectedUrls = this._getSelectedBackgroundUrlsForCategory(
-      category,
+      normalizedCategory,
       resolvedSettings,
     );
 
@@ -505,7 +518,9 @@ class BackgroundManager extends BaseManager {
       settings && typeof settings === "object"
         ? settings
         : this.storage.getSettings();
-    const category = resolvedSettings.bgCategory || "nature";
+    const category = this.normalizeBackgroundCategory(
+      resolvedSettings.bgCategory || "nature",
+    );
     const images = this.getImagesForCategory(category, resolvedSettings);
     const index = Number.isInteger(resolvedSettings.currentBgIndex)
       ? resolvedSettings.currentBgIndex
@@ -517,7 +532,9 @@ class BackgroundManager extends BaseManager {
    * Load background image
    */
   loadBackground(settings) {
-    const category = settings.bgCategory || "nature";
+    const category = this.normalizeBackgroundCategory(
+      settings.bgCategory || "nature",
+    );
     const images = this.getImagesForCategory(category, settings);
     if (images.length === 0) return;
 
@@ -893,7 +910,9 @@ class BackgroundManager extends BaseManager {
    */
   changeBackground() {
     const settings = this.storage.getSettings();
-    const category = settings.bgCategory || "nature";
+    const category = this.normalizeBackgroundCategory(
+      settings.bgCategory || "nature",
+    );
     const images = this.getImagesForCategory(category, settings);
     if (images.length === 0) return;
 
@@ -918,7 +937,10 @@ class BackgroundManager extends BaseManager {
    */
   updateCategory(category) {
     const settings = this.storage.getSettings();
-    const previousCategory = settings.bgCategory || "nature";
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
+    const previousCategory = this.normalizeBackgroundCategory(
+      settings.bgCategory || "nature",
+    );
     const previousImages = this.getImagesForCategory(
       previousCategory,
       settings,
@@ -930,11 +952,12 @@ class BackgroundManager extends BaseManager {
       this._getImageUrlByIndex(previousImages, previousIndex) ||
       this.getCurrentImageUrl(settings);
 
-    settings.bgCategory = category;
-    const images = this.getImagesForCategory(category, settings);
+    settings.bgCategory = normalizedCategory;
+    const images = this.getImagesForCategory(normalizedCategory, settings);
     if (images.length > 0) {
       const index = this._getRandomIndexAvoidingImage(images, {
-        excludeIndex: previousCategory === category ? previousIndex : -1,
+        excludeIndex:
+          previousCategory === normalizedCategory ? previousIndex : -1,
         excludeUrl: previousImageUrl,
       });
       settings.currentBgIndex = index;

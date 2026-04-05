@@ -5845,6 +5845,11 @@
           <!-- Background Settings -->
           <div class="settings-panel" id="backgroundPanel">
             <div class="setting-group">
+              <button class="setting-btn" id="changeBackgroundBtn">
+                🔄 Refresh Background
+              </button>
+            </div>
+            <div class="setting-group">
               <label class="setting-label">Background Rotation Interval</label>
               <select class="setting-select" id="bgInterval">
                 <option value="15">Every 15 minutes</option>
@@ -5873,12 +5878,7 @@
             <div class="setting-group">
               <label class="setting-label">Background Category</label>
               <select class="setting-select" id="bgCategory">
-                <option value="allWithCustom">
-                  All Backgrounds (Including Custom)
-                </option>
-                <option value="allNoCustom">
-                  All Backgrounds (Excluding Custom)
-                </option>
+                <option value="all">All Backgrounds</option>
                 <option value="nature" selected>Nature</option>
                 <option value="landscape">Landscapes</option>
                 <option value="mountains">Mountains</option>
@@ -5908,9 +5908,6 @@
                   style="display: none"
                 >
                   🖼️ Add Background
-                </button>
-                <button class="setting-btn" id="changeBackgroundBtn">
-                  🔄 Change Background
                 </button>
                 <span class="custom-bg-count" id="customBgCount"
                   >0 selected</span

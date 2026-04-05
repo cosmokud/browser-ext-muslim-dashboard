@@ -269,6 +269,7 @@ class SettingsManager extends BaseManager {
     this._backgroundThumbCacheName = "md-background-thumbs-v1";
     this._backgroundThumbCacheMaxEntries = 220;
     this._backgroundThumbBlobUrlMaxEntries = 140;
+    this._backgroundSettingsDirty = false;
 
     // General settings elements
     this.containerWidth = document.getElementById("containerWidth");
@@ -1131,6 +1132,7 @@ class SettingsManager extends BaseManager {
    */
   loadSettings() {
     const settings = this.storage.getSettings();
+    this._backgroundSettingsDirty = false;
 
     // Keep floating mode button UI in sync (handled by FloatingModeManager)
     try {
@@ -1279,8 +1281,11 @@ class SettingsManager extends BaseManager {
       if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
       this.toggleCustomInterval(false);
     }
+    const normalizedBgCategory = this.normalizeBackgroundCategory(
+      settings.bgCategory,
+    );
     if (this.bgCategory) {
-      this.bgCategory.value = settings.bgCategory || "nature";
+      this.bgCategory.value = normalizedBgCategory;
     }
     this.updateBackgroundPoolAddButtonVisibility();
     this.renderBackgroundImagePool();
@@ -4484,6 +4489,21 @@ class SettingsManager extends BaseManager {
     return String(url || "").trim();
   }
 
+  normalizeBackgroundCategory(category) {
+    const normalized = String(category || "").trim();
+    if (!normalized) return "nature";
+
+    if (
+      normalized === "allWithCustom" ||
+      normalized === "allNoCustom" ||
+      normalized === "all"
+    ) {
+      return "all";
+    }
+
+    return normalized;
+  }
+
   getBackgroundThumbnailPlaceholder() {
     return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
   }
@@ -4775,6 +4795,7 @@ class SettingsManager extends BaseManager {
     const normalizedMap = {};
     Object.entries(rawMap).forEach(([category, urls]) => {
       if (!Array.isArray(urls)) return;
+      const normalizedCategory = this.normalizeBackgroundCategory(category);
 
       const dedupedUrls = [];
       const seen = new Set();
@@ -4785,7 +4806,18 @@ class SettingsManager extends BaseManager {
         dedupedUrls.push(normalizedUrl);
       });
 
-      normalizedMap[category] = dedupedUrls;
+      const existing = Array.isArray(normalizedMap[normalizedCategory])
+        ? normalizedMap[normalizedCategory]
+        : [];
+      const merged = [];
+      const mergedSeen = new Set();
+      [...existing, ...dedupedUrls].forEach((url) => {
+        if (mergedSeen.has(url)) return;
+        mergedSeen.add(url);
+        merged.push(url);
+      });
+
+      normalizedMap[normalizedCategory] = merged;
     });
 
     return normalizedMap;
@@ -4808,27 +4840,32 @@ class SettingsManager extends BaseManager {
   updateBackgroundPoolAddButtonVisibility() {
     if (!this.addCustomBgBtn) return;
 
-    const selectedCategory = this.bgCategory?.value || "nature";
+    const selectedCategory = this.normalizeBackgroundCategory(
+      this.bgCategory?.value || "nature",
+    );
     this.addCustomBgBtn.style.display =
       selectedCategory === "custom" ? "inline-flex" : "none";
   }
 
   ensureBackgroundCategorySelectionInitialized(category, allImages, settings) {
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
     const resolvedSettings =
       settings && typeof settings === "object"
         ? settings
         : this.storage.getSettings();
 
     const selectionMap = this.getBackgroundImageSelectionMap(resolvedSettings);
-    if (Object.prototype.hasOwnProperty.call(selectionMap, category)) {
-      return selectionMap[category];
+    if (
+      Object.prototype.hasOwnProperty.call(selectionMap, normalizedCategory)
+    ) {
+      return selectionMap[normalizedCategory];
     }
 
     const allUrls = allImages
       .map((image) => this.normalizeBackgroundImageUrl(image.url))
       .filter(Boolean);
 
-    selectionMap[category] = allUrls;
+    selectionMap[normalizedCategory] = allUrls;
     resolvedSettings.backgroundImageSelections = selectionMap;
     this.storage.saveSettings(resolvedSettings);
     return allUrls;
@@ -4836,6 +4873,7 @@ class SettingsManager extends BaseManager {
 
   saveBackgroundSelectionForCategory(category, selectedUrls, settings = null) {
     if (!category) return;
+    const normalizedCategory = this.normalizeBackgroundCategory(category);
 
     const resolvedSettings =
       settings && typeof settings === "object"
@@ -4852,7 +4890,7 @@ class SettingsManager extends BaseManager {
       dedupedUrls.push(normalizedUrl);
     });
 
-    selectionMap[category] = dedupedUrls;
+    selectionMap[normalizedCategory] = dedupedUrls;
     resolvedSettings.backgroundImageSelections = selectionMap;
     this.storage.saveSettings(resolvedSettings);
   }
@@ -4873,14 +4911,42 @@ class SettingsManager extends BaseManager {
     }
   }
 
+  applyBackgroundPoolSelectionToRenderedItems(selectedSet) {
+    if (!(selectedSet instanceof Set)) {
+      return;
+    }
+
+    const items = this.customBgList?.querySelectorAll(".custom-bg-item") || [];
+    let selectedCount = 0;
+
+    items.forEach((item, index) => {
+      const url = this.normalizeBackgroundImageUrl(
+        this._activeBgPoolImages?.[index]?.url,
+      );
+      const isSelected = Boolean(url) && selectedSet.has(url);
+      if (isSelected) {
+        selectedCount += 1;
+      }
+
+      item.classList.toggle("is-selected", isSelected);
+      item.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    });
+
+    this.updateBackgroundPoolCount(
+      selectedCount,
+      this._activeBgPoolImages.length,
+    );
+  }
+
   renderBackgroundImagePool() {
     if (!this.customBgList) return;
 
     this.resetBackgroundThumbObserver();
 
     const settings = this.storage.getSettings();
-    const selectedCategory =
-      this.bgCategory?.value || settings.bgCategory || "nature";
+    const selectedCategory = this.normalizeBackgroundCategory(
+      this.bgCategory?.value || settings.bgCategory || "nature",
+    );
     const rawImages = this.getAllBackgroundImagesForCategory(
       selectedCategory,
       settings,
@@ -4979,8 +5045,9 @@ class SettingsManager extends BaseManager {
   }
 
   toggleBackgroundPoolImageSelection(index) {
-    const category =
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    const category = this.normalizeBackgroundCategory(
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+    );
     const entry = this._activeBgPoolImages?.[index];
     const imageUrl = this.normalizeBackgroundImageUrl(entry?.url);
     if (!imageUrl) return;
@@ -5005,24 +5072,29 @@ class SettingsManager extends BaseManager {
       Array.from(selectedSet),
       settings,
     );
-    this.renderBackgroundImagePool();
+    this.applyBackgroundPoolSelectionToRenderedItems(selectedSet);
+    this._backgroundSettingsDirty = true;
   }
 
   selectAllBackgroundPoolImages() {
-    const category =
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    const category = this.normalizeBackgroundCategory(
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+    );
     const urls = this._activeBgPoolImages
       .map((image) => this.normalizeBackgroundImageUrl(image.url))
       .filter(Boolean);
     this.saveBackgroundSelectionForCategory(category, urls);
-    this.renderBackgroundImagePool();
+    this.applyBackgroundPoolSelectionToRenderedItems(new Set(urls));
+    this._backgroundSettingsDirty = true;
   }
 
   deselectAllBackgroundPoolImages() {
-    const category =
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    const category = this.normalizeBackgroundCategory(
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+    );
     this.saveBackgroundSelectionForCategory(category, []);
-    this.renderBackgroundImagePool();
+    this.applyBackgroundPoolSelectionToRenderedItems(new Set());
+    this._backgroundSettingsDirty = true;
   }
 
   /**
@@ -5071,6 +5143,7 @@ class SettingsManager extends BaseManager {
 
       this.storage.saveSettings(settings);
       this.renderBackgroundImagePool();
+      this._backgroundSettingsDirty = true;
       this.showToast("Background added!", "success");
     };
     reader.readAsDataURL(file);
@@ -5988,7 +6061,9 @@ class SettingsManager extends BaseManager {
       settings.bgInterval = parseInt(bgIntervalValue) || 60;
       settings.bgIntervalCustom = null;
     }
-    settings.bgCategory = this.bgCategory?.value || "nature";
+    settings.bgCategory = this.normalizeBackgroundCategory(
+      this.bgCategory?.value || "nature",
+    );
 
     // Theme settings (container width, blur power, and theme selection are now in Themes panel)
     this.saveThemeSettings(settings);
@@ -6127,11 +6202,40 @@ class SettingsManager extends BaseManager {
     // Apply changes live
     this.applySettings(settings);
 
+    if (source === "manual" && this._backgroundSettingsDirty) {
+      this.refreshBackgroundAfterSettingsSave(settings);
+      this._backgroundSettingsDirty = false;
+    }
+
     if (showToast) {
       this.showToast("Settings saved successfully!", "success");
     }
 
     return true;
+  }
+
+  refreshBackgroundAfterSettingsSave(settings) {
+    if (!this.backgrounds) return;
+
+    const selectedCategory = this.normalizeBackgroundCategory(
+      settings?.bgCategory || this.bgCategory?.value || "nature",
+    );
+
+    try {
+      const persisted = this.storage.getSettings();
+      if (persisted.bgCategory !== selectedCategory) {
+        persisted.bgCategory = selectedCategory;
+        this.storage.saveSettings(persisted);
+      }
+
+      if (typeof this.backgrounds.updateCategory === "function") {
+        this.backgrounds.updateCategory(selectedCategory);
+      } else if (typeof this.backgrounds.changeBackground === "function") {
+        this.backgrounds.changeBackground();
+      }
+    } catch (e) {
+      // ignore non-critical background refresh failures
+    }
   }
 
   /**
@@ -8698,6 +8802,7 @@ class SettingsManager extends BaseManager {
       this.bgCategory.addEventListener("change", () => {
         this.updateBackgroundPoolAddButtonVisibility();
         this.renderBackgroundImagePool();
+        this._backgroundSettingsDirty = true;
       });
     }
 
@@ -9403,18 +9508,24 @@ class SettingsManager extends BaseManager {
       el.addEventListener("change", applyLiveDashboardVisibility);
     });
 
-    // Change background now
+    // Refresh background now
     if (this.changeBackgroundBtn) {
       this.changeBackgroundBtn.addEventListener("click", () => {
         const settings = this.storage.getSettings();
         if (this.bgCategory) {
-          settings.bgCategory = this.bgCategory.value;
+          settings.bgCategory = this.normalizeBackgroundCategory(
+            this.bgCategory.value,
+          );
           this.storage.saveSettings(settings);
         }
         if (this.backgrounds) {
-          this.backgrounds.changeBackground();
+          if (typeof this.backgrounds.updateCategory === "function") {
+            this.backgrounds.updateCategory(settings.bgCategory || "nature");
+          } else {
+            this.backgrounds.changeBackground();
+          }
         }
-        this.showToast("Background changed!", "success");
+        this.showToast("Background refreshed!", "success");
       });
     }
 
