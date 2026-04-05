@@ -413,6 +413,11 @@ class BackgroundManager extends BaseManager {
    */
   getImageUrl(url) {
     if (!this.imageParams) return url;
+    // Uploaded custom backgrounds are data/blob URLs; adding query params
+    // corrupts them and causes image preload to fail.
+    if (!/^https?:\/\//i.test(String(url || ""))) {
+      return url;
+    }
     const params = this.imageParams.startsWith("?")
       ? this.imageParams.slice(1)
       : this.imageParams;
