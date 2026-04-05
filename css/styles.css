@@ -10124,47 +10124,74 @@ html[data-theme-mode="light"]
 
 /* Custom Background List */
 .custom-bg-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
+  margin-top: var(--spacing-sm);
 }
 
 .custom-bg-item {
   position: relative;
-  width: 80px;
-  height: 50px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.custom-bg-item:hover {
+  transform: translateY(-1px);
+}
+
+.custom-bg-item:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.custom-bg-item.is-selected {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-gold) 55%, transparent);
 }
 
 .custom-bg-thumb {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.custom-bg-remove {
+.custom-bg-item-check {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 18px;
-  height: 18px;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-full);
-  background: #ff6b6b;
-  border: none;
+  background: color-mix(in srgb, var(--accent-gold) 90%, #ffffff 10%);
+  border: 1px solid color-mix(in srgb, #000 18%, transparent);
   color: white;
-  font-size: 12px;
-  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  transform: scale(0.85);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.custom-bg-item:hover .custom-bg-remove {
+.custom-bg-item.is-selected .custom-bg-item-check {
   opacity: 1;
+  transform: scale(1);
 }
 
 .custom-bg-actions {
@@ -10178,6 +10205,7 @@ html[data-theme-mode="light"]
   font-size: 0.85rem;
   color: var(--text-muted);
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .empty-hint {

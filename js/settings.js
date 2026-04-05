@@ -257,7 +257,11 @@ class SettingsManager extends BaseManager {
     this.customBgList = document.getElementById("customBgList");
     this.customBgInput = document.getElementById("customBgInput");
     this.addCustomBgBtn = document.getElementById("addCustomBgBtn");
+    this.selectAllBgPoolBtn = document.getElementById("selectAllBgPoolBtn");
+    this.deselectAllBgPoolBtn = document.getElementById("deselectAllBgPoolBtn");
     this.customBgCount = document.getElementById("customBgCount");
+    this._activeBgPoolCategory = "";
+    this._activeBgPoolImages = [];
 
     // General settings elements
     this.containerWidth = document.getElementById("containerWidth");
@@ -757,7 +761,7 @@ class SettingsManager extends BaseManager {
     this.ensureDetachedEditorModal();
     this.setupEventListeners();
     this.updateMethodAnglesDisplay();
-    this.renderCustomBackgrounds();
+    this.renderBackgroundImagePool();
 
     this.updateNotesCountHint();
     this.updatePocketQuranBookmarkStats();
@@ -1268,7 +1272,11 @@ class SettingsManager extends BaseManager {
       if (this.bgInterval) this.bgInterval.value = settings.bgInterval;
       this.toggleCustomInterval(false);
     }
-    if (this.bgCategory) this.bgCategory.value = settings.bgCategory;
+    if (this.bgCategory) {
+      this.bgCategory.value = settings.bgCategory || "nature";
+    }
+    this.updateBackgroundPoolAddButtonVisibility();
+    this.renderBackgroundImagePool();
 
     // Container width settings
     if (this.containerWidth) {
@@ -4426,47 +4434,262 @@ class SettingsManager extends BaseManager {
     }
   }
 
-  /**
-   * Render custom backgrounds list
-   */
-  renderCustomBackgrounds() {
-    const settings = this.storage.getSettings();
-    const customBgs = settings.customBackgrounds || [];
+  normalizeBackgroundImageUrl(url) {
+    return String(url || "").trim();
+  }
 
-    if (this.customBgList) {
-      if (customBgs.length === 0) {
-        this.customBgList.innerHTML =
-          '<p class="empty-hint">No custom backgrounds added yet.</p>';
-      } else {
-        this.customBgList.innerHTML = customBgs
-          .map(
-            (bg, index) => `
-          <div class="custom-bg-item" data-index="${index}">
-            <img src="${bg}" alt="Background ${
-              index + 1
-            }" class="custom-bg-thumb" />
-            <button class="custom-bg-remove" data-index="${index}" title="Remove">×</button>
-          </div>
-        `,
-          )
-          .join("");
+  getBackgroundImageSelectionMap(settings = null) {
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
 
-        // Bind remove events
-        this.customBgList
-          .querySelectorAll(".custom-bg-remove")
-          .forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              e.preventDefault();
-              const index = parseInt(btn.dataset.index);
-              this.removeCustomBackground(index);
-            });
-          });
-      }
+    const rawMap = resolvedSettings.backgroundImageSelections;
+    if (!rawMap || typeof rawMap !== "object" || Array.isArray(rawMap)) {
+      return {};
     }
 
+    const normalizedMap = {};
+    Object.entries(rawMap).forEach(([category, urls]) => {
+      if (!Array.isArray(urls)) return;
+
+      const dedupedUrls = [];
+      const seen = new Set();
+      urls.forEach((value) => {
+        const normalizedUrl = this.normalizeBackgroundImageUrl(value);
+        if (!normalizedUrl || seen.has(normalizedUrl)) return;
+        seen.add(normalizedUrl);
+        dedupedUrls.push(normalizedUrl);
+      });
+
+      normalizedMap[category] = dedupedUrls;
+    });
+
+    return normalizedMap;
+  }
+
+  getAllBackgroundImagesForCategory(category, settings) {
+    if (!this.backgrounds) return [];
+
+    if (typeof this.backgrounds.getAllImagesForCategory === "function") {
+      return this.backgrounds.getAllImagesForCategory(category, settings);
+    }
+
+    if (typeof this.backgrounds.getImagesForCategory === "function") {
+      return this.backgrounds.getImagesForCategory(category, settings);
+    }
+
+    return [];
+  }
+
+  updateBackgroundPoolAddButtonVisibility() {
+    if (!this.addCustomBgBtn) return;
+
+    const selectedCategory = this.bgCategory?.value || "nature";
+    this.addCustomBgBtn.style.display =
+      selectedCategory === "custom" ? "inline-flex" : "none";
+  }
+
+  ensureBackgroundCategorySelectionInitialized(category, allImages, settings) {
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
+
+    const selectionMap = this.getBackgroundImageSelectionMap(resolvedSettings);
+    if (Object.prototype.hasOwnProperty.call(selectionMap, category)) {
+      return selectionMap[category];
+    }
+
+    const allUrls = allImages
+      .map((image) => this.normalizeBackgroundImageUrl(image.url))
+      .filter(Boolean);
+
+    selectionMap[category] = allUrls;
+    resolvedSettings.backgroundImageSelections = selectionMap;
+    this.storage.saveSettings(resolvedSettings);
+    return allUrls;
+  }
+
+  saveBackgroundSelectionForCategory(category, selectedUrls, settings = null) {
+    if (!category) return;
+
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
+    const selectionMap = this.getBackgroundImageSelectionMap(resolvedSettings);
+
+    const dedupedUrls = [];
+    const seen = new Set();
+    selectedUrls.forEach((value) => {
+      const normalizedUrl = this.normalizeBackgroundImageUrl(value);
+      if (!normalizedUrl || seen.has(normalizedUrl)) return;
+      seen.add(normalizedUrl);
+      dedupedUrls.push(normalizedUrl);
+    });
+
+    selectionMap[category] = dedupedUrls;
+    resolvedSettings.backgroundImageSelections = selectionMap;
+    this.storage.saveSettings(resolvedSettings);
+  }
+
+  updateBackgroundPoolCount(selectedCount, totalCount) {
     if (this.customBgCount) {
-      this.customBgCount.textContent = `${customBgs.length}/${SettingsManager.CUSTOM_BACKGROUND_LIMIT}`;
+      this.customBgCount.textContent = `${selectedCount}/${totalCount} selected`;
     }
+
+    if (this.selectAllBgPoolBtn) {
+      this.selectAllBgPoolBtn.disabled =
+        totalCount === 0 || selectedCount === totalCount;
+    }
+
+    if (this.deselectAllBgPoolBtn) {
+      this.deselectAllBgPoolBtn.disabled =
+        totalCount === 0 || selectedCount === 0;
+    }
+  }
+
+  renderBackgroundImagePool() {
+    if (!this.customBgList) return;
+
+    const settings = this.storage.getSettings();
+    const selectedCategory =
+      this.bgCategory?.value || settings.bgCategory || "nature";
+    const rawImages = this.getAllBackgroundImagesForCategory(
+      selectedCategory,
+      settings,
+    );
+
+    const images = (Array.isArray(rawImages) ? rawImages : [])
+      .map((entry) => {
+        if (
+          this.backgrounds &&
+          typeof this.backgrounds.normalizeImage === "function"
+        ) {
+          return this.backgrounds.normalizeImage(entry);
+        }
+
+        if (typeof entry === "string") {
+          return { url: entry, credit: "", href: "" };
+        }
+
+        return {
+          url: entry?.url || "",
+          credit: entry?.credit || "",
+          href: entry?.href || "",
+        };
+      })
+      .map((entry) => ({
+        ...entry,
+        url: this.normalizeBackgroundImageUrl(entry.url),
+      }))
+      .filter((entry) => Boolean(entry.url));
+
+    this._activeBgPoolCategory = selectedCategory;
+    this._activeBgPoolImages = images;
+
+    if (images.length === 0) {
+      const emptyHint = document.createElement("p");
+      emptyHint.className = "empty-hint";
+      emptyHint.textContent =
+        selectedCategory === "custom"
+          ? "No custom backgrounds yet. Use Add Background to create your pool."
+          : "No backgrounds available for this category.";
+      this.customBgList.replaceChildren(emptyHint);
+      this.updateBackgroundPoolCount(0, 0);
+      return;
+    }
+
+    const selectedUrls = this.ensureBackgroundCategorySelectionInitialized(
+      selectedCategory,
+      images,
+      settings,
+    );
+    const selectedSet = new Set(selectedUrls);
+
+    const fragment = document.createDocumentFragment();
+    let selectedCount = 0;
+
+    images.forEach((entry, index) => {
+      const isSelected = selectedSet.has(entry.url);
+      if (isSelected) selectedCount += 1;
+
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = `custom-bg-item${isSelected ? " is-selected" : ""}`;
+      item.dataset.index = String(index);
+      item.setAttribute("aria-pressed", isSelected ? "true" : "false");
+
+      const thumb = document.createElement("img");
+      thumb.src = entry.url;
+      thumb.alt = `Background ${index + 1}`;
+      thumb.className = "custom-bg-thumb";
+      thumb.loading = "lazy";
+
+      const check = document.createElement("span");
+      check.className = "custom-bg-item-check";
+      check.textContent = "✓";
+      check.setAttribute("aria-hidden", "true");
+
+      item.appendChild(thumb);
+      item.appendChild(check);
+      item.addEventListener("click", () => {
+        this.toggleBackgroundPoolImageSelection(index);
+      });
+
+      fragment.appendChild(item);
+    });
+
+    this.customBgList.replaceChildren(fragment);
+    this.updateBackgroundPoolCount(selectedCount, images.length);
+  }
+
+  toggleBackgroundPoolImageSelection(index) {
+    const category =
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    const entry = this._activeBgPoolImages?.[index];
+    const imageUrl = this.normalizeBackgroundImageUrl(entry?.url);
+    if (!imageUrl) return;
+
+    const settings = this.storage.getSettings();
+    const selectionMap = this.getBackgroundImageSelectionMap(settings);
+    const currentSelection = Object.prototype.hasOwnProperty.call(
+      selectionMap,
+      category,
+    )
+      ? selectionMap[category]
+      : this._activeBgPoolImages
+          .map((image) => this.normalizeBackgroundImageUrl(image.url))
+          .filter(Boolean);
+
+    const selectedSet = new Set(currentSelection);
+    if (selectedSet.has(imageUrl)) selectedSet.delete(imageUrl);
+    else selectedSet.add(imageUrl);
+
+    this.saveBackgroundSelectionForCategory(
+      category,
+      Array.from(selectedSet),
+      settings,
+    );
+    this.renderBackgroundImagePool();
+  }
+
+  selectAllBackgroundPoolImages() {
+    const category =
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    const urls = this._activeBgPoolImages
+      .map((image) => this.normalizeBackgroundImageUrl(image.url))
+      .filter(Boolean);
+    this.saveBackgroundSelectionForCategory(category, urls);
+    this.renderBackgroundImagePool();
+  }
+
+  deselectAllBackgroundPoolImages() {
+    const category =
+      this._activeBgPoolCategory || this.bgCategory?.value || "nature";
+    this.saveBackgroundSelectionForCategory(category, []);
+    this.renderBackgroundImagePool();
   }
 
   /**
@@ -4474,7 +4697,9 @@ class SettingsManager extends BaseManager {
    */
   addCustomBackground(file) {
     const settings = this.storage.getSettings();
-    const customBgs = settings.customBackgrounds || [];
+    const customBgs = Array.isArray(settings.customBackgrounds)
+      ? settings.customBackgrounds
+      : [];
 
     if (customBgs.length >= SettingsManager.CUSTOM_BACKGROUND_LIMIT) {
       this.showToast(
@@ -4486,7 +4711,11 @@ class SettingsManager extends BaseManager {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const base64 = e.target.result;
+      const base64 = this.normalizeBackgroundImageUrl(e?.target?.result);
+      if (!base64) {
+        this.showToast("Failed to read image.", "error");
+        return;
+      }
 
       // Check size (limit to ~2MB per image after base64 encoding)
       if (base64.length > 2800000) {
@@ -4496,27 +4725,22 @@ class SettingsManager extends BaseManager {
 
       customBgs.push(base64);
       settings.customBackgrounds = customBgs;
+
+      const selectionMap = this.getBackgroundImageSelectionMap(settings);
+      const customSelection = Array.isArray(selectionMap.custom)
+        ? selectionMap.custom.slice()
+        : [];
+      if (!customSelection.includes(base64)) {
+        customSelection.push(base64);
+      }
+      selectionMap.custom = customSelection;
+      settings.backgroundImageSelections = selectionMap;
+
       this.storage.saveSettings(settings);
-      this.renderCustomBackgrounds();
+      this.renderBackgroundImagePool();
       this.showToast("Background added!", "success");
     };
     reader.readAsDataURL(file);
-  }
-
-  /**
-   * Remove custom background
-   */
-  removeCustomBackground(index) {
-    const settings = this.storage.getSettings();
-    const customBgs = settings.customBackgrounds || [];
-
-    if (index >= 0 && index < customBgs.length) {
-      customBgs.splice(index, 1);
-      settings.customBackgrounds = customBgs;
-      this.storage.saveSettings(settings);
-      this.renderCustomBackgrounds();
-      this.showToast("Background removed", "success");
-    }
   }
 
   /**
@@ -5317,7 +5541,6 @@ class SettingsManager extends BaseManager {
     }
 
     const settings = this.storage.getSettings();
-    const previousBackgroundSyncState = this.getBackgroundSyncState(settings);
 
     // Location settings
     const locationRadio = document.querySelector(
@@ -5567,19 +5790,6 @@ class SettingsManager extends BaseManager {
     // Apply changes live
     this.applySettings(settings);
 
-    const shouldSyncBackgroundAfterManualSave =
-      source === "manual" &&
-      this.didBackgroundSettingsChange(previousBackgroundSyncState, settings);
-
-    if (shouldSyncBackgroundAfterManualSave) {
-      const currentDisplayedBgUrl =
-        this.backgrounds &&
-        typeof this.backgrounds.getCurrentImageUrl === "function"
-          ? this.backgrounds.getCurrentImageUrl()
-          : "";
-      this.syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl);
-    }
-
     if (showToast) {
       this.showToast("Settings saved successfully!", "success");
     }
@@ -5589,94 +5799,6 @@ class SettingsManager extends BaseManager {
     }
 
     return true;
-  }
-
-  getBackgroundSyncState(settings = {}) {
-    const category =
-      typeof settings.bgCategory === "string" && settings.bgCategory
-        ? settings.bgCategory
-        : "nature";
-    const isCustomInterval = settings.bgInterval === "custom";
-
-    if (isCustomInterval) {
-      return {
-        bgCategory: category,
-        bgInterval: "custom",
-        bgIntervalCustom: this.clampNumber(
-          parseInt(settings.bgIntervalCustom, 10),
-          1,
-          10080,
-          60,
-        ),
-      };
-    }
-
-    return {
-      bgCategory: category,
-      bgInterval: this.clampNumber(
-        parseInt(settings.bgInterval, 10),
-        1,
-        10080,
-        60,
-      ),
-      bgIntervalCustom: null,
-    };
-  }
-
-  didBackgroundSettingsChange(previousState, nextSettings) {
-    if (!previousState || typeof previousState !== "object") {
-      return true;
-    }
-
-    const nextState = this.getBackgroundSyncState(nextSettings);
-    return (
-      previousState.bgCategory !== nextState.bgCategory ||
-      previousState.bgInterval !== nextState.bgInterval ||
-      previousState.bgIntervalCustom !== nextState.bgIntervalCustom
-    );
-  }
-
-  syncBackgroundAfterManualSave(settings, currentDisplayedBgUrl = "") {
-    if (!this.backgrounds) return;
-
-    const selectedCategory = settings.bgCategory || "nature";
-    if (typeof this.backgrounds.getImagesForCategory !== "function") {
-      return;
-    }
-
-    const images = this.backgrounds.getImagesForCategory(
-      selectedCategory,
-      settings,
-    );
-    if (!Array.isArray(images) || images.length === 0) {
-      return;
-    }
-
-    const currentUrl = String(currentDisplayedBgUrl || "").trim();
-    if (
-      currentUrl &&
-      typeof this.backgrounds.findImageIndexByUrl === "function"
-    ) {
-      const indexInCategory = this.backgrounds.findImageIndexByUrl(
-        images,
-        currentUrl,
-      );
-
-      if (indexInCategory >= 0) {
-        if (settings.currentBgIndex !== indexInCategory) {
-          settings.currentBgIndex = indexInCategory;
-          this.storage.saveSettings(settings);
-        }
-        return;
-      }
-    }
-
-    if (typeof this.backgrounds.updateCategory === "function") {
-      this.backgrounds.updateCategory(selectedCategory);
-      const refreshed = this.storage.getSettings();
-      settings.currentBgIndex = refreshed.currentBgIndex;
-      settings.lastBgChange = refreshed.lastBgChange;
-    }
   }
 
   /**
@@ -8222,6 +8344,13 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.bgCategory) {
+      this.bgCategory.addEventListener("change", () => {
+        this.updateBackgroundPoolAddButtonVisibility();
+        this.renderBackgroundImagePool();
+      });
+    }
+
     // Compact weather toggle
     if (this.compactWeatherEnabled) {
       this.compactWeatherEnabled.addEventListener("change", (e) => {
@@ -8439,6 +8568,18 @@ class SettingsManager extends BaseManager {
     }
 
     // Add custom background
+    if (this.selectAllBgPoolBtn) {
+      this.selectAllBgPoolBtn.addEventListener("click", () => {
+        this.selectAllBackgroundPoolImages();
+      });
+    }
+
+    if (this.deselectAllBgPoolBtn) {
+      this.deselectAllBgPoolBtn.addEventListener("click", () => {
+        this.deselectAllBackgroundPoolImages();
+      });
+    }
+
     if (this.addCustomBgBtn) {
       this.addCustomBgBtn.addEventListener("click", () => {
         this.customBgInput?.click();

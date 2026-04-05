@@ -160,6 +160,7 @@ class StorageManager {
       lastBgChange: null,
       currentBgIndex: 0,
       customBackgrounds: [], // up to 20 custom backgrounds (base64)
+      backgroundImageSelections: {}, // per-category selected image URLs
       notesCardFontFamily: "Poppins",
 
       // Todo settings
@@ -493,6 +494,33 @@ class StorageManager {
   }
 
   /**
+   * Normalize background image selection map
+   */
+  normalizeBackgroundImageSelections(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return {};
+    }
+
+    const normalized = {};
+    Object.entries(value).forEach(([category, urls]) => {
+      if (!Array.isArray(urls)) return;
+
+      const deduped = [];
+      const seen = new Set();
+      urls.forEach((entry) => {
+        const url = String(entry || "").trim();
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        deduped.push(url);
+      });
+
+      normalized[category] = deduped;
+    });
+
+    return normalized;
+  }
+
+  /**
    * Get settings with defaults
    */
   getSettings() {
@@ -522,6 +550,10 @@ class StorageManager {
         merged[key] = stored[key];
       }
     }
+
+    merged.backgroundImageSelections = this.normalizeBackgroundImageSelections(
+      merged.backgroundImageSelections,
+    );
 
     // Normalize blur settings for all supported card-blur-btn components,
     // and migrate legacy override keys when present.
@@ -702,6 +734,11 @@ class StorageManager {
     ) {
       normalizedSettings.theme.highestVisualFidelityEnabled = false;
     }
+
+    normalizedSettings.backgroundImageSelections =
+      this.normalizeBackgroundImageSelections(
+        normalizedSettings.backgroundImageSelections,
+      );
 
     const ok = this.set("settings", normalizedSettings);
 

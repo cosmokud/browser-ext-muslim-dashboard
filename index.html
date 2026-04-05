@@ -5890,25 +5890,41 @@
               </select>
             </div>
             <div class="setting-group custom-bg-group" id="customBgGroup">
-              <label class="setting-label">Custom Backgrounds (up to 20)</label>
-              <div class="custom-bg-list" id="customBgList">
-                <!-- Custom backgrounds will be shown here -->
-              </div>
+              <label class="setting-label">Background Image Pool</label>
+              <p class="setting-hint">
+                Select which images are included when the background rotates or
+                refreshes.
+              </p>
               <div class="custom-bg-actions">
-                <input
-                  type="file"
-                  id="customBgInput"
-                  accept="image/*"
+                <button class="setting-btn" id="selectAllBgPoolBtn">
+                  ✅ Select All
+                </button>
+                <button class="setting-btn" id="deselectAllBgPoolBtn">
+                  ⬜ Deselect All
+                </button>
+                <button
+                  class="setting-btn"
+                  id="addCustomBgBtn"
                   style="display: none"
-                  multiple
-                />
-                <button class="setting-btn" id="addCustomBgBtn">
+                >
                   🖼️ Add Background
                 </button>
                 <button class="setting-btn" id="changeBackgroundBtn">
                   🔄 Change Background
                 </button>
-                <span class="custom-bg-count" id="customBgCount">0/20</span>
+                <span class="custom-bg-count" id="customBgCount"
+                  >0 selected</span
+                >
+              </div>
+              <input
+                type="file"
+                id="customBgInput"
+                accept="image/*"
+                style="display: none"
+                multiple
+              />
+              <div class="custom-bg-list bg-pool-list" id="customBgList">
+                <!-- Background pool items will be shown here -->
               </div>
             </div>
           </div>

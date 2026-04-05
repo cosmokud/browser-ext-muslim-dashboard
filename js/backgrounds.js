@@ -354,10 +354,39 @@ class BackgroundManager extends BaseManager {
     return String(url || "").trim();
   }
 
-  getImagesForCategory(category, settings) {
+  _getSelectedBackgroundUrlsForCategory(category, settings) {
+    const map = settings?.backgroundImageSelections;
+    if (!map || typeof map !== "object" || Array.isArray(map)) {
+      return null;
+    }
+
+    const rawUrls = map[category];
+    if (!Array.isArray(rawUrls)) {
+      return null;
+    }
+
+    const dedupedUrls = [];
+    const seen = new Set();
+    rawUrls.forEach((value) => {
+      const normalized = this._normalizeImageUrl(value);
+      if (!normalized || seen.has(normalized)) {
+        return;
+      }
+      seen.add(normalized);
+      dedupedUrls.push(normalized);
+    });
+
+    return dedupedUrls;
+  }
+
+  getAllImagesForCategory(category, settings) {
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
     const specialCategory = this._getSpecialCategoryType(category);
     const allBuiltIn = Object.values(this.backgrounds).flat();
-    const customBgs = this._getCustomBackgrounds(settings);
+    const customBgs = this._getCustomBackgrounds(resolvedSettings);
 
     if (specialCategory === "allNoCustom") {
       return allBuiltIn.length > 0 ? allBuiltIn : this.backgrounds.nature;
@@ -369,10 +398,36 @@ class BackgroundManager extends BaseManager {
     }
 
     if (specialCategory === "custom") {
-      return customBgs.length > 0 ? customBgs : this.backgrounds.nature;
+      return customBgs;
     }
 
     return this.backgrounds[category] || this.backgrounds.nature;
+  }
+
+  getImagesForCategory(category, settings) {
+    const resolvedSettings =
+      settings && typeof settings === "object"
+        ? settings
+        : this.storage.getSettings();
+    const allImages = this.getAllImagesForCategory(category, resolvedSettings);
+    const selectedUrls = this._getSelectedBackgroundUrlsForCategory(
+      category,
+      resolvedSettings,
+    );
+
+    if (!selectedUrls) {
+      return allImages;
+    }
+
+    if (selectedUrls.length === 0) {
+      return [];
+    }
+
+    const selectedSet = new Set(selectedUrls);
+    return allImages.filter((image) => {
+      const url = this._normalizeImageUrl(this.normalizeImage(image).url);
+      return selectedSet.has(url);
+    });
   }
 
   _getImageUrlByIndex(images, index) {
