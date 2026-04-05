@@ -216,6 +216,11 @@ class GridLayoutManager {
   setQuranFocusModeActive(active) {
     this.isQuranFocusModeContext = active === true;
 
+    if (!this.isQuranFocusModeContext) {
+      const pocketQuranCard = document.getElementById("pocketQuranCard");
+      this.clearQuranFocusFloatingWidthStyles(pocketQuranCard);
+    }
+
     // Focus mode and main layout keep separate edit-mode state.
     const settings = this.storage.getSettings();
     const editModeStorageKey = this.getEditModeStorageKey();
@@ -228,6 +233,30 @@ class GridLayoutManager {
 
   isSidebarDropAllowed() {
     return this.isSidebarModeEnabled && !this.isQuranFocusModeContextActive();
+  }
+
+  isFocusModePocketQuranElement(el) {
+    return (
+      !!el &&
+      this.getSidebarComponentId(el) === "pocketQuranCard" &&
+      this.isQuranFocusModeContextActive()
+    );
+  }
+
+  applyQuranFocusFloatingWidthStyles(el, widthPx) {
+    if (!el) return;
+
+    const width = Math.round(Number(widthPx) || 0);
+    if (!Number.isFinite(width) || width <= 0) return;
+
+    el.classList.add("quran-focus-floating-width");
+    el.style.setProperty("--quran-focus-pocket-width", `${width}px`);
+  }
+
+  clearQuranFocusFloatingWidthStyles(el) {
+    if (!el) return;
+    el.classList.remove("quran-focus-floating-width");
+    el.style.removeProperty("--quran-focus-pocket-width");
   }
 
   getFocusModeMiddleWidthStorageKey() {
@@ -401,10 +430,21 @@ class GridLayoutManager {
   getMiddleMaxResizeWidth(el) {
     if (!el) return this.getMiddleMinResizeWidth(el);
 
+    const currentWidth = Math.round(el.getBoundingClientRect().width || 0);
+    if (this.isFocusModePocketQuranElement(el)) {
+      // Focus mode uses a fixed-position Pocket Quran overlay, so clamp by viewport
+      // width instead of row/layout flow to bypass grid/container limits.
+      const viewportWidth = Math.round((window.innerWidth || 0) - 24);
+      return Math.max(
+        viewportWidth,
+        currentWidth,
+        this.getMiddleMinResizeWidth(el),
+      );
+    }
+
     const row = el.closest(".grid-flex-row");
     const rowWidth = Math.round((row && row.clientWidth) || 0);
     const layoutWidth = Math.round(this.getLayoutWidth() || 0);
-    const currentWidth = Math.round(el.getBoundingClientRect().width || 0);
 
     return Math.max(
       rowWidth,
@@ -472,8 +512,15 @@ class GridLayoutManager {
     el.style.width = `${clampedWidth}px`;
     el.style.maxWidth = `${clampedWidth}px`;
     el.style.flex = `0 0 ${clampedWidth}px`;
-    el.style.marginLeft = "auto";
-    el.style.marginRight = "auto";
+    if (this.isFocusModePocketQuranElement(el)) {
+      this.applyQuranFocusFloatingWidthStyles(el, clampedWidth);
+      el.style.marginLeft = "0";
+      el.style.marginRight = "0";
+    } else {
+      this.clearQuranFocusFloatingWidthStyles(el);
+      el.style.marginLeft = "auto";
+      el.style.marginRight = "auto";
+    }
     el.classList.add("middle-custom-width");
     el.dataset.middleCustomWidth = String(clampedWidth);
 
@@ -508,6 +555,8 @@ class GridLayoutManager {
     { keepSaved = true, restoreDefaultFlex = true } = {},
   ) {
     if (!el) return;
+
+    this.clearQuranFocusFloatingWidthStyles(el);
 
     el.style.removeProperty("width");
     el.style.removeProperty("max-width");
