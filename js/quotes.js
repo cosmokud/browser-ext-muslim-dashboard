@@ -645,6 +645,18 @@ class QuotesManager extends BaseManager {
       return;
     }
 
+    const isSameAsCurrent = (candidate) => {
+      if (!this.currentQuote || !candidate) return false;
+      if (candidate === this.currentQuote) return true;
+
+      const currentText = this.getQuoteText(this.currentQuote);
+      const candidateText = this.getQuoteText(candidate);
+      const currentSource = String(this.currentQuote?.source || "").trim();
+      const candidateSource = String(candidate?.source || "").trim();
+
+      return currentText === candidateText && currentSource === candidateSource;
+    };
+
     // Shuffle mode: random quote; non-shuffle mode: deterministic sequential quote.
     let newQuote;
     if (quotes.length === 1) {
@@ -665,10 +677,21 @@ class QuotesManager extends BaseManager {
       newQuote = quotes[nextIndex];
       this._sequentialQuoteCursor = nextIndex;
     } else {
+      let tries = 0;
+      const maxTries = Math.max(8, quotes.length * 2);
+
       do {
         const randomIndex = Math.floor(Math.random() * quotes.length);
         newQuote = quotes[randomIndex];
-      } while (newQuote === this.currentQuote && quotes.length > 1);
+        tries += 1;
+      } while (isSameAsCurrent(newQuote) && tries < maxTries);
+
+      if (isSameAsCurrent(newQuote)) {
+        const fallback = quotes.find((quote) => !isSameAsCurrent(quote));
+        if (fallback) {
+          newQuote = fallback;
+        }
+      }
     }
 
     this.setCurrentQuote(newQuote, { pushToHistory: true });
@@ -717,6 +740,11 @@ class QuotesManager extends BaseManager {
   }
 
   showPreviousQuote() {
+    if (this.quoteShuffleEnabled !== false) {
+      this.displayRandomQuote();
+      return;
+    }
+
     if (this._quoteHistoryIndex > 0) {
       this._quoteHistoryIndex -= 1;
       const q = this._quoteHistory[this._quoteHistoryIndex];
@@ -725,6 +753,11 @@ class QuotesManager extends BaseManager {
   }
 
   showNextQuote() {
+    if (this.quoteShuffleEnabled !== false) {
+      this.displayRandomQuote();
+      return;
+    }
+
     // If we have forward history (user went back), use it.
     if (this._quoteHistoryIndex >= 0) {
       const canForward =
