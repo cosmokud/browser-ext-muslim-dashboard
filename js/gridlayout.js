@@ -490,7 +490,10 @@ class GridLayoutManager {
       return;
     }
 
-    if (el.classList.contains("middle-custom-width") || el.dataset.middleCustomWidth) {
+    if (
+      el.classList.contains("middle-custom-width") ||
+      el.dataset.middleCustomWidth
+    ) {
       this.resetMiddleWidthForElement(el, {
         keepSaved: true,
         restoreDefaultFlex: true,
@@ -1803,7 +1806,8 @@ class GridLayoutManager {
     }
 
     const isSidebarItem =
-      el.classList.contains("sidebar-detached") && !!el.closest(".sidebar-slot");
+      el.classList.contains("sidebar-detached") &&
+      !!el.closest(".sidebar-slot");
     const isMiddleItem = !isSidebarItem && !!el.closest(".grid-flex-row");
     if (!isSidebarItem && !isMiddleItem) {
       return false;
@@ -1848,7 +1852,8 @@ class GridLayoutManager {
     if (!el) return;
 
     const isSidebarItem =
-      el.classList.contains("sidebar-detached") && !!el.closest(".sidebar-slot");
+      el.classList.contains("sidebar-detached") &&
+      !!el.closest(".sidebar-slot");
     if (isSidebarItem) {
       this.resetSidebarWidthForElement(el, { keepSaved: false });
     } else {

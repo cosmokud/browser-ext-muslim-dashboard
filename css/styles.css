@@ -587,8 +587,7 @@ body.grid-edit-mode
   opacity: 1;
 }
 
-body.grid-edit-mode
-  .grid-draggable.sidebar-resizable-host.sidebar-resizing {
+body.grid-edit-mode .grid-draggable.sidebar-resizable-host.sidebar-resizing {
   transition: none !important;
 }
 
