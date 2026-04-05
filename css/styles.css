@@ -1267,15 +1267,15 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   order: 1;
 }
 
-.quote-search-btn {
+.quote-pause-btn {
   order: 2;
 }
 
-.quote-pause-btn {
+.quote-shuffle-btn {
   order: 3;
 }
 
-.quote-shuffle-btn {
+.quote-search-btn {
   order: 4;
 }
 

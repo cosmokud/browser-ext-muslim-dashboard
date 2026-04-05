@@ -199,7 +199,8 @@ class QuotesManager extends BaseManager {
       pauseBtn.className = "adhkar-set-selector-btn quote-pause-btn";
       pauseBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        this.setQuoteAutoRotatePaused(!this.quoteAutoRotatePaused);
+        const autoPlayEnabled = this.quoteAutoRotatePaused !== true;
+        this.setQuoteAutoRotatePaused(autoPlayEnabled);
       });
     }
     if (pauseBtn.parentElement !== actionsGroup) {
@@ -237,16 +238,20 @@ class QuotesManager extends BaseManager {
     this.quoteShuffleBtn = shuffleBtn || null;
 
     if (pauseBtn) {
-      const isPaused = this.quoteAutoRotatePaused === true;
-      const pauseIcon = this._getIcon(isPaused ? "▶" : "⏸", { size: 16 });
-      const pauseTitle = isPaused
-        ? "Resume quote auto-rotation"
-        : "Pause quote auto-rotation";
+      const autoPlayEnabled = this.quoteAutoRotatePaused !== true;
+      const autoPlayIcon = this._getIcon("▶", { size: 16 });
+      const autoPlayState = autoPlayEnabled ? "on" : "off";
 
-      pauseBtn.innerHTML = pauseIcon;
-      pauseBtn.setAttribute("aria-pressed", isPaused ? "true" : "false");
-      pauseBtn.setAttribute("aria-label", pauseTitle);
-      pauseBtn.title = pauseTitle;
+      pauseBtn.innerHTML = autoPlayIcon;
+      pauseBtn.setAttribute(
+        "aria-pressed",
+        autoPlayEnabled ? "true" : "false",
+      );
+      pauseBtn.setAttribute(
+        "aria-label",
+        `Toggle quote auto play (currently ${autoPlayState})`,
+      );
+      pauseBtn.title = `Auto play: ${autoPlayState}`;
     }
 
     if (shuffleBtn) {
