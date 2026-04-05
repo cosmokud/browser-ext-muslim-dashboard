@@ -520,7 +520,7 @@ body.sidebar-mode .main-container {
   width: 100%;
 }
 
-/* Sidebar width resizing handles (Layout Editor Mode only) */
+/* Component width resizing handles (Layout Editor Mode only) */
 .sidebar-slot > .grid-draggable.sidebar-resizable-host {
   position: relative;
 }
@@ -543,7 +543,7 @@ body.sidebar-mode .main-container {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  height: 24px;
+  height: 16px;
   width: 2px;
   border-radius: var(--radius-full);
   background: linear-gradient(
@@ -572,31 +572,23 @@ body.sidebar-mode .main-container {
 }
 
 body.grid-edit-mode
-  .sidebar-zone
-  .sidebar-slot
-  > .grid-draggable.sidebar-detached
+  .grid-draggable.sidebar-resizable-host
   > .sidebar-resize-handle {
   opacity: 0;
   pointer-events: auto;
 }
 
 body.grid-edit-mode
-  .sidebar-zone
-  .sidebar-slot
-  > .grid-draggable.sidebar-detached:hover
+  .grid-draggable.sidebar-resizable-host:hover
   > .sidebar-resize-handle,
 body.grid-edit-mode
-  .sidebar-zone
-  .sidebar-slot
-  > .grid-draggable.sidebar-detached.sidebar-resizing
+  .grid-draggable.sidebar-resizable-host.sidebar-resizing
   > .sidebar-resize-handle {
   opacity: 1;
 }
 
 body.grid-edit-mode
-  .sidebar-zone
-  .sidebar-slot
-  > .grid-draggable.sidebar-detached.sidebar-resizing {
+  .grid-draggable.sidebar-resizable-host.sidebar-resizing {
   transition: none !important;
 }
 

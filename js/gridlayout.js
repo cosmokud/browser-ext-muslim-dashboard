@@ -183,6 +183,10 @@ class GridLayoutManager {
     return "sidebarModeComponentWidths";
   }
 
+  getMiddleWidthStorageKey() {
+    return "sidebarMiddleComponentWidths";
+  }
+
   getSidebarWidthMapFromSettings() {
     const settings = this.storage.getSettings();
     const raw = settings[this.getSidebarWidthStorageKey()];
@@ -203,6 +207,29 @@ class GridLayoutManager {
   saveSidebarWidthMapToSettings(widthMap) {
     const settings = this.storage.getSettings();
     settings[this.getSidebarWidthStorageKey()] = { ...(widthMap || {}) };
+    this.storage.saveSettings(settings);
+  }
+
+  getMiddleWidthMapFromSettings() {
+    const settings = this.storage.getSettings();
+    const raw = settings[this.getMiddleWidthStorageKey()];
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return {};
+    }
+
+    const normalized = {};
+    Object.entries(raw).forEach(([id, width]) => {
+      const value = Number(width);
+      if (!id || !Number.isFinite(value) || value <= 0) return;
+      normalized[id] = Math.round(value);
+    });
+
+    return normalized;
+  }
+
+  saveMiddleWidthMapToSettings(widthMap) {
+    const settings = this.storage.getSettings();
+    settings[this.getMiddleWidthStorageKey()] = { ...(widthMap || {}) };
     this.storage.saveSettings(settings);
   }
 
@@ -241,6 +268,36 @@ class GridLayoutManager {
     this.saveSidebarWidthMapToSettings(widthMap);
   }
 
+  getSavedMiddleComponentWidth(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return null;
+
+    const widthMap = this.getMiddleWidthMapFromSettings();
+    const value = Number(widthMap[id]);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  setSavedMiddleComponentWidth(componentId, widthPx) {
+    const id = String(componentId || "").trim();
+    const value = Number(widthPx);
+    if (!id || !Number.isFinite(value) || value <= 0) return;
+
+    const widthMap = this.getMiddleWidthMapFromSettings();
+    widthMap[id] = Math.round(value);
+    this.saveMiddleWidthMapToSettings(widthMap);
+  }
+
+  clearSavedMiddleComponentWidth(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return;
+
+    const widthMap = this.getMiddleWidthMapFromSettings();
+    if (!Object.prototype.hasOwnProperty.call(widthMap, id)) return;
+
+    delete widthMap[id];
+    this.saveMiddleWidthMapToSettings(widthMap);
+  }
+
   getSidebarMinResizeWidth(el) {
     const componentId = this.getSidebarComponentId(el);
     const configuredMin = Number(this.componentMinWidths[componentId]);
@@ -266,6 +323,33 @@ class GridLayoutManager {
       zoneWidth,
       currentWidth,
       this.getSidebarMinResizeWidth(el),
+    );
+  }
+
+  getMiddleMinResizeWidth(el) {
+    const componentId = this.getSidebarComponentId(el);
+    const configuredMin = Number(this.componentMinWidths[componentId]);
+    const fallbackMin = 220;
+    if (!Number.isFinite(configuredMin) || configuredMin <= 0) {
+      return fallbackMin;
+    }
+
+    return Math.max(180, Math.min(620, Math.round(configuredMin)));
+  }
+
+  getMiddleMaxResizeWidth(el) {
+    if (!el) return this.getMiddleMinResizeWidth(el);
+
+    const row = el.closest(".grid-flex-row");
+    const rowWidth = Math.round((row && row.clientWidth) || 0);
+    const layoutWidth = Math.round(this.getLayoutWidth() || 0);
+    const currentWidth = Math.round(el.getBoundingClientRect().width || 0);
+
+    return Math.max(
+      rowWidth,
+      layoutWidth,
+      currentWidth,
+      this.getMiddleMinResizeWidth(el),
     );
   }
 
@@ -296,6 +380,50 @@ class GridLayoutManager {
     }
   }
 
+  restoreDefaultFlexForElement(el) {
+    if (!el || !this.grid) return;
+    if (el.classList.contains("sidebar-detached")) return;
+
+    const id = this.getSidebarComponentId(el);
+    if (!id || !this.componentSpans[id]) return;
+
+    const row = el.closest(".grid-flex-row");
+    if (!row) return;
+
+    const visibleItems = Array.from(row.children).filter(
+      (child) => !this.isComponentHidden(child),
+    );
+    this.setItemFlexBasis(el, id, visibleItems.length);
+  }
+
+  applyMiddleWidthToElement(el, widthPx, { persist = true } = {}) {
+    if (!el || el.classList.contains("sidebar-detached")) return;
+
+    const width = Number(widthPx);
+    if (!Number.isFinite(width) || width <= 0) return;
+
+    const minWidth = this.getMiddleMinResizeWidth(el);
+    const maxWidth = this.getMiddleMaxResizeWidth(el);
+    const clampedWidth = Math.round(
+      Math.min(maxWidth, Math.max(minWidth, width)),
+    );
+
+    el.style.width = `${clampedWidth}px`;
+    el.style.maxWidth = `${clampedWidth}px`;
+    el.style.flex = `0 0 ${clampedWidth}px`;
+    el.style.marginLeft = "auto";
+    el.style.marginRight = "auto";
+    el.classList.add("middle-custom-width");
+    el.dataset.middleCustomWidth = String(clampedWidth);
+
+    if (persist) {
+      const componentId = this.getSidebarComponentId(el);
+      if (componentId) {
+        this.setSavedMiddleComponentWidth(componentId, clampedWidth);
+      }
+    }
+  }
+
   resetSidebarWidthForElement(el, { keepSaved = true } = {}) {
     if (!el) return;
 
@@ -314,6 +442,31 @@ class GridLayoutManager {
     }
   }
 
+  resetMiddleWidthForElement(
+    el,
+    { keepSaved = true, restoreDefaultFlex = true } = {},
+  ) {
+    if (!el) return;
+
+    el.style.removeProperty("width");
+    el.style.removeProperty("max-width");
+    el.style.removeProperty("margin-left");
+    el.style.removeProperty("margin-right");
+    el.classList.remove("middle-custom-width");
+    delete el.dataset.middleCustomWidth;
+
+    if (restoreDefaultFlex) {
+      this.restoreDefaultFlexForElement(el);
+    }
+
+    if (!keepSaved) {
+      const componentId = this.getSidebarComponentId(el);
+      if (componentId) {
+        this.clearSavedMiddleComponentWidth(componentId);
+      }
+    }
+  }
+
   applySavedSidebarWidthToElement(el) {
     if (!el) return;
 
@@ -325,6 +478,37 @@ class GridLayoutManager {
     }
 
     this.resetSidebarWidthForElement(el, { keepSaved: true });
+  }
+
+  applySavedMiddleWidthToElement(el) {
+    if (!el || el.classList.contains("sidebar-detached")) return;
+
+    const componentId = this.getSidebarComponentId(el);
+    const savedWidth = this.getSavedMiddleComponentWidth(componentId);
+    if (savedWidth) {
+      this.applyMiddleWidthToElement(el, savedWidth, { persist: false });
+      return;
+    }
+
+    if (el.classList.contains("middle-custom-width") || el.dataset.middleCustomWidth) {
+      this.resetMiddleWidthForElement(el, {
+        keepSaved: true,
+        restoreDefaultFlex: true,
+      });
+    }
+  }
+
+  applySavedMiddleWidthsFromDOM() {
+    if (!this.grid) return;
+
+    const middleItems = Array.from(
+      this.grid.querySelectorAll(".grid-flex-row > .grid-draggable"),
+    ).filter((el) => !el.classList.contains("sidebar-detached"));
+
+    middleItems.forEach((el) => {
+      this.ensureSidebarResizeHandles(el);
+      this.applySavedMiddleWidthToElement(el);
+    });
   }
 
   ensureSidebarResizeHandles(el) {
@@ -485,9 +669,9 @@ class GridLayoutManager {
           const child = slot.querySelector(":scope > .grid-draggable");
           if (child) {
             this.resetSidebarWidthForElement(child, { keepSaved: true });
-            this.removeSidebarResizeHandles(child);
             child.classList.remove("sidebar-detached");
             this.grid.appendChild(child);
+            this.ensureSidebarResizeHandles(child);
           }
           try {
             slot.remove();
@@ -502,6 +686,11 @@ class GridLayoutManager {
   dockElementToSidebar(el, side, index = null) {
     const zone = this.getSidebarZone(side);
     if (!zone || !el) return false;
+
+    this.resetMiddleWidthForElement(el, {
+      keepSaved: true,
+      restoreDefaultFlex: false,
+    });
 
     // Ensure element is not counted in grid
     el.classList.add("sidebar-detached");
@@ -835,6 +1024,7 @@ class GridLayoutManager {
     });
 
     this.updateGridItems();
+    this.applySavedMiddleWidthsFromDOM();
   }
 
   /**
@@ -923,7 +1113,6 @@ class GridLayoutManager {
 
       const toggleBtn = document.getElementById("layoutEditBtn");
       this.updateEditModeUI(toggleBtn);
-      this.syncSidebarModeForEditState();
       return;
     }
 
@@ -959,8 +1148,6 @@ class GridLayoutManager {
         this.saveLayout();
       } catch (e) {}
     }
-
-    this.syncSidebarModeForEditState();
   }
 
   /**
@@ -1302,6 +1489,7 @@ class GridLayoutManager {
           el.classList.add("grid-draggable");
           el.setAttribute("draggable", "false"); // We use custom drag
           el.dataset.gridId = id;
+          this.ensureSidebarResizeHandles(el);
 
           rowWrapper.appendChild(el);
         }
@@ -1323,6 +1511,7 @@ class GridLayoutManager {
     this.grid.classList.add("grid-layout-active");
 
     this.updateGridItems();
+    this.applySavedMiddleWidthsFromDOM();
   }
 
   /**
@@ -1438,6 +1627,7 @@ class GridLayoutManager {
       }
 
       this.updateGridItems();
+      this.applySavedMiddleWidthsFromDOM();
       return;
     }
 
@@ -1550,6 +1740,7 @@ class GridLayoutManager {
     }
 
     this.updateGridItems();
+    this.applySavedMiddleWidthsFromDOM();
   }
 
   /**
@@ -1558,6 +1749,7 @@ class GridLayoutManager {
   setupEventListeners() {
     // Mouse events
     this.grid.addEventListener("mousedown", this.handleMouseDown);
+    this.grid.addEventListener("dblclick", this.handleSidebarResizeDoubleClick);
     document.addEventListener("mousemove", this.handleMouseMove);
     document.addEventListener("mouseup", this.handleMouseUp);
 
@@ -1605,8 +1797,15 @@ class GridLayoutManager {
     const handle = e.target?.closest?.(".sidebar-resize-handle");
     if (!handle) return false;
 
-    const el = handle.closest(".grid-draggable.sidebar-detached");
-    if (!el || !el.closest(".sidebar-slot")) {
+    const el = handle.closest(".grid-draggable");
+    if (!el) {
+      return false;
+    }
+
+    const isSidebarItem =
+      el.classList.contains("sidebar-detached") && !!el.closest(".sidebar-slot");
+    const isMiddleItem = !isSidebarItem && !!el.closest(".grid-flex-row");
+    if (!isSidebarItem && !isMiddleItem) {
       return false;
     }
 
@@ -1626,6 +1825,7 @@ class GridLayoutManager {
     this.sidebarResizeState = {
       el,
       side,
+      mode: isSidebarItem ? "sidebar" : "middle",
       startX: e.clientX,
       startWidth: rect.width,
     };
@@ -1644,10 +1844,19 @@ class GridLayoutManager {
     const handle = e.target?.closest?.(".sidebar-resize-handle");
     if (!handle) return;
 
-    const el = handle.closest(".grid-draggable.sidebar-detached");
+    const el = handle.closest(".grid-draggable");
     if (!el) return;
 
-    this.resetSidebarWidthForElement(el, { keepSaved: false });
+    const isSidebarItem =
+      el.classList.contains("sidebar-detached") && !!el.closest(".sidebar-slot");
+    if (isSidebarItem) {
+      this.resetSidebarWidthForElement(el, { keepSaved: false });
+    } else {
+      this.resetMiddleWidthForElement(el, {
+        keepSaved: false,
+        restoreDefaultFlex: true,
+      });
+    }
 
     e.preventDefault();
     e.stopPropagation();
@@ -1656,7 +1865,7 @@ class GridLayoutManager {
   updateSidebarResize(clientX) {
     if (!this.isSidebarResizing || !this.sidebarResizeState) return;
 
-    const { el, side, startX, startWidth } = this.sidebarResizeState;
+    const { el, side, mode, startX, startWidth } = this.sidebarResizeState;
     if (!el || !el.isConnected) {
       this.endSidebarResize();
       return;
@@ -1665,7 +1874,11 @@ class GridLayoutManager {
     const delta = side === "right" ? clientX - startX : startX - clientX;
     const nextWidth = startWidth + delta * 2;
 
-    this.applySidebarWidthToElement(el, nextWidth, { persist: false });
+    if (mode === "middle") {
+      this.applyMiddleWidthToElement(el, nextWidth, { persist: false });
+    } else {
+      this.applySidebarWidthToElement(el, nextWidth, { persist: false });
+    }
   }
 
   endSidebarResize() {
@@ -1673,11 +1886,15 @@ class GridLayoutManager {
       return false;
     }
 
-    const { el } = this.sidebarResizeState;
+    const { el, mode } = this.sidebarResizeState;
     if (el && el.isConnected) {
       const finalWidth = Math.round(el.getBoundingClientRect().width || 0);
       if (finalWidth > 0) {
-        this.applySidebarWidthToElement(el, finalWidth, { persist: true });
+        if (mode === "middle") {
+          this.applyMiddleWidthToElement(el, finalWidth, { persist: true });
+        } else {
+          this.applySidebarWidthToElement(el, finalWidth, { persist: true });
+        }
       }
       el.classList.remove("sidebar-resizing");
     }
@@ -2356,7 +2573,8 @@ class GridLayoutManager {
 
     if (movedOutFromSidebar) {
       this.resetSidebarWidthForElement(this.draggedItem, { keepSaved: true });
-      this.removeSidebarResizeHandles(this.draggedItem);
+      this.ensureSidebarResizeHandles(this.draggedItem);
+      this.applySavedMiddleWidthToElement(this.draggedItem);
     }
 
     // Clean up empty rows and temporary rows
@@ -2711,6 +2929,7 @@ class GridLayoutManager {
       settings.gridLayout = JSON.parse(JSON.stringify(defaultRows));
       settings[this.getSidebarStateStorageKey()] = { left: [], right: [] };
       settings[this.getSidebarWidthStorageKey()] = {};
+      settings[this.getMiddleWidthStorageKey()] = {};
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore
@@ -2847,6 +3066,10 @@ class GridLayoutManager {
 
     if (this.grid) {
       this.grid.removeEventListener("mousedown", this.handleMouseDown);
+      this.grid.removeEventListener(
+        "dblclick",
+        this.handleSidebarResizeDoubleClick,
+      );
       this.grid.removeEventListener("touchstart", this.handleTouchStart);
     }
     const leftZone = document.getElementById("sidebarLeftZone");
