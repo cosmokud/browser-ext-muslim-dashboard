@@ -1,5 +1,7 @@
 # Muslim Dashboard
 
+[![Chrome Web Store](https://developer.chrome.com/static/docs/webstore/branding/image/tbyBjqi7Zu733AAKA5n4.png)](https://chromewebstore.google.com/detail/muslim-dashboard-islamic/mdhjkocbmiiekkfeghjnmbbaipdcmijg)
+
 Muslim Dashboard is a customizable Islamic new-tab dashboard extension for Chromium browsers. It brings prayer and calendar tools, Quran and Hadith reading, study modules, personalization controls, and day-to-day utilities into one focused workspace.
 
 The project targets Chromium-based browsers with Manifest V3.
