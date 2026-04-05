@@ -1144,7 +1144,8 @@ class SettingsManager extends BaseManager {
    */
   loadSettings() {
     const settings = this.storage.getSettings();
-    this._backgroundSettingsDirty = false;
+    // Keep pending background refresh intent across modal reopen.
+    // It will be cleared only after a manual save-triggered refresh.
 
     // Keep floating mode button UI in sync (handled by FloatingModeManager)
     try {
