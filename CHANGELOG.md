@@ -1,3 +1,29 @@
+## [0.1.3] - 2026-04-06
+
+### Added
+
+- Added Sticky Notes custom color presets and preview improvements for faster personalization.
+- Added sidebar and middle-component resizing in Layout Editor, including reset controls and visual handles.
+- Added Pocket Quran focus-mode sizing refinements, fixed positioning behavior, and related focus transitions.
+- Added background controls for display mode, shuffle behavior, dim level, blur level, and custom media management.
+- Added quote action controls (pause/shuffle) with improved non-repeating shuffle behavior.
+
+### Changed
+
+- Refined floating card controls with custom resize handles and reset affordances.
+- Improved notes editor alignment and overflow handling when used with floating cards.
+- Enhanced sidebar mode integration and layout persistence during edit mode transitions.
+- Hardened release runtime reliability by improving service-worker alarm error reporting and storage quota handling.
+- Hardened weather and popup Quran API handling with stricter response validation and cache-based fallback behavior.
+- Consolidated default dataset loading paths by introducing shared BaseManager fetch helpers for JSON/text resources.
+- Narrowed favicon-related host permission scope from wildcard gstatic subdomains to explicit `www.gstatic.com`.
+
+### Fixed
+
+- Fixed sidebar resize selector issue that impacted edit mode behavior.
+- Fixed empty grid rows reserving vertical space after card visibility/floating changes.
+- Fixed custom background upload URLs from being corrupted by query parameters.
+
 ## [0.1.2] - 2026-04-05
 
 ### Added

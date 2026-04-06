@@ -520,10 +520,10 @@ class AdhkarManager extends BaseManager {
     const now = new Date().toISOString();
 
     try {
-      const res = await fetch(def.file, { cache: "no-store" });
-      if (!res.ok)
-        throw new Error(`Failed to load default JSON: ${res.status}`);
-      const json = await res.json();
+      const json = await this.fetchJsonResource(def.file, {
+        cache: "no-store",
+        label: `Adhkar default set ${def.id}`,
+      });
       const cards = this.normalizeImportedCards(json);
       return {
         id: def.id,

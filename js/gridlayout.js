@@ -1727,6 +1727,25 @@ class GridLayoutManager {
     );
   }
 
+  areRowsEqual(leftRows, rightRows) {
+    if (!Array.isArray(leftRows) || !Array.isArray(rightRows)) return false;
+    if (leftRows.length !== rightRows.length) return false;
+
+    for (let rowIndex = 0; rowIndex < leftRows.length; rowIndex += 1) {
+      const leftRow = leftRows[rowIndex];
+      const rightRow = rightRows[rowIndex];
+
+      if (!Array.isArray(leftRow) || !Array.isArray(rightRow)) return false;
+      if (leftRow.length !== rightRow.length) return false;
+
+      for (let itemIndex = 0; itemIndex < leftRow.length; itemIndex += 1) {
+        if (leftRow[itemIndex] !== rightRow[itemIndex]) return false;
+      }
+    }
+
+    return true;
+  }
+
   /**
    * Recalculate layout when visibility or viewport changes
    * Rebuilds rows based on current effective spans
@@ -1743,8 +1762,7 @@ class GridLayoutManager {
 
     // If no responsive overrides are needed, restore the canonical layout.
     if (!hasResponsiveOverrides) {
-      const layoutChanged =
-        JSON.stringify(baseRows) !== JSON.stringify(this.activeRows || []);
+      const layoutChanged = !this.areRowsEqual(baseRows, this.activeRows || []);
 
       if (layoutChanged) {
         this.applyLayout(baseRows);

@@ -76,6 +76,15 @@ class FloatingModeManager {
     this.collapseInMs = 90;
   }
 
+  debugLog(scope, error, extra = null) {
+    const message = error?.message || String(error);
+    if (extra !== null && typeof extra !== "undefined") {
+      console.debug(`[FloatingMode] ${scope}: ${message}`, extra);
+      return;
+    }
+    console.debug(`[FloatingMode] ${scope}: ${message}`);
+  }
+
   _isGridLayoutActive() {
     try {
       return !!document.querySelector(".content-grid .grid-flex-row");
@@ -933,13 +942,17 @@ class FloatingModeManager {
     window.addEventListener("pagehide", () => {
       try {
         this.flushAll();
-      } catch (e) {}
+      } catch (e) {
+        this.debugLog("pagehide flushAll failed", e);
+      }
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
         try {
           this.flushAll();
-        } catch (e) {}
+        } catch (e) {
+          this.debugLog("visibilitychange flushAll failed", e);
+        }
       }
     });
   }
@@ -951,7 +964,9 @@ class FloatingModeManager {
     if (typeof dashboard.applyComponentVisibility === "function") {
       try {
         dashboard.applyComponentVisibility();
-      } catch (e) {}
+      } catch (e) {
+        this.debugLog("applyComponentVisibility failed", e);
+      }
     }
 
     if (
@@ -960,7 +975,9 @@ class FloatingModeManager {
     ) {
       try {
         dashboard.gridLayout.recalculateLayout();
-      } catch (e) {}
+      } catch (e) {
+        this.debugLog("gridLayout.recalculateLayout failed", e);
+      }
     }
   }
 
@@ -971,7 +988,9 @@ class FloatingModeManager {
       if (st.saveTimer) {
         try {
           clearTimeout(st.saveTimer);
-        } catch (e) {}
+        } catch (e) {
+          this.debugLog(`clearTimeout failed for ${key}`, e);
+        }
         st.saveTimer = null;
       }
       // If the user is/was dragging, ensure persistence isn't blocked by any
@@ -1010,6 +1029,7 @@ class FloatingModeManager {
           ? this.storage.getDefaultSettings()
           : {};
     } catch (e) {
+      this.debugLog("getDefaultSettings failed during reset", e);
       defaults = {};
     }
 
@@ -1034,7 +1054,9 @@ class FloatingModeManager {
 
       try {
         this.storage.remove(this.getBoxStorageKey(key));
-      } catch (e) {}
+      } catch (e) {
+        this.debugLog(`storage.remove failed for ${key}`, e);
+      }
 
       const st = this.runtime.get(key);
       if (st) {
@@ -1097,7 +1119,9 @@ class FloatingModeManager {
     try {
       st.button.disabled = false;
       st.button.removeAttribute("aria-disabled");
-    } catch (e) {}
+    } catch (e) {
+      this.debugLog(`updateButton disabled state failed for ${key}`, e);
+    }
 
     if (this.isViewportSuspended) {
       st.button.setAttribute(

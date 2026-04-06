@@ -45,11 +45,21 @@ const DEFAULT_PRAYER_VISIBILITY = {
   qiyam: false,
 };
 
+function logServiceWorkerDebug(scope, error, extra = null) {
+  const message = error?.message || String(error);
+  if (extra !== null && typeof extra !== "undefined") {
+    console.debug(`[ServiceWorker] ${scope}: ${message}`, extra);
+    return;
+  }
+  console.debug(`[ServiceWorker] ${scope}: ${message}`);
+}
+
 function storageGet(keys) {
   return new Promise((resolve) => {
     try {
       chrome.storage.local.get(keys, (result) => resolve(result || {}));
     } catch (e) {
+      logServiceWorkerDebug("storageGet failed", e, keys);
       resolve({});
     }
   });
@@ -60,6 +70,7 @@ function storageSet(obj) {
     try {
       chrome.storage.local.set(obj, () => resolve());
     } catch (e) {
+      logServiceWorkerDebug("storageSet failed", e, obj);
       resolve();
     }
   });
@@ -72,6 +83,7 @@ function alarmsGetAll() {
         resolve(Array.isArray(alarms) ? alarms : []),
       );
     } catch (e) {
+      logServiceWorkerDebug("alarmsGetAll failed", e);
       resolve([]);
     }
   });
@@ -82,17 +94,46 @@ function alarmsClear(name) {
     try {
       chrome.alarms.clear(name, () => resolve());
     } catch (e) {
+      logServiceWorkerDebug(`alarmsClear failed for ${name}`, e);
       resolve();
     }
   });
 }
 
 function alarmsCreate(name, alarmInfo) {
-  try {
-    chrome.alarms.create(name, alarmInfo);
-  } catch (e) {
-    // ignore
-  }
+  return new Promise((resolve) => {
+    try {
+      chrome.alarms.create(name, alarmInfo, () => {
+        const err = chrome.runtime?.lastError;
+        if (!err) {
+          resolve(true);
+          return;
+        }
+
+        void storageSet({
+          md_alarm_lastError: {
+            at: Date.now(),
+            name,
+            alarmInfo,
+            message: err.message || String(err),
+          },
+        });
+        logServiceWorkerDebug(`Failed to create alarm ${name}`, err, alarmInfo);
+        resolve(false);
+      });
+    } catch (e) {
+      void storageSet({
+        md_alarm_lastError: {
+          at: Date.now(),
+          name,
+          alarmInfo,
+          message: e?.message || String(e),
+        },
+      });
+      logServiceWorkerDebug(`Exception creating alarm ${name}`, e, alarmInfo);
+      resolve(false);
+    }
+  });
 }
 
 function getVisiblePrayerDefs(settings) {
@@ -222,11 +263,11 @@ async function clearPrayerAlarms() {
   }
 }
 
-function scheduleDailyRescheduleAlarm(now = new Date()) {
+async function scheduleDailyRescheduleAlarm(now = new Date()) {
   const next = new Date(now);
   next.setDate(now.getDate() + 1);
   next.setHours(0, 5, 0, 0); // 00:05 local time
-  alarmsCreate(RESCHEDULE_ALARM_NAME, { when: next.getTime() });
+  return alarmsCreate(RESCHEDULE_ALARM_NAME, { when: next.getTime() });
 }
 
 function getPrayerNotificationsSettings(settings) {
@@ -334,7 +375,9 @@ async function schedulePrayerNotifications() {
   await clearPrayerAlarms();
 
   // Keep the daily rescheduler alive.
-  scheduleDailyRescheduleAlarm(new Date());
+  const dailyRescheduleScheduled = await scheduleDailyRescheduleAlarm(
+    new Date(),
+  );
 
   if (!pn.enabled) return;
 
@@ -365,6 +408,9 @@ async function schedulePrayerNotifications() {
     },
   });
 
+  let scheduledCount = 0;
+  let failedCount = 0;
+
   for (const def of PRAYER_DEFS) {
     const cfg = getPrayerNotificationConfig(def.key, settings, pn);
     if (!cfg) continue;
@@ -377,7 +423,11 @@ async function schedulePrayerNotifications() {
     if (pn.atTimeEnabled && cfg.atTimeEnabled) {
       const when = baseDate.getTime();
       if (when > Date.now() + 1000) {
-        alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_at`, { when });
+        const ok = await alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_at`, {
+          when,
+        });
+        if (ok) scheduledCount += 1;
+        else failedCount += 1;
       }
     }
 
@@ -385,7 +435,12 @@ async function schedulePrayerNotifications() {
     if (cfg.beforeMinutes > 0) {
       const when = baseDate.getTime() - cfg.beforeMinutes * 60 * 1000;
       if (when > Date.now() + 1000) {
-        alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_before`, { when });
+        const ok = await alarmsCreate(
+          `${PRAYER_ALARM_PREFIX}${def.key}_before`,
+          { when },
+        );
+        if (ok) scheduledCount += 1;
+        else failedCount += 1;
       }
     }
 
@@ -393,10 +448,27 @@ async function schedulePrayerNotifications() {
     if (cfg.afterMinutes > 0) {
       const when = baseDate.getTime() + cfg.afterMinutes * 60 * 1000;
       if (when > Date.now() + 1000) {
-        alarmsCreate(`${PRAYER_ALARM_PREFIX}${def.key}_after`, { when });
+        const ok = await alarmsCreate(
+          `${PRAYER_ALARM_PREFIX}${def.key}_after`,
+          {
+            when,
+          },
+        );
+        if (ok) scheduledCount += 1;
+        else failedCount += 1;
       }
     }
   }
+
+  await storageSet({
+    md_prayerSchedule_lastRun: {
+      at: Date.now(),
+      date: toISODateKey(today),
+      dailyRescheduleScheduled,
+      scheduledCount,
+      failedCount,
+    },
+  });
 }
 
 function getPrayerName(prayerKey, referenceDate = new Date()) {
@@ -439,11 +511,15 @@ function formatCountdownTitle(totalMinutes) {
 function clearActionCountdownBadge() {
   try {
     chrome.action.setBadgeText({ text: "" });
-  } catch (e) {}
+  } catch (e) {
+    logServiceWorkerDebug("setBadgeText clear failed", e);
+  }
 
   try {
     chrome.action.setTitle({ title: "Muslim Dashboard" });
-  } catch (e) {}
+  } catch (e) {
+    logServiceWorkerDebug("setTitle clear failed", e);
+  }
 }
 
 function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
@@ -548,24 +624,33 @@ async function updateActionPrayerCountdownBadge() {
 
     try {
       chrome.action.setBadgeBackgroundColor({ color: "#0d3d2e" });
-    } catch (e) {}
+    } catch (e) {
+      logServiceWorkerDebug("setBadgeBackgroundColor failed", e);
+    }
 
     try {
       if (typeof chrome.action.setBadgeTextColor === "function") {
         chrome.action.setBadgeTextColor({ color: "#ffffff" });
       }
-    } catch (e) {}
+    } catch (e) {
+      logServiceWorkerDebug("setBadgeTextColor failed", e);
+    }
 
     try {
       chrome.action.setBadgeText({ text: badgeText });
-    } catch (e) {}
+    } catch (e) {
+      logServiceWorkerDebug("setBadgeText failed", e);
+    }
 
     try {
       chrome.action.setTitle({
         title: `Next ${next.name} in ${formatCountdownTitle(remainingMinutes)}`,
       });
-    } catch (e) {}
+    } catch (e) {
+      logServiceWorkerDebug("setTitle failed", e);
+    }
   } catch (e) {
+    logServiceWorkerDebug("updateActionPrayerCountdownBadge failed", e);
     clearActionCountdownBadge();
   }
 }
@@ -576,7 +661,7 @@ function ensureBadgeTickAlarm() {
   nextMinute.setSeconds(0, 0);
   nextMinute.setMinutes(nextMinute.getMinutes() + 1);
 
-  alarmsCreate(BADGE_TICK_ALARM_NAME, {
+  void alarmsCreate(BADGE_TICK_ALARM_NAME, {
     when: nextMinute.getTime(),
     periodInMinutes: 1,
   });
@@ -613,7 +698,7 @@ async function showPrayerNotification(prayerKey, kind) {
       }
     }
   } catch (e) {
-    // best effort; fall back to 0/0
+    logServiceWorkerDebug("showPrayerNotification settings read failed", e);
   }
 
   let message = "";
@@ -873,7 +958,9 @@ async function scheduleFastingNotifications() {
 
   // Only schedule if the time is in the future
   if (suhurTime > Date.now() + 1000) {
-    alarmsCreate(FASTING_ALARM_NAME, { when: suhurTime });
+    const alarmCreated = await alarmsCreate(FASTING_ALARM_NAME, {
+      when: suhurTime,
+    });
 
     await storageSet({
       md_fasting_status: {
@@ -884,6 +971,7 @@ async function scheduleFastingNotifications() {
         fajrTime: fajrTimeStr,
         suhurNotificationTime: new Date(suhurTime).toISOString(),
         minutesBefore,
+        alarmCreated,
         scheduledAt: Date.now(),
         date: toISODateKey(todayStart),
       },

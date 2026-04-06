@@ -1821,6 +1821,68 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, "&#39;");
   }
 
+  function logPocketQuranFetchWarning(scope, error) {
+    const message = error?.message || String(error);
+    console.warn(`[Pocket Quran Popup] ${scope}: ${message}`);
+  }
+
+  async function parsePocketQuranJsonResponse(response, sourceLabel) {
+    if (!response || !response.ok) {
+      throw new Error(
+        `${sourceLabel} request failed (HTTP ${response?.status || "unknown"}).`,
+      );
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error(`${sourceLabel} returned invalid JSON.`);
+    }
+
+    if (!data || typeof data !== "object") {
+      throw new Error(`${sourceLabel} returned malformed payload.`);
+    }
+
+    if (data.error === true) {
+      const reason =
+        typeof data.reason === "string" && data.reason.trim()
+          ? data.reason.trim()
+          : `${sourceLabel} returned an API error.`;
+      throw new Error(reason);
+    }
+
+    return data;
+  }
+
+  function normalizePocketQuranChapterEntries(entries) {
+    return (Array.isArray(entries) ? entries : [])
+      .map((chapter) => ({
+        id: clampNumber(chapter?.id, 1, 114, 1),
+        name_simple: String(chapter?.name_simple || "").trim(),
+        name_arabic: String(chapter?.name_arabic || "").trim(),
+        verses_count: clampNumber(chapter?.verses_count, 1, 286, 286),
+      }))
+      .filter((chapter) => chapter.name_simple || chapter.name_arabic)
+      .sort((left, right) => left.id - right.id);
+  }
+
+  function normalizePocketQuranReciterEntries(entries) {
+    return (Array.isArray(entries) ? entries : [])
+      .map((reciter) => ({
+        id: clampNumber(reciter?.id, 1, 10000, 7),
+        name: String(
+          reciter?.name ||
+            reciter?.formattedName ||
+            reciter?.translated_name?.name ||
+            reciter?.reciter_name ||
+            "",
+        ).trim(),
+        style: String(reciter?.style || "").trim(),
+      }))
+      .filter((reciter) => reciter.name);
+  }
+
   async function ensurePocketQuranChaptersLoaded(forceFetch = false) {
     if (!forceFetch && pocketQuranChapters.length > 0)
       return pocketQuranChapters;
@@ -1828,21 +1890,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cached = storage.get("pocketQuran_chapters_cache", null);
     const cachedAt = storage.get("pocketQuran_chapters_cache_at", 0);
     const freshEnough = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+    const cachedChapters = normalizePocketQuranChapterEntries(cached);
 
-    if (
-      !forceFetch &&
-      freshEnough &&
-      Array.isArray(cached) &&
-      cached.length > 0
-    ) {
-      pocketQuranChapters = cached
-        .map((chapter) => ({
-          id: clampNumber(chapter?.id, 1, 114, 1),
-          name_simple: String(chapter?.name_simple || "").trim(),
-          name_arabic: String(chapter?.name_arabic || "").trim(),
-          verses_count: clampNumber(chapter?.verses_count, 1, 286, 286),
-        }))
-        .sort((left, right) => left.id - right.id);
+    if (!forceFetch && freshEnough && cachedChapters.length > 0) {
+      pocketQuranChapters = cachedChapters;
       return pocketQuranChapters;
     }
 
@@ -1850,28 +1901,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(
         `${pocketQuranApiBase}/chapters?language=en`,
       );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const data = await parsePocketQuranJsonResponse(
+        response,
+        "Pocket Quran chapters",
+      );
+      const chapters = normalizePocketQuranChapterEntries(data?.chapters);
+      if (!chapters.length) {
+        throw new Error("Pocket Quran chapters payload contained no chapters.");
       }
 
-      const data = await response.json();
-      const chapters = Array.isArray(data?.chapters) ? data.chapters : [];
-
-      pocketQuranChapters = chapters
-        .map((chapter) => ({
-          id: clampNumber(chapter?.id, 1, 114, 1),
-          name_simple: String(chapter?.name_simple || "").trim(),
-          name_arabic: String(chapter?.name_arabic || "").trim(),
-          verses_count: clampNumber(chapter?.verses_count, 1, 286, 286),
-        }))
-        .sort((left, right) => left.id - right.id);
+      pocketQuranChapters = chapters;
 
       if (pocketQuranChapters.length > 0) {
         storage.set("pocketQuran_chapters_cache", pocketQuranChapters);
         storage.set("pocketQuran_chapters_cache_at", Date.now());
       }
     } catch (error) {
-      if (!Array.isArray(cached) || cached.length === 0) {
+      logPocketQuranFetchWarning("load chapters failed", error);
+      if (cachedChapters.length > 0) {
+        pocketQuranChapters = cachedChapters;
+      } else {
         pocketQuranChapters = [];
       }
     }
@@ -1890,11 +1939,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const url = `${pocketQuranApiBase}/verses/by_chapter/${surahId}?fields=text_uthmani,verse_number,verse_key&translations=${tid}&per_page=300`;
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await parsePocketQuranJsonResponse(
+      response,
+      "Pocket Quran verses",
+    );
     const verses = Array.isArray(data?.verses) ? data.verses : [];
     pocketQuranVersesCache.set(cacheKey, verses);
     return verses;
@@ -1925,11 +1973,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const url = `${pocketQuranApiBase}/quran/verses/uthmani_tajweed?chapter_number=${surahId}`;
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await parsePocketQuranJsonResponse(
+      response,
+      "Pocket Quran tajweed verses",
+    );
     const verses = Array.isArray(data?.verses) ? data.verses : [];
     pocketQuranTajweedVersesCache.set(surahId, verses);
     return verses;
@@ -1954,26 +2001,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cached = storage.get("pocketQuran_reciters_cache", null);
     const cachedAt = storage.get("pocketQuran_reciters_cache_at", 0);
     const cacheIsFresh = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+    const cachedReciters = normalizePocketQuranReciterEntries(cached);
 
-    if (
-      !forceFetch &&
-      cacheIsFresh &&
-      Array.isArray(cached) &&
-      cached.length > 0
-    ) {
-      pocketQuranReciters = cached
-        .map((reciter) => ({
-          id: clampNumber(reciter?.id, 1, 10000, 7),
-          name: String(
-            reciter?.name ||
-              reciter?.formattedName ||
-              reciter?.reciter_name ||
-              "",
-          ).trim(),
-          style: String(reciter?.style || "").trim(),
-        }))
-        .filter((reciter) => reciter.name);
-
+    if (!forceFetch && cacheIsFresh && cachedReciters.length > 0) {
+      pocketQuranReciters = cachedReciters;
       return pocketQuranReciters;
     }
 
@@ -1981,30 +2012,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(
         `${pocketQuranApiBase}/resources/recitations?language=en`,
       );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const data = await parsePocketQuranJsonResponse(
+        response,
+        "Pocket Quran reciters",
+      );
+      pocketQuranReciters = normalizePocketQuranReciterEntries(
+        data?.recitations,
+      );
+      if (!pocketQuranReciters.length) {
+        throw new Error("Pocket Quran reciters payload contained no reciters.");
       }
-
-      const data = await response.json();
-      const recitations = Array.isArray(data?.recitations)
-        ? data.recitations
-        : [];
-      pocketQuranReciters = recitations
-        .map((reciter) => ({
-          id: clampNumber(reciter?.id, 1, 10000, 7),
-          name: String(
-            reciter?.translated_name?.name || reciter?.reciter_name || "",
-          ).trim(),
-          style: String(reciter?.style || "").trim(),
-        }))
-        .filter((reciter) => reciter.name);
 
       if (pocketQuranReciters.length > 0) {
         storage.set("pocketQuran_reciters_cache", pocketQuranReciters);
         storage.set("pocketQuran_reciters_cache_at", Date.now());
       }
     } catch (error) {
-      if (!Array.isArray(cached) || cached.length === 0) {
+      logPocketQuranFetchWarning("load reciters failed", error);
+      if (cachedReciters.length > 0) {
+        pocketQuranReciters = cachedReciters;
+      } else {
         pocketQuranReciters = [];
       }
     }
@@ -2052,21 +2079,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const cached = storage.get("pocketQuran_translations_cache", null);
     const cachedAt = storage.get("pocketQuran_translations_cache_at", 0);
     const cacheIsFresh = Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
+    const cachedTranslations = Array.isArray(cached)
+      ? cached
+          .map((entry) => normalizePocketQuranTranslationEntry(entry))
+          .filter(Boolean)
+          .sort((left, right) => {
+            const langOrder = left.language.localeCompare(right.language);
+            if (langOrder !== 0) return langOrder;
+            return left.label.localeCompare(right.label);
+          })
+      : [];
 
-    if (
-      !forceFetch &&
-      cacheIsFresh &&
-      Array.isArray(cached) &&
-      cached.length > 0
-    ) {
-      pocketQuranTranslations = cached
-        .map((entry) => normalizePocketQuranTranslationEntry(entry))
-        .filter(Boolean)
-        .sort((left, right) => {
-          const langOrder = left.language.localeCompare(right.language);
-          if (langOrder !== 0) return langOrder;
-          return left.label.localeCompare(right.label);
-        });
+    if (!forceFetch && cacheIsFresh && cachedTranslations.length > 0) {
+      pocketQuranTranslations = cachedTranslations;
       return pocketQuranTranslations;
     }
 
@@ -2080,11 +2105,10 @@ document.addEventListener("DOMContentLoaded", () => {
           `${pocketQuranApiBase}/resources/translations?language=en&page=${page}&per_page=${perPage}`,
         );
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await parsePocketQuranJsonResponse(
+          response,
+          "Pocket Quran translations",
+        );
         const batch = Array.isArray(data?.translations)
           ? data.translations
           : [];
@@ -2125,10 +2149,9 @@ document.addEventListener("DOMContentLoaded", () => {
         storage.set("pocketQuran_translations_cache_at", Date.now());
       }
     } catch (error) {
-      if (Array.isArray(cached) && cached.length > 0) {
-        pocketQuranTranslations = cached
-          .map((entry) => normalizePocketQuranTranslationEntry(entry))
-          .filter(Boolean);
+      logPocketQuranFetchWarning("load translations failed", error);
+      if (cachedTranslations.length > 0) {
+        pocketQuranTranslations = cachedTranslations;
       }
     }
 
@@ -2541,13 +2564,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const endpoint = `${pocketQuranApiBase}/recitations/${reciterId}/by_ayah/${surah}:${ayah}`;
     const response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(
-        `Pocket Quran audio request failed: HTTP ${response.status}`,
-      );
-    }
-
-    const data = await response.json();
+    const data = await parsePocketQuranJsonResponse(
+      response,
+      "Pocket Quran audio",
+    );
     const audioUrl = resolvePocketQuranAudioUrl(
       data?.audio_files?.[0]?.url ||
         data?.audio_file?.url ||

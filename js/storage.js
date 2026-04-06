@@ -9,6 +9,16 @@ class StorageManager {
     this.prefix = "muslimDashboard_";
   }
 
+  isQuotaExceededError(error) {
+    if (!error) return false;
+    return (
+      error.name === "QuotaExceededError" ||
+      error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+      error.code === 22 ||
+      error.code === 1014
+    );
+  }
+
   /**
    * Get item from storage
    */
@@ -27,11 +37,42 @@ class StorageManager {
    * Set item in storage
    */
   set(key, value) {
+    let serialized = "";
     try {
-      localStorage.setItem(this.prefix + key, JSON.stringify(value));
+      serialized = JSON.stringify(value);
+
+      // Keep single-key writes bounded to reduce quota blowups from accidental large payloads.
+      if (serialized.length > 1024 * 1024) {
+        console.warn(
+          `[Storage] Refusing to persist key "${key}" because payload exceeds 1MB (${serialized.length} bytes).`,
+        );
+        return false;
+      }
+
+      localStorage.setItem(this.prefix + key, serialized);
       return true;
     } catch (e) {
-      console.error("Storage set error:", e);
+      if (this.isQuotaExceededError(e)) {
+        console.error(
+          `[Storage] Quota exceeded while saving key "${key}" (${serialized.length} bytes).`,
+          e,
+        );
+        try {
+          document.dispatchEvent(
+            new CustomEvent("md:storage-full", {
+              detail: {
+                key,
+                bytes: serialized.length,
+                message: e?.message || String(e),
+              },
+            }),
+          );
+        } catch (dispatchError) {
+          console.error("Storage full event dispatch failed:", dispatchError);
+        }
+      } else {
+        console.error("Storage set error:", e);
+      }
       return false;
     }
   }

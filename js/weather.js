@@ -190,6 +190,39 @@ class WeatherManager extends BaseManager {
     } catch (e) {}
   }
 
+  _isUsableWeatherPayload(data) {
+    if (!data || typeof data !== "object") return false;
+    if (data.error === true) return false;
+
+    const hasCurrent = data.current && typeof data.current === "object";
+    const hasLegacyCurrent =
+      data.current_weather && typeof data.current_weather === "object";
+    const hasHourly = data.hourly && typeof data.hourly === "object";
+    const hasDaily = data.daily && typeof data.daily === "object";
+
+    return (hasCurrent || hasLegacyCurrent) && (hasHourly || hasDaily);
+  }
+
+  _validateWeatherPayload(data) {
+    if (!data || typeof data !== "object") {
+      throw new Error("Weather API returned malformed payload.");
+    }
+
+    if (data.error === true) {
+      const reason =
+        typeof data.reason === "string" && data.reason.trim()
+          ? data.reason.trim()
+          : "Unknown weather API error";
+      throw new Error(reason);
+    }
+
+    if (!this._isUsableWeatherPayload(data)) {
+      throw new Error(
+        "Weather API payload is missing required forecast fields.",
+      );
+    }
+  }
+
   /**
    * Initialize weather manager
    * Shows loading state immediately, fetches data in background
@@ -911,10 +944,13 @@ class WeatherManager extends BaseManager {
 
       const todayKey = this._getLocalDateKey(Date.now());
       const cached = this._getWeatherForecastCache();
-      const cacheHit =
-        !force &&
+      const hasUsableCachedData =
         cached &&
         cached.url === url &&
+        this._isUsableWeatherPayload(cached.data);
+      const cacheHit =
+        !force &&
+        hasUsableCachedData &&
         cached.dateKey === todayKey &&
         cached.data;
 
@@ -952,7 +988,7 @@ class WeatherManager extends BaseManager {
 
         // If all retries failed, try to fall back to cached payload (even if stale).
         if (!response) {
-          if (cached && cached.url === url && cached.data) {
+          if (hasUsableCachedData) {
             data = cached.data;
             usedCache = true;
           } else {
@@ -989,15 +1025,35 @@ class WeatherManager extends BaseManager {
             throw new Error("Weather API returned invalid JSON");
           }
 
-          // Persist only when we successfully fetched fresh data.
-          this._setWeatherForecastCache({
-            url,
-            dateKey: todayKey,
-            data,
-            savedAt: Date.now(),
-          });
+          try {
+            this._validateWeatherPayload(data);
+          } catch (validationError) {
+            console.error(
+              "Weather API payload validation failed:",
+              validationError?.message || validationError,
+            );
+            if (hasUsableCachedData) {
+              data = cached.data;
+              usedCache = true;
+            } else {
+              throw validationError;
+            }
+          }
+
+          // Persist only when we successfully fetched fresh valid data.
+          if (!usedCache) {
+            this._setWeatherForecastCache({
+              url,
+              dateKey: todayKey,
+              data,
+              savedAt: Date.now(),
+            });
+          }
         }
       }
+
+      this._validateWeatherPayload(data);
+
       const current = data.current || data.current_weather || {};
 
       const displayLocationName =

@@ -52,6 +52,38 @@ class BaseManager {
     div.textContent = String(text ?? "");
     return div.innerHTML;
   }
+
+  async fetchJsonResource(
+    url,
+    { cache = "no-store", label = "Resource" } = {},
+  ) {
+    const response = await fetch(url, { cache });
+    if (!response.ok) {
+      throw new Error(`${label} request failed: HTTP ${response.status}`);
+    }
+
+    try {
+      return await response.json();
+    } catch (error) {
+      throw new Error(`${label} returned invalid JSON.`);
+    }
+  }
+
+  async fetchTextResource(
+    url,
+    { cache = "no-store", label = "Resource" } = {},
+  ) {
+    const response = await fetch(url, { cache });
+    if (!response.ok) {
+      throw new Error(`${label} request failed: HTTP ${response.status}`);
+    }
+
+    try {
+      return await response.text();
+    } catch (error) {
+      throw new Error(`${label} returned invalid text payload.`);
+    }
+  }
 }
 
 window.BaseManager = BaseManager;

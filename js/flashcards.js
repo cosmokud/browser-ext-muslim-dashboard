@@ -556,12 +556,10 @@ class FlashcardManager extends BaseManager {
     let cards = [];
 
     try {
-      const res = await fetch(def.file, { cache: "no-store" });
-      if (!res.ok) {
-        throw new Error(`Failed to load default CSV: ${res.status}`);
-      }
-
-      const text = await res.text();
+      const text = await this.fetchTextResource(def.file, {
+        cache: "no-store",
+        label: `Flashcards default set ${def?.id || "unknown"}`,
+      });
       cards =
         def.parser === "pipe"
           ? this.parsePipeTwoColumns(text)

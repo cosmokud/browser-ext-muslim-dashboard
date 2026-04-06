@@ -102,7 +102,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.2.zip`
+Example: `muslim-dashboard-v0.1.3.zip`
 
 ### Build output
 
@@ -131,6 +131,18 @@ Example: `muslim-dashboard-v0.1.2.zip`
 - Weather data: Open-Meteo APIs.
 - Geocoding: OpenStreetMap Nominatim and Open-Meteo geocoding.
 - Quran APIs/recitation sources are accessed via host permissions declared in `manifest.json`.
+
+## Permissions Rationale
+
+- `storage`: Persist dashboard settings, layout state, notes, and content preferences.
+- `geolocation`: Resolve prayer-time and weather location when automatic location mode is enabled.
+- `alarms`: Schedule prayer, fasting, and badge refresh background tasks.
+- `notifications`: Display prayer and fasting notifications.
+- `https://api.quran.com/*`: Fetch Quran chapters, verses, reciters, and translation metadata.
+- `https://download.quranicaudio.com/*` and `https://verses.quran.com/*`: Fetch Quran recitation audio sources.
+- `https://api.open-meteo.com/*` and `https://geocoding-api.open-meteo.com/*`: Fetch weather and geocoding data.
+- `https://nominatim.openstreetmap.org/*`: Reverse geocode user location names.
+- `https://www.google.com/s2/*` and `https://www.gstatic.com/*`: Resolve fallback favicons for custom search/pinned app entries.
 
 ## Governance and Community Files
 
