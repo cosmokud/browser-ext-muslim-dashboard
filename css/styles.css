@@ -10477,6 +10477,40 @@ html[data-theme-mode="light"]
     transform var(--transition-fast);
 }
 
+.custom-bg-item-delete {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, #000 22%, transparent);
+  background: color-mix(in srgb, var(--error-color) 86%, #ffffff 14%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.custom-bg-item-delete:hover {
+  transform: scale(1.06);
+  filter: brightness(1.03);
+}
+
+.custom-bg-item-delete:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--error-color) 65%, #ffffff 35%);
+  outline-offset: 1px;
+}
+
+.custom-bg-item-delete .icon-theme-svg {
+  pointer-events: none;
+}
+
 .custom-bg-item.is-selected .custom-bg-item-check {
   opacity: 1;
   transform: scale(1);

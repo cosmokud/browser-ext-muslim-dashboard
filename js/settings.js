@@ -4885,6 +4885,56 @@ class SettingsManager extends BaseManager {
     }
   }
 
+  async deleteCustomBackgroundMediaByToken(token) {
+    const normalizedToken = this.normalizeBackgroundImageUrl(token);
+    if (!this.isCustomBackgroundToken(normalizedToken)) {
+      return false;
+    }
+
+    const mediaId = this.getCustomBackgroundIdFromToken(normalizedToken);
+    const mappedImage = this.normalizeBackgroundImageUrl(
+      this._customBackgroundImageByToken?.get(normalizedToken),
+    );
+    const mappedThumb = this.normalizeBackgroundImageUrl(
+      this._customBackgroundThumbByImageUrl?.get(normalizedToken),
+    );
+
+    this._customBackgroundImageByToken?.delete(normalizedToken);
+    this._customBackgroundThumbByImageUrl?.delete(normalizedToken);
+    this._backgroundThumbUrlCache?.delete(normalizedToken);
+
+    if (mappedImage) {
+      this._customBackgroundThumbByImageUrl?.delete(mappedImage);
+      this._backgroundThumbUrlCache?.delete(mappedImage);
+    }
+
+    if (mappedThumb) {
+      this._backgroundThumbUrlCache?.delete(mappedThumb);
+    }
+
+    if (!mediaId) {
+      return true;
+    }
+
+    const db = await this.openCustomBackgroundMediaDb();
+    if (!db) {
+      return true;
+    }
+
+    try {
+      const tx = db.transaction(
+        this._customBackgroundMediaStoreName,
+        "readwrite",
+      );
+      const store = tx.objectStore(this._customBackgroundMediaStoreName);
+      store.delete(mediaId);
+      await this.customBackgroundTxDonePromise(tx);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async clearCustomBackgroundMediaIndexedDb() {
     this._customBackgroundThumbByImageUrl.clear();
     this._customBackgroundImageByToken.clear();
@@ -5681,6 +5731,37 @@ class SettingsManager extends BaseManager {
       check.textContent = "✓";
       check.setAttribute("aria-hidden", "true");
 
+      if (selectedCategory === "custom") {
+        const deleteBtn = document.createElement("span");
+        deleteBtn.className = "custom-bg-item-delete";
+        deleteBtn.innerHTML = this._getIcon("🗑️", {
+          size: 14,
+          inline: true,
+        });
+        deleteBtn.setAttribute("role", "button");
+        deleteBtn.setAttribute("tabindex", "0");
+        deleteBtn.setAttribute("title", "Remove from custom backgrounds");
+        deleteBtn.setAttribute(
+          "aria-label",
+          `Remove custom background ${index + 1}`,
+        );
+
+        const deleteHandler = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void this.removeCustomBackgroundFromPool(entry.url);
+        };
+
+        deleteBtn.addEventListener("click", deleteHandler);
+        deleteBtn.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            deleteHandler(event);
+          }
+        });
+
+        item.appendChild(deleteBtn);
+      }
+
       item.appendChild(thumb);
       item.appendChild(check);
       item.addEventListener("click", () => {
@@ -5749,6 +5830,85 @@ class SettingsManager extends BaseManager {
     this.saveBackgroundSelectionForCategory(category, []);
     this.applyBackgroundPoolSelectionToRenderedItems(new Set());
     this._backgroundSettingsDirty = true;
+  }
+
+  async removeCustomBackgroundFromPool(imageUrl) {
+    const normalizedUrl = this.normalizeBackgroundImageUrl(imageUrl);
+    if (!normalizedUrl) {
+      return false;
+    }
+
+    const settings = this.storage.getSettings();
+    const customBgRefs = Array.isArray(settings.customBackgrounds)
+      ? settings.customBackgrounds
+          .map((entry) => this.normalizeBackgroundImageUrl(entry))
+          .filter((entry) => this.isValidCustomBackgroundReference(entry))
+      : [];
+
+    const removalCandidates = new Set([normalizedUrl]);
+    const mappedImage = this.normalizeBackgroundImageUrl(
+      this._customBackgroundImageByToken?.get(normalizedUrl),
+    );
+    if (mappedImage) {
+      removalCandidates.add(mappedImage);
+    }
+
+    const nextRefs = customBgRefs.filter(
+      (entry) => !removalCandidates.has(entry),
+    );
+    if (nextRefs.length === customBgRefs.length) {
+      this.showToast("Background not found in pool.", "error");
+      return false;
+    }
+
+    settings.customBackgrounds = nextRefs.slice(
+      0,
+      SettingsManager.CUSTOM_BACKGROUND_LIMIT,
+    );
+
+    const selectionMap = this.getBackgroundImageSelectionMap(settings);
+    Object.keys(selectionMap).forEach((category) => {
+      const urls = Array.isArray(selectionMap[category])
+        ? selectionMap[category]
+        : [];
+
+      selectionMap[category] = urls
+        .map((value) => this.normalizeBackgroundImageUrl(value))
+        .filter((value) => Boolean(value) && !removalCandidates.has(value));
+    });
+    settings.backgroundImageSelections = selectionMap;
+
+    this.storage.saveSettings(settings);
+
+    for (const candidate of removalCandidates) {
+      this._backgroundThumbUrlCache?.delete(candidate);
+      this._backgroundThumbPendingLoads?.delete(candidate);
+      const blobThumb = this._backgroundThumbBlobUrlCache?.get(candidate);
+      if (blobThumb) {
+        this._backgroundThumbBlobUrlCache.delete(candidate);
+        this.revokeBackgroundThumbBlobUrl(blobThumb);
+      }
+    }
+
+    if (this.isCustomBackgroundToken(normalizedUrl)) {
+      await this.deleteCustomBackgroundMediaByToken(normalizedUrl);
+    }
+
+    void this.syncCustomBackgroundMediaFromSettings(settings);
+    this.renderBackgroundImagePool();
+    this._backgroundSettingsDirty = true;
+
+    const currentBgUrl = this.normalizeBackgroundImageUrl(
+      (typeof this.backgrounds?.getCurrentImageUrl === "function"
+        ? this.backgrounds.getCurrentImageUrl(settings)
+        : this.backgrounds?.currentImageUrl) || "",
+    );
+    if (currentBgUrl && removalCandidates.has(currentBgUrl)) {
+      this.refreshBackgroundAfterSettingsSave(settings);
+    }
+
+    this.showToast("Background removed from pool.", "success");
+    return true;
   }
 
   /**
