@@ -4358,7 +4358,7 @@ textarea.notes-editor:focus {
   right: var(--spacing-xl);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing-sm);
   z-index: 900;
   /* Allow clicks to pass through to elements below when menu is closed */

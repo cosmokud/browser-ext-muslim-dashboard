@@ -1244,7 +1244,9 @@ class FloatingModeManager {
 
     // Use custom edge resize handles (sides + bottom corners) for consistent UX.
     card.style.resize = "none";
-    card.style.overflow = key === "notesCard" ? "visible" : "hidden";
+    const keepOverflowVisible =
+      card.id === "notesCard" || card.id === "fastingCard";
+    card.style.overflow = keepOverflowVisible ? "visible" : "hidden";
 
     // Prevent resizing below content (no scrollbars). Will be refined dynamically.
     card.style.minWidth = "280px";
