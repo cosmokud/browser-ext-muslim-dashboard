@@ -877,6 +877,7 @@ class IconThemeManager {
         ".settings-tab",
         ".modal-title",
         ".setting-btn",
+        ".favicon-btn",
         ".modal-btn",
         ".delete-confirm-btn",
         ".theme-palette-mode-btn",

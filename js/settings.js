@@ -263,6 +263,7 @@ class SettingsManager extends BaseManager {
     this.customBgList = document.getElementById("customBgList");
     this.customBgInput = document.getElementById("customBgInput");
     this.addCustomBgBtn = document.getElementById("addCustomBgBtn");
+    this.addCustomBgUrlBtn = document.getElementById("addCustomBgUrlBtn");
     this.selectAllBgPoolBtn = document.getElementById("selectAllBgPoolBtn");
     this.deselectAllBgPoolBtn = document.getElementById("deselectAllBgPoolBtn");
     this.customBgCount = document.getElementById("customBgCount");
@@ -4542,6 +4543,45 @@ class SettingsManager extends BaseManager {
     return String(url || "").trim();
   }
 
+  normalizeBackgroundImageImportUrl(url) {
+    const raw = this.normalizeBackgroundImageUrl(url);
+    if (!raw) return "";
+
+    let normalized = raw;
+    if (!/^https?:\/\//i.test(normalized)) {
+      normalized = `https://${normalized}`;
+    }
+
+    let parsed = null;
+    try {
+      parsed = new URL(normalized);
+    } catch (e) {
+      return "";
+    }
+
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "";
+    }
+
+    return parsed.href;
+  }
+
+  isRemoteBackgroundImageUrl(url) {
+    const normalized = this.normalizeBackgroundImageUrl(url);
+    return /^https?:\/\//i.test(normalized);
+  }
+
+  isValidCustomBackgroundReference(value) {
+    const normalized = this.normalizeBackgroundImageUrl(value);
+    if (!normalized) return false;
+
+    return (
+      this.isCustomBackgroundToken(normalized) ||
+      normalized.startsWith("data:image") ||
+      this.isRemoteBackgroundImageUrl(normalized)
+    );
+  }
+
   normalizeBackgroundCategory(category) {
     const normalized = String(category || "").trim();
     if (!normalized) return "nature";
@@ -4938,6 +4978,13 @@ class SettingsManager extends BaseManager {
         if (!normalizedEntry) continue;
 
         if (this.isCustomBackgroundToken(normalizedEntry)) {
+          if (seenRefs.has(normalizedEntry)) continue;
+          seenRefs.add(normalizedEntry);
+          normalizedRefs.push(normalizedEntry);
+          continue;
+        }
+
+        if (this.isRemoteBackgroundImageUrl(normalizedEntry)) {
           if (seenRefs.has(normalizedEntry)) continue;
           seenRefs.add(normalizedEntry);
           normalizedRefs.push(normalizedEntry);
@@ -5438,13 +5485,18 @@ class SettingsManager extends BaseManager {
   }
 
   updateBackgroundPoolAddButtonVisibility() {
-    if (!this.addCustomBgBtn) return;
+    if (!this.addCustomBgBtn && !this.addCustomBgUrlBtn) return;
 
     const selectedCategory = this.normalizeBackgroundCategory(
       this.bgCategory?.value || "nature",
     );
-    this.addCustomBgBtn.style.display =
-      selectedCategory === "custom" ? "inline-flex" : "none";
+    const displayValue = selectedCategory === "custom" ? "inline-flex" : "none";
+    if (this.addCustomBgBtn) {
+      this.addCustomBgBtn.style.display = displayValue;
+    }
+    if (this.addCustomBgUrlBtn) {
+      this.addCustomBgUrlBtn.style.display = displayValue;
+    }
   }
 
   ensureBackgroundCategorySelectionInitialized(category, allImages, settings) {
@@ -5585,7 +5637,7 @@ class SettingsManager extends BaseManager {
       emptyHint.className = "empty-hint";
       emptyHint.textContent =
         selectedCategory === "custom"
-          ? "No custom backgrounds yet. Use Add Background to create your pool."
+          ? "No custom backgrounds yet. Use Import or URL to create your pool."
           : "No backgrounds available for this category.";
       this.customBgList.replaceChildren(emptyHint);
       this.updateBackgroundPoolCount(0, 0);
@@ -5785,6 +5837,77 @@ class SettingsManager extends BaseManager {
       "success",
     );
     return true;
+  }
+
+  async addCustomBackgroundFromUrl(imageUrl) {
+    const normalizedUrl = this.normalizeBackgroundImageImportUrl(imageUrl);
+    if (!normalizedUrl) {
+      this.showToast("Please enter a valid HTTP(S) image URL.", "error");
+      return false;
+    }
+
+    const settings = this.storage.getSettings();
+    const customBgRefs = Array.isArray(settings.customBackgrounds)
+      ? settings.customBackgrounds
+          .map((entry) => this.normalizeBackgroundImageUrl(entry))
+          .filter((entry) => this.isValidCustomBackgroundReference(entry))
+      : [];
+
+    const alreadyExists = customBgRefs.includes(normalizedUrl);
+    if (
+      !alreadyExists &&
+      customBgRefs.length >= SettingsManager.CUSTOM_BACKGROUND_LIMIT
+    ) {
+      this.showToast(
+        `Maximum ${SettingsManager.CUSTOM_BACKGROUND_LIMIT} custom backgrounds allowed`,
+        "error",
+      );
+      return false;
+    }
+
+    if (!alreadyExists) {
+      customBgRefs.push(normalizedUrl);
+    }
+    settings.customBackgrounds = customBgRefs.slice(
+      0,
+      SettingsManager.CUSTOM_BACKGROUND_LIMIT,
+    );
+
+    const selectionMap = this.getBackgroundImageSelectionMap(settings);
+    const customSelection = Array.isArray(selectionMap.custom)
+      ? selectionMap.custom.slice()
+      : [];
+    if (!customSelection.includes(normalizedUrl)) {
+      customSelection.push(normalizedUrl);
+    }
+    selectionMap.custom = customSelection;
+    settings.backgroundImageSelections = selectionMap;
+
+    this.storage.saveSettings(settings);
+    void this.syncCustomBackgroundMediaFromSettings(settings);
+    this.renderBackgroundImagePool();
+    this._backgroundSettingsDirty = true;
+    this.showToast(
+      alreadyExists ? "Background already in pool." : "Background URL added!",
+      "success",
+    );
+    return true;
+  }
+
+  async promptAndAddCustomBackgroundFromUrl() {
+    const prompted = window.prompt(
+      "Enter image URL for background import",
+      "https://",
+    );
+    if (prompted === null) return false;
+
+    const imageUrl = String(prompted || "").trim();
+    if (!imageUrl) {
+      this.showToast("Please enter an image URL.", "error");
+      return false;
+    }
+
+    return this.addCustomBackgroundFromUrl(imageUrl);
   }
 
   /**
@@ -6253,9 +6376,7 @@ class SettingsManager extends BaseManager {
     if (Array.isArray(data.customBackgrounds)) {
       const filtered = data.customBackgrounds
         .map((x) => this.normalizeBackgroundImageUrl(x))
-        .filter(
-          (x) => this.isCustomBackgroundToken(x) || x.startsWith("data:image"),
-        )
+        .filter((x) => this.isValidCustomBackgroundReference(x))
         .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT);
       settings.customBackgrounds = filtered;
     }
@@ -9751,6 +9872,12 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.addCustomBgUrlBtn) {
+      this.addCustomBgUrlBtn.addEventListener("click", () => {
+        void this.promptAndAddCustomBackgroundFromUrl();
+      });
+    }
+
     if (this.customBgInput) {
       this.customBgInput.addEventListener("change", async (e) => {
         const file = e.target.files?.[0];
@@ -9915,10 +10042,7 @@ class SettingsManager extends BaseManager {
       )
         ? current.customBackgrounds
             .map((x) => this.normalizeBackgroundImageUrl(x))
-            .filter(
-              (x) =>
-                this.isCustomBackgroundToken(x) || x.startsWith("data:image"),
-            )
+            .filter((x) => this.isValidCustomBackgroundReference(x))
             .slice(0, SettingsManager.CUSTOM_BACKGROUND_LIMIT)
         : [];
 

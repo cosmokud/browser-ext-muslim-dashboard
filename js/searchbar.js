@@ -21,6 +21,7 @@ class SearchBarManager extends BaseManager {
     this.pendingDeleteId = null;
 
     this.customColorInput = null;
+    this.customColorPickerEngineId = null;
 
     // Favicon-derived dominant color cache (1px-canvas hack)
     this.faviconDominantCache = new Map();
@@ -727,21 +728,52 @@ class SearchBarManager extends BaseManager {
         this.customColorInput.value =
           this._rgbStringToHex(current) || "#ffffff";
 
+        const normalizedEngineId = String(engineId);
+        this.customColorPickerEngineId = normalizedEngineId;
+        this.selectEngine(normalizedEngineId);
+
         // Trigger native picker.
-        this.customColorInput.click();
+        try {
+          if (typeof this.customColorInput.showPicker === "function") {
+            this.customColorInput.showPicker();
+          } else {
+            this.customColorInput.click();
+          }
+        } catch (error) {
+          this.customColorInput.click();
+        }
       });
 
     if (this.customColorInput) {
-      this.customColorInput.addEventListener("input", (e) => {
-        const engineId = this.contextMenu?.dataset?.engineId;
-        const hex = String(e.target?.value || "").trim();
+      const applyCustomAccentFromPicker = (hex, { closeMenu = false } = {}) => {
+        const engineId =
+          this.customColorPickerEngineId || this.contextMenu?.dataset?.engineId;
         if (!engineId) return;
 
         const rgb = this._hexToRgbString(hex);
         if (!rgb) return;
 
+        this.selectEngine(engineId);
         this.setEngineAccent(engineId, rgb);
-        this.hideContextMenu();
+
+        if (closeMenu) {
+          this.hideContextMenu();
+          this.customColorPickerEngineId = null;
+        }
+      };
+
+      this.customColorInput.addEventListener("input", (e) => {
+        const hex = String(e.target?.value || "").trim();
+        applyCustomAccentFromPicker(hex);
+      });
+
+      this.customColorInput.addEventListener("change", (e) => {
+        const hex = String(e.target?.value || "").trim();
+        applyCustomAccentFromPicker(hex, { closeMenu: true });
+      });
+
+      this.customColorInput.addEventListener("blur", () => {
+        this.customColorPickerEngineId = null;
       });
     }
 
@@ -757,6 +789,7 @@ class SearchBarManager extends BaseManager {
         const engineId = this.contextMenu?.dataset?.engineId;
         const rgb = btn.dataset.rgb;
         if (!engineId || !rgb) return;
+        this.selectEngine(engineId);
         this.setEngineAccent(engineId, rgb);
         this.hideContextMenu();
       });
@@ -808,6 +841,7 @@ class SearchBarManager extends BaseManager {
   showContextMenu(x, y, engineId) {
     if (!this.contextMenu) return;
 
+    this.customColorPickerEngineId = null;
     this.contextMenu.dataset.engineId = String(engineId);
 
     // Refresh the palette for the current engine.
