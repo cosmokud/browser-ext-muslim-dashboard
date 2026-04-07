@@ -3052,6 +3052,9 @@ class GridLayoutManager {
       const row = newRows[rowIndex];
       if (!Array.isArray(row)) return false;
 
+      // Keep latent layout aligned with 3-items-per-row constraint.
+      if (row.length >= 3) return false;
+
       const currentSpan = rowSpanTotals[rowIndex] || 0;
       if (currentSpan + componentSpan > 6) return false;
 
@@ -3060,34 +3063,45 @@ class GridLayoutManager {
       return true;
     };
 
-    // Re-insert hidden components while preserving latent row capacity.
+    // Re-insert hidden components using deterministic placement:
+    // old row -> next row (if space) -> solo row above next row.
     hiddenComponentIds.forEach((id) => {
       const componentSpan = this.getEffectiveSpan(id);
       const originalRowIdx = baseRowIndexMap.has(id)
         ? baseRowIndexMap.get(id)
         : -1;
 
+      // Fallback for unexpected IDs without an original row mapping.
+      if (originalRowIdx < 0) {
+        const lastRowIdx = newRows.length - 1;
+        if (!tryAppendToExistingRow(lastRowIdx, id, componentSpan)) {
+          newRows.push([id]);
+          rowSpanTotals.push(componentSpan);
+        }
+        return;
+      }
+
       if (tryAppendToExistingRow(originalRowIdx, id, componentSpan)) {
         return;
       }
 
-      for (
-        let rowIndex = Math.max(0, originalRowIdx + 1);
-        rowIndex < newRows.length;
-        rowIndex += 1
-      ) {
-        if (tryAppendToExistingRow(rowIndex, id, componentSpan)) {
-          return;
-        }
+      const nextRowIdx = originalRowIdx + 1;
+
+      // No next row exists: spawn a solo row at the end.
+      if (nextRowIdx >= newRows.length) {
+        newRows.push([id]);
+        rowSpanTotals.push(componentSpan);
+        return;
       }
 
-      const insertAt =
-        originalRowIdx >= 0
-          ? Math.min(originalRowIdx + 1, newRows.length)
-          : newRows.length;
+      // Next row exists: use it when there's room.
+      if (tryAppendToExistingRow(nextRowIdx, id, componentSpan)) {
+        return;
+      }
 
-      newRows.splice(insertAt, 0, [id]);
-      rowSpanTotals.splice(insertAt, 0, componentSpan);
+      // Next row is full (3 items or span-locked): insert solo row above it.
+      newRows.splice(nextRowIdx, 0, [id]);
+      rowSpanTotals.splice(nextRowIdx, 0, componentSpan);
     });
 
     // Only update DOM if layout actually changed
