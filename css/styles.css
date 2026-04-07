@@ -12082,19 +12082,24 @@ body.sticky-note-resizing {
     minmax(0, 1fr) minmax(0, 1.45fr)
     minmax(0, 1fr);
   align-items: center;
+  justify-items: center;
+  justify-content: center;
   gap: var(--spacing-xl);
   width: 100%;
+  margin-inline: auto;
 }
 
 .weather-main {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-lg);
   grid-column: 1 / 2;
-  justify-self: start;
+  justify-self: center;
   min-width: 0;
   width: 100%;
   max-width: 100%;
+  text-align: center;
 }
 
 .weather-icon {
@@ -12148,7 +12153,7 @@ body.sticky-note-resizing {
 .weather-temp-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .weather-temp {
@@ -12227,12 +12232,14 @@ body:not(.sidebar-mode)
   display: flex;
   justify-content: center;
   align-items: center;
+  align-content: center;
+  flex-wrap: wrap;
   gap: var(--spacing-xl);
   padding: var(--spacing-md) var(--spacing-xl);
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   grid-column: 3 / 4;
-  justify-self: end;
+  justify-self: center;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -12251,6 +12258,20 @@ body:not(.sidebar-mode)
   gap: var(--spacing-xs);
   font-size: 0.9rem;
   color: var(--text-secondary);
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.weather-detail-value {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.2;
 }
 
 .weather-detail-icon {
@@ -12281,9 +12302,14 @@ body:not(.sidebar-mode)
   display: flex;
   flex-wrap: wrap;
   gap: var(--wf-gap);
-  justify-content: flex-start;
+  justify-content: center;
   align-items: stretch;
   box-sizing: border-box;
+}
+
+#weatherForecast.weather-forecast {
+  justify-content: center;
+  margin-inline: auto;
 }
 
 .weather-forecast-day {
@@ -12297,7 +12323,7 @@ body:not(.sidebar-mode)
   transition: all var(--transition-fast);
   /* Default: 7 columns layout using a 10px gap (6 gaps between items).
      flex-basis subtracts the total gap width so 7 items fit exactly.
-     flex-grow is 0 in full rows, last-row items are upgraded to flex-grow via JS to spread evenly. */
+      items remain fixed-width so incomplete rows stay centered. */
   flex: 0 0 calc((100% - (6 * var(--wf-gap))) / 7);
   min-width: 0;
   box-sizing: border-box;
@@ -12337,7 +12363,7 @@ body:not(.sidebar-mode)
   font-size: 0.75rem;
   color: var(--text-muted);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--spacing-sm);
 }
 
@@ -12757,13 +12783,40 @@ body:not(.sidebar-mode)
   flex-wrap: wrap;
 }
 
+body:not(.sidebar-mode)
+  .weather-card[data-weather-details-layout="single-column"]
+  .weather-details {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  flex-wrap: nowrap;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-details-layout="single-column"]
+  .weather-detail-item {
+  width: 100%;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-details-layout="single-column"]
+  .weather-detail-value {
+  text-align: left;
+}
+
 /* Mobile: 2-column layout for weather forecast */
 @media (max-width: 640px) {
   .weather-forecast {
     gap: var(--wf-gap);
   }
   .weather-forecast-day {
-    /* 2 columns layout on mobile: default fixed 2-column basis (no grow); JS will upgrade last-row items to grow */
+    /* 2 columns layout on mobile. */
     flex: 0 0 calc((100% - (1 * var(--wf-gap))) / 2);
   }
 }
@@ -18578,15 +18631,6 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 
 .grid-edit-mode .grid-draggable:not(.grid-dragging) {
   animation: settleInPlace 0.3s ease-out;
-}
-
-/* Enforce minimum width for weather details (explicit requirement) */
-body:not(.sidebar-mode)
-  .weather-card:not([data-weather-layout="compact"]):not(
-    [data-weather-layout="stacked"]
-  )
-  .weather-details {
-  min-width: 310px;
 }
 
 /* Mobile override: allow stacking without horizontal scroll on narrow viewports */
