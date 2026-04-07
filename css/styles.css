@@ -18503,7 +18503,8 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 }
 
 /* Keep quote card vertically centered only in 3-items mode (span=2). */
-.grid-flex-row > #quoteSection[data-effective-span="2"]:not(.middle-custom-width) {
+.grid-flex-row
+  > #quoteSection[data-effective-span="2"]:not(.middle-custom-width) {
   align-self: center;
 }
 
