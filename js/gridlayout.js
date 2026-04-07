@@ -720,7 +720,10 @@ class GridLayoutManager {
 
     try {
       const weather = window.dashboard?.weather;
-      if (weather && typeof weather.handleExternalLayoutLiveResize === "function") {
+      if (
+        weather &&
+        typeof weather.handleExternalLayoutLiveResize === "function"
+      ) {
         weather.handleExternalLayoutLiveResize(detail || {});
       }
     } catch (e) {}
