@@ -1738,10 +1738,17 @@ class FloatingModeManager {
       let inserted = false;
 
       const gridLayoutActive = this._isGridLayoutActive();
+      const placeholderParent = placeholder?.parentNode || null;
+      const restoreToSidebarSlot =
+        card.classList.contains("sidebar-detached") ||
+        !!placeholderParent?.closest?.(".sidebar-zone") ||
+        !!st.originalParent?.closest?.(".sidebar-zone") ||
+        placeholderParent?.classList?.contains("sidebar-slot") === true ||
+        st.originalParent?.classList?.contains("sidebar-slot") === true;
 
       // Strategy 1 (PRIMARY): Apply explicit layout rules for floating -> tiling restore.
       // This prevents components from jumping to the top when edit-mode layout changed.
-      if (!inserted && gridLayoutActive) {
+      if (!inserted && gridLayoutActive && !restoreToSidebarSlot) {
         try {
           if (placeholder && placeholder.parentNode) {
             placeholder.remove();
@@ -1753,9 +1760,9 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 2: Use placeholder position (only for non-grid-layout mode)
-      // When GridLayoutManager is NOT active, the placeholder position is reliable.
-      if (!inserted && !gridLayoutActive) {
+      // Strategy 2: Use placeholder position for non-grid layout mode and
+      // for cards that originated from sidebar slots.
+      if (!inserted && (!gridLayoutActive || restoreToSidebarSlot)) {
         const placeholderStillValid = !!(placeholder && placeholder.parentNode);
 
         if (placeholderStillValid) {
