@@ -10451,7 +10451,27 @@ class SettingsManager extends BaseManager {
               dashboard.gridLayout.resetToDefault();
             }
 
-            this.showToast("Layout reset to default!", "success");
+            const settings = this.storage.getSettings();
+            const defaults = this.storage.getDefaultSettings();
+            const defaultComponentVisibility =
+              defaults && typeof defaults.componentVisibility === "object"
+                ? { ...defaults.componentVisibility }
+                : {};
+
+            settings.componentVisibility = defaultComponentVisibility;
+            this.storage.saveSettings(settings);
+            this.loadVisibilitySettings(settings);
+
+            if (typeof dashboard.applyComponentVisibility === "function") {
+              dashboard.applyComponentVisibility();
+            } else {
+              applyLiveDashboardVisibility();
+            }
+
+            this.showToast(
+              "Layout and component visibility reset to default!",
+              "success",
+            );
           } finally {
             const minDuration = 900;
             const elapsed = Date.now() - startedAt;
