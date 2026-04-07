@@ -2701,7 +2701,8 @@ class FloatingModeManager {
       top: persistedTop,
       width: Math.round(width),
       height: Math.round(height),
-      enabled: true,
+      // Persist geometry without mutating the user's toggle intent.
+      enabled: this.isEnabledDesired(key) === true,
       z: this.safeNumber(parseInt(card.style.zIndex || "10", 10), prev.z ?? 10),
     };
 
