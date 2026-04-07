@@ -3104,6 +3104,10 @@ class GridLayoutManager {
       rowSpanTotals.splice(nextRowIdx, 0, componentSpan);
     });
 
+    const canonicalRowsChanged = !this.areRowsEqual(baseRows, newRows);
+    const shouldPersistOverflowRepair =
+      hasVisibleOverflow && !hasResponsiveOverrides && canonicalRowsChanged;
+
     // Only update DOM if layout actually changed
     const layoutChanged =
       JSON.stringify(newRows) !== JSON.stringify(this.activeRows || []);
@@ -3134,6 +3138,17 @@ class GridLayoutManager {
           rowWrapper.style.display = "";
         }
       });
+    }
+
+    if (shouldPersistOverflowRepair) {
+      this.rows = JSON.parse(JSON.stringify(newRows));
+      this.activeRows = JSON.parse(JSON.stringify(newRows));
+
+      try {
+        this.saveLayout();
+      } catch (e) {
+        // ignore storage save failures during automatic repair
+      }
     }
 
     this.updateGridItems();
