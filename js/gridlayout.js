@@ -268,7 +268,9 @@ class GridLayoutManager {
 
   getCurrentSidebarMiddleLayoutWidth() {
     const middleEl = this.getSidebarMiddleElement();
-    const mainContainer = document.querySelector("#sidebarMiddle > .main-container");
+    const mainContainer = document.querySelector(
+      "#sidebarMiddle > .main-container",
+    );
     const rectSource = this.isSidebarModeEnabled ? middleEl : mainContainer;
     const rectWidth = Math.round(
       (rectSource && rectSource.getBoundingClientRect().width) || 0,
