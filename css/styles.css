@@ -12763,7 +12763,9 @@ body:not(.sidebar-mode)
   flex-wrap: wrap;
 }
 
-.weather-card:not(.sidebar-detached)[data-weather-details-layout="single-column"]
+.weather-card:not(
+    .sidebar-detached
+  )[data-weather-details-layout="single-column"]
   .weather-details {
   flex-direction: column;
   align-items: stretch;
@@ -12772,7 +12774,9 @@ body:not(.sidebar-mode)
   flex-wrap: nowrap;
 }
 
-.weather-card:not(.sidebar-detached)[data-weather-details-layout="single-column"]
+.weather-card:not(
+    .sidebar-detached
+  )[data-weather-details-layout="single-column"]
   .weather-detail-item {
   width: 100%;
   flex: 0 0 auto;
@@ -12782,7 +12786,9 @@ body:not(.sidebar-mode)
   gap: var(--spacing-sm);
 }
 
-.weather-card:not(.sidebar-detached)[data-weather-details-layout="single-column"]
+.weather-card:not(
+    .sidebar-detached
+  )[data-weather-details-layout="single-column"]
   .weather-detail-value {
   text-align: left;
 }
