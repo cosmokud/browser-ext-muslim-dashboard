@@ -2942,14 +2942,10 @@ class GridLayoutManager {
       return false;
     });
 
-    // If no responsive overrides are needed, restore the canonical layout.
-    if (!hasResponsiveOverrides && !hasVisibleOverflow) {
-      const layoutChanged = !this.areRowsEqual(baseRows, this.activeRows || []);
-
-      if (layoutChanged) {
-        this.applyLayout(baseRows);
-      } else {
-        // Just update flex basis for existing layout
+    // When responsive overrides are inactive, preserve user-defined row boundaries.
+    // If overflow exists after visibility changes, repair only overflowing rows.
+    if (!hasResponsiveOverrides) {
+      const updateFlexBasisForCurrentRows = () => {
         const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
         rowWrappers.forEach((rowWrapper) => {
           const rowItems = Array.from(rowWrapper.children);
@@ -2971,6 +2967,126 @@ class GridLayoutManager {
             rowWrapper.style.display = "";
           }
         });
+      };
+
+      if (!hasVisibleOverflow) {
+        const layoutChanged = !this.areRowsEqual(
+          baseRows,
+          this.activeRows || [],
+        );
+
+        if (layoutChanged) {
+          this.applyLayout(baseRows);
+        } else {
+          // Just update flex basis for existing layout
+          updateFlexBasisForCurrentRows();
+        }
+
+        this.updateGridItems();
+        this.applySavedMiddleWidthsFromDOM();
+        return;
+      }
+
+      const repairedRows = JSON.parse(JSON.stringify(baseRows));
+
+      const isVisibleComponentId = (componentId) => {
+        const el = this.getElementByComponentId(componentId);
+        return !!el && !this.isComponentHidden(el);
+      };
+
+      const getVisibleRowUsage = (row) => {
+        let visibleCount = 0;
+        let visibleSpan = 0;
+
+        row.forEach((componentId) => {
+          if (!isVisibleComponentId(componentId)) return;
+          visibleCount += 1;
+          visibleSpan += this.getEffectiveSpan(componentId);
+        });
+
+        return { visibleCount, visibleSpan };
+      };
+
+      const findFirstOverflowComponentId = (row) => {
+        let visibleCount = 0;
+        let visibleSpan = 0;
+
+        for (const componentId of row) {
+          if (!isVisibleComponentId(componentId)) continue;
+
+          const span = this.getEffectiveSpan(componentId);
+          if (visibleCount + 1 > 3 || visibleSpan + span > 6) {
+            return componentId;
+          }
+
+          visibleCount += 1;
+          visibleSpan += span;
+        }
+
+        return null;
+      };
+
+      const canFitVisibleComponentInRow = (row, componentId) => {
+        if (!isVisibleComponentId(componentId)) return true;
+
+        const { visibleCount, visibleSpan } = getVisibleRowUsage(row);
+        const nextSpan = this.getEffectiveSpan(componentId);
+        return visibleCount + 1 <= 3 && visibleSpan + nextSpan <= 6;
+      };
+
+      for (let rowIndex = 0; rowIndex < repairedRows.length; rowIndex += 1) {
+        const row = repairedRows[rowIndex];
+        if (!Array.isArray(row) || row.length === 0) continue;
+
+        while (true) {
+          const overflowComponentId = findFirstOverflowComponentId(row);
+          if (!overflowComponentId) break;
+
+          const overflowIndex = row.indexOf(overflowComponentId);
+          if (overflowIndex < 0) break;
+
+          row.splice(overflowIndex, 1);
+
+          const nextRowIndex = rowIndex + 1;
+          if (nextRowIndex >= repairedRows.length) {
+            repairedRows.push([overflowComponentId]);
+            continue;
+          }
+
+          const nextRow = repairedRows[nextRowIndex];
+          if (
+            Array.isArray(nextRow) &&
+            canFitVisibleComponentInRow(nextRow, overflowComponentId)
+          ) {
+            nextRow.push(overflowComponentId);
+          } else {
+            // Keep next row intact and spawn a solo row above it when full.
+            repairedRows.splice(nextRowIndex, 0, [overflowComponentId]);
+          }
+        }
+      }
+
+      const canonicalRowsChanged = !this.areRowsEqual(baseRows, repairedRows);
+      const layoutChanged = !this.areRowsEqual(
+        repairedRows,
+        this.activeRows || [],
+      );
+
+      if (layoutChanged) {
+        this.applyLayout(repairedRows);
+      } else {
+        updateFlexBasisForCurrentRows();
+      }
+
+      if (canonicalRowsChanged) {
+        this.rows = JSON.parse(JSON.stringify(repairedRows));
+        this.activeRows = JSON.parse(JSON.stringify(repairedRows));
+
+        try {
+          this.saveLayout();
+        } catch (e) {
+          // ignore storage save failures during automatic overflow repair
+        }
       }
 
       this.updateGridItems();
@@ -3104,10 +3220,6 @@ class GridLayoutManager {
       rowSpanTotals.splice(nextRowIdx, 0, componentSpan);
     });
 
-    const canonicalRowsChanged = !this.areRowsEqual(baseRows, newRows);
-    const shouldPersistOverflowRepair =
-      hasVisibleOverflow && !hasResponsiveOverrides && canonicalRowsChanged;
-
     // Only update DOM if layout actually changed
     const layoutChanged =
       JSON.stringify(newRows) !== JSON.stringify(this.activeRows || []);
@@ -3138,17 +3250,6 @@ class GridLayoutManager {
           rowWrapper.style.display = "";
         }
       });
-    }
-
-    if (shouldPersistOverflowRepair) {
-      this.rows = JSON.parse(JSON.stringify(newRows));
-      this.activeRows = JSON.parse(JSON.stringify(newRows));
-
-      try {
-        this.saveLayout();
-      } catch (e) {
-        // ignore storage save failures during automatic repair
-      }
     }
 
     this.updateGridItems();
