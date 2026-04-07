@@ -458,6 +458,7 @@ body.sidebar-mode .sidebar-layout {
   content: "";
   position: absolute;
   top: 12px;
+  bottom: auto;
   width: 2px;
   height: 16px;
   border-radius: var(--radius-full);
@@ -470,7 +471,9 @@ body.sidebar-mode .sidebar-layout {
   opacity: 0;
   transition:
     opacity var(--transition-fast),
-    transform var(--transition-fast);
+    top var(--transition-fast),
+    bottom var(--transition-fast),
+    height var(--transition-fast);
 }
 
 .middle-layout-resize-handle::after {
@@ -483,7 +486,6 @@ body.sidebar-mode .sidebar-layout {
 
 .middle-layout-resize-handle-left::before {
   right: 8px;
-  transform: translateY(-2px);
 }
 
 .middle-layout-resize-handle-right {
@@ -492,7 +494,6 @@ body.sidebar-mode .sidebar-layout {
 
 .middle-layout-resize-handle-right::before {
   left: 8px;
-  transform: translateY(-2px);
 }
 
 body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
@@ -501,28 +502,27 @@ body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
 }
 
 body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle::before {
-  opacity: 0.14;
+  opacity: 0.08;
 }
 
 body.grid-edit-mode #sidebarMiddle:hover > .middle-layout-resize-handle::before,
 body.grid-edit-mode
   #sidebarMiddle:has(> .main-container:hover)
   > .middle-layout-resize-handle::before {
-  opacity: 0.52;
+  opacity: 0.24;
+  top: 0;
+  bottom: 0;
+  height: auto;
 }
 
 body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle:hover::before,
 body.middle-layout-resizing
   #sidebarMiddle
   > .middle-layout-resize-handle::before {
-  opacity: 0.9;
-}
-
-body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle:hover::before,
-body.middle-layout-resizing
-  #sidebarMiddle
-  > .middle-layout-resize-handle::before {
-  transform: translateY(0);
+  opacity: 0.34;
+  top: 0;
+  bottom: 0;
+  height: auto;
 }
 
 body.middle-layout-resizing {
