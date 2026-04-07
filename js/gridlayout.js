@@ -2016,7 +2016,8 @@ class GridLayoutManager {
       // Only recalculate if layout width changed (avoid tiny jitter)
       if (newWidth > 0 && Math.abs(newWidth - this.lastViewportWidth) > 2) {
         this.lastViewportWidth = newWidth;
-        const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(newWidth);
+        const isViewportZoomedOut =
+          this.applyViewportAutoZoomIfNeeded(newWidth);
         if (isViewportZoomedOut) {
           return;
         }
