@@ -217,29 +217,10 @@ class GridLayoutManager {
   }
 
   getSidebarMiddleLayoutBounds() {
-    const layoutEl = this.getSidebarLayoutElement();
-    const layoutWidth = Math.round(
-      (layoutEl && layoutEl.getBoundingClientRect().width) ||
-        window.innerWidth ||
-        document.documentElement.clientWidth ||
-        0,
-    );
-
-    if (this.isSidebarModeEnabled) {
-      const minWidth = this.sidebarMiddleLayoutMinWidth;
-      const maxWidth = Math.max(
-        minWidth,
-        layoutWidth - this.sidebarMiddleLayoutSideGutter * 2,
-      );
-
-      return { minWidth, maxWidth };
-    }
-
-    const normalModeSidePadding = 24;
-    const maxWidth = Math.max(260, layoutWidth - normalModeSidePadding);
-    const minWidth = Math.min(maxWidth, this.sidebarMiddleLayoutNormalMinWidth);
-
-    return { minWidth, maxWidth };
+    return {
+      minWidth: 1,
+      maxWidth: Number.MAX_SAFE_INTEGER,
+    };
   }
 
   getSavedSidebarMiddleLayoutWidth() {
@@ -249,8 +230,7 @@ class GridLayoutManager {
     );
     if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
 
-    const { minWidth, maxWidth } = this.getSidebarMiddleLayoutBounds();
-    return Math.round(Math.min(maxWidth, Math.max(minWidth, rawValue)));
+    return Math.round(rawValue);
   }
 
   setSavedSidebarMiddleLayoutWidth(widthPx) {
@@ -350,30 +330,8 @@ class GridLayoutManager {
   }
 
   maybeSnapSidebarItemsBackToMiddleLayout() {
-    if (!this.isSidebarModeEnabled) return false;
-
-    const leftZone = this.getSidebarZone("left");
-    const rightZone = this.getSidebarZone("right");
-    if (!leftZone || !rightZone) return false;
-
-    const leftRequired = this.getSidebarZoneRequiredWidth(leftZone);
-    const rightRequired = this.getSidebarZoneRequiredWidth(rightZone);
-
-    if (leftRequired <= 0 && rightRequired <= 0) {
-      return false;
-    }
-
-    const leftWidth = Math.round(leftZone.getBoundingClientRect().width || 0);
-    const rightWidth = Math.round(rightZone.getBoundingClientRect().width || 0);
-
-    const leftTooNarrow = leftRequired > 0 && leftWidth + 2 < leftRequired;
-    const rightTooNarrow = rightRequired > 0 && rightWidth + 2 < rightRequired;
-
-    if (!leftTooNarrow && !rightTooNarrow) {
-      return false;
-    }
-
-    return this.restoreSidebarItemsToSavedMiddleLayout();
+    // Width resizing is intentionally unrestricted by viewport/column checks.
+    return false;
   }
 
   applySidebarMiddleLayoutWidth(
@@ -390,10 +348,7 @@ class GridLayoutManager {
       return { width: 0, snapped: false };
     }
 
-    const { minWidth, maxWidth } = this.getSidebarMiddleLayoutBounds();
-    const clampedWidth = Math.round(
-      Math.min(maxWidth, Math.max(minWidth, numericWidth)),
-    );
+    const clampedWidth = Math.round(Math.max(1, numericWidth));
 
     layoutEl.style.setProperty(
       "--sidebar-middle-fixed-width",

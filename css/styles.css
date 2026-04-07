@@ -410,7 +410,8 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
 
 /* Main Container */
 .main-container {
-  max-width: min(100%, var(--sidebar-middle-fixed-width, 1400px));
+  width: var(--sidebar-middle-fixed-width, 1400px);
+  max-width: none !important;
   margin: 0 auto;
   padding: var(--spacing-xl);
   min-height: 100vh;

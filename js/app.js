@@ -571,11 +571,7 @@ class MuslimDashboard {
   }
 
   isSidebarWidthSupported() {
-    try {
-      return window.innerWidth >= this.MIN_SIDEBAR_MODE_WIDTH;
-    } catch (e) {
-      return false;
-    }
+    return true;
   }
 
   syncSidebarModeWithLayoutEditMode() {
