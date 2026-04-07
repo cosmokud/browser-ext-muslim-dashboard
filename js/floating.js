@@ -2148,6 +2148,10 @@ class FloatingModeManager {
         !!st.originalParent?.closest?.(".sidebar-zone") ||
         placeholderParent?.classList?.contains("sidebar-slot") === true ||
         st.originalParent?.classList?.contains("sidebar-slot") === true;
+      const placeholderInSidebarContext =
+        placeholderParent?.classList?.contains("sidebar-slot") === true ||
+        placeholderParent?.classList?.contains("sidebar-zone") === true ||
+        !!placeholderParent?.closest?.(".sidebar-slot, .sidebar-zone");
 
       // Strategy 1 (PRIMARY): Apply explicit layout rules for floating -> tiling restore.
       // This prevents components from jumping to the top when edit-mode layout changed.
@@ -2170,9 +2174,15 @@ class FloatingModeManager {
 
       // Strategy 2: Use placeholder position for non-grid layout mode and
       // for cards that originated from sidebar slots/focus-mode context.
+      // For sidebar-origin cards, only trust placeholder when it still lives in
+      // a sidebar context; otherwise allow persisted sidebar anchor recovery.
       if (
         !inserted &&
-        (!gridLayoutActive || restoreToSidebarSlot || quranFocusModeActive)
+        (!gridLayoutActive ||
+          quranFocusModeActive ||
+          (restoreToSidebarSlot
+            ? placeholderInSidebarContext
+            : !!(placeholder && placeholder.parentNode)))
       ) {
         const placeholderStillValid = !!(placeholder && placeholder.parentNode);
 
