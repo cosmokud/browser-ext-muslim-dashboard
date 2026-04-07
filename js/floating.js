@@ -1360,6 +1360,27 @@ class FloatingModeManager {
     return settings?.floating?.[key]?.enabled === true;
   }
 
+  isQuranFocusModeActive() {
+    return (
+      !!document.body?.classList?.contains("quran-focus-mode") ||
+      window.dashboard?._quranFocusModeActive === true
+    );
+  }
+
+  applyDeferredFromSettings() {
+    if (this.isQuranFocusModeActive()) {
+      this.updateAllButtons();
+      return;
+    }
+
+    for (const key of this.runtime.keys()) {
+      this.applyOne(key);
+    }
+
+    this.updateAllButtons();
+    this.notifyLayoutChanged();
+  }
+
   setEnabledDesired(key, enabled) {
     const settings = this.getSettings();
     settings.floating = settings.floating || {};
@@ -1424,6 +1445,14 @@ class FloatingModeManager {
   toggle(key) {
     const desired = this.isEnabledDesired(key);
     this.setEnabledDesired(key, !desired);
+
+    // While Quran Focus Mode is active, toggles should only update
+    // preference state; apply runtime changes after focus exits.
+    if (this.isQuranFocusModeActive()) {
+      this.updateButton(key);
+      return;
+    }
+
     this.applyOne(key);
     this.notifyLayoutChanged();
   }
@@ -1433,6 +1462,13 @@ class FloatingModeManager {
 
     const changed = shouldSuspend !== this.isViewportSuspended;
     this.isViewportSuspended = shouldSuspend;
+
+    // In Quran Focus Mode, keep settings toggleable but defer runtime changes.
+    if (this.isQuranFocusModeActive()) {
+      this.hasAppliedOnce = true;
+      this.updateAllButtons();
+      return;
+    }
 
     // Always apply at least once so persisted states restore on reload
     if (this.isViewportSuspended) {
@@ -1455,6 +1491,7 @@ class FloatingModeManager {
     if (!st || !st.button) return;
 
     const desired = this.isEnabledDesired(key);
+    const quranFocusModeActive = this.isQuranFocusModeActive();
     const active = desired && !this.isViewportSuspended && !st.spaceSuspended;
 
     st.button.classList.toggle("active", active);
@@ -1469,7 +1506,14 @@ class FloatingModeManager {
       this.debugLog(`updateButton disabled state failed for ${key}`, e);
     }
 
-    if (this.isViewportSuspended) {
+    if (quranFocusModeActive) {
+      st.button.setAttribute(
+        "title",
+        desired
+          ? "Floating will apply after exiting Quran Focus Mode"
+          : "Toggle Floating Mode (applies after exiting Quran Focus Mode)",
+      );
+    } else if (this.isViewportSuspended) {
       st.button.setAttribute(
         "title",
         desired
@@ -1489,6 +1533,12 @@ class FloatingModeManager {
   applyOne(key) {
     const st = this.runtime.get(key);
     if (!st) return;
+
+    // Keep focus mode stable: do not mutate runtime floating state while active.
+    if (this.isQuranFocusModeActive()) {
+      this.updateButton(key);
+      return;
+    }
 
     if (this.isViewportSuspended) {
       this.disableFloatingRuntime(key);

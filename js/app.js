@@ -2091,6 +2091,21 @@ class MuslimDashboard {
       if (!restoredSidebarAfterFocus) {
         this.syncSidebarModeWithLayoutEditMode();
       }
+
+      // Apply any floating toggles that were changed while focus mode was active.
+      try {
+        if (
+          this.floating &&
+          typeof this.floating.applyDeferredFromSettings === "function"
+        ) {
+          this.floating.applyDeferredFromSettings();
+        } else if (
+          this.floating &&
+          typeof this.floating.applyViewportConstraint === "function"
+        ) {
+          this.floating.applyViewportConstraint();
+        }
+      } catch (e) {}
     };
 
     // Expose setter for other modes to call.
