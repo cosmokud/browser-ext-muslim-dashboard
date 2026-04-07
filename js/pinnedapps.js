@@ -607,13 +607,34 @@ class PinnedAppsManager extends BaseManager {
       return;
     }
 
-    const prompted = window.prompt(
-      "Enter image URL for favicon import",
-      "https://",
-    );
-    if (prompted === null) return;
+    const imageUrl = await this.openUrlInputModal({
+      title: "Import Favicon by URL",
+      description:
+        "Paste a direct icon/image URL. Only HTTP(S) links are supported.",
+      label: "Favicon image URL",
+      placeholder: "https://example.com/favicon.png",
+      submitLabel: "Import",
+      initialValue: "https://",
+      validate: (value) => {
+        let normalized = String(value || "").trim();
+        if (!normalized) return "";
+        if (!/^https?:\/\//i.test(normalized)) {
+          normalized = `https://${normalized}`;
+        }
 
-    const imageUrl = String(prompted || "").trim();
+        try {
+          const parsed = new URL(normalized);
+          if (!["http:", "https:"].includes(parsed.protocol)) {
+            return "";
+          }
+          return parsed.href;
+        } catch (_error) {
+          return "";
+        }
+      },
+      invalidMessage: "Please enter a valid HTTP(S) image URL.",
+    });
+
     if (!imageUrl) {
       this.showFaviconStatus("Please enter an image URL", "error");
       return;

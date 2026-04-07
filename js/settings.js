@@ -5864,7 +5864,19 @@ class SettingsManager extends BaseManager {
         const deleteHandler = (event) => {
           event.preventDefault();
           event.stopPropagation();
-          void this.removeCustomBackgroundFromPool(entry.url);
+          void (async () => {
+            const confirmed = await this.openConfirmModal({
+              icon: "🗑️",
+              title: "Remove Background?",
+              text: "This background will be removed from your custom pool.",
+              hint: "You can import it again anytime.",
+              confirmLabel: "Remove",
+              cancelLabel: "Keep",
+            });
+
+            if (!confirmed) return;
+            await this.removeCustomBackgroundFromPool(entry.url);
+          })();
         };
 
         deleteBtn.addEventListener("click", deleteHandler);
@@ -6228,15 +6240,23 @@ class SettingsManager extends BaseManager {
   }
 
   async promptAndAddCustomBackgroundFromUrl() {
-    const prompted = window.prompt(
-      "Enter image URL for background import",
-      "https://",
-    );
-    if (prompted === null) return false;
+    const imageUrl = await this.openUrlInputModal({
+      title: "Import Background by URL",
+      description:
+        "Paste a direct image URL. Only HTTP(S) image links are supported.",
+      label: "Background image URL",
+      placeholder: "https://example.com/wallpaper.jpg",
+      submitLabel: "Import",
+      initialValue: "https://",
+      validate: (value) => {
+        const normalized = this.normalizeBackgroundImageImportUrl(value);
+        if (!normalized) return "";
+        return this.isRemoteBackgroundImageUrl(normalized) ? normalized : "";
+      },
+      invalidMessage: "Please enter a valid HTTP(S) image URL.",
+    });
 
-    const imageUrl = String(prompted || "").trim();
     if (!imageUrl) {
-      this.showToast("Please enter an image URL.", "error");
       return false;
     }
 
