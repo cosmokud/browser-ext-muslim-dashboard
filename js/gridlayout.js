@@ -1075,22 +1075,16 @@ class GridLayoutManager {
     const baseMax = Math.max(rowWidth, layoutWidth, currentWidth, minWidth);
 
     const componentId = this.getSidebarComponentId(el);
-    if (
-      !this.isSidebarModeEnabled &&
-      this.isThreeItemComponentId(componentId)
-    ) {
+    if (this.isThreeItemComponentId(componentId)) {
       const mainContainerWidth = Math.round(
         this.getMainContainerResponsiveWidth() || 0,
       );
       const hardCap = Math.max(
         1,
         Math.round(
-          Math.min(
-            Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
-              ? mainContainerWidth
-              : baseMax,
-            Number(this.threeItemSingleRowCollapseThresholdWidth) || 1200,
-          ),
+          Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
+            ? mainContainerWidth
+            : baseMax,
         ),
       );
 
@@ -2292,44 +2286,37 @@ class GridLayoutManager {
     const fallbackCap = Math.max(1, Math.round(Number(absoluteCap) || 0));
     if (!el) return fallbackCap;
 
-    const row = el.closest(".grid-flex-row");
-    if (!row) return fallbackCap;
-
-    const visibleChildren = Array.from(row.children).filter(
-      (child) => !this.isComponentHidden(child),
-    );
-
     const targetId = this.getSidebarComponentId(el);
     if (!this.isThreeItemComponentId(targetId)) {
       return fallbackCap;
     }
 
+    // Two modes only:
+    // 1) Normal 3-items row -> each item hard-limited to one third of container.
+    // 2) Compressed single-item row -> full container width allowed.
+    if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
+      return fallbackCap;
+    }
+
+    const row = el.closest(".grid-flex-row");
+    if (!row) {
+      return Math.max(1, Math.round(fallbackCap / 3));
+    }
+
     const rowWidth = Math.round(
       row.getBoundingClientRect().width || row.clientWidth || 0,
     );
-    const totalGapWidth =
-      Math.max(0, visibleChildren.length - 1) * this.getGridFlexRowGapPx(row);
+    const rowGap = this.getGridFlexRowGapPx(row);
 
-    const rowBudgetLimit = Math.max(1, Math.round(rowWidth - totalGapWidth));
-    const totalBudgetLimit = Math.max(
+    // Use the default 3-items mode width: (row width - 2 gaps) / 3.
+    // This keeps each card at or below its original 3-column size,
+    // even when only 2 cards are currently visible in that row.
+    const defaultThreeItemWidth = Math.max(
       1,
-      Math.round(Math.min(fallbackCap, rowBudgetLimit)),
+      Math.round(Math.max(0, rowWidth - rowGap * 2) / 3),
     );
 
-    let siblingWidth = 0;
-    visibleChildren.forEach((child) => {
-      if (child === el) return;
-      siblingWidth += Math.round(
-        child.getBoundingClientRect().width || child.offsetWidth || 0,
-      );
-    });
-
-    const remainingBudget = Math.max(
-      1,
-      Math.round(totalBudgetLimit - siblingWidth),
-    );
-
-    return Math.max(1, Math.min(totalBudgetLimit, remainingBudget));
+    return Math.max(1, Math.min(fallbackCap, defaultThreeItemWidth));
   }
 
   runViewportResizeLayoutSync({ force = false } = {}) {
@@ -3138,7 +3125,7 @@ class GridLayoutManager {
     const mode = isSidebarItem ? "sidebar" : "middle";
 
     let middleResizeHardMaxWidth = null;
-    if (mode === "middle" && !this.isSidebarModeEnabled) {
+    if (mode === "middle") {
       const componentId = this.getSidebarComponentId(el);
       if (this.isThreeItemComponentId(componentId)) {
         const mainContainerWidth = Math.round(
@@ -3147,12 +3134,9 @@ class GridLayoutManager {
         const hardCap = Math.max(
           1,
           Math.round(
-            Math.min(
-              Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
-                ? mainContainerWidth
-                : rect.width,
-              Number(this.threeItemSingleRowCollapseThresholdWidth) || 1200,
-            ),
+            Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
+              ? mainContainerWidth
+              : rect.width,
           ),
         );
 
