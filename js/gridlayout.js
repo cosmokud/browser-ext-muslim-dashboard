@@ -72,9 +72,9 @@ class GridLayoutManager {
     // Span represents the maximum columns out of 6 the component prefers
     this.componentSpans = {
       header: { id: "header", span: 6, minSpan: 6 },
-      pinnedAppsSection: { id: "pinnedAppsSection", span: 6, minSpan: 6 },
-      searchBarSection: { id: "searchBarSection", span: 6, minSpan: 6 },
-      quoteSection: { id: "quoteSection", span: 6, minSpan: 6 },
+      pinnedAppsSection: { id: "pinnedAppsSection", span: 2, minSpan: 2 },
+      searchBarSection: { id: "searchBarSection", span: 2, minSpan: 2 },
+      quoteSection: { id: "quoteSection", span: 2, minSpan: 2 },
       prayerTimesCard: { id: "prayerTimesCard", span: 2, minSpan: 2 },
       calendarCard: { id: "calendarCard", span: 2, minSpan: 2 },
       qiblaCard: { id: "qiblaCard", span: 2, minSpan: 2 },
@@ -83,10 +83,10 @@ class GridLayoutManager {
       fastingCard: { id: "fastingCard", span: 2, minSpan: 2 },
       flashcardCard: { id: "flashcardCard", span: 2, minSpan: 2 },
       adhkarCard: { id: "adhkarCard", span: 2, minSpan: 2 },
-      hadithCard: { id: "hadithCard", span: 6, minSpan: 6 },
+      hadithCard: { id: "hadithCard", span: 2, minSpan: 2 },
       todoCard: { id: "todoCard", span: 2, minSpan: 2 },
-      notesCard: { id: "notesCard", span: 6, minSpan: 6 },
-      pocketQuranCard: { id: "pocketQuranCard", span: 6, minSpan: 6 },
+      notesCard: { id: "notesCard", span: 2, minSpan: 2 },
+      pocketQuranCard: { id: "pocketQuranCard", span: 2, minSpan: 2 },
     };
 
     /**
