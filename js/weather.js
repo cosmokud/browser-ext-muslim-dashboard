@@ -526,7 +526,11 @@ class WeatherManager extends BaseManager {
       componentId === "weatherCard"
     ) {
       const borderBoxWidth = Math.round(Number(detail?.width) || 0);
-      if (Number.isFinite(borderBoxWidth) && borderBoxWidth > 0 && this.weatherCard) {
+      if (
+        Number.isFinite(borderBoxWidth) &&
+        borderBoxWidth > 0 &&
+        this.weatherCard
+      ) {
         const cardStyle = window.getComputedStyle(this.weatherCard);
         const paddingLeft = parseFloat(cardStyle.paddingLeft) || 0;
         const paddingRight = parseFloat(cardStyle.paddingRight) || 0;
