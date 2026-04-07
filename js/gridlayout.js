@@ -2304,6 +2304,18 @@ class GridLayoutManager {
       return fallbackCap;
     }
 
+    const rowWidth = Math.round(
+      row.getBoundingClientRect().width || row.clientWidth || 0,
+    );
+    const totalGapWidth =
+      Math.max(0, visibleChildren.length - 1) * this.getGridFlexRowGapPx(row);
+
+    const rowBudgetLimit = Math.max(1, Math.round(rowWidth - totalGapWidth));
+    const totalBudgetLimit = Math.max(
+      1,
+      Math.round(Math.min(fallbackCap, rowBudgetLimit)),
+    );
+
     let siblingWidth = 0;
     visibleChildren.forEach((child) => {
       if (child === el) return;
@@ -2312,9 +2324,12 @@ class GridLayoutManager {
       );
     });
 
-    const remainingBudget = Math.max(1, Math.round(fallbackCap - siblingWidth));
+    const remainingBudget = Math.max(
+      1,
+      Math.round(totalBudgetLimit - siblingWidth),
+    );
 
-    return Math.max(1, Math.min(fallbackCap, remainingBudget));
+    return Math.max(1, Math.min(totalBudgetLimit, remainingBudget));
   }
 
   runViewportResizeLayoutSync({ force = false } = {}) {
@@ -3119,7 +3134,7 @@ class GridLayoutManager {
     const side = handle.classList.contains("sidebar-resize-handle-left")
       ? "left"
       : "right";
-    const rect = el.getBoundingClientRect();
+    let rect = el.getBoundingClientRect();
     const mode = isSidebarItem ? "sidebar" : "middle";
 
     let middleResizeHardMaxWidth = null;
@@ -3145,6 +3160,17 @@ class GridLayoutManager {
           el,
           hardCap,
         );
+
+        if (
+          Number.isFinite(middleResizeHardMaxWidth) &&
+          middleResizeHardMaxWidth > 0 &&
+          rect.width > middleResizeHardMaxWidth
+        ) {
+          this.applyMiddleWidthToElement(el, middleResizeHardMaxWidth, {
+            persist: false,
+          });
+          rect = el.getBoundingClientRect();
+        }
       }
     }
 
