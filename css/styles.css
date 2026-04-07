@@ -18502,6 +18502,11 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   align-self: center;
 }
 
+/* Keep quote card vertically centered only in 3-items mode (span=2). */
+.grid-flex-row > #quoteSection[data-effective-span="2"]:not(.middle-custom-width) {
+  align-self: center;
+}
+
 /* Full-width components always take 100% */
 .grid-flex-row > .header:not(.middle-custom-width),
 .grid-flex-row > #pinnedAppsSection:not(.middle-custom-width),
