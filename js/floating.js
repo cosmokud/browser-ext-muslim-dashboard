@@ -1367,8 +1367,19 @@ class FloatingModeManager {
     );
   }
 
+  isMomentModeActive() {
+    return (
+      !!document.body?.classList?.contains("moment-mode") ||
+      window.dashboard?._momentModeActive === true
+    );
+  }
+
+  isRuntimeModeDeferred() {
+    return this.isQuranFocusModeActive() || this.isMomentModeActive();
+  }
+
   applyDeferredFromSettings() {
-    if (this.isQuranFocusModeActive()) {
+    if (this.isRuntimeModeDeferred()) {
       this.updateAllButtons();
       return;
     }
@@ -1403,7 +1414,7 @@ class FloatingModeManager {
     const settings = this.getSettings() || {};
     const floatingSettings = settings.floating || {};
     const sidebarModeEnabled = settings.sidebarModeEnabled === true;
-    const focusActive = this.isQuranFocusModeActive();
+    const runtimeModeDeferred = this.isRuntimeModeDeferred();
     const grid = window.dashboard?.gridLayout || null;
     const normalizeIdList = (ids) =>
       (Array.isArray(ids) ? ids : [])
@@ -1606,7 +1617,7 @@ class FloatingModeManager {
     }
 
     // During focus mode we only enforce OFF immediately; runtime/layout apply is deferred.
-    if (focusActive) {
+    if (runtimeModeDeferred) {
       if (changed) this.notifyLayoutChanged();
       return;
     }
@@ -1713,9 +1724,9 @@ class FloatingModeManager {
     const desired = this.isEnabledDesired(key);
     this.setEnabledDesired(key, !desired);
 
-    // While Quran Focus Mode is active, toggles should only update
-    // preference state; apply runtime changes after focus exits.
-    if (this.isQuranFocusModeActive()) {
+    // While mode-managed layouts are active, toggles only update preference
+    // state; runtime changes apply after mode exits.
+    if (this.isRuntimeModeDeferred()) {
       this.updateButton(key);
       return;
     }
@@ -1730,8 +1741,9 @@ class FloatingModeManager {
     const changed = shouldSuspend !== this.isViewportSuspended;
     this.isViewportSuspended = shouldSuspend;
 
-    // In Quran Focus Mode, keep settings toggleable but defer runtime changes.
-    if (this.isQuranFocusModeActive()) {
+    // In mode-managed layouts, keep settings toggleable but defer runtime
+    // changes.
+    if (this.isRuntimeModeDeferred()) {
       this.hasAppliedOnce = true;
       this.updateAllButtons();
       return;
@@ -1759,6 +1771,7 @@ class FloatingModeManager {
 
     const desired = this.isEnabledDesired(key);
     const quranFocusModeActive = this.isQuranFocusModeActive();
+    const momentModeActive = this.isMomentModeActive();
     const active = desired && !this.isViewportSuspended && !st.spaceSuspended;
 
     st.button.classList.toggle("active", active);
@@ -1779,6 +1792,13 @@ class FloatingModeManager {
         desired
           ? "Floating will apply after exiting Quran Focus Mode"
           : "Toggle Floating Mode (applies after exiting Quran Focus Mode)",
+      );
+    } else if (momentModeActive) {
+      st.button.setAttribute(
+        "title",
+        desired
+          ? "Floating will apply after exiting Moment Mode"
+          : "Toggle Floating Mode (applies after exiting Moment Mode)",
       );
     } else if (this.isViewportSuspended) {
       st.button.setAttribute(
@@ -1801,8 +1821,9 @@ class FloatingModeManager {
     const st = this.runtime.get(key);
     if (!st) return;
 
-    // Keep focus mode stable: do not mutate runtime floating state while active.
-    if (this.isQuranFocusModeActive()) {
+    // Keep mode-managed layouts stable: do not mutate runtime floating state
+    // while active.
+    if (this.isRuntimeModeDeferred()) {
       this.updateButton(key);
       return;
     }

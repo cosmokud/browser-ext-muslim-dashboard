@@ -1120,6 +1120,31 @@ class SettingsManager extends BaseManager {
     this._autoSaveQueued = false;
   }
 
+  flushPendingAutoSaveBeforeClose() {
+    const hadScheduledSave = !!this._autoSaveTimer;
+    const hadQueuedSave = this._autoSaveQueued === true;
+
+    this.clearScheduledAutoSave();
+
+    if (!this.modal?.classList.contains("active")) {
+      return;
+    }
+
+    if (!hadScheduledSave && !hadQueuedSave) {
+      return;
+    }
+
+    if (this._isAutoSaving) {
+      return;
+    }
+
+    try {
+      this.runAutoSave();
+    } catch (e) {
+      // ignore close-path autosave failures
+    }
+  }
+
   setupSettingsAutoSaveListeners() {
     if (!this.modal || this.modal.dataset.autoSaveBound === "1") {
       return;
@@ -9260,7 +9285,7 @@ class SettingsManager extends BaseManager {
    * Close modal
    */
   closeModal() {
-    this.clearScheduledAutoSave();
+    this.flushPendingAutoSaveBeforeClose();
     this.closeDetachedEditorModal();
     this.resetBackgroundThumbObserver();
     this.clearBackgroundThumbBlobUrlCache();
@@ -10873,6 +10898,12 @@ class SettingsManager extends BaseManager {
 
       try {
         document.dispatchEvent(new CustomEvent("md:visibility-changed"));
+      } catch (e) {}
+
+      try {
+        if (window.dashboard?.floating?.updateAllButtons) {
+          window.dashboard.floating.updateAllButtons();
+        }
       } catch (e) {}
     };
 

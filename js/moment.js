@@ -162,6 +162,7 @@ class MomentModeManager {
     this.originalPositions.set(key, {
       parent: element.parentNode,
       nextSibling: element.nextSibling,
+      parentId: element.parentElement?.id || "",
     });
   }
 
@@ -186,15 +187,38 @@ class MomentModeManager {
     this.getBindings().forEach((binding) => {
       const element = binding.getElement();
       const original = this.originalPositions.get(binding.key);
-      if (!element || !original || !original.parent) return;
+      if (!element || !original) return;
 
-      if (
-        original.nextSibling &&
-        original.nextSibling.parentNode === original.parent
-      ) {
-        original.parent.insertBefore(element, original.nextSibling);
-      } else {
-        original.parent.appendChild(element);
+      let restored = false;
+
+      if (original.parent && original.parent.isConnected) {
+        if (
+          original.nextSibling &&
+          original.nextSibling.parentNode === original.parent
+        ) {
+          original.parent.insertBefore(element, original.nextSibling);
+        } else {
+          original.parent.appendChild(element);
+        }
+        restored = true;
+      }
+
+      if (!restored && original.parentId) {
+        const parentById = document.getElementById(original.parentId);
+        if (parentById) {
+          parentById.appendChild(element);
+          restored = true;
+        }
+      }
+
+      if (!restored) {
+        const fallbackParent =
+          document.querySelector(".content-grid") ||
+          document.getElementById("sidebarMiddle") ||
+          document.body;
+        if (fallbackParent) {
+          fallbackParent.appendChild(element);
+        }
       }
     });
 
@@ -293,6 +317,24 @@ class MomentModeManager {
     document.body.classList.add("moment-mode");
     this.layoutRoot.setAttribute("aria-hidden", "false");
 
+    // Keep Moment layout deterministic by suspending active floating runtime.
+    try {
+      const floating = this.dashboard.floating;
+      if (
+        floating &&
+        typeof floating.disableFloatingRuntime === "function" &&
+        floating.runtime instanceof Map
+      ) {
+        for (const [key, st] of floating.runtime.entries()) {
+          if (!st?.card?.classList?.contains("floating-card")) continue;
+          floating.disableFloatingRuntime(key);
+        }
+      }
+      if (floating && typeof floating.updateAllButtons === "function") {
+        floating.updateAllButtons();
+      }
+    } catch (e) {}
+
     this.moveComponentsIntoMomentLayout();
     this.syncLayoutVisibility();
     this.closeFabMenu();
@@ -315,6 +357,41 @@ class MomentModeManager {
     this.layoutRoot.setAttribute("aria-hidden", "true");
 
     this.restoreComponentsFromMomentLayout();
+
+    // Rebuild grid wrappers after moving cards back from Moment slots.
+    try {
+      const grid = this.dashboard.gridLayout;
+      if (grid && typeof grid.applyLayout === "function") {
+        grid.applyLayout();
+      }
+      if (grid && typeof grid.recalculateLayout === "function") {
+        grid.recalculateLayout();
+      }
+    } catch (e) {}
+
+    // Apply deferred floating preferences after Moment mode exits.
+    try {
+      const floating = this.dashboard.floating;
+      if (floating && typeof floating.applyDeferredFromSettings === "function") {
+        floating.applyDeferredFromSettings();
+      } else if (
+        floating &&
+        typeof floating.applyViewportConstraint === "function"
+      ) {
+        floating.applyViewportConstraint();
+      }
+    } catch (e) {}
+
+    try {
+      if (
+        this.dashboard.floating &&
+        typeof this.dashboard.floating.enforceNonFloatingFromDashboardSettings ===
+          "function"
+      ) {
+        this.dashboard.floating.enforceNonFloatingFromDashboardSettings();
+      }
+    } catch (e) {}
+
     this.setEditModeLocked(false);
 
     this.saveModeState(false);
