@@ -260,10 +260,16 @@ class SettingsManager extends BaseManager {
     this.bgCategory = document.getElementById("bgCategory");
     this.changeBackgroundBtn = document.getElementById("changeBackgroundBtn");
     this.customBgGroup = document.getElementById("customBgGroup");
+    this.backgroundPoolLabel = document.getElementById("backgroundPoolLabel");
+    this.backgroundPoolHint = document.getElementById("backgroundPoolHint");
     this.customBgList = document.getElementById("customBgList");
     this.customBgInput = document.getElementById("customBgInput");
     this.addCustomBgBtn = document.getElementById("addCustomBgBtn");
     this.addCustomBgUrlBtn = document.getElementById("addCustomBgUrlBtn");
+    this.solidColorControls = document.getElementById("solidColorControls");
+    this.solidColorPicker = document.getElementById("solidColorPicker");
+    this.solidColorHexInput = document.getElementById("solidColorHexInput");
+    this.addSolidColorBtn = document.getElementById("addSolidColorBtn");
     this.selectAllBgPoolBtn = document.getElementById("selectAllBgPoolBtn");
     this.deselectAllBgPoolBtn = document.getElementById("deselectAllBgPoolBtn");
     this.customBgCount = document.getElementById("customBgCount");
@@ -283,6 +289,7 @@ class SettingsManager extends BaseManager {
     this._customBackgroundMediaSyncPromise = null;
     this._customBackgroundMediaLoaded = false;
     this._customBackgroundTokenPrefix = "mdcbg:id:";
+    this._solidBackgroundUrlPrefix = "solid:";
     this._customBackgroundThumbByImageUrl = new Map();
     this._customBackgroundImageByToken = new Map();
     this._backgroundSettingsDirty = false;
@@ -4582,6 +4589,52 @@ class SettingsManager extends BaseManager {
     );
   }
 
+  normalizeSolidColorHex(value) {
+    let raw = String(value || "").trim();
+    if (!raw) return "";
+
+    if (raw.toLowerCase().startsWith(this._solidBackgroundUrlPrefix)) {
+      raw = raw.slice(this._solidBackgroundUrlPrefix.length);
+    }
+
+    if (!raw.startsWith("#")) {
+      raw = `#${raw}`;
+    }
+
+    const shortMatch = raw.match(/^#([0-9a-fA-F]{3})$/);
+    if (shortMatch) {
+      const [r, g, b] = shortMatch[1].split("");
+      raw = `#${r}${r}${g}${g}${b}${b}`;
+    }
+
+    const fullMatch = raw.match(/^#([0-9a-fA-F]{6})$/);
+    if (!fullMatch) return "";
+
+    return `#${fullMatch[1].toUpperCase()}`;
+  }
+
+  isSolidColorBackgroundUrl(value) {
+    const normalized = this.normalizeBackgroundImageUrl(value);
+    return normalized.toLowerCase().startsWith(this._solidBackgroundUrlPrefix);
+  }
+
+  solidColorHexToBackgroundUrl(value) {
+    const hex = this.normalizeSolidColorHex(value);
+    if (!hex) return "";
+    return `${this._solidBackgroundUrlPrefix}${hex}`;
+  }
+
+  solidColorBackgroundUrlToHex(value) {
+    const normalized = this.normalizeBackgroundImageUrl(value);
+    if (!this.isSolidColorBackgroundUrl(normalized)) {
+      return "";
+    }
+
+    return this.normalizeSolidColorHex(
+      normalized.slice(this._solidBackgroundUrlPrefix.length),
+    );
+  }
+
   normalizeBackgroundCategory(category) {
     const normalized = String(category || "").trim();
     if (!normalized) return "nature";
@@ -5535,17 +5588,57 @@ class SettingsManager extends BaseManager {
   }
 
   updateBackgroundPoolAddButtonVisibility() {
-    if (!this.addCustomBgBtn && !this.addCustomBgUrlBtn) return;
-
     const selectedCategory = this.normalizeBackgroundCategory(
       this.bgCategory?.value || "nature",
     );
+
+    if (!this.addCustomBgBtn && !this.addCustomBgUrlBtn) {
+      this.updateBackgroundPoolModeUi(selectedCategory);
+      return;
+    }
+
     const displayValue = selectedCategory === "custom" ? "inline-flex" : "none";
     if (this.addCustomBgBtn) {
       this.addCustomBgBtn.style.display = displayValue;
     }
     if (this.addCustomBgUrlBtn) {
       this.addCustomBgUrlBtn.style.display = displayValue;
+    }
+
+    this.updateBackgroundPoolModeUi(selectedCategory);
+  }
+
+  updateBackgroundPoolModeUi(category = null) {
+    const selectedCategory = this.normalizeBackgroundCategory(
+      category || this.bgCategory?.value || "nature",
+    );
+    const isSolid = selectedCategory === "solid";
+
+    if (this.backgroundPoolLabel) {
+      this.backgroundPoolLabel.textContent = isSolid
+        ? "Solid Color Pool"
+        : "Background Image Pool";
+    }
+
+    if (this.backgroundPoolHint) {
+      this.backgroundPoolHint.textContent = isSolid
+        ? "Select which colors are included when the background rotates or refreshes."
+        : "Select which images are included when the background rotates or refreshes.";
+    }
+
+    if (this.solidColorControls) {
+      this.solidColorControls.hidden = !isSolid;
+      this.solidColorControls.style.display = isSolid ? "grid" : "none";
+    }
+
+    if (isSolid && this.solidColorPicker && this.solidColorHexInput) {
+      const pickerValue = this.normalizeSolidColorHex(
+        this.solidColorPicker.value || this.solidColorHexInput.value,
+      );
+      if (pickerValue) {
+        this.solidColorPicker.value = pickerValue;
+        this.solidColorHexInput.value = pickerValue;
+      }
     }
   }
 
@@ -5649,6 +5742,8 @@ class SettingsManager extends BaseManager {
     const selectedCategory = this.normalizeBackgroundCategory(
       this.bgCategory?.value || settings.bgCategory || "nature",
     );
+    this.updateBackgroundPoolModeUi(selectedCategory);
+
     const rawImages = this.getAllBackgroundImagesForCategory(
       selectedCategory,
       settings,
@@ -5688,7 +5783,9 @@ class SettingsManager extends BaseManager {
       emptyHint.textContent =
         selectedCategory === "custom"
           ? "No custom backgrounds yet. Use Import or URL to create your pool."
-          : "No backgrounds available for this category.";
+          : selectedCategory === "solid"
+            ? "No solid colors available yet. Add one with the color selector."
+            : "No backgrounds available for this category.";
       this.customBgList.replaceChildren(emptyHint);
       this.updateBackgroundPoolCount(0, 0);
       return;
@@ -5715,16 +5812,34 @@ class SettingsManager extends BaseManager {
       item.dataset.index = String(index);
       item.setAttribute("aria-pressed", isSelected ? "true" : "false");
 
-      const thumb = document.createElement("img");
-      thumb.src = this.getBackgroundThumbnailPlaceholder();
-      thumb.dataset.thumbSrc = this.getBackgroundThumbnailUrl(entry.url);
-      thumb.dataset.bgSourceUrl = entry.url;
-      thumb.alt = `Background ${index + 1}`;
-      thumb.className = "custom-bg-thumb";
-      thumb.loading = "lazy";
-      thumb.decoding = "async";
-      thumb.fetchPriority = "low";
-      thumbsToObserve.push(thumb);
+      let thumb = null;
+      if (selectedCategory === "solid") {
+        const solidHex =
+          this.solidColorBackgroundUrlToHex(entry.url) || "#000000";
+        const swatch = document.createElement("span");
+        swatch.className = "custom-bg-color-swatch";
+        swatch.style.background = solidHex;
+
+        const code = document.createElement("span");
+        code.className = "custom-bg-color-code";
+        code.textContent = solidHex;
+        code.setAttribute("aria-hidden", "true");
+
+        item.setAttribute("aria-label", `Solid color ${solidHex}`);
+        item.appendChild(swatch);
+        item.appendChild(code);
+      } else {
+        thumb = document.createElement("img");
+        thumb.src = this.getBackgroundThumbnailPlaceholder();
+        thumb.dataset.thumbSrc = this.getBackgroundThumbnailUrl(entry.url);
+        thumb.dataset.bgSourceUrl = entry.url;
+        thumb.alt = `Background ${index + 1}`;
+        thumb.className = "custom-bg-thumb";
+        thumb.loading = "lazy";
+        thumb.decoding = "async";
+        thumb.fetchPriority = "low";
+        thumbsToObserve.push(thumb);
+      }
 
       const check = document.createElement("span");
       check.className = "custom-bg-item-check";
@@ -5762,7 +5877,9 @@ class SettingsManager extends BaseManager {
         item.appendChild(deleteBtn);
       }
 
-      item.appendChild(thumb);
+      if (thumb) {
+        item.appendChild(thumb);
+      }
       item.appendChild(check);
       item.addEventListener("click", () => {
         this.toggleBackgroundPoolImageSelection(index);
@@ -5772,10 +5889,12 @@ class SettingsManager extends BaseManager {
     });
 
     this.customBgList.replaceChildren(fragment);
-    thumbsToObserve.forEach((thumb) => {
-      this.observeBackgroundThumbImage(thumb);
-    });
-    this.applyCustomBackgroundThumbsToRenderedPool();
+    if (selectedCategory !== "solid") {
+      thumbsToObserve.forEach((thumb) => {
+        this.observeBackgroundThumbImage(thumb);
+      });
+      this.applyCustomBackgroundThumbsToRenderedPool();
+    }
     this.updateBackgroundPoolCount(selectedCount, images.length);
   }
 
@@ -5830,6 +5949,60 @@ class SettingsManager extends BaseManager {
     this.saveBackgroundSelectionForCategory(category, []);
     this.applyBackgroundPoolSelectionToRenderedItems(new Set());
     this._backgroundSettingsDirty = true;
+  }
+
+  async addSolidColorTemplate(rawColor) {
+    const solidHex = this.normalizeSolidColorHex(rawColor);
+    if (!solidHex) {
+      this.showToast("Please enter a valid hex color.", "error");
+      return false;
+    }
+
+    const solidUrl = this.solidColorHexToBackgroundUrl(solidHex);
+    if (!solidUrl) {
+      this.showToast("Failed to build solid color template.", "error");
+      return false;
+    }
+
+    const settings = this.storage.getSettings();
+
+    const customTemplates = Array.isArray(settings.solidColorTemplates)
+      ? settings.solidColorTemplates
+          .map((entry) => this.normalizeSolidColorHex(entry))
+          .filter(Boolean)
+      : [];
+
+    if (!customTemplates.includes(solidHex)) {
+      customTemplates.push(solidHex);
+    }
+    settings.solidColorTemplates = customTemplates;
+
+    const selectionMap = this.getBackgroundImageSelectionMap(settings);
+    const solidSelection = Array.isArray(selectionMap.solid)
+      ? selectionMap.solid
+          .map((entry) => this.normalizeBackgroundImageUrl(entry))
+          .filter(Boolean)
+      : [];
+
+    if (!solidSelection.includes(solidUrl)) {
+      solidSelection.push(solidUrl);
+    }
+    selectionMap.solid = solidSelection;
+    settings.backgroundImageSelections = selectionMap;
+
+    this.storage.saveSettings(settings);
+    this.renderBackgroundImagePool();
+    this._backgroundSettingsDirty = true;
+
+    if (this.solidColorPicker) {
+      this.solidColorPicker.value = solidHex;
+    }
+    if (this.solidColorHexInput) {
+      this.solidColorHexInput.value = solidHex;
+    }
+
+    this.showToast("Solid color template added!", "success");
+    return true;
   }
 
   async removeCustomBackgroundFromPool(imageUrl) {
@@ -9750,6 +9923,42 @@ class SettingsManager extends BaseManager {
         this.updateBackgroundPoolAddButtonVisibility();
         this.renderBackgroundImagePool();
         this._backgroundSettingsDirty = true;
+      });
+    }
+
+    if (this.solidColorPicker) {
+      this.solidColorPicker.addEventListener("input", () => {
+        const normalized = this.normalizeSolidColorHex(
+          this.solidColorPicker.value,
+        );
+        if (normalized && this.solidColorHexInput) {
+          this.solidColorHexInput.value = normalized;
+        }
+      });
+    }
+
+    if (this.solidColorHexInput) {
+      this.solidColorHexInput.addEventListener("input", () => {
+        const normalized = this.normalizeSolidColorHex(
+          this.solidColorHexInput.value,
+        );
+        if (normalized && this.solidColorPicker) {
+          this.solidColorPicker.value = normalized;
+        }
+      });
+
+      this.solidColorHexInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        void this.addSolidColorTemplate(this.solidColorHexInput.value);
+      });
+    }
+
+    if (this.addSolidColorBtn) {
+      this.addSolidColorBtn.addEventListener("click", () => {
+        const value =
+          this.solidColorHexInput?.value || this.solidColorPicker?.value;
+        void this.addSolidColorTemplate(value);
       });
     }
 

@@ -5905,11 +5905,14 @@
                 <option value="sky">Sky & Clouds</option>
                 <option value="night">Night Sky</option>
                 <option value="custom">My Custom Backgrounds</option>
+                <option value="solid">Solid Color</option>
               </select>
             </div>
             <div class="setting-group custom-bg-group" id="customBgGroup">
-              <label class="setting-label">Background Image Pool</label>
-              <p class="setting-hint">
+              <label class="setting-label" id="backgroundPoolLabel"
+                >Background Image Pool</label
+              >
+              <p class="setting-hint" id="backgroundPoolHint">
                 Select which images are included when the background rotates or
                 refreshes.
               </p>
@@ -5939,6 +5942,36 @@
                 <span class="custom-bg-count" id="customBgCount"
                   >0 selected</span
                 >
+              </div>
+              <div class="solid-color-controls" id="solidColorControls" hidden>
+                <div class="solid-color-controls-row">
+                  <input
+                    type="color"
+                    id="solidColorPicker"
+                    class="solid-color-picker"
+                    value="#4F46E5"
+                    aria-label="Pick a solid color"
+                  />
+                  <input
+                    type="text"
+                    class="setting-input solid-color-hex-input"
+                    id="solidColorHexInput"
+                    value="#4F46E5"
+                    placeholder="#4F46E5"
+                    maxlength="7"
+                    aria-label="Solid color hex code"
+                  />
+                  <button
+                    class="setting-btn"
+                    id="addSolidColorBtn"
+                    type="button"
+                  >
+                    ➕ Add Color
+                  </button>
+                </div>
+                <p class="setting-hint">
+                  Pick a color and add it to your solid color templates.
+                </p>
               </div>
               <input
                 type="file"

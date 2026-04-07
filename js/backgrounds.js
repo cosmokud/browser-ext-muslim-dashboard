@@ -23,6 +23,8 @@ class BackgroundManager extends BaseManager {
     this._customBackgroundMediaStoreName = "media";
     this._customBackgroundMediaDbPromise = null;
     this._customBackgroundResolvedUrlCache = new Map();
+    this._solidBackgroundUrlPrefix = "solid:";
+    this._defaultSolidBackgroundUrls = null;
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -644,7 +646,156 @@ class BackgroundManager extends BaseManager {
   }
 
   _getSpecialCategoryType(category) {
-    return category === "all" || category === "custom" ? category : null;
+    return category === "all" || category === "custom" || category === "solid"
+      ? category
+      : null;
+  }
+
+  _normalizeSolidColorHex(value) {
+    let raw = String(value || "").trim();
+    if (!raw) return "";
+
+    if (raw.toLowerCase().startsWith(this._solidBackgroundUrlPrefix)) {
+      raw = raw.slice(this._solidBackgroundUrlPrefix.length);
+    }
+
+    if (!raw.startsWith("#")) {
+      raw = `#${raw}`;
+    }
+
+    const shortMatch = raw.match(/^#([0-9a-fA-F]{3})$/);
+    if (shortMatch) {
+      const [r, g, b] = shortMatch[1].split("");
+      raw = `#${r}${r}${g}${g}${b}${b}`;
+    }
+
+    const fullMatch = raw.match(/^#([0-9a-fA-F]{6})$/);
+    if (!fullMatch) return "";
+
+    return `#${fullMatch[1].toUpperCase()}`;
+  }
+
+  _solidColorHexToUrl(value) {
+    const hex = this._normalizeSolidColorHex(value);
+    if (!hex) return "";
+    return `${this._solidBackgroundUrlPrefix}${hex}`;
+  }
+
+  _solidBackgroundUrlToColor(value) {
+    const normalized = this._normalizeImageUrl(value);
+    if (!this.isSolidColorBackgroundUrl(normalized)) return "";
+    return this._normalizeSolidColorHex(
+      normalized.slice(this._solidBackgroundUrlPrefix.length),
+    );
+  }
+
+  isSolidColorBackgroundUrl(value) {
+    const normalized = this._normalizeImageUrl(value);
+    return normalized.toLowerCase().startsWith(this._solidBackgroundUrlPrefix);
+  }
+
+  _hslToHex(h, s, l) {
+    const hh = (((Number(h) || 0) % 360) + 360) % 360;
+    const ss = Math.max(0, Math.min(100, Number(s) || 0)) / 100;
+    const ll = Math.max(0, Math.min(100, Number(l) || 0)) / 100;
+
+    const c = (1 - Math.abs(2 * ll - 1)) * ss;
+    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+    const m = ll - c / 2;
+
+    let r1 = 0;
+    let g1 = 0;
+    let b1 = 0;
+
+    if (hh < 60) {
+      r1 = c;
+      g1 = x;
+    } else if (hh < 120) {
+      r1 = x;
+      g1 = c;
+    } else if (hh < 180) {
+      g1 = c;
+      b1 = x;
+    } else if (hh < 240) {
+      g1 = x;
+      b1 = c;
+    } else if (hh < 300) {
+      r1 = x;
+      b1 = c;
+    } else {
+      r1 = c;
+      b1 = x;
+    }
+
+    const toHex2 = (n) =>
+      Math.round((n + m) * 255)
+        .toString(16)
+        .padStart(2, "0")
+        .toUpperCase();
+
+    return `#${toHex2(r1)}${toHex2(g1)}${toHex2(b1)}`;
+  }
+
+  _getDefaultSolidBackgroundUrls() {
+    if (Array.isArray(this._defaultSolidBackgroundUrls)) {
+      return this._defaultSolidBackgroundUrls.slice();
+    }
+
+    const generated = [];
+    const seen = new Set();
+    const saturations = [88, 76, 64];
+    const lightnesses = [58, 48, 38];
+
+    for (let hue = 0; hue < 360; hue += 12) {
+      saturations.forEach((sat, satIndex) => {
+        const light = lightnesses[satIndex] ?? lightnesses[1];
+        const hex = this._hslToHex(hue, sat, light);
+        const url = this._solidColorHexToUrl(hex);
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        generated.push(url);
+      });
+    }
+
+    ["#0B1020", "#101820", "#1A1A1A", "#2B2B2B", "#E8E3D8", "#F5F5F5"]
+      .map((hex) => this._solidColorHexToUrl(hex))
+      .forEach((url) => {
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        generated.push(url);
+      });
+
+    this._defaultSolidBackgroundUrls = generated;
+    return generated.slice();
+  }
+
+  _getSolidBackgrounds(settings) {
+    const defaultUrls = this._getDefaultSolidBackgroundUrls();
+    const customHexes = Array.isArray(settings?.solidColorTemplates)
+      ? settings.solidColorTemplates
+          .map((entry) => this._normalizeSolidColorHex(entry))
+          .filter(Boolean)
+      : [];
+
+    const merged = [];
+    const seen = new Set();
+
+    [
+      ...defaultUrls,
+      ...customHexes.map((hex) => this._solidColorHexToUrl(hex)),
+    ].forEach((url) => {
+      const normalizedUrl = this._normalizeImageUrl(url);
+      const hex = this._solidBackgroundUrlToColor(normalizedUrl);
+      if (!normalizedUrl || !hex || seen.has(normalizedUrl)) return;
+      seen.add(normalizedUrl);
+      merged.push({
+        url: normalizedUrl,
+        credit: "",
+        href: "",
+      });
+    });
+
+    return merged;
   }
 
   _getCustomBackgrounds(settings) {
@@ -724,6 +875,10 @@ class BackgroundManager extends BaseManager {
 
     if (specialCategory === "custom") {
       return customBgs;
+    }
+
+    if (specialCategory === "solid") {
+      return this._getSolidBackgrounds(resolvedSettings);
     }
 
     return this.backgrounds[normalizedCategory] || this.backgrounds.nature;
@@ -1204,9 +1359,24 @@ class BackgroundManager extends BaseManager {
       return;
     }
 
-    const fullUrl = this.getImageUrl(sourceUrl);
     const targetBg = this.currentBg === 1 ? this.bg2 : this.bg1;
     const currentBgEl = this.currentBg === 1 ? this.bg1 : this.bg2;
+
+    const solidColor = this._solidBackgroundUrlToColor(sourceUrl);
+    if (solidColor) {
+      this.applyBackgroundDisplayMode(this.backgroundDisplayMode);
+      targetBg.style.backgroundImage = "none";
+      targetBg.style.background = solidColor;
+      targetBg.style.backgroundColor = solidColor;
+      targetBg.classList.add("active");
+      currentBgEl.classList.remove("active");
+      this.currentBg = this.currentBg === 1 ? 2 : 1;
+      this.currentImageUrl = this._normalizeImageUrl(imgObj.url);
+      this.updateAttribution({ ...imgObj, credit: "", href: "" });
+      return;
+    }
+
+    const fullUrl = this.getImageUrl(sourceUrl);
 
     if (!fullUrl) {
       targetBg.style.background =
