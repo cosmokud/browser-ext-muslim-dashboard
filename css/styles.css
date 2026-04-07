@@ -538,6 +538,11 @@ body.middle-layout-resizing
   height: auto;
 }
 
+body.quran-focus-mode #sidebarMiddle > .middle-layout-resize-handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 body.middle-layout-resizing {
   cursor: ew-resize;
 }

@@ -799,6 +799,12 @@ class GridLayoutManager {
   setQuranFocusModeActive(active) {
     this.isQuranFocusModeContext = active === true;
 
+    // In focus mode, keep main-container resize state off so only
+    // Pocket Quran width handles remain interactive.
+    if (this.isQuranFocusModeContext) {
+      this.endMiddleLayoutResize();
+    }
+
     if (!this.isQuranFocusModeContext) {
       const pocketQuranCard = document.getElementById("pocketQuranCard");
       this.clearQuranFocusFloatingWidthStyles(pocketQuranCard);
@@ -3090,6 +3096,14 @@ class GridLayoutManager {
       return false;
     }
 
+    if (this.isQuranFocusModeContextActive()) {
+      if (sourceEvent) {
+        sourceEvent.preventDefault();
+        sourceEvent.stopPropagation();
+      }
+      return true;
+    }
+
     if (sourceEvent && sourceEvent.detail >= 2) {
       sourceEvent.preventDefault();
       sourceEvent.stopPropagation();
@@ -3122,6 +3136,12 @@ class GridLayoutManager {
 
     const handle = e.target?.closest?.(".middle-layout-resize-handle");
     if (!handle || !handle.closest("#sidebarMiddle")) {
+      return;
+    }
+
+    if (this.isQuranFocusModeContextActive()) {
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
