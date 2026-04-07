@@ -1407,29 +1407,19 @@ class PocketQuranManager extends BaseManager {
   }
 
   /**
-   * Find the first rendered ayah that is meaningfully visible in the viewport.
-   * This uses DOM geometry (more accurate than height estimates), and applies
-   * a visibility threshold so we don't count an ayah that's basically gone.
+   * Find the first meaningfully visible ayah index from scroll offset only.
+   * Avoids DOM geometry reads in the scroll RAF path, which can trigger
+   * forced reflow and make scrollbar drag feel behind the cursor.
    */
-  getFirstVisibleRenderedAyahIndex() {
-    if (!this._virtualContainer || !this._virtualContent) return null;
+  getFirstVisibleRenderedAyahIndex(scrollTop = null) {
+    if (!this._activeVerses?.length) return null;
 
-    const containerRect = this._virtualContainer.getBoundingClientRect();
-    const threshold = PocketQuranManager.ACTIVE_AYAH_VISIBILITY_PX;
-    const minBottom = containerRect.top + threshold;
+    const resolvedScrollTop = Number.isFinite(scrollTop)
+      ? scrollTop
+      : (this._virtualContainer?.scrollTop ?? 0);
+    const threshold = Math.max(0, PocketQuranManager.ACTIVE_AYAH_VISIBILITY_PX);
 
-    const ayahEls = this._virtualContent.querySelectorAll(
-      ".pocket-quran-ayah[data-index]",
-    );
-
-    for (const el of ayahEls) {
-      const rect = el.getBoundingClientRect();
-      if (rect.bottom <= minBottom) continue;
-      const index = parseInt(el.dataset.index, 10);
-      if (Number.isFinite(index)) return index;
-    }
-
-    return null;
+    return this.getAyahAtOffset(resolvedScrollTop + threshold);
   }
 
   /**
@@ -1486,11 +1476,18 @@ class PocketQuranManager extends BaseManager {
 
         // Always pin UI to the requested ayah while the lock exists, and do
         // not fall through to scroll-derived updates in the same RAF tick.
+        const activeAyahChanged = this._activeAyah !== targetAyah;
         this._activeAyah = targetAyah;
-        if (this.ayahInput && document.activeElement !== this.ayahInput) {
+        if (
+          this.ayahInput &&
+          document.activeElement !== this.ayahInput &&
+          this.ayahInput.value !== String(targetAyah)
+        ) {
           this.ayahInput.value = String(targetAyah);
         }
-        this.updateAyahDropdownActiveState();
+        if (activeAyahChanged) {
+          this.updateAyahDropdownActiveState();
+        }
 
         if (delta < 2 || timedOut) {
           this._programmaticScroll = null;
@@ -1499,16 +1496,27 @@ class PocketQuranManager extends BaseManager {
       }
 
       // Update active ayah for UI
-      const domVisibleIndex = this.getFirstVisibleRenderedAyahIndex();
-      const activeIndex = Number.isFinite(domVisibleIndex)
-        ? domVisibleIndex
+      const offsetVisibleIndex =
+        this.getFirstVisibleRenderedAyahIndex(scrollTop);
+      const activeIndex = Number.isFinite(offsetVisibleIndex)
+        ? offsetVisibleIndex
         : firstVisibleIndex;
 
-      this._activeAyah = activeIndex + 1;
-      if (this.ayahInput && document.activeElement !== this.ayahInput) {
-        this.ayahInput.value = String(this._activeAyah);
+      const nextActiveAyah = activeIndex + 1;
+      const activeAyahChanged = this._activeAyah !== nextActiveAyah;
+      this._activeAyah = nextActiveAyah;
+
+      if (
+        this.ayahInput &&
+        document.activeElement !== this.ayahInput &&
+        this.ayahInput.value !== String(nextActiveAyah)
+      ) {
+        this.ayahInput.value = String(nextActiveAyah);
       }
-      this.updateAyahDropdownActiveState();
+
+      if (activeAyahChanged) {
+        this.updateAyahDropdownActiveState();
+      }
     });
   }
 
