@@ -40,6 +40,14 @@
       </aside>
 
       <div class="sidebar-middle" id="sidebarMiddle">
+        <div
+          class="middle-layout-resize-handle middle-layout-resize-handle-left"
+          aria-hidden="true"
+        ></div>
+        <div
+          class="middle-layout-resize-handle middle-layout-resize-handle-right"
+          aria-hidden="true"
+        ></div>
         <!-- Main Container -->
         <div class="main-container">
           <!-- header, pinned apps, search bar, and quote moved into the main content grid (see .content-grid) -->
@@ -6234,39 +6242,6 @@
                   <span class="icon-theme-desc">Clean single-color icons</span>
                   <span class="icon-theme-check">✓</span>
                 </button>
-              </div>
-            </div>
-
-            <div class="setting-group">
-              <label class="setting-label">Dashboard Width</label>
-              <select class="setting-select" id="themeContainerWidth">
-                <option value="extra-compact">Extra Compact (800px)</option>
-                <option value="compact">Compact (1000px)</option>
-                <option value="slim">Slim (1200px)</option>
-                <option value="narrow" selected>Narrow (1400px)</option>
-                <option value="medium">Medium (1600px)</option>
-                <option value="wide">Wide (1800px)</option>
-                <option value="full">Full Width (98%)</option>
-                <option value="custom">Custom Width</option>
-              </select>
-            </div>
-            <div
-              class="setting-group custom-width-group"
-              id="themeCustomWidthGroup"
-              style="display: none"
-            >
-              <label class="setting-label">Custom Width</label>
-              <div class="custom-width-slider">
-                <input
-                  type="range"
-                  id="themeContainerWidthCustom"
-                  min="20"
-                  max="98"
-                  value="70"
-                />
-                <span class="custom-width-value" id="themeCustomWidthValue"
-                  >70%</span
-                >
               </div>
             </div>
 

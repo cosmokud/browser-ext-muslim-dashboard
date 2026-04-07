@@ -418,6 +418,11 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
   flex-direction: column;
 }
 
+.sidebar-middle {
+  position: relative;
+  min-width: 0;
+}
+
 /* ========================================
    Sidebar Mode
    3-column layout with sticky sidebars
@@ -425,15 +430,88 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
 
 body.sidebar-mode .sidebar-layout {
   display: grid;
-  --sidebar-min-width: 480px;
   --sidebar-middle-min-width: 960px;
+  --sidebar-middle-fixed-width: var(--sidebar-middle-min-width);
   grid-template-columns:
-    minmax(var(--sidebar-min-width), 1fr)
-    minmax(var(--sidebar-middle-min-width), 2fr)
-    minmax(var(--sidebar-min-width), 1fr);
+    minmax(0, 1fr)
+    minmax(var(--sidebar-middle-fixed-width), var(--sidebar-middle-fixed-width))
+    minmax(0, 1fr);
   grid-template-rows: 1fr;
   align-items: start;
   width: 100%;
+}
+
+.middle-layout-resize-handle {
+  position: absolute;
+  top: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 6;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.middle-layout-resize-handle::before,
+.middle-layout-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.middle-layout-resize-handle::before {
+  left: 6px;
+}
+
+.middle-layout-resize-handle::after {
+  right: 6px;
+}
+
+.middle-layout-resize-handle-left {
+  left: 10px;
+}
+
+.middle-layout-resize-handle-right {
+  right: 10px;
+}
+
+body.sidebar-mode.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
+  opacity: 0.55;
+  pointer-events: auto;
+}
+
+body.sidebar-mode.grid-edit-mode
+  #sidebarMiddle
+  > .middle-layout-resize-handle:hover,
+body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.36);
+}
+
+body.middle-layout-resizing {
+  cursor: ew-resize;
+}
+
+@media (max-width: 980px) {
+  .middle-layout-resize-handle {
+    display: none !important;
+  }
 }
 
 body.sidebar-mode .sidebar-column {
@@ -17909,7 +17987,8 @@ body.layout-edit-toggle-no-anim .grid-draggable,
 body.layout-edit-toggle-no-anim .grid-draggable::before,
 body.layout-edit-toggle-no-anim .sidebar-slot,
 body.layout-edit-toggle-no-anim .sidebar-slot .grid-draggable,
-body.layout-edit-toggle-no-anim .sidebar-resize-handle {
+body.layout-edit-toggle-no-anim .sidebar-resize-handle,
+body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   transition: none !important;
   animation: none !important;
 }

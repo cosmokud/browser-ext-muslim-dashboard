@@ -48,6 +48,11 @@ class GridLayoutManager {
     this.containerResizeObserver = null;
     this.isSidebarResizing = false;
     this.sidebarResizeState = null;
+    this.isMiddleLayoutResizing = false;
+    this.middleLayoutResizeState = null;
+    this.sidebarMiddleLayoutDefaultWidth = 960;
+    this.sidebarMiddleLayoutMinWidth = 800;
+    this.sidebarMiddleLayoutSideGutter = 80;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -122,6 +127,12 @@ class GridLayoutManager {
     this.handleViewportResize = this.handleViewportResize.bind(this);
     this.handleSidebarResizeDoubleClick =
       this.handleSidebarResizeDoubleClick.bind(this);
+    this.handleMiddleLayoutResizeMouseDown =
+      this.handleMiddleLayoutResizeMouseDown.bind(this);
+    this.handleMiddleLayoutResizeTouchStart =
+      this.handleMiddleLayoutResizeTouchStart.bind(this);
+    this.handleMiddleLayoutResizeDoubleClick =
+      this.handleMiddleLayoutResizeDoubleClick.bind(this);
   }
 
   /**
@@ -147,6 +158,10 @@ class GridLayoutManager {
     this.isSidebarModeEnabled = next;
     this.clearSidebarDropTarget();
 
+    if (!this.isSidebarModeEnabled) {
+      this.endMiddleLayoutResize();
+    }
+
     // Switching modes swaps layout + (for sidebar mode) restores docked components.
     if (!this.grid) return;
 
@@ -156,6 +171,10 @@ class GridLayoutManager {
       this.loadLayoutForMode("sidebar");
       this.applyLayout();
       this.applySidebarStateFromStorage();
+      this.applySavedSidebarMiddleLayoutWidth({
+        persist: false,
+        triggerSnapCheck: true,
+      });
     } else {
       // Exit sidebar mode
       this.undockAllSidebarItemsToGrid();
@@ -182,6 +201,217 @@ class GridLayoutManager {
 
   getSidebarWidthStorageKey() {
     return "sidebarModeComponentWidths";
+  }
+
+  getSidebarMiddleLayoutWidthStorageKey() {
+    return "sidebarMiddleLayoutWidthPx";
+  }
+
+  getSidebarLayoutElement() {
+    return document.getElementById("sidebarLayout");
+  }
+
+  getSidebarMiddleElement() {
+    return document.getElementById("sidebarMiddle");
+  }
+
+  getSidebarMiddleLayoutBounds() {
+    const layoutEl = this.getSidebarLayoutElement();
+    const layoutWidth = Math.round(
+      (layoutEl && layoutEl.getBoundingClientRect().width) ||
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        0,
+    );
+
+    const minWidth = this.sidebarMiddleLayoutMinWidth;
+    const maxWidth = Math.max(
+      minWidth,
+      layoutWidth - this.sidebarMiddleLayoutSideGutter * 2,
+    );
+
+    return { minWidth, maxWidth };
+  }
+
+  getSavedSidebarMiddleLayoutWidth() {
+    const settings = this.storage.getSettings();
+    const rawValue = Number(
+      settings[this.getSidebarMiddleLayoutWidthStorageKey()],
+    );
+    if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
+
+    const { minWidth, maxWidth } = this.getSidebarMiddleLayoutBounds();
+    return Math.round(Math.min(maxWidth, Math.max(minWidth, rawValue)));
+  }
+
+  setSavedSidebarMiddleLayoutWidth(widthPx) {
+    const width = Number(widthPx);
+    if (!Number.isFinite(width) || width <= 0) return;
+
+    const settings = this.storage.getSettings();
+    settings[this.getSidebarMiddleLayoutWidthStorageKey()] = Math.round(width);
+    this.storage.saveSettings(settings);
+  }
+
+  resetSidebarMiddleLayoutWidth({ persist = true } = {}) {
+    const layoutEl = this.getSidebarLayoutElement();
+    if (layoutEl) {
+      layoutEl.style.removeProperty("--sidebar-middle-fixed-width");
+    }
+
+    if (!persist) return;
+
+    const settings = this.storage.getSettings();
+    delete settings[this.getSidebarMiddleLayoutWidthStorageKey()];
+    this.storage.saveSettings(settings);
+  }
+
+  getCurrentSidebarMiddleLayoutWidth() {
+    const middleEl = this.getSidebarMiddleElement();
+    const rectWidth = Math.round(
+      (middleEl && middleEl.getBoundingClientRect().width) || 0,
+    );
+    if (rectWidth > 0) return rectWidth;
+
+    const saved = this.getSavedSidebarMiddleLayoutWidth();
+    return saved || this.sidebarMiddleLayoutDefaultWidth;
+  }
+
+  getSidebarZoneRequiredWidth(zoneEl) {
+    if (!zoneEl) return 0;
+
+    const items = Array.from(
+      zoneEl.querySelectorAll(":scope > .sidebar-slot > .grid-draggable"),
+    );
+    if (items.length === 0) return 0;
+
+    let required = 0;
+    items.forEach((el) => {
+      const componentId = this.getSidebarComponentId(el);
+      const minWidth = this.getSidebarMinResizeWidth(el);
+      const savedWidth = Number(
+        this.getSavedSidebarComponentWidth(componentId),
+      );
+      const activeWidth = Number(el.dataset.sidebarCustomWidth);
+
+      if (Number.isFinite(minWidth)) {
+        required = Math.max(required, minWidth);
+      }
+      if (Number.isFinite(savedWidth) && savedWidth > 0) {
+        required = Math.max(required, Math.round(savedWidth));
+      }
+      if (Number.isFinite(activeWidth) && activeWidth > 0) {
+        required = Math.max(required, Math.round(activeWidth));
+      }
+    });
+
+    return required > 0 ? required + 6 : 0;
+  }
+
+  restoreSidebarItemsToSavedMiddleLayout() {
+    if (!this.grid) return false;
+
+    const leftZone = this.getSidebarZone("left");
+    const rightZone = this.getSidebarZone("right");
+    const hasSidebarItems =
+      this.getSidebarZoneItemCount(leftZone) > 0 ||
+      this.getSidebarZoneItemCount(rightZone) > 0;
+
+    if (!hasSidebarItems) return false;
+
+    this.undockAllSidebarItemsToGrid();
+    this.loadLayoutForMode("normal");
+    this.applyLayout();
+    this.updateFlexBasisForCurrentDOM();
+
+    try {
+      this.saveLayout();
+      this.saveSidebarStateFromDOM();
+    } catch (e) {}
+
+    this.showToast(
+      "Sidebar cards moved back to center layout because side columns became too narrow.",
+      "info",
+    );
+    return true;
+  }
+
+  maybeSnapSidebarItemsBackToMiddleLayout() {
+    if (!this.isSidebarModeEnabled) return false;
+
+    const leftZone = this.getSidebarZone("left");
+    const rightZone = this.getSidebarZone("right");
+    if (!leftZone || !rightZone) return false;
+
+    const leftRequired = this.getSidebarZoneRequiredWidth(leftZone);
+    const rightRequired = this.getSidebarZoneRequiredWidth(rightZone);
+
+    if (leftRequired <= 0 && rightRequired <= 0) {
+      return false;
+    }
+
+    const leftWidth = Math.round(leftZone.getBoundingClientRect().width || 0);
+    const rightWidth = Math.round(rightZone.getBoundingClientRect().width || 0);
+
+    const leftTooNarrow = leftRequired > 0 && leftWidth + 2 < leftRequired;
+    const rightTooNarrow = rightRequired > 0 && rightWidth + 2 < rightRequired;
+
+    if (!leftTooNarrow && !rightTooNarrow) {
+      return false;
+    }
+
+    return this.restoreSidebarItemsToSavedMiddleLayout();
+  }
+
+  applySidebarMiddleLayoutWidth(
+    widthPx,
+    { persist = true, triggerSnapCheck = true } = {},
+  ) {
+    const layoutEl = this.getSidebarLayoutElement();
+    if (!layoutEl) {
+      return { width: 0, snapped: false };
+    }
+
+    const numericWidth = Number(widthPx);
+    if (!Number.isFinite(numericWidth) || numericWidth <= 0) {
+      return { width: 0, snapped: false };
+    }
+
+    const { minWidth, maxWidth } = this.getSidebarMiddleLayoutBounds();
+    const clampedWidth = Math.round(
+      Math.min(maxWidth, Math.max(minWidth, numericWidth)),
+    );
+
+    layoutEl.style.setProperty(
+      "--sidebar-middle-fixed-width",
+      `${clampedWidth}px`,
+    );
+
+    if (persist) {
+      this.setSavedSidebarMiddleLayoutWidth(clampedWidth);
+    }
+
+    const snapped = triggerSnapCheck
+      ? this.maybeSnapSidebarItemsBackToMiddleLayout()
+      : false;
+
+    return {
+      width: clampedWidth,
+      snapped,
+    };
+  }
+
+  applySavedSidebarMiddleLayoutWidth({
+    persist = false,
+    triggerSnapCheck = true,
+  } = {}) {
+    const savedWidth = this.getSavedSidebarMiddleLayoutWidth();
+    const targetWidth = savedWidth || this.sidebarMiddleLayoutDefaultWidth;
+
+    return this.applySidebarMiddleLayoutWidth(targetWidth, {
+      persist,
+      triggerSnapCheck,
+    });
   }
 
   getMainEditModeStorageKey() {
@@ -1187,6 +1417,11 @@ class GridLayoutManager {
     // Setup edit mode toggle button
     this.setupEditModeToggle();
 
+    this.applySavedSidebarMiddleLayoutWidth({
+      persist: false,
+      triggerSnapCheck: false,
+    });
+
     // Listen for visibility changes
     document.addEventListener("md:visibility-changed", () => {
       this.recalculateLayout();
@@ -1262,6 +1497,11 @@ class GridLayoutManager {
     }
     // Also add to body so sidebar CSS selectors work
     document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
+
+    if (!this.isEditModeEnabled) {
+      this.endMiddleLayoutResize();
+      this.endSidebarResize();
+    }
 
     if (this.isQuranFocusModeContextActive()) {
       const pocketQuranCard = document.getElementById("pocketQuranCard");
@@ -1468,6 +1708,13 @@ class GridLayoutManager {
         this.lastViewportWidth = newWidth;
         this.calculateResponsiveLayout();
         this.recalculateLayout();
+
+        if (this.isSidebarModeEnabled) {
+          this.applySavedSidebarMiddleLayoutWidth({
+            persist: false,
+            triggerSnapCheck: true,
+          });
+        }
       }
     }, 150);
   }
@@ -1935,6 +2182,25 @@ class GridLayoutManager {
         this.handleSidebarResizeDoubleClick,
       );
 
+    const sidebarMiddle = this.getSidebarMiddleElement();
+    if (sidebarMiddle) {
+      sidebarMiddle.addEventListener(
+        "mousedown",
+        this.handleMiddleLayoutResizeMouseDown,
+      );
+      sidebarMiddle.addEventListener(
+        "touchstart",
+        this.handleMiddleLayoutResizeTouchStart,
+        {
+          passive: false,
+        },
+      );
+      sidebarMiddle.addEventListener(
+        "dblclick",
+        this.handleMiddleLayoutResizeDoubleClick,
+      );
+    }
+
     // Touch events
     this.grid.addEventListener("touchstart", this.handleTouchStart, {
       passive: false,
@@ -1954,6 +2220,122 @@ class GridLayoutManager {
 
     // Keyboard support for accessibility
     document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleMiddleLayoutResizeMouseDown(e) {
+    this.tryStartMiddleLayoutResizeFromMouseEvent(e);
+  }
+
+  handleMiddleLayoutResizeTouchStart(e) {
+    if (!e || e.touches.length !== 1) return;
+    this.tryStartMiddleLayoutResizeFromTouchEvent(e);
+  }
+
+  tryStartMiddleLayoutResizeFromMouseEvent(e) {
+    if (!e || e.button !== 0) return false;
+    return this.tryStartMiddleLayoutResize(e.target, e.clientX, e);
+  }
+
+  tryStartMiddleLayoutResizeFromTouchEvent(e) {
+    if (!e || e.touches.length !== 1) return false;
+    const touch = e.touches[0];
+    return this.tryStartMiddleLayoutResize(touch.target, touch.clientX, e);
+  }
+
+  tryStartMiddleLayoutResize(target, clientX, sourceEvent = null) {
+    if (!this.isEditModeEnabled || this.isEditModeLocked) return false;
+    if (!this.isSidebarModeEnabled) return false;
+
+    const handle = target?.closest?.(".middle-layout-resize-handle");
+    if (!handle || !handle.closest("#sidebarMiddle")) {
+      return false;
+    }
+
+    if (sourceEvent && sourceEvent.detail >= 2) {
+      sourceEvent.preventDefault();
+      sourceEvent.stopPropagation();
+      return true;
+    }
+
+    const side = handle.classList.contains("middle-layout-resize-handle-left")
+      ? "left"
+      : "right";
+
+    this.isMiddleLayoutResizing = true;
+    this.middleLayoutResizeState = {
+      side,
+      startX: clientX,
+      startWidth: this.getCurrentSidebarMiddleLayoutWidth(),
+    };
+
+    document.body.classList.add("middle-layout-resizing");
+
+    if (sourceEvent) {
+      sourceEvent.preventDefault();
+      sourceEvent.stopPropagation();
+    }
+
+    return true;
+  }
+
+  handleMiddleLayoutResizeDoubleClick(e) {
+    if (!this.isEditModeEnabled || this.isEditModeLocked) return;
+    if (!this.isSidebarModeEnabled) return;
+
+    const handle = e.target?.closest?.(".middle-layout-resize-handle");
+    if (!handle || !handle.closest("#sidebarMiddle")) {
+      return;
+    }
+
+    this.applySidebarMiddleLayoutWidth(this.sidebarMiddleLayoutDefaultWidth, {
+      persist: true,
+      triggerSnapCheck: true,
+    });
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  updateMiddleLayoutResize(clientX) {
+    if (!this.isMiddleLayoutResizing || !this.middleLayoutResizeState) return;
+
+    const { side, startX, startWidth } = this.middleLayoutResizeState;
+    const delta = side === "right" ? clientX - startX : startX - clientX;
+    const nextWidth = startWidth + delta * 2;
+
+    const result = this.applySidebarMiddleLayoutWidth(nextWidth, {
+      persist: false,
+      triggerSnapCheck: true,
+    });
+
+    if (result.snapped) {
+      this.endMiddleLayoutResize();
+    }
+  }
+
+  endMiddleLayoutResize() {
+    if (!this.isMiddleLayoutResizing || !this.middleLayoutResizeState) {
+      return false;
+    }
+
+    const middleEl = this.getSidebarMiddleElement();
+    const finalWidth = Math.round(
+      (middleEl && middleEl.getBoundingClientRect().width) ||
+        this.middleLayoutResizeState.startWidth ||
+        0,
+    );
+
+    if (finalWidth > 0) {
+      this.applySidebarMiddleLayoutWidth(finalWidth, {
+        persist: true,
+        triggerSnapCheck: true,
+      });
+    }
+
+    this.isMiddleLayoutResizing = false;
+    this.middleLayoutResizeState = null;
+    document.body.classList.remove("middle-layout-resizing");
+    return true;
   }
 
   tryStartSidebarResizeFromMouseEvent(e) {
@@ -2287,6 +2669,12 @@ class GridLayoutManager {
    * Handle mouse move - update drag position
    */
   handleMouseMove(e) {
+    if (this.isMiddleLayoutResizing) {
+      this.updateMiddleLayoutResize(e.clientX);
+      e.preventDefault();
+      return;
+    }
+
     if (this.isSidebarResizing) {
       this.updateSidebarResize(e.clientX);
       e.preventDefault();
@@ -2301,6 +2689,14 @@ class GridLayoutManager {
    * Handle touch move - update drag position
    */
   handleTouchMove(e) {
+    if (this.isMiddleLayoutResizing) {
+      const touch = e.touches && e.touches[0];
+      if (!touch) return;
+      this.updateMiddleLayoutResize(touch.clientX);
+      e.preventDefault();
+      return;
+    }
+
     if (this.touchStartTimer) {
       const touch = e.touches[0];
       const dx = Math.abs(touch.clientX - this.touchStartPos.x);
@@ -2647,6 +3043,11 @@ class GridLayoutManager {
    * Handle mouse up - end drag
    */
   handleMouseUp(e) {
+    if (this.isMiddleLayoutResizing) {
+      this.endMiddleLayoutResize();
+      return;
+    }
+
     if (this.isSidebarResizing) {
       this.endSidebarResize();
       return;
@@ -2666,6 +3067,11 @@ class GridLayoutManager {
    * Handle touch end - end drag
    */
   handleTouchEnd(e) {
+    if (this.isMiddleLayoutResizing) {
+      this.endMiddleLayoutResize();
+      return;
+    }
+
     if (this.touchStartTimer) {
       clearTimeout(this.touchStartTimer);
       this.touchStartTimer = null;
@@ -3016,6 +3422,11 @@ class GridLayoutManager {
    * Handle keyboard events for accessibility
    */
   handleKeyDown(e) {
+    if (e.key === "Escape" && this.isMiddleLayoutResizing) {
+      this.endMiddleLayoutResize();
+      return;
+    }
+
     if (e.key === "Escape" && this.isSidebarResizing) {
       this.endSidebarResize();
       return;
@@ -3108,6 +3519,7 @@ class GridLayoutManager {
       settings[this.getSidebarWidthStorageKey()] = {};
       settings[this.getMiddleWidthStorageKey()] = {};
       settings[this.getFocusModeMiddleWidthStorageKey()] = {};
+      delete settings[this.getSidebarMiddleLayoutWidthStorageKey()];
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore
@@ -3119,6 +3531,7 @@ class GridLayoutManager {
     } catch (e) {}
 
     this.applyLayout(this.rows);
+    this.resetSidebarMiddleLayoutWidth({ persist: false });
     this.updateSidebarZoneCounts();
     this.updateFlexBasisForCurrentDOM();
   }
@@ -3297,6 +3710,21 @@ class GridLayoutManager {
         this.handleSidebarResizeDoubleClick,
       );
     }
+    const sidebarMiddle = this.getSidebarMiddleElement();
+    if (sidebarMiddle) {
+      sidebarMiddle.removeEventListener(
+        "mousedown",
+        this.handleMiddleLayoutResizeMouseDown,
+      );
+      sidebarMiddle.removeEventListener(
+        "touchstart",
+        this.handleMiddleLayoutResizeTouchStart,
+      );
+      sidebarMiddle.removeEventListener(
+        "dblclick",
+        this.handleMiddleLayoutResizeDoubleClick,
+      );
+    }
     document.removeEventListener("mousemove", this.handleMouseMove);
     document.removeEventListener("mouseup", this.handleMouseUp);
     document.removeEventListener("touchmove", this.handleTouchMove);
@@ -3304,6 +3732,7 @@ class GridLayoutManager {
     document.removeEventListener("keydown", this.handleKeyDown);
     document.removeEventListener("wheel", this.handleWheel);
     document.body.classList.remove("sidebar-resizing");
+    document.body.classList.remove("middle-layout-resizing");
   }
 }
 

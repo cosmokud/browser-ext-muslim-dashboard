@@ -4442,15 +4442,17 @@ class SettingsManager extends BaseManager {
       100,
     );
 
-    // Save container width (now from Themes panel)
-    settings.containerWidth = this.themeContainerWidth?.value || "narrow";
-    if (settings.containerWidth === "custom") {
-      settings.containerWidthCustom = this.clampNumber(
-        parseInt(this.themeContainerWidthCustom?.value, 10),
-        20,
-        98,
-        70,
-      );
+    // Save container width only when a width control is present in the UI.
+    if (this.themeContainerWidth) {
+      settings.containerWidth = this.themeContainerWidth.value || "narrow";
+      if (settings.containerWidth === "custom") {
+        settings.containerWidthCustom = this.clampNumber(
+          parseInt(this.themeContainerWidthCustom?.value, 10),
+          20,
+          98,
+          70,
+        );
+      }
     }
 
     settings.performanceModeEnabled =
