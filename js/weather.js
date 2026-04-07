@@ -517,6 +517,38 @@ class WeatherManager extends BaseManager {
 
   handleExternalLayoutLiveResize(detail = {}) {
     const reason = String(detail?.reason || "").trim();
+    const componentId = String(detail?.componentId || "").trim();
+
+    // Direct component-width updates (Layout Editor and other runtime width
+    // writes) should immediately update the cached content-box width.
+    if (
+      (reason === "component-width" || reason === "sidebar-component-width") &&
+      componentId === "weatherCard"
+    ) {
+      const borderBoxWidth = Math.round(Number(detail?.width) || 0);
+      if (Number.isFinite(borderBoxWidth) && borderBoxWidth > 0 && this.weatherCard) {
+        const cardStyle = window.getComputedStyle(this.weatherCard);
+        const paddingLeft = parseFloat(cardStyle.paddingLeft) || 0;
+        const paddingRight = parseFloat(cardStyle.paddingRight) || 0;
+        const borderLeft = parseFloat(cardStyle.borderLeftWidth) || 0;
+        const borderRight = parseFloat(cardStyle.borderRightWidth) || 0;
+
+        const contentWidth = Math.max(
+          0,
+          Math.round(
+            borderBoxWidth -
+              paddingLeft -
+              paddingRight -
+              borderLeft -
+              borderRight,
+          ),
+        );
+
+        if (contentWidth > 0) {
+          this._weatherCardContentWidth = contentWidth;
+        }
+      }
+    }
 
     // High-frequency drag/resize updates: keep weather-content layout live on
     // every frame so card mode changes are visible while dragging.
@@ -1604,10 +1636,6 @@ class WeatherManager extends BaseManager {
 
     const readUsableContentWidth = (el) => {
       if (!el) return 0;
-      const rectWidth = Number(el.getBoundingClientRect().width) || 0;
-      if (!Number.isFinite(rectWidth) || rectWidth <= 0) {
-        return 0;
-      }
 
       const style = window.getComputedStyle(el);
       const paddingLeft = parseFloat(style.paddingLeft) || 0;
@@ -1615,25 +1643,35 @@ class WeatherManager extends BaseManager {
       const borderLeft = parseFloat(style.borderLeftWidth) || 0;
       const borderRight = parseFloat(style.borderRightWidth) || 0;
 
+      // Prefer clientWidth because it is stable under root zoom.
+      const clientWidth = Number(el.clientWidth) || 0;
+      if (Number.isFinite(clientWidth) && clientWidth > 0) {
+        return Math.max(
+          0,
+          Math.round(clientWidth - paddingLeft - paddingRight),
+        );
+      }
+
+      const rectWidth = Number(el.getBoundingClientRect().width) || 0;
+      if (!Number.isFinite(rectWidth) || rectWidth <= 0) {
+        return 0;
+      }
+
       const usableWidth =
         rectWidth - paddingLeft - paddingRight - borderLeft - borderRight;
 
       return Math.max(0, Math.round(usableWidth));
     };
 
+    // Use weather card content-box width as the authoritative responsive width.
     const weatherCardWidth = readUsableContentWidth(this.weatherCard);
+    if (Number.isFinite(weatherCardWidth) && weatherCardWidth > 0) {
+      return weatherCardWidth;
+    }
+
     const weatherContentWidth = readUsableContentWidth(this.weatherContent);
-
-    // Breakpoints must be based on the weather card content-box width
-    // (no padding/border/margin), otherwise stacked/compact CSS on inner
-    // content can lock the component in a narrow-mode feedback loop.
-    const primaryWidth = Math.max(
-      Number.isFinite(weatherCardWidth) ? weatherCardWidth : 0,
-      Number.isFinite(weatherContentWidth) ? weatherContentWidth : 0,
-    );
-
-    if (Number.isFinite(primaryWidth) && primaryWidth > 0) {
-      return primaryWidth;
+    if (Number.isFinite(weatherContentWidth) && weatherContentWidth > 0) {
+      return weatherContentWidth;
     }
 
     const fallbackClientWidth = Number(this.weatherCard.clientWidth) || 0;
@@ -1723,14 +1761,12 @@ class WeatherManager extends BaseManager {
       return;
     }
 
-    const detailsWrapping = this.isWeatherDetailsWrapping();
-    const shouldStackFromDetails =
-      detailsWrapping && responsiveWidth <= weatherCompactBreakpoint;
-
-    let layoutMode =
-      responsiveWidth <= weatherCompactBreakpoint ? "compact" : "wide";
-    if (responsiveWidth <= weatherStackBreakpoint || shouldStackFromDetails) {
+    // Keep transitions deterministic: only width drives wide/compact/stacked.
+    let layoutMode = "wide";
+    if (responsiveWidth <= weatherStackBreakpoint) {
       layoutMode = "stacked";
+    } else if (responsiveWidth <= weatherCompactBreakpoint) {
+      layoutMode = "compact";
     }
 
     this.weatherCard.setAttribute("data-weather-layout", layoutMode);
