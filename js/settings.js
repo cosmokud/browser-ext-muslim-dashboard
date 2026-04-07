@@ -8022,6 +8022,20 @@ class SettingsManager extends BaseManager {
     } catch (e) {}
   }
 
+  queueContainerResizeWindowSync() {
+    if (this._containerResizeWindowSyncRaf) {
+      cancelAnimationFrame(this._containerResizeWindowSyncRaf);
+      this._containerResizeWindowSyncRaf = null;
+    }
+
+    this._containerResizeWindowSyncRaf = requestAnimationFrame(() => {
+      this._containerResizeWindowSyncRaf = null;
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch (e) {}
+    });
+  }
+
   applyContainerWidth(width, customValue) {
     const mainContainer = document.querySelector(".main-container");
 
@@ -8087,6 +8101,7 @@ class SettingsManager extends BaseManager {
       widthMode: width || "narrow",
       customValue,
     });
+    this.queueContainerResizeWindowSync();
   }
 
   /**

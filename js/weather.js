@@ -1458,6 +1458,12 @@ class WeatherManager extends BaseManager {
       this._responsiveSyncRaf2 = null;
     }
 
+    if (this._responsiveSyncFrameRaf) {
+      cancelAnimationFrame(this._responsiveSyncFrameRaf);
+      this._responsiveSyncFrameRaf = null;
+    }
+    this._responsiveSyncFrameIncludeChart = false;
+
     window.removeEventListener("resize", this._onResize);
     window.removeEventListener("resize", this._onForecastResize);
 

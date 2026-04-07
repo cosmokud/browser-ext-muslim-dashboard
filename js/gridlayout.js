@@ -67,6 +67,7 @@ class GridLayoutManager {
     this.viewportAutoZoomScale = 1;
     this.viewportStabilizeRaf = null;
     this.viewportStabilizeRaf2 = null;
+    this.manualResizeWindowSyncRaf = null;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -727,6 +728,20 @@ class GridLayoutManager {
         weather.handleExternalLayoutLiveResize(detail || {});
       }
     } catch (e) {}
+  }
+
+  queueManualResizeWindowSync() {
+    if (this.manualResizeWindowSyncRaf) {
+      return;
+    }
+
+    this.manualResizeWindowSyncRaf = requestAnimationFrame(() => {
+      this.manualResizeWindowSyncRaf = null;
+
+      try {
+        window.dispatchEvent(new Event("resize"));
+      } catch (e) {}
+    });
   }
 
   applySidebarMiddleLayoutWidth(
@@ -3217,6 +3232,8 @@ class GridLayoutManager {
       // Keep drag movement smooth; evaluate clipping/auto-restore on release.
       triggerSnapCheck: false,
     });
+
+    this.queueManualResizeWindowSync();
   }
 
   endMiddleLayoutResize() {
@@ -3251,6 +3268,8 @@ class GridLayoutManager {
       reason: "middle-layout-resize-end",
       finalWidth,
     });
+
+    this.queueManualResizeWindowSync();
 
     // Run one post-resize responsive sync now that manual resizing has ended.
     this.handleViewportResize("middle-resize-end");
@@ -3398,6 +3417,8 @@ class GridLayoutManager {
     } else {
       this.applySidebarWidthToElement(el, nextWidth, { persist: false });
     }
+
+    this.queueManualResizeWindowSync();
   }
 
   endSidebarResize() {
@@ -3426,6 +3447,8 @@ class GridLayoutManager {
       reason: "component-resize-end",
       componentId: this.getSidebarComponentId(el),
     });
+
+    this.queueManualResizeWindowSync();
 
     return true;
   }
