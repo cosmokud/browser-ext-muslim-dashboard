@@ -2918,8 +2918,32 @@ class GridLayoutManager {
     const baseOrder = baseRows.flat();
     const hasResponsiveOverrides = Object.keys(this.effectiveSpans).length > 0;
 
+    // Hidden components can be temporarily replaced by other cards via drag/drop.
+    // When those hidden cards are toggled visible again, proactively repack if
+    // any row would exceed the 6-span budget (or 3 visible cards for span-2 cards).
+    const hasVisibleOverflow = baseRows.some((row) => {
+      if (!Array.isArray(row) || row.length === 0) return false;
+
+      let visibleCount = 0;
+      let visibleSpan = 0;
+
+      for (const id of row) {
+        const el = this.getElementByComponentId(id);
+        if (!el || this.isComponentHidden(el)) continue;
+
+        visibleCount += 1;
+        visibleSpan += this.getEffectiveSpan(id);
+
+        if (visibleCount > 3 || visibleSpan > 6) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
     // If no responsive overrides are needed, restore the canonical layout.
-    if (!hasResponsiveOverrides) {
+    if (!hasResponsiveOverrides && !hasVisibleOverflow) {
       const layoutChanged = !this.areRowsEqual(baseRows, this.activeRows || []);
 
       if (layoutChanged) {
@@ -3015,19 +3039,55 @@ class GridLayoutManager {
       });
     });
 
-    // Append hidden components to maintain order (they won't be visible anyway)
+    const rowSpanTotals = newRows.map((row) =>
+      row.reduce(
+        (sum, componentId) => sum + this.getEffectiveSpan(componentId),
+        0,
+      ),
+    );
+
+    const tryAppendToExistingRow = (rowIndex, componentId, componentSpan) => {
+      if (rowIndex < 0 || rowIndex >= newRows.length) return false;
+
+      const row = newRows[rowIndex];
+      if (!Array.isArray(row)) return false;
+
+      const currentSpan = rowSpanTotals[rowIndex] || 0;
+      if (currentSpan + componentSpan > 6) return false;
+
+      row.push(componentId);
+      rowSpanTotals[rowIndex] = currentSpan + componentSpan;
+      return true;
+    };
+
+    // Re-insert hidden components while preserving latent row capacity.
     hiddenComponentIds.forEach((id) => {
-      // Find original row index and add to corresponding new row
+      const componentSpan = this.getEffectiveSpan(id);
       const originalRowIdx = baseRowIndexMap.has(id)
         ? baseRowIndexMap.get(id)
         : -1;
-      if (originalRowIdx >= 0 && newRows[originalRowIdx]) {
-        newRows[originalRowIdx].push(id);
-      } else if (newRows.length > 0) {
-        newRows[newRows.length - 1].push(id);
-      } else {
-        newRows.push([id]);
+
+      if (tryAppendToExistingRow(originalRowIdx, id, componentSpan)) {
+        return;
       }
+
+      for (
+        let rowIndex = Math.max(0, originalRowIdx + 1);
+        rowIndex < newRows.length;
+        rowIndex += 1
+      ) {
+        if (tryAppendToExistingRow(rowIndex, id, componentSpan)) {
+          return;
+        }
+      }
+
+      const insertAt =
+        originalRowIdx >= 0
+          ? Math.min(originalRowIdx + 1, newRows.length)
+          : newRows.length;
+
+      newRows.splice(insertAt, 0, [id]);
+      rowSpanTotals.splice(insertAt, 0, componentSpan);
     });
 
     // Only update DOM if layout actually changed
