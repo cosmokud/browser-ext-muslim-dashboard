@@ -5180,7 +5180,6 @@ body.quran-focus-mode
   .pq-virtual-container::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
-  border: 1px solid var(--scrollbar-track);
   min-height: 24px;
 }
 
@@ -14556,7 +14555,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     transform var(--transition-fast),
     background var(--transition-fast),
     border-color 0.22s ease;
-  will-change: transform, background, border-color;
 }
 
 .pq-ayah-controls-stack {
@@ -15030,6 +15028,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track-strong);
   scrollbar-gutter: stable;
+  /* Prevent anchor corrections from fighting virtualized scroll metric updates. */
+  overflow-anchor: none;
 }
 
 .pq-virtual-container::-webkit-scrollbar {
@@ -15044,7 +15044,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-virtual-container::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
-  border: 1px solid var(--scrollbar-track);
   min-height: 24px;
 }
 

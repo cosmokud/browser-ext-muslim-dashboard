@@ -536,6 +536,7 @@ class PocketQuranManager extends BaseManager {
   static ESTIMATED_AYAH_HEIGHT = 180; // Initial estimate, recalculated dynamically
   static BUFFER_AYAHS = 3; // Extra ayahs above/below viewport
   static SCROLL_THROTTLE_MS = 16; // ~60fps throttle
+  static SCROLL_IDLE_COMMIT_MS = 140; // Delay before committing deferred measurements
 
   // How many pixels of an ayah should be visible before we consider it "active".
   // Increasing this makes the active-ayah detection less "tight".
@@ -654,6 +655,9 @@ class PocketQuranManager extends BaseManager {
     this._renderedRange = { start: 0, end: 0 };
     this._scrollRAF = null;
     this._isScrolling = false;
+    this._scrollIdleTimer = null;
+    this._measureRAF = null;
+    this._pendingMeasureAfterScroll = false;
     this._lastScrollTop = 0;
     this._scrollDirection = "down";
     this._resizeObserver = null;
@@ -1276,6 +1280,22 @@ class PocketQuranManager extends BaseManager {
   initVirtualization() {
     if (!this.contentEl || !this._activeVerses?.length) return;
 
+    if (this._scrollRAF) {
+      cancelAnimationFrame(this._scrollRAF);
+      this._scrollRAF = null;
+    }
+    if (this._measureRAF) {
+      cancelAnimationFrame(this._measureRAF);
+      this._measureRAF = null;
+    }
+    if (this._scrollIdleTimer) {
+      clearTimeout(this._scrollIdleTimer);
+      this._scrollIdleTimer = null;
+    }
+    this._isScrolling = false;
+    this._pendingMeasureAfterScroll = false;
+    this._lastScrollTop = 0;
+
     // Clear previous content
     this.contentEl.innerHTML = "";
     this._ayahHeights.clear();
@@ -1422,10 +1442,43 @@ class PocketQuranManager extends BaseManager {
     return this.getAyahAtOffset(resolvedScrollTop + threshold);
   }
 
+  markVirtualScrollActivity() {
+    this._isScrolling = true;
+    if (this._scrollIdleTimer) {
+      clearTimeout(this._scrollIdleTimer);
+    }
+
+    this._scrollIdleTimer = setTimeout(() => {
+      this._scrollIdleTimer = null;
+      this._isScrolling = false;
+
+      if (!this._pendingMeasureAfterScroll) return;
+
+      this._pendingMeasureAfterScroll = false;
+      this.scheduleRenderedAyahMeasurement();
+    }, PocketQuranManager.SCROLL_IDLE_COMMIT_MS);
+  }
+
+  scheduleRenderedAyahMeasurement() {
+    if (this._isScrolling) {
+      this._pendingMeasureAfterScroll = true;
+      return;
+    }
+
+    if (this._measureRAF) return;
+
+    this._measureRAF = requestAnimationFrame(() => {
+      this._measureRAF = null;
+      this.measureRenderedAyahs();
+    });
+  }
+
   /**
    * Handle scroll events with RAF throttling.
    */
   handleVirtualScroll() {
+    this.markVirtualScrollActivity();
+
     if (this._scrollRAF) return;
 
     this._scrollRAF = requestAnimationFrame(() => {
@@ -1562,10 +1615,8 @@ class PocketQuranManager extends BaseManager {
     this._virtualContent.innerHTML = "";
     this._virtualContent.appendChild(fragment);
 
-    // Measure rendered ayahs and update heights
-    requestAnimationFrame(() => {
-      this.measureRenderedAyahs();
-    });
+    // Avoid forcing layout reads during active scroll; commit measurement on idle.
+    this.scheduleRenderedAyahMeasurement();
   }
 
   /**
@@ -1978,6 +2029,16 @@ class PocketQuranManager extends BaseManager {
       cancelAnimationFrame(this._scrollRAF);
       this._scrollRAF = null;
     }
+    if (this._measureRAF) {
+      cancelAnimationFrame(this._measureRAF);
+      this._measureRAF = null;
+    }
+    if (this._scrollIdleTimer) {
+      clearTimeout(this._scrollIdleTimer);
+      this._scrollIdleTimer = null;
+    }
+    this._isScrolling = false;
+    this._pendingMeasureAfterScroll = false;
     this._virtualContainer = null;
     this._virtualSpacer = null;
     this._virtualContent = null;
