@@ -10967,9 +10967,24 @@ html[data-theme-mode="light"]
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    visibility 0s linear var(--transition-fast);
   color: inherit;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-2px) scale(0.95);
+}
+
+.sticky-note:hover .sticky-note-menu-btn {
   opacity: 0.7;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
 }
 
 .sticky-note-menu-btn:hover {
@@ -11288,13 +11303,59 @@ html[data-theme-mode="light"]
 
 /* WYSIWYG Toolbar */
 .sticky-note-toolbar {
+  --sticky-note-toolbar-pad-y: 6px;
+  --sticky-note-toolbar-pad-x: 10px;
   display: flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 0 var(--sticky-note-toolbar-pad-x);
   background: rgba(0, 0, 0, 0.08);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid transparent;
   gap: 2px;
   flex-wrap: wrap;
+  max-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+  transform: translateY(6px);
+  transition:
+    max-height var(--transition-fast),
+    padding var(--transition-fast),
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    visibility 0s linear var(--transition-fast);
+}
+
+.sticky-note:hover .sticky-note-toolbar {
+  padding: var(--sticky-note-toolbar-pad-y) var(--sticky-note-toolbar-pad-x);
+  border-top-color: rgba(0, 0, 0, 0.08);
+  max-height: 140px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+@media (hover: none) {
+  .sticky-note .sticky-note-menu-btn {
+    opacity: 0.7;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .sticky-note .sticky-note-toolbar {
+    padding: var(--sticky-note-toolbar-pad-y) var(--sticky-note-toolbar-pad-x);
+    border-top-color: rgba(0, 0, 0, 0.08);
+    max-height: 140px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition-delay: 0s;
+  }
 }
 
 .toolbar-btn {
@@ -11449,7 +11510,8 @@ body.sticky-note-resizing {
   }
 
   .sticky-note-toolbar {
-    padding: 4px 8px;
+    --sticky-note-toolbar-pad-y: 4px;
+    --sticky-note-toolbar-pad-x: 8px;
     gap: 1px;
   }
 
@@ -11520,7 +11582,8 @@ body.sticky-note-resizing {
   }
 
   .sticky-note-toolbar {
-    padding: 3px 6px;
+    --sticky-note-toolbar-pad-y: 3px;
+    --sticky-note-toolbar-pad-x: 6px;
   }
 
   .toolbar-btn {

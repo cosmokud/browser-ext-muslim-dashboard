@@ -692,11 +692,6 @@ class GridLayoutManager {
         this.setSidebarModeEnabled(false);
       }
 
-      this.showToast(
-        "Sidebars were removed because their content started clipping. Components were snapped back to center layout.",
-        "info",
-      );
-
       return true;
     } finally {
       this.sidebarClippingCollapseInProgress = false;
