@@ -1318,6 +1318,14 @@ class WeatherManager extends BaseManager {
   updateWeatherLocationTruncation() {
     if (!this.weatherLocation) return;
 
+    this.weatherLocation.classList.remove(
+      "weather-location-single-word",
+      "weather-location-single-word-tight",
+    );
+    this.weatherLocation.style.removeProperty(
+      "--weather-location-single-word-scale",
+    );
+
     const displayText = String(this.weatherLocation.textContent || "").trim();
     if (!displayText) {
       this.weatherLocation.classList.remove("is-truncated");
@@ -1325,8 +1333,49 @@ class WeatherManager extends BaseManager {
       return;
     }
 
+    const viewportWidth = Math.round(
+      window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth ||
+        0,
+    );
+    const isSingleWord = !/\s/.test(displayText);
+    const isNarrowViewport = viewportWidth > 0 && viewportWidth <= 1000;
+
+    let appliedSingleWordShrink = false;
+    if (isSingleWord && isNarrowViewport) {
+      this.weatherLocation.classList.add("weather-location-single-word");
+
+      const clientWidth = Math.max(
+        1,
+        Math.round(this.weatherLocation.clientWidth),
+      );
+      const scrollWidth = Math.max(
+        1,
+        Math.round(this.weatherLocation.scrollWidth),
+      );
+
+      if (scrollWidth > clientWidth + 1) {
+        const shrinkScale = Math.max(
+          0.5,
+          Math.min(1, clientWidth / scrollWidth),
+        );
+
+        this.weatherLocation.style.setProperty(
+          "--weather-location-single-word-scale",
+          shrinkScale.toFixed(4),
+        );
+        this.weatherLocation.classList.add(
+          "weather-location-single-word-tight",
+        );
+        appliedSingleWordShrink = true;
+      }
+    }
+
     const maxLocationCharsBeforeTruncate = 64;
-    const isTruncated = displayText.length > maxLocationCharsBeforeTruncate;
+    const isTruncated =
+      !appliedSingleWordShrink &&
+      displayText.length > maxLocationCharsBeforeTruncate;
     this.weatherLocation.classList.toggle("is-truncated", isTruncated);
 
     this.weatherLocation.removeAttribute("title");

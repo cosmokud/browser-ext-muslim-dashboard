@@ -319,6 +319,43 @@ class GridLayoutManager {
     return Number.isFinite(width) && width > 0 ? width : 0;
   }
 
+  getViewportAutoZoomBaseWidth() {
+    const threshold = Math.max(
+      1000,
+      Math.round(this.viewportAutoZoomThresholdWidth || 1000),
+    );
+
+    const preferredWidth = Number(this.getPreferredSidebarMiddleLayoutWidth());
+    const currentMiddleWidth = Number(
+      this.getCurrentSidebarMiddleLayoutWidth(),
+    );
+
+    let requiredWidth = Math.max(
+      threshold,
+      Number.isFinite(preferredWidth) ? preferredWidth : 0,
+      Number.isFinite(currentMiddleWidth) ? currentMiddleWidth : 0,
+      Math.round(this.sidebarMiddleLayoutMinWidth || threshold),
+    );
+
+    if (this.isSidebarModeEnabled) {
+      const leftRequired = Number(
+        this.getSidebarZoneRequiredWidth(this.getSidebarZone("left")),
+      );
+      const rightRequired = Number(
+        this.getSidebarZoneRequiredWidth(this.getSidebarZone("right")),
+      );
+
+      requiredWidth = Math.max(
+        requiredWidth,
+        (Number.isFinite(currentMiddleWidth) ? currentMiddleWidth : threshold) +
+          Math.max(0, Number.isFinite(leftRequired) ? leftRequired : 0) +
+          Math.max(0, Number.isFinite(rightRequired) ? rightRequired : 0),
+      );
+    }
+
+    return Math.max(threshold, Math.round(requiredWidth));
+  }
+
   clearViewportAutoZoom() {
     const root = document.documentElement;
     if (root) {
@@ -346,8 +383,10 @@ class GridLayoutManager {
       return false;
     }
 
+    const requiredLayoutWidth = this.getViewportAutoZoomBaseWidth();
+
     const scale = Number(
-      Math.max(0.5, Math.min(1, width / threshold)).toFixed(4),
+      Math.max(0.35, Math.min(1, width / requiredLayoutWidth)).toFixed(4),
     );
     const root = document.documentElement;
 
@@ -2009,19 +2048,28 @@ class GridLayoutManager {
       return { applied: false, zoomed: false, widthChanged: false };
     }
 
+    const previousZoomActive = this.viewportAutoZoomActive === true;
+    const previousZoomScale = Number(this.viewportAutoZoomScale) || 1;
+    const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(newWidth);
+    const zoomChanged =
+      previousZoomActive !== this.viewportAutoZoomActive ||
+      Math.abs(previousZoomScale - (Number(this.viewportAutoZoomScale) || 1)) >
+        0.0005;
+
     const widthChanged = Math.abs(newWidth - this.lastViewportWidth) > 2;
-    if (!force && !widthChanged) {
-      return {
-        applied: false,
-        zoomed: this.viewportAutoZoomActive,
-        widthChanged,
-      };
+    this.lastViewportWidth = newWidth;
+
+    if (isViewportZoomedOut) {
+      return { applied: true, zoomed: true, widthChanged, zoomChanged };
     }
 
-    this.lastViewportWidth = newWidth;
-    const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(newWidth);
-    if (isViewportZoomedOut) {
-      return { applied: true, zoomed: true, widthChanged };
+    if (!force && !widthChanged && !zoomChanged) {
+      return {
+        applied: false,
+        zoomed: false,
+        widthChanged,
+        zoomChanged,
+      };
     }
 
     this.syncSidebarMiddleLayoutWidthToViewport({
@@ -2037,7 +2085,7 @@ class GridLayoutManager {
       this.maybeAutoRestoreSidebarMode();
     }
 
-    return { applied: true, zoomed: false, widthChanged };
+    return { applied: true, zoomed: false, widthChanged, zoomChanged };
   }
 
   cancelViewportStabilizePass() {
@@ -2069,6 +2117,11 @@ class GridLayoutManager {
   handleViewportResize(sourceOrEvent = "window") {
     const source = typeof sourceOrEvent === "string" ? sourceOrEvent : "window";
     const forceSync = source !== "observer";
+
+    const immediateWidth = this.getSidebarViewportWidthForMiddleLayout();
+    if (immediateWidth > 0) {
+      this.applyViewportAutoZoomIfNeeded(immediateWidth);
+    }
 
     // Debounce resize handling
     if (this.viewportResizeTimer) {
