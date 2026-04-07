@@ -1438,6 +1438,9 @@ class WeatherManager extends BaseManager {
   syncWeatherResponsiveLayout() {
     if (!this.weatherCard) return;
 
+    const weatherStackBreakpoint = 1134;
+    const weatherCompactBreakpoint = 1200;
+
     const responsiveWidth = this.getWeatherResponsiveWidth();
     if (!Number.isFinite(responsiveWidth) || responsiveWidth <= 0) {
       this.weatherCard.removeAttribute("data-weather-layout");
@@ -1453,10 +1456,12 @@ class WeatherManager extends BaseManager {
 
     const shouldStackFromDetails =
       detailsWrapping ||
-      (this._weatherDetailsStackLock && responsiveWidth <= 1200);
+      (this._weatherDetailsStackLock &&
+        responsiveWidth <= weatherCompactBreakpoint);
 
-    let layoutMode = responsiveWidth <= 1200 ? "compact" : "wide";
-    if (responsiveWidth <= 1000 || shouldStackFromDetails) {
+    let layoutMode =
+      responsiveWidth <= weatherCompactBreakpoint ? "compact" : "wide";
+    if (responsiveWidth <= weatherStackBreakpoint || shouldStackFromDetails) {
       layoutMode = "stacked";
     }
 

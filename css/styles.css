@@ -12540,7 +12540,7 @@ body:not(.sidebar-mode)
   }
 }
 
-@media (max-width: 1200px) and (min-width: 1001px) {
+@media (max-width: 1200px) and (min-width: 1135px) {
   .weather-content {
     --weather-three-item-cap: 300px;
     grid-template-columns: repeat(3, minmax(0, var(--weather-three-item-cap)));
@@ -12573,7 +12573,7 @@ body:not(.sidebar-mode)
   }
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1134px) {
   .weather-content {
     grid-template-columns: minmax(0, 300px);
     grid-template-rows: auto auto auto;
