@@ -2106,6 +2106,16 @@ class MuslimDashboard {
           this.floating.applyViewportConstraint();
         }
       } catch (e) {}
+
+      try {
+        if (
+          this.floating &&
+          typeof this.floating.enforceNonFloatingFromDashboardSettings ===
+            "function"
+        ) {
+          this.floating.enforceNonFloatingFromDashboardSettings();
+        }
+      } catch (e) {}
     };
 
     // Expose setter for other modes to call.
@@ -2127,6 +2137,20 @@ class MuslimDashboard {
       e.preventDefault();
       e.stopPropagation();
       toggleFocusMode();
+
+      // Safety reconcile after any focus toggle click.
+      // If a floating setting is OFF, component must not remain floating.
+      window.setTimeout(() => {
+        try {
+          if (
+            this.floating &&
+            typeof this.floating.enforceNonFloatingFromDashboardSettings ===
+              "function"
+          ) {
+            this.floating.enforceNonFloatingFromDashboardSettings();
+          }
+        } catch (err) {}
+      }, 0);
     });
 
     // Handle Escape key to exit focus mode

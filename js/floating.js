@@ -1381,6 +1381,153 @@ class FloatingModeManager {
     this.notifyLayoutChanged();
   }
 
+  _clearFloatingPresentation(card) {
+    if (!card) return;
+
+    card.classList.remove("floating-card");
+    card.style.position = "";
+    card.style.left = "";
+    card.style.top = "";
+    card.style.width = "";
+    card.style.height = "";
+    card.style.zIndex = "";
+    card.style.resize = "";
+    card.style.overflow = "";
+    card.style.minWidth = "";
+    card.style.minHeight = "";
+    card.style.maxWidth = "";
+    card.style.maxHeight = "";
+    card.style.pointerEvents = "";
+  }
+
+  enforceNonFloatingFromDashboardSettings() {
+    const grid = window.dashboard?.gridLayout || null;
+    const sidebarModeActive =
+      !!document.body?.classList?.contains("sidebar-mode") ||
+      grid?.isSidebarModeEnabled === true;
+
+    let changed = false;
+    let shouldUndockAllSidebarItems = false;
+
+    for (const [key, st] of this.runtime.entries()) {
+      if (!st?.card) continue;
+
+      const card = st.card;
+      const desiredFloating = this.isEnabledDesired(key);
+
+      // User requirement: if dashboard setting is OFF, this component must
+      // never stay in floating mode.
+      if (desiredFloating !== true) {
+        if (st.collapseTimer) {
+          try {
+            clearTimeout(st.collapseTimer);
+          } catch (e) {}
+          st.collapseTimer = null;
+        }
+
+        if (card.classList.contains("floating-card")) {
+          try {
+            this.disableFloatingRuntime(key);
+          } catch (e) {}
+        }
+
+        if (card.classList.contains("floating-card")) {
+          this.removeCollapseButton(key);
+          this.removeResizeHandles(key);
+          this._clearFloatingPresentation(card);
+          changed = true;
+        }
+
+        const componentId =
+          st.componentId ||
+          card.dataset?.gridId ||
+          this.targets?.[key]?.cardId ||
+          card.id ||
+          null;
+
+        const savedSidebarAnchor =
+          this._getSavedSidebarAnchorForComponent(componentId);
+
+        if (
+          sidebarModeActive &&
+          savedSidebarAnchor &&
+          grid &&
+          typeof grid.dockElementToSidebar === "function"
+        ) {
+          const expectedZoneId =
+            savedSidebarAnchor.side === "right"
+              ? "sidebarRightZone"
+              : "sidebarLeftZone";
+          const currentZone = card.closest(".sidebar-zone");
+          const currentlyInExpectedSidebar =
+            !!currentZone && currentZone.id === expectedZoneId;
+
+          if (!currentlyInExpectedSidebar) {
+            try {
+              grid.dockElementToSidebar(
+                card,
+                savedSidebarAnchor.side,
+                savedSidebarAnchor.index,
+              );
+              changed = true;
+            } catch (e) {}
+          }
+        } else {
+          if (!sidebarModeActive && card.closest(".sidebar-slot")) {
+            shouldUndockAllSidebarItems = true;
+          }
+
+          if (
+            !sidebarModeActive &&
+            card.classList.contains("sidebar-detached")
+          ) {
+            card.classList.remove("sidebar-detached");
+            changed = true;
+          }
+
+          if (!card.isConnected) {
+            const contentGrid = document.querySelector(".content-grid");
+            if (contentGrid) {
+              contentGrid.appendChild(card);
+              changed = true;
+            }
+          }
+        }
+
+        st.spaceSuspended = false;
+      }
+
+      this.updateButton(key);
+    }
+
+    if (
+      shouldUndockAllSidebarItems &&
+      grid &&
+      typeof grid.undockAllSidebarItemsToGrid === "function"
+    ) {
+      try {
+        grid.undockAllSidebarItemsToGrid();
+        changed = true;
+      } catch (e) {}
+    }
+
+    if (changed) {
+      try {
+        if (typeof grid?.updateRowsFromDOM === "function") {
+          grid.updateRowsFromDOM();
+        }
+      } catch (e) {}
+
+      try {
+        if (typeof grid?.updateFlexBasisForCurrentDOM === "function") {
+          grid.updateFlexBasisForCurrentDOM();
+        }
+      } catch (e) {}
+
+      this.notifyLayoutChanged();
+    }
+  }
+
   setEnabledDesired(key, enabled) {
     const settings = this.getSettings();
     settings.floating = settings.floating || {};
