@@ -2299,33 +2299,20 @@ class GridLayoutManager {
       (child) => !this.isComponentHidden(child),
     );
 
-    const threeItemChildren = visibleChildren.filter((child) =>
-      this.isThreeItemComponentId(this.getSidebarComponentId(child)),
-    );
-
-    if (threeItemChildren.length <= 1) {
+    const targetId = this.getSidebarComponentId(el);
+    if (!this.isThreeItemComponentId(targetId)) {
       return fallbackCap;
     }
 
-    const totalGapWidth =
-      Math.max(0, threeItemChildren.length - 1) * this.getGridFlexRowGapPx(row);
-
     let siblingWidth = 0;
-    threeItemChildren.forEach((child) => {
+    visibleChildren.forEach((child) => {
       if (child === el) return;
       siblingWidth += Math.round(
         child.getBoundingClientRect().width || child.offsetWidth || 0,
       );
     });
 
-    const hardTotalLimit = Math.max(
-      1,
-      Math.round(this.threeItemSingleRowCollapseThresholdWidth || 1200),
-    );
-    const remainingBudget = Math.max(
-      1,
-      Math.round(hardTotalLimit - totalGapWidth - siblingWidth),
-    );
+    const remainingBudget = Math.max(1, Math.round(fallbackCap - siblingWidth));
 
     return Math.max(1, Math.min(fallbackCap, remainingBudget));
   }
@@ -3133,14 +3120,42 @@ class GridLayoutManager {
       ? "left"
       : "right";
     const rect = el.getBoundingClientRect();
+    const mode = isSidebarItem ? "sidebar" : "middle";
+
+    let middleResizeHardMaxWidth = null;
+    if (mode === "middle" && !this.isSidebarModeEnabled) {
+      const componentId = this.getSidebarComponentId(el);
+      if (this.isThreeItemComponentId(componentId)) {
+        const mainContainerWidth = Math.round(
+          this.getMainContainerResponsiveWidth() || 0,
+        );
+        const hardCap = Math.max(
+          1,
+          Math.round(
+            Math.min(
+              Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
+                ? mainContainerWidth
+                : rect.width,
+              Number(this.threeItemSingleRowCollapseThresholdWidth) || 1200,
+            ),
+          ),
+        );
+
+        middleResizeHardMaxWidth = this.getThreeItemRowResizeBudgetCap(
+          el,
+          hardCap,
+        );
+      }
+    }
 
     this.isSidebarResizing = true;
     this.sidebarResizeState = {
       el,
       side,
-      mode: isSidebarItem ? "sidebar" : "middle",
+      mode,
       startX: e.clientX,
       startWidth: rect.width,
+      middleResizeHardMaxWidth,
     };
 
     el.classList.add("sidebar-resizing");
@@ -3179,14 +3194,23 @@ class GridLayoutManager {
   updateSidebarResize(clientX) {
     if (!this.isSidebarResizing || !this.sidebarResizeState) return;
 
-    const { el, side, mode, startX, startWidth } = this.sidebarResizeState;
+    const { el, side, mode, startX, startWidth, middleResizeHardMaxWidth } =
+      this.sidebarResizeState;
     if (!el || !el.isConnected) {
       this.endSidebarResize();
       return;
     }
 
     const delta = side === "right" ? clientX - startX : startX - clientX;
-    const nextWidth = startWidth + delta * 2;
+    let nextWidth = startWidth + delta * 2;
+
+    if (
+      mode === "middle" &&
+      Number.isFinite(middleResizeHardMaxWidth) &&
+      middleResizeHardMaxWidth > 0
+    ) {
+      nextWidth = Math.min(nextWidth, Math.round(middleResizeHardMaxWidth));
+    }
 
     if (mode === "middle") {
       this.applyMiddleWidthToElement(el, nextWidth, { persist: false });
