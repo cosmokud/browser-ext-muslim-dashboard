@@ -533,7 +533,7 @@ class WeatherManager extends BaseManager {
       this._chartVisibilityObserver.observe(this.weatherChartWrap);
     }
 
-    this._weatherCardContentWidth = this.measureWeatherCardContentWidth();
+    this._weatherCardContentWidth = this.measureWeatherCardElementWidth();
     this.syncWeatherResponsiveLayout();
 
     if (
@@ -541,16 +541,8 @@ class WeatherManager extends BaseManager {
       this.weatherCard &&
       typeof ResizeObserver !== "undefined"
     ) {
-      this._weatherResizeObserver = new ResizeObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.target !== this.weatherCard) return;
-          const observedWidth = Math.round(
-            (entry.contentRect && entry.contentRect.width) || 0,
-          );
-          if (Number.isFinite(observedWidth) && observedWidth > 0) {
-            this._weatherCardContentWidth = observedWidth;
-          }
-        });
+      this._weatherResizeObserver = new ResizeObserver(() => {
+        this._weatherCardContentWidth = this.measureWeatherCardElementWidth();
         this._onWeatherCardResize();
       });
       this._weatherResizeObserver.observe(this.weatherCard);
@@ -1382,19 +1374,40 @@ class WeatherManager extends BaseManager {
     this.updateWeatherLocationTruncation();
   }
 
-  measureWeatherCardContentWidth() {
+  measureWeatherCardElementWidth() {
     if (!this.weatherCard) return 0;
 
-    const computed = getComputedStyle(this.weatherCard);
-    const paddingLeft = parseFloat(computed.paddingLeft) || 0;
-    const paddingRight = parseFloat(computed.paddingRight) || 0;
-    const rawClientWidth = Math.round(this.weatherCard.clientWidth || 0);
-    const contentWidth = Math.max(
-      0,
-      Math.round(rawClientWidth - paddingLeft - paddingRight),
+    const datasetWidth = Math.round(
+      Number(this.weatherCard.dataset.middleCustomWidth) || 0,
     );
+    if (
+      this.weatherCard.classList.contains("middle-custom-width") &&
+      Number.isFinite(datasetWidth) &&
+      datasetWidth > 0
+    ) {
+      return datasetWidth;
+    }
 
-    return Number.isFinite(contentWidth) && contentWidth > 0 ? contentWidth : 0;
+    const inlineWidth = Math.round(
+      parseFloat(this.weatherCard.style.width) || 0,
+    );
+    if (Number.isFinite(inlineWidth) && inlineWidth > 0) {
+      return inlineWidth;
+    }
+
+    const rectWidth = Math.round(
+      this.weatherCard.getBoundingClientRect().width || 0,
+    );
+    if (Number.isFinite(rectWidth) && rectWidth > 0) {
+      return rectWidth;
+    }
+
+    const offsetWidth = Math.round(this.weatherCard.offsetWidth || 0);
+    if (Number.isFinite(offsetWidth) && offsetWidth > 0) {
+      return offsetWidth;
+    }
+
+    return 0;
   }
 
   getWeatherResponsiveWidth() {
@@ -1405,7 +1418,7 @@ class WeatherManager extends BaseManager {
       return observedWidth;
     }
 
-    const measuredWidth = this.measureWeatherCardContentWidth();
+    const measuredWidth = this.measureWeatherCardElementWidth();
     if (measuredWidth > 0) {
       this._weatherCardContentWidth = measuredWidth;
       return measuredWidth;
