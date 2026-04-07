@@ -497,6 +497,14 @@ body.sidebar-mode .sidebar-layout {
   left: 8px;
 }
 
+body:not(.sidebar-mode) #sidebarMiddle > .middle-layout-resize-handle-left {
+  left: calc((100% - var(--sidebar-middle-fixed-width, 1400px)) / 2);
+}
+
+body:not(.sidebar-mode) #sidebarMiddle > .middle-layout-resize-handle-right {
+  right: calc((100% - var(--sidebar-middle-fixed-width, 1400px)) / 2);
+}
+
 body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
   opacity: 1;
   pointer-events: auto;

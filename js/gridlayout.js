@@ -55,7 +55,8 @@ class GridLayoutManager {
     this.sidebarMiddleLayoutDefaultWidth = 1400;
     this.sidebarMiddleLayoutMinWidth = 800;
     this.sidebarMiddleLayoutNormalMinWidth = 360;
-    this.sidebarMiddleLayoutSideGutter = 80;
+    this.sidebarMiddleLayoutSideGutter = 48;
+    this.sidebarAutoRestoreMinSideWidth = 0;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -206,6 +207,77 @@ class GridLayoutManager {
 
   clearSidebarAutoEnableBlocked() {
     this.sidebarAutoEnableBlocked = false;
+    this.sidebarAutoRestoreMinSideWidth = 0;
+  }
+
+  getSavedSidebarStateFromSettings() {
+    const settings = this.storage.getSettings();
+    const raw = settings[this.getSidebarStateStorageKey()];
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return { left: [], right: [] };
+    }
+
+    const normalizeIds = (ids) =>
+      (Array.isArray(ids) ? ids : [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean);
+
+    return {
+      left: normalizeIds(raw.left),
+      right: normalizeIds(raw.right),
+    };
+  }
+
+  getEstimatedSidebarContentWidth() {
+    const layoutEl = this.getSidebarLayoutElement();
+    const layoutWidth = Math.round(
+      (layoutEl && layoutEl.getBoundingClientRect().width) ||
+        this.getLayoutWidth() ||
+        window.innerWidth ||
+        0,
+    );
+    if (!Number.isFinite(layoutWidth) || layoutWidth <= 0) return 0;
+
+    const middleWidth = Math.round(
+      this.getCurrentSidebarMiddleLayoutWidth() ||
+        this.sidebarMiddleLayoutDefaultWidth,
+    );
+    const sideColumnWidth = Math.max(0, (layoutWidth - middleWidth) / 2);
+
+    return Math.max(
+      0,
+      Math.round(sideColumnWidth - this.sidebarMiddleLayoutSideGutter),
+    );
+  }
+
+  hasSavedSidebarItems() {
+    const state = this.getSavedSidebarStateFromSettings();
+    return state.left.length > 0 || state.right.length > 0;
+  }
+
+  canAutoRestoreSidebarMode() {
+    if (this.isSidebarModeEnabled || !this.sidebarAutoEnableBlocked) {
+      return false;
+    }
+    if (!this.hasSavedSidebarItems()) return false;
+
+    const availableWidth = this.getEstimatedSidebarContentWidth();
+    if (availableWidth <= 0) return false;
+
+    const requiredWidth = Math.max(
+      Number(this.sidebarAutoRestoreMinSideWidth) || 0,
+      120,
+    );
+
+    return availableWidth >= requiredWidth;
+  }
+
+  maybeAutoRestoreSidebarMode() {
+    if (!this.canAutoRestoreSidebarMode()) return false;
+
+    this.clearSidebarAutoEnableBlocked();
+    this.syncSidebarModeForEditState();
+    return true;
   }
 
   getSidebarStateStorageKey() {
@@ -404,7 +476,13 @@ class GridLayoutManager {
         this.setSavedSidebarMiddleLayoutWidth(currentWidth);
       }
 
+      const collapseSideWidth = this.getEstimatedSidebarContentWidth();
+
       this.sidebarAutoEnableBlocked = true;
+      this.sidebarAutoRestoreMinSideWidth = Math.max(
+        120,
+        Math.round(collapseSideWidth + 36),
+      );
       this.isMiddleLayoutResizing = false;
       this.middleLayoutResizeState = null;
       document.body.classList.remove("middle-layout-resizing");
@@ -461,9 +539,14 @@ class GridLayoutManager {
       this.setSavedSidebarMiddleLayoutWidth(clampedWidth);
     }
 
-    const snapped = triggerSnapCheck
-      ? this.maybeSnapSidebarItemsBackToMiddleLayout()
-      : false;
+    let snapped = false;
+    if (triggerSnapCheck) {
+      if (this.isSidebarModeEnabled) {
+        snapped = this.maybeSnapSidebarItemsBackToMiddleLayout();
+      } else {
+        this.maybeAutoRestoreSidebarMode();
+      }
+    }
 
     return {
       width: clampedWidth,
@@ -1782,6 +1865,8 @@ class GridLayoutManager {
 
         if (this.isSidebarModeEnabled) {
           this.maybeSnapSidebarItemsBackToMiddleLayout();
+        } else {
+          this.maybeAutoRestoreSidebarMode();
         }
       }
     }, 150);
@@ -2371,7 +2456,7 @@ class GridLayoutManager {
 
     const result = this.applySidebarMiddleLayoutWidth(nextWidth, {
       persist: false,
-      triggerSnapCheck: true,
+      triggerSnapCheck: this.isSidebarModeEnabled,
     });
 
     if (result.snapped) {
