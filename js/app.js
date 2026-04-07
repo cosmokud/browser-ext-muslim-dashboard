@@ -2081,7 +2081,8 @@ class MuslimDashboard {
         typeof this._setSidebarModeEnabled === "function"
       ) {
         try {
-          restoredSidebarAfterFocus = this._setSidebarModeEnabled(true) === true;
+          restoredSidebarAfterFocus =
+            this._setSidebarModeEnabled(true) === true;
         } catch (e) {
           restoredSidebarAfterFocus = false;
         }
