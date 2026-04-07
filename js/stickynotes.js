@@ -214,10 +214,28 @@ class StickyNotesManager {
    * Toggle notes visibility
    */
   toggleVisibility() {
-    this.isVisible = !this.isVisible;
+    this.setVisibility(!this.isVisible, { save: true });
+  }
+
+  setVisibility(visible, { save = true } = {}) {
+    const next = visible === true;
+    if (this.isVisible === next) {
+      this.updateToggleButtonIcon();
+      return false;
+    }
+
+    this.isVisible = next;
     this.applyVisibility();
     this.updateToggleButtonIcon();
-    this.saveNotes();
+    if (save) {
+      this.saveNotes();
+    }
+
+    return true;
+  }
+
+  hideAllNotes() {
+    this.setVisibility(false, { save: true });
   }
 
   /**
@@ -456,6 +474,18 @@ class StickyNotesManager {
             <circle cx="12" cy="5" r="2"></circle>
             <circle cx="12" cy="12" r="2"></circle>
             <circle cx="12" cy="19" r="2"></circle>
+          </svg>
+        </button>
+        <button
+          class="sticky-note-menu-btn sticky-note-hide-all-btn"
+          title="Hide Sticky Notes"
+          aria-label="Hide Sticky Notes"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"></path>
+            <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
         </button>
         <div class="sticky-note-dropdown">
@@ -1365,6 +1395,7 @@ class StickyNotesManager {
     const header = noteEl.querySelector(".sticky-note-header");
     const dragHandle = noteEl.querySelector(".sticky-note-drag-handle");
     const menuBtn = noteEl.querySelector(".sticky-note-menu-btn");
+    const hideAllBtn = noteEl.querySelector(".sticky-note-hide-all-btn");
     const dropdown = noteEl.querySelector(".sticky-note-dropdown");
     const content = noteEl.querySelector(".sticky-note-content");
     const toolbar = noteEl.querySelector(".sticky-note-toolbar");
@@ -1438,6 +1469,14 @@ class StickyNotesManager {
           }
         });
       }
+    });
+
+    hideAllBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeAllNoteBlurMenus();
+      dropdown.classList.remove("open");
+      this.hideAllNotes();
     });
 
     // Make dropdown keyboard accessible (role, tabindex) and close on Escape

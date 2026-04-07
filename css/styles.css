@@ -10973,6 +10973,14 @@ html[data-theme-mode="light"]
   height: 16px;
 }
 
+.sticky-note-hide-all-btn {
+  margin-left: 6px;
+}
+
+.sticky-note-hide-all-btn:hover {
+  background: rgba(0, 0, 0, 0.24);
+}
+
 /* Dropdown Menu */
 .sticky-note-dropdown {
   position: absolute;

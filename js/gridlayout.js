@@ -53,8 +53,8 @@ class GridLayoutManager {
     this.sidebarAutoEnableBlocked = false;
     this.sidebarClippingCollapseInProgress = false;
     this.sidebarMiddleLayoutDefaultWidth = 1400;
-    this.sidebarMiddleLayoutMinWidth = 800;
-    this.sidebarMiddleLayoutNormalMinWidth = 360;
+    this.sidebarMiddleLayoutMinWidth = 1000;
+    this.sidebarMiddleLayoutNormalMinWidth = 1000;
     this.sidebarMiddleLayoutSideGutter = 48;
     this.sidebarAutoRestoreMinSideWidth = 0;
 
@@ -292,6 +292,10 @@ class GridLayoutManager {
     return "sidebarMiddleLayoutWidthPx";
   }
 
+  getSidebarMiddleLayoutPreferredWidthStorageKey() {
+    return "sidebarMiddleLayoutPreferredWidthPx";
+  }
+
   getSidebarLayoutElement() {
     return document.getElementById("sidebarLayout");
   }
@@ -300,11 +304,33 @@ class GridLayoutManager {
     return document.getElementById("sidebarMiddle");
   }
 
+  getSidebarViewportWidthForMiddleLayout() {
+    const layoutEl = this.getSidebarLayoutElement();
+    const width = Math.round(
+      (layoutEl && layoutEl.getBoundingClientRect().width) ||
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth ||
+        0,
+    );
+    return Number.isFinite(width) && width > 0 ? width : 0;
+  }
+
   getSidebarMiddleLayoutBounds() {
     return {
-      minWidth: 1,
+      minWidth: Math.max(1, Math.round(this.sidebarMiddleLayoutMinWidth || 1)),
       maxWidth: Number.MAX_SAFE_INTEGER,
     };
+  }
+
+  clampSidebarMiddleLayoutWidth(widthPx, { fallback = null } = {}) {
+    const numericWidth = Number(widthPx);
+    if (!Number.isFinite(numericWidth) || numericWidth <= 0) {
+      return fallback;
+    }
+
+    const { minWidth, maxWidth } = this.getSidebarMiddleLayoutBounds();
+    return Math.round(Math.min(maxWidth, Math.max(minWidth, numericWidth)));
   }
 
   getSavedSidebarMiddleLayoutWidth() {
@@ -312,18 +338,92 @@ class GridLayoutManager {
     const rawValue = Number(
       settings[this.getSidebarMiddleLayoutWidthStorageKey()],
     );
-    if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
-
-    return Math.round(rawValue);
+    return this.clampSidebarMiddleLayoutWidth(rawValue, { fallback: null });
   }
 
   setSavedSidebarMiddleLayoutWidth(widthPx) {
-    const width = Number(widthPx);
+    const width = this.clampSidebarMiddleLayoutWidth(widthPx, {
+      fallback: null,
+    });
     if (!Number.isFinite(width) || width <= 0) return;
 
     const settings = this.storage.getSettings();
-    settings[this.getSidebarMiddleLayoutWidthStorageKey()] = Math.round(width);
+    settings[this.getSidebarMiddleLayoutWidthStorageKey()] = width;
     this.storage.saveSettings(settings);
+  }
+
+  getSavedSidebarMiddleLayoutPreferredWidth() {
+    const settings = this.storage.getSettings();
+    const rawValue = Number(
+      settings[this.getSidebarMiddleLayoutPreferredWidthStorageKey()],
+    );
+    return this.clampSidebarMiddleLayoutWidth(rawValue, { fallback: null });
+  }
+
+  setSavedSidebarMiddleLayoutPreferredWidth(widthPx) {
+    const width = this.clampSidebarMiddleLayoutWidth(widthPx, {
+      fallback: null,
+    });
+    if (!Number.isFinite(width) || width <= 0) return;
+
+    const settings = this.storage.getSettings();
+    settings[this.getSidebarMiddleLayoutPreferredWidthStorageKey()] = width;
+    this.storage.saveSettings(settings);
+  }
+
+  getPreferredSidebarMiddleLayoutWidth() {
+    const preferredWidth = this.getSavedSidebarMiddleLayoutPreferredWidth();
+    const savedWidth = this.getSavedSidebarMiddleLayoutWidth();
+
+    if (!preferredWidth && savedWidth) {
+      this.setSavedSidebarMiddleLayoutPreferredWidth(savedWidth);
+    }
+
+    const candidate =
+      preferredWidth || savedWidth || this.sidebarMiddleLayoutDefaultWidth;
+
+    return this.clampSidebarMiddleLayoutWidth(candidate, {
+      fallback: this.sidebarMiddleLayoutDefaultWidth,
+    });
+  }
+
+  getResponsiveSidebarMiddleLayoutWidth() {
+    const preferredWidth = this.getPreferredSidebarMiddleLayoutWidth();
+    const { minWidth } = this.getSidebarMiddleLayoutBounds();
+    const viewportWidth = this.getSidebarViewportWidthForMiddleLayout();
+
+    if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) {
+      return preferredWidth;
+    }
+
+    const maxAllowedWidth = Math.max(minWidth, Math.round(viewportWidth));
+    return Math.max(minWidth, Math.min(preferredWidth, maxAllowedWidth));
+  }
+
+  syncSidebarMiddleLayoutWidthToViewport({
+    persist = true,
+    triggerSnapCheck = true,
+  } = {}) {
+    const targetWidth = this.getResponsiveSidebarMiddleLayoutWidth();
+    const currentWidth = this.getCurrentSidebarMiddleLayoutWidth();
+
+    if (Math.abs(currentWidth - targetWidth) <= 1) {
+      if (persist) {
+        this.setSavedSidebarMiddleLayoutWidth(targetWidth);
+      }
+      return { width: targetWidth, snapped: false, changed: false };
+    }
+
+    const result = this.applySidebarMiddleLayoutWidth(targetWidth, {
+      persist,
+      triggerSnapCheck,
+      persistPreferred: false,
+    });
+
+    return {
+      ...result,
+      changed: true,
+    };
   }
 
   resetSidebarMiddleLayoutWidth({ persist = true } = {}) {
@@ -336,6 +436,7 @@ class GridLayoutManager {
 
     const settings = this.storage.getSettings();
     delete settings[this.getSidebarMiddleLayoutWidthStorageKey()];
+    delete settings[this.getSidebarMiddleLayoutPreferredWidthStorageKey()];
     this.storage.saveSettings(settings);
   }
 
@@ -351,7 +452,7 @@ class GridLayoutManager {
     if (rectWidth > 0) return rectWidth;
 
     const saved = this.getSavedSidebarMiddleLayoutWidth();
-    return saved || this.sidebarMiddleLayoutDefaultWidth;
+    return saved || this.getPreferredSidebarMiddleLayoutWidth();
   }
 
   getSidebarZoneRequiredWidth(zoneEl) {
@@ -516,19 +617,19 @@ class GridLayoutManager {
 
   applySidebarMiddleLayoutWidth(
     widthPx,
-    { persist = true, triggerSnapCheck = true } = {},
+    { persist = true, triggerSnapCheck = true, persistPreferred = false } = {},
   ) {
     const layoutEl = this.getSidebarLayoutElement();
     if (!layoutEl) {
       return { width: 0, snapped: false };
     }
 
-    const numericWidth = Number(widthPx);
-    if (!Number.isFinite(numericWidth) || numericWidth <= 0) {
+    const clampedWidth = this.clampSidebarMiddleLayoutWidth(widthPx, {
+      fallback: null,
+    });
+    if (!Number.isFinite(clampedWidth) || clampedWidth <= 0) {
       return { width: 0, snapped: false };
     }
-
-    const clampedWidth = Math.round(Math.max(1, numericWidth));
 
     layoutEl.style.setProperty(
       "--sidebar-middle-fixed-width",
@@ -537,6 +638,9 @@ class GridLayoutManager {
 
     if (persist) {
       this.setSavedSidebarMiddleLayoutWidth(clampedWidth);
+    }
+    if (persistPreferred) {
+      this.setSavedSidebarMiddleLayoutPreferredWidth(clampedWidth);
     }
 
     let snapped = false;
@@ -558,12 +662,12 @@ class GridLayoutManager {
     persist = false,
     triggerSnapCheck = true,
   } = {}) {
-    const savedWidth = this.getSavedSidebarMiddleLayoutWidth();
-    const targetWidth = savedWidth || this.sidebarMiddleLayoutDefaultWidth;
+    const targetWidth = this.getResponsiveSidebarMiddleLayoutWidth();
 
     return this.applySidebarMiddleLayoutWidth(targetWidth, {
       persist,
       triggerSnapCheck,
+      persistPreferred: false,
     });
   }
 
@@ -1555,7 +1659,7 @@ class GridLayoutManager {
       settings[this.getMainEditModeStorageKey()] === true;
 
     // Calculate initial responsive layout based on viewport
-    this.lastViewportWidth = this.getLayoutWidth();
+    this.lastViewportWidth = this.getSidebarViewportWidthForMiddleLayout();
     this.calculateResponsiveLayout();
 
     // Apply the layout to create flex rows
@@ -1855,11 +1959,15 @@ class GridLayoutManager {
     }
 
     this.viewportResizeTimer = setTimeout(() => {
-      const newWidth = this.getLayoutWidth();
+      const newWidth = this.getSidebarViewportWidthForMiddleLayout();
 
       // Only recalculate if layout width changed (avoid tiny jitter)
       if (newWidth > 0 && Math.abs(newWidth - this.lastViewportWidth) > 2) {
         this.lastViewportWidth = newWidth;
+        this.syncSidebarMiddleLayoutWidthToViewport({
+          persist: true,
+          triggerSnapCheck: true,
+        });
         this.calculateResponsiveLayout();
         this.recalculateLayout();
 
@@ -2441,6 +2549,7 @@ class GridLayoutManager {
     this.applySidebarMiddleLayoutWidth(this.sidebarMiddleLayoutDefaultWidth, {
       persist: true,
       triggerSnapCheck: true,
+      persistPreferred: true,
     });
 
     e.preventDefault();
@@ -2484,6 +2593,7 @@ class GridLayoutManager {
       this.applySidebarMiddleLayoutWidth(finalWidth, {
         persist: true,
         triggerSnapCheck: true,
+        persistPreferred: true,
       });
     }
 
@@ -3675,6 +3785,7 @@ class GridLayoutManager {
       settings[this.getMiddleWidthStorageKey()] = {};
       settings[this.getFocusModeMiddleWidthStorageKey()] = {};
       delete settings[this.getSidebarMiddleLayoutWidthStorageKey()];
+      delete settings[this.getSidebarMiddleLayoutPreferredWidthStorageKey()];
       this.storage.saveSettings(settings);
     } catch (e) {
       // ignore
