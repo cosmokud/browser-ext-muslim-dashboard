@@ -11251,7 +11251,6 @@ html[data-theme-mode="light"]
 }
 
 .sticky-note-content:empty::before {
-  content: "Type your note here...";
   color: rgba(255, 255, 255, 0.95);
   pointer-events: none;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
@@ -12342,6 +12341,25 @@ body:not(.sidebar-mode)
   gap: var(--spacing-sm);
 }
 
+.weather-forecast-day .day-meta > span {
+  white-space: nowrap;
+}
+
+.weather-forecast-day .day-meta.day-meta-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.weather-forecast-day .day-meta.day-meta-wrap > span {
+  width: 100%;
+  text-align: center;
+}
+
 .weather-chart-wrap {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
@@ -12598,6 +12616,135 @@ body:not(.sidebar-mode)
   .weather-chart {
     height: 300px;
   }
+}
+
+/* Card-width-driven fallback so weather card responds to layout/card resizing without refresh. */
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-content {
+  --weather-three-item-cap: 300px;
+  grid-template-columns: repeat(3, minmax(0, var(--weather-three-item-cap)));
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-main,
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-location,
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-details {
+  width: 100%;
+  max-width: var(--weather-three-item-cap);
+  min-width: 0;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-main {
+  justify-self: stretch;
+  gap: var(--spacing-md);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-main
+  .weather-icon {
+  font-size: clamp(3rem, 3.6vw, 3.4rem);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-main
+  .weather-temp {
+  font-size: clamp(2.35rem, 3.3vw, 2.7rem);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-main
+  .weather-desc {
+  font-size: 1rem;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-location {
+  justify-self: stretch;
+  font-size: clamp(2.1rem, 3.2vw, 2.7rem);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="compact"]
+  .weather-details {
+  justify-self: stretch;
+  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-content {
+  grid-template-columns: minmax(0, 300px);
+  grid-template-rows: auto auto auto;
+  justify-content: center;
+  gap: var(--spacing-lg);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-main,
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-location,
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-details {
+  grid-column: 1;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 300px;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-main {
+  gap: var(--spacing-md);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-main
+  .weather-icon {
+  font-size: clamp(2.6rem, 8vw, 3.1rem);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-main
+  .weather-temp {
+  font-size: clamp(2.05rem, 8.2vw, 2.45rem);
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-main
+  .weather-desc {
+  font-size: 0.95rem;
+}
+
+body:not(.sidebar-mode)
+  .weather-card[data-weather-layout="stacked"]
+  .weather-details {
+  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
 }
 
 /* Mobile: 2-column layout for weather forecast */
@@ -18424,7 +18571,11 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 }
 
 /* Enforce minimum width for weather details (explicit requirement) */
-.weather-details {
+body:not(.sidebar-mode)
+  .weather-card:not([data-weather-layout="compact"]):not(
+    [data-weather-layout="stacked"]
+  )
+  .weather-details {
   min-width: 310px;
 }
 

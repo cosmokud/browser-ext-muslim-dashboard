@@ -9,6 +9,7 @@ class WeatherManager extends BaseManager {
     super();
     this.storage = storage;
     this.weatherCard = document.getElementById("weatherCard");
+    this.weatherContent = this.weatherCard?.querySelector(".weather-content");
     this.weatherIcon = document.getElementById("weatherIcon");
     this.weatherTemp = document.getElementById("weatherTemp");
     this.weatherDesc = document.getElementById("weatherDesc");
@@ -43,6 +44,8 @@ class WeatherManager extends BaseManager {
 
     this._resizeTimer = null;
     this._forecastResizeTimer = null; // used for debouncing forecast layout recalcs
+    this._weatherCardResizeTimer = null;
+    this._weatherResizeObserver = null;
     this.selectedForecastIndex = 0;
     this.selectedMetric = "temperature";
 
@@ -50,8 +53,10 @@ class WeatherManager extends BaseManager {
     this._onResize = () => {
       if (this._resizeTimer) window.clearTimeout(this._resizeTimer);
       this._resizeTimer = window.setTimeout(() => {
+        this.syncWeatherResponsiveLayout();
         this.renderHourlyChart();
         this.updateWeatherLocationTruncation();
+        this.updateForecastMetaWrapping();
       }, 120);
     };
 
@@ -60,9 +65,23 @@ class WeatherManager extends BaseManager {
       if (this._forecastResizeTimer)
         window.clearTimeout(this._forecastResizeTimer);
       this._forecastResizeTimer = window.setTimeout(() => {
+        this.syncWeatherResponsiveLayout();
         this.applyForecastFlexLayout();
         this.updateWeatherLocationTruncation();
+        this.updateForecastMetaWrapping();
       }, 80);
+    };
+
+    this._onWeatherCardResize = () => {
+      if (this._weatherCardResizeTimer)
+        window.clearTimeout(this._weatherCardResizeTimer);
+      this._weatherCardResizeTimer = window.setTimeout(() => {
+        this.syncWeatherResponsiveLayout();
+        this.applyForecastFlexLayout();
+        this.updateWeatherLocationTruncation();
+        this.updateForecastMetaWrapping();
+        this.renderHourlyChart();
+      }, 90);
     };
 
     // Listen for resize to update forecast layout (keeps last-row spreading correct)
@@ -509,6 +528,19 @@ class WeatherManager extends BaseManager {
       );
 
       this._chartVisibilityObserver.observe(this.weatherChartWrap);
+    }
+
+    this.syncWeatherResponsiveLayout();
+
+    if (
+      !this._weatherResizeObserver &&
+      this.weatherCard &&
+      typeof ResizeObserver !== "undefined"
+    ) {
+      this._weatherResizeObserver = new ResizeObserver(() => {
+        this._onWeatherCardResize();
+      });
+      this._weatherResizeObserver.observe(this.weatherCard);
     }
 
     window.addEventListener("resize", this._onResize);
@@ -1232,8 +1264,28 @@ class WeatherManager extends BaseManager {
       clearInterval(this.refreshInterval);
     }
 
+    if (this._resizeTimer) {
+      clearTimeout(this._resizeTimer);
+      this._resizeTimer = null;
+    }
+
+    if (this._forecastResizeTimer) {
+      clearTimeout(this._forecastResizeTimer);
+      this._forecastResizeTimer = null;
+    }
+
+    if (this._weatherCardResizeTimer) {
+      clearTimeout(this._weatherCardResizeTimer);
+      this._weatherCardResizeTimer = null;
+    }
+
     window.removeEventListener("resize", this._onResize);
     window.removeEventListener("resize", this._onForecastResize);
+
+    if (this._weatherResizeObserver) {
+      this._weatherResizeObserver.disconnect();
+      this._weatherResizeObserver = null;
+    }
 
     if (this._chartVisibilityObserver) {
       this._chartVisibilityObserver.disconnect();
@@ -1315,6 +1367,48 @@ class WeatherManager extends BaseManager {
     this.updateWeatherLocationTruncation();
   }
 
+  getWeatherResponsiveWidth() {
+    const weatherContentWidth = Math.round(
+      (this.weatherContent &&
+        this.weatherContent.getBoundingClientRect().width) ||
+        0,
+    );
+
+    if (Number.isFinite(weatherContentWidth) && weatherContentWidth > 0) {
+      return weatherContentWidth;
+    }
+
+    const weatherCardWidth = Math.round(
+      (this.weatherCard && this.weatherCard.getBoundingClientRect().width) || 0,
+    );
+    if (Number.isFinite(weatherCardWidth) && weatherCardWidth > 0) {
+      return weatherCardWidth;
+    }
+
+    return Math.round(
+      window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth ||
+        0,
+    );
+  }
+
+  syncWeatherResponsiveLayout() {
+    if (!this.weatherCard) return;
+
+    const responsiveWidth = this.getWeatherResponsiveWidth();
+    if (!Number.isFinite(responsiveWidth) || responsiveWidth <= 0) {
+      this.weatherCard.removeAttribute("data-weather-layout");
+      return;
+    }
+
+    let layoutMode = "wide";
+    if (responsiveWidth <= 1000) layoutMode = "stacked";
+    else if (responsiveWidth <= 1200) layoutMode = "compact";
+
+    this.weatherCard.setAttribute("data-weather-layout", layoutMode);
+  }
+
   updateWeatherLocationTruncation() {
     if (!this.weatherLocation) return;
 
@@ -1333,17 +1427,12 @@ class WeatherManager extends BaseManager {
       return;
     }
 
-    const viewportWidth = Math.round(
-      window.innerWidth ||
-        document.documentElement.clientWidth ||
-        document.body.clientWidth ||
-        0,
-    );
+    const responsiveWidth = this.getWeatherResponsiveWidth();
     const isSingleWord = !/\s/.test(displayText);
-    const isNarrowViewport = viewportWidth > 0 && viewportWidth <= 1000;
+    const isNarrowLayout = responsiveWidth > 0 && responsiveWidth <= 1000;
 
     let appliedSingleWordShrink = false;
-    if (isSingleWord && isNarrowViewport) {
+    if (isSingleWord && isNarrowLayout) {
       this.weatherLocation.classList.add("weather-location-single-word");
 
       const clientWidth = Math.max(
@@ -1460,6 +1549,7 @@ class WeatherManager extends BaseManager {
     // Apply responsive flex rules so 7-column full rows remain exact,
     // and any incomplete last row items spread equally to fill the row.
     this.applyForecastFlexLayout();
+    this.updateForecastMetaWrapping();
   }
 
   applyForecastFlexLayout() {
@@ -1475,8 +1565,14 @@ class WeatherManager extends BaseManager {
       getComputedStyle(container).getPropertyValue("--wf-gap") || "10px";
     const gapPx = parseFloat(computedGap) || 10;
 
-    // Breakpoints: <=640px => 2 cols, <=1020px => 4 cols, otherwise 7 cols
-    const w = window.innerWidth;
+    // Breakpoints use card/container width so forecast adapts to grid/layout resizes.
+    const w = Math.round(
+      container.getBoundingClientRect().width ||
+        container.clientWidth ||
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        0,
+    );
     let columns = 7;
     if (w <= 640) columns = 2;
     else if (w <= 1020) columns = 4;
@@ -1502,6 +1598,31 @@ class WeatherManager extends BaseManager {
     const lastItems = items.slice(-remainder);
     lastItems.forEach((el) => {
       el.style.flex = `1 1 ${lastBasis}`;
+    });
+  }
+
+  updateForecastMetaWrapping() {
+    const container = this.weatherForecast;
+    if (!container) return;
+
+    const metaRows = Array.from(container.querySelectorAll(".day-meta"));
+    if (!metaRows.length) return;
+
+    metaRows.forEach((meta) => {
+      meta.classList.remove("day-meta-wrap");
+    });
+
+    metaRows.forEach((meta) => {
+      const windEl = meta.querySelector("span:last-child");
+      const metaOverflowing = meta.scrollWidth > meta.clientWidth + 1;
+      const windOverflowing = Boolean(
+        windEl && windEl.scrollWidth > windEl.clientWidth + 1,
+      );
+
+      meta.classList.toggle(
+        "day-meta-wrap",
+        metaOverflowing || windOverflowing,
+      );
     });
   }
 
