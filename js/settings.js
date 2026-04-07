@@ -5783,7 +5783,8 @@ class SettingsManager extends BaseManager {
       .filter((entry) => Boolean(entry.url));
 
     const solidCustomTemplateSet = new Set(
-      selectedCategory === "solid" && Array.isArray(settings.solidColorTemplates)
+      selectedCategory === "solid" &&
+        Array.isArray(settings.solidColorTemplates)
         ? settings.solidColorTemplates
             .map((entry) => this.normalizeSolidColorHex(entry))
             .filter(Boolean)
