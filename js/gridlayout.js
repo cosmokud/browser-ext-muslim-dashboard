@@ -3238,7 +3238,12 @@ class GridLayoutManager {
     let middleResizeHardMaxWidth = null;
     if (mode === "middle") {
       const componentId = this.getSidebarComponentId(el);
-      if (this.isThreeItemComponentId(componentId)) {
+      const shouldSkipThreeItemHardCap = this.isFocusModePocketQuranElement(el);
+
+      if (
+        this.isThreeItemComponentId(componentId) &&
+        !shouldSkipThreeItemHardCap
+      ) {
         const mainContainerWidth = Math.round(
           this.getMainContainerResponsiveWidth() || 0,
         );
