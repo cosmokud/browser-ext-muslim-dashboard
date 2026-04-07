@@ -52,6 +52,7 @@ class GridLayoutManager {
     this.middleLayoutResizeState = null;
     this.sidebarMiddleLayoutDefaultWidth = 1400;
     this.sidebarMiddleLayoutMinWidth = 800;
+    this.sidebarMiddleLayoutNormalMinWidth = 360;
     this.sidebarMiddleLayoutSideGutter = 80;
 
     // Component definitions with their original span limits
@@ -224,11 +225,19 @@ class GridLayoutManager {
         0,
     );
 
-    const minWidth = this.sidebarMiddleLayoutMinWidth;
-    const maxWidth = Math.max(
-      minWidth,
-      layoutWidth - this.sidebarMiddleLayoutSideGutter * 2,
-    );
+    if (this.isSidebarModeEnabled) {
+      const minWidth = this.sidebarMiddleLayoutMinWidth;
+      const maxWidth = Math.max(
+        minWidth,
+        layoutWidth - this.sidebarMiddleLayoutSideGutter * 2,
+      );
+
+      return { minWidth, maxWidth };
+    }
+
+    const normalModeSidePadding = 24;
+    const maxWidth = Math.max(260, layoutWidth - normalModeSidePadding);
+    const minWidth = Math.min(maxWidth, this.sidebarMiddleLayoutNormalMinWidth);
 
     return { minWidth, maxWidth };
   }
@@ -2321,8 +2330,12 @@ class GridLayoutManager {
     }
 
     const middleEl = this.getSidebarMiddleElement();
+    const mainContainer = document.querySelector(
+      "#sidebarMiddle > .main-container",
+    );
+    const widthSource = this.isSidebarModeEnabled ? middleEl : mainContainer;
     const finalWidth = Math.round(
-      (middleEl && middleEl.getBoundingClientRect().width) ||
+      (widthSource && widthSource.getBoundingClientRect().width) ||
         this.middleLayoutResizeState.startWidth ||
         0,
     );
