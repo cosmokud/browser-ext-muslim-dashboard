@@ -1397,7 +1397,9 @@ class FloatingModeManager {
     card.style.pointerEvents = "";
   }
 
-  enforceNonFloatingFromDashboardSettings({ applyFloatingEnabled = false } = {}) {
+  enforceNonFloatingFromDashboardSettings({
+    applyFloatingEnabled = false,
+  } = {}) {
     const settings = this.getSettings() || {};
     const floatingSettings = settings.floating || {};
     const sidebarModeEnabled = settings.sidebarModeEnabled === true;
