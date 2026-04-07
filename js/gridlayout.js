@@ -610,21 +610,20 @@ class GridLayoutManager {
   isSidebarElementHorizontallyClipped(el, zoneEl, tolerancePx = 2) {
     if (!el || !zoneEl) return false;
 
+    const slotEl = el.closest(".sidebar-slot");
     const elementRect = el.getBoundingClientRect();
     const zoneRect = zoneEl.getBoundingClientRect();
+    const boundaryRect = slotEl ? slotEl.getBoundingClientRect() : zoneRect;
+    const tolerance = Math.max(2, Number(tolerancePx) || 0);
 
-    if (elementRect.width > zoneRect.width + tolerancePx) {
+    if (elementRect.width > boundaryRect.width + tolerance) {
       return true;
     }
 
     if (
-      elementRect.left < zoneRect.left - tolerancePx ||
-      elementRect.right > zoneRect.right + tolerancePx
+      elementRect.left < boundaryRect.left - tolerance ||
+      elementRect.right > boundaryRect.right + tolerance
     ) {
-      return true;
-    }
-
-    if (el.scrollWidth > el.clientWidth + tolerancePx) {
       return true;
     }
 
@@ -638,9 +637,11 @@ class GridLayoutManager {
       this.getSidebarZone("left"),
       this.getSidebarZone("right"),
     ].filter(Boolean);
+    const tolerance = Math.max(2, Number(tolerancePx) || 0);
 
     for (const zoneEl of zones) {
-      if (zoneEl.scrollWidth > zoneEl.clientWidth + tolerancePx) {
+      // Ignore tiny deltas caused by fractional layout/border rounding.
+      if (zoneEl.scrollWidth > zoneEl.clientWidth + tolerance + 12) {
         return true;
       }
 
@@ -649,7 +650,7 @@ class GridLayoutManager {
       );
 
       for (const el of items) {
-        if (this.isSidebarElementHorizontallyClipped(el, zoneEl, tolerancePx)) {
+        if (this.isSidebarElementHorizontallyClipped(el, zoneEl, tolerance)) {
           return true;
         }
       }
@@ -660,6 +661,7 @@ class GridLayoutManager {
 
   collapseSidebarModeDueToClipping() {
     if (!this.isSidebarModeEnabled) return false;
+    if (this.hasSidebarDropViewportSpace()) return false;
     if (this.sidebarClippingCollapseInProgress) return true;
 
     this.sidebarClippingCollapseInProgress = true;
@@ -703,6 +705,7 @@ class GridLayoutManager {
 
   maybeSnapSidebarItemsBackToMiddleLayout() {
     if (!this.isSidebarModeEnabled) return false;
+    if (this.hasSidebarDropViewportSpace()) return false;
     if (!this.hasSidebarHorizontalClipping()) return false;
 
     return this.collapseSidebarModeDueToClipping();
@@ -812,6 +815,16 @@ class GridLayoutManager {
   }
 
   getSidebarDropAvailableViewportSpace() {
+    const leftSidebar = document.getElementById("sidebarLeft");
+    const rightSidebar = document.getElementById("sidebarRight");
+    const leftWidth = Math.round(
+      (leftSidebar && leftSidebar.getBoundingClientRect().width) || 0,
+    );
+    const rightWidth = Math.round(
+      (rightSidebar && rightSidebar.getBoundingClientRect().width) || 0,
+    );
+    const measuredSidebarWidth = Math.max(0, leftWidth + rightWidth);
+
     const viewportWidth = this.getSidebarViewportWidthForMiddleLayout();
     if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 0;
 
@@ -829,11 +842,20 @@ class GridLayoutManager {
     );
 
     if (!Number.isFinite(middleWidth) || middleWidth <= 0) return 0;
-    return Math.max(0, Math.round(viewportWidth - middleWidth));
+    const computedSidebarWidth = Math.max(
+      0,
+      Math.round(viewportWidth - middleWidth),
+    );
+
+    if (measuredSidebarWidth > 0) {
+      return Math.max(measuredSidebarWidth, computedSidebarWidth);
+    }
+
+    return computedSidebarWidth;
   }
 
-  hasSidebarDropViewportSpace() {
-    const requiredTotalWidth = Math.max(
+  getSidebarDropRequiredTotalWidth() {
+    return Math.max(
       1,
       Math.round(
         Number(this.sidebarDropMinTotalWidth) ||
@@ -841,8 +863,13 @@ class GridLayoutManager {
           844,
       ),
     );
+  }
 
-    return this.getSidebarDropAvailableViewportSpace() >= requiredTotalWidth;
+  hasSidebarDropViewportSpace() {
+    return (
+      this.getSidebarDropAvailableViewportSpace() >=
+      this.getSidebarDropRequiredTotalWidth()
+    );
   }
 
   isSidebarDropAllowed() {
