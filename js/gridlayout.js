@@ -2327,6 +2327,17 @@ class GridLayoutManager {
   }
 
   runViewportResizeLayoutSync({ force = false } = {}) {
+    if (this.isMiddleLayoutResizing || this.isSidebarResizing) {
+      return {
+        applied: false,
+        zoomed: false,
+        widthChanged: false,
+        zoomChanged: false,
+        mainContainerWidthChanged: false,
+        layoutModeChanged: false,
+      };
+    }
+
     const newWidth = this.getSidebarViewportWidthForMiddleLayout();
     if (newWidth <= 0) {
       return { applied: false, zoomed: false, widthChanged: false };
@@ -3059,14 +3070,11 @@ class GridLayoutManager {
     const delta = side === "right" ? clientX - startX : startX - clientX;
     const nextWidth = startWidth + delta * 2;
 
-    const result = this.applySidebarMiddleLayoutWidth(nextWidth, {
+    this.applySidebarMiddleLayoutWidth(nextWidth, {
       persist: false,
-      triggerSnapCheck: this.isSidebarModeEnabled,
+      // Keep drag movement smooth; evaluate clipping/auto-restore on release.
+      triggerSnapCheck: false,
     });
-
-    if (result.snapped) {
-      this.endMiddleLayoutResize();
-    }
   }
 
   endMiddleLayoutResize() {
@@ -3096,6 +3104,10 @@ class GridLayoutManager {
     this.isMiddleLayoutResizing = false;
     this.middleLayoutResizeState = null;
     document.body.classList.remove("middle-layout-resizing");
+
+    // Run one post-resize responsive sync now that manual resizing has ended.
+    this.handleViewportResize("middle-resize-end");
+
     return true;
   }
 
