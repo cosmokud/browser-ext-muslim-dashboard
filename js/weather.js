@@ -54,6 +54,7 @@ class WeatherManager extends BaseManager {
     this._weatherResizeObserver = null;
     this._weatherContentResizeObserver = null;
     this._weatherMainContainerResizeObserver = null;
+    this._weatherCardMutationObserver = null;
     this._weatherLayoutSyncEvents = [
       "md:layout-live-resize",
       "md:settings-applied",
@@ -701,6 +702,31 @@ class WeatherManager extends BaseManager {
         this._onWeatherCardResize();
       });
       this._weatherMainContainerResizeObserver.observe(mainContainerEl);
+    }
+
+    if (
+      !this._weatherCardMutationObserver &&
+      this.weatherCard &&
+      typeof MutationObserver !== "undefined"
+    ) {
+      this._weatherCardMutationObserver = new MutationObserver(() => {
+        this.queueResponsiveLayoutSyncFrame({ includeChart: false });
+        this.scheduleResponsiveLayoutSync({
+          includeChart: false,
+          settlePass: true,
+          debounceMs: 12,
+        });
+      });
+
+      this._weatherCardMutationObserver.observe(this.weatherCard, {
+        attributes: true,
+        attributeFilter: [
+          "style",
+          "class",
+          "data-middle-custom-width",
+          "data-sidebar-custom-width",
+        ],
+      });
     }
 
     this._weatherLayoutSyncEvents.forEach((eventName) => {
@@ -1486,6 +1512,11 @@ class WeatherManager extends BaseManager {
       this._weatherMainContainerResizeObserver = null;
     }
 
+    if (this._weatherCardMutationObserver) {
+      this._weatherCardMutationObserver.disconnect();
+      this._weatherCardMutationObserver = null;
+    }
+
     if (this._chartVisibilityObserver) {
       this._chartVisibilityObserver.disconnect();
       this._chartVisibilityObserver = null;
@@ -1590,16 +1621,19 @@ class WeatherManager extends BaseManager {
       return Math.max(0, Math.round(usableWidth));
     };
 
-    // Use live rendered content width so responsive logic follows real layout
-    // changes from layout editor and container width changes.
-    const weatherContentWidth = readUsableContentWidth(this.weatherContent);
-    if (Number.isFinite(weatherContentWidth) && weatherContentWidth > 0) {
-      return weatherContentWidth;
-    }
-
     const weatherCardWidth = readUsableContentWidth(this.weatherCard);
-    if (Number.isFinite(weatherCardWidth) && weatherCardWidth > 0) {
-      return weatherCardWidth;
+    const weatherContentWidth = readUsableContentWidth(this.weatherContent);
+
+    // Breakpoints must be based on the weather card content-box width
+    // (no padding/border/margin), otherwise stacked/compact CSS on inner
+    // content can lock the component in a narrow-mode feedback loop.
+    const primaryWidth = Math.max(
+      Number.isFinite(weatherCardWidth) ? weatherCardWidth : 0,
+      Number.isFinite(weatherContentWidth) ? weatherContentWidth : 0,
+    );
+
+    if (Number.isFinite(primaryWidth) && primaryWidth > 0) {
+      return primaryWidth;
     }
 
     const fallbackClientWidth = Number(this.weatherCard.clientWidth) || 0;
