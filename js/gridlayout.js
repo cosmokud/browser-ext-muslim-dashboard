@@ -50,6 +50,8 @@ class GridLayoutManager {
     this.sidebarResizeState = null;
     this.isMiddleLayoutResizing = false;
     this.middleLayoutResizeState = null;
+    this.sidebarAutoEnableBlocked = false;
+    this.sidebarClippingCollapseInProgress = false;
     this.sidebarMiddleLayoutDefaultWidth = 1400;
     this.sidebarMiddleLayoutMinWidth = 800;
     this.sidebarMiddleLayoutNormalMinWidth = 360;
@@ -161,6 +163,8 @@ class GridLayoutManager {
 
     if (!this.isSidebarModeEnabled) {
       this.endMiddleLayoutResize();
+    } else {
+      this.clearSidebarAutoEnableBlocked();
     }
 
     // Switching modes swaps layout + (for sidebar mode) restores docked components.
@@ -194,6 +198,14 @@ class GridLayoutManager {
     this.undockAllSidebarItemsToGrid();
     this.updateSidebarZoneCounts();
     this.updateFlexBasisForCurrentDOM();
+  }
+
+  isSidebarAutoEnableBlocked() {
+    return this.sidebarAutoEnableBlocked === true;
+  }
+
+  clearSidebarAutoEnableBlocked() {
+    this.sidebarAutoEnableBlocked = false;
   }
 
   getSidebarStateStorageKey() {
@@ -329,9 +341,99 @@ class GridLayoutManager {
     return true;
   }
 
-  maybeSnapSidebarItemsBackToMiddleLayout() {
-    // Width resizing is intentionally unrestricted by viewport/column checks.
+  isSidebarElementHorizontallyClipped(el, zoneEl, tolerancePx = 2) {
+    if (!el || !zoneEl) return false;
+
+    const elementRect = el.getBoundingClientRect();
+    const zoneRect = zoneEl.getBoundingClientRect();
+
+    if (elementRect.width > zoneRect.width + tolerancePx) {
+      return true;
+    }
+
+    if (
+      elementRect.left < zoneRect.left - tolerancePx ||
+      elementRect.right > zoneRect.right + tolerancePx
+    ) {
+      return true;
+    }
+
+    if (el.scrollWidth > el.clientWidth + tolerancePx) {
+      return true;
+    }
+
     return false;
+  }
+
+  hasSidebarHorizontalClipping(tolerancePx = 2) {
+    if (!this.isSidebarModeEnabled) return false;
+
+    const zones = [
+      this.getSidebarZone("left"),
+      this.getSidebarZone("right"),
+    ].filter(Boolean);
+
+    for (const zoneEl of zones) {
+      if (zoneEl.scrollWidth > zoneEl.clientWidth + tolerancePx) {
+        return true;
+      }
+
+      const items = Array.from(
+        zoneEl.querySelectorAll(":scope > .sidebar-slot > .grid-draggable"),
+      );
+
+      for (const el of items) {
+        if (this.isSidebarElementHorizontallyClipped(el, zoneEl, tolerancePx)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  collapseSidebarModeDueToClipping() {
+    if (!this.isSidebarModeEnabled) return false;
+    if (this.sidebarClippingCollapseInProgress) return true;
+
+    this.sidebarClippingCollapseInProgress = true;
+
+    try {
+      const currentWidth = this.getCurrentSidebarMiddleLayoutWidth();
+      if (currentWidth > 0) {
+        this.setSavedSidebarMiddleLayoutWidth(currentWidth);
+      }
+
+      this.sidebarAutoEnableBlocked = true;
+      this.isMiddleLayoutResizing = false;
+      this.middleLayoutResizeState = null;
+      document.body.classList.remove("middle-layout-resizing");
+
+      if (
+        window.dashboard &&
+        typeof window.dashboard._setSidebarModeEnabled === "function"
+      ) {
+        window.dashboard._setSidebarModeEnabled(false);
+      } else {
+        this.setSidebarModeEnabled(false);
+      }
+
+      this.showToast(
+        "Sidebars were removed because their content started clipping. Components were snapped back to center layout.",
+        "info",
+      );
+
+      return true;
+    } finally {
+      this.sidebarClippingCollapseInProgress = false;
+    }
+  }
+
+  maybeSnapSidebarItemsBackToMiddleLayout() {
+    if (!this.isSidebarModeEnabled) return false;
+    if (!this.hasSidebarHorizontalClipping()) return false;
+
+    return this.collapseSidebarModeDueToClipping();
   }
 
   applySidebarMiddleLayoutWidth(
@@ -1469,6 +1571,7 @@ class GridLayoutManager {
     if (!this.isEditModeEnabled) {
       this.endMiddleLayoutResize();
       this.endSidebarResize();
+      this.clearSidebarAutoEnableBlocked();
     }
 
     if (this.isQuranFocusModeContextActive()) {
@@ -1678,10 +1781,7 @@ class GridLayoutManager {
         this.recalculateLayout();
 
         if (this.isSidebarModeEnabled) {
-          this.applySavedSidebarMiddleLayoutWidth({
-            persist: false,
-            triggerSnapCheck: true,
-          });
+          this.maybeSnapSidebarItemsBackToMiddleLayout();
         }
       }
     }, 150);

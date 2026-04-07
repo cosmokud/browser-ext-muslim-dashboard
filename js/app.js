@@ -590,6 +590,11 @@ class MuslimDashboard {
       typeof this.gridLayout.isEditMode === "function" &&
       this.gridLayout.isEditMode()
     );
+    const sidebarAutoEnableBlocked = !!(
+      this.gridLayout &&
+      typeof this.gridLayout.isSidebarAutoEnableBlocked === "function" &&
+      this.gridLayout.isSidebarAutoEnableBlocked()
+    );
     const keepCurrentSidebarLayout = this.sidebarModeEnabled === true;
     const wantsSidebarLayout = isEditModeEnabled || keepCurrentSidebarLayout;
 
@@ -597,6 +602,7 @@ class MuslimDashboard {
       wantsSidebarLayout &&
       !focusModeActive &&
       !this._momentModeActive &&
+      !sidebarAutoEnableBlocked &&
       this.isSidebarWidthSupported();
 
     if (typeof this._setSidebarModeEnabled === "function") {
@@ -611,6 +617,15 @@ class MuslimDashboard {
       // Enforce mutual exclusivity: sidebar mode cannot coexist with Quran focus mode or Moment mode.
       // Exit other modes first so visibility/layout restore happens cleanly.
       if (next) {
+        try {
+          if (
+            this.gridLayout &&
+            typeof this.gridLayout.clearSidebarAutoEnableBlocked === "function"
+          ) {
+            this.gridLayout.clearSidebarAutoEnableBlocked();
+          }
+        } catch (e) {}
+
         try {
           if (
             this._quranFocusModeActive &&
