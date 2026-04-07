@@ -57,6 +57,7 @@ class GridLayoutManager {
     this.sidebarMiddleLayoutNormalMinWidth = 1000;
     this.sidebarMiddleLayoutSideGutter = 48;
     this.sidebarAutoRestoreMinSideWidth = 0;
+    this.threeItemSingleRowCollapseThresholdWidth = 1200;
     this.viewportAutoZoomThresholdWidth = 1000;
     this.viewportAutoZoomActive = false;
     this.viewportAutoZoomScale = 1;
@@ -1704,6 +1705,13 @@ class GridLayoutManager {
     // Recompute responsive spans, but do not rebuild rows.
     this.calculateResponsiveLayout();
 
+    // Force a full repack when narrow-container mode is active so
+    // 2-span cards cannot remain side-by-side in existing rows.
+    if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
+      this.recalculateLayout();
+      return;
+    }
+
     const rowWrappers = this.grid.querySelectorAll(".grid-flex-row");
     rowWrappers.forEach((rowWrapper) => {
       const rowItems = Array.from(rowWrapper.children);
@@ -1757,6 +1765,7 @@ class GridLayoutManager {
 
     // Apply the layout to create flex rows
     this.applyLayout();
+    this.recalculateLayout();
 
     // Setup event listeners for drag and drop (only active when edit mode is enabled)
     this.setupEventListeners();
@@ -2042,6 +2051,52 @@ class GridLayoutManager {
     );
   }
 
+  getMainContainerResponsiveWidth() {
+    const mainContainer =
+      (this.grid &&
+        (this.grid.closest(".main-container.container-wide") ||
+          this.grid.closest(".main-container"))) ||
+      document.querySelector(
+        "#sidebarMiddle > .main-container.container-wide",
+      ) ||
+      document.querySelector(".main-container.container-wide") ||
+      document.querySelector("#sidebarMiddle > .main-container") ||
+      document.querySelector(".main-container");
+
+    const width = Math.round(
+      (mainContainer && mainContainer.getBoundingClientRect().width) || 0,
+    );
+
+    if (Number.isFinite(width) && width > 0) {
+      return width;
+    }
+
+    return this.getLayoutWidth();
+  }
+
+  shouldForceSingleRowLayoutForThreeItemComponents() {
+    const threshold = Math.max(
+      1,
+      Math.round(this.threeItemSingleRowCollapseThresholdWidth || 1200),
+    );
+    const containerWidth = this.getMainContainerResponsiveWidth();
+
+    return (
+      Number.isFinite(containerWidth) &&
+      containerWidth > 0 &&
+      containerWidth < threshold
+    );
+  }
+
+  getThreeItemComponentIds() {
+    return Object.keys(this.componentSpans).filter((componentId) => {
+      const config = this.componentSpans[componentId];
+      return (
+        config && Number(config.span) === 2 && Number(config.minSpan) === 2
+      );
+    });
+  }
+
   runViewportResizeLayoutSync({ force = false } = {}) {
     const newWidth = this.getSidebarViewportWidthForMiddleLayout();
     if (newWidth <= 0) {
@@ -2060,6 +2115,9 @@ class GridLayoutManager {
     this.lastViewportWidth = newWidth;
 
     if (isViewportZoomedOut) {
+      if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
+        this.recalculateLayout();
+      }
       return { applied: true, zoomed: true, widthChanged, zoomChanged };
     }
 
@@ -2160,6 +2218,15 @@ class GridLayoutManager {
 
     // Reset effective spans to defaults
     this.effectiveSpans = {};
+
+    // Global narrow-container rule: below the threshold, force every
+    // 2-span component to occupy its own full row.
+    if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
+      this.getThreeItemComponentIds().forEach((componentId) => {
+        this.effectiveSpans[componentId] = 6;
+      });
+      return;
+    }
 
     // Calculate effective span for each component with min width requirements
     Object.keys(this.componentMinWidths).forEach((componentId) => {
