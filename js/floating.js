@@ -425,6 +425,352 @@ class FloatingModeManager {
     return { parent: rowWrapper, before: firstRealChild || null };
   }
 
+  _resolveComponentIdFromRestoreNode(node) {
+    if (!node) return null;
+
+    if (node.classList?.contains("header")) return "header";
+
+    const gridId = node.dataset?.gridId;
+    if (gridId) return gridId;
+
+    if (node.id) return node.id;
+
+    const floatingKey = node.getAttribute?.("data-floating-placeholder");
+    if (floatingKey && this.targets?.[floatingKey]?.cardId) {
+      return this.targets[floatingKey].cardId;
+    }
+
+    return null;
+  }
+
+  _getSavedSidebarAnchorForComponent(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return null;
+
+    try {
+      const settings = this.getSettings();
+      const raw = settings?.sidebarModeSidebars;
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+        return null;
+      }
+
+      const normalizeIds = (ids) =>
+        (Array.isArray(ids) ? ids : [])
+          .map((value) => String(value || "").trim())
+          .filter(Boolean);
+
+      const left = normalizeIds(raw.left);
+      const leftIndex = left.indexOf(id);
+      if (leftIndex >= 0) {
+        return { side: "left", index: leftIndex };
+      }
+
+      const right = normalizeIds(raw.right);
+      const rightIndex = right.indexOf(id);
+      if (rightIndex >= 0) {
+        return { side: "right", index: rightIndex };
+      }
+    } catch (e) {}
+
+    return null;
+  }
+
+  _buildRestoreAnchorFromCurrentDOM(key, card, st) {
+    const placeholder = st?.placeholder || null;
+    const placeholderParent = placeholder?.parentNode || null;
+    if (!placeholder || !placeholderParent) return null;
+
+    const componentId =
+      st?.componentId ||
+      card?.dataset?.gridId ||
+      this.targets?.[key]?.cardId ||
+      card?.id ||
+      null;
+
+    const quranFocusModeActive =
+      !!document.body?.classList?.contains("quran-focus-mode") ||
+      window.dashboard?._quranFocusModeActive === true;
+
+    // In Quran Focus mode, preserve sidebar origin from persisted sidebar state
+    // instead of replacing it with a temporary middle-grid anchor.
+    if (quranFocusModeActive) {
+      const savedSidebarAnchor =
+        this._getSavedSidebarAnchorForComponent(componentId);
+      if (savedSidebarAnchor) {
+        return {
+          mode: "sidebar",
+          side: savedSidebarAnchor.side,
+          index: savedSidebarAnchor.index,
+          componentId,
+        };
+      }
+    }
+
+    const sidebarSlot = placeholderParent.classList?.contains("sidebar-slot")
+      ? placeholderParent
+      : placeholderParent.closest?.(".sidebar-slot");
+
+    if (sidebarSlot) {
+      const sidebarZone = sidebarSlot.closest?.(".sidebar-zone");
+      const side =
+        sidebarZone?.id === "sidebarRightZone"
+          ? "right"
+          : sidebarZone?.id === "sidebarLeftZone"
+            ? "left"
+            : null;
+
+      if (side) {
+        const slots = Array.from(
+          sidebarZone.querySelectorAll(":scope > .sidebar-slot"),
+        );
+        const index = slots.indexOf(sidebarSlot);
+
+        return {
+          mode: "sidebar",
+          side,
+          index: index >= 0 ? index : 0,
+          componentId,
+        };
+      }
+    }
+
+    const rowEl = placeholderParent.classList?.contains("grid-flex-row")
+      ? placeholderParent
+      : placeholderParent.closest?.(".grid-flex-row");
+
+    if (!rowEl) return null;
+
+    let rowIndex = Number.parseInt(rowEl.dataset?.rowIndex ?? "", 10);
+    if (!Number.isFinite(rowIndex) || rowIndex < 0) {
+      const rowEls = Array.from(
+        document.querySelectorAll(".content-grid .grid-flex-row"),
+      );
+      const foundIndex = rowEls.indexOf(rowEl);
+      rowIndex = foundIndex >= 0 ? foundIndex : 0;
+    }
+
+    let indexInRow = 0;
+    let beforeComponentId = null;
+    let seenPlaceholder = false;
+    const children = Array.from(rowEl.children || []);
+
+    for (const child of children) {
+      if (child === placeholder) {
+        seenPlaceholder = true;
+        continue;
+      }
+
+      const childId = this._resolveComponentIdFromRestoreNode(child);
+      if (!childId) continue;
+
+      if (!seenPlaceholder) {
+        indexInRow += 1;
+      } else if (!beforeComponentId) {
+        beforeComponentId = childId;
+      }
+    }
+
+    return {
+      mode: "grid",
+      rowIndex: Math.max(0, rowIndex),
+      indexInRow: Math.max(0, indexInRow),
+      beforeComponentId: beforeComponentId || null,
+      componentId,
+    };
+  }
+
+  _persistRestoreAnchor(key, card, st) {
+    const restoreAnchor = this._buildRestoreAnchorFromCurrentDOM(key, card, st);
+    if (!restoreAnchor) return;
+
+    try {
+      const settings = this.getSettings();
+      settings.floating = settings.floating || {};
+      settings.floating[key] = {
+        ...(settings.floating[key] || {}),
+        restoreAnchor,
+      };
+      this.saveSettings(settings);
+    } catch (e) {}
+
+    try {
+      const storedBox = this.getStoredBox(key);
+      const nextStoredBox =
+        storedBox && typeof storedBox === "object"
+          ? { ...storedBox, restoreAnchor }
+          : { restoreAnchor };
+      this.storage.set(this.getBoxStorageKey(key), nextStoredBox);
+    } catch (e) {}
+  }
+
+  _getPersistedRestoreAnchor(key) {
+    let anchor = null;
+
+    try {
+      const storedBox = this.getStoredBox(key);
+      if (
+        storedBox &&
+        typeof storedBox === "object" &&
+        storedBox.restoreAnchor &&
+        typeof storedBox.restoreAnchor === "object"
+      ) {
+        anchor = storedBox.restoreAnchor;
+      }
+    } catch (e) {}
+
+    if (!anchor) {
+      try {
+        anchor = this.getSettings()?.floating?.[key]?.restoreAnchor || null;
+      } catch (e) {
+        anchor = null;
+      }
+    }
+
+    if (!anchor || typeof anchor !== "object") return null;
+    if (anchor.mode !== "sidebar" && anchor.mode !== "grid") return null;
+
+    return anchor;
+  }
+
+  _restoreCardWithPersistedAnchor(key, card, st) {
+    const anchor = this._getPersistedRestoreAnchor(key);
+    if (!anchor) return false;
+
+    const componentId =
+      anchor.componentId ||
+      st?.componentId ||
+      card?.dataset?.gridId ||
+      this.targets?.[key]?.cardId ||
+      card?.id ||
+      null;
+
+    if (anchor.mode === "sidebar") {
+      const side =
+        anchor.side === "right"
+          ? "right"
+          : anchor.side === "left"
+            ? "left"
+            : null;
+      if (!side) return false;
+
+      const grid = window.dashboard?.gridLayout;
+      const sidebarModeActive =
+        !!document.body?.classList?.contains("sidebar-mode") ||
+        grid?.isSidebarModeEnabled === true;
+
+      if (
+        !sidebarModeActive ||
+        !grid ||
+        typeof grid.dockElementToSidebar !== "function"
+      ) {
+        return false;
+      }
+
+      const rawIndex = Number(anchor.index);
+      const insertIndex =
+        Number.isFinite(rawIndex) && rawIndex >= 0
+          ? Math.round(rawIndex)
+          : null;
+
+      try {
+        grid.dockElementToSidebar(card, side, insertIndex);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (anchor.mode === "grid") {
+      const grid = window.dashboard?.gridLayout;
+
+      if (
+        grid &&
+        Array.isArray(grid.rows) &&
+        typeof grid.applyLayout === "function" &&
+        componentId
+      ) {
+        try {
+          const currentRows = JSON.parse(JSON.stringify(grid.rows));
+          const rows = [];
+
+          for (const row of currentRows) {
+            if (!Array.isArray(row)) continue;
+            const nextRow = row.filter((id) => id !== componentId);
+            if (nextRow.length > 0) rows.push(nextRow);
+          }
+
+          let targetRowIndex = Number(anchor.rowIndex);
+          if (!Number.isFinite(targetRowIndex) || targetRowIndex < 0) {
+            targetRowIndex = rows.length;
+          }
+          targetRowIndex = Math.min(Math.round(targetRowIndex), rows.length);
+
+          if (!rows[targetRowIndex]) {
+            rows.splice(targetRowIndex, 0, []);
+          }
+
+          const targetRow = rows[targetRowIndex];
+          let targetIndex = Number(anchor.indexInRow);
+          if (!Number.isFinite(targetIndex) || targetIndex < 0) {
+            targetIndex = targetRow.length;
+          }
+          targetIndex = Math.min(Math.round(targetIndex), targetRow.length);
+
+          targetRow.splice(targetIndex, 0, componentId);
+
+          grid.rows = rows;
+          grid.activeRows = JSON.parse(JSON.stringify(rows));
+          grid.applyLayout(rows);
+
+          if (typeof grid.updateFlexBasisForCurrentDOM === "function") {
+            grid.updateFlexBasisForCurrentDOM();
+          }
+
+          if (typeof grid.saveLayout === "function") {
+            grid.saveLayout();
+          }
+
+          return true;
+        } catch (e) {}
+      }
+
+      try {
+        const rawRowIndex = Number(anchor.rowIndex);
+        const rowSelector =
+          Number.isFinite(rawRowIndex) && rawRowIndex >= 0
+            ? `.content-grid .grid-flex-row[data-row-index="${Math.round(rawRowIndex)}"]`
+            : ".content-grid .grid-flex-row:last-child";
+        const rowEl = document.querySelector(rowSelector);
+        if (!rowEl) return false;
+
+        let beforeEl = null;
+        const beforeComponentId = String(anchor.beforeComponentId || "").trim();
+        if (beforeComponentId) {
+          beforeEl =
+            rowEl.querySelector(`[data-grid-id="${beforeComponentId}"]`) ||
+            rowEl.querySelector(`#${beforeComponentId}`);
+        }
+
+        if (!beforeEl) {
+          const rawIndex = Number(anchor.indexInRow);
+          if (Number.isFinite(rawIndex) && rawIndex >= 0) {
+            const rowChildren = Array.from(rowEl.children || []).filter(
+              (child) => this._resolveComponentIdFromRestoreNode(child),
+            );
+            beforeEl = rowChildren[Math.round(rawIndex)] || null;
+          }
+        }
+
+        rowEl.insertBefore(card, beforeEl);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
   removeCollapseProxy(key) {
     const st = this.runtime.get(key);
     if (!st) return;
@@ -1229,6 +1575,10 @@ class FloatingModeManager {
       } catch (e2) {}
     }
 
+    // Persist a restore anchor so we can recover exact origin even if
+    // placeholder/original parent is lost after layout rebuilds.
+    this._persistRestoreAnchor(key, card, st);
+
     // Detach and float
     document.body.appendChild(card);
     card.classList.add("floating-card");
@@ -1793,7 +2143,17 @@ class FloatingModeManager {
         } catch (e) {}
       }
 
-      // Strategy 3: Use stored original position
+      // Strategy 3: Recover from persisted restore anchor (settings/local storage)
+      // when runtime DOM anchors are unavailable.
+      if (!inserted) {
+        try {
+          inserted = this._restoreCardWithPersistedAnchor(key, card, st);
+        } catch (e) {
+          inserted = false;
+        }
+      }
+
+      // Strategy 4: Use stored original position
       if (!inserted && st.originalParent && st.originalParent.isConnected) {
         try {
           if (
@@ -1811,7 +2171,7 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 4: Find content-grid and append
+      // Strategy 5: Find content-grid and append
       if (!inserted) {
         try {
           const contentGrid = document.querySelector(".content-grid");
@@ -1824,7 +2184,7 @@ class FloatingModeManager {
         }
       }
 
-      // Strategy 4: Last resort - append to body
+      // Strategy 6: Last resort - append to body
       if (!inserted) {
         try {
           (

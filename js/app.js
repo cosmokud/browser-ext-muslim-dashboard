@@ -1976,11 +1976,13 @@ class MuslimDashboard {
       const pocketQuranCard = document.getElementById("pocketQuranCard");
       pocketQuranCard?.classList.remove("quran-focus-entering");
 
-      const restoreMode = "normal";
+      const restoreMode =
+        this._dashboardModeBeforeFocus === "sidebar" ? "sidebar" : "normal";
 
       try {
         const s = this.storage.getSettings();
         s.quranFocusModeEnabled = false;
+        s.sidebarModeEnabled = restoreMode === "sidebar";
 
         // Restore the last non-focus mode (captured on entry).
         s.lastDashboardMode = restoreMode;
@@ -2071,8 +2073,23 @@ class MuslimDashboard {
         window.dispatchEvent(new Event("resize"));
       } catch (e) {}
 
-      // Sidebar behavior is now owned by Layout Edit Mode.
-      this.syncSidebarModeWithLayoutEditMode();
+      // If focus was entered from sidebar mode, restore sidebar layout/state.
+      // Otherwise keep the existing sync behavior for normal mode.
+      let restoredSidebarAfterFocus = false;
+      if (
+        restoreMode === "sidebar" &&
+        typeof this._setSidebarModeEnabled === "function"
+      ) {
+        try {
+          restoredSidebarAfterFocus = this._setSidebarModeEnabled(true) === true;
+        } catch (e) {
+          restoredSidebarAfterFocus = false;
+        }
+      }
+
+      if (!restoredSidebarAfterFocus) {
+        this.syncSidebarModeWithLayoutEditMode();
+      }
     };
 
     // Expose setter for other modes to call.
