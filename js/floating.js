@@ -1738,6 +1738,9 @@ class FloatingModeManager {
       let inserted = false;
 
       const gridLayoutActive = this._isGridLayoutActive();
+      const quranFocusModeActive =
+        !!document.body?.classList?.contains("quran-focus-mode") ||
+        window.dashboard?._quranFocusModeActive === true;
       const placeholderParent = placeholder?.parentNode || null;
       const restoreToSidebarSlot =
         card.classList.contains("sidebar-detached") ||
@@ -1748,7 +1751,12 @@ class FloatingModeManager {
 
       // Strategy 1 (PRIMARY): Apply explicit layout rules for floating -> tiling restore.
       // This prevents components from jumping to the top when edit-mode layout changed.
-      if (!inserted && gridLayoutActive && !restoreToSidebarSlot) {
+      if (
+        !inserted &&
+        gridLayoutActive &&
+        !restoreToSidebarSlot &&
+        !quranFocusModeActive
+      ) {
         try {
           if (placeholder && placeholder.parentNode) {
             placeholder.remove();
@@ -1761,8 +1769,11 @@ class FloatingModeManager {
       }
 
       // Strategy 2: Use placeholder position for non-grid layout mode and
-      // for cards that originated from sidebar slots.
-      if (!inserted && (!gridLayoutActive || restoreToSidebarSlot)) {
+      // for cards that originated from sidebar slots/focus-mode context.
+      if (
+        !inserted &&
+        (!gridLayoutActive || restoreToSidebarSlot || quranFocusModeActive)
+      ) {
         const placeholderStillValid = !!(placeholder && placeholder.parentNode);
 
         if (placeholderStillValid) {
