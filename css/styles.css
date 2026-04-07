@@ -10414,8 +10414,8 @@ html[data-theme-mode="light"]
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
-  max-height: 360px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   overflow-x: visible;
   padding: calc(var(--bg-pool-hover-lift) + 1px) 2px 2px;
 }

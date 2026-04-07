@@ -771,6 +771,11 @@ class BackgroundManager extends BaseManager {
 
   _getSolidBackgrounds(settings) {
     const defaultUrls = this._getDefaultSolidBackgroundUrls();
+    const defaultSet = new Set(
+      defaultUrls
+        .map((entry) => this._normalizeImageUrl(entry))
+        .filter(Boolean),
+    );
     const customHexes = Array.isArray(settings?.solidColorTemplates)
       ? settings.solidColorTemplates
           .map((entry) => this._normalizeSolidColorHex(entry))
@@ -792,6 +797,7 @@ class BackgroundManager extends BaseManager {
         url: normalizedUrl,
         credit: "",
         href: "",
+        isCustomSolid: !defaultSet.has(normalizedUrl),
       });
     });
 

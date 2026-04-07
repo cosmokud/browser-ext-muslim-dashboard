@@ -5755,24 +5755,40 @@ class SettingsManager extends BaseManager {
           this.backgrounds &&
           typeof this.backgrounds.normalizeImage === "function"
         ) {
-          return this.backgrounds.normalizeImage(entry);
+          const normalized = this.backgrounds.normalizeImage(entry);
+          return {
+            ...normalized,
+            isCustomSolid:
+              Boolean(entry?.isCustomSolid) ||
+              Boolean(normalized?.isCustomSolid),
+          };
         }
 
         if (typeof entry === "string") {
-          return { url: entry, credit: "", href: "" };
+          return { url: entry, credit: "", href: "", isCustomSolid: false };
         }
 
         return {
           url: entry?.url || "",
           credit: entry?.credit || "",
           href: entry?.href || "",
+          isCustomSolid: entry?.isCustomSolid === true,
         };
       })
       .map((entry) => ({
         ...entry,
         url: this.normalizeBackgroundImageUrl(entry.url),
+        isCustomSolid: entry?.isCustomSolid === true,
       }))
       .filter((entry) => Boolean(entry.url));
+
+    const solidCustomTemplateSet = new Set(
+      selectedCategory === "solid" && Array.isArray(settings.solidColorTemplates)
+        ? settings.solidColorTemplates
+            .map((entry) => this.normalizeSolidColorHex(entry))
+            .filter(Boolean)
+        : [],
+    );
 
     this._activeBgPoolCategory = selectedCategory;
     this._activeBgPoolImages = images;
@@ -5813,9 +5829,12 @@ class SettingsManager extends BaseManager {
       item.setAttribute("aria-pressed", isSelected ? "true" : "false");
 
       let thumb = null;
+      let solidHex = "";
+      let isCustomSolidTemplate = false;
       if (selectedCategory === "solid") {
-        const solidHex =
-          this.solidColorBackgroundUrlToHex(entry.url) || "#000000";
+        solidHex = this.solidColorBackgroundUrlToHex(entry.url) || "#000000";
+        isCustomSolidTemplate =
+          entry?.isCustomSolid === true || solidCustomTemplateSet.has(solidHex);
         const swatch = document.createElement("span");
         swatch.className = "custom-bg-color-swatch";
         swatch.style.background = solidHex;
@@ -5846,7 +5865,11 @@ class SettingsManager extends BaseManager {
       check.textContent = "✓";
       check.setAttribute("aria-hidden", "true");
 
-      if (selectedCategory === "custom") {
+      const canDeleteCustomBg = selectedCategory === "custom";
+      const canDeleteCustomSolid =
+        selectedCategory === "solid" && isCustomSolidTemplate;
+
+      if (canDeleteCustomBg || canDeleteCustomSolid) {
         const deleteBtn = document.createElement("span");
         deleteBtn.className = "custom-bg-item-delete";
         deleteBtn.innerHTML = this._getIcon("🗑️", {
@@ -5855,10 +5878,17 @@ class SettingsManager extends BaseManager {
         });
         deleteBtn.setAttribute("role", "button");
         deleteBtn.setAttribute("tabindex", "0");
-        deleteBtn.setAttribute("title", "Remove from custom backgrounds");
+        deleteBtn.setAttribute(
+          "title",
+          canDeleteCustomSolid
+            ? "Remove custom solid color"
+            : "Remove from custom backgrounds",
+        );
         deleteBtn.setAttribute(
           "aria-label",
-          `Remove custom background ${index + 1}`,
+          canDeleteCustomSolid
+            ? `Remove custom solid color ${solidHex || index + 1}`
+            : `Remove custom background ${index + 1}`,
         );
 
         const deleteHandler = (event) => {
@@ -5867,14 +5897,23 @@ class SettingsManager extends BaseManager {
           void (async () => {
             const confirmed = await this.openConfirmModal({
               icon: "🗑️",
-              title: "Remove Background?",
-              text: "This background will be removed from your custom pool.",
+              title: canDeleteCustomSolid
+                ? "Remove Custom Solid Color?"
+                : "Remove Background?",
+              text: canDeleteCustomSolid
+                ? "This custom solid color will be removed from your palette."
+                : "This background will be removed from your custom pool.",
               hint: "You can import it again anytime.",
               confirmLabel: "Remove",
               cancelLabel: "Keep",
             });
 
             if (!confirmed) return;
+            if (canDeleteCustomSolid) {
+              await this.removeSolidColorTemplate(entry.url);
+              return;
+            }
+
             await this.removeCustomBackgroundFromPool(entry.url);
           })();
         };
@@ -6014,6 +6053,75 @@ class SettingsManager extends BaseManager {
     }
 
     this.showToast("Solid color template added!", "success");
+    return true;
+  }
+
+  async removeSolidColorTemplate(value) {
+    const solidHex = this.normalizeSolidColorHex(value);
+    if (!solidHex) {
+      return false;
+    }
+
+    const settings = this.storage.getSettings();
+    const customTemplates = Array.isArray(settings.solidColorTemplates)
+      ? settings.solidColorTemplates
+          .map((entry) => this.normalizeSolidColorHex(entry))
+          .filter(Boolean)
+      : [];
+
+    if (!customTemplates.includes(solidHex)) {
+      this.showToast("Only custom solid colors can be removed.", "error");
+      return false;
+    }
+
+    settings.solidColorTemplates = customTemplates.filter(
+      (entry) => entry !== solidHex,
+    );
+
+    const solidUrl = this.solidColorHexToBackgroundUrl(solidHex);
+    const selectionMap = this.getBackgroundImageSelectionMap(settings);
+    const currentSolidSelection = Array.isArray(selectionMap.solid)
+      ? selectionMap.solid
+          .map((entry) => this.normalizeBackgroundImageUrl(entry))
+          .filter(Boolean)
+      : [];
+
+    if (solidUrl) {
+      selectionMap.solid = currentSolidSelection.filter(
+        (entry) => entry !== solidUrl,
+      );
+    } else {
+      selectionMap.solid = currentSolidSelection;
+    }
+    settings.backgroundImageSelections = selectionMap;
+
+    this.storage.saveSettings(settings);
+    this.renderBackgroundImagePool();
+    this._backgroundSettingsDirty = true;
+
+    const currentBgUrl = this.normalizeBackgroundImageUrl(
+      (typeof this.backgrounds?.getCurrentImageUrl === "function"
+        ? this.backgrounds.getCurrentImageUrl(settings)
+        : this.backgrounds?.currentImageUrl) || "",
+    );
+
+    if (solidUrl && currentBgUrl === solidUrl) {
+      const availableSolidUrls = new Set(
+        (this.getAllBackgroundImagesForCategory("solid", settings) || [])
+          .map((entry) =>
+            this.normalizeBackgroundImageUrl(
+              typeof entry === "string" ? entry : entry?.url,
+            ),
+          )
+          .filter(Boolean),
+      );
+
+      if (!availableSolidUrls.has(solidUrl)) {
+        this.refreshBackgroundAfterSettingsSave(settings);
+      }
+    }
+
+    this.showToast("Custom solid color removed.", "success");
     return true;
   }
 
