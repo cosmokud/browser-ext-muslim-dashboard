@@ -540,15 +540,21 @@ body.sidebar-mode.grid-edit-mode
 body.sidebar-mode.grid-edit-mode
   #sidebarMiddle
   > .middle-layout-resize-handle:hover::after,
-body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::before,
-body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::after {
+body.middle-layout-resizing
+  #sidebarMiddle
+  > .middle-layout-resize-handle::before,
+body.middle-layout-resizing
+  #sidebarMiddle
+  > .middle-layout-resize-handle::after {
   opacity: 0.9;
 }
 
 body.sidebar-mode.grid-edit-mode
   #sidebarMiddle
   > .middle-layout-resize-handle:hover::before,
-body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::before {
+body.middle-layout-resizing
+  #sidebarMiddle
+  > .middle-layout-resize-handle::before {
   transform: translateY(-50%) scaleY(1);
 }
 
