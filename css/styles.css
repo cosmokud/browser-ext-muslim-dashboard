@@ -443,65 +443,113 @@ body.sidebar-mode .sidebar-layout {
 
 .middle-layout-resize-handle {
   position: absolute;
-  top: 10px;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+  top: 0;
+  bottom: 0;
+  width: 20px;
   opacity: 0;
   pointer-events: none;
   cursor: ew-resize;
   touch-action: none;
-  z-index: 6;
+  z-index: 7;
   transition:
     opacity var(--transition-fast),
-    transform var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast);
+    background var(--transition-fast);
 }
 
 .middle-layout-resize-handle::before,
 .middle-layout-resize-handle::after {
   content: "";
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  width: 2px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .middle-layout-resize-handle::before {
-  left: 6px;
+  top: 50%;
+  width: 2px;
+  height: min(240px, 52%);
+  border-radius: var(--radius-full);
+  transform: translateY(-50%) scaleY(0.8);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 12%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.25) 88%,
+    transparent 100%
+  );
 }
 
 .middle-layout-resize-handle::after {
-  right: 6px;
+  top: 0;
+  bottom: 0;
+  width: 100%;
 }
 
 .middle-layout-resize-handle-left {
-  left: 10px;
+  left: 0;
+}
+
+.middle-layout-resize-handle-left::before {
+  right: 5px;
+}
+
+.middle-layout-resize-handle-left::after {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
 .middle-layout-resize-handle-right {
-  right: 10px;
+  right: 0;
+}
+
+.middle-layout-resize-handle-right::before {
+  left: 5px;
+}
+
+.middle-layout-resize-handle-right::after {
+  background: linear-gradient(
+    270deg,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
 body.sidebar-mode.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
-  opacity: 0.55;
+  opacity: 1;
   pointer-events: auto;
 }
 
 body.sidebar-mode.grid-edit-mode
+  #sidebarMiddle:hover
+  > .middle-layout-resize-handle::before,
+body.sidebar-mode.grid-edit-mode
+  #sidebarMiddle:hover
+  > .middle-layout-resize-handle::after {
+  opacity: 0.45;
+}
+
+body.sidebar-mode.grid-edit-mode
   #sidebarMiddle
-  > .middle-layout-resize-handle:hover,
-body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle {
-  opacity: 0.95;
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.36);
+  > .middle-layout-resize-handle:hover::before,
+body.sidebar-mode.grid-edit-mode
+  #sidebarMiddle
+  > .middle-layout-resize-handle:hover::after,
+body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::before,
+body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::after {
+  opacity: 0.9;
+}
+
+body.sidebar-mode.grid-edit-mode
+  #sidebarMiddle
+  > .middle-layout-resize-handle:hover::before,
+body.middle-layout-resizing #sidebarMiddle > .middle-layout-resize-handle::before {
+  transform: translateY(-50%) scaleY(1);
 }
 
 body.middle-layout-resizing {
