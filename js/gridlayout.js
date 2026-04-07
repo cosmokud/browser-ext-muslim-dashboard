@@ -2292,7 +2292,8 @@ class GridLayoutManager {
     }
 
     // Two modes only:
-    // 1) Normal 3-items row -> each item hard-limited to one third of container.
+    // 1) Normal layout -> each item hard-limited to its default width for the
+    //    current row density (1, 2, or 3 visible items).
     // 2) Compressed single-item row -> full container width allowed.
     if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
       return fallbackCap;
@@ -2303,20 +2304,26 @@ class GridLayoutManager {
       return Math.max(1, Math.round(fallbackCap / 3));
     }
 
+    const visibleChildren = Array.from(row.children).filter(
+      (child) => !this.isComponentHidden(child),
+    );
+    const visibleCount = Math.max(1, visibleChildren.length);
+
     const rowWidth = Math.round(
       row.getBoundingClientRect().width || row.clientWidth || 0,
     );
     const rowGap = this.getGridFlexRowGapPx(row);
 
-    // Use the default 3-items mode width: (row width - 2 gaps) / 3.
-    // This keeps each card at or below its original 3-column size,
-    // even when only 2 cards are currently visible in that row.
-    const defaultThreeItemWidth = Math.max(
+    const totalGapWidth = Math.max(0, visibleCount - 1) * rowGap;
+
+    // Use the default width for the current row composition:
+    // 1 item: full row, 2 items: half row (minus 1 gap), 3 items: third row (minus 2 gaps).
+    const defaultRowWidth = Math.max(
       1,
-      Math.round(Math.max(0, rowWidth - rowGap * 2) / 3),
+      Math.round(Math.max(0, rowWidth - totalGapWidth) / visibleCount),
     );
 
-    return Math.max(1, Math.min(fallbackCap, defaultThreeItemWidth));
+    return Math.max(1, Math.min(fallbackCap, defaultRowWidth));
   }
 
   runViewportResizeLayoutSync({ force = false } = {}) {
