@@ -17,6 +17,7 @@ class WeatherManager extends BaseManager {
     this.weatherFeelsLike = document.getElementById("weatherFeelsLike");
     this.weatherHumidity = document.getElementById("weatherHumidity");
     this.weatherWind = document.getElementById("weatherWind");
+    this.weatherDetails = this.weatherCard?.querySelector(".weather-details");
     this.weatherRefreshBtn = document.getElementById("weatherRefreshBtn");
 
     this.weatherForecast = document.getElementById("weatherForecast");
@@ -46,6 +47,7 @@ class WeatherManager extends BaseManager {
     this._forecastResizeTimer = null; // used for debouncing forecast layout recalcs
     this._weatherCardResizeTimer = null;
     this._weatherResizeObserver = null;
+    this._weatherDetailsStackLock = false;
     this.selectedForecastIndex = 0;
     this.selectedMetric = "temperature";
 
@@ -1349,6 +1351,8 @@ class WeatherManager extends BaseManager {
     // Update compact weather as well
     this.updateCompactWeather();
 
+    this.syncWeatherResponsiveLayout();
+
     this.render7DayForecast();
     this.updateMetricTabs();
     this.renderHourlyChart();
@@ -1393,6 +1397,44 @@ class WeatherManager extends BaseManager {
     );
   }
 
+  isWeatherDetailsWrapping() {
+    const weatherDetails =
+      this.weatherDetails ||
+      this.weatherCard?.querySelector(".weather-details") ||
+      null;
+    if (!weatherDetails) return false;
+    if (weatherDetails.clientWidth <= 0) return false;
+
+    const detailItems = Array.from(
+      weatherDetails.querySelectorAll(".weather-detail-item"),
+    );
+    const detailValues = Array.from(
+      weatherDetails.querySelectorAll(".weather-detail-value"),
+    );
+
+    let wrappedToSecondRow = false;
+    if (detailItems.length > 1) {
+      const firstTop = Math.round(detailItems[0].getBoundingClientRect().top);
+      wrappedToSecondRow = detailItems.some(
+        (item, index) =>
+          index > 0 &&
+          Math.abs(Math.round(item.getBoundingClientRect().top) - firstTop) > 1,
+      );
+    }
+
+    const valueTextWrapped = detailValues.some((valueEl) => {
+      const rects = valueEl.getClientRects();
+      return rects && rects.length > 1;
+    });
+
+    const detailsOverflowingHorizontally =
+      weatherDetails.scrollWidth > weatherDetails.clientWidth + 1;
+
+    return (
+      wrappedToSecondRow || valueTextWrapped || detailsOverflowingHorizontally
+    );
+  }
+
   syncWeatherResponsiveLayout() {
     if (!this.weatherCard) return;
 
@@ -1402,9 +1444,21 @@ class WeatherManager extends BaseManager {
       return;
     }
 
-    let layoutMode = "wide";
-    if (responsiveWidth <= 1000) layoutMode = "stacked";
-    else if (responsiveWidth <= 1200) layoutMode = "compact";
+    const detailsWrapping = this.isWeatherDetailsWrapping();
+    if (detailsWrapping) {
+      this._weatherDetailsStackLock = true;
+    } else if (responsiveWidth > 1200) {
+      this._weatherDetailsStackLock = false;
+    }
+
+    const shouldStackFromDetails =
+      detailsWrapping ||
+      (this._weatherDetailsStackLock && responsiveWidth <= 1200);
+
+    let layoutMode = responsiveWidth <= 1200 ? "compact" : "wide";
+    if (responsiveWidth <= 1000 || shouldStackFromDetails) {
+      layoutMode = "stacked";
+    }
 
     this.weatherCard.setAttribute("data-weather-layout", layoutMode);
   }
