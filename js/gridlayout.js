@@ -50,7 +50,7 @@ class GridLayoutManager {
     this.sidebarResizeState = null;
     this.isMiddleLayoutResizing = false;
     this.middleLayoutResizeState = null;
-    this.sidebarMiddleLayoutDefaultWidth = 960;
+    this.sidebarMiddleLayoutDefaultWidth = 1400;
     this.sidebarMiddleLayoutMinWidth = 800;
     this.sidebarMiddleLayoutSideGutter = 80;
 
@@ -268,8 +268,10 @@ class GridLayoutManager {
 
   getCurrentSidebarMiddleLayoutWidth() {
     const middleEl = this.getSidebarMiddleElement();
+    const mainContainer = document.querySelector("#sidebarMiddle > .main-container");
+    const rectSource = this.isSidebarModeEnabled ? middleEl : mainContainer;
     const rectWidth = Math.round(
-      (middleEl && middleEl.getBoundingClientRect().width) || 0,
+      (rectSource && rectSource.getBoundingClientRect().width) || 0,
     );
     if (rectWidth > 0) return rectWidth;
 
@@ -2244,7 +2246,6 @@ class GridLayoutManager {
 
   tryStartMiddleLayoutResize(target, clientX, sourceEvent = null) {
     if (!this.isEditModeEnabled || this.isEditModeLocked) return false;
-    if (!this.isSidebarModeEnabled) return false;
 
     const handle = target?.closest?.(".middle-layout-resize-handle");
     if (!handle || !handle.closest("#sidebarMiddle")) {
@@ -2280,7 +2281,6 @@ class GridLayoutManager {
 
   handleMiddleLayoutResizeDoubleClick(e) {
     if (!this.isEditModeEnabled || this.isEditModeLocked) return;
-    if (!this.isSidebarModeEnabled) return;
 
     const handle = e.target?.closest?.(".middle-layout-resize-handle");
     if (!handle || !handle.closest("#sidebarMiddle")) {

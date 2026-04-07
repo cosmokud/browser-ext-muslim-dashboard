@@ -410,7 +410,7 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
 
 /* Main Container */
 .main-container {
-  max-width: 1400px;
+  max-width: min(100%, var(--sidebar-middle-fixed-width, 1400px));
   margin: 0 auto;
   padding: var(--spacing-xl);
   min-height: 100vh;
@@ -430,7 +430,7 @@ html[data-highest-visual-fidelity="false"]:not([data-performance-mode="true"])
 
 body.sidebar-mode .sidebar-layout {
   display: grid;
-  --sidebar-middle-min-width: 960px;
+  --sidebar-middle-min-width: 1400px;
   --sidebar-middle-fixed-width: var(--sidebar-middle-min-width);
   grid-template-columns:
     minmax(0, 1fr)
@@ -445,7 +445,7 @@ body.sidebar-mode .sidebar-layout {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 20px;
+  width: 26px;
   opacity: 0;
   pointer-events: none;
   cursor: ew-resize;
@@ -520,26 +520,29 @@ body.sidebar-mode .sidebar-layout {
   );
 }
 
-body.sidebar-mode.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle {
   opacity: 1;
   pointer-events: auto;
 }
 
-body.sidebar-mode.grid-edit-mode
-  #sidebarMiddle:hover
-  > .middle-layout-resize-handle::before,
-body.sidebar-mode.grid-edit-mode
-  #sidebarMiddle:hover
-  > .middle-layout-resize-handle::after {
-  opacity: 0.45;
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle::before,
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle::after {
+  opacity: 0.14;
 }
 
-body.sidebar-mode.grid-edit-mode
-  #sidebarMiddle
-  > .middle-layout-resize-handle:hover::before,
-body.sidebar-mode.grid-edit-mode
-  #sidebarMiddle
-  > .middle-layout-resize-handle:hover::after,
+body.grid-edit-mode #sidebarMiddle:hover > .middle-layout-resize-handle::before,
+body.grid-edit-mode #sidebarMiddle:hover > .middle-layout-resize-handle::after,
+body.grid-edit-mode
+  #sidebarMiddle:has(> .main-container:hover)
+  > .middle-layout-resize-handle::before,
+body.grid-edit-mode
+  #sidebarMiddle:has(> .main-container:hover)
+  > .middle-layout-resize-handle::after {
+  opacity: 0.52;
+}
+
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle:hover::before,
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle:hover::after,
 body.middle-layout-resizing
   #sidebarMiddle
   > .middle-layout-resize-handle::before,
@@ -549,9 +552,7 @@ body.middle-layout-resizing
   opacity: 0.9;
 }
 
-body.sidebar-mode.grid-edit-mode
-  #sidebarMiddle
-  > .middle-layout-resize-handle:hover::before,
+body.grid-edit-mode #sidebarMiddle > .middle-layout-resize-handle:hover::before,
 body.middle-layout-resizing
   #sidebarMiddle
   > .middle-layout-resize-handle::before {
