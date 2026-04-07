@@ -537,6 +537,7 @@ class PocketQuranManager extends BaseManager {
   static BUFFER_AYAHS = 3; // Extra ayahs above/below viewport
   static SCROLL_THROTTLE_MS = 16; // ~60fps throttle
   static SCROLL_IDLE_COMMIT_MS = 140; // Delay before committing deferred measurements
+  static BOTTOM_LOCK_THRESHOLD_PX = 3; // Keep thumb pinned when user is already at bottom
 
   // How many pixels of an ayah should be visible before we consider it "active".
   // Increasing this makes the active-ayah detection less "tight".
@@ -1375,8 +1376,25 @@ class PocketQuranManager extends BaseManager {
   /**
    * Calculate the total scrollable height based on estimated/measured ayah heights.
    */
-  updateTotalHeight() {
+  updateTotalHeight(opts = {}) {
     if (!this._virtualSpacer || !this._activeVerses?.length) return;
+
+    const preserveBottomEdge = opts?.preserveBottomEdge === true;
+    const container = this._virtualContainer;
+    let previousScrollTop = 0;
+    let previousMaxScrollTop = 0;
+    let wasNearBottom = false;
+
+    if (preserveBottomEdge && container) {
+      previousScrollTop = container.scrollTop;
+      previousMaxScrollTop = Math.max(
+        0,
+        container.scrollHeight - container.clientHeight,
+      );
+      wasNearBottom =
+        previousMaxScrollTop - previousScrollTop <=
+        PocketQuranManager.BOTTOM_LOCK_THRESHOLD_PX;
+    }
 
     let totalHeight = 0;
     const total = this._activeVerses.length;
@@ -1388,6 +1406,21 @@ class PocketQuranManager extends BaseManager {
     }
 
     this._virtualSpacer.style.height = `${totalHeight}px`;
+
+    if (!preserveBottomEdge || !container) return;
+
+    const nextMaxScrollTop = Math.max(
+      0,
+      container.scrollHeight - container.clientHeight,
+    );
+
+    if (wasNearBottom) {
+      container.scrollTop = nextMaxScrollTop;
+    } else if (previousScrollTop > nextMaxScrollTop) {
+      container.scrollTop = nextMaxScrollTop;
+    }
+
+    this._lastScrollTop = container.scrollTop;
   }
 
   /**
@@ -1628,6 +1661,7 @@ class PocketQuranManager extends BaseManager {
     const ayahEls = this._virtualContent.querySelectorAll(".pocket-quran-ayah");
     let totalMeasured = 0;
     let measureCount = 0;
+    let heightsChanged = false;
 
     ayahEls.forEach((el) => {
       const index = parseInt(el.dataset.index, 10);
@@ -1637,21 +1671,30 @@ class PocketQuranManager extends BaseManager {
       const height = rect.height;
 
       if (height > 0) {
-        this._ayahHeights.set(index, height);
+        const previousHeight = this._ayahHeights.get(index);
+        if (
+          !Number.isFinite(previousHeight) ||
+          Math.abs(previousHeight - height) > 0.5
+        ) {
+          this._ayahHeights.set(index, height);
+          heightsChanged = true;
+        }
         totalMeasured += height;
         measureCount++;
       }
     });
 
     // Update average height
-    if (measureCount > 0) {
+    if (measureCount > 0 && heightsChanged) {
       const newAvg = totalMeasured / measureCount;
       // Smooth the average to avoid sudden jumps
       this._avgAyahHeight = this._avgAyahHeight * 0.7 + newAvg * 0.3;
     }
 
-    // Update total height if measurements changed
-    this.updateTotalHeight();
+    // Commit scroll height only when actual measurements changed.
+    if (heightsChanged) {
+      this.updateTotalHeight({ preserveBottomEdge: true });
+    }
   }
 
   /**
