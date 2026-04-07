@@ -49,6 +49,8 @@ class WeatherManager extends BaseManager {
     this._responsiveSyncTimer = null;
     this._responsiveSyncRaf1 = null;
     this._responsiveSyncRaf2 = null;
+    this._responsiveSyncFrameRaf = null;
+    this._responsiveSyncFrameIncludeChart = false;
     this._weatherResizeObserver = null;
     this._weatherContentResizeObserver = null;
     this._weatherMainContainerResizeObserver = null;
@@ -57,12 +59,8 @@ class WeatherManager extends BaseManager {
       "md:settings-applied",
       "md:visibility-changed",
     ];
-    this._externalLayoutSyncHandler = () => {
-      this.scheduleResponsiveLayoutSync({
-        includeChart: true,
-        settlePass: true,
-        debounceMs: 48,
-      });
+    this._externalLayoutSyncHandler = (event) => {
+      this.handleExternalLayoutLiveResize(event?.detail || {});
     };
     this._weatherCardContentWidth = 0;
     this.selectedForecastIndex = 0;
@@ -72,6 +70,7 @@ class WeatherManager extends BaseManager {
     this._onResize = () => {
       if (this._resizeTimer) window.clearTimeout(this._resizeTimer);
       this._resizeTimer = window.setTimeout(() => {
+        this.queueResponsiveLayoutSyncFrame({ includeChart: false });
         this.scheduleResponsiveLayoutSync({
           includeChart: true,
           settlePass: true,
@@ -85,6 +84,7 @@ class WeatherManager extends BaseManager {
       if (this._forecastResizeTimer)
         window.clearTimeout(this._forecastResizeTimer);
       this._forecastResizeTimer = window.setTimeout(() => {
+        this.queueResponsiveLayoutSyncFrame({ includeChart: false });
         this.scheduleResponsiveLayoutSync({
           includeChart: false,
           settlePass: true,
@@ -97,6 +97,7 @@ class WeatherManager extends BaseManager {
       if (this._weatherCardResizeTimer)
         window.clearTimeout(this._weatherCardResizeTimer);
       this._weatherCardResizeTimer = window.setTimeout(() => {
+        this.queueResponsiveLayoutSyncFrame({ includeChart: false });
         this.scheduleResponsiveLayoutSync({
           includeChart: true,
           settlePass: true,
@@ -494,6 +495,61 @@ class WeatherManager extends BaseManager {
     if (includeChart) {
       this.renderHourlyChart();
     }
+  }
+
+  queueResponsiveLayoutSyncFrame({ includeChart = false } = {}) {
+    if (includeChart) {
+      this._responsiveSyncFrameIncludeChart = true;
+    }
+
+    if (this._responsiveSyncFrameRaf) {
+      return;
+    }
+
+    this._responsiveSyncFrameRaf = requestAnimationFrame(() => {
+      this._responsiveSyncFrameRaf = null;
+      const shouldRenderChart = this._responsiveSyncFrameIncludeChart;
+      this._responsiveSyncFrameIncludeChart = false;
+      this.runResponsiveLayoutSync({ includeChart: shouldRenderChart });
+    });
+  }
+
+  handleExternalLayoutLiveResize(detail = {}) {
+    const reason = String(detail?.reason || "").trim();
+
+    // High-frequency drag/resize updates: keep weather-content layout live on
+    // every frame so card mode changes are visible while dragging.
+    if (
+      reason === "component-width" ||
+      reason === "sidebar-component-width" ||
+      reason === "middle-layout-width"
+    ) {
+      this.queueResponsiveLayoutSyncFrame({ includeChart: false });
+      return;
+    }
+
+    // Resize-end transitions should include a settled pass for chart sizing
+    // and any transient width reflow after mouse/touch release.
+    if (
+      reason === "component-resize-end" ||
+      reason === "middle-layout-resize-end" ||
+      reason === "container-width-setting" ||
+      reason === "viewport-resize-sync"
+    ) {
+      this.queueResponsiveLayoutSyncFrame({ includeChart: false });
+      this.scheduleResponsiveLayoutSync({
+        includeChart: true,
+        settlePass: true,
+        debounceMs: 16,
+      });
+      return;
+    }
+
+    this.scheduleResponsiveLayoutSync({
+      includeChart: true,
+      settlePass: true,
+      debounceMs: 48,
+    });
   }
 
   scheduleResponsiveLayoutSync({

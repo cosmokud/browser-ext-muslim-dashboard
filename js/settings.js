@@ -8010,6 +8010,13 @@ class SettingsManager extends BaseManager {
         }),
       );
     } catch (e) {}
+
+    try {
+      const weather = window.dashboard?.weather;
+      if (weather && typeof weather.handleExternalLayoutLiveResize === "function") {
+        weather.handleExternalLayoutLiveResize(detail || {});
+      }
+    } catch (e) {}
   }
 
   applyContainerWidth(width, customValue) {
