@@ -372,7 +372,10 @@ class MomentModeManager {
     // Apply deferred floating preferences after Moment mode exits.
     try {
       const floating = this.dashboard.floating;
-      if (floating && typeof floating.applyDeferredFromSettings === "function") {
+      if (
+        floating &&
+        typeof floating.applyDeferredFromSettings === "function"
+      ) {
         floating.applyDeferredFromSettings();
       } else if (
         floating &&
@@ -385,8 +388,8 @@ class MomentModeManager {
     try {
       if (
         this.dashboard.floating &&
-        typeof this.dashboard.floating.enforceNonFloatingFromDashboardSettings ===
-          "function"
+        typeof this.dashboard.floating
+          .enforceNonFloatingFromDashboardSettings === "function"
       ) {
         this.dashboard.floating.enforceNonFloatingFromDashboardSettings();
       }
