@@ -58,6 +58,8 @@ class GridLayoutManager {
     this.sidebarMiddleLayoutSideGutter = 48;
     this.sidebarAutoRestoreMinSideWidth = 0;
     this.threeItemSingleRowCollapseThresholdWidth = 1200;
+    this.currentMainContainerLayoutMode = null;
+    this.lastMainContainerResponsiveWidth = 0;
     this.viewportAutoZoomThresholdWidth = 1000;
     this.viewportAutoZoomActive = false;
     this.viewportAutoZoomScale = 1;
@@ -852,6 +854,18 @@ class GridLayoutManager {
     return "quranFocusMiddleComponentWidths";
   }
 
+  getNormalWideMiddleWidthStorageKey() {
+    return "sidebarMiddleComponentWidthsNormalWide";
+  }
+
+  getCompressedMiddleWidthStorageKey() {
+    return "sidebarMiddleComponentWidthsCompressed";
+  }
+
+  getLegacyMiddleWidthStorageKey() {
+    return "sidebarMiddleComponentWidths";
+  }
+
   getMiddleWidthStorageKey(componentId = "") {
     const id = String(componentId || "").trim();
     const isQuranFocusPocketQuran =
@@ -861,7 +875,10 @@ class GridLayoutManager {
       return this.getFocusModeMiddleWidthStorageKey();
     }
 
-    return "sidebarMiddleComponentWidths";
+    const mainLayoutMode = this.getMainContainerLayoutMode();
+    return mainLayoutMode === "compressed"
+      ? this.getCompressedMiddleWidthStorageKey()
+      : this.getNormalWideMiddleWidthStorageKey();
   }
 
   getSidebarWidthMapFromSettings() {
@@ -889,7 +906,22 @@ class GridLayoutManager {
 
   getMiddleWidthMapFromSettings(componentId = "") {
     const settings = this.storage.getSettings();
-    const raw = settings[this.getMiddleWidthStorageKey(componentId)];
+    const selectedKey = this.getMiddleWidthStorageKey(componentId);
+
+    let raw = settings[selectedKey];
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      // Back-compat: if mode-specific maps are missing, fall back to the
+      // previous single-key middle width map.
+      const legacyRaw = settings[this.getLegacyMiddleWidthStorageKey()];
+      if (
+        legacyRaw &&
+        typeof legacyRaw === "object" &&
+        !Array.isArray(legacyRaw)
+      ) {
+        raw = legacyRaw;
+      }
+    }
+
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       return {};
     }
@@ -906,9 +938,18 @@ class GridLayoutManager {
 
   saveMiddleWidthMapToSettings(widthMap, componentId = "") {
     const settings = this.storage.getSettings();
-    settings[this.getMiddleWidthStorageKey(componentId)] = {
+    const selectedKey = this.getMiddleWidthStorageKey(componentId);
+    settings[selectedKey] = {
       ...(widthMap || {}),
     };
+
+    // Back-compat: keep the legacy key synchronized with the normal-wide map.
+    if (selectedKey === this.getNormalWideMiddleWidthStorageKey()) {
+      settings[this.getLegacyMiddleWidthStorageKey()] = {
+        ...(widthMap || {}),
+      };
+    }
+
     this.storage.saveSettings(settings);
   }
 
@@ -1019,28 +1060,48 @@ class GridLayoutManager {
   getMiddleMaxResizeWidth(el) {
     if (!el) return this.getMiddleMinResizeWidth(el);
 
+    const minWidth = this.getMiddleMinResizeWidth(el);
     const currentWidth = Math.round(el.getBoundingClientRect().width || 0);
     if (this.isFocusModePocketQuranElement(el)) {
       // Focus mode uses a fixed-position Pocket Quran overlay, so clamp by viewport
       // width instead of row/layout flow to bypass grid/container limits.
       const viewportWidth = Math.round((window.innerWidth || 0) - 24);
-      return Math.max(
-        viewportWidth,
-        currentWidth,
-        this.getMiddleMinResizeWidth(el),
-      );
+      return Math.max(viewportWidth, currentWidth, minWidth);
     }
 
     const row = el.closest(".grid-flex-row");
     const rowWidth = Math.round((row && row.clientWidth) || 0);
     const layoutWidth = Math.round(this.getLayoutWidth() || 0);
+    const baseMax = Math.max(rowWidth, layoutWidth, currentWidth, minWidth);
 
-    return Math.max(
-      rowWidth,
-      layoutWidth,
-      currentWidth,
-      this.getMiddleMinResizeWidth(el),
-    );
+    const componentId = this.getSidebarComponentId(el);
+    if (
+      !this.isSidebarModeEnabled &&
+      this.isThreeItemComponentId(componentId)
+    ) {
+      const mainContainerWidth = Math.round(
+        this.getMainContainerResponsiveWidth() || 0,
+      );
+      const hardCap = Math.max(
+        1,
+        Math.round(
+          Math.min(
+            Number.isFinite(mainContainerWidth) && mainContainerWidth > 0
+              ? mainContainerWidth
+              : baseMax,
+            Number(this.threeItemSingleRowCollapseThresholdWidth) || 1200,
+          ),
+        ),
+      );
+
+      const cappedByRowBudget = this.getThreeItemRowResizeBudgetCap(
+        el,
+        hardCap,
+      );
+      return Math.max(1, Math.min(baseMax, cappedByRowBudget));
+    }
+
+    return baseMax;
   }
 
   applySidebarWidthToElement(el, widthPx, { persist = true } = {}) {
@@ -1250,16 +1311,40 @@ class GridLayoutManager {
     el.classList.remove("sidebar-resizable-host", "sidebar-resizing");
   }
 
+  getSavedNormalLayoutForMode(settings, layoutMode = "normalWide") {
+    const modeKey = this.getNormalLayoutStorageKeyForMode(layoutMode);
+
+    let savedLayout = settings[modeKey];
+
+    if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+      // Compressed mode can fall back to wide layout if it has never been saved.
+      if (layoutMode === "compressed") {
+        savedLayout =
+          settings[this.getNormalLayoutStorageKeyForMode("normalWide")];
+      }
+    }
+
+    if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+      savedLayout = settings.gridLayoutNormal;
+    }
+
+    if (!Array.isArray(savedLayout) || savedLayout.length === 0) {
+      savedLayout = settings.gridLayout;
+    }
+
+    return savedLayout;
+  }
+
   loadLayoutForMode(mode) {
     const settings = this.storage.getSettings();
 
-    const layoutKey =
-      mode === "sidebar" ? "gridLayoutSidebar" : "gridLayoutNormal";
-    let savedLayout = settings[layoutKey];
-
-    // Back-compat: old single layout key is treated as the normal layout.
-    if (mode !== "sidebar" && (!savedLayout || !Array.isArray(savedLayout))) {
-      savedLayout = settings.gridLayout;
+    let savedLayout = null;
+    if (mode === "sidebar") {
+      savedLayout = settings[this.getSidebarLayoutStorageKey()];
+    } else {
+      const normalMode = this.getMainContainerLayoutMode();
+      savedLayout = this.getSavedNormalLayoutForMode(settings, normalMode);
+      this.currentMainContainerLayoutMode = normalMode;
     }
 
     // Normalize/validate
@@ -1748,6 +1833,8 @@ class GridLayoutManager {
 
     // Load saved layout or use default
     this.loadLayout();
+    this.lastMainContainerResponsiveWidth =
+      this.getMainContainerResponsiveWidth();
 
     // Load edit mode state from settings (default OFF)
     const settings = this.storage.getSettings();
@@ -2074,6 +2161,89 @@ class GridLayoutManager {
     return this.getLayoutWidth();
   }
 
+  getNormalWideLayoutStorageKey() {
+    return "gridLayoutNormalWide";
+  }
+
+  getCompressedLayoutStorageKey() {
+    return "gridLayoutNormalCompressed";
+  }
+
+  getSidebarLayoutStorageKey() {
+    return "gridLayoutSidebar";
+  }
+
+  getNormalLayoutStorageKeyForMode(layoutMode = "normalWide") {
+    return layoutMode === "compressed"
+      ? this.getCompressedLayoutStorageKey()
+      : this.getNormalWideLayoutStorageKey();
+  }
+
+  getMainContainerLayoutMode() {
+    return this.shouldForceSingleRowLayoutForThreeItemComponents()
+      ? "compressed"
+      : "normalWide";
+  }
+
+  saveNormalLayoutRowsForMode(
+    layoutMode,
+    rowsOverride = this.rows,
+    settings = null,
+  ) {
+    const targetSettings = settings || this.storage.getSettings();
+    const rows = Array.isArray(rowsOverride)
+      ? JSON.parse(JSON.stringify(rowsOverride))
+      : [];
+
+    targetSettings[this.getNormalLayoutStorageKeyForMode(layoutMode)] = rows;
+
+    // Back-compat: keep legacy normal keys synced with wide mode only.
+    if (layoutMode === "normalWide") {
+      targetSettings.gridLayoutNormal = JSON.parse(JSON.stringify(rows));
+      targetSettings.gridLayout = JSON.parse(JSON.stringify(rows));
+    }
+
+    return targetSettings;
+  }
+
+  syncMainContainerLayoutModeIfNeeded() {
+    if (this.isSidebarModeEnabled || !this.grid) {
+      return false;
+    }
+
+    const targetMode = this.getMainContainerLayoutMode();
+    const previousMode = this.currentMainContainerLayoutMode;
+
+    if (!previousMode) {
+      this.currentMainContainerLayoutMode = targetMode;
+      return false;
+    }
+
+    if (previousMode === targetMode) {
+      return false;
+    }
+
+    const settings = this.storage.getSettings();
+
+    // Save the currently active normal-mode layout before switching buckets.
+    this.saveNormalLayoutRowsForMode(previousMode, this.rows, settings);
+
+    const nextSavedLayout = this.getSavedNormalLayoutForMode(
+      settings,
+      targetMode,
+    );
+    const normalized = this.normalizeLayout(nextSavedLayout);
+
+    this.rows = normalized;
+    this.activeRows = JSON.parse(JSON.stringify(normalized));
+    this.currentMainContainerLayoutMode = targetMode;
+
+    this.storage.saveSettings(settings);
+    this.applyLayout(this.rows);
+
+    return true;
+  }
+
   shouldForceSingleRowLayoutForThreeItemComponents() {
     const threshold = Math.max(
       1,
@@ -2097,11 +2267,81 @@ class GridLayoutManager {
     });
   }
 
+  isThreeItemComponentId(componentId) {
+    const id = String(componentId || "").trim();
+    if (!id) return false;
+
+    const config = this.componentSpans[id];
+    return (
+      !!config && Number(config.span) === 2 && Number(config.minSpan) === 2
+    );
+  }
+
+  getGridFlexRowGapPx(rowEl) {
+    if (!rowEl || typeof window === "undefined" || !window.getComputedStyle) {
+      return 0;
+    }
+
+    const computed = window.getComputedStyle(rowEl);
+    const gapRaw = computed.columnGap || computed.gap || "0";
+    const gap = Number.parseFloat(gapRaw);
+    return Number.isFinite(gap) && gap > 0 ? gap : 0;
+  }
+
+  getThreeItemRowResizeBudgetCap(el, absoluteCap) {
+    const fallbackCap = Math.max(1, Math.round(Number(absoluteCap) || 0));
+    if (!el) return fallbackCap;
+
+    const row = el.closest(".grid-flex-row");
+    if (!row) return fallbackCap;
+
+    const visibleChildren = Array.from(row.children).filter(
+      (child) => !this.isComponentHidden(child),
+    );
+
+    const threeItemChildren = visibleChildren.filter((child) =>
+      this.isThreeItemComponentId(this.getSidebarComponentId(child)),
+    );
+
+    if (threeItemChildren.length <= 1) {
+      return fallbackCap;
+    }
+
+    const totalGapWidth =
+      Math.max(0, threeItemChildren.length - 1) * this.getGridFlexRowGapPx(row);
+
+    let siblingWidth = 0;
+    threeItemChildren.forEach((child) => {
+      if (child === el) return;
+      siblingWidth += Math.round(
+        child.getBoundingClientRect().width || child.offsetWidth || 0,
+      );
+    });
+
+    const hardTotalLimit = Math.max(
+      1,
+      Math.round(this.threeItemSingleRowCollapseThresholdWidth || 1200),
+    );
+    const remainingBudget = Math.max(
+      1,
+      Math.round(hardTotalLimit - totalGapWidth - siblingWidth),
+    );
+
+    return Math.max(1, Math.min(fallbackCap, remainingBudget));
+  }
+
   runViewportResizeLayoutSync({ force = false } = {}) {
     const newWidth = this.getSidebarViewportWidthForMiddleLayout();
     if (newWidth <= 0) {
       return { applied: false, zoomed: false, widthChanged: false };
     }
+
+    const mainContainerWidth = this.getMainContainerResponsiveWidth();
+    const mainContainerWidthChanged =
+      Math.abs(mainContainerWidth - this.lastMainContainerResponsiveWidth) > 2;
+    this.lastMainContainerResponsiveWidth = mainContainerWidth;
+
+    const layoutModeChanged = this.syncMainContainerLayoutModeIfNeeded();
 
     const previousZoomActive = this.viewportAutoZoomActive === true;
     const previousZoomScale = Number(this.viewportAutoZoomScale) || 1;
@@ -2115,18 +2355,37 @@ class GridLayoutManager {
     this.lastViewportWidth = newWidth;
 
     if (isViewportZoomedOut) {
-      if (this.shouldForceSingleRowLayoutForThreeItemComponents()) {
+      if (
+        this.shouldForceSingleRowLayoutForThreeItemComponents() ||
+        layoutModeChanged ||
+        mainContainerWidthChanged
+      ) {
         this.recalculateLayout();
       }
-      return { applied: true, zoomed: true, widthChanged, zoomChanged };
+      return {
+        applied: true,
+        zoomed: true,
+        widthChanged,
+        zoomChanged,
+        mainContainerWidthChanged,
+        layoutModeChanged,
+      };
     }
 
-    if (!force && !widthChanged && !zoomChanged) {
+    if (
+      !force &&
+      !widthChanged &&
+      !zoomChanged &&
+      !mainContainerWidthChanged &&
+      !layoutModeChanged
+    ) {
       return {
         applied: false,
         zoomed: false,
         widthChanged,
         zoomChanged,
+        mainContainerWidthChanged,
+        layoutModeChanged,
       };
     }
 
@@ -2143,7 +2402,14 @@ class GridLayoutManager {
       this.maybeAutoRestoreSidebarMode();
     }
 
-    return { applied: true, zoomed: false, widthChanged, zoomChanged };
+    return {
+      applied: true,
+      zoomed: false,
+      widthChanged,
+      zoomChanged,
+      mainContainerWidthChanged,
+      layoutModeChanged,
+    };
   }
 
   cancelViewportStabilizePass() {
@@ -2192,7 +2458,13 @@ class GridLayoutManager {
 
       // Fast maximize/restore can report transient dimensions; run a second
       // stabilized pass after reflow to avoid ending in a stale/broken layout.
-      if (!syncResult.zoomed && (forceSync || syncResult.widthChanged)) {
+      if (
+        !syncResult.zoomed &&
+        (forceSync ||
+          syncResult.widthChanged ||
+          syncResult.mainContainerWidthChanged ||
+          syncResult.layoutModeChanged)
+      ) {
         this.scheduleViewportStabilizePass();
       }
     }, 150);
@@ -2284,14 +2556,15 @@ class GridLayoutManager {
    */
   saveLayout() {
     const settings = this.storage.getSettings();
-    const layoutKey = this.isSidebarModeEnabled
-      ? "gridLayoutSidebar"
-      : "gridLayoutNormal";
-    settings[layoutKey] = this.rows;
 
-    // Back-compat: keep old key updated for normal mode
-    if (!this.isSidebarModeEnabled) {
-      settings.gridLayout = this.rows;
+    if (this.isSidebarModeEnabled) {
+      settings[this.getSidebarLayoutStorageKey()] = JSON.parse(
+        JSON.stringify(this.rows),
+      );
+    } else {
+      const layoutMode = this.getMainContainerLayoutMode();
+      this.saveNormalLayoutRowsForMode(layoutMode, this.rows, settings);
+      this.currentMainContainerLayoutMode = layoutMode;
     }
 
     // Sidebar mode also persists which components are docked
@@ -4004,12 +4277,20 @@ class GridLayoutManager {
     // Reset both layout modes and sidebar positions in storage
     try {
       const settings = this.storage.getSettings();
+      settings[this.getNormalLayoutStorageKeyForMode("normalWide")] =
+        JSON.parse(JSON.stringify(defaultRows));
+      settings[this.getNormalLayoutStorageKeyForMode("compressed")] =
+        JSON.parse(JSON.stringify(defaultRows));
+      settings[this.getSidebarLayoutStorageKey()] = JSON.parse(
+        JSON.stringify(defaultRows),
+      );
       settings.gridLayoutNormal = JSON.parse(JSON.stringify(defaultRows));
-      settings.gridLayoutSidebar = JSON.parse(JSON.stringify(defaultRows));
       settings.gridLayout = JSON.parse(JSON.stringify(defaultRows));
       settings[this.getSidebarStateStorageKey()] = { left: [], right: [] };
       settings[this.getSidebarWidthStorageKey()] = {};
-      settings[this.getMiddleWidthStorageKey()] = {};
+      settings[this.getNormalWideMiddleWidthStorageKey()] = {};
+      settings[this.getCompressedMiddleWidthStorageKey()] = {};
+      settings[this.getLegacyMiddleWidthStorageKey()] = {};
       settings[this.getFocusModeMiddleWidthStorageKey()] = {};
       delete settings[this.getSidebarMiddleLayoutWidthStorageKey()];
       delete settings[this.getSidebarMiddleLayoutPreferredWidthStorageKey()];
@@ -4034,7 +4315,9 @@ class GridLayoutManager {
     try {
       const settings = this.storage.getSettings();
       settings[this.getSidebarWidthStorageKey()] = {};
-      settings[this.getMiddleWidthStorageKey()] = {};
+      settings[this.getNormalWideMiddleWidthStorageKey()] = {};
+      settings[this.getCompressedMiddleWidthStorageKey()] = {};
+      settings[this.getLegacyMiddleWidthStorageKey()] = {};
       settings[this.getFocusModeMiddleWidthStorageKey()] = {};
       this.storage.saveSettings(settings);
     } catch (e) {
