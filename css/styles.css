@@ -12566,39 +12566,6 @@ body:not(.sidebar-mode)
   }
 }
 
-@media (max-width: 1200px) and (min-width: 1135px) {
-  .weather-content {
-    --weather-three-item-cap: 300px;
-    grid-template-columns: repeat(3, minmax(0, var(--weather-three-item-cap)));
-    justify-content: center;
-    gap: var(--spacing-sm);
-  }
-
-  .weather-main,
-  .weather-location,
-  .weather-details {
-    width: 100%;
-    max-width: var(--weather-three-item-cap);
-    min-width: 0;
-  }
-
-  .weather-main {
-    justify-self: stretch;
-  }
-
-  .weather-location {
-    justify-self: stretch;
-    font-size: clamp(2.1rem, 3.2vw, 2.7rem);
-  }
-
-  .weather-details {
-    justify-self: stretch;
-    padding: var(--spacing-sm) var(--spacing-md);
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
-  }
-}
-
 @media (max-width: 1134px) {
   .weather-content {
     grid-template-columns: minmax(0, 300px);

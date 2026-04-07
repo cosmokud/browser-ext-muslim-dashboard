@@ -1757,7 +1757,6 @@ class WeatherManager extends BaseManager {
     if (!this.weatherCard) return;
 
     const weatherStackBreakpoint = 1134;
-    const weatherCompactBreakpoint = 1200;
     const weatherSingleColumnDetailsBreakpoint = 980;
 
     const responsiveWidth = this.getWeatherResponsiveWidth();
@@ -1765,12 +1764,10 @@ class WeatherManager extends BaseManager {
       return;
     }
 
-    // Keep transitions deterministic: only width drives wide/compact/stacked.
+    // Keep transitions deterministic: only width drives wide/stacked.
     let layoutMode = "wide";
     if (responsiveWidth <= weatherStackBreakpoint) {
       layoutMode = "stacked";
-    } else if (responsiveWidth <= weatherCompactBreakpoint) {
-      layoutMode = "compact";
     }
 
     this.weatherCard.setAttribute("data-weather-layout", layoutMode);
