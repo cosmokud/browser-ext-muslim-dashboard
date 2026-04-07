@@ -48,6 +48,7 @@ class WeatherManager extends BaseManager {
     this._weatherCardResizeTimer = null;
     this._weatherResizeObserver = null;
     this._weatherDetailsStackLock = false;
+    this._weatherCardContentWidth = 0;
     this.selectedForecastIndex = 0;
     this.selectedMetric = "temperature";
 
@@ -532,6 +533,7 @@ class WeatherManager extends BaseManager {
       this._chartVisibilityObserver.observe(this.weatherChartWrap);
     }
 
+    this._weatherCardContentWidth = this.measureWeatherCardContentWidth();
     this.syncWeatherResponsiveLayout();
 
     if (
@@ -539,7 +541,16 @@ class WeatherManager extends BaseManager {
       this.weatherCard &&
       typeof ResizeObserver !== "undefined"
     ) {
-      this._weatherResizeObserver = new ResizeObserver(() => {
+      this._weatherResizeObserver = new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.target !== this.weatherCard) return;
+          const observedWidth = Math.round(
+            (entry.contentRect && entry.contentRect.width) || 0,
+          );
+          if (Number.isFinite(observedWidth) && observedWidth > 0) {
+            this._weatherCardContentWidth = observedWidth;
+          }
+        });
         this._onWeatherCardResize();
       });
       this._weatherResizeObserver.observe(this.weatherCard);
@@ -1371,15 +1382,33 @@ class WeatherManager extends BaseManager {
     this.updateWeatherLocationTruncation();
   }
 
-  getWeatherResponsiveWidth() {
-    const weatherContentWidth = Math.round(
-      (this.weatherContent &&
-        this.weatherContent.getBoundingClientRect().width) ||
-        0,
+  measureWeatherCardContentWidth() {
+    if (!this.weatherCard) return 0;
+
+    const computed = getComputedStyle(this.weatherCard);
+    const paddingLeft = parseFloat(computed.paddingLeft) || 0;
+    const paddingRight = parseFloat(computed.paddingRight) || 0;
+    const rawClientWidth = Math.round(this.weatherCard.clientWidth || 0);
+    const contentWidth = Math.max(
+      0,
+      Math.round(rawClientWidth - paddingLeft - paddingRight),
     );
 
-    if (Number.isFinite(weatherContentWidth) && weatherContentWidth > 0) {
-      return weatherContentWidth;
+    return Number.isFinite(contentWidth) && contentWidth > 0 ? contentWidth : 0;
+  }
+
+  getWeatherResponsiveWidth() {
+    const observedWidth = Math.round(
+      Number(this._weatherCardContentWidth) || 0,
+    );
+    if (Number.isFinite(observedWidth) && observedWidth > 0) {
+      return observedWidth;
+    }
+
+    const measuredWidth = this.measureWeatherCardContentWidth();
+    if (measuredWidth > 0) {
+      this._weatherCardContentWidth = measuredWidth;
+      return measuredWidth;
     }
 
     const weatherCardWidth = Math.round(
@@ -1389,12 +1418,7 @@ class WeatherManager extends BaseManager {
       return weatherCardWidth;
     }
 
-    return Math.round(
-      window.innerWidth ||
-        document.documentElement.clientWidth ||
-        document.body.clientWidth ||
-        0,
-    );
+    return 0;
   }
 
   isWeatherDetailsWrapping() {
@@ -1443,14 +1467,13 @@ class WeatherManager extends BaseManager {
 
     const responsiveWidth = this.getWeatherResponsiveWidth();
     if (!Number.isFinite(responsiveWidth) || responsiveWidth <= 0) {
-      this.weatherCard.removeAttribute("data-weather-layout");
       return;
     }
 
     const detailsWrapping = this.isWeatherDetailsWrapping();
     if (detailsWrapping) {
       this._weatherDetailsStackLock = true;
-    } else if (responsiveWidth > 1200) {
+    } else if (responsiveWidth > weatherCompactBreakpoint) {
       this._weatherDetailsStackLock = false;
     }
 
@@ -1628,8 +1651,7 @@ class WeatherManager extends BaseManager {
     const w = Math.round(
       container.getBoundingClientRect().width ||
         container.clientWidth ||
-        window.innerWidth ||
-        document.documentElement.clientWidth ||
+        this.getWeatherResponsiveWidth() ||
         0,
     );
     let columns = 7;
