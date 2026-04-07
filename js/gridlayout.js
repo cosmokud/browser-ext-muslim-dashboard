@@ -57,6 +57,9 @@ class GridLayoutManager {
     this.sidebarMiddleLayoutNormalMinWidth = 1000;
     this.sidebarMiddleLayoutSideGutter = 48;
     this.sidebarAutoRestoreMinSideWidth = 0;
+    this.viewportAutoZoomThresholdWidth = 1000;
+    this.viewportAutoZoomActive = false;
+    this.viewportAutoZoomScale = 1;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -305,15 +308,59 @@ class GridLayoutManager {
   }
 
   getSidebarViewportWidthForMiddleLayout() {
-    const layoutEl = this.getSidebarLayoutElement();
     const width = Math.round(
-      (layoutEl && layoutEl.getBoundingClientRect().width) ||
-        window.innerWidth ||
+      window.innerWidth ||
         document.documentElement.clientWidth ||
         document.body.clientWidth ||
         0,
     );
     return Number.isFinite(width) && width > 0 ? width : 0;
+  }
+
+  clearViewportAutoZoom() {
+    const root = document.documentElement;
+    if (root) {
+      root.style.removeProperty("zoom");
+      root.style.removeProperty("--md-viewport-auto-zoom");
+    }
+
+    if (document.body) {
+      document.body.classList.remove("viewport-auto-zoom");
+    }
+
+    this.viewportAutoZoomActive = false;
+    this.viewportAutoZoomScale = 1;
+  }
+
+  applyViewportAutoZoomIfNeeded(viewportWidth) {
+    const width = Math.round(Number(viewportWidth));
+    const threshold = Math.max(
+      1000,
+      Math.round(this.viewportAutoZoomThresholdWidth || 1000),
+    );
+
+    if (!Number.isFinite(width) || width <= 0 || width >= threshold) {
+      this.clearViewportAutoZoom();
+      return false;
+    }
+
+    const scale = Number(
+      Math.max(0.5, Math.min(1, width / threshold)).toFixed(4),
+    );
+    const root = document.documentElement;
+
+    if (root) {
+      root.style.zoom = String(scale);
+      root.style.setProperty("--md-viewport-auto-zoom", String(scale));
+    }
+
+    if (document.body) {
+      document.body.classList.add("viewport-auto-zoom");
+    }
+
+    this.viewportAutoZoomActive = true;
+    this.viewportAutoZoomScale = scale;
+    return true;
   }
 
   getSidebarMiddleLayoutBounds() {
@@ -1660,7 +1707,12 @@ class GridLayoutManager {
 
     // Calculate initial responsive layout based on viewport
     this.lastViewportWidth = this.getSidebarViewportWidthForMiddleLayout();
-    this.calculateResponsiveLayout();
+    const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(
+      this.lastViewportWidth,
+    );
+    if (!isViewportZoomedOut) {
+      this.calculateResponsiveLayout();
+    }
 
     // Apply the layout to create flex rows
     this.applyLayout();
@@ -1964,6 +2016,11 @@ class GridLayoutManager {
       // Only recalculate if layout width changed (avoid tiny jitter)
       if (newWidth > 0 && Math.abs(newWidth - this.lastViewportWidth) > 2) {
         this.lastViewportWidth = newWidth;
+        const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(newWidth);
+        if (isViewportZoomedOut) {
+          return;
+        }
+
         this.syncSidebarMiddleLayoutWidthToViewport({
           persist: true,
           triggerSnapCheck: true,
@@ -3999,6 +4056,7 @@ class GridLayoutManager {
     document.removeEventListener("wheel", this.handleWheel);
     document.body.classList.remove("sidebar-resizing");
     document.body.classList.remove("middle-layout-resizing");
+    this.clearViewportAutoZoom();
   }
 }
 
