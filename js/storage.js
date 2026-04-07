@@ -199,7 +199,7 @@ class StorageManager {
       // Background settings
       bgInterval: 60, // minutes
       bgIntervalCustom: null, // custom interval in minutes
-      bgCategory: "nature",
+      bgCategory: "all",
       bgDisplayMode: "fill", // fill, fit, stretch, tile, center, span
       bgDim: 100, // background overlay intensity percentage
       bgBlur: 0, // background image blur radius in px

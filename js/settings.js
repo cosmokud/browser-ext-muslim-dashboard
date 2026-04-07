@@ -4639,7 +4639,7 @@ class SettingsManager extends BaseManager {
 
   normalizeBackgroundCategory(category) {
     const normalized = String(category || "").trim();
-    if (!normalized) return "nature";
+    if (!normalized) return "all";
 
     if (
       normalized === "allWithCustom" ||
@@ -5591,7 +5591,7 @@ class SettingsManager extends BaseManager {
 
   updateBackgroundPoolAddButtonVisibility() {
     const selectedCategory = this.normalizeBackgroundCategory(
-      this.bgCategory?.value || "nature",
+      this.bgCategory?.value || "all",
     );
 
     if (!this.addCustomBgBtn && !this.addCustomBgUrlBtn) {
@@ -5612,7 +5612,7 @@ class SettingsManager extends BaseManager {
 
   updateBackgroundPoolModeUi(category = null) {
     const selectedCategory = this.normalizeBackgroundCategory(
-      category || this.bgCategory?.value || "nature",
+      category || this.bgCategory?.value || "all",
     );
     const isSolid = selectedCategory === "solid";
 
@@ -5742,7 +5742,7 @@ class SettingsManager extends BaseManager {
 
     const settings = this.storage.getSettings();
     const selectedCategory = this.normalizeBackgroundCategory(
-      this.bgCategory?.value || settings.bgCategory || "nature",
+      this.bgCategory?.value || settings.bgCategory || "all",
     );
     this.updateBackgroundPoolModeUi(selectedCategory);
 
@@ -5954,7 +5954,7 @@ class SettingsManager extends BaseManager {
 
   toggleBackgroundPoolImageSelection(index) {
     const category = this.normalizeBackgroundCategory(
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+      this._activeBgPoolCategory || this.bgCategory?.value || "all",
     );
     const entry = this._activeBgPoolImages?.[index];
     const imageUrl = this.normalizeBackgroundImageUrl(entry?.url);
@@ -5986,7 +5986,7 @@ class SettingsManager extends BaseManager {
 
   selectAllBackgroundPoolImages() {
     const category = this.normalizeBackgroundCategory(
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+      this._activeBgPoolCategory || this.bgCategory?.value || "all",
     );
     const urls = this._activeBgPoolImages
       .map((image) => this.normalizeBackgroundImageUrl(image.url))
@@ -5998,7 +5998,7 @@ class SettingsManager extends BaseManager {
 
   deselectAllBackgroundPoolImages() {
     const category = this.normalizeBackgroundCategory(
-      this._activeBgPoolCategory || this.bgCategory?.value || "nature",
+      this._activeBgPoolCategory || this.bgCategory?.value || "all",
     );
     this.saveBackgroundSelectionForCategory(category, []);
     this.applyBackgroundPoolSelectionToRenderedItems(new Set());
@@ -7289,7 +7289,7 @@ class SettingsManager extends BaseManager {
       settings.bgIntervalCustom = null;
     }
     settings.bgCategory = this.normalizeBackgroundCategory(
-      this.bgCategory?.value || "nature",
+      this.bgCategory?.value || "all",
     );
     settings.bgDisplayMode = this.normalizeBackgroundDisplayMode(
       this.bgDisplayMode?.value || settings.bgDisplayMode || "fill",
@@ -7457,7 +7457,7 @@ class SettingsManager extends BaseManager {
     if (!this.backgrounds) return;
 
     const selectedCategory = this.normalizeBackgroundCategory(
-      settings?.bgCategory || this.bgCategory?.value || "nature",
+      settings?.bgCategory || this.bgCategory?.value || "all",
     );
 
     try {
@@ -10930,7 +10930,7 @@ class SettingsManager extends BaseManager {
               this.backgrounds.updateShuffleMode(settings.bgShuffle);
             }
             if (typeof this.backgrounds.updateCategory === "function") {
-              this.backgrounds.updateCategory(settings.bgCategory || "nature");
+              this.backgrounds.updateCategory(settings.bgCategory || "all");
             } else if (
               typeof this.backgrounds.changeBackground === "function"
             ) {

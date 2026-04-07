@@ -356,7 +356,7 @@ class BackgroundManager extends BaseManager {
    */
   normalizeBackgroundCategory(category) {
     const normalized = String(category || "").trim();
-    if (!normalized) return "nature";
+    if (!normalized) return "all";
 
     if (
       normalized === "allWithCustom" ||
@@ -1003,7 +1003,7 @@ class BackgroundManager extends BaseManager {
         ? settings
         : this.storage.getSettings();
     const category = this.normalizeBackgroundCategory(
-      resolvedSettings.bgCategory || "nature",
+      resolvedSettings.bgCategory || "all",
     );
     const images = this.getImagesForCategory(category, resolvedSettings);
     const index = Number.isInteger(resolvedSettings.currentBgIndex)
@@ -1017,7 +1017,7 @@ class BackgroundManager extends BaseManager {
    */
   loadBackground(settings) {
     const category = this.normalizeBackgroundCategory(
-      settings.bgCategory || "nature",
+      settings.bgCategory || "all",
     );
     this.updateDisplayMode(
       settings.bgDisplayMode || this.backgroundDisplayMode,
@@ -1446,7 +1446,7 @@ class BackgroundManager extends BaseManager {
   changeBackground() {
     const settings = this.storage.getSettings();
     const category = this.normalizeBackgroundCategory(
-      settings.bgCategory || "nature",
+      settings.bgCategory || "all",
     );
     this.updateDisplayMode(
       settings.bgDisplayMode || this.backgroundDisplayMode,
@@ -1490,7 +1490,7 @@ class BackgroundManager extends BaseManager {
     this.updateShuffleMode(settings.bgShuffle !== false);
 
     const previousCategory = this.normalizeBackgroundCategory(
-      settings.bgCategory || "nature",
+      settings.bgCategory || "all",
     );
     const previousImages = this.getImagesForCategory(
       previousCategory,
