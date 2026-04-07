@@ -56,6 +56,8 @@ class GridLayoutManager {
     this.sidebarMiddleLayoutMinWidth = 1000;
     this.sidebarMiddleLayoutNormalMinWidth = 1000;
     this.sidebarMiddleLayoutSideGutter = 48;
+    this.sidebarDropMinWidthPerSide = 422;
+    this.sidebarDropMinTotalWidth = this.sidebarDropMinWidthPerSide * 2;
     this.sidebarAutoRestoreMinSideWidth = 0;
     this.threeItemSingleRowCollapseThresholdWidth = 1200;
     this.currentMainContainerLayoutMode = null;
@@ -809,8 +811,51 @@ class GridLayoutManager {
     this.clearSidebarDropTarget();
   }
 
+  getSidebarDropAvailableViewportSpace() {
+    const viewportWidth = this.getSidebarViewportWidthForMiddleLayout();
+    if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 0;
+
+    const mainContainer = document.querySelector(
+      "#sidebarMiddle > .main-container.container-wide, #sidebarMiddle > .main-container",
+    );
+    const middleEl = this.getSidebarMiddleElement();
+
+    const middleWidth = Math.round(
+      (mainContainer && mainContainer.getBoundingClientRect().width) ||
+        (middleEl && middleEl.getBoundingClientRect().width) ||
+        this.getCurrentSidebarMiddleLayoutWidth() ||
+        this.sidebarMiddleLayoutDefaultWidth ||
+        0,
+    );
+
+    if (!Number.isFinite(middleWidth) || middleWidth <= 0) return 0;
+    return Math.max(0, Math.round(viewportWidth - middleWidth));
+  }
+
+  hasSidebarDropViewportSpace() {
+    const requiredTotalWidth = Math.max(
+      1,
+      Math.round(
+        Number(this.sidebarDropMinTotalWidth) ||
+          Number(this.sidebarDropMinWidthPerSide) * 2 ||
+          844,
+      ),
+    );
+
+    return this.getSidebarDropAvailableViewportSpace() >= requiredTotalWidth;
+  }
+
   isSidebarDropAllowed() {
-    return this.isSidebarModeEnabled && !this.isQuranFocusModeContextActive();
+    if (!this.isSidebarModeEnabled || this.isQuranFocusModeContextActive()) {
+      return false;
+    }
+
+    // Keep sidebar-origin drags returnable/reorderable even in tight viewports.
+    if (this.sidebarDragOrigin) {
+      return true;
+    }
+
+    return this.hasSidebarDropViewportSpace();
   }
 
   isFocusModePocketQuranElement(el) {

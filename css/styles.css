@@ -5161,17 +5161,18 @@ body.quran-focus-mode #pocketQuranCard .pq-virtual-container {
   max-height: 100%;
 }
 
-/* Hide scrollbar for cleaner focus mode while keeping functionality */
+/* Preserve a visible scrollbar thumb in focus mode for reliable navigation. */
 body.quran-focus-mode
   #pocketQuranCard
   .pq-virtual-container::-webkit-scrollbar {
-  width: var(--scrollbar-size-thin);
+  width: var(--scrollbar-size);
 }
 
 body.quran-focus-mode
   #pocketQuranCard
   .pq-virtual-container::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track-strong);
+  border-radius: var(--radius-full);
 }
 
 body.quran-focus-mode
@@ -5179,8 +5180,8 @@ body.quran-focus-mode
   .pq-virtual-container::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  border: 1px solid var(--scrollbar-track);
+  min-height: 24px;
 }
 
 body.quran-focus-mode
@@ -15022,32 +15023,33 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: auto;
   min-height: 0;
   max-height: 100%;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
   border-radius: var(--radius-lg);
-  /* Custom scrollbar styling */
+  /* Keep a clearly visible scrollbar thumb for Quran navigation. */
   scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track-strong);
+  scrollbar-gutter: stable;
 }
 
 .pq-virtual-container::-webkit-scrollbar {
-  width: var(--scrollbar-size-thin);
+  width: var(--scrollbar-size);
 }
 
 .pq-virtual-container::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track-strong);
+  border-radius: var(--radius-full);
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  border: 1px solid var(--scrollbar-track);
+  min-height: 24px;
 }
 
 .pq-virtual-container::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
-  background-clip: padding-box;
 }
 
 .pq-virtual-spacer {
