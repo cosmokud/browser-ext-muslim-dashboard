@@ -7999,6 +7999,19 @@ class SettingsManager extends BaseManager {
   /**
    * Apply container width setting
    */
+  emitLayoutLiveResize(detail = {}) {
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:layout-live-resize", {
+          detail: {
+            source: "settings",
+            ...(detail || {}),
+          },
+        }),
+      );
+    } catch (e) {}
+  }
+
   applyContainerWidth(width, customValue) {
     const mainContainer = document.querySelector(".main-container");
 
@@ -8059,6 +8072,11 @@ class SettingsManager extends BaseManager {
     }
 
     this.scheduleContainerWidthMediaEmulation(mainContainer);
+    this.emitLayoutLiveResize({
+      reason: "container-width-setting",
+      widthMode: width || "narrow",
+      customValue,
+    });
   }
 
   /**

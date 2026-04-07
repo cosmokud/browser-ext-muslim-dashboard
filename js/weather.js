@@ -46,7 +46,24 @@ class WeatherManager extends BaseManager {
     this._resizeTimer = null;
     this._forecastResizeTimer = null; // used for debouncing forecast layout recalcs
     this._weatherCardResizeTimer = null;
+    this._responsiveSyncTimer = null;
+    this._responsiveSyncRaf1 = null;
+    this._responsiveSyncRaf2 = null;
     this._weatherResizeObserver = null;
+    this._weatherContentResizeObserver = null;
+    this._weatherMainContainerResizeObserver = null;
+    this._weatherLayoutSyncEvents = [
+      "md:layout-live-resize",
+      "md:settings-applied",
+      "md:visibility-changed",
+    ];
+    this._externalLayoutSyncHandler = () => {
+      this.scheduleResponsiveLayoutSync({
+        includeChart: true,
+        settlePass: true,
+        debounceMs: 48,
+      });
+    };
     this._weatherCardContentWidth = 0;
     this.selectedForecastIndex = 0;
     this.selectedMetric = "temperature";
@@ -55,11 +72,12 @@ class WeatherManager extends BaseManager {
     this._onResize = () => {
       if (this._resizeTimer) window.clearTimeout(this._resizeTimer);
       this._resizeTimer = window.setTimeout(() => {
-        this.syncWeatherResponsiveLayout();
-        this.renderHourlyChart();
-        this.updateWeatherLocationTruncation();
-        this.updateForecastMetaWrapping();
-      }, 120);
+        this.scheduleResponsiveLayoutSync({
+          includeChart: true,
+          settlePass: true,
+          debounceMs: 0,
+        });
+      }, 90);
     };
 
     // Debounced handler to update forecast flex layout on viewport changes
@@ -67,23 +85,24 @@ class WeatherManager extends BaseManager {
       if (this._forecastResizeTimer)
         window.clearTimeout(this._forecastResizeTimer);
       this._forecastResizeTimer = window.setTimeout(() => {
-        this.syncWeatherResponsiveLayout();
-        this.applyForecastFlexLayout();
-        this.updateWeatherLocationTruncation();
-        this.updateForecastMetaWrapping();
-      }, 80);
+        this.scheduleResponsiveLayoutSync({
+          includeChart: false,
+          settlePass: true,
+          debounceMs: 0,
+        });
+      }, 60);
     };
 
     this._onWeatherCardResize = () => {
       if (this._weatherCardResizeTimer)
         window.clearTimeout(this._weatherCardResizeTimer);
       this._weatherCardResizeTimer = window.setTimeout(() => {
-        this.syncWeatherResponsiveLayout();
-        this.applyForecastFlexLayout();
-        this.updateWeatherLocationTruncation();
-        this.updateForecastMetaWrapping();
-        this.renderHourlyChart();
-      }, 90);
+        this.scheduleResponsiveLayoutSync({
+          includeChart: true,
+          settlePass: true,
+          debounceMs: 0,
+        });
+      }, 40);
     };
 
     // Listen for resize to update forecast layout (keeps last-row spreading correct)
@@ -465,6 +484,60 @@ class WeatherManager extends BaseManager {
     }
   }
 
+  runResponsiveLayoutSync({ includeChart = false } = {}) {
+    this._weatherCardContentWidth = this.measureWeatherCardElementWidth();
+    this.syncWeatherResponsiveLayout();
+    this.applyForecastFlexLayout();
+    this.updateWeatherLocationTruncation();
+    this.updateForecastMetaWrapping();
+
+    if (includeChart) {
+      this.renderHourlyChart();
+    }
+  }
+
+  scheduleResponsiveLayoutSync({
+    includeChart = false,
+    settlePass = false,
+    debounceMs = 0,
+  } = {}) {
+    const runSync = () => {
+      this.runResponsiveLayoutSync({ includeChart });
+    };
+
+    if (this._responsiveSyncTimer) {
+      clearTimeout(this._responsiveSyncTimer);
+      this._responsiveSyncTimer = null;
+    }
+
+    if (this._responsiveSyncRaf1) {
+      cancelAnimationFrame(this._responsiveSyncRaf1);
+      this._responsiveSyncRaf1 = null;
+    }
+    if (this._responsiveSyncRaf2) {
+      cancelAnimationFrame(this._responsiveSyncRaf2);
+      this._responsiveSyncRaf2 = null;
+    }
+
+    const delay = Math.max(0, Math.round(Number(debounceMs) || 0));
+    this._responsiveSyncTimer = window.setTimeout(() => {
+      this._responsiveSyncTimer = null;
+      runSync();
+
+      if (!settlePass) {
+        return;
+      }
+
+      this._responsiveSyncRaf1 = requestAnimationFrame(() => {
+        this._responsiveSyncRaf1 = null;
+        this._responsiveSyncRaf2 = requestAnimationFrame(() => {
+          this._responsiveSyncRaf2 = null;
+          runSync();
+        });
+      });
+    }, delay);
+  }
+
   setupEventListeners() {
     if (this._listenersBound) return;
     this._listenersBound = true;
@@ -533,7 +606,7 @@ class WeatherManager extends BaseManager {
     }
 
     this._weatherCardContentWidth = this.measureWeatherCardElementWidth();
-    this.syncWeatherResponsiveLayout();
+    this.runResponsiveLayoutSync({ includeChart: true });
 
     if (
       !this._weatherResizeObserver &&
@@ -546,6 +619,37 @@ class WeatherManager extends BaseManager {
       });
       this._weatherResizeObserver.observe(this.weatherCard);
     }
+
+    if (
+      !this._weatherContentResizeObserver &&
+      this.weatherContent &&
+      typeof ResizeObserver !== "undefined"
+    ) {
+      this._weatherContentResizeObserver = new ResizeObserver(() => {
+        this._onWeatherCardResize();
+      });
+      this._weatherContentResizeObserver.observe(this.weatherContent);
+    }
+
+    const mainContainerEl =
+      this.weatherCard?.closest(".main-container") ||
+      document.querySelector("#sidebarMiddle > .main-container") ||
+      document.querySelector(".main-container");
+
+    if (
+      !this._weatherMainContainerResizeObserver &&
+      mainContainerEl &&
+      typeof ResizeObserver !== "undefined"
+    ) {
+      this._weatherMainContainerResizeObserver = new ResizeObserver(() => {
+        this._onWeatherCardResize();
+      });
+      this._weatherMainContainerResizeObserver.observe(mainContainerEl);
+    }
+
+    this._weatherLayoutSyncEvents.forEach((eventName) => {
+      document.addEventListener(eventName, this._externalLayoutSyncHandler);
+    });
 
     window.addEventListener("resize", this._onResize);
   }
@@ -1283,12 +1387,41 @@ class WeatherManager extends BaseManager {
       this._weatherCardResizeTimer = null;
     }
 
+    if (this._responsiveSyncTimer) {
+      clearTimeout(this._responsiveSyncTimer);
+      this._responsiveSyncTimer = null;
+    }
+
+    if (this._responsiveSyncRaf1) {
+      cancelAnimationFrame(this._responsiveSyncRaf1);
+      this._responsiveSyncRaf1 = null;
+    }
+
+    if (this._responsiveSyncRaf2) {
+      cancelAnimationFrame(this._responsiveSyncRaf2);
+      this._responsiveSyncRaf2 = null;
+    }
+
     window.removeEventListener("resize", this._onResize);
     window.removeEventListener("resize", this._onForecastResize);
+
+    this._weatherLayoutSyncEvents.forEach((eventName) => {
+      document.removeEventListener(eventName, this._externalLayoutSyncHandler);
+    });
 
     if (this._weatherResizeObserver) {
       this._weatherResizeObserver.disconnect();
       this._weatherResizeObserver = null;
+    }
+
+    if (this._weatherContentResizeObserver) {
+      this._weatherContentResizeObserver.disconnect();
+      this._weatherContentResizeObserver = null;
+    }
+
+    if (this._weatherMainContainerResizeObserver) {
+      this._weatherMainContainerResizeObserver.disconnect();
+      this._weatherMainContainerResizeObserver = null;
     }
 
     if (this._chartVisibilityObserver) {

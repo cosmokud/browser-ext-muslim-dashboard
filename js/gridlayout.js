@@ -706,6 +706,19 @@ class GridLayoutManager {
     return this.collapseSidebarModeDueToClipping();
   }
 
+  emitLayoutLiveResize(detail = {}) {
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:layout-live-resize", {
+          detail: {
+            source: "gridlayout",
+            ...(detail || {}),
+          },
+        }),
+      );
+    } catch (e) {}
+  }
+
   applySidebarMiddleLayoutWidth(
     widthPx,
     { persist = true, triggerSnapCheck = true, persistPreferred = false } = {},
@@ -726,6 +739,11 @@ class GridLayoutManager {
       "--sidebar-middle-fixed-width",
       `${clampedWidth}px`,
     );
+
+    this.emitLayoutLiveResize({
+      reason: "middle-layout-width",
+      width: clampedWidth,
+    });
 
     if (persist) {
       this.setSavedSidebarMiddleLayoutWidth(clampedWidth);
@@ -1190,6 +1208,12 @@ class GridLayoutManager {
     el.classList.add("sidebar-custom-width");
     el.dataset.sidebarCustomWidth = String(clampedWidth);
 
+    this.emitLayoutLiveResize({
+      reason: "sidebar-component-width",
+      componentId: this.getSidebarComponentId(el),
+      width: clampedWidth,
+    });
+
     if (persist) {
       const componentId = this.getSidebarComponentId(el);
       if (componentId) {
@@ -1240,6 +1264,12 @@ class GridLayoutManager {
     }
     el.classList.add("middle-custom-width");
     el.dataset.middleCustomWidth = String(clampedWidth);
+
+    this.emitLayoutLiveResize({
+      reason: "component-width",
+      componentId: this.getSidebarComponentId(el),
+      width: clampedWidth,
+    });
 
     if (persist) {
       const componentId = this.getSidebarComponentId(el);
@@ -2536,6 +2566,21 @@ class GridLayoutManager {
     this.viewportResizeTimer = setTimeout(() => {
       const syncResult = this.runViewportResizeLayoutSync({ force: forceSync });
 
+      if (
+        syncResult.applied ||
+        syncResult.widthChanged ||
+        syncResult.mainContainerWidthChanged ||
+        syncResult.layoutModeChanged
+      ) {
+        this.emitLayoutLiveResize({
+          reason: "viewport-resize-sync",
+          triggerSource: source,
+          zoomed: syncResult.zoomed === true,
+          layoutMode: this.getMainContainerLayoutMode(),
+          mainContainerWidth: this.getMainContainerResponsiveWidth(),
+        });
+      }
+
       // Fast maximize/restore can report transient dimensions; run a second
       // stabilized pass after reflow to avoid ending in a stale/broken layout.
       if (
@@ -3192,6 +3237,11 @@ class GridLayoutManager {
     this.middleLayoutResizeState = null;
     document.body.classList.remove("middle-layout-resizing");
 
+    this.emitLayoutLiveResize({
+      reason: "middle-layout-resize-end",
+      finalWidth,
+    });
+
     // Run one post-resize responsive sync now that manual resizing has ended.
     this.handleViewportResize("middle-resize-end");
 
@@ -3361,6 +3411,12 @@ class GridLayoutManager {
     document.body.classList.remove("sidebar-resizing");
     this.isSidebarResizing = false;
     this.sidebarResizeState = null;
+
+    this.emitLayoutLiveResize({
+      reason: "component-resize-end",
+      componentId: this.getSidebarComponentId(el),
+    });
+
     return true;
   }
 
