@@ -60,6 +60,8 @@ class GridLayoutManager {
     this.viewportAutoZoomThresholdWidth = 1000;
     this.viewportAutoZoomActive = false;
     this.viewportAutoZoomScale = 1;
+    this.viewportStabilizeRaf = null;
+    this.viewportStabilizeRaf2 = null;
 
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
@@ -1973,7 +1975,7 @@ class GridLayoutManager {
         this.containerResizeObserver.disconnect();
       }
       this.containerResizeObserver = new ResizeObserver(() => {
-        this.handleViewportResize();
+        this.handleViewportResize("observer");
       });
       this.containerResizeObserver.observe(this.grid);
     }
@@ -2001,39 +2003,86 @@ class GridLayoutManager {
     );
   }
 
+  runViewportResizeLayoutSync({ force = false } = {}) {
+    const newWidth = this.getSidebarViewportWidthForMiddleLayout();
+    if (newWidth <= 0) {
+      return { applied: false, zoomed: false, widthChanged: false };
+    }
+
+    const widthChanged = Math.abs(newWidth - this.lastViewportWidth) > 2;
+    if (!force && !widthChanged) {
+      return {
+        applied: false,
+        zoomed: this.viewportAutoZoomActive,
+        widthChanged,
+      };
+    }
+
+    this.lastViewportWidth = newWidth;
+    const isViewportZoomedOut = this.applyViewportAutoZoomIfNeeded(newWidth);
+    if (isViewportZoomedOut) {
+      return { applied: true, zoomed: true, widthChanged };
+    }
+
+    this.syncSidebarMiddleLayoutWidthToViewport({
+      persist: true,
+      triggerSnapCheck: true,
+    });
+    this.calculateResponsiveLayout();
+    this.recalculateLayout();
+
+    if (this.isSidebarModeEnabled) {
+      this.maybeSnapSidebarItemsBackToMiddleLayout();
+    } else {
+      this.maybeAutoRestoreSidebarMode();
+    }
+
+    return { applied: true, zoomed: false, widthChanged };
+  }
+
+  cancelViewportStabilizePass() {
+    if (this.viewportStabilizeRaf) {
+      cancelAnimationFrame(this.viewportStabilizeRaf);
+      this.viewportStabilizeRaf = null;
+    }
+    if (this.viewportStabilizeRaf2) {
+      cancelAnimationFrame(this.viewportStabilizeRaf2);
+      this.viewportStabilizeRaf2 = null;
+    }
+  }
+
+  scheduleViewportStabilizePass() {
+    this.cancelViewportStabilizePass();
+
+    this.viewportStabilizeRaf = requestAnimationFrame(() => {
+      this.viewportStabilizeRaf = null;
+      this.viewportStabilizeRaf2 = requestAnimationFrame(() => {
+        this.viewportStabilizeRaf2 = null;
+        this.runViewportResizeLayoutSync({ force: true });
+      });
+    });
+  }
+
   /**
    * Handle viewport resize - recalculate responsive layout
    */
-  handleViewportResize() {
+  handleViewportResize(sourceOrEvent = "window") {
+    const source = typeof sourceOrEvent === "string" ? sourceOrEvent : "window";
+    const forceSync = source !== "observer";
+
     // Debounce resize handling
     if (this.viewportResizeTimer) {
       clearTimeout(this.viewportResizeTimer);
     }
+    this.cancelViewportStabilizePass();
 
     this.viewportResizeTimer = setTimeout(() => {
-      const newWidth = this.getSidebarViewportWidthForMiddleLayout();
+      const syncResult = this.runViewportResizeLayoutSync({ force: forceSync });
 
-      // Only recalculate if layout width changed (avoid tiny jitter)
-      if (newWidth > 0 && Math.abs(newWidth - this.lastViewportWidth) > 2) {
-        this.lastViewportWidth = newWidth;
-        const isViewportZoomedOut =
-          this.applyViewportAutoZoomIfNeeded(newWidth);
-        if (isViewportZoomedOut) {
-          return;
-        }
-
-        this.syncSidebarMiddleLayoutWidthToViewport({
-          persist: true,
-          triggerSnapCheck: true,
-        });
-        this.calculateResponsiveLayout();
-        this.recalculateLayout();
-
-        if (this.isSidebarModeEnabled) {
-          this.maybeSnapSidebarItemsBackToMiddleLayout();
-        } else {
-          this.maybeAutoRestoreSidebarMode();
-        }
+      // Fast maximize/restore can report transient dimensions; run a second
+      // stabilized pass after reflow to avoid ending in a stale/broken layout.
+      if (!syncResult.zoomed && (forceSync || syncResult.widthChanged)) {
+        this.scheduleViewportStabilizePass();
       }
     }, 150);
   }
@@ -3997,6 +4046,7 @@ class GridLayoutManager {
     if (this.viewportResizeTimer) {
       clearTimeout(this.viewportResizeTimer);
     }
+    this.cancelViewportStabilizePass();
 
     this.cancelDropTargetUpdate();
 
