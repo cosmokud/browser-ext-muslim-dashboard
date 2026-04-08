@@ -4526,15 +4526,16 @@ class GridLayoutManager {
    * Setup auto-scroll when dragging near edges
    */
   setupAutoScroll() {
-    const scrollThreshold = 280;
-    const minSpeed = 22;
-    const maxSpeed = 180;
-    const smoothing = 0.2;
+    const scrollThreshold = 240;
+    const minSpeed = 0;
+    const maxSpeed = 24;
+    const smoothing = 0.16;
+    const accelerationLimit = 2.4;
 
     const getSpeed = (intensity) => {
       const clamped = Math.max(0, Math.min(scrollThreshold, intensity));
       const ratio = clamped / scrollThreshold;
-      const eased = Math.pow(ratio, 0.65);
+      const eased = Math.pow(ratio, 1.8);
       return minSpeed + eased * (maxSpeed - minSpeed);
     };
 
@@ -4563,9 +4564,22 @@ class GridLayoutManager {
         targetSpeed = getSpeed(scrollThreshold - distanceToBottom);
       }
 
+      // Limit acceleration so near-edge movement feels controlled.
+      const velocityDelta = targetSpeed - this.autoScrollVelocity;
+      if (velocityDelta > accelerationLimit) {
+        targetSpeed = this.autoScrollVelocity + accelerationLimit;
+      } else if (velocityDelta < -accelerationLimit) {
+        targetSpeed = this.autoScrollVelocity - accelerationLimit;
+      }
+
       // Smooth velocity for less jittery motion
       this.autoScrollVelocity =
         this.autoScrollVelocity * (1 - smoothing) + targetSpeed * smoothing;
+
+      this.autoScrollVelocity = Math.max(
+        -maxSpeed,
+        Math.min(maxSpeed, this.autoScrollVelocity),
+      );
 
       if (Math.abs(this.autoScrollVelocity) > 0.5) {
         window.scrollBy({
