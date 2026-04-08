@@ -4527,8 +4527,8 @@ class GridLayoutManager {
    */
   setupAutoScroll() {
     const scrollThreshold = 240;
-    const minSpeed = 0;
-    const maxSpeed = 24;
+    const minSpeed = 12;
+    const maxSpeed = 36;
     const smoothing = 0.16;
     const accelerationLimit = 2.4;
 
