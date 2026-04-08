@@ -4298,7 +4298,11 @@ class GridLayoutManager {
     }
 
     // Get final position from placeholder
-    const placeholderParent = this.placeholder.parentNode;
+    const placeholderParent = this.placeholder?.parentElement;
+    if (!placeholderParent) {
+      this.cancelDrag();
+      return;
+    }
     const placeholderIndex = Array.from(placeholderParent.children).indexOf(
       this.placeholder,
     );
@@ -4338,9 +4342,40 @@ class GridLayoutManager {
     this.draggedItem.style.pointerEvents = "";
     this.draggedItem.style.transition = "";
 
-    // Replace placeholder with dragged item
-    targetRow.insertBefore(this.draggedItem, this.placeholder);
-    this.placeholder.remove();
+    // Replace placeholder with dragged item.
+    // During the drop animation delay, DOM updates can move/remove rows.
+    const livePlaceholder = this.placeholder;
+    const livePlaceholderParent = livePlaceholder.parentElement;
+    let destinationRow =
+      livePlaceholderParent && this.grid.contains(livePlaceholderParent)
+        ? livePlaceholderParent
+        : targetRow && this.grid.contains(targetRow)
+          ? targetRow
+          : this.originalRow && this.grid.contains(this.originalRow)
+            ? this.originalRow
+            : this.grid.querySelector(".grid-flex-row");
+
+    if (!destinationRow) {
+      destinationRow = document.createElement("div");
+      destinationRow.className = "grid-flex-row";
+      destinationRow.dataset.rowIndex = "0";
+      this.grid.appendChild(destinationRow);
+    }
+
+    if (livePlaceholderParent === destinationRow) {
+      destinationRow.insertBefore(this.draggedItem, livePlaceholder);
+    } else {
+      const safeInsertIndex =
+        Number.isInteger(insertIndex) && insertIndex >= 0
+          ? insertIndex
+          : destinationRow.children.length;
+      const referenceNode = destinationRow.children[safeInsertIndex] || null;
+      destinationRow.insertBefore(this.draggedItem, referenceNode);
+    }
+
+    if (livePlaceholder.parentNode) {
+      livePlaceholder.remove();
+    }
     this.placeholder = null;
 
     if (movedOutFromSidebar) {
