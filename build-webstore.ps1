@@ -19,7 +19,7 @@ if ([string]::IsNullOrWhiteSpace($manifestVersion)) {
 }
 
 if ($manifestVersion -notmatch '^\d+\.\d+\.\d+$') {
-  throw "Unsupported manifest version format: $manifestVersion. Expected semantic version like 0.1.2"
+  throw "Unsupported manifest version format: $manifestVersion. Expected semantic version like 0.1.3"
 }
 
 $zipName = "muslim-dashboard-v$manifestVersion.zip"

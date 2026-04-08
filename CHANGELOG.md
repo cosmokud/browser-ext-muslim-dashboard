@@ -1,4 +1,4 @@
-## [0.1.3] - 2026-04-06
+## [0.1.3] - 2026-04-08
 
 ### Added
 
@@ -10,6 +10,10 @@
 
 ### Changed
 
+- Improved grid layout flexibility with updated component span settings and quote card alignment behavior.
+- Tuned GridLayoutManager auto-scroll speed and drag response for smoother layout editing.
+- Strengthened sidebar state management and floating-card restoration flows, including deferred settings application in Quran Focus mode and stricter non-floating enforcement.
+- Expanded settings auto-save and reset behavior for layout and component visibility state.
 - Refined floating card controls with custom resize handles and reset affordances.
 - Improved notes editor alignment and overflow handling when used with floating cards.
 - Enhanced sidebar mode integration and layout persistence during edit mode transitions.
@@ -20,6 +24,7 @@
 
 ### Fixed
 
+- Preserved floating geometry during restore cycles without overriding the user's toggle intent.
 - Fixed sidebar resize selector issue that impacted edit mode behavior.
 - Fixed empty grid rows reserving vertical space after card visibility/floating changes.
 - Fixed custom background upload URLs from being corrupted by query parameters.
