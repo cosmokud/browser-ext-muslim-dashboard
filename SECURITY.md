@@ -2,12 +2,13 @@
 
 ## Supported Versions
 
-Security fixes are currently prioritized for the latest minor release line.
+Security fixes are prioritized for the latest published release line.
 
-| Version | Supported |
-| ------- | --------- |
-| 0.1.x   | Yes       |
-| < 0.1.0 | No        |
+| Version               | Supported                                         |
+| --------------------- | ------------------------------------------------- |
+| 0.1.3 (current)       | Yes                                               |
+| 0.1.x (older patches) | Best effort (if reproducible on current codebase) |
+| < 0.1.0               | No                                                |
 
 ## Reporting a Vulnerability
 
@@ -31,6 +32,12 @@ request private contact without disclosing exploit details:
 - Browser and extension version details
 - Any suggested remediation
 
+## Response Targets
+
+- Initial acknowledgement: within 7 days.
+- Triage/update after initial validation: within 14 days when reproduction is possible.
+- Fix timeline: depends on severity and complexity; critical issues are prioritized.
+
 ## Disclosure Process
 
 - We will acknowledge receipt as soon as possible.
@@ -42,3 +49,8 @@ request private contact without disclosing exploit details:
 
 This policy applies to the code and assets in this repository and official
 release artifacts generated from it.
+
+Out of scope:
+
+- Availability or reliability incidents in third-party services used by the extension (for example API downtime outside this repository).
+- Reports that only affect unsupported versions.

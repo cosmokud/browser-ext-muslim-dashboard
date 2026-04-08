@@ -1,3 +1,10 @@
+## [Unreleased] - 2026-04-08
+
+### Changed
+
+- Updated project documentation to align with current codebase behavior across README and security policy details.
+- Documented known first-run behavior where sidebar drag-and-drop may require one manual refresh after new installation.
+
 ## [0.1.3] - 2026-04-08
 
 ### Added

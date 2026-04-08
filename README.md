@@ -6,6 +6,12 @@ Muslim Dashboard is a customizable Islamic new-tab dashboard extension for Chrom
 
 The project targets Chromium-based browsers with Manifest V3.
 
+## Current Snapshot (2026-04-08)
+
+- Extension version: `0.1.3` (from `manifest.json`).
+- Repository head at documentation refresh: `e9d7008`.
+- Latest release notes are tracked in `CHANGELOG.md`.
+
 ## Feature Inventory
 
 ### Core Islamic tools
@@ -14,10 +20,12 @@ The project targets Chromium-based browsers with Manifest V3.
 - Multiple prayer calculation methods, including regional presets and a custom-angle mode.
 - Asr juristic method selection, high-latitude adjustment modes, and midnight calculation variants.
 - Per-prayer minute offsets and configurable prayer visibility.
-- Real-time next-prayer countdown in both the dashboard header and prayer card.
+- Prayer notifications with per-prayer before/after reminders and minute tuning.
+- Real-time next-prayer countdown in both the dashboard header and prayer card, with optional browser action badge timer.
 - Qibla compass with directional bearing.
 - Calendar card with Hijri and Gregorian views, month navigation, and current-date details.
 - Fasting card with day progress and date-aware fasting context.
+- Fasting notifications with configurable Suhur lead-time and per-fast toggles (including Monday/Thursday, Ayyam al-Beed, Ashura, Arafah, Ramadan, and Dhu al-Hijjah windows).
 - Lunar phase card with current phase and metadata.
 
 ### Quran, Hadith, and Adhkar
@@ -56,10 +64,20 @@ The project targets Chromium-based browsers with Manifest V3.
 
 ### Extension platform features
 
-- Dedicated popup page focused on prayer times.
-- Service worker integration for extension background tasks and prayer-related notifications.
+- Dedicated popup tabs for Prayer Times and Pocket Quran.
+- Service worker integration for extension background tasks, prayer reminders, fasting reminders, and badge countdown updates.
 - Local persistent settings and user data storage.
 - Localized data bundles in JSON/CSV for quotes, adhkar, flashcards, and hadith content.
+
+### Data management and controls
+
+- Full backup/export and restore/import for settings and user data.
+- Module-level import/export for supported features (Quotes, Flashcards, Adhkar, Hadith, Notes, Search Engines, and Pocket Quran bookmarks).
+- Reset controls for grid layout, full settings reset, and full data wipe.
+
+## Known Issue
+
+- On first run/new installation, drag-and-drop into sidebar columns may require one manual page refresh before it starts working.
 
 ## Installation (Unpacked)
 
