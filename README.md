@@ -6,12 +6,6 @@ Muslim Dashboard is a customizable Islamic new-tab dashboard extension for Chrom
 
 The project targets Chromium-based browsers with Manifest V3.
 
-## Current Snapshot (2026-04-08)
-
-- Extension version: `0.1.3` (from `manifest.json`).
-- Repository head at documentation refresh: `e9d7008`.
-- Latest release notes are tracked in `CHANGELOG.md`.
-
 ## Feature Inventory
 
 ### Core Islamic tools
