@@ -132,7 +132,7 @@ class FloatingModeManager {
     }
 
     const fallbackMeta = {
-      header: { span: 6, minSpan: 6 },
+      header: { span: 2, minSpan: 2 },
       pinnedAppsSection: { span: 2, minSpan: 2 },
       searchBarSection: { span: 2, minSpan: 2 },
       quoteSection: { span: 2, minSpan: 2 },

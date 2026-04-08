@@ -18508,12 +18508,9 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   align-self: center;
 }
 
-/* Full-width components always take 100% */
-.grid-flex-row > .header:not(.middle-custom-width),
-.grid-flex-row > #pinnedAppsSection:not(.middle-custom-width),
-.grid-flex-row > #searchBarSection:not(.middle-custom-width),
-.grid-flex-row > #quoteSection:not(.middle-custom-width),
-.grid-flex-row > #pocketQuranCard:not(.middle-custom-width) {
+/* Only effective span-6 components should be pinned to full width. */
+.grid-flex-row
+  > .grid-draggable[data-effective-span="6"]:not(.middle-custom-width) {
   flex: 1 1 100% !important;
   max-width: 100% !important;
 }

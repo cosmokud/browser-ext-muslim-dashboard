@@ -72,7 +72,7 @@ class GridLayoutManager {
     // Component definitions with their original span limits
     // Span represents the maximum columns out of 6 the component prefers
     this.componentSpans = {
-      header: { id: "header", span: 6, minSpan: 6 },
+      header: { id: "header", span: 2, minSpan: 2 },
       pinnedAppsSection: { id: "pinnedAppsSection", span: 2, minSpan: 2 },
       searchBarSection: { id: "searchBarSection", span: 2, minSpan: 2 },
       quoteSection: { id: "quoteSection", span: 2, minSpan: 2 },
