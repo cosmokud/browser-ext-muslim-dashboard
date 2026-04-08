@@ -574,7 +574,7 @@ class FastingManager {
 
   _daysLeftText(daysLeft) {
     if (daysLeft <= 0) return "Today";
-    if (daysLeft === 1) return "1 day left";
+    if (daysLeft === 1) return "Tonight";
     return `${daysLeft} days left`;
   }
 
