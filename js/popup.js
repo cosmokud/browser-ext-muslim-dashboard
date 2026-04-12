@@ -36,9 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerLocationPanelHost = document.getElementById(
     "popupPrayerLocationPanelHost",
   );
-  const popupPrayerLocationApplyBtn = document.getElementById(
-    "popupPrayerLocationApplyBtn",
-  );
   const popupPrayerLocationStatus = document.getElementById(
     "popupPrayerLocationStatus",
   );
@@ -50,9 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const popupPrayerMethodPanelHost = document.getElementById(
     "popupPrayerMethodPanelHost",
-  );
-  const popupPrayerMethodApplyBtn = document.getElementById(
-    "popupPrayerMethodApplyBtn",
   );
   const popupPrayerMethodStatus = document.getElementById(
     "popupPrayerMethodStatus",
@@ -285,6 +279,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let popupPrayerLocationPanelRoot = null;
   let popupPrayerMethodPanelRoot = null;
   let popupPrayerSettingsPanelsLoaded = false;
+  let popupPrayerLocationAutoSaveTimer = null;
+  let popupPrayerMethodAutoSaveTimer = null;
+  let popupPrayerLocationAutoSaveShowValidation = false;
+  const popupPrayerAutoSaveDelayMs = 220;
   const popupPrayerKeys = [
     "fajr",
     "sunrise",
@@ -660,6 +658,62 @@ document.addEventListener("DOMContentLoaded", () => {
     return null;
   }
 
+  function schedulePopupPrayerLocationAutoSave(options = {}) {
+    const immediate = options.immediate === true;
+    const showValidationErrors = options.showValidationErrors === true;
+
+    popupPrayerLocationAutoSaveShowValidation =
+      popupPrayerLocationAutoSaveShowValidation || showValidationErrors;
+
+    const runAutoSave = () => {
+      const shouldShowValidation = popupPrayerLocationAutoSaveShowValidation;
+      popupPrayerLocationAutoSaveShowValidation = false;
+      popupPrayerLocationAutoSaveTimer = null;
+      applyPopupPrayerLocationSettings({
+        showValidationErrors: shouldShowValidation,
+      });
+    };
+
+    if (popupPrayerLocationAutoSaveTimer) {
+      clearTimeout(popupPrayerLocationAutoSaveTimer);
+      popupPrayerLocationAutoSaveTimer = null;
+    }
+
+    if (immediate) {
+      runAutoSave();
+      return;
+    }
+
+    popupPrayerLocationAutoSaveTimer = setTimeout(
+      runAutoSave,
+      popupPrayerAutoSaveDelayMs,
+    );
+  }
+
+  function schedulePopupPrayerMethodAutoSave(options = {}) {
+    const immediate = options.immediate === true;
+
+    const runAutoSave = () => {
+      popupPrayerMethodAutoSaveTimer = null;
+      applyPopupPrayerMethodSettings();
+    };
+
+    if (popupPrayerMethodAutoSaveTimer) {
+      clearTimeout(popupPrayerMethodAutoSaveTimer);
+      popupPrayerMethodAutoSaveTimer = null;
+    }
+
+    if (immediate) {
+      runAutoSave();
+      return;
+    }
+
+    popupPrayerMethodAutoSaveTimer = setTimeout(
+      runAutoSave,
+      popupPrayerAutoSaveDelayMs,
+    );
+  }
+
   async function readPopupClipboardTextWithFallback() {
     try {
       if (navigator.clipboard?.readText) {
@@ -704,6 +758,10 @@ document.addEventListener("DOMContentLoaded", () => {
       "Coordinates pasted.",
       false,
     );
+    schedulePopupPrayerLocationAutoSave({
+      immediate: true,
+      showValidationErrors: true,
+    });
   }
 
   async function searchPopupLocationCity(panelRoot) {
@@ -758,6 +816,11 @@ document.addEventListener("DOMContentLoaded", () => {
           "City selected.",
           false,
         );
+
+        schedulePopupPrayerLocationAutoSave({
+          immediate: true,
+          showValidationErrors: true,
+        });
       });
 
       setPopupPrayerSettingsStatus(
@@ -848,12 +911,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     panelRoot.addEventListener("change", (event) => {
       const target = getEventTargetElement(event.target);
-      if (!(target instanceof HTMLInputElement)) return;
+      if (
+        !(target instanceof HTMLInputElement) &&
+        !(target instanceof HTMLSelectElement)
+      ) {
+        return;
+      }
 
-      if (target.name === "locationMethod") {
+      if (
+        target instanceof HTMLInputElement &&
+        target.name === "locationMethod"
+      ) {
         togglePopupManualLocation(panelRoot, target.value === "manual");
         setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
       }
+
+      schedulePopupPrayerLocationAutoSave({ showValidationErrors: true });
+    });
+
+    panelRoot.addEventListener("input", (event) => {
+      const target = getEventTargetElement(event.target);
+      if (!(target instanceof HTMLInputElement)) return;
+      schedulePopupPrayerLocationAutoSave();
     });
 
     requestLocationButton?.addEventListener("click", () => {
@@ -897,6 +976,19 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         updatePopupPrayerMethodAnglesDisplay(panelRoot);
       }
+
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        schedulePopupPrayerMethodAutoSave({ immediate: true });
+      }
+    });
+
+    panelRoot.addEventListener("input", (event) => {
+      const target = getEventTargetElement(event.target);
+      if (!(target instanceof HTMLInputElement)) return;
+      schedulePopupPrayerMethodAutoSave();
     });
 
     panelRoot.dataset.popupBound = "1";
@@ -1154,9 +1246,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setPopupPrayerSettingsStatus(popupPrayerMethodStatus, "");
   }
 
-  function applyPopupPrayerLocationSettings() {
+  function applyPopupPrayerLocationSettings(options = {}) {
     const panelRoot = popupPrayerLocationPanelRoot;
     if (!(panelRoot instanceof Element)) return;
+    const showValidationErrors = options.showValidationErrors === true;
 
     const settings = storage.getSettings();
     const selectedLocationMethod = panelRoot.querySelector(
@@ -1188,12 +1281,14 @@ document.addEventListener("DOMContentLoaded", () => {
         settings.latitude < -90 ||
         settings.latitude > 90
       ) {
-        setPopupPrayerSettingsStatus(
-          popupPrayerLocationStatus,
-          "Latitude must be between -90 and 90.",
-          true,
-        );
-        latitudeInput?.focus();
+        if (showValidationErrors) {
+          setPopupPrayerSettingsStatus(
+            popupPrayerLocationStatus,
+            "Latitude must be between -90 and 90.",
+            true,
+          );
+          latitudeInput?.focus();
+        }
         return;
       }
 
@@ -1202,12 +1297,14 @@ document.addEventListener("DOMContentLoaded", () => {
         settings.longitude < -180 ||
         settings.longitude > 180
       ) {
-        setPopupPrayerSettingsStatus(
-          popupPrayerLocationStatus,
-          "Longitude must be between -180 and 180.",
-          true,
-        );
-        longitudeInput?.focus();
+        if (showValidationErrors) {
+          setPopupPrayerSettingsStatus(
+            popupPrayerLocationStatus,
+            "Longitude must be between -180 and 180.",
+            true,
+          );
+          longitudeInput?.focus();
+        }
         return;
       }
 
@@ -2712,14 +2809,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     popupPrayerMethodPanelClose?.addEventListener("click", () => {
       closePopupPrayerSettingsPanel();
-    });
-
-    popupPrayerLocationApplyBtn?.addEventListener("click", () => {
-      applyPopupPrayerLocationSettings();
-    });
-
-    popupPrayerMethodApplyBtn?.addEventListener("click", () => {
-      applyPopupPrayerMethodSettings();
     });
 
     popupPrayerSettingsPanel?.addEventListener("click", (event) => {
