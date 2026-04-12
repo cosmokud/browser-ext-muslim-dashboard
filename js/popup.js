@@ -27,14 +27,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerSettingsPanel = document.getElementById(
     "popupPrayerSettingsPanel",
   );
-  const popupPrayerSettingsPanelTitle = document.getElementById(
-    "popupPrayerSettingsPanelTitle",
+  const popupPrayerLocationPanel = document.getElementById(
+    "popupPrayerLocationPanel",
   );
-  const popupPrayerSettingsPanelClose = document.getElementById(
-    "popupPrayerSettingsPanelClose",
+  const popupPrayerLocationPanelClose = document.getElementById(
+    "popupPrayerLocationPanelClose",
   );
-  const popupPrayerSettingsFrame = document.getElementById(
-    "popupPrayerSettingsFrame",
+  const popupPrayerLocationMethod = document.getElementById(
+    "popupPrayerLocationMethod",
+  );
+  const popupPrayerManualLocationFields = document.getElementById(
+    "popupPrayerManualLocationFields",
+  );
+  const popupPrayerCityInput = document.getElementById("popupPrayerCityInput");
+  const popupPrayerLatitudeInput = document.getElementById(
+    "popupPrayerLatitudeInput",
+  );
+  const popupPrayerLongitudeInput = document.getElementById(
+    "popupPrayerLongitudeInput",
+  );
+  const popupPrayerUseCurrentLocationBtn = document.getElementById(
+    "popupPrayerUseCurrentLocationBtn",
+  );
+  const popupPrayerLocationApplyBtn = document.getElementById(
+    "popupPrayerLocationApplyBtn",
+  );
+  const popupPrayerLocationStatus = document.getElementById(
+    "popupPrayerLocationStatus",
+  );
+  const popupPrayerMethodPanel = document.getElementById(
+    "popupPrayerMethodPanel",
+  );
+  const popupPrayerMethodPanelClose = document.getElementById(
+    "popupPrayerMethodPanelClose",
+  );
+  const popupPrayerCalcMethod = document.getElementById("popupPrayerCalcMethod");
+  const popupPrayerAsrMethod = document.getElementById("popupPrayerAsrMethod");
+  const popupPrayerHighLatMethod = document.getElementById(
+    "popupPrayerHighLatMethod",
+  );
+  const popupPrayerMidnightMethod = document.getElementById(
+    "popupPrayerMidnightMethod",
+  );
+  const popupPrayerMethodApplyBtn = document.getElementById(
+    "popupPrayerMethodApplyBtn",
+  );
+  const popupPrayerMethodStatus = document.getElementById(
+    "popupPrayerMethodStatus",
   );
   const popupBlurMenu = document.getElementById("popupBlurMenu");
   const popupBlurMenuButton = document.getElementById("popupBlurMenuBtn");
@@ -253,7 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranResyncTimeoutIds = [];
   let pocketQuranPendingAyahSelection = null;
   let pocketQuranAyahSelectionLoadTimeoutId = null;
-  let popupPrayerSettingsActiveTab = "prayer";
   const popupPqSelectionState = {
     selectedSurah: null,
     selectedAyah: null,
@@ -422,8 +460,256 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePopupViewportForTab("prayer");
   }
 
+  function setPopupPrayerSettingsStatus(statusElement, message, isError = false) {
+    if (!statusElement) return;
+
+    const text = String(message || "").trim();
+    statusElement.textContent = text;
+    statusElement.classList.toggle("error", Boolean(text) && isError);
+  }
+
+  function populateSelectOptions(selectElement, options, selectedValue) {
+    if (!(selectElement instanceof HTMLSelectElement)) return;
+
+    const normalizedOptions = Array.isArray(options) ? options : [];
+    const normalizedSelected = String(selectedValue || "").trim();
+
+    selectElement.innerHTML = "";
+
+    normalizedOptions.forEach((option) => {
+      if (!option || typeof option !== "object") return;
+      const optionElement = document.createElement("option");
+      optionElement.value = String(option.value ?? "");
+      optionElement.textContent = String(option.label ?? option.value ?? "");
+      selectElement.appendChild(optionElement);
+    });
+
+    if (
+      normalizedSelected &&
+      !Array.from(selectElement.options).some(
+        (option) => option.value === normalizedSelected,
+      )
+    ) {
+      const fallbackOption = document.createElement("option");
+      fallbackOption.value = normalizedSelected;
+      fallbackOption.textContent = normalizedSelected;
+      selectElement.appendChild(fallbackOption);
+    }
+
+    if (normalizedSelected) {
+      selectElement.value = normalizedSelected;
+    } else if (selectElement.options.length > 0) {
+      selectElement.selectedIndex = 0;
+    }
+  }
+
+  function formatPopupCoordinateValue(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return "";
+
+    return String(Math.round(numericValue * 1000000) / 1000000);
+  }
+
+  function updatePopupPrayerManualLocationVisibility() {
+    const isManual = popupPrayerLocationMethod?.value === "manual";
+    if (popupPrayerManualLocationFields) {
+      popupPrayerManualLocationFields.hidden = !isManual;
+    }
+  }
+
+  function fillPopupPrayerLocationSettings(settings = storage.getSettings()) {
+    const locationMethod =
+      settings?.locationMethod === "manual" ? "manual" : "auto";
+
+    if (popupPrayerLocationMethod) {
+      popupPrayerLocationMethod.value = locationMethod;
+    }
+
+    if (popupPrayerCityInput) {
+      popupPrayerCityInput.value = String(settings?.city || "");
+    }
+
+    if (popupPrayerLatitudeInput) {
+      popupPrayerLatitudeInput.value = formatPopupCoordinateValue(
+        settings?.latitude,
+      );
+    }
+
+    if (popupPrayerLongitudeInput) {
+      popupPrayerLongitudeInput.value = formatPopupCoordinateValue(
+        settings?.longitude,
+      );
+    }
+
+    updatePopupPrayerManualLocationVisibility();
+    setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
+  }
+
+  function fillPopupPrayerMethodSettings(settings = storage.getSettings()) {
+    const methodMap = prayerTimes?.prayTimes?.getMethods?.() || {};
+    const calcOptions = Object.entries(methodMap).map(([value, label]) => ({
+      value,
+      label,
+    }));
+
+    populateSelectOptions(
+      popupPrayerCalcMethod,
+      calcOptions,
+      settings?.calculationMethod,
+    );
+
+    populateSelectOptions(
+      popupPrayerAsrMethod,
+      [
+        { value: "Standard", label: "Standard (Shafi'i)" },
+        { value: "Hanafi", label: "Hanafi" },
+      ],
+      settings?.asrMethod,
+    );
+
+    const highLatMethodMap = prayerTimes?.prayTimes?.getHighLatMethods?.() || {};
+    const highLatOptions = Object.entries(highLatMethodMap).map(
+      ([value, label]) => ({
+        value,
+        label,
+      }),
+    );
+
+    populateSelectOptions(
+      popupPrayerHighLatMethod,
+      highLatOptions,
+      settings?.highLatMethod,
+    );
+
+    populateSelectOptions(
+      popupPrayerMidnightMethod,
+      [
+        { value: "Standard", label: "Standard" },
+        { value: "Jafari", label: "Jafari" },
+      ],
+      settings?.midnightMethod,
+    );
+
+    setPopupPrayerSettingsStatus(popupPrayerMethodStatus, "");
+  }
+
+  function applyPopupPrayerLocationSettings() {
+    const settings = storage.getSettings();
+    const locationMethod =
+      popupPrayerLocationMethod?.value === "manual" ? "manual" : "auto";
+
+    settings.locationMethod = locationMethod;
+
+    if (locationMethod === "manual") {
+      const latitude = Number(popupPrayerLatitudeInput?.value);
+      const longitude = Number(popupPrayerLongitudeInput?.value);
+
+      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+        setPopupPrayerSettingsStatus(
+          popupPrayerLocationStatus,
+          "Latitude must be between -90 and 90.",
+          true,
+        );
+        popupPrayerLatitudeInput?.focus();
+        return;
+      }
+
+      if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+        setPopupPrayerSettingsStatus(
+          popupPrayerLocationStatus,
+          "Longitude must be between -180 and 180.",
+          true,
+        );
+        popupPrayerLongitudeInput?.focus();
+        return;
+      }
+
+      const cityName =
+        String(popupPrayerCityInput?.value || "").trim() || "Custom Location";
+      settings.city = cityName;
+      settings.latitude = latitude;
+      settings.longitude = longitude;
+      storage.saveLastLocation({
+        latitude,
+        longitude,
+        city: cityName,
+      });
+    }
+
+    storage.saveSettings(settings);
+    setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "Location saved.");
+    void refreshPopupState();
+  }
+
+  async function requestPopupPrayerCurrentLocation() {
+    setPopupPrayerSettingsStatus(
+      popupPrayerLocationStatus,
+      "Requesting current location...",
+    );
+
+    if (popupPrayerUseCurrentLocationBtn) {
+      popupPrayerUseCurrentLocationBtn.disabled = true;
+    }
+
+    try {
+      const settings = storage.getSettings();
+      settings.locationMethod = "auto";
+      storage.saveSettings(settings);
+
+      await ensurePrayerManagerInitialized();
+      await prayerTimes.requestLocation();
+
+      fillPopupPrayerLocationSettings(storage.getSettings());
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Location request completed.",
+      );
+      void refreshPopupState();
+    } catch (error) {
+      console.warn("Popup location request failed:", error);
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Could not refresh location.",
+        true,
+      );
+    } finally {
+      if (popupPrayerUseCurrentLocationBtn) {
+        popupPrayerUseCurrentLocationBtn.disabled = false;
+      }
+    }
+  }
+
+  function applyPopupPrayerMethodSettings() {
+    const settings = storage.getSettings();
+
+    settings.calculationMethod =
+      String(popupPrayerCalcMethod?.value || "").trim() ||
+      settings.calculationMethod;
+    settings.asrMethod =
+      String(popupPrayerAsrMethod?.value || "").trim() || settings.asrMethod;
+    settings.highLatMethod =
+      String(popupPrayerHighLatMethod?.value || "").trim() ||
+      settings.highLatMethod;
+    settings.midnightMethod =
+      String(popupPrayerMidnightMethod?.value || "").trim() ||
+      settings.midnightMethod;
+
+    storage.saveSettings(settings);
+    setPopupPrayerSettingsStatus(popupPrayerMethodStatus, "Prayer settings saved.");
+    void refreshPopupState();
+  }
+
   function closePopupPrayerSettingsPanel() {
     if (!popupPrayerSettingsPanel) return;
+
+    if (popupPrayerLocationPanel) {
+      popupPrayerLocationPanel.hidden = true;
+    }
+
+    if (popupPrayerMethodPanel) {
+      popupPrayerMethodPanel.hidden = true;
+    }
+
     popupPrayerSettingsPanel.hidden = true;
     updatePopupPrayerSettingsMode();
   }
@@ -431,37 +717,36 @@ document.addEventListener("DOMContentLoaded", () => {
   function openPopupPrayerSettingsPanel(tabName) {
     const normalizedTab = normalizePopupPrayerSettingsTab(tabName);
 
-    if (!popupPrayerSettingsPanel || !popupPrayerSettingsFrame) {
+    if (
+      !popupPrayerSettingsPanel ||
+      !popupPrayerLocationPanel ||
+      !popupPrayerMethodPanel
+    ) {
       openDashboardSettingsTab(normalizedTab);
       return;
     }
 
-    const panelTitle =
-      normalizedTab === "location"
-        ? "Location Settings"
-        : "Prayer Times Settings";
-    const targetUrl = getDashboardUrl(
-      `index.html?settingsTab=${encodeURIComponent(normalizedTab)}`,
-    );
-    const shouldLoadFrame =
-      popupPrayerSettingsActiveTab !== normalizedTab ||
-      !popupPrayerSettingsFrame.getAttribute("src");
+    const settings = storage.getSettings();
 
-    popupPrayerSettingsActiveTab = normalizedTab;
-    if (popupPrayerSettingsPanelTitle) {
-      popupPrayerSettingsPanelTitle.textContent = panelTitle;
-    }
-    popupPrayerSettingsFrame.title = panelTitle;
-
-    if (shouldLoadFrame) {
-      popupPrayerSettingsFrame.setAttribute("src", targetUrl);
+    if (normalizedTab === "location") {
+      fillPopupPrayerLocationSettings(settings);
+      popupPrayerLocationPanel.hidden = false;
+      popupPrayerMethodPanel.hidden = true;
+    } else {
+      fillPopupPrayerMethodSettings(settings);
+      popupPrayerMethodPanel.hidden = false;
+      popupPrayerLocationPanel.hidden = true;
     }
 
     popupPrayerSettingsPanel.hidden = false;
     updatePopupPrayerSettingsMode();
 
     requestAnimationFrame(() => {
-      popupPrayerSettingsPanelClose?.focus();
+      if (normalizedTab === "location") {
+        popupPrayerLocationMethod?.focus();
+      } else {
+        popupPrayerCalcMethod?.focus();
+      }
     });
   }
 
@@ -1691,8 +1976,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupPopupPrayerSettingsPanel() {
-    popupPrayerSettingsPanelClose?.addEventListener("click", () => {
+    popupPrayerLocationPanelClose?.addEventListener("click", () => {
       closePopupPrayerSettingsPanel();
+    });
+
+    popupPrayerMethodPanelClose?.addEventListener("click", () => {
+      closePopupPrayerSettingsPanel();
+    });
+
+    popupPrayerLocationMethod?.addEventListener("change", () => {
+      updatePopupPrayerManualLocationVisibility();
+      setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
+    });
+
+    popupPrayerUseCurrentLocationBtn?.addEventListener("click", () => {
+      void requestPopupPrayerCurrentLocation();
+    });
+
+    popupPrayerLocationApplyBtn?.addEventListener("click", () => {
+      applyPopupPrayerLocationSettings();
+    });
+
+    popupPrayerMethodApplyBtn?.addEventListener("click", () => {
+      applyPopupPrayerMethodSettings();
     });
 
     popupPrayerSettingsPanel?.addEventListener("click", (event) => {

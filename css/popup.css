@@ -182,6 +182,10 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   display: none;
 }
 
+.popup-prayer-settings-stack[hidden] {
+  display: none !important;
+}
+
 .popup-prayer-card.popup-prayer-settings-open .next-prayer,
 .popup-prayer-card.popup-prayer-settings-open .prayer-list {
   display: none;
@@ -190,6 +194,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 .popup-prayer-card.popup-prayer-settings-open .popup-prayer-settings-stack {
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .popup-prayer-embedded-panel {
@@ -199,10 +204,14 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 360px;
+  min-height: 0;
 }
 
 .popup-prayer-embedded-panel[hidden] {
+  display: none !important;
+}
+
+.popup-prayer-settings-subpanel[hidden] {
   display: none !important;
 }
 
@@ -239,16 +248,51 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-embedded-panel-body {
-  height: min(72vh, 520px);
-  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  max-height: min(72vh, 520px);
+  overflow-y: auto;
 }
 
-.popup-prayer-settings-frame {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-  background: var(--bg-primary);
+.popup-prayer-settings-body .popup-pq-modal-actions {
+  border-top: 0;
+  padding: 0;
+  margin-top: auto;
+}
+
+.popup-prayer-settings-manual {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.popup-prayer-settings-manual[hidden] {
+  display: none !important;
+}
+
+.popup-prayer-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.popup-prayer-setting-control {
+  min-height: 36px;
+  font-size: 0.86rem;
+  padding: 0.55rem 0.68rem;
+}
+
+.popup-prayer-settings-status {
+  min-height: 1.05rem;
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.popup-prayer-settings-status.error {
+  color: #ff8f8f;
 }
 
 .popup-prayer-card .prayer-item {
