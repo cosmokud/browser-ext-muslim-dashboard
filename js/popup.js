@@ -61,7 +61,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerMethodPanelClose = document.getElementById(
     "popupPrayerMethodPanelClose",
   );
-  const popupPrayerCalcMethod = document.getElementById("popupPrayerCalcMethod");
+  const popupPrayerCalcMethod = document.getElementById(
+    "popupPrayerCalcMethod",
+  );
   const popupPrayerAsrMethod = document.getElementById("popupPrayerAsrMethod");
   const popupPrayerHighLatMethod = document.getElementById(
     "popupPrayerHighLatMethod",
@@ -460,7 +462,11 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePopupViewportForTab("prayer");
   }
 
-  function setPopupPrayerSettingsStatus(statusElement, message, isError = false) {
+  function setPopupPrayerSettingsStatus(
+    statusElement,
+    message,
+    isError = false,
+  ) {
     if (!statusElement) return;
 
     const text = String(message || "").trim();
@@ -567,7 +573,8 @@ document.addEventListener("DOMContentLoaded", () => {
       settings?.asrMethod,
     );
 
-    const highLatMethodMap = prayerTimes?.prayTimes?.getHighLatMethods?.() || {};
+    const highLatMethodMap =
+      prayerTimes?.prayTimes?.getHighLatMethods?.() || {};
     const highLatOptions = Object.entries(highLatMethodMap).map(
       ([value, label]) => ({
         value,
@@ -695,7 +702,10 @@ document.addEventListener("DOMContentLoaded", () => {
       settings.midnightMethod;
 
     storage.saveSettings(settings);
-    setPopupPrayerSettingsStatus(popupPrayerMethodStatus, "Prayer settings saved.");
+    setPopupPrayerSettingsStatus(
+      popupPrayerMethodStatus,
+      "Prayer settings saved.",
+    );
     void refreshPopupState();
   }
 
