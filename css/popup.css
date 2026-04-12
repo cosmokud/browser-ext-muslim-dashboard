@@ -268,9 +268,19 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-settings-clone-host {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: hidden;
+}
+
+.popup-prayer-settings-clone-host > #popupPrayerLocationPanelContent {
+  min-height: 0;
+}
+
+#popupPrayerLocationPanelHost > .popup-pq-modal-actions {
+  margin-top: auto;
 }
 
 .popup-prayer-settings-clone-host .settings-panel {
@@ -352,6 +362,22 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   .popup-prayer-settings-clone-host .prayer-settings-row {
     padding: 0.44rem 0.35rem;
   }
+}
+
+#popupPrayerMethodPanelHost {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#popupPrayerMethodPanelHost .prayer-settings-list {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#popupPrayerMethodPanelHost .prayer-settings-list-header,
+#popupPrayerMethodPanelHost .prayer-settings-row {
+  grid-template-columns: 1fr 60px 90px 60px 90px 90px;
+  min-width: 560px;
 }
 
 .popup-prayer-settings-status {
