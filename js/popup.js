@@ -266,6 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranSnippetRenderedKey = "";
   let pocketQuranSnippetInFlightKey = "";
   let pocketQuranResyncTimeoutIds = [];
+  let pocketQuranPendingCommandIssuedAt = 0;
   let pocketQuranPendingAyahSelection = null;
   let pocketQuranAyahSelectionLoadTimeoutId = null;
   const popupPqSelectionState = {
@@ -4472,6 +4473,77 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  function isDashboardPocketQuranAckState(rawState, command) {
+    if (!rawState || typeof rawState !== "object") return false;
+    if (rawState.source !== pocketQuranStateSourceDashboard) return false;
+
+    const updatedAt = Number(rawState.updatedAt);
+    const issuedAt = Number(command?.issuedAt);
+
+    if (!Number.isFinite(updatedAt) || !Number.isFinite(issuedAt)) {
+      return false;
+    }
+
+    return updatedAt >= issuedAt;
+  }
+
+  async function waitForDashboardPocketQuranCommandAck(
+    command,
+    timeoutMs = 900,
+  ) {
+    if (!command || typeof command !== "object") return false;
+
+    const stateStorageEventKey = `${storage.prefix}${pocketQuranPopupStateKey}`;
+    const currentState = storage.get(pocketQuranPopupStateKey, null);
+    if (isDashboardPocketQuranAckState(currentState, command)) {
+      return true;
+    }
+
+    return await new Promise((resolve) => {
+      let settled = false;
+
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        window.removeEventListener("storage", onStorage);
+        resolve(result);
+      };
+
+      const onStorage = (event) => {
+        if (!event || event.key !== stateStorageEventKey || !event.newValue) {
+          return;
+        }
+
+        let parsed = null;
+        try {
+          parsed = JSON.parse(event.newValue);
+        } catch (error) {
+          return;
+        }
+
+        if (isDashboardPocketQuranAckState(parsed, command)) {
+          finish(true);
+        }
+      };
+
+      const timeoutId = setTimeout(
+        () => {
+          finish(false);
+        },
+        Math.max(150, timeoutMs),
+      );
+
+      window.addEventListener("storage", onStorage);
+
+      // Close the race between adding the listener and timeout setup.
+      const latestState = storage.get(pocketQuranPopupStateKey, null);
+      if (isDashboardPocketQuranAckState(latestState, command)) {
+        finish(true);
+      }
+    });
+  }
+
   async function hasDashboardPocketQuranController() {
     if (typeof chrome === "undefined") return false;
     let hasDetectionCapability = false;
@@ -4513,22 +4585,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!hasDetectionCapability) {
-      return Date.now() - pocketQuranLastDashboardStateAt < 3000;
+      return null;
     }
 
     return false;
   }
 
   async function dispatchPocketQuranCommandWithFallback(command) {
-    const dashboardAvailable = await hasDashboardPocketQuranController();
+    if (pocketQuranLocalPlaybackActive) {
+      queuePocketQuranLocalCommand(command);
+      return;
+    }
 
-    if (dashboardAvailable) {
+    const dashboardAvailability = await hasDashboardPocketQuranController();
+
+    if (dashboardAvailability === true) {
+      pocketQuranPendingCommandIssuedAt = 0;
       if (pocketQuranLocalPlaybackActive) {
         deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
       }
       return;
     }
 
+    const ackWaitMs = dashboardAvailability === null ? 900 : 700;
+    const dashboardAcknowledged = await waitForDashboardPocketQuranCommandAck(
+      command,
+      ackWaitMs,
+    );
+
+    if (dashboardAcknowledged) {
+      pocketQuranPendingCommandIssuedAt = 0;
+      if (pocketQuranLocalPlaybackActive) {
+        deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
+      }
+      return;
+    }
+
+    pocketQuranPendingCommandIssuedAt = 0;
     queuePocketQuranLocalCommand(command);
   }
 
@@ -4539,6 +4632,11 @@ document.addEventListener("DOMContentLoaded", () => {
       payload,
       issuedAt: Date.now(),
     };
+
+    pocketQuranPendingCommandIssuedAt = Math.max(
+      pocketQuranPendingCommandIssuedAt,
+      command.issuedAt,
+    );
 
     storage.set(pocketQuranPopupCommandKey, command);
     schedulePocketQuranStateReconcile();
@@ -4554,12 +4652,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const stateSource =
       rawState && typeof rawState.source === "string" ? rawState.source : "";
+    const rawUpdatedAt = Number(rawState?.updatedAt);
+
+    if (
+      stateSource === pocketQuranStateSourceDashboard &&
+      Number.isFinite(rawUpdatedAt) &&
+      rawUpdatedAt < pocketQuranPendingCommandIssuedAt
+    ) {
+      return;
+    }
 
     if (stateSource === pocketQuranStateSourceDashboard) {
-      const updatedAt = Number(rawState.updatedAt);
-      pocketQuranLastDashboardStateAt = Number.isFinite(updatedAt)
-        ? Math.max(pocketQuranLastDashboardStateAt, updatedAt)
+      pocketQuranLastDashboardStateAt = Number.isFinite(rawUpdatedAt)
+        ? Math.max(pocketQuranLastDashboardStateAt, rawUpdatedAt)
         : Date.now();
+
+      if (
+        Number.isFinite(rawUpdatedAt) &&
+        rawUpdatedAt >= pocketQuranPendingCommandIssuedAt
+      ) {
+        pocketQuranPendingCommandIssuedAt = 0;
+      }
 
       if (pocketQuranLocalPlaybackActive) {
         deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
