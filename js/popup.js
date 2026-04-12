@@ -54,6 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerMethodPanelHost = document.getElementById(
     "popupPrayerMethodPanelHost",
   );
+  const popupPrayerMethodPanelContent = document.getElementById(
+    "popupPrayerMethodPanelContent",
+  );
   const popupPrayerMethodApplyBtn = document.getElementById(
     "popupPrayerMethodApplyBtn",
   );
@@ -944,7 +947,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       popupPrayerMethodPanelRoot = prayerPanelTemplate.cloneNode(true);
       popupPrayerMethodPanelRoot.classList.add("active");
-      popupPrayerMethodPanelHost.replaceChildren(popupPrayerMethodPanelRoot);
+      const prayerPanelContainer =
+        popupPrayerMethodPanelContent || popupPrayerMethodPanelHost;
+      prayerPanelContainer.replaceChildren(popupPrayerMethodPanelRoot);
 
       bindPopupPrayerLocationPanelEvents(popupPrayerLocationPanelRoot);
       bindPopupPrayerMethodPanelEvents(popupPrayerMethodPanelRoot);
