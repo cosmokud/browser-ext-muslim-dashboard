@@ -330,72 +330,10 @@
               <div
                 class="popup-prayer-embedded-panel-body popup-prayer-settings-body"
               >
-                <div class="popup-pq-modal-section">
-                  <label
-                    class="popup-pq-modal-label"
-                    for="popupPrayerLocationMethod"
-                    >Location Source</label
-                  >
-                  <select
-                    class="setting-select popup-prayer-setting-control"
-                    id="popupPrayerLocationMethod"
-                  >
-                    <option value="auto">Automatic (device location)</option>
-                    <option value="manual">Manual coordinates</option>
-                  </select>
-                </div>
-
                 <div
-                  class="popup-prayer-settings-manual"
-                  id="popupPrayerManualLocationFields"
-                >
-                  <div class="popup-pq-modal-section">
-                    <label
-                      class="popup-pq-modal-label"
-                      for="popupPrayerCityInput"
-                      >City Name</label
-                    >
-                    <input
-                      class="setting-input popup-prayer-setting-control"
-                      id="popupPrayerCityInput"
-                      type="text"
-                      placeholder="Custom Location"
-                      autocomplete="off"
-                      spellcheck="false"
-                    />
-                  </div>
-
-                  <div class="popup-prayer-settings-grid">
-                    <div class="popup-pq-modal-section">
-                      <label
-                        class="popup-pq-modal-label"
-                        for="popupPrayerLatitudeInput"
-                        >Latitude</label
-                      >
-                      <input
-                        class="setting-input popup-prayer-setting-control"
-                        id="popupPrayerLatitudeInput"
-                        type="number"
-                        step="any"
-                        placeholder="0.0"
-                      />
-                    </div>
-                    <div class="popup-pq-modal-section">
-                      <label
-                        class="popup-pq-modal-label"
-                        for="popupPrayerLongitudeInput"
-                        >Longitude</label
-                      >
-                      <input
-                        class="setting-input popup-prayer-setting-control"
-                        id="popupPrayerLongitudeInput"
-                        type="number"
-                        step="any"
-                        placeholder="0.0"
-                      />
-                    </div>
-                  </div>
-                </div>
+                  class="popup-prayer-settings-clone-host"
+                  id="popupPrayerLocationPanelHost"
+                ></div>
 
                 <p
                   class="popup-prayer-settings-status"
@@ -403,13 +341,6 @@
                 ></p>
 
                 <div class="popup-pq-modal-actions">
-                  <button
-                    type="button"
-                    class="popup-pq-modal-btn"
-                    id="popupPrayerUseCurrentLocationBtn"
-                  >
-                    Use Current Location
-                  </button>
                   <button
                     type="button"
                     class="popup-pq-modal-btn popup-pq-modal-btn-primary"
@@ -443,57 +374,10 @@
               <div
                 class="popup-prayer-embedded-panel-body popup-prayer-settings-body"
               >
-                <div class="popup-pq-modal-section">
-                  <label
-                    class="popup-pq-modal-label"
-                    for="popupPrayerCalcMethod"
-                    >Calculation Method</label
-                  >
-                  <select
-                    class="setting-select popup-prayer-setting-control"
-                    id="popupPrayerCalcMethod"
-                  ></select>
-                </div>
-
-                <div class="popup-pq-modal-section">
-                  <label class="popup-pq-modal-label" for="popupPrayerAsrMethod"
-                    >Asr Method</label
-                  >
-                  <select
-                    class="setting-select popup-prayer-setting-control"
-                    id="popupPrayerAsrMethod"
-                  >
-                    <option value="Standard">Standard (Shafi'i)</option>
-                    <option value="Hanafi">Hanafi</option>
-                  </select>
-                </div>
-
-                <div class="popup-pq-modal-section">
-                  <label
-                    class="popup-pq-modal-label"
-                    for="popupPrayerHighLatMethod"
-                    >High Latitude Rule</label
-                  >
-                  <select
-                    class="setting-select popup-prayer-setting-control"
-                    id="popupPrayerHighLatMethod"
-                  ></select>
-                </div>
-
-                <div class="popup-pq-modal-section">
-                  <label
-                    class="popup-pq-modal-label"
-                    for="popupPrayerMidnightMethod"
-                    >Midnight Method</label
-                  >
-                  <select
-                    class="setting-select popup-prayer-setting-control"
-                    id="popupPrayerMidnightMethod"
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Jafari">Jafari</option>
-                  </select>
-                </div>
+                <div
+                  class="popup-prayer-settings-clone-host"
+                  id="popupPrayerMethodPanelHost"
+                ></div>
 
                 <p
                   class="popup-prayer-settings-status"

@@ -33,21 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerLocationPanelClose = document.getElementById(
     "popupPrayerLocationPanelClose",
   );
-  const popupPrayerLocationMethod = document.getElementById(
-    "popupPrayerLocationMethod",
-  );
-  const popupPrayerManualLocationFields = document.getElementById(
-    "popupPrayerManualLocationFields",
-  );
-  const popupPrayerCityInput = document.getElementById("popupPrayerCityInput");
-  const popupPrayerLatitudeInput = document.getElementById(
-    "popupPrayerLatitudeInput",
-  );
-  const popupPrayerLongitudeInput = document.getElementById(
-    "popupPrayerLongitudeInput",
-  );
-  const popupPrayerUseCurrentLocationBtn = document.getElementById(
-    "popupPrayerUseCurrentLocationBtn",
+  const popupPrayerLocationPanelHost = document.getElementById(
+    "popupPrayerLocationPanelHost",
   );
   const popupPrayerLocationApplyBtn = document.getElementById(
     "popupPrayerLocationApplyBtn",
@@ -61,15 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const popupPrayerMethodPanelClose = document.getElementById(
     "popupPrayerMethodPanelClose",
   );
-  const popupPrayerCalcMethod = document.getElementById(
-    "popupPrayerCalcMethod",
-  );
-  const popupPrayerAsrMethod = document.getElementById("popupPrayerAsrMethod");
-  const popupPrayerHighLatMethod = document.getElementById(
-    "popupPrayerHighLatMethod",
-  );
-  const popupPrayerMidnightMethod = document.getElementById(
-    "popupPrayerMidnightMethod",
+  const popupPrayerMethodPanelHost = document.getElementById(
+    "popupPrayerMethodPanelHost",
   );
   const popupPrayerMethodApplyBtn = document.getElementById(
     "popupPrayerMethodApplyBtn",
@@ -302,6 +282,31 @@ document.addEventListener("DOMContentLoaded", () => {
     ayahPopoverAnchorEl: null,
   };
   let popupPqTypographyState = null;
+  let popupPrayerLocationPanelRoot = null;
+  let popupPrayerMethodPanelRoot = null;
+  let popupPrayerSettingsPanelsLoaded = false;
+  const popupPrayerKeys = [
+    "fajr",
+    "sunrise",
+    "duha",
+    "dhuhr",
+    "asr",
+    "maghrib",
+    "isha",
+    "midnight",
+    "qiyam",
+  ];
+  const popupPrayerIdSuffixByKey = {
+    fajr: "Fajr",
+    sunrise: "Sunrise",
+    duha: "Duha",
+    dhuhr: "Dhuhr",
+    asr: "Asr",
+    maghrib: "Maghrib",
+    isha: "Isha",
+    midnight: "Midnight",
+    qiyam: "Qiyam",
+  };
 
   function getDashboardUrl(pathWithQuery = "index.html") {
     return typeof chrome !== "undefined" && chrome.runtime?.getURL
@@ -474,172 +479,746 @@ document.addEventListener("DOMContentLoaded", () => {
     statusElement.classList.toggle("error", Boolean(text) && isError);
   }
 
-  function populateSelectOptions(selectElement, options, selectedValue) {
-    if (!(selectElement instanceof HTMLSelectElement)) return;
-
-    const normalizedOptions = Array.isArray(options) ? options : [];
-    const normalizedSelected = String(selectedValue || "").trim();
-
-    selectElement.innerHTML = "";
-
-    normalizedOptions.forEach((option) => {
-      if (!option || typeof option !== "object") return;
-      const optionElement = document.createElement("option");
-      optionElement.value = String(option.value ?? "");
-      optionElement.textContent = String(option.label ?? option.value ?? "");
-      selectElement.appendChild(optionElement);
-    });
-
-    if (
-      normalizedSelected &&
-      !Array.from(selectElement.options).some(
-        (option) => option.value === normalizedSelected,
-      )
-    ) {
-      const fallbackOption = document.createElement("option");
-      fallbackOption.value = normalizedSelected;
-      fallbackOption.textContent = normalizedSelected;
-      selectElement.appendChild(fallbackOption);
-    }
-
-    if (normalizedSelected) {
-      selectElement.value = normalizedSelected;
-    } else if (selectElement.options.length > 0) {
-      selectElement.selectedIndex = 0;
-    }
+  function getPopupPanelElement(panelRoot, selector) {
+    if (!(panelRoot instanceof Element)) return null;
+    return panelRoot.querySelector(selector);
   }
 
   function formatPopupCoordinateValue(value) {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return "";
-
     return String(Math.round(numericValue * 1000000) / 1000000);
   }
 
-  function updatePopupPrayerManualLocationVisibility() {
-    const isManual = popupPrayerLocationMethod?.value === "manual";
-    if (popupPrayerManualLocationFields) {
-      popupPrayerManualLocationFields.hidden = !isManual;
+  function getPopupDetectedLocationText() {
+    const locationTextEl = document.getElementById("locationText");
+    const locationText = String(locationTextEl?.textContent || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (locationText) {
+      const lowered = locationText.toLowerCase();
+      const isTransientText =
+        lowered.includes("detecting") ||
+        lowered.includes("requesting permission") ||
+        lowered.includes("loading");
+      if (!isTransientText) {
+        return locationText;
+      }
+    }
+
+    const lastLocation = storage.getLastLocation();
+    const lastCity = String(lastLocation?.city || "").trim();
+    if (lastCity) {
+      return lastCity;
+    }
+    return "Not detected yet";
+  }
+
+  function togglePopupManualLocation(panelRoot, show) {
+    const manualLocationFields = getPopupPanelElement(
+      panelRoot,
+      "#manualLocationFields",
+    );
+
+    if (manualLocationFields) {
+      if (show) {
+        manualLocationFields.classList.add("active");
+      } else {
+        manualLocationFields.classList.remove("active");
+      }
+    }
+
+    updatePopupDetectedLocationText(panelRoot);
+  }
+
+  function updatePopupDetectedLocationText(panelRoot) {
+    const detectedLocationText = getPopupPanelElement(
+      panelRoot,
+      "#detectedLocationText",
+    );
+    if (!detectedLocationText) return;
+
+    const selectedRadio = panelRoot.querySelector(
+      'input[name="locationMethod"]:checked',
+    );
+    const isManual = selectedRadio?.value === "manual";
+
+    const text = getPopupDetectedLocationText();
+    detectedLocationText.textContent = text;
+    detectedLocationText.title = text;
+    detectedLocationText.hidden = isManual;
+  }
+
+  function clearPopupCitySearchResults(container) {
+    if (!(container instanceof Element)) return;
+    container.innerHTML = "";
+    container.classList.remove("active");
+  }
+
+  function renderPopupCitySearchResults(container, results, onPick) {
+    if (!(container instanceof Element)) return;
+
+    clearPopupCitySearchResults(container);
+
+    const list = Array.isArray(results) ? results : [];
+    if (!list.length) return;
+
+    const fragment = document.createDocumentFragment();
+    list.forEach((result, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "city-result-item";
+
+      const title = String(result.fullName || result.city || "").trim();
+      const lat = Number(result.latitude);
+      const lon = Number(result.longitude);
+
+      const primary = document.createElement("div");
+      primary.className = "city-result-primary";
+      primary.textContent = title || "Unknown";
+
+      const secondary = document.createElement("div");
+      secondary.className = "city-result-secondary";
+      secondary.textContent =
+        Number.isFinite(lat) && Number.isFinite(lon)
+          ? `${lat.toFixed(4)}, ${lon.toFixed(4)}`
+          : "";
+
+      button.dataset.shortcut = String(index + 1);
+      button.appendChild(primary);
+      button.appendChild(secondary);
+      button.addEventListener("click", () => {
+        try {
+          if (typeof onPick === "function") onPick(result);
+        } finally {
+          clearPopupCitySearchResults(container);
+        }
+      });
+
+      fragment.appendChild(button);
+    });
+
+    container.appendChild(fragment);
+    container.classList.add("active");
+  }
+
+  function safeDecodePopupUriComponent(value) {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
+  function normalizePopupLatLng(latText, lngText) {
+    const latNumber = Number(latText);
+    const lngNumber = Number(lngText);
+    if (!Number.isFinite(latNumber) || !Number.isFinite(lngNumber)) {
+      return null;
+    }
+
+    let latitude = latNumber;
+    let longitude = lngNumber;
+    if (Math.abs(latitude) > 90 && Math.abs(longitude) <= 90) {
+      [latitude, longitude] = [longitude, latitude];
+    }
+
+    if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+      return null;
+    }
+
+    return {
+      latitude: String(latitude),
+      longitude: String(longitude),
+    };
+  }
+
+  function parsePopupLatLngFromText(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return null;
+
+    const candidates = [raw, safeDecodePopupUriComponent(raw)];
+    for (const candidate of candidates) {
+      const atMatch = candidate.match(
+        /@\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/,
+      );
+      if (atMatch) {
+        const normalized = normalizePopupLatLng(atMatch[1], atMatch[2]);
+        if (normalized) return normalized;
+      }
+
+      const pairMatch = candidate.match(
+        /(-?\d+(?:\.\d+)?)(?:\s*,\s*|\s+)(-?\d+(?:\.\d+)?)/,
+      );
+      if (pairMatch) {
+        const normalized = normalizePopupLatLng(pairMatch[1], pairMatch[2]);
+        if (normalized) return normalized;
+      }
+    }
+
+    return null;
+  }
+
+  async function readPopupClipboardTextWithFallback() {
+    try {
+      if (navigator.clipboard?.readText) {
+        return await navigator.clipboard.readText();
+      }
+    } catch {
+      // ignored: prompt fallback below
+    }
+
+    return (
+      window.prompt(
+        "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)",
+      ) || ""
+    );
+  }
+
+  function applyPopupLatLngToInputs(panelRoot, latLng) {
+    const latitudeInput = getPopupPanelElement(panelRoot, "#latitudeInput");
+    const longitudeInput = getPopupPanelElement(panelRoot, "#longitudeInput");
+    if (!(latitudeInput instanceof HTMLInputElement)) return;
+    if (!(longitudeInput instanceof HTMLInputElement)) return;
+
+    latitudeInput.value = latLng.latitude;
+    longitudeInput.value = latLng.longitude;
+  }
+
+  async function pastePopupLocationCoordinates(panelRoot) {
+    const text = await readPopupClipboardTextWithFallback();
+    const latLng = parsePopupLatLngFromText(text);
+    if (!latLng) {
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Could not parse coordinates.",
+        true,
+      );
+      return;
+    }
+
+    applyPopupLatLngToInputs(panelRoot, latLng);
+    setPopupPrayerSettingsStatus(
+      popupPrayerLocationStatus,
+      "Coordinates pasted.",
+      false,
+    );
+  }
+
+  async function searchPopupLocationCity(panelRoot) {
+    const cityInput = getPopupPanelElement(panelRoot, "#cityInput");
+    const searchButton = getPopupPanelElement(panelRoot, "#searchCityBtn");
+    const citySearchResults = getPopupPanelElement(
+      panelRoot,
+      "#citySearchResults",
+    );
+
+    const cityName = String(cityInput?.value || "").trim();
+    if (!cityName) {
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Please enter a city name.",
+        true,
+      );
+      return;
+    }
+
+    clearPopupCitySearchResults(citySearchResults);
+
+    const previousButtonHtml = searchButton?.innerHTML || "";
+    if (searchButton) {
+      searchButton.disabled = true;
+      searchButton.textContent = "Searching...";
+    }
+
+    try {
+      await ensurePrayerManagerInitialized();
+      const results = await prayerTimes.searchCity(cityName);
+      if (!Array.isArray(results) || !results.length) {
+        setPopupPrayerSettingsStatus(
+          popupPrayerLocationStatus,
+          "City not found.",
+          true,
+        );
+        return;
+      }
+
+      renderPopupCitySearchResults(citySearchResults, results, (result) => {
+        if (cityInput instanceof HTMLInputElement) {
+          cityInput.value = String(result.city || "");
+        }
+        applyPopupLatLngToInputs(panelRoot, {
+          latitude: Number(result.latitude).toFixed(4),
+          longitude: Number(result.longitude).toFixed(4),
+        });
+
+        setPopupPrayerSettingsStatus(
+          popupPrayerLocationStatus,
+          "City selected.",
+          false,
+        );
+      });
+
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Select a city from the list.",
+        false,
+      );
+    } catch (error) {
+      console.warn("Popup city search failed:", error);
+      setPopupPrayerSettingsStatus(
+        popupPrayerLocationStatus,
+        "Search failed. Try again.",
+        true,
+      );
+    } finally {
+      if (searchButton) {
+        searchButton.disabled = false;
+        searchButton.innerHTML = previousButtonHtml || "Search City";
+      }
+    }
+  }
+
+  function updatePopupPrayerMethodAnglesDisplay(panelRoot) {
+    const calculationMethod = getPopupPanelElement(
+      panelRoot,
+      "#calculationMethod",
+    );
+    const methodAnglesInfo = getPopupPanelElement(
+      panelRoot,
+      "#methodAnglesInfo",
+    );
+    const methodFajrAngle = getPopupPanelElement(panelRoot, "#methodFajrAngle");
+    const methodIshaAngle = getPopupPanelElement(panelRoot, "#methodIshaAngle");
+    const customAnglesGroup = getPopupPanelElement(
+      panelRoot,
+      "#customAnglesGroup",
+    );
+
+    const selectedMethod = String(calculationMethod?.value || "MWL");
+    const showCustom = selectedMethod === "Custom";
+
+    if (customAnglesGroup) {
+      customAnglesGroup.style.display = showCustom ? "block" : "none";
+    }
+
+    if (showCustom) {
+      if (methodAnglesInfo) {
+        methodAnglesInfo.style.display = "none";
+      }
+      return;
+    }
+
+    const methodParams =
+      prayerTimes?.prayTimes?.methods?.[selectedMethod]?.params;
+    const fajrAngle = methodParams?.fajr ?? 18;
+    const ishaAngle = methodParams?.isha ?? 17;
+
+    if (methodFajrAngle) {
+      methodFajrAngle.textContent = `${fajrAngle}\u00b0`;
+    }
+    if (methodIshaAngle) {
+      methodIshaAngle.textContent =
+        typeof ishaAngle === "string" ? ishaAngle : `${ishaAngle}\u00b0`;
+    }
+    if (methodAnglesInfo) {
+      methodAnglesInfo.style.display = "block";
+    }
+  }
+
+  function bindPopupPrayerLocationPanelEvents(panelRoot) {
+    if (!(panelRoot instanceof Element)) return;
+    if (panelRoot.dataset.popupBound === "1") return;
+
+    const requestLocationButton = getPopupPanelElement(
+      panelRoot,
+      "#requestLocationBtn",
+    );
+    const refreshLocationButton = getPopupPanelElement(
+      panelRoot,
+      "#refreshLocationBtn",
+    );
+    const searchCityButton = getPopupPanelElement(panelRoot, "#searchCityBtn");
+    const pasteCoordsButton = getPopupPanelElement(
+      panelRoot,
+      "#pasteCoordsBtn",
+    );
+    const cityInput = getPopupPanelElement(panelRoot, "#cityInput");
+
+    panelRoot.addEventListener("change", (event) => {
+      const target = getEventTargetElement(event.target);
+      if (!(target instanceof HTMLInputElement)) return;
+
+      if (target.name === "locationMethod") {
+        togglePopupManualLocation(panelRoot, target.value === "manual");
+        setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
+      }
+    });
+
+    requestLocationButton?.addEventListener("click", () => {
+      void requestPopupPrayerCurrentLocation(panelRoot);
+    });
+
+    refreshLocationButton?.addEventListener("click", () => {
+      void requestPopupPrayerCurrentLocation(panelRoot);
+    });
+
+    searchCityButton?.addEventListener("click", () => {
+      void searchPopupLocationCity(panelRoot);
+    });
+
+    pasteCoordsButton?.addEventListener("click", () => {
+      void pastePopupLocationCoordinates(panelRoot);
+    });
+
+    cityInput?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      void searchPopupLocationCity(panelRoot);
+    });
+
+    panelRoot.dataset.popupBound = "1";
+  }
+
+  function bindPopupPrayerMethodPanelEvents(panelRoot) {
+    if (!(panelRoot instanceof Element)) return;
+    if (panelRoot.dataset.popupBound === "1") return;
+
+    panelRoot.addEventListener("change", (event) => {
+      const target = getEventTargetElement(event.target);
+      if (!(target instanceof Element)) return;
+
+      if (
+        target.id === "calculationMethod" ||
+        target.id === "customIshaMinutes" ||
+        target.id === "customFajrAngle" ||
+        target.id === "customIshaAngle"
+      ) {
+        updatePopupPrayerMethodAnglesDisplay(panelRoot);
+      }
+    });
+
+    panelRoot.dataset.popupBound = "1";
+  }
+
+  async function ensurePopupPrayerSettingsPanelsLoaded() {
+    if (
+      popupPrayerSettingsPanelsLoaded &&
+      popupPrayerLocationPanelRoot &&
+      popupPrayerMethodPanelRoot
+    ) {
+      return true;
+    }
+
+    if (!popupPrayerLocationPanelHost || !popupPrayerMethodPanelHost) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(getDashboardUrl("index.html"), {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        return false;
+      }
+
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      const locationPanelTemplate = doc.getElementById("locationPanel");
+      const prayerPanelTemplate = doc.getElementById("prayerPanel");
+      if (!locationPanelTemplate || !prayerPanelTemplate) {
+        return false;
+      }
+
+      popupPrayerLocationPanelRoot = locationPanelTemplate.cloneNode(true);
+      popupPrayerLocationPanelRoot.classList.add("active");
+      popupPrayerLocationPanelHost.replaceChildren(
+        popupPrayerLocationPanelRoot,
+      );
+
+      popupPrayerMethodPanelRoot = prayerPanelTemplate.cloneNode(true);
+      popupPrayerMethodPanelRoot.classList.add("active");
+      popupPrayerMethodPanelHost.replaceChildren(popupPrayerMethodPanelRoot);
+
+      bindPopupPrayerLocationPanelEvents(popupPrayerLocationPanelRoot);
+      bindPopupPrayerMethodPanelEvents(popupPrayerMethodPanelRoot);
+      popupPrayerSettingsPanelsLoaded = true;
+
+      try {
+        iconThemes.applyIconTheme();
+      } catch (error) {
+        console.warn(
+          "Could not apply icon theme to popup settings panel:",
+          error,
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.warn(
+        "Could not load dashboard settings panels for popup:",
+        error,
+      );
+      return false;
     }
   }
 
   function fillPopupPrayerLocationSettings(settings = storage.getSettings()) {
+    const panelRoot = popupPrayerLocationPanelRoot;
+    if (!(panelRoot instanceof Element)) return;
+
     const locationMethod =
       settings?.locationMethod === "manual" ? "manual" : "auto";
+    const locationRadio = panelRoot.querySelector(
+      `input[name="locationMethod"][value="${locationMethod}"]`,
+    );
 
-    if (popupPrayerLocationMethod) {
-      popupPrayerLocationMethod.value = locationMethod;
+    if (locationRadio instanceof HTMLInputElement) {
+      locationRadio.checked = true;
     }
 
-    if (popupPrayerCityInput) {
-      popupPrayerCityInput.value = String(settings?.city || "");
+    const cityInput = getPopupPanelElement(panelRoot, "#cityInput");
+    if (cityInput instanceof HTMLInputElement) {
+      cityInput.value = String(settings?.city || "");
     }
 
-    if (popupPrayerLatitudeInput) {
-      popupPrayerLatitudeInput.value = formatPopupCoordinateValue(
-        settings?.latitude,
-      );
+    const latitudeInput = getPopupPanelElement(panelRoot, "#latitudeInput");
+    if (latitudeInput instanceof HTMLInputElement) {
+      latitudeInput.value = formatPopupCoordinateValue(settings?.latitude);
     }
 
-    if (popupPrayerLongitudeInput) {
-      popupPrayerLongitudeInput.value = formatPopupCoordinateValue(
-        settings?.longitude,
-      );
+    const longitudeInput = getPopupPanelElement(panelRoot, "#longitudeInput");
+    if (longitudeInput instanceof HTMLInputElement) {
+      longitudeInput.value = formatPopupCoordinateValue(settings?.longitude);
     }
 
-    updatePopupPrayerManualLocationVisibility();
+    togglePopupManualLocation(panelRoot, locationMethod === "manual");
+    updatePopupDetectedLocationText(panelRoot);
+    clearPopupCitySearchResults(
+      getPopupPanelElement(panelRoot, "#citySearchResults"),
+    );
     setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
   }
 
   function fillPopupPrayerMethodSettings(settings = storage.getSettings()) {
-    const methodMap = prayerTimes?.prayTimes?.getMethods?.() || {};
-    const calcOptions = Object.entries(methodMap).map(([value, label]) => ({
-      value,
-      label,
-    }));
+    const panelRoot = popupPrayerMethodPanelRoot;
+    if (!(panelRoot instanceof Element)) return;
 
-    populateSelectOptions(
-      popupPrayerCalcMethod,
-      calcOptions,
-      settings?.calculationMethod,
+    const setInputValue = (id, value, fallback = "") => {
+      const element = getPopupPanelElement(panelRoot, `#${id}`);
+      if (
+        element instanceof HTMLInputElement ||
+        element instanceof HTMLSelectElement
+      ) {
+        element.value = String(value ?? fallback);
+      }
+    };
+
+    setInputValue(
+      "calculationMethod",
+      settings.calculationMethod || "MWL",
+      "MWL",
+    );
+    setInputValue("asrMethod", settings.asrMethod || "Standard", "Standard");
+    setInputValue("highLatMethod", settings.highLatMethod || "None", "None");
+    setInputValue(
+      "midnightMethod",
+      settings.midnightMethod || "Standard",
+      "Standard",
+    );
+    setInputValue("duhaOffset", settings.duhaOffset || 20, 20);
+    setInputValue("customFajrAngle", settings.customFajrAngle || 18, 18);
+    setInputValue("customIshaAngle", settings.customIshaAngle || 17, 17);
+
+    const customIshaMinutes = getPopupPanelElement(
+      panelRoot,
+      "#customIshaMinutes",
+    );
+    if (customIshaMinutes instanceof HTMLInputElement) {
+      customIshaMinutes.checked = settings.customIshaMinutes === true;
+    }
+
+    const prayerVisibility =
+      settings.prayerVisibility && typeof settings.prayerVisibility === "object"
+        ? settings.prayerVisibility
+        : {};
+    const adjustments =
+      settings.adjustments && typeof settings.adjustments === "object"
+        ? settings.adjustments
+        : {};
+
+    popupPrayerKeys.forEach((key) => {
+      const suffix = popupPrayerIdSuffixByKey[key];
+      if (!suffix) return;
+
+      const showInput = getPopupPanelElement(panelRoot, `#show${suffix}`);
+      if (showInput instanceof HTMLInputElement) {
+        showInput.checked = prayerVisibility[key] !== false;
+      }
+
+      const adjustInput = getPopupPanelElement(panelRoot, `#adjust${suffix}`);
+      if (adjustInput instanceof HTMLInputElement) {
+        adjustInput.value = String(parseInt(adjustments[key], 10) || 0);
+      }
+    });
+
+    const prayerNotifications =
+      settings.prayerNotifications &&
+      typeof settings.prayerNotifications === "object"
+        ? settings.prayerNotifications
+        : {};
+
+    const enablePrayerNotifications = getPopupPanelElement(
+      panelRoot,
+      "#enablePrayerNotifications",
+    );
+    if (enablePrayerNotifications instanceof HTMLInputElement) {
+      enablePrayerNotifications.checked = prayerNotifications.enabled === true;
+    }
+
+    const defaultBeforeMinutes = clampNumber(
+      parseInt(prayerNotifications.beforeMinutes, 10),
+      0,
+      180,
+      10,
+    );
+    const defaultAfterMinutes = clampNumber(
+      parseInt(prayerNotifications.afterMinutes, 10),
+      0,
+      180,
+      0,
     );
 
-    populateSelectOptions(
-      popupPrayerAsrMethod,
-      [
-        { value: "Standard", label: "Standard (Shafi'i)" },
-        { value: "Hanafi", label: "Hanafi" },
-      ],
-      settings?.asrMethod,
-    );
+    const perPrayerRaw =
+      prayerNotifications.perPrayer &&
+      typeof prayerNotifications.perPrayer === "object"
+        ? prayerNotifications.perPrayer
+        : null;
 
-    const highLatMethodMap =
-      prayerTimes?.prayTimes?.getHighLatMethods?.() || {};
-    const highLatOptions = Object.entries(highLatMethodMap).map(
-      ([value, label]) => ({
-        value,
-        label,
-      }),
-    );
+    popupPrayerKeys.forEach((key) => {
+      const suffix = popupPrayerIdSuffixByKey[key];
+      if (!suffix) return;
 
-    populateSelectOptions(
-      popupPrayerHighLatMethod,
-      highLatOptions,
-      settings?.highLatMethod,
-    );
+      const entry = perPrayerRaw ? perPrayerRaw[key] : null;
+      const enabled =
+        entry && typeof entry === "object"
+          ? entry.enabled === true
+          : typeof entry === "boolean"
+            ? entry === true
+            : prayerVisibility[key] === true;
 
-    populateSelectOptions(
-      popupPrayerMidnightMethod,
-      [
-        { value: "Standard", label: "Standard" },
-        { value: "Jafari", label: "Jafari" },
-      ],
-      settings?.midnightMethod,
-    );
+      const notifyInput = getPopupPanelElement(panelRoot, `#notify${suffix}`);
+      if (notifyInput instanceof HTMLInputElement) {
+        notifyInput.checked = enabled;
+      }
 
+      const beforeInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}BeforeMinutes`,
+      );
+      if (beforeInput instanceof HTMLInputElement) {
+        const beforeMinutes =
+          entry && typeof entry === "object"
+            ? clampNumber(
+                parseInt(entry.beforeMinutes, 10),
+                0,
+                180,
+                defaultBeforeMinutes,
+              )
+            : defaultBeforeMinutes;
+        beforeInput.value = String(beforeMinutes);
+      }
+
+      const afterInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}AfterMinutes`,
+      );
+      if (afterInput instanceof HTMLInputElement) {
+        const afterMinutes =
+          entry && typeof entry === "object"
+            ? clampNumber(
+                parseInt(entry.afterMinutes, 10),
+                0,
+                180,
+                defaultAfterMinutes,
+              )
+            : defaultAfterMinutes;
+        afterInput.value = String(afterMinutes);
+      }
+    });
+
+    updatePopupPrayerMethodAnglesDisplay(panelRoot);
     setPopupPrayerSettingsStatus(popupPrayerMethodStatus, "");
   }
 
   function applyPopupPrayerLocationSettings() {
+    const panelRoot = popupPrayerLocationPanelRoot;
+    if (!(panelRoot instanceof Element)) return;
+
     const settings = storage.getSettings();
+    const selectedLocationMethod = panelRoot.querySelector(
+      'input[name="locationMethod"]:checked',
+    );
     const locationMethod =
-      popupPrayerLocationMethod?.value === "manual" ? "manual" : "auto";
+      selectedLocationMethod instanceof HTMLInputElement
+        ? selectedLocationMethod.value
+        : "auto";
 
-    settings.locationMethod = locationMethod;
+    const cityInput = getPopupPanelElement(panelRoot, "#cityInput");
+    const latitudeInput = getPopupPanelElement(panelRoot, "#latitudeInput");
+    const longitudeInput = getPopupPanelElement(panelRoot, "#longitudeInput");
 
-    if (locationMethod === "manual") {
-      const latitude = Number(popupPrayerLatitudeInput?.value);
-      const longitude = Number(popupPrayerLongitudeInput?.value);
+    const city = String(cityInput?.value || "").trim();
+    const parsedLatitude = parseFloat(latitudeInput?.value);
+    const parsedLongitude = parseFloat(longitudeInput?.value);
 
-      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+    settings.locationMethod = locationMethod === "manual" ? "manual" : "auto";
+    settings.city = city;
+    settings.latitude = Number.isFinite(parsedLatitude) ? parsedLatitude : null;
+    settings.longitude = Number.isFinite(parsedLongitude)
+      ? parsedLongitude
+      : null;
+
+    if (settings.locationMethod === "manual") {
+      if (
+        !Number.isFinite(settings.latitude) ||
+        settings.latitude < -90 ||
+        settings.latitude > 90
+      ) {
         setPopupPrayerSettingsStatus(
           popupPrayerLocationStatus,
           "Latitude must be between -90 and 90.",
           true,
         );
-        popupPrayerLatitudeInput?.focus();
+        latitudeInput?.focus();
         return;
       }
 
-      if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      if (
+        !Number.isFinite(settings.longitude) ||
+        settings.longitude < -180 ||
+        settings.longitude > 180
+      ) {
         setPopupPrayerSettingsStatus(
           popupPrayerLocationStatus,
           "Longitude must be between -180 and 180.",
           true,
         );
-        popupPrayerLongitudeInput?.focus();
+        longitudeInput?.focus();
         return;
       }
 
-      const cityName =
-        String(popupPrayerCityInput?.value || "").trim() || "Custom Location";
-      settings.city = cityName;
-      settings.latitude = latitude;
-      settings.longitude = longitude;
+      if (!settings.city) {
+        settings.city = "Custom Location";
+      }
+
       storage.saveLastLocation({
-        latitude,
-        longitude,
-        city: cityName,
+        latitude: settings.latitude,
+        longitude: settings.longitude,
+        city: settings.city,
       });
     }
 
@@ -648,28 +1227,39 @@ document.addEventListener("DOMContentLoaded", () => {
     void refreshPopupState();
   }
 
-  async function requestPopupPrayerCurrentLocation() {
+  async function requestPopupPrayerCurrentLocation(panelRoot) {
+    if (!(panelRoot instanceof Element)) return;
+
+    const requestLocationButton = getPopupPanelElement(
+      panelRoot,
+      "#requestLocationBtn",
+    );
+    const refreshLocationButton = getPopupPanelElement(
+      panelRoot,
+      "#refreshLocationBtn",
+    );
+
     setPopupPrayerSettingsStatus(
       popupPrayerLocationStatus,
       "Requesting current location...",
+      false,
     );
 
-    if (popupPrayerUseCurrentLocationBtn) {
-      popupPrayerUseCurrentLocationBtn.disabled = true;
+    if (requestLocationButton instanceof HTMLButtonElement) {
+      requestLocationButton.disabled = true;
+    }
+    if (refreshLocationButton instanceof HTMLButtonElement) {
+      refreshLocationButton.disabled = true;
     }
 
     try {
-      const settings = storage.getSettings();
-      settings.locationMethod = "auto";
-      storage.saveSettings(settings);
-
       await ensurePrayerManagerInitialized();
       await prayerTimes.requestLocation();
-
-      fillPopupPrayerLocationSettings(storage.getSettings());
+      updatePopupDetectedLocationText(panelRoot);
       setPopupPrayerSettingsStatus(
         popupPrayerLocationStatus,
-        "Location request completed.",
+        "Location updated.",
+        false,
       );
       void refreshPopupState();
     } catch (error) {
@@ -680,31 +1270,145 @@ document.addEventListener("DOMContentLoaded", () => {
         true,
       );
     } finally {
-      if (popupPrayerUseCurrentLocationBtn) {
-        popupPrayerUseCurrentLocationBtn.disabled = false;
+      if (requestLocationButton instanceof HTMLButtonElement) {
+        requestLocationButton.disabled = false;
+      }
+      if (refreshLocationButton instanceof HTMLButtonElement) {
+        refreshLocationButton.disabled = false;
       }
     }
   }
 
   function applyPopupPrayerMethodSettings() {
+    const panelRoot = popupPrayerMethodPanelRoot;
+    if (!(panelRoot instanceof Element)) return;
+
     const settings = storage.getSettings();
 
+    const calculationMethod = getPopupPanelElement(
+      panelRoot,
+      "#calculationMethod",
+    );
+    const asrMethod = getPopupPanelElement(panelRoot, "#asrMethod");
+    const highLatMethod = getPopupPanelElement(panelRoot, "#highLatMethod");
+    const midnightMethod = getPopupPanelElement(panelRoot, "#midnightMethod");
+    const duhaOffset = getPopupPanelElement(panelRoot, "#duhaOffset");
+    const customFajrAngle = getPopupPanelElement(panelRoot, "#customFajrAngle");
+    const customIshaAngle = getPopupPanelElement(panelRoot, "#customIshaAngle");
+    const customIshaMinutes = getPopupPanelElement(
+      panelRoot,
+      "#customIshaMinutes",
+    );
+    const enablePrayerNotifications = getPopupPanelElement(
+      panelRoot,
+      "#enablePrayerNotifications",
+    );
+
     settings.calculationMethod =
-      String(popupPrayerCalcMethod?.value || "").trim() ||
-      settings.calculationMethod;
-    settings.asrMethod =
-      String(popupPrayerAsrMethod?.value || "").trim() || settings.asrMethod;
+      String(calculationMethod?.value || "").trim() || "MWL";
+    settings.asrMethod = String(asrMethod?.value || "").trim() || "Standard";
     settings.highLatMethod =
-      String(popupPrayerHighLatMethod?.value || "").trim() ||
-      settings.highLatMethod;
+      String(highLatMethod?.value || "").trim() || "None";
     settings.midnightMethod =
-      String(popupPrayerMidnightMethod?.value || "").trim() ||
-      settings.midnightMethod;
+      String(midnightMethod?.value || "").trim() || "Standard";
+    settings.duhaOffset = clampNumber(
+      parseInt(duhaOffset?.value, 10),
+      10,
+      60,
+      20,
+    );
+    settings.customFajrAngle = clampNumber(
+      parseFloat(customFajrAngle?.value),
+      10,
+      25,
+      18,
+    );
+    settings.customIshaAngle = clampNumber(
+      parseFloat(customIshaAngle?.value),
+      10,
+      25,
+      17,
+    );
+    settings.customIshaMinutes =
+      customIshaMinutes instanceof HTMLInputElement &&
+      customIshaMinutes.checked === true;
+
+    settings.prayerVisibility = {};
+    settings.adjustments = {};
+
+    popupPrayerKeys.forEach((key) => {
+      const suffix = popupPrayerIdSuffixByKey[key];
+      if (!suffix) return;
+
+      const showInput = getPopupPanelElement(panelRoot, `#show${suffix}`);
+      settings.prayerVisibility[key] =
+        showInput instanceof HTMLInputElement && showInput.checked === true;
+
+      const adjustInput = getPopupPanelElement(panelRoot, `#adjust${suffix}`);
+      settings.adjustments[key] =
+        clampNumber(parseInt(adjustInput?.value, 10), -60, 60, 0) || 0;
+    });
+
+    settings.prayerNotifications = settings.prayerNotifications || {};
+    settings.prayerNotifications.enabled =
+      enablePrayerNotifications instanceof HTMLInputElement &&
+      enablePrayerNotifications.checked === true;
+
+    const existingBeforeMinutes = clampNumber(
+      parseInt(settings.prayerNotifications.beforeMinutes, 10),
+      0,
+      180,
+      10,
+    );
+    const existingAfterMinutes = clampNumber(
+      parseInt(settings.prayerNotifications.afterMinutes, 10),
+      0,
+      180,
+      0,
+    );
+
+    settings.prayerNotifications.beforeMinutes = existingBeforeMinutes;
+    settings.prayerNotifications.afterMinutes = existingAfterMinutes;
+    settings.prayerNotifications.perPrayer = {};
+
+    popupPrayerKeys.forEach((key) => {
+      const suffix = popupPrayerIdSuffixByKey[key];
+      if (!suffix) return;
+
+      const notifyInput = getPopupPanelElement(panelRoot, `#notify${suffix}`);
+      const beforeInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}BeforeMinutes`,
+      );
+      const afterInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}AfterMinutes`,
+      );
+
+      settings.prayerNotifications.perPrayer[key] = {
+        enabled:
+          notifyInput instanceof HTMLInputElement &&
+          notifyInput.checked === true,
+        beforeMinutes: clampNumber(
+          parseInt(beforeInput?.value, 10),
+          0,
+          180,
+          existingBeforeMinutes,
+        ),
+        afterMinutes: clampNumber(
+          parseInt(afterInput?.value, 10),
+          0,
+          180,
+          existingAfterMinutes,
+        ),
+      };
+    });
 
     storage.saveSettings(settings);
     setPopupPrayerSettingsStatus(
       popupPrayerMethodStatus,
       "Prayer settings saved.",
+      false,
     );
     void refreshPopupState();
   }
@@ -715,7 +1419,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (popupPrayerLocationPanel) {
       popupPrayerLocationPanel.hidden = true;
     }
-
     if (popupPrayerMethodPanel) {
       popupPrayerMethodPanel.hidden = true;
     }
@@ -724,7 +1427,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePopupPrayerSettingsMode();
   }
 
-  function openPopupPrayerSettingsPanel(tabName) {
+  async function openPopupPrayerSettingsPanel(tabName) {
     const normalizedTab = normalizePopupPrayerSettingsTab(tabName);
 
     if (
@@ -732,7 +1435,22 @@ document.addEventListener("DOMContentLoaded", () => {
       !popupPrayerLocationPanel ||
       !popupPrayerMethodPanel
     ) {
-      openDashboardSettingsTab(normalizedTab);
+      console.warn("Popup prayer settings panel containers are missing.");
+      return;
+    }
+
+    const loaded = await ensurePopupPrayerSettingsPanelsLoaded();
+    if (!loaded) {
+      const fallbackStatus =
+        normalizedTab === "location"
+          ? popupPrayerLocationStatus
+          : popupPrayerMethodStatus;
+
+      setPopupPrayerSettingsStatus(
+        fallbackStatus,
+        "Could not load settings panel.",
+        true,
+      );
       return;
     }
 
@@ -752,11 +1470,13 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePopupPrayerSettingsMode();
 
     requestAnimationFrame(() => {
-      if (normalizedTab === "location") {
-        popupPrayerLocationMethod?.focus();
-      } else {
-        popupPrayerCalcMethod?.focus();
-      }
+      const firstControl =
+        normalizedTab === "location"
+          ? popupPrayerLocationPanelRoot?.querySelector(
+              'input[name="locationMethod"]',
+            )
+          : popupPrayerMethodPanelRoot?.querySelector("#calculationMethod");
+      firstControl?.focus?.();
     });
   }
 
@@ -1992,15 +2712,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     popupPrayerMethodPanelClose?.addEventListener("click", () => {
       closePopupPrayerSettingsPanel();
-    });
-
-    popupPrayerLocationMethod?.addEventListener("change", () => {
-      updatePopupPrayerManualLocationVisibility();
-      setPopupPrayerSettingsStatus(popupPrayerLocationStatus, "");
-    });
-
-    popupPrayerUseCurrentLocationBtn?.addEventListener("click", () => {
-      void requestPopupPrayerCurrentLocation();
     });
 
     popupPrayerLocationApplyBtn?.addEventListener("click", () => {
