@@ -273,6 +273,15 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   overflow-x: hidden;
 }
 
+#popupPrayerMethodPanelHost {
+  overflow-x: auto;
+}
+
+#popupPrayerMethodPanelHost .prayer-settings-list-header,
+#popupPrayerMethodPanelHost .prayer-settings-row {
+  min-width: max-content;
+}
+
 .popup-prayer-settings-clone-host .settings-panel {
   display: block;
   animation: none;
