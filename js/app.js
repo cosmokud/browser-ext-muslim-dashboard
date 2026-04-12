@@ -1823,22 +1823,60 @@ class MuslimDashboard {
       ].filter(Boolean);
     };
 
+    let focusEnterAnimationClearTimer = null;
+    let focusEnterAnimationEndHandler = null;
+
     const runFocusEnterAnimation = () => {
       const pocketQuranCard = document.getElementById("pocketQuranCard");
       if (!pocketQuranCard) return;
+
+      if (focusEnterAnimationClearTimer) {
+        clearTimeout(focusEnterAnimationClearTimer);
+        focusEnterAnimationClearTimer = null;
+      }
+      if (focusEnterAnimationEndHandler) {
+        pocketQuranCard.removeEventListener(
+          "animationend",
+          focusEnterAnimationEndHandler,
+        );
+        focusEnterAnimationEndHandler = null;
+      }
 
       pocketQuranCard.classList.remove("quran-focus-entering");
       void pocketQuranCard.offsetWidth;
       pocketQuranCard.classList.add("quran-focus-entering");
 
       const clearEnterClass = () => {
+        if (focusEnterAnimationClearTimer) {
+          clearTimeout(focusEnterAnimationClearTimer);
+          focusEnterAnimationClearTimer = null;
+        }
+        if (focusEnterAnimationEndHandler) {
+          pocketQuranCard.removeEventListener(
+            "animationend",
+            focusEnterAnimationEndHandler,
+          );
+          focusEnterAnimationEndHandler = null;
+        }
         pocketQuranCard.classList.remove("quran-focus-entering");
       };
 
-      pocketQuranCard.addEventListener("animationend", clearEnterClass, {
-        once: true,
-      });
-      setTimeout(clearEnterClass, 520);
+      focusEnterAnimationEndHandler = (event) => {
+        if (
+          event.target !== pocketQuranCard ||
+          event.animationName !== "quranFocusEnterFade"
+        ) {
+          return;
+        }
+        clearEnterClass();
+      };
+
+      pocketQuranCard.addEventListener(
+        "animationend",
+        focusEnterAnimationEndHandler,
+      );
+
+      focusEnterAnimationClearTimer = setTimeout(clearEnterClass, 520);
     };
 
     const enterFocusMode = (opts = {}) => {

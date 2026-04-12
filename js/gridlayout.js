@@ -2044,6 +2044,7 @@ class GridLayoutManager {
 
       const toggleBtn = document.getElementById("layoutEditBtn");
       this.updateEditModeUI(toggleBtn);
+      this.syncSidebarModeForEditState();
       return;
     }
 
@@ -2093,6 +2094,8 @@ class GridLayoutManager {
         this.saveLayout();
       } catch (e) {}
     }
+
+    this.syncSidebarModeForEditState();
   }
 
   /**

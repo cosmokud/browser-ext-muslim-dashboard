@@ -5110,6 +5110,7 @@ body.quran-focus-mode #pocketQuranCard {
   margin: 0;
   padding: var(--spacing-md);
   border-radius: var(--radius-xl);
+  animation: none;
   display: flex !important;
   flex-direction: column;
   overflow: hidden;
