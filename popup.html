@@ -302,6 +302,39 @@
           </div>
 
           <div class="prayer-list" id="prayerList"></div>
+
+          <div class="popup-prayer-settings-stack">
+            <section
+              class="popup-prayer-embedded-panel"
+              id="popupPrayerSettingsPanel"
+              hidden
+            >
+              <div class="popup-prayer-embedded-panel-header">
+                <h3
+                  class="popup-prayer-embedded-panel-title"
+                  id="popupPrayerSettingsPanelTitle"
+                >
+                  Prayer Times Settings
+                </h3>
+                <button
+                  type="button"
+                  class="popup-prayer-embedded-panel-close"
+                  id="popupPrayerSettingsPanelClose"
+                  aria-label="Close prayer settings"
+                >
+                  ×
+                </button>
+              </div>
+              <div class="popup-prayer-embedded-panel-body">
+                <iframe
+                  class="popup-prayer-settings-frame"
+                  id="popupPrayerSettingsFrame"
+                  title="Prayer Times settings"
+                  loading="lazy"
+                ></iframe>
+              </div>
+            </section>
+          </div>
         </section>
 
         <section

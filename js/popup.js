@@ -24,6 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const openPrayerSettingsButton = document.getElementById(
     "popupOpenPrayerSettingsBtn",
   );
+  const popupPrayerSettingsPanel = document.getElementById(
+    "popupPrayerSettingsPanel",
+  );
+  const popupPrayerSettingsPanelTitle = document.getElementById(
+    "popupPrayerSettingsPanelTitle",
+  );
+  const popupPrayerSettingsPanelClose = document.getElementById(
+    "popupPrayerSettingsPanelClose",
+  );
+  const popupPrayerSettingsFrame = document.getElementById(
+    "popupPrayerSettingsFrame",
+  );
   const popupBlurMenu = document.getElementById("popupBlurMenu");
   const popupBlurMenuButton = document.getElementById("popupBlurMenuBtn");
   const popupBlurModal = document.getElementById("popupBlurModal");
@@ -241,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranResyncTimeoutIds = [];
   let pocketQuranPendingAyahSelection = null;
   let pocketQuranAyahSelectionLoadTimeoutId = null;
+  let popupPrayerSettingsActiveTab = "prayer";
   const popupPqSelectionState = {
     selectedSurah: null,
     selectedAyah: null,
@@ -385,6 +398,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     openUrlInCurrentTab(targetUrl, {
       dashboardHashUrl: inPlaceTargetUrl,
+    });
+  }
+
+  function normalizePopupPrayerSettingsTab(tabName) {
+    const normalized = String(tabName || "").trim();
+    if (normalized === "location" || normalized === "prayer") {
+      return normalized;
+    }
+    return "prayer";
+  }
+
+  function updatePopupPrayerSettingsMode() {
+    const panelOpen = popupPrayerSettingsPanel?.hidden === false;
+    prayerCard?.classList.toggle("popup-prayer-settings-open", panelOpen);
+
+    if (!panelOpen) {
+      popupPrayerSettingsPanel?.setAttribute("aria-hidden", "true");
+    } else {
+      popupPrayerSettingsPanel?.removeAttribute("aria-hidden");
+    }
+
+    updatePopupViewportForTab("prayer");
+  }
+
+  function closePopupPrayerSettingsPanel() {
+    if (!popupPrayerSettingsPanel) return;
+    popupPrayerSettingsPanel.hidden = true;
+    updatePopupPrayerSettingsMode();
+  }
+
+  function openPopupPrayerSettingsPanel(tabName) {
+    const normalizedTab = normalizePopupPrayerSettingsTab(tabName);
+
+    if (!popupPrayerSettingsPanel || !popupPrayerSettingsFrame) {
+      openDashboardSettingsTab(normalizedTab);
+      return;
+    }
+
+    const panelTitle =
+      normalizedTab === "location"
+        ? "Location Settings"
+        : "Prayer Times Settings";
+    const targetUrl = getDashboardUrl(
+      `index.html?settingsTab=${encodeURIComponent(normalizedTab)}`,
+    );
+    const shouldLoadFrame =
+      popupPrayerSettingsActiveTab !== normalizedTab ||
+      !popupPrayerSettingsFrame.getAttribute("src");
+
+    popupPrayerSettingsActiveTab = normalizedTab;
+    if (popupPrayerSettingsPanelTitle) {
+      popupPrayerSettingsPanelTitle.textContent = panelTitle;
+    }
+    popupPrayerSettingsFrame.title = panelTitle;
+
+    if (shouldLoadFrame) {
+      popupPrayerSettingsFrame.setAttribute("src", targetUrl);
+    }
+
+    popupPrayerSettingsPanel.hidden = false;
+    updatePopupPrayerSettingsMode();
+
+    requestAnimationFrame(() => {
+      popupPrayerSettingsPanelClose?.focus();
     });
   }
 
@@ -1576,6 +1653,10 @@ document.addEventListener("DOMContentLoaded", () => {
       closePocketQuranFontPanel();
     }
 
+    if (normalizedTab !== "prayer") {
+      closePopupPrayerSettingsPanel();
+    }
+
     updatePopupViewportForTab(normalizedTab);
 
     if (persist) {
@@ -1606,6 +1687,46 @@ document.addEventListener("DOMContentLoaded", () => {
         nextButton.focus();
         setActivePopupTab(nextButton.dataset.popupTab, { persist: true });
       });
+    });
+  }
+
+  function setupPopupPrayerSettingsPanel() {
+    popupPrayerSettingsPanelClose?.addEventListener("click", () => {
+      closePopupPrayerSettingsPanel();
+    });
+
+    popupPrayerSettingsPanel?.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (popupPrayerSettingsPanel?.hidden !== false) return;
+
+      const target = getEventTargetElement(event.target);
+      if (!target) return;
+
+      const clickedInsidePanel = popupPrayerSettingsPanel.contains(target);
+      const clickedLocationTrigger =
+        openLocationSettingsIcon?.contains(target) === true;
+      const clickedPrayerTrigger =
+        openPrayerSettingsButton?.contains(target) === true;
+
+      if (
+        clickedInsidePanel ||
+        clickedLocationTrigger ||
+        clickedPrayerTrigger
+      ) {
+        return;
+      }
+
+      closePopupPrayerSettingsPanel();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (popupPrayerSettingsPanel?.hidden !== false) return;
+
+      closePopupPrayerSettingsPanel();
     });
   }
 
@@ -4463,6 +4584,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (hiddenCard) {
       hiddenCard.hidden = isPrayerVisible;
     }
+
+    if (!isPrayerVisible) {
+      closePopupPrayerSettingsPanel();
+    }
   }
 
   function applyPerformanceModeState(settings = storage.getSettings()) {
@@ -4606,16 +4731,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   setupPopupTabs();
+  setupPopupPrayerSettingsPanel();
   setupPocketQuranControls();
   setupPocketQuranSelectors();
   setupPopupBlurModal();
 
   bindShortcut(openDashboardButton, () => openDashboardSettingsTab("prayer"));
   bindShortcut(openLocationSettingsIcon, () =>
-    openDashboardSettingsTab("location"),
+    openPopupPrayerSettingsPanel("location"),
   );
   bindShortcut(openPrayerSettingsButton, () =>
-    openDashboardSettingsTab("prayer"),
+    openPopupPrayerSettingsPanel("prayer"),
   );
 
   window.addEventListener("storage", handleStorageChange);

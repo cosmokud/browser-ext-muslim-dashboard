@@ -178,6 +178,79 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   gap: var(--spacing-sm);
 }
 
+.popup-prayer-settings-stack {
+  display: none;
+}
+
+.popup-prayer-card.popup-prayer-settings-open .next-prayer,
+.popup-prayer-card.popup-prayer-settings-open .prayer-list {
+  display: none;
+}
+
+.popup-prayer-card.popup-prayer-settings-open .popup-prayer-settings-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-prayer-embedded-panel {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-subtle);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+.popup-prayer-embedded-panel[hidden] {
+  display: none !important;
+}
+
+.popup-prayer-embedded-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.popup-prayer-embedded-panel-title {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.popup-prayer-embedded-panel-close {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.popup-prayer-embedded-panel-close:hover {
+  background: var(--glass-bg-hover);
+}
+
+.popup-prayer-embedded-panel-body {
+  height: min(72vh, 520px);
+  min-height: 330px;
+}
+
+.popup-prayer-settings-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--bg-primary);
+}
+
 .popup-prayer-card .prayer-item {
   padding: 0.7rem 0.8rem;
 }
