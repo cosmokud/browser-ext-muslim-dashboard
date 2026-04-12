@@ -279,15 +279,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   min-height: 0;
 }
 
-.popup-prayer-settings-clone-host > #popupPrayerMethodPanelContent {
-  min-height: 0;
-}
-
 #popupPrayerLocationPanelHost > .popup-pq-modal-actions {
-  margin-top: auto;
-}
-
-#popupPrayerMethodPanelHost > .popup-pq-modal-actions {
   margin-top: auto;
 }
 
@@ -372,7 +364,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   }
 }
 
-#popupPrayerMethodPanelHost > #popupPrayerMethodPanelContent {
+#popupPrayerMethodPanelHost {
   overflow-x: auto;
   overflow-y: hidden;
 }
