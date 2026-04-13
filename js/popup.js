@@ -4777,15 +4777,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function dispatchPocketQuranCommandWithFallback(command) {
-    const dashboardAvailability = await hasDashboardPocketQuranController();
-
     const recentDashboardState = hasRecentDashboardPocketQuranState();
+    let dashboardAvailability = false;
+
+    if (recentDashboardState) {
+      dashboardAvailability = await hasDashboardPocketQuranController();
+    }
+
     const shouldAttemptDashboardAck =
-      dashboardAvailability !== false || recentDashboardState;
+      recentDashboardState && dashboardAvailability !== false;
 
     if (shouldAttemptDashboardAck) {
-      const ackWaitMs =
-        dashboardAvailability === null || recentDashboardState ? 1100 : 700;
+      const ackWaitMs = dashboardAvailability === null ? 1100 : 700;
       const dashboardAcknowledged = await waitForDashboardPocketQuranCommandAck(
         command,
         ackWaitMs,
