@@ -4099,6 +4099,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       case pocketQuranCommandTypes.playPreviousAyah: {
+        const desiredIsPlaying =
+          typeof payload.desiredIsPlaying === "boolean"
+            ? payload.desiredIsPlaying
+            : state.isPlaying === true;
         const targetSurah = clampNumber(
           payload.surah,
           1,
@@ -4124,12 +4128,50 @@ document.addEventListener("DOMContentLoaded", () => {
           targetAyah !== currentTarget.ayah ||
           Number.isFinite(explicitAyah)
         ) {
-          await playPocketQuranAyahLocally(targetSurah, targetAyah);
+          if (desiredIsPlaying) {
+            await playPocketQuranAyahLocally(targetSurah, targetAyah);
+          } else {
+            if (pocketQuranLocalAudio) {
+              try {
+                pocketQuranLocalAudio.pause();
+                pocketQuranLocalAudio.currentTime = 0;
+              } catch (e) {
+                // no-op
+              }
+            }
+
+            pocketQuranState = normalizePocketQuranState(
+              {
+                ...state,
+                activeSurah: targetSurah,
+                activeAyah: targetAyah,
+                recitationAyah: {
+                  surah: targetSurah,
+                  ayah: targetAyah,
+                },
+                isPlaying: false,
+              },
+              storage.getSettings(),
+            );
+            renderPocketQuranControls();
+            publishPocketQuranPopupState(
+              pocketQuranState,
+              pocketQuranStateSourcePopup,
+            );
+            persistPocketQuranSettingsPatch({
+              lastSurahNumber: targetSurah,
+              lastAyahNumber: targetAyah,
+            });
+          }
         }
         break;
       }
 
       case pocketQuranCommandTypes.playNextAyah: {
+        const desiredIsPlaying =
+          typeof payload.desiredIsPlaying === "boolean"
+            ? payload.desiredIsPlaying
+            : state.isPlaying === true;
         const targetSurah = clampNumber(
           payload.surah,
           1,
@@ -4155,7 +4197,41 @@ document.addEventListener("DOMContentLoaded", () => {
           targetAyah !== currentTarget.ayah ||
           Number.isFinite(explicitAyah)
         ) {
-          await playPocketQuranAyahLocally(targetSurah, targetAyah);
+          if (desiredIsPlaying) {
+            await playPocketQuranAyahLocally(targetSurah, targetAyah);
+          } else {
+            if (pocketQuranLocalAudio) {
+              try {
+                pocketQuranLocalAudio.pause();
+                pocketQuranLocalAudio.currentTime = 0;
+              } catch (e) {
+                // no-op
+              }
+            }
+
+            pocketQuranState = normalizePocketQuranState(
+              {
+                ...state,
+                activeSurah: targetSurah,
+                activeAyah: targetAyah,
+                recitationAyah: {
+                  surah: targetSurah,
+                  ayah: targetAyah,
+                },
+                isPlaying: false,
+              },
+              storage.getSettings(),
+            );
+            renderPocketQuranControls();
+            publishPocketQuranPopupState(
+              pocketQuranState,
+              pocketQuranStateSourcePopup,
+            );
+            persistPocketQuranSettingsPatch({
+              lastSurahNumber: targetSurah,
+              lastAyahNumber: targetAyah,
+            });
+          }
         }
         break;
       }
@@ -4504,8 +4580,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const updatedAt = Number(rawState.updatedAt);
     const issuedAt = Number(command?.issuedAt);
+    const controllerInteractionAt = Number(rawState.controllerInteractionAt);
 
-    if (!Number.isFinite(updatedAt) || !Number.isFinite(issuedAt)) {
+    if (
+      !Number.isFinite(updatedAt) ||
+      !Number.isFinite(issuedAt) ||
+      !Number.isFinite(controllerInteractionAt)
+    ) {
+      return false;
+    }
+
+    if (controllerInteractionAt < issuedAt) {
       return false;
     }
 
@@ -4628,16 +4713,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const updatedAt = Number(rawState.updatedAt);
-    if (!Number.isFinite(updatedAt)) {
+    const controllerInteractionAt = Number(rawState.controllerInteractionAt);
+    if (
+      !Number.isFinite(updatedAt) ||
+      !Number.isFinite(controllerInteractionAt)
+    ) {
       return false;
     }
 
+    const referenceAt = Math.max(updatedAt, controllerInteractionAt);
+
     pocketQuranLastDashboardStateAt = Math.max(
       pocketQuranLastDashboardStateAt,
-      updatedAt,
+      referenceAt,
     );
 
-    return now - updatedAt <= pocketQuranDashboardPriorityWindowMs;
+    return now - referenceAt <= pocketQuranDashboardPriorityWindowMs;
   }
 
   async function dispatchPocketQuranCommandToOffscreen(command) {
@@ -5652,6 +5743,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sendPocketQuranCommand(pocketQuranCommandTypes.playPreviousAyah, {
         surah: target.surah,
         ayah: previousAyah,
+        desiredIsPlaying: pocketQuranState?.isPlaying === true,
       });
     });
 
@@ -5667,6 +5759,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sendPocketQuranCommand(pocketQuranCommandTypes.playNextAyah, {
         surah: target.surah,
         ayah: nextAyah,
+        desiredIsPlaying: pocketQuranState?.isPlaying === true,
       });
     });
 
