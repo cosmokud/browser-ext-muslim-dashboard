@@ -11,6 +11,8 @@ const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
 const FASTING_ALARM_NAME = "md_fasting_suhur";
 const BADGE_TICK_ALARM_NAME = "md_badge_tick";
+const PQ_OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
+let pqOffscreenCreatePromise = null;
 
 // If a device sleeps, Chrome may deliver missed alarms immediately on wake.
 // Suppress notifications that are *too late* to avoid spamming.
@@ -1122,6 +1124,117 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
+function getPocketQuranOffscreenDocumentUrl() {
+  try {
+    return chrome.runtime.getURL(PQ_OFFSCREEN_DOCUMENT_PATH);
+  } catch (error) {
+    return "";
+  }
+}
+
+async function hasPocketQuranOffscreenDocument() {
+  if (typeof chrome.runtime?.getContexts !== "function") {
+    return false;
+  }
+
+  try {
+    const contexts = await chrome.runtime.getContexts({
+      contextTypes: ["OFFSCREEN_DOCUMENT"],
+      documentUrls: [getPocketQuranOffscreenDocumentUrl()],
+    });
+    return Array.isArray(contexts) && contexts.length > 0;
+  } catch (error) {
+    logServiceWorkerDebug("Failed checking offscreen contexts", error);
+    return false;
+  }
+}
+
+async function ensurePocketQuranOffscreenDocument() {
+  if (typeof chrome.offscreen?.createDocument !== "function") {
+    return false;
+  }
+
+  if (await hasPocketQuranOffscreenDocument()) {
+    return true;
+  }
+
+  if (pqOffscreenCreatePromise) {
+    return pqOffscreenCreatePromise;
+  }
+
+  pqOffscreenCreatePromise = (async () => {
+    try {
+      await chrome.offscreen.createDocument({
+        url: PQ_OFFSCREEN_DOCUMENT_PATH,
+        reasons: ["AUDIO_PLAYBACK"],
+        justification:
+          "Keep Pocket Quran ayah playback running when popup is closed.",
+      });
+      return true;
+    } catch (error) {
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("exists") || message.includes("already")) {
+        return true;
+      }
+
+      logServiceWorkerDebug(
+        "Failed creating Pocket Quran offscreen doc",
+        error,
+      );
+      return await hasPocketQuranOffscreenDocument();
+    } finally {
+      pqOffscreenCreatePromise = null;
+    }
+  })();
+
+  return pqOffscreenCreatePromise;
+}
+
+async function sendMessageToPocketQuranOffscreen(message) {
+  return await new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        const runtimeError = chrome.runtime?.lastError;
+        if (runtimeError) {
+          resolve({
+            ok: false,
+            error: runtimeError.message || String(runtimeError),
+          });
+          return;
+        }
+
+        resolve(
+          response && typeof response === "object" ? response : { ok: false },
+        );
+      });
+    } catch (error) {
+      resolve({ ok: false, error: error?.message || String(error) });
+    }
+  });
+}
+
+async function executePocketQuranOffscreenCommand(command) {
+  const ready = await ensurePocketQuranOffscreenDocument();
+  if (!ready) {
+    return { ok: false, error: "offscreen-unavailable" };
+  }
+
+  return await sendMessageToPocketQuranOffscreen({
+    type: "md_pq_offscreen_execute_internal",
+    command,
+  });
+}
+
+async function stopPocketQuranOffscreenPlayback() {
+  if (!(await hasPocketQuranOffscreenDocument())) {
+    return { ok: true, skipped: true };
+  }
+
+  return await sendMessageToPocketQuranOffscreen({
+    type: "md_pq_offscreen_stop_internal",
+  });
+}
+
 // Listen for manual reschedule request from settings
 chrome.runtime.onMessage?.addListener?.((message, sender, sendResponse) => {
   if (message?.type === "md_reschedule_fasting") {
@@ -1132,6 +1245,40 @@ chrome.runtime.onMessage?.addListener?.((message, sender, sendResponse) => {
   if (message?.type === "md_update_prayer_badge") {
     updateActionPrayerCountdownBadge();
     return;
+  }
+
+  if (message?.type === "md_pq_offscreen_execute") {
+    void executePocketQuranOffscreenCommand(message.command)
+      .then((result) => {
+        sendResponse?.(
+          result && typeof result === "object" ? result : { ok: false },
+        );
+      })
+      .catch((error) => {
+        logServiceWorkerDebug(
+          "Failed executing Pocket Quran offscreen command",
+          error,
+        );
+        sendResponse?.({ ok: false, error: error?.message || String(error) });
+      });
+    return true;
+  }
+
+  if (message?.type === "md_pq_offscreen_stop") {
+    void stopPocketQuranOffscreenPlayback()
+      .then((result) => {
+        sendResponse?.(
+          result && typeof result === "object" ? result : { ok: true },
+        );
+      })
+      .catch((error) => {
+        logServiceWorkerDebug(
+          "Failed stopping Pocket Quran offscreen playback",
+          error,
+        );
+        sendResponse?.({ ok: false, error: error?.message || String(error) });
+      });
+    return true;
   }
 
   if (message?.type === "md_pq_ensure_dashboard_controller") {

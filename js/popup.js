@@ -200,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pocketQuranPopupCommandKey = "pocketQuran_popupCommand";
   const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourcePopup = "popup";
+  const pocketQuranStateSourceOffscreen = "offscreen";
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
   const pocketQuranArabicFontFamilies = [
     "Noto Naskh Arabic",
@@ -4614,11 +4615,53 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
+  async function dispatchPocketQuranCommandToOffscreen(command) {
+    if (!command || typeof command !== "object") return false;
+    if (typeof chrome === "undefined") return false;
+    if (typeof chrome.runtime?.sendMessage !== "function") return false;
+
+    return await new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(
+          {
+            type: "md_pq_offscreen_execute",
+            command,
+          },
+          (response) => {
+            const runtimeError = chrome.runtime?.lastError;
+            if (runtimeError) {
+              resolve(false);
+              return;
+            }
+
+            resolve(response?.ok === true);
+          },
+        );
+      } catch (error) {
+        resolve(false);
+      }
+    });
+  }
+
+  function stopPocketQuranOffscreenPlaybackBestEffort() {
+    if (typeof chrome === "undefined") return;
+    if (typeof chrome.runtime?.sendMessage !== "function") return;
+
+    try {
+      chrome.runtime.sendMessage({ type: "md_pq_offscreen_stop" }, () => {
+        // no-op
+      });
+    } catch (error) {
+      // no-op
+    }
+  }
+
   async function dispatchPocketQuranCommandWithFallback(command) {
     const dashboardAvailability = await hasDashboardPocketQuranController();
 
     if (dashboardAvailability === true) {
       pocketQuranPendingCommandIssuedAt = 0;
+      stopPocketQuranOffscreenPlaybackBestEffort();
       if (pocketQuranLocalPlaybackActive) {
         deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
       }
@@ -4633,6 +4676,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (dashboardAcknowledged) {
       pocketQuranPendingCommandIssuedAt = 0;
+      stopPocketQuranOffscreenPlaybackBestEffort();
+      if (pocketQuranLocalPlaybackActive) {
+        deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
+      }
+      return;
+    }
+
+    const offscreenHandled =
+      await dispatchPocketQuranCommandToOffscreen(command);
+
+    if (offscreenHandled) {
+      pocketQuranPendingCommandIssuedAt = 0;
       if (pocketQuranLocalPlaybackActive) {
         deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
       }
@@ -4640,6 +4695,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     pocketQuranPendingCommandIssuedAt = 0;
+    stopPocketQuranOffscreenPlaybackBestEffort();
     queuePocketQuranLocalCommand(command);
   }
 
@@ -4670,7 +4726,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (stateSource === pocketQuranStateSourceDashboard) {
+    if (
+      stateSource === pocketQuranStateSourceDashboard ||
+      stateSource === pocketQuranStateSourceOffscreen
+    ) {
       pocketQuranLastDashboardStateAt = Number.isFinite(rawUpdatedAt)
         ? Math.max(pocketQuranLastDashboardStateAt, rawUpdatedAt)
         : Date.now();
@@ -5990,7 +6049,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("beforeunload", () => {
     stopSoftResync();
     clearPocketQuranResyncTimers();
-    deactivatePocketQuranLocalPlayback({ publishStoppedState: true });
+    deactivatePocketQuranLocalPlayback({
+      publishStoppedState: pocketQuranLocalPlaybackActive,
+    });
     if (
       typeof chrome !== "undefined" &&
       chrome.storage?.onChanged?.removeListener
