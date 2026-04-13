@@ -1022,7 +1022,10 @@
     }
 
     const controllerInteractionAt = Number(rawState.controllerInteractionAt);
-    if (!Number.isFinite(controllerInteractionAt) || controllerInteractionAt <= 0) {
+    if (
+      !Number.isFinite(controllerInteractionAt) ||
+      controllerInteractionAt <= 0
+    ) {
       return false;
     }
 
