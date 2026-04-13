@@ -5,6 +5,7 @@
 
   const pocketQuranPopupStateKey = "pocketQuran_popupState";
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
+  const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourceOffscreen = "offscreen";
 
   const pocketQuranCommandTypes = {
@@ -500,6 +501,19 @@
     }
   }
 
+  function pausePocketQuranAudioSilently({ resetTime = false } = {}) {
+    if (!pocketQuranAudio) return;
+
+    try {
+      pocketQuranAudio.pause();
+      if (resetTime) {
+        pocketQuranAudio.currentTime = 0;
+      }
+    } catch (error) {
+      // no-op
+    }
+  }
+
   async function playPocketQuranAyah(
     surah,
     ayah,
@@ -950,6 +964,38 @@
 
     return pocketQuranCommandQueue;
   }
+
+  function handleDashboardPopupStateStorageEvent(event) {
+    if (!event || (event.storageArea && event.storageArea !== localStorage)) {
+      return;
+    }
+
+    const stateStorageEventKey = `${storage.prefix || ""}${pocketQuranPopupStateKey}`;
+    if (event.key !== stateStorageEventKey || !event.newValue) {
+      return;
+    }
+
+    let rawState = null;
+    try {
+      rawState = JSON.parse(event.newValue);
+    } catch (error) {
+      return;
+    }
+
+    if (!rawState || typeof rawState !== "object") return;
+    if (rawState.source !== pocketQuranStateSourceDashboard) return;
+
+    pocketQuranState = normalizePocketQuranState(
+      rawState,
+      storage.getSettings(),
+    );
+
+    if (pocketQuranAudio && pocketQuranAudio.paused === false) {
+      pausePocketQuranAudioSilently({ resetTime: true });
+    }
+  }
+
+  window.addEventListener("storage", handleDashboardPopupStateStorageEvent);
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || typeof message !== "object") {

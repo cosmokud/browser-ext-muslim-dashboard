@@ -718,6 +718,7 @@ class PocketQuranManager extends BaseManager {
     this._popupSyncStateKey = "pocketQuran_popupState";
     this._popupSyncCommandKey = "pocketQuran_popupCommand";
     this._lastPopupCommandId = null;
+    this._lastOffscreenStopSignalAt = 0;
     this._onPopupCommandStorage = (event) => {
       this.handlePopupCommandStorageEvent(event);
     };
@@ -3485,6 +3486,8 @@ class PocketQuranManager extends BaseManager {
   async playAyah(surah, ayah, { forceRestart = false } = {}) {
     if (!this._audioElement) return;
 
+    this.stopOffscreenPlaybackBestEffort();
+
     const cacheKey = this.buildRecitationCacheKey(surah, ayah);
     const expectedCachedSrc = this._audioSrcCache?.get(cacheKey);
     const currentAudioSrc = String(
@@ -4466,6 +4469,25 @@ class PocketQuranManager extends BaseManager {
     }
   }
 
+  stopOffscreenPlaybackBestEffort({ force = false } = {}) {
+    const now = Date.now();
+    if (!force && now - this._lastOffscreenStopSignalAt < 700) {
+      return;
+    }
+    this._lastOffscreenStopSignalAt = now;
+
+    if (typeof chrome === "undefined") return;
+    if (typeof chrome.runtime?.sendMessage !== "function") return;
+
+    try {
+      chrome.runtime.sendMessage({ type: "md_pq_offscreen_stop" }, () => {
+        // no-op
+      });
+    } catch (e) {
+      // no-op
+    }
+  }
+
   async primePopupSelectionAudioTarget(surah, ayah) {
     if (!this._audioElement) return;
 
@@ -4589,6 +4611,8 @@ class PocketQuranManager extends BaseManager {
         : {};
 
     if (!action) return;
+
+    this.stopOffscreenPlaybackBestEffort();
 
     try {
       switch (action) {

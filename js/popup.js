@@ -201,6 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourcePopup = "popup";
   const pocketQuranStateSourceOffscreen = "offscreen";
+  const pocketQuranDashboardPriorityWindowMs = 5000;
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
   const pocketQuranArabicFontFamilies = [
     "Noto Naskh Arabic",
@@ -4615,6 +4616,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
+  function hasRecentDashboardPocketQuranState() {
+    const now = Date.now();
+    const rawState = storage.get(pocketQuranPopupStateKey, null);
+    if (!rawState || typeof rawState !== "object") {
+      return false;
+    }
+
+    if (rawState.source !== pocketQuranStateSourceDashboard) {
+      return false;
+    }
+
+    const updatedAt = Number(rawState.updatedAt);
+    if (!Number.isFinite(updatedAt)) {
+      return false;
+    }
+
+    pocketQuranLastDashboardStateAt = Math.max(
+      pocketQuranLastDashboardStateAt,
+      updatedAt,
+    );
+
+    return now - updatedAt <= pocketQuranDashboardPriorityWindowMs;
+  }
+
   async function dispatchPocketQuranCommandToOffscreen(command) {
     if (!command || typeof command !== "object") return false;
     if (typeof chrome === "undefined") return false;
@@ -4668,7 +4693,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const ackWaitMs = dashboardAvailability === null ? 900 : 700;
+    const recentDashboardState = hasRecentDashboardPocketQuranState();
+    const ackWaitMs =
+      dashboardAvailability === null || recentDashboardState ? 1100 : 700;
     const dashboardAcknowledged = await waitForDashboardPocketQuranCommandAck(
       command,
       ackWaitMs,
@@ -4726,14 +4753,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (stateSource === pocketQuranStateSourceDashboard) {
+      pocketQuranLastDashboardStateAt = Number.isFinite(rawUpdatedAt)
+        ? Math.max(pocketQuranLastDashboardStateAt, rawUpdatedAt)
+        : Date.now();
+    }
+
     if (
       stateSource === pocketQuranStateSourceDashboard ||
       stateSource === pocketQuranStateSourceOffscreen
     ) {
-      pocketQuranLastDashboardStateAt = Number.isFinite(rawUpdatedAt)
-        ? Math.max(pocketQuranLastDashboardStateAt, rawUpdatedAt)
-        : Date.now();
-
       if (
         Number.isFinite(rawUpdatedAt) &&
         rawUpdatedAt >= pocketQuranPendingCommandIssuedAt
