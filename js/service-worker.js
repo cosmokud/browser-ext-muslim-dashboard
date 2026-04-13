@@ -1122,67 +1122,6 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
-async function ensurePocketQuranDashboardControllerTab() {
-  try {
-    if (typeof chrome.runtime?.getContexts === "function") {
-      const contexts = await chrome.runtime.getContexts({
-        contextTypes: ["TAB"],
-      });
-
-      const hasDashboardContext = Array.isArray(contexts)
-        ? contexts.some((context) => {
-            try {
-              const url = String(context?.documentUrl || "");
-              if (!url) return false;
-
-              const parsed = new URL(url);
-              return parsed.pathname.endsWith("/index.html");
-            } catch (error) {
-              return false;
-            }
-          })
-        : false;
-
-      if (hasDashboardContext) {
-        return true;
-      }
-    }
-  } catch (error) {
-    logServiceWorkerDebug("getContexts for PQ controller failed", error);
-  }
-
-  if (typeof chrome.tabs?.create !== "function") {
-    return false;
-  }
-
-  try {
-    return await new Promise((resolve) => {
-      chrome.tabs.create(
-        {
-          url: chrome.runtime.getURL("index.html"),
-          active: false,
-        },
-        () => {
-          const tabError = chrome.runtime?.lastError;
-          if (tabError) {
-            logServiceWorkerDebug(
-              "Failed to create dashboard controller tab",
-              tabError,
-            );
-            resolve(false);
-            return;
-          }
-
-          resolve(true);
-        },
-      );
-    });
-  } catch (error) {
-    logServiceWorkerDebug("Exception creating dashboard controller tab", error);
-    return false;
-  }
-}
-
 // Listen for manual reschedule request from settings
 chrome.runtime.onMessage?.addListener?.((message, sender, sendResponse) => {
   if (message?.type === "md_reschedule_fasting") {
@@ -1196,18 +1135,7 @@ chrome.runtime.onMessage?.addListener?.((message, sender, sendResponse) => {
   }
 
   if (message?.type === "md_pq_ensure_dashboard_controller") {
-    void ensurePocketQuranDashboardControllerTab()
-      .then((ok) => {
-        sendResponse?.({ ok: ok === true });
-      })
-      .catch((error) => {
-        logServiceWorkerDebug(
-          "Failed to ensure PQ dashboard controller",
-          error,
-        );
-        sendResponse?.({ ok: false });
-      });
-
+    sendResponse?.({ ok: false });
     return true;
   }
 });

@@ -258,7 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranLocalAudio = null;
   let pocketQuranLocalPlaybackActive = false;
   let pocketQuranLastDashboardStateAt = 0;
-  let pocketQuranControllerBootstrapInFlight = null;
   let pocketQuranLocalCommandQueue = Promise.resolve();
   const pocketQuranLocalAudioUrlCache = new Map();
   const pocketQuranVersesCache = new Map();
@@ -4497,19 +4496,6 @@ document.addEventListener("DOMContentLoaded", () => {
     storage.set(pocketQuranPopupCommandKey, command);
   }
 
-  function replayPocketQuranCommand(command) {
-    if (!command || typeof command !== "object") return command;
-
-    const replayed = {
-      ...command,
-      id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
-      issuedAt: Date.now(),
-    };
-
-    writePocketQuranCommand(replayed);
-    return replayed;
-  }
-
   function isDashboardPocketQuranAckState(rawState, command) {
     if (!rawState || typeof rawState !== "object") return false;
     if (rawState.source !== pocketQuranStateSourceDashboard) return false;
@@ -4628,93 +4614,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
-  async function requestDashboardControllerBootstrapViaServiceWorker() {
-    if (typeof chrome === "undefined") return false;
-    if (typeof chrome.runtime?.sendMessage !== "function") return false;
-
-    return await new Promise((resolve) => {
-      try {
-        chrome.runtime.sendMessage(
-          { type: "md_pq_ensure_dashboard_controller" },
-          (response) => {
-            const runtimeError = chrome.runtime?.lastError;
-            if (runtimeError) {
-              resolve(false);
-              return;
-            }
-
-            resolve(response?.ok === true);
-          },
-        );
-      } catch (error) {
-        resolve(false);
-      }
-    });
-  }
-
-  async function ensureDashboardPocketQuranControllerTab() {
-    if (pocketQuranControllerBootstrapInFlight) {
-      return pocketQuranControllerBootstrapInFlight;
-    }
-
-    pocketQuranControllerBootstrapInFlight = (async () => {
-      if (typeof chrome === "undefined") return false;
-
-      const existingController = await hasDashboardPocketQuranController();
-      if (existingController === true) return true;
-
-      if (typeof chrome.tabs?.create !== "function") {
-        const bootstrappedByServiceWorker =
-          await requestDashboardControllerBootstrapViaServiceWorker();
-        if (!bootstrappedByServiceWorker) return false;
-      } else {
-        try {
-          const createdInPopup = await new Promise((resolve) => {
-            chrome.tabs.create(
-              {
-                url: getDashboardUrl("index.html"),
-                active: false,
-              },
-              () => {
-                const tabError = chrome.runtime?.lastError;
-                resolve(!tabError);
-              },
-            );
-          });
-
-          if (!createdInPopup) {
-            const bootstrappedByServiceWorker =
-              await requestDashboardControllerBootstrapViaServiceWorker();
-            if (!bootstrappedByServiceWorker) return false;
-          }
-        } catch (error) {
-          const bootstrappedByServiceWorker =
-            await requestDashboardControllerBootstrapViaServiceWorker();
-          if (!bootstrappedByServiceWorker) return false;
-        }
-      }
-
-      // Give the dashboard a moment to initialize Pocket Quran and start
-      // listening for popup command/state sync events.
-      await new Promise((resolve) => {
-        setTimeout(resolve, 700);
-      });
-
-      const controllerAfterCreate = await hasDashboardPocketQuranController();
-      if (controllerAfterCreate === true) return true;
-
-      // In environments where context APIs are unavailable, accept an eventual
-      // dashboard heartbeat as proof that a controller is now alive.
-      return Date.now() - pocketQuranLastDashboardStateAt < 5000;
-    })();
-
-    try {
-      return await pocketQuranControllerBootstrapInFlight;
-    } finally {
-      pocketQuranControllerBootstrapInFlight = null;
-    }
-  }
-
   async function dispatchPocketQuranCommandWithFallback(command) {
     const dashboardAvailability = await hasDashboardPocketQuranController();
 
@@ -4738,27 +4637,6 @@ document.addEventListener("DOMContentLoaded", () => {
         deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
       }
       return;
-    }
-
-    // If no controller acknowledged, bootstrap one in the background and replay
-    // the command so a newly opened dashboard receives it.
-    const controllerBootstrapped =
-      await ensureDashboardPocketQuranControllerTab();
-
-    if (controllerBootstrapped) {
-      const replayedCommand = replayPocketQuranCommand(command);
-      const replayAcknowledged = await waitForDashboardPocketQuranCommandAck(
-        replayedCommand,
-        3200,
-      );
-
-      if (replayAcknowledged) {
-        pocketQuranPendingCommandIssuedAt = 0;
-        if (pocketQuranLocalPlaybackActive) {
-          deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
-        }
-        return;
-      }
     }
 
     pocketQuranPendingCommandIssuedAt = 0;

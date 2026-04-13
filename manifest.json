@@ -9,7 +9,7 @@
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "permissions": ["storage", "geolocation", "alarms", "notifications", "tabs"],
+  "permissions": ["storage", "geolocation", "alarms", "notifications"],
   "host_permissions": [
     "https://api.quran.com/*",
     "https://download.quranicaudio.com/*",
