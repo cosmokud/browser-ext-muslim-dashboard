@@ -1,8 +1,19 @@
-## [Unreleased] - 2026-04-08
+## [Unreleased] - 2026-04-13
 
 ### Changed
 
-- Updated project documentation to align with current codebase behavior across README and security policy details.
+- No unreleased changes yet.
+
+## [0.1.4] - 2026-04-13
+
+### Added
+
+- Added extension version label (`v0.1.4`) to the main Settings modal header.
+
+### Changed
+
+- Updated project documentation references for release packaging examples to reflect version 0.1.4.
+- Updated security policy supported-version table to mark 0.1.4 as current.
 - Documented known first-run behavior where sidebar drag-and-drop may require one manual refresh after new installation.
 
 ## [0.1.3] - 2026-04-08

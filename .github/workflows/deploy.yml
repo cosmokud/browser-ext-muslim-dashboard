@@ -22,7 +22,7 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           if ($tag -notmatch '^v\.?\d+\.\d+\.\d+$') {
-            throw "Unsupported tag format: $tag. Expected v0.1.2 or v.0.1.2"
+            throw "Unsupported tag format: $tag. Expected v1.2.3 or v.1.2.3"
           }
 
       - name: Read manifest version

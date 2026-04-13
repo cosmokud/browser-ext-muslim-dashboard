@@ -5983,6 +5983,18 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   font-weight: 600;
 }
 
+.settings-modal-title::after {
+  content: attr(data-settings-version);
+  display: inline-block;
+  margin-left: 0.55rem;
+  font-size: 0.68em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
 .modal-close {
   width: 36px;
   height: 36px;
