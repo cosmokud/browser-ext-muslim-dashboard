@@ -4775,30 +4775,26 @@ document.addEventListener("DOMContentLoaded", () => {
   async function dispatchPocketQuranCommandWithFallback(command) {
     const dashboardAvailability = await hasDashboardPocketQuranController();
 
-    if (dashboardAvailability === true) {
-      pocketQuranPendingCommandIssuedAt = 0;
-      stopPocketQuranOffscreenPlaybackBestEffort();
-      if (pocketQuranLocalPlaybackActive) {
-        deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
-      }
-      return;
-    }
-
     const recentDashboardState = hasRecentDashboardPocketQuranState();
-    const ackWaitMs =
-      dashboardAvailability === null || recentDashboardState ? 1100 : 700;
-    const dashboardAcknowledged = await waitForDashboardPocketQuranCommandAck(
-      command,
-      ackWaitMs,
-    );
+    const shouldAttemptDashboardAck =
+      dashboardAvailability !== false || recentDashboardState;
 
-    if (dashboardAcknowledged) {
-      pocketQuranPendingCommandIssuedAt = 0;
-      stopPocketQuranOffscreenPlaybackBestEffort();
-      if (pocketQuranLocalPlaybackActive) {
-        deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
+    if (shouldAttemptDashboardAck) {
+      const ackWaitMs =
+        dashboardAvailability === null || recentDashboardState ? 1100 : 700;
+      const dashboardAcknowledged = await waitForDashboardPocketQuranCommandAck(
+        command,
+        ackWaitMs,
+      );
+
+      if (dashboardAcknowledged) {
+        pocketQuranPendingCommandIssuedAt = 0;
+        stopPocketQuranOffscreenPlaybackBestEffort();
+        if (pocketQuranLocalPlaybackActive) {
+          deactivatePocketQuranLocalPlayback({ publishStoppedState: false });
+        }
+        return;
       }
-      return;
     }
 
     const offscreenHandled =
