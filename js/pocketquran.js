@@ -4557,6 +4557,10 @@ class PocketQuranManager extends BaseManager {
     this._lastPocketQuranControlAt = Date.now();
   }
 
+  hasDashboardControlOwnership() {
+    return Number(this._lastPocketQuranControlAt) > 0;
+  }
+
   setPausedRecitationTarget(surah, ayah) {
     const targetSurah = this.clampNumber(surah, 1, 114, this._activeSurah);
     const chapter = this._chapters.find((c) => c.id === targetSurah);
@@ -4699,6 +4703,8 @@ class PocketQuranManager extends BaseManager {
 
     if (!command || typeof command !== "object") return;
 
+    if (!this.hasDashboardControlOwnership()) return;
+
     const commandId = command.id == null ? "" : String(command.id);
     if (commandId && commandId === this._lastPopupCommandId) return;
 
@@ -4717,7 +4723,6 @@ class PocketQuranManager extends BaseManager {
 
     if (!action) return;
 
-    this.markPocketQuranControlInteraction();
     this.stopOffscreenPlaybackBestEffort();
 
     try {

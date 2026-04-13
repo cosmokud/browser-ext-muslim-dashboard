@@ -4590,7 +4590,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    if (controllerInteractionAt < issuedAt) {
+    if (controllerInteractionAt <= 0) {
       return false;
     }
 
@@ -4721,7 +4721,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    const referenceAt = Math.max(updatedAt, controllerInteractionAt);
+    if (controllerInteractionAt <= 0) {
+      return false;
+    }
+
+    const referenceAt = controllerInteractionAt;
 
     pocketQuranLastDashboardStateAt = Math.max(
       pocketQuranLastDashboardStateAt,
