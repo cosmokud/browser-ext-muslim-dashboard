@@ -4554,7 +4554,9 @@ class PocketQuranManager extends BaseManager {
   }
 
   markPocketQuranControlInteraction() {
-    this._lastPocketQuranControlAt = Date.now();
+    const now = Date.now();
+    const last = Number(this._lastPocketQuranControlAt) || 0;
+    this._lastPocketQuranControlAt = now > last ? now : last + 1;
   }
 
   hasDashboardControlOwnership() {
@@ -4723,6 +4725,7 @@ class PocketQuranManager extends BaseManager {
 
     if (!action) return;
 
+    this.markPocketQuranControlInteraction();
     this.stopOffscreenPlaybackBestEffort();
 
     try {

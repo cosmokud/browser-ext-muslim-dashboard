@@ -201,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourcePopup = "popup";
   const pocketQuranStateSourceOffscreen = "offscreen";
-  const pocketQuranDashboardPriorityWindowMs = 5000;
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
   const pocketQuranArabicFontFamilies = [
     "Noto Naskh Arabic",
@@ -4702,7 +4701,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function hasRecentDashboardPocketQuranState() {
-    const now = Date.now();
     const rawState = storage.get(pocketQuranPopupStateKey, null);
     if (!rawState || typeof rawState !== "object") {
       return false;
@@ -4712,12 +4710,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    const updatedAt = Number(rawState.updatedAt);
     const controllerInteractionAt = Number(rawState.controllerInteractionAt);
-    if (
-      !Number.isFinite(updatedAt) ||
-      !Number.isFinite(controllerInteractionAt)
-    ) {
+    if (!Number.isFinite(controllerInteractionAt)) {
       return false;
     }
 
@@ -4732,7 +4726,7 @@ document.addEventListener("DOMContentLoaded", () => {
       referenceAt,
     );
 
-    return now - referenceAt <= pocketQuranDashboardPriorityWindowMs;
+    return true;
   }
 
   async function dispatchPocketQuranCommandToOffscreen(command) {

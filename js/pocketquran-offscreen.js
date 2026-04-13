@@ -7,6 +7,7 @@
   const pocketQuranApiBase = "https://api.quran.com/api/v4";
   const pocketQuranStateSourceDashboard = "dashboard";
   const pocketQuranStateSourceOffscreen = "offscreen";
+  const pocketQuranDashboardOwnerFreshMs = 2500;
 
   const pocketQuranCommandTypes = {
     togglePlayPause: "togglePlayPause",
@@ -1010,6 +1011,34 @@
     return pocketQuranCommandQueue;
   }
 
+  function hasRecentDashboardOwnerState() {
+    const rawState = storage.get(pocketQuranPopupStateKey, null);
+    if (!rawState || typeof rawState !== "object") {
+      return false;
+    }
+
+    if (rawState.source !== pocketQuranStateSourceDashboard) {
+      return false;
+    }
+
+    const controllerInteractionAt = Number(rawState.controllerInteractionAt);
+    if (!Number.isFinite(controllerInteractionAt) || controllerInteractionAt <= 0) {
+      return false;
+    }
+
+    const updatedAt = Number(rawState.updatedAt);
+    const referenceAt = Number.isFinite(updatedAt)
+      ? Math.max(updatedAt, controllerInteractionAt)
+      : controllerInteractionAt;
+
+    pocketQuranLastDashboardControlAt = Math.max(
+      pocketQuranLastDashboardControlAt,
+      controllerInteractionAt,
+    );
+
+    return Date.now() - referenceAt <= pocketQuranDashboardOwnerFreshMs;
+  }
+
   function handleDashboardPopupStateStorageEvent(event) {
     if (!event || (event.storageArea && event.storageArea !== localStorage)) {
       return;
@@ -1058,6 +1087,15 @@
     }
 
     if (message.type === "md_pq_offscreen_execute_internal") {
+      if (hasRecentDashboardOwnerState()) {
+        sendResponse({
+          ok: true,
+          skippedDueToDashboardOwner: true,
+          state: getPocketQuranActiveState(),
+        });
+        return true;
+      }
+
       void queuePocketQuranCommand(message.command)
         .then(() => {
           sendResponse({
