@@ -9266,14 +9266,14 @@ class SettingsManager extends BaseManager {
    */
   getChangelogResourceUrl() {
     if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
-      return chrome.runtime.getURL("CHANGELOG.md");
+      return chrome.runtime.getURL("data/Changelog.txt");
     }
 
     if (typeof browser !== "undefined" && browser.runtime?.getURL) {
-      return browser.runtime.getURL("CHANGELOG.md");
+      return browser.runtime.getURL("data/Changelog.txt");
     }
 
-    return "CHANGELOG.md";
+    return "data/Changelog.txt";
   }
 
   renderChangelogInlineMarkdown(value) {
@@ -9390,7 +9390,7 @@ class SettingsManager extends BaseManager {
         })
         .catch((error) => {
           console.warn("Unable to load changelog:", error);
-          return '<p class="changelog-empty">Unable to load CHANGELOG.md right now.</p>';
+          return '<p class="changelog-empty">Unable to load data/Changelog.txt right now.</p>';
         })
         .finally(() => {
           this._changelogLoadPromise = null;

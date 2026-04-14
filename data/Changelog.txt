@@ -1,0 +1,97 @@
+## [0.1.5] - 2026-04-15
+
+### Highlights
+
+- Click the version text in Settings to open these release notes.
+- The changelog is now easier to read inside the app.
+
+### Bug Fixes
+
+- Fixed the Settings version label so it opens the changelog properly.
+- Fixed a Pocket Quran popup player issue in Google Chrome.
+- Fixed the release notes view so you no longer need to open a file manually.
+
+## [0.1.4] - 2026-04-13
+
+### Highlights
+
+- Pocket Quran playback is more reliable.
+- Prayer and location updates now refresh more smoothly.
+- Drag-and-drop and floating card behavior are steadier.
+
+### Bug Fixes
+
+- Fixed Pocket Quran playback controls when dashboard tabs were open.
+- Fixed previous and next ayah behavior while playback is paused.
+- Fixed popup playback with a safer fallback when the player closes.
+- Fixed newer popup commands from being overwritten by older dashboard state.
+- Fixed prayer and location changes from the popup not updating the dashboard right away.
+- Fixed card placement after drag-and-drop animations finish.
+- Fixed the fasting countdown wording for one day remaining.
+
+## [0.1.3] - 2026-04-08
+
+### Highlights
+
+- Added more background controls and improved layout editing.
+- Better Pocket Quran focus mode behavior.
+- Faster and smoother settings and floating card handling.
+
+### Bug Fixes
+
+- Fixed floating cards turning back on after saving their position.
+- Fixed sidebar resize handles not always activating correctly.
+- Fixed blank gaps left behind when cards were hidden.
+- Fixed uploaded background images breaking when extra URL data was added.
+- Fixed live weather and layout updates while resizing.
+
+## [0.1.2] - 2026-04-05
+
+### Highlights
+
+- More polished notes editing.
+- Better fasting and calendar features.
+- More Pocket Quran controls and improved performance options.
+
+### Bug Fixes
+
+- Fixed Notes editor cursor and formatting issues.
+- Fixed checklist and list formatting problems.
+- Fixed Pocket Quran Arabic and translation layouts from clipping or overlapping.
+- Fixed unstable recitation sync behavior.
+- Fixed text and theme readability issues.
+- Removed experimental features that were causing inconsistent behavior.
+
+## [0.1.1] - 2026-03-07
+
+### Highlights
+
+- Added prayer-time controls in the popup.
+- Added countdown and badge updates.
+- Added more font options and debugging tools.
+
+### Bug Fixes
+
+- Fixed compact weather location text not appearing correctly.
+- Fixed Duha and Dhuhr icons being swapped.
+- Fixed fasting countdown and notification timing regressions.
+- Fixed popup and settings interactions that could misbehave.
+- Fixed the app version display to match the release.
+
+## [0.1.0] - 2026-01-28
+
+### Highlights
+
+- First release of the dashboard.
+- Prayer times, Pocket Quran, weather, notes, themes, and layout tools all arrived here.
+
+### Bug Fixes
+
+- Fixed dashboard card spacing at medium screen sizes.
+- Fixed floating card position drift.
+- Fixed dropdowns and other overlays on blurred surfaces.
+- Fixed Pocket Quran content clipping.
+- Fixed moon phase rendering.
+- Fixed sidebar drag-and-drop sizing.
+- Fixed early sticky notes and layout issues.
+- Removed unstable early experiments that could break the UI.
