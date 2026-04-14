@@ -428,6 +428,8 @@ class StorageManager {
         translationFontFamily: "Poppins",
         showTranslationText: true,
         translationResourceId: 85, // M.A.S. Abdel Haleem
+        reciterAutoplay: true,
+        reciterAutoplayNextSurah: true,
         recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: false,
         recitationFloatingAppearance: "opaque",
