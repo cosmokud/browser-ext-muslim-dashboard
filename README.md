@@ -2,7 +2,7 @@
 
 [![Chrome Web Store](https://developer.chrome.com/static/docs/webstore/branding/image/tbyBjqi7Zu733AAKA5n4.png)](https://chromewebstore.google.com/detail/muslim-dashboard-islamic/mdhjkocbmiiekkfeghjnmbbaipdcmijg)
 
-Muslim Dashboard is a customizable Islamic new-tab dashboard extension for Chromium browsers. It brings prayer and calendar tools, Quran and Hadith reading, study modules, personalization controls, and day-to-day utilities into one focused workspace.
+Muslim Dashboard is a customizable Islamic new-tab dashboard extension for Chromium browsers. It brings prayer and calendar tools, Quran and Hadith reading, study modules, personalization controls, and day-to-day utilities into one focused workspace, including a Pocket Quran player that can continue playback across tabs.
 
 The project targets Chromium-based browsers with Manifest V3.
 
@@ -24,7 +24,7 @@ The project targets Chromium-based browsers with Manifest V3.
 
 ### Quran, Hadith, and Adhkar
 
-- Pocket Quran reader with surah and ayah navigation.
+- Pocket Quran reader with surah and ayah navigation, bookmarks, and audio playback that can continue across tabs.
 - Quran translation and recitation support.
 - Tajweed display mode and Arabic font options for Quran reading.
 - Adjustable Arabic and translation font sizes.
@@ -58,7 +58,7 @@ The project targets Chromium-based browsers with Manifest V3.
 
 ### Extension platform features
 
-- Dedicated popup tabs for Prayer Times and Pocket Quran.
+- Dedicated popup tabs for Prayer Times and Pocket Quran, with Pocket Quran playback that can continue across tabs in Chromium Browsers.
 - Service worker integration for extension background tasks, prayer reminders, fasting reminders, and badge countdown updates.
 - Local persistent settings and user data storage.
 - Localized data bundles in JSON/CSV for quotes, adhkar, flashcards, and hadith content.
