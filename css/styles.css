@@ -5994,39 +5994,26 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   margin: 0;
 }
 
-.settings-version-trigger {
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.16),
-    rgba(255, 255, 255, 0.05)
-  );
+.settings-version-link {
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  padding: 0.38rem 0.68rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  letter-spacing: 0.01em;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  text-decoration-thickness: 1px;
+  transition: color var(--transition-fast);
 }
 
-.settings-version-trigger:hover,
-.settings-version-trigger:focus-visible {
+.settings-version-link:hover,
+.settings-version-link:focus-visible {
   color: var(--text-primary);
-  border-color: var(--accent-gold);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.24),
-    rgba(255, 255, 255, 0.1)
-  );
-  transform: translateY(-1px);
 }
 
-.settings-version-trigger:focus-visible {
+.settings-version-link:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.26);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .modal-close {
@@ -6154,9 +6141,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     row-gap: 0.35rem;
   }
 
-  .settings-version-trigger {
+  .settings-version-link {
     font-size: 0.68rem;
-    padding: 0.3rem 0.58rem;
   }
 
   .changelog-modal {

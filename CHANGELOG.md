@@ -2,16 +2,22 @@
 
 ### Changed
 
-- No unreleased changes yet.
+- Next improvements are in progress.
 
 ## [0.1.5] - 2026-04-15
 
-### Added
+### What is New
 
-- Added a clickable Settings version badge (`v0.1.5`) that opens an in-app changelog modal.
-- Added a styled changelog modal that loads and renders release notes directly from `CHANGELOG.md`.
+- You can now click the version text in Settings (`v0.1.5`) to open release notes instantly.
+- Added a cleaner in-app Changelog modal so updates are easier to read without leaving the dashboard.
 
-### Changed
+### Bug Fixes
+
+- Fixed an issue where the version label in Settings was not interactive.
+- Fixed the release-notes access flow so users no longer need to manually open `CHANGELOG.md`.
+- Fixed changelog readability in-app by presenting updates in clearer sections.
+
+### Other Improvements
 
 - Updated extension version references to 0.1.5 across runtime metadata and project documentation.
 

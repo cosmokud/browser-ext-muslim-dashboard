@@ -10057,7 +10057,8 @@ class SettingsManager extends BaseManager {
       this.settingsVersionTrigger.dataset.bound !== "1"
     ) {
       this.settingsVersionTrigger.dataset.bound = "1";
-      this.settingsVersionTrigger.addEventListener("click", () => {
+      this.settingsVersionTrigger.addEventListener("click", (event) => {
+        event.preventDefault();
         this.openChangelogModal();
       });
     }
