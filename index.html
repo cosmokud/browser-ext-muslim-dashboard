@@ -2411,12 +2411,22 @@
     <div class="modal-overlay" id="settingsModal">
       <div class="modal modal-large">
         <div class="modal-header">
-          <h2
-            class="modal-title settings-modal-title"
-            data-settings-version="v0.1.4"
-          >
-            ⚙️ Settings
-          </h2>
+          <div class="settings-modal-title-wrap">
+            <h2
+              class="modal-title settings-modal-title"
+              data-settings-version="v0.1.5"
+            >
+              ⚙️ Settings
+            </h2>
+            <button
+              class="settings-version-trigger"
+              id="settingsVersionTrigger"
+              type="button"
+              aria-label="Show changelog for version 0.1.5"
+            >
+              v0.1.5
+            </button>
+          </div>
           <button class="modal-close" id="settingsClose">&times;</button>
         </div>
         <div class="modal-body">
@@ -6696,6 +6706,33 @@
           <button class="modal-btn save-btn" id="saveSettingsBtn">
             💾 Save Settings
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div class="modal-overlay" id="changelogModal" aria-hidden="true">
+      <div
+        class="modal modal-wide changelog-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="modal-header">
+          <h2 class="modal-title" id="changelogModalTitle">🗒️ Changelog</h2>
+          <button
+            class="modal-close"
+            id="changelogClose"
+            type="button"
+            aria-label="Close changelog"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body changelog-modal-body">
+          <p class="changelog-modal-subtitle">
+            Recent releases from CHANGELOG.md
+          </p>
+          <div class="changelog-content" id="changelogContent"></div>
         </div>
       </div>
     </div>

@@ -108,6 +108,14 @@ class SettingsManager extends BaseManager {
     this.settingsBtn = document.getElementById("settingsBtn");
     this.closeBtn = document.getElementById("settingsClose");
     this.saveBtn = document.getElementById("saveSettingsBtn");
+    this.settingsVersionTrigger = document.getElementById(
+      "settingsVersionTrigger",
+    );
+    this.changelogModal = document.getElementById("changelogModal");
+    this.changelogCloseBtn = document.getElementById("changelogClose");
+    this.changelogContent = document.getElementById("changelogContent");
+    this._changelogHtmlCache = "";
+    this._changelogLoadPromise = null;
 
     // Tabs
     this.tabs = document.querySelectorAll(".settings-tab");
@@ -9254,6 +9262,169 @@ class SettingsManager extends BaseManager {
   }
 
   /**
+   * Resolve changelog URL in extension/runtime contexts.
+   */
+  getChangelogResourceUrl() {
+    if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
+      return chrome.runtime.getURL("CHANGELOG.md");
+    }
+
+    if (typeof browser !== "undefined" && browser.runtime?.getURL) {
+      return browser.runtime.getURL("CHANGELOG.md");
+    }
+
+    return "CHANGELOG.md";
+  }
+
+  renderChangelogInlineMarkdown(value) {
+    const escaped = this.escapeHtml(value);
+    return escaped
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>");
+  }
+
+  renderChangelogMarkdown(markdown) {
+    const lines = String(markdown || "").split(/\r?\n/);
+    const html = [];
+    let hasEntry = false;
+    let entryOpen = false;
+    let listOpen = false;
+
+    const closeList = () => {
+      if (!listOpen) return;
+      html.push("</ul>");
+      listOpen = false;
+    };
+
+    const closeEntry = () => {
+      closeList();
+      if (!entryOpen) return;
+      html.push("</section>");
+      entryOpen = false;
+    };
+
+    const ensureEntry = () => {
+      if (entryOpen) return;
+      html.push('<section class="changelog-entry">');
+      entryOpen = true;
+      hasEntry = true;
+    };
+
+    lines.forEach((rawLine) => {
+      const line = String(rawLine || "").trim();
+
+      if (!line) {
+        closeList();
+        return;
+      }
+
+      if (line.startsWith("## ")) {
+        closeEntry();
+        ensureEntry();
+        html.push(
+          `<h3 class="changelog-entry-title">${this.renderChangelogInlineMarkdown(line.slice(3).trim())}</h3>`,
+        );
+        return;
+      }
+
+      if (line.startsWith("### ")) {
+        ensureEntry();
+        closeList();
+        html.push(
+          `<h4 class="changelog-entry-subtitle">${this.renderChangelogInlineMarkdown(line.slice(4).trim())}</h4>`,
+        );
+        return;
+      }
+
+      if (line.startsWith("- ")) {
+        ensureEntry();
+        if (!listOpen) {
+          html.push('<ul class="changelog-list">');
+          listOpen = true;
+        }
+
+        html.push(
+          `<li>${this.renderChangelogInlineMarkdown(line.replace(/^-\s+/, ""))}</li>`,
+        );
+        return;
+      }
+
+      ensureEntry();
+      closeList();
+      html.push(
+        `<p class="changelog-text">${this.renderChangelogInlineMarkdown(line)}</p>`,
+      );
+    });
+
+    closeEntry();
+
+    if (!hasEntry) {
+      return '<p class="changelog-empty">No changelog entries found.</p>';
+    }
+
+    return html.join("");
+  }
+
+  async ensureChangelogContentLoaded() {
+    if (!this.changelogContent) {
+      return;
+    }
+
+    if (this._changelogHtmlCache) {
+      this.changelogContent.innerHTML = this._changelogHtmlCache;
+      return;
+    }
+
+    if (!this._changelogLoadPromise) {
+      this.changelogContent.innerHTML =
+        '<p class="changelog-empty">Loading changelog...</p>';
+
+      this._changelogLoadPromise = this.fetchTextResource(
+        this.getChangelogResourceUrl(),
+        { cache: "no-store", label: "Changelog" },
+      )
+        .then((markdown) => {
+          const rendered = this.renderChangelogMarkdown(markdown);
+          this._changelogHtmlCache = rendered;
+          return rendered;
+        })
+        .catch((error) => {
+          console.warn("Unable to load changelog:", error);
+          return '<p class="changelog-empty">Unable to load CHANGELOG.md right now.</p>';
+        })
+        .finally(() => {
+          this._changelogLoadPromise = null;
+        });
+    }
+
+    const rendered = await this._changelogLoadPromise;
+    if (this.changelogContent) {
+      this.changelogContent.innerHTML = rendered;
+    }
+  }
+
+  async openChangelogModal() {
+    if (!this.changelogModal) {
+      return;
+    }
+
+    this.changelogModal.classList.add("active");
+    this.changelogModal.setAttribute("aria-hidden", "false");
+    this.changelogCloseBtn?.focus?.();
+
+    await this.ensureChangelogContentLoaded();
+  }
+
+  closeChangelogModal() {
+    if (!this.changelogModal) {
+      return;
+    }
+
+    this.changelogModal.classList.remove("active");
+    this.changelogModal.setAttribute("aria-hidden", "true");
+  }
+
+  /**
    * Open modal
    */
   openModal() {
@@ -9287,6 +9458,7 @@ class SettingsManager extends BaseManager {
   closeModal() {
     this.flushPendingAutoSaveBeforeClose();
     this.closeDetachedEditorModal();
+    this.closeChangelogModal();
     this.resetBackgroundThumbObserver();
     this.clearBackgroundThumbBlobUrlCache();
 
@@ -9879,6 +10051,36 @@ class SettingsManager extends BaseManager {
     }
 
     this._bindOverlayCloseBehavior(this.modal, () => this.closeModal());
+
+    if (
+      this.settingsVersionTrigger &&
+      this.settingsVersionTrigger.dataset.bound !== "1"
+    ) {
+      this.settingsVersionTrigger.dataset.bound = "1";
+      this.settingsVersionTrigger.addEventListener("click", () => {
+        this.openChangelogModal();
+      });
+    }
+
+    if (
+      this.changelogCloseBtn &&
+      this.changelogCloseBtn.dataset.bound !== "1"
+    ) {
+      this.changelogCloseBtn.dataset.bound = "1";
+      this.changelogCloseBtn.addEventListener("click", () => {
+        this.closeChangelogModal();
+      });
+    }
+
+    if (
+      this.changelogModal &&
+      this.changelogModal.dataset.overlayCloseBound !== "1"
+    ) {
+      this.changelogModal.dataset.overlayCloseBound = "1";
+      this._bindOverlayCloseBehavior(this.changelogModal, () =>
+        this.closeChangelogModal(),
+      );
+    }
 
     // Tabs
     this.tabs.forEach((tab) => {
@@ -11110,6 +11312,15 @@ class SettingsManager extends BaseManager {
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Escape" &&
+        this.changelogModal?.classList.contains("active")
+      ) {
+        e.preventDefault();
+        this.closeChangelogModal();
+        return;
+      }
+
       if (e.key === "Escape" && this.modal?.classList.contains("active")) {
         this.closeModal();
       }

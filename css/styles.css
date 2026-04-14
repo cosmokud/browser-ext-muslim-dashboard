@@ -5983,16 +5983,50 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   font-weight: 600;
 }
 
-.settings-modal-title::after {
-  content: attr(data-settings-version);
-  display: inline-block;
-  margin-left: 0.55rem;
-  font-size: 0.68em;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+.settings-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.settings-modal-title {
+  margin: 0;
+}
+
+.settings-version-trigger {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.05)
+  );
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   line-height: 1;
-  vertical-align: middle;
-  opacity: 0.8;
+  padding: 0.38rem 0.68rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.settings-version-trigger:hover,
+.settings-version-trigger:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--accent-gold);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.24),
+    rgba(255, 255, 255, 0.1)
+  );
+  transform: translateY(-1px);
+}
+
+.settings-version-trigger:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.26);
+  outline-offset: 2px;
 }
 
 .modal-close {
@@ -6019,6 +6053,115 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   padding: var(--spacing-lg);
   max-height: 60vh;
   overflow-y: auto;
+}
+
+.changelog-modal {
+  max-width: 920px;
+}
+
+#changelogModal .modal-body {
+  max-height: 72vh;
+}
+
+.changelog-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0) 52%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+}
+
+.changelog-modal-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.changelog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.changelog-entry {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  padding: var(--spacing-md);
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+}
+
+.changelog-entry-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.changelog-entry-subtitle {
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.changelog-list {
+  margin: 0.2rem 0 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.changelog-list li {
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.changelog-text {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.changelog-text code,
+.changelog-list code {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.35rem;
+  padding: 0.08rem 0.38rem;
+  font-size: 0.9em;
+}
+
+.changelog-empty {
+  margin: 0;
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .settings-modal-title-wrap {
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+  }
+
+  .settings-version-trigger {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.58rem;
+  }
+
+  .changelog-modal {
+    width: 94%;
+  }
 }
 
 /* Content Search Modal */

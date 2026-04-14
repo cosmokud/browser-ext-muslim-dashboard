@@ -1,8 +1,19 @@
-## [Unreleased] - 2026-04-13
+## [Unreleased] - 2026-04-15
 
 ### Changed
 
 - No unreleased changes yet.
+
+## [0.1.5] - 2026-04-15
+
+### Added
+
+- Added a clickable Settings version badge (`v0.1.5`) that opens an in-app changelog modal.
+- Added a styled changelog modal that loads and renders release notes directly from `CHANGELOG.md`.
+
+### Changed
+
+- Updated extension version references to 0.1.5 across runtime metadata and project documentation.
 
 ## [0.1.4] - 2026-04-13
 
