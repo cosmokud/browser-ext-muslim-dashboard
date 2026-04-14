@@ -1213,16 +1213,43 @@ async function sendMessageToPocketQuranOffscreen(message) {
   });
 }
 
+function isPocketQuranOffscreenReceiverMissing(result) {
+  const message = String(result?.error || "").toLowerCase();
+  if (!message) return false;
+
+  return (
+    message.includes("receiving end does not exist") ||
+    message.includes("could not establish connection")
+  );
+}
+
 async function executePocketQuranOffscreenCommand(command) {
   const ready = await ensurePocketQuranOffscreenDocument();
   if (!ready) {
     return { ok: false, error: "offscreen-unavailable" };
   }
 
-  return await sendMessageToPocketQuranOffscreen({
+  let result = await sendMessageToPocketQuranOffscreen({
     type: "md_pq_offscreen_execute_internal",
     command,
   });
+
+  if (result?.ok === true) {
+    return result;
+  }
+
+  if (isPocketQuranOffscreenReceiverMissing(result)) {
+    const stillReady = await ensurePocketQuranOffscreenDocument();
+    if (stillReady) {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      result = await sendMessageToPocketQuranOffscreen({
+        type: "md_pq_offscreen_execute_internal",
+        command,
+      });
+    }
+  }
+
+  return result;
 }
 
 async function stopPocketQuranOffscreenPlayback() {

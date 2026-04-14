@@ -636,6 +636,50 @@
     });
   }
 
+  function doesPocketQuranCommandRequirePlayback(command, activeState) {
+    if (!command || typeof command !== "object") return false;
+
+    const action = String(command.action || "").trim();
+    const payload =
+      command.payload && typeof command.payload === "object"
+        ? command.payload
+        : {};
+    const state =
+      activeState && typeof activeState === "object"
+        ? activeState
+        : getPocketQuranActiveState();
+
+    switch (action) {
+      case pocketQuranCommandTypes.togglePlayPause:
+        if (typeof payload.desiredIsPlaying === "boolean") {
+          return payload.desiredIsPlaying;
+        }
+        return state.isPlaying !== true;
+
+      case pocketQuranCommandTypes.playPreviousAyah:
+      case pocketQuranCommandTypes.playNextAyah:
+        if (typeof payload.desiredIsPlaying === "boolean") {
+          return payload.desiredIsPlaying;
+        }
+        return state.isPlaying === true;
+
+      case pocketQuranCommandTypes.selectAyah:
+      case pocketQuranCommandTypes.selectReciter:
+        return state.isPlaying === true;
+
+      case pocketQuranCommandTypes.toggleAutoplay: {
+        const desiredAutoplay =
+          typeof payload.desiredIsAutoplay === "boolean"
+            ? payload.desiredIsAutoplay
+            : !(state.isAutoplay === true);
+        return desiredAutoplay && state.isPlaying !== true;
+      }
+
+      default:
+        return false;
+    }
+  }
+
   async function executePocketQuranCommand(command) {
     if (!command || typeof command !== "object") return;
 
@@ -1002,13 +1046,15 @@
   }
 
   function queuePocketQuranCommand(command) {
-    pocketQuranCommandQueue = pocketQuranCommandQueue
-      .then(() => executePocketQuranCommand(command))
-      .catch(() => {
-        // Keep queue alive even if one command fails.
-      });
+    const runPromise = pocketQuranCommandQueue.then(() =>
+      executePocketQuranCommand(command),
+    );
 
-    return pocketQuranCommandQueue;
+    pocketQuranCommandQueue = runPromise.catch(() => {
+      // Keep queue alive even if one command fails.
+    });
+
+    return runPromise;
   }
 
   function hasRecentDashboardOwnerState() {
@@ -1099,11 +1145,25 @@
         return true;
       }
 
+      const stateBeforeCommand = getPocketQuranActiveState();
+      const playbackRequired = doesPocketQuranCommandRequirePlayback(
+        message.command,
+        stateBeforeCommand,
+      );
+
       void queuePocketQuranCommand(message.command)
         .then(() => {
+          const currentState = getPocketQuranActiveState();
+          const playbackSatisfied =
+            !playbackRequired || currentState.isPlaying === true;
+
           sendResponse({
-            ok: true,
-            state: getPocketQuranActiveState(),
+            ok: playbackSatisfied,
+            playbackRequired,
+            state: currentState,
+            ...(playbackSatisfied
+              ? {}
+              : { error: "offscreen-playback-not-active" }),
           });
         })
         .catch((error) => {

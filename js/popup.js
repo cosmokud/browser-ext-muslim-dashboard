@@ -4729,10 +4729,61 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   }
 
-  async function dispatchPocketQuranCommandToOffscreen(command) {
+  function doesPocketQuranCommandRequireOffscreenPlayback(command) {
     if (!command || typeof command !== "object") return false;
-    if (typeof chrome === "undefined") return false;
-    if (typeof chrome.runtime?.sendMessage !== "function") return false;
+
+    const action = String(command.action || "").trim();
+    const payload =
+      command.payload && typeof command.payload === "object"
+        ? command.payload
+        : {};
+    const state =
+      pocketQuranState || buildPocketQuranFallbackState(storage.getSettings());
+
+    switch (action) {
+      case pocketQuranCommandTypes.togglePlayPause:
+        if (typeof payload.desiredIsPlaying === "boolean") {
+          return payload.desiredIsPlaying;
+        }
+        return state.isPlaying !== true;
+
+      case pocketQuranCommandTypes.playPreviousAyah:
+      case pocketQuranCommandTypes.playNextAyah:
+        if (typeof payload.desiredIsPlaying === "boolean") {
+          return payload.desiredIsPlaying;
+        }
+        return state.isPlaying === true;
+
+      case pocketQuranCommandTypes.selectAyah:
+      case pocketQuranCommandTypes.selectReciter:
+        return state.isPlaying === true;
+
+      case pocketQuranCommandTypes.toggleAutoplay: {
+        const desiredAutoplay =
+          typeof payload.desiredIsAutoplay === "boolean"
+            ? payload.desiredIsAutoplay
+            : !(state.isAutoplay === true);
+        return desiredAutoplay && state.isPlaying !== true;
+      }
+
+      default:
+        return false;
+    }
+  }
+
+  async function dispatchPocketQuranCommandToOffscreen(command) {
+    if (!command || typeof command !== "object") {
+      return { ok: false, error: "invalid-command" };
+    }
+    if (typeof chrome === "undefined") {
+      return { ok: false, error: "chrome-unavailable" };
+    }
+    if (typeof chrome.runtime?.sendMessage !== "function") {
+      return { ok: false, error: "runtime-sendMessage-unavailable" };
+    }
+
+    const playbackRequired =
+      doesPocketQuranCommandRequireOffscreenPlayback(command);
 
     return await new Promise((resolve) => {
       try {
@@ -4744,15 +4795,39 @@ document.addEventListener("DOMContentLoaded", () => {
           (response) => {
             const runtimeError = chrome.runtime?.lastError;
             if (runtimeError) {
-              resolve(false);
+              resolve({
+                ok: false,
+                playbackRequired,
+                error: runtimeError.message || String(runtimeError),
+              });
               return;
             }
 
-            resolve(response?.ok === true);
+            const responseObject =
+              response && typeof response === "object"
+                ? response
+                : { ok: false };
+            const playbackSatisfied =
+              !playbackRequired ||
+              responseObject.skippedDueToDashboardOwner === true ||
+              responseObject.state?.isPlaying === true;
+
+            resolve({
+              ...responseObject,
+              ok: responseObject.ok === true && playbackSatisfied,
+              playbackRequired,
+              ...(playbackSatisfied
+                ? {}
+                : { error: "offscreen-playback-not-active" }),
+            });
           },
         );
       } catch (error) {
-        resolve(false);
+        resolve({
+          ok: false,
+          playbackRequired,
+          error: error?.message || String(error),
+        });
       }
     });
   }
@@ -4798,8 +4873,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    const offscreenHandled =
+    const offscreenResult =
       await dispatchPocketQuranCommandToOffscreen(command);
+    const offscreenHandled = offscreenResult?.ok === true;
 
     if (offscreenHandled) {
       pocketQuranPendingCommandIssuedAt = 0;
