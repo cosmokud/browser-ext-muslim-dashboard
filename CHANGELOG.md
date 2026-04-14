@@ -1,9 +1,3 @@
-## [Unreleased] - 2026-04-15
-
-### Changed
-
-- Next improvements are in progress.
-
 ## [0.1.5] - 2026-04-15
 
 ### What is New

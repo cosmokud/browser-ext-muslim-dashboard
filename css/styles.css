@@ -6063,12 +6063,6 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
 }
 
-.changelog-modal-subtitle {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
 .changelog-content {
   display: flex;
   flex-direction: column;
@@ -6080,18 +6074,19 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   border-radius: var(--radius-lg);
   background: var(--glass-bg);
   padding: var(--spacing-md);
+  font-size: 1rem;
   backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
 }
 
 .changelog-entry-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98em;
   color: var(--text-primary);
 }
 
 .changelog-entry-subtitle {
   margin: var(--spacing-sm) 0 var(--spacing-xs);
-  font-size: 0.84rem;
+  font-size: 0.9em;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.05em;
@@ -6108,12 +6103,14 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 
 .changelog-list li {
   color: var(--text-primary);
+  font-size: 1em;
   line-height: 1.45;
 }
 
 .changelog-text {
   margin: 0;
   color: var(--text-secondary);
+  font-size: 1em;
   line-height: 1.45;
 }
 
