@@ -33,6 +33,16 @@
 - Updated security policy supported-version table to mark 0.1.4 as current.
 - Documented known first-run behavior where sidebar drag-and-drop may require one manual refresh after new installation.
 
+### Bug Fixes
+
+- Fixed Pocket Quran playback command routing when dashboard tabs were open but not actively controlling playback.
+- Fixed Pocket Quran previous/next behavior while paused, so ayah selection updates correctly without unintended playback jumps.
+- Fixed popup playback continuity by adding an offscreen audio execution path with safer fallback handling.
+- Fixed stale dashboard state from overriding newer popup commands by validating interaction timing and pending command timestamps.
+- Fixed prayer/location updates saved from the popup not refreshing dashboard prayer cards until a manual reload.
+- Fixed drag-and-drop final placement race conditions that could insert cards into the wrong row after delayed drop animations.
+- Fixed fasting countdown copy for one day remaining to show "Tonight".
+
 ## [0.1.3] - 2026-04-08
 
 ### Added
@@ -57,12 +67,13 @@
 - Consolidated default dataset loading paths by introducing shared BaseManager fetch helpers for JSON/text resources.
 - Narrowed favicon-related host permission scope from wildcard gstatic subdomains to explicit `www.gstatic.com`.
 
-### Fixed
+### Bug Fixes
 
-- Preserved floating geometry during restore cycles without overriding the user's toggle intent.
-- Fixed sidebar resize selector issue that impacted edit mode behavior.
-- Fixed empty grid rows reserving vertical space after card visibility/floating changes.
-- Fixed custom background upload URLs from being corrupted by query parameters.
+- Fixed floating cards sometimes re-enabling themselves after geometry saves; your floating ON/OFF preference now stays respected.
+- Fixed sidebar resize handles in Layout Editor not always activating because of selector issues.
+- Fixed empty grid rows leaving blank vertical gaps after cards were hidden or moved to floating mode.
+- Fixed custom uploaded background images breaking when query parameters were appended to data/blob URLs.
+- Fixed live weather/layout sync edge cases that could delay card layout updates while resizing.
 
 ## [0.1.2] - 2026-04-05
 
@@ -93,16 +104,15 @@
 - Standardized page size to 10 items for Adhkar, Flashcard, and Hadith managers.
 - Updated webstore packaging to auto-disable debug mode and emit versioned archives named `muslim-dashboard-v<version>.zip`.
 
-### Fixed
+### Bug Fixes
 
-- Fixed multiple notes editor edge cases around caret behavior, selection scrolling, inline code handling, list boundaries, and markdown preview synchronization.
-- Fixed Pocket Quran Arabic/translation layout edge cases for spacing, hiding behavior, and flexible text presentation.
-- Fixed recitation playback/selection edge cases while stabilizing control interactions in popup and dashboard contexts.
-- Fixed translation and data cleanup issues including Indonesian text updates, Arabic diacritic corrections, and romanization formatting fixes.
-- Fixed styling and compatibility issues across theme palettes, blur normalization, and card surface rendering.
-- Reverted unstable global playback synchronization between popup and service worker to keep playback behavior reliable.
-- Removed deprecated dashboard scale behavior after temporary rollout.
-- Reverted unstable liquid glass experiments to keep 0.1.2 stable.
+- Fixed many Notes editor edge cases around caret visibility, selection restore, inline code handling, list boundaries, and markdown preview sync.
+- Fixed checklist/list indentation and placeholder behavior in markdown mode to prevent broken list formatting.
+- Fixed Pocket Quran Arabic/translation hide-show layouts so text and controls no longer overlap or clip.
+- Fixed recitation reliability by removing unstable popup/service-worker global force-sync behavior.
+- Fixed translation/content data quality issues (Indonesian wording, Arabic diacritics, and romanization cleanup).
+- Fixed theme/readability issues for text contrast, blur opacity normalization, accent handling, and card rendering consistency.
+- Removed unstable experiments (dashboard scale and liquid-glass variants) that caused inconsistent behavior.
 
 ## [0.1.1] - 2026-03-07
 
@@ -123,11 +133,13 @@
 - Enhanced blur popup positioning/portalling and reset-to-default layout behavior in settings.
 - Updated manifest metadata and corrected extension version in manifest from 1.0.0 to 0.1.1.
 
-### Fixed
+### Bug Fixes
 
-- Fixed compact weather CSS selector issues and prayer icon mismatches.
-- Fixed service worker and fasting countdown formatting regressions.
-- Fixed HTML/JS formatting and interaction inconsistencies in popup and settings flows.
+- Fixed compact weather location text not appearing correctly because of selector mismatches.
+- Fixed swapped Duha and Dhuhr icons in prayer lists.
+- Fixed fasting countdown and service-worker scheduling regressions caused by malformed function arguments.
+- Fixed popup/settings markup inconsistencies that could cause unreliable interactions.
+- Fixed release metadata mismatch by correcting the manifest version from 1.0.0 to 0.1.1.
 
 ## [0.1.0] - 2026-01-28
 
@@ -166,10 +178,13 @@
 - Improved startup behavior with faster non-blocking UI initialization and async data loading paths.
 - Expanded notification flows and messaging for prayers and fasting-related features.
 
-### Fixed
+### Bug Fixes
 
-- Fixed repeated drag-and-drop, scroll alignment, and viewport persistence edge cases across cards and managers.
-- Fixed multiple modal overlay close behaviors and interaction conflicts.
-- Fixed styling regressions, icon substitutions, and accessibility issues during rapid UI iteration.
-- Fixed data/content quality issues in adhkar, hadith, and localization resources.
-- Reverted unstable iterations where needed to preserve working behavior while continuing feature development.
+- Fixed dashboard card layout gaps at medium screen widths by forcing key cards to full-width when needed.
+- Fixed floating card position drift/jumps by using inline position values as the source of truth during drag/clamp.
+- Fixed dropdown layering and click-through issues on blurred surfaces by portalling dropdowns above overlay stacks.
+- Fixed Pocket Quran content clipping by reworking shell/content sizing with flex and min-height constraints.
+- Fixed moon phase SVG illumination rendering so lit and shadowed portions display correctly.
+- Fixed sidebar drag rectangle calculation so dragged items keep correct dimensions and drop behavior.
+- Fixed multiple runtime/syntax issues in sticky notes and related UI scripts that caused inconsistent behavior.
+- Reverted unstable experiments (dock layouts, bookmark flows, scroll-sync attempts, and moment-mode variants) to keep core flows stable.
