@@ -1,3 +1,13 @@
+## [0.1.6] - 2026-04-24
+
+### Highlights
+
+- Enhanced sidebar auto-enable logic during window resize events.
+
+### Bug Fixes
+
+- Fixed sidebar not auto-enabling after window resize when conditions are met.
+
 ## [0.1.5] - 2026-04-15
 
 ### Highlights

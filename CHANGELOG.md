@@ -1,3 +1,19 @@
+## [0.1.6] - 2026-04-24
+
+### What is New
+
+- Enhanced sidebar auto-enable logic during window resize events for a smoother user experience.
+- Updated README with detailed Pocket Quran features and playback capabilities documentation.
+
+### Bug Fixes
+
+- Fixed sidebar not automatically enabling after window resize when viewport space becomes available.
+
+### Other Improvements
+
+- Renamed internal changelog file from `Changelog.txt` to `changelog.txt` for consistency.
+- Updated extension version references to 0.1.6 across runtime metadata and project documentation.
+
 ## [0.1.5] - 2026-04-15
 
 ### What is New
