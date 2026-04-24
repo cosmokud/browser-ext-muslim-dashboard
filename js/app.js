@@ -736,6 +736,17 @@ class MuslimDashboard {
     window.addEventListener("resize", () => {
       if (resizeTimer) clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
+        if (this.gridLayout && this.gridLayout.isSidebarModeEnabled === false) {
+          const blocked = this.gridLayout.isSidebarAutoEnableBlocked?.() === true;
+          const hasSpace = this.gridLayout.hasSidebarDropViewportSpace?.() === true;
+          if (blocked && hasSpace) {
+            this.gridLayout.clearSidebarAutoEnableBlocked?.();
+            if (typeof this._setSidebarModeEnabled === "function") {
+              this._setSidebarModeEnabled(true);
+            }
+            return;
+          }
+        }
         this.syncSidebarModeWithLayoutEditMode();
       }, 120);
     });
