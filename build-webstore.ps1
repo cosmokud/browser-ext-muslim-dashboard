@@ -28,7 +28,8 @@ $zipPath = Join-Path $distRoot $zipName
 $topLevelFiles = @(
   "manifest.json",
   "index.html",
-  "popup.html"
+  "popup.html",
+  "offscreen.html"
 )
 
 $runtimeDirectories = @(
