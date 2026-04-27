@@ -11430,8 +11430,26 @@ html[data-theme-mode="light"]
 }
 
 /* Custom scrollbar for note content */
-.sticky-note-content::-webkit-scrollbar {
+.sticky-note.visible .sticky-note-content {
+  scrollbar-width: none;
+}
+
+.sticky-note.visible:hover .sticky-note-content,
+.sticky-note.visible:focus-within .sticky-note-content,
+.sticky-note.visible:active .sticky-note-content {
+  scrollbar-width: thin;
+}
+
+.sticky-note.visible .sticky-note-content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.sticky-note.visible:hover .sticky-note-content::-webkit-scrollbar,
+.sticky-note.visible:focus-within .sticky-note-content::-webkit-scrollbar,
+.sticky-note.visible:active .sticky-note-content::-webkit-scrollbar {
   width: var(--scrollbar-size-thin);
+  height: var(--scrollbar-size-thin);
 }
 
 .sticky-note-content::-webkit-scrollbar-track {

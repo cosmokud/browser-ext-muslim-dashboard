@@ -1589,17 +1589,9 @@ class SearchBarManager extends BaseManager {
 
     try {
       const urlObj = new URL(test);
+      const domainBaseUrl = new URL(`${urlObj.origin}/`).href;
 
-      if (urlObj.hostname === "docs.google.com") {
-        urlObj.pathname = urlObj.pathname.replace(
-          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
-          "/$1",
-        );
-      }
-
-      urlObj.hash = "";
-
-      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
+      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(domainBaseUrl)}&sz=256`;
     } catch (e) {
       return null;
     }

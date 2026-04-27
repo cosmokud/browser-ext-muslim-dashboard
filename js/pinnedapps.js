@@ -846,18 +846,10 @@ class PinnedAppsManager extends BaseManager {
   getFaviconUrl(url) {
     try {
       const urlObj = new URL(url);
-
-      if (urlObj.hostname === "docs.google.com") {
-        urlObj.pathname = urlObj.pathname.replace(
-          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
-          "/$1",
-        );
-      }
-
-      urlObj.hash = "";
+      const domainBaseUrl = new URL(`${urlObj.origin}/`).href;
 
       // Use Google's favicon service as primary
-      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
+      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(domainBaseUrl)}&sz=256`;
     } catch (e) {
       return null;
     }

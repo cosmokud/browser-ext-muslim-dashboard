@@ -71,7 +71,7 @@ class FaviconCacheManager {
   _getCacheKey(url, type = "pinned") {
     const normalizedUrl = this._normalizeLookupUrl(url);
     if (normalizedUrl) {
-      // Path-aware keys avoid collisions on shared hosts (e.g., docs/sheets).
+      // Domain-base keys keep favicon cache consistent across deep paths.
       return `${type}:${normalizedUrl}`;
     }
 
@@ -89,27 +89,15 @@ class FaviconCacheManager {
 
     try {
       // Keep template URLs parseable without changing non-template URLs.
-      const normalizedUrl = new URL(rawUrl.replace(/%s/g, "test"));
-      normalizedUrl.hash = "";
-
-      // Google Workspace often injects account-scoped /u/<n>/ segments.
-      // Canonicalize those paths so favicon resolution stays product-specific.
-      if (normalizedUrl.hostname === "docs.google.com") {
-        const canonicalPath = normalizedUrl.pathname.replace(
-          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
-          "/$1",
-        );
-        normalizedUrl.pathname = canonicalPath;
-      }
-
-      return normalizedUrl.href;
+      const parsedUrl = new URL(rawUrl.replace(/%s/g, "test"));
+      return new URL(`${parsedUrl.origin}/`).href;
     } catch (e) {
       return null;
     }
   }
 
   /**
-   * Build Google favicon API URL using the full URL (not hostname only)
+   * Build Google favicon API URL using a normalized domain-base URL.
    */
   _getGoogleFaviconUrl(url, size = 256) {
     const normalizedUrl = this._normalizeLookupUrl(url);
