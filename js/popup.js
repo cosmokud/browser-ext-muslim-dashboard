@@ -220,20 +220,134 @@ document.addEventListener("DOMContentLoaded", () => {
     "Cascadia Code",
     "Courier New",
   ];
-  const pocketQuranFallbackTranslations = [
-    { id: 85, label: "M.A.S. Abdel Haleem", language: "English" },
-    { id: 20, label: "Saheeh International", language: "English" },
-    {
-      id: 57,
-      label: "Muhammad Taqi-ud-Din al-Hilali & Khan",
-      language: "English",
-    },
-    { id: 131, label: "Rachid Maach", language: "French" },
-    { id: 149, label: "Muhammad Hamidullah", language: "French" },
-    { id: 168, label: "Bubenheim/Elyas", language: "German" },
-    { id: 171, label: "Sofian S. Siregar", language: "Indonesian" },
-    { id: 33, label: "Mahmoud Y. Zayid", language: "Spanish" },
-  ];
+  const pocketQuranFallbackTranslations = {
+    88: { label: "Hasan Efendi Nahi", language: "Albanian" },
+    47: { label: "Albanian", language: "Albanian" },
+    89: { label: "Albanian Translation (Sherif Ahmeti)", language: "Albanian" },
+    236: { label: "Ramdane At Mansour", language: "Amazigh" },
+    87: { label: "Sadiq and Sani", language: "Amharic" },
+    120: { label: "Shaykh Rafeequl Islam Habibur-Rahman", language: "Assamese" },
+    75: { label: "Alikhan Musayev", language: "Azeri" },
+    23: { label: "Azerbaijani", language: "Azeri" },
+    795: { label: "Suliman Kanti", language: "Bambara" },
+    796: { label: "Baba Mamady Jani", language: "Bambara" },
+    161: { label: "Taisirul Quran", language: "Bengali" },
+    163: { label: "Sheikh Mujibur Rahman", language: "Bengali" },
+    162: { label: "Rawai Al-bayan", language: "Bengali" },
+    213: { label: "Dr. Abu Bakr Muhammad Zakaria", language: "Bengali" },
+    214: { label: "Dar Al-Salam Center", language: "Bosnian" },
+    25: { label: "Muhamed Mehanović", language: "Bosnian" },
+    126: { label: "Besim Korkut", language: "Bosnian" },
+    237: { label: "Tzvetan Theophanov", language: "Bulgarian" },
+    128: { label: "Cambodian Muslim Community Development", language: "Central Khmer" },
+    106: { label: "Magomed Magomedov", language: "Chechen" },
+    56: { label: "Chinese Translation (Simplified) - Ma Jian", language: "Chinese" },
+    109: { label: "Muhammad Makin", language: "Chinese" },
+    26: { label: "Czech", language: "Czech" },
+    785: { label: "Mawlawi Muhammad Anwar Badkhashani", language: "Dari" },
+    86: { label: "Office of the President of Maldives", language: "Divehi" },
+    840: { label: "Abu Bakr Ibrahim Ali (Bakurube)", language: "Divehi" },
+    235: { label: "Malak Faris Abdalsalaam", language: "Dutch" },
+    144: { label: "Sofian S. Siregar", language: "Dutch" },
+    85: { label: "M.A.S. Abdel Haleem", language: "English" },
+    149: { label: "Fadel Soliman, Bridges' translation", language: "English" },
+    84: { label: "T. Usmani", language: "English" },
+    95: { label: "A. Maududi (Tafhim commentary)", language: "English" },
+    19: { label: "M. Pickthall", language: "English" },
+    22: { label: "A. Yusuf Ali", language: "English" },
+    20: { label: "Saheeh International", language: "English" },
+    203: { label: "Al-Hilali & Khan", language: "English" },
+    57: { label: "Transliteration", language: "English" },
+    30: { label: "Finnish", language: "Finnish" },
+    136: { label: "Montada Islamic Foundation", language: "French" },
+    31: { label: "Muhammad Hamidullah", language: "French" },
+    779: { label: "Rashid Maash", language: "French" },
+    232: { label: "African Development Foundation", language: "Ganda" },
+    208: { label: "Abu Reda Muhammad ibn Ahmad", language: "German" },
+    27: { label: "Frank Bubenheim and Nadeem", language: "German" },
+    225: { label: "Rabila Al-Umry", language: "Gujarati" },
+    32: { label: "Hausa Translation (Abubakar Gumi)", language: "Hausa" },
+    115: { label: "Abubakar Mahmood Jummi", language: "Hausa" },
+    233: { label: "Dar Al-Salam Center", language: "Hebrew" },
+    122: { label: "Maulana Azizul Haque al-Umari", language: "Hindi" },
+    134: { label: "King Fahad Quran Complex", language: "Indonesian" },
+    141: { label: "The Sabiq Company", language: "Indonesian" },
+    33: { label: "Indonesian Islamic Affairs Ministry", language: "Indonesian" },
+    153: { label: "Hamza Roberto Piccardo", language: "Italian" },
+    209: { label: "Othman al-Sharif", language: "Italian" },
+    35: { label: "Ryoichi Mita", language: "Japanese" },
+    218: { label: "Saeed Sato", language: "Japanese" },
+    771: { label: "Kannada Translation", language: "Kannada" },
+    222: { label: "Khalifa Altay", language: "Kazakh" },
+    113: { label: "Khalifah Altai", language: "Kazakh" },
+    774: { label: "The Rwanda Muslims Association team", language: "Kinyarwanda" },
+    36: { label: "Korean", language: "Korean" },
+    219: { label: "Hamed Choi", language: "Korean" },
+    81: { label: "Burhan Muhammad-Amin", language: "Kurdish" },
+    143: { label: "Muhammad Saleh Bamoki", language: "Kurdish" },
+    39: { label: "Abdullah Muhammad Basmeih", language: "Malay" },
+    80: { label: "Muhammad Karakunnu and Vanidas Elayavoor", language: "Malayalam" },
+    224: { label: "Abdul-Hamid Haidar & Kanhi Muhammad", language: "Malayalam" },
+    37: { label: "Malayalam Translation (Abdul Hameed and Kunhi)", language: "Malayalam" },
+    38: { label: "Maranao", language: "Maranao" },
+    226: { label: "Muhammad Shafi'i Ansari", language: "Marathi" },
+    108: { label: "Ahl Al-Hadith Central Society of Nepal", language: "Nepali" },
+    41: { label: "Norwegian", language: "Norwegian" },
+    111: { label: "Ghali Apapur Apaghuna", language: "Oromo" },
+    118: { label: "Zakaria Abulsalam", language: "Pashto" },
+    135: { label: "IslamHouse.com", language: "Persian" },
+    29: { label: "Hussein Taji Kal Dari", language: "Persian" },
+    42: { label: "Józef Bielawski", language: "Polish" },
+    103: { label: "Helmi Nasr", language: "Portuguese" },
+    43: { label: "Portuguese Translation (Samir)", language: "Portuguese" },
+    44: { label: "Grigore", language: "Romanian" },
+    782: { label: "Islamic and Cultural League", language: "Romanian" },
+    78: { label: "Ministry of Awqaf, Egypt", language: "Russian" },
+    79: { label: "Abu Adel", language: "Russian" },
+    45: { label: "Russian Translation (Elmir Kuliev)", language: "Russian" },
+    238: { label: "Taj Mehmood Amroti", language: "Sindhi" },
+    228: { label: "Ruwwad Center", language: "Sinhala" },
+    46: { label: "Mahmud Muhammad Abduh", language: "Somali" },
+    83: { label: "Sheikh Isa Garcia", language: "Spanish" },
+    140: { label: "Montada Islamic Foundation", language: "Spanish" },
+    199: { label: "Noor International Center", language: "Spanish" },
+    231: { label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis", language: "Swahili" },
+    49: { label: "Ali Muhsin Al-Barwani", language: "Swahili" },
+    48: { label: "Knut Bernström", language: "Swedish" },
+    211: { label: "Dar Al-Salam Center", language: "Tagalog" },
+    139: { label: "Khawaja Mirof & Khawaja Mir", language: "Tajik" },
+    74: { label: "Tajik (AbdolMohammad Ayati)", language: "Tajik" },
+    223: { label: "Pioneers of Translation Center", language: "Tajik" },
+    229: { label: "Sheikh Omar Sharif bin Abdul Salam", language: "Tamil" },
+    50: { label: "Jan Trust Foundation", language: "Tamil" },
+    133: { label: "Abdul Hameed Baqavi", language: "Tamil" },
+    53: { label: "Tatar", language: "Tatar" },
+    227: { label: "Maulana Abder-Rahim ibn Muhammad", language: "Telugu" },
+    230: { label: "Society of Institutes and Universities", language: "Thai" },
+    51: { label: "Thai Translation (King Fahad Quran Complex)", language: "Thai" },
+    210: { label: "Dar Al-Salam Center", language: "Turkish" },
+    77: { label: "Turkish Translation (Diyanet)", language: "Turkish" },
+    124: { label: "Muslim Shahin", language: "Turkish" },
+    112: { label: "Shaban Britch", language: "Turkish" },
+    52: { label: "Elmalili Hamdi Yazir", language: "Turkish" },
+    76: { label: "Muhammad Saleh", language: "Uighur" },
+    217: { label: "Dr. Mikhailo Yaqubovic", language: "Ukrainian" },
+    234: { label: "Fatah Muhammad Jalandhari", language: "Urdu" },
+    54: { label: "Maulana Muhammad Junagarhi", language: "Urdu" },
+    156: { label: "Fe Zilal al-Qur'an (Sayyid Qutb)", language: "Urdu" },
+    151: { label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)", language: "Urdu" },
+    158: { label: "Bayan-ul-Quran (Dr. Israr Ahmad)", language: "Urdu" },
+    97: { label: "Tafheem e Qur'an - Syed Abu Ali Maududi", language: "Urdu" },
+    831: { label: "Abul Ala Maududi (Roman Urdu)", language: "Urdu" },
+    819: { label: "Maulana Wahiduddin Khan", language: "Urdu" },
+    55: { label: "Muhammad Sodiq Muhammad Yusuf (Latin)", language: "Uzbek" },
+    101: { label: "Alauddin Mansour", language: "Uzbek" },
+    127: { label: "Muhammad Sodik Muhammad Yusuf", language: "Uzbek" },
+    220: { label: "Ruwwad Center", language: "Vietnamese" },
+    221: { label: "Hasan Abdul-Karim", language: "Vietnamese" },
+    798: { label: "Abdul Hamid Silika", language: "Yau" },
+    125: { label: "Shaykh Abu Rahimah Mikael Aykyuni", language: "Yoruba" },
+  };
   const popupBlurDefaults = {
     glassState: "dashboard",
     customBlurEnabled: false,
@@ -3282,6 +3396,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = clampNumber(entry?.id, 1, 10000, NaN);
     if (!Number.isFinite(id)) return null;
 
+    if (pocketQuranFallbackTranslations[id]) {
+      return {
+        id,
+        ...pocketQuranFallbackTranslations[id],
+      };
+    }
+
     const language = String(
       entry?.language_name ||
         entry?.language ||
@@ -3313,16 +3434,9 @@ document.addEventListener("DOMContentLoaded", () => {
       label = `${baseName} — ${author}`;
     }
 
-    const labelOverrides = {
-      33: "Indonesian Islamic Affairs Ministry",
-      134: "King Fahad Quran Complex",
-      141: "The Sabiq Company",
-    };
-    const finalLabel = labelOverrides[id] || label;
-
     return {
       id,
-      label: finalLabel,
+      label,
       language: language || "Other",
     };
   }
@@ -3412,11 +3526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!pocketQuranTranslations.length) {
-      pocketQuranTranslations = pocketQuranFallbackTranslations.map(
-        (entry) => ({
-          ...entry,
-        }),
-      );
+      pocketQuranTranslations = Object.values(pocketQuranFallbackTranslations);
     }
 
     return pocketQuranTranslations;
