@@ -1050,8 +1050,6 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
-  overflow-y: auto;
-  max-height: 100%;
 }
 
 .popup-pq-surah-toolbar {
