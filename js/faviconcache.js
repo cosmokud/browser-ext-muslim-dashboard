@@ -2,10 +2,10 @@
  * Favicon Cache Manager
  * Handles caching of favicons using IndexedDB for persistent storage
  * Features:
- * - Caches favicons as base64 data URLs
+ * - Caches favicons as display-ready URL strings (data URLs or remote URLs)
  * - Supports custom favicon imports (file + URL)
  * - Automatic downscaling to 256x256 for large images
- * - Google Favicon API fetching with caching
+ * - Google favicon URL generation with caching
  * - Session-aware refresh control (only fetch on fresh start or manual refresh)
  */
 
@@ -81,7 +81,7 @@ class FaviconCacheManager {
   }
 
   /**
-   * Normalize URL inputs for cache lookups and Google favicon requests.
+   * Normalize URL inputs for cache lookups and favicon service requests.
    */
   _normalizeLookupUrl(url) {
     const rawUrl = String(url || "").trim();
@@ -97,9 +97,9 @@ class FaviconCacheManager {
   }
 
   /**
-   * Build Google favicon API URL using a normalized domain-base URL.
+   * Build favicon service URL using a normalized domain-base URL.
    */
-  _getGoogleFaviconUrl(url, size = 256) {
+  _getFaviconServiceUrl(url, size = 256) {
     const normalizedUrl = this._normalizeLookupUrl(url);
     if (!normalizedUrl) return null;
 
@@ -110,7 +110,7 @@ class FaviconCacheManager {
    * Get cached favicon
    * @param {string} url - The URL to get favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
-   * @returns {Promise<string|null>} - Base64 data URL or null
+   * @returns {Promise<string|null>} - Cached favicon URL string or null
    */
   async getCached(url, type = "pinned") {
     try {
@@ -249,15 +249,15 @@ class FaviconCacheManager {
   }
 
   /**
-   * Fetch favicon from Google API and cache it
+   * Fetch favicon from service URL and cache it
    * @param {string} url - The URL to fetch favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
    * @param {boolean} forceRefresh - Force fetch even if cached
-   * @returns {Promise<string|null>} - Base64 data URL or null
+   * @returns {Promise<string|null>} - Favicon URL string or null
    */
   async fetchAndCache(url, type = "pinned", forceRefresh = false) {
-    const googleUrl = this._getGoogleFaviconUrl(url, 256);
-    if (!googleUrl) return null;
+    const faviconUrl = this._getFaviconServiceUrl(url, 256);
+    if (!faviconUrl) return null;
 
     const cacheKey = this._getCacheKey(url, type);
 
@@ -276,41 +276,18 @@ class FaviconCacheManager {
       }
     }
 
-    // Fetch from Google Favicon API
-
-    try {
-      const response = await fetch(googleUrl, {
-        cache: forceRefresh ? "reload" : "default",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const dataUrl = await this._blobToDataUrl(blob);
-
-      // Process and downscale if needed
-      const processedDataUrl = await this._processImage(dataUrl);
-
-      // Cache the result
-      await this.setCached(url, processedDataUrl, type, false);
-      this.sessionFetched.add(cacheKey);
-
-      return processedDataUrl;
-    } catch (e) {
-      console.warn("FaviconCache: Error fetching favicon from Google", e);
-      this.sessionFetched.add(cacheKey); // Mark as attempted
-      return null;
-    }
+    // Keep automatic favicons URL-based to avoid CORS fetch failures.
+    await this.setCached(url, faviconUrl, type, false);
+    this.sessionFetched.add(cacheKey);
+    return faviconUrl;
   }
 
   /**
-   * Get favicon URL - uses cache or returns Google API URL as fallback
+   * Get favicon URL - uses cache or returns service URL as fallback
    * @param {string} url - The URL to get favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
    * @param {boolean} preferCached - If true, only return cached version
-   * @returns {Promise<string>} - Data URL or Google API URL
+   * @returns {Promise<string>} - Data URL or service URL
    */
   async getFaviconUrl(url, type = "pinned", preferCached = true) {
     // Try to get cached version first
@@ -321,9 +298,9 @@ class FaviconCacheManager {
 
     // If preferCached is true, don't auto-fetch
     if (preferCached) {
-      const googleUrl = this._getGoogleFaviconUrl(url, 256);
-      if (googleUrl) {
-        return googleUrl;
+      const faviconUrl = this._getFaviconServiceUrl(url, 256);
+      if (faviconUrl) {
+        return faviconUrl;
       }
       return null;
     }
@@ -334,10 +311,10 @@ class FaviconCacheManager {
       return fetched;
     }
 
-    // Fallback to Google API URL
-    const googleUrl = this._getGoogleFaviconUrl(url, 256);
-    if (googleUrl) {
-      return googleUrl;
+    // Fallback to service URL
+    const faviconUrl = this._getFaviconServiceUrl(url, 256);
+    if (faviconUrl) {
+      return faviconUrl;
     }
 
     return null;
@@ -552,10 +529,10 @@ class FaviconCacheManager {
   }
 
   /**
-   * Refresh favicon from Google API (force re-fetch)
+   * Refresh favicon from service URL (force re-fetch)
    * @param {string} url - The URL to refresh favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
-   * @returns {Promise<string|null>} - New base64 data URL or null
+   * @returns {Promise<string|null>} - New favicon URL string or null
    */
   async refreshFromGoogle(url, type = "pinned") {
     return this.fetchAndCache(url, type, true);

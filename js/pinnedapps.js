@@ -313,9 +313,39 @@ class PinnedAppsManager extends BaseManager {
    * Load apps from storage
    */
   loadApps() {
-    this.apps = this.storage.getPinnedApps();
+    const stored = this.storage.getPinnedApps();
+    const apps = Array.isArray(stored) ? stored : [];
+    let migratedFaviconUrl = false;
+
+    this.apps = apps.map((app) => {
+      if (!app || typeof app !== "object") return app;
+
+      const url = typeof app.url === "string" ? app.url : "";
+      if (!url || !this._isExtensionFaviconUrl(app.favicon)) {
+        return app;
+      }
+
+      const migratedFavicon = this.getFaviconUrl(url);
+      if (!migratedFavicon) {
+        return app;
+      }
+
+      migratedFaviconUrl = true;
+      return { ...app, favicon: migratedFavicon };
+    });
+
     // Sort by order
     this.apps.sort((a, b) => a.order - b.order);
+
+    if (migratedFaviconUrl) {
+      this.saveApps();
+    }
+  }
+
+  _isExtensionFaviconUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return false;
+    return /^chrome-extension:\/\/[^/]+\/_favicon\/\?/i.test(raw);
   }
 
   /**
@@ -848,7 +878,6 @@ class PinnedAppsManager extends BaseManager {
       const urlObj = new URL(url);
       const domainBaseUrl = new URL(`${urlObj.origin}/`).href;
 
-      // Use Google's favicon service as primary
       return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(domainBaseUrl)}&sz=256`;
     } catch (e) {
       return null;

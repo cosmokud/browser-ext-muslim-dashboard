@@ -232,6 +232,7 @@ class SearchBarManager extends BaseManager {
         : this.storage.get("customSearches", []);
 
     const list = Array.isArray(raw) ? raw : [];
+    let migratedFaviconUrl = false;
 
     this.searches = list
       .filter(
@@ -243,11 +244,20 @@ class SearchBarManager extends BaseManager {
           .trim()
           .slice(0, 40);
         const url = String(s.url || "").trim();
-        const favicon = typeof s.favicon === "string" ? s.favicon : null;
+        let favicon = typeof s.favicon === "string" ? s.favicon : null;
         const cachedFavicon =
           typeof s.cachedFavicon === "string" ? s.cachedFavicon : null;
         const accentRgb =
           typeof s.accentRgb === "string" ? String(s.accentRgb) : null;
+
+        if (this._isExtensionFaviconUrl(favicon)) {
+          const migratedFavicon = this.getFaviconUrlFromTemplate(url);
+          if (migratedFavicon) {
+            favicon = migratedFavicon;
+            migratedFaviconUrl = true;
+          }
+        }
+
         return { id, name, url, favicon, cachedFavicon, accentRgb };
       })
       .filter((s) => s.name && s.url);
@@ -267,6 +277,10 @@ class SearchBarManager extends BaseManager {
     }
 
     this.ensureSelectionInView();
+
+    if (migratedFaviconUrl) {
+      this.persist();
+    }
   }
 
   persist() {
@@ -1597,6 +1611,27 @@ class SearchBarManager extends BaseManager {
     }
   }
 
+  _isExtensionFaviconUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return false;
+    return /^chrome-extension:\/\/[^/]+\/_favicon\/\?/i.test(raw);
+  }
+
+  _isGoogleFaviconServiceUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return false;
+
+    try {
+      const parsed = new URL(raw);
+      return (
+        parsed.hostname === "www.google.com" &&
+        parsed.pathname === "/s2/favicons"
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   runSearch() {
     const engine = this.getSelected();
 
@@ -1777,6 +1812,12 @@ class SearchBarManager extends BaseManager {
   }
 
   async _computeFaviconDominantRgb(url) {
+    // Google's favicon endpoint is display-safe as <img> but unreliable for fetch()
+    // due redirects/CORS. Skip to avoid noisy errors.
+    if (this._isGoogleFaviconServiceUrl(url)) {
+      return null;
+    }
+
     // "Hack" dominant color: draw the whole image into a 1x1 canvas.
     // We still fetch->blob->objectURL to avoid CORS/canvas taint issues.
     let blob;
