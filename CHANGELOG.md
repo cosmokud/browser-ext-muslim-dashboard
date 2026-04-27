@@ -1,3 +1,17 @@
+## [0.1.8] - 2026-04-27
+
+### What is New
+
+- Updated release packaging to include `offscreen.html` in Web Store build artifacts.
+
+### Bug Fixes
+
+- Fixed a critical release-packaging issue where `offscreen.html` was omitted from packaged builds, which could break features that rely on the extension offscreen document.
+
+### Other Improvements
+
+- Updated extension version references to 0.1.8 across runtime metadata and project documentation.
+
 ## [0.1.7] - 2026-04-27
 
 ### What is New
