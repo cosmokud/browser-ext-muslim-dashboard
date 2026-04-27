@@ -4,12 +4,14 @@
 
 - Improved Prayer Times and Pocket Quran translation panel styling with better overflow handling.
 - Expanded Pocket Quran fallback translation coverage and refined fallback lookup behavior.
+- Improved favicon handling in Pinned Apps and Search with consistent domain-based URL normalization.
 - Updated Sticky Notes scrollbar behavior to stay hidden until the note is hovered, focused, or active.
 
 ### Bug Fixes
 
 - Fixed overflow clipping issues in prayer and translation list panels at constrained heights.
 - Fixed fallback translation retrieval edge cases where available translation text was not selected reliably.
+- Fixed favicon refresh reliability by validating URL/template inputs and using a direct favicon fallback when cache refresh misses.
 - Fixed Sticky Notes paste behavior to always strip external formatting and insert plain text only.
 
 ### Other Improvements
