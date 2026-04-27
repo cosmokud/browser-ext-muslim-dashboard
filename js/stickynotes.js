@@ -1560,6 +1560,11 @@ class StickyNotesManager {
       this.updateNoteContent(note.id, content.innerHTML);
     });
 
+    // Force plain-text paste (same behavior as Ctrl+Shift+V).
+    content.addEventListener("paste", (e) => {
+      this.handlePlainTextPaste(e, content, note.id);
+    });
+
     // URL detection and CTRL+click handling
     content.addEventListener("click", (e) => {
       if (e.ctrlKey || e.metaKey) {
@@ -1657,6 +1662,78 @@ class StickyNotesManager {
       handle.addEventListener("mousedown", startResize);
       handle.addEventListener("touchstart", startResize, { passive: false });
     });
+  }
+
+  /**
+   * Paste plain text into sticky note content and strip external formatting.
+   */
+  handlePlainTextPaste(event, contentEl, noteId) {
+    const clipboard = event.clipboardData || window.clipboardData;
+    if (!clipboard) return;
+
+    let plainText = clipboard.getData("text/plain") || "";
+    if (!plainText) {
+      const html = clipboard.getData("text/html") || "";
+      if (html) {
+        const container = document.createElement("div");
+        container.innerHTML = html;
+        plainText = container.textContent || container.innerText || "";
+      }
+    }
+
+    plainText = plainText.replace(/\r\n?/g, "\n").replace(/\u0000/g, "");
+    if (!plainText) return;
+
+    event.preventDefault();
+    this.insertPlainTextAtCursor(plainText);
+    this.updateNoteContent(noteId, contentEl.innerHTML);
+  }
+
+  /**
+   * Insert plain text at the current cursor position in the active editable note.
+   */
+  insertPlainTextAtCursor(text) {
+    if (!text) return;
+
+    try {
+      if (
+        typeof document.queryCommandSupported === "function" &&
+        document.queryCommandSupported("insertText") &&
+        document.execCommand("insertText", false, text)
+      ) {
+        return;
+      }
+    } catch (err) {
+      // Fallback to manual range insertion when insertText is unavailable.
+    }
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+
+    const fragment = document.createDocumentFragment();
+    let lastInsertedNode = null;
+    text.split("\n").forEach((line, index) => {
+      if (index > 0) {
+        const br = document.createElement("br");
+        fragment.appendChild(br);
+        lastInsertedNode = br;
+      }
+      const textNode = document.createTextNode(line);
+      fragment.appendChild(textNode);
+      lastInsertedNode = textNode;
+    });
+
+    range.insertNode(fragment);
+
+    if (lastInsertedNode) {
+      range.setStartAfter(lastInsertedNode);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
 
   /**
