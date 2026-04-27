@@ -3849,12 +3849,7 @@ textarea.notes-editor:focus {
   flex: 0 0 auto;
 }
 
-.card.prayer-times-card .next-prayer {
-  margin-top: auto;
-}
-
 .card.prayer-times-card .prayer-list {
-  margin-bottom: auto;
 }
 
 .location-display {
