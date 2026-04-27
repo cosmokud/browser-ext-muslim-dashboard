@@ -479,32 +479,43 @@ class SearchBarManager extends BaseManager {
    * Handle refresh favicon button click
    */
   async handleRefreshFavicon() {
-    const url = this.editUrl?.value.trim();
-    if (!url) {
+    const rawUrl = this.editUrl?.value.trim();
+    if (!rawUrl) {
       this.showFaviconStatus("Please enter a URL first", "error");
       return;
     }
 
+    // Search templates must remain valid URL templates.
+    const normalized = this._normalizeAndValidateTemplate("Search", rawUrl);
+    if (!normalized) return;
+    const url = normalized.url;
+
     this.showFaviconStatus("Fetching favicon...", "loading");
 
     try {
+      let refreshedFaviconUrl = null;
+
       if (window.faviconCache) {
         const dataUrl = await window.faviconCache.refreshFromGoogle(
           url,
           "search",
         );
         if (dataUrl) {
-          this.pendingFaviconDataUrl = dataUrl;
-          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
-          this.showFaviconStatus("Favicon refreshed!", "success");
-        } else {
-          this.showFaviconStatus("Could not fetch favicon", "error");
+          refreshedFaviconUrl = dataUrl;
         }
-      } else {
-        // Fallback without cache
-        const faviconUrl = this.getFaviconUrlFromTemplate(url);
-        this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
+      }
+
+      // Fallback: use direct URL even when cache refresh fails.
+      if (!refreshedFaviconUrl) {
+        refreshedFaviconUrl = this.getFaviconUrlFromTemplate(url);
+      }
+
+      if (refreshedFaviconUrl) {
+        this.pendingFaviconDataUrl = refreshedFaviconUrl;
+        this._renderFaviconPreview(this.editFaviconPreview, refreshedFaviconUrl);
         this.showFaviconStatus("Favicon refreshed!", "success");
+      } else {
+        this.showFaviconStatus("Could not fetch favicon", "error");
       }
     } catch (e) {
       this.showFaviconStatus("Error refreshing favicon", "error");
@@ -1578,6 +1589,16 @@ class SearchBarManager extends BaseManager {
 
     try {
       const urlObj = new URL(test);
+
+      if (urlObj.hostname === "docs.google.com") {
+        urlObj.pathname = urlObj.pathname.replace(
+          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
+          "/$1",
+        );
+      }
+
+      urlObj.hash = "";
+
       return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
     } catch (e) {
       return null;

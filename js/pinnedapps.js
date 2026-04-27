@@ -501,41 +501,52 @@ class PinnedAppsManager extends BaseManager {
    * Handle refresh favicon button click
    */
   async handleRefreshFavicon() {
-    const url = this.editUrlInput?.value.trim();
-    if (!url) {
+    const rawUrl = this.editUrlInput?.value.trim();
+    if (!rawUrl) {
       this.showFaviconStatus("Please enter a URL first", "error");
       return;
     }
 
     // Ensure URL has protocol
-    let normalizedUrl = url;
-    if (
-      !normalizedUrl.startsWith("http://") &&
-      !normalizedUrl.startsWith("https://")
-    ) {
+    let normalizedUrl = rawUrl;
+    if (!/^https?:\/\//i.test(normalizedUrl)) {
       normalizedUrl = "https://" + normalizedUrl;
+    }
+
+    // Validate URL before attempting refresh
+    try {
+      normalizedUrl = new URL(normalizedUrl).href;
+    } catch (e) {
+      this.showFaviconStatus("Please enter a valid URL", "error");
+      return;
     }
 
     this.showFaviconStatus("Fetching favicon...", "loading");
 
     try {
+      let refreshedFaviconUrl = null;
+
       if (window.faviconCache) {
         const dataUrl = await window.faviconCache.refreshFromGoogle(
           normalizedUrl,
           "pinned",
         );
         if (dataUrl) {
-          this.pendingFaviconDataUrl = dataUrl;
-          this._renderFaviconPreview(this.editFaviconPreview, dataUrl);
-          this.showFaviconStatus("Favicon refreshed!", "success");
-        } else {
-          this.showFaviconStatus("Could not fetch favicon", "error");
+          refreshedFaviconUrl = dataUrl;
         }
-      } else {
-        // Fallback without cache
-        const faviconUrl = this.getFaviconUrl(normalizedUrl);
-        this._renderFaviconPreview(this.editFaviconPreview, faviconUrl);
+      }
+
+      // Fallback: use direct URL even when cache refresh fails.
+      if (!refreshedFaviconUrl) {
+        refreshedFaviconUrl = this.getFaviconUrl(normalizedUrl);
+      }
+
+      if (refreshedFaviconUrl) {
+        this.pendingFaviconDataUrl = refreshedFaviconUrl;
+        this._renderFaviconPreview(this.editFaviconPreview, refreshedFaviconUrl);
         this.showFaviconStatus("Favicon refreshed!", "success");
+      } else {
+        this.showFaviconStatus("Could not fetch favicon", "error");
       }
     } catch (e) {
       this.showFaviconStatus("Error refreshing favicon", "error");
@@ -835,6 +846,16 @@ class PinnedAppsManager extends BaseManager {
   getFaviconUrl(url) {
     try {
       const urlObj = new URL(url);
+
+      if (urlObj.hostname === "docs.google.com") {
+        urlObj.pathname = urlObj.pathname.replace(
+          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
+          "/$1",
+        );
+      }
+
+      urlObj.hash = "";
+
       // Use Google's favicon service as primary
       return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(urlObj.href)}&sz=256`;
     } catch (e) {

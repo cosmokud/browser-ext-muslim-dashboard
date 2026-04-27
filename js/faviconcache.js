@@ -69,13 +69,42 @@ class FaviconCacheManager {
    * Generate a cache key from URL
    */
   _getCacheKey(url, type = "pinned") {
+    const normalizedUrl = this._normalizeLookupUrl(url);
+    if (normalizedUrl) {
+      // Path-aware keys avoid collisions on shared hosts (e.g., docs/sheets).
+      return `${type}:${normalizedUrl}`;
+    }
+
+    // For non-URL strings (like malformed templates), fall back to a safe key.
+    const sanitized = String(url || "").replace(/[^a-zA-Z0-9.-]/g, "_");
+    return `${type}:${sanitized}`;
+  }
+
+  /**
+   * Normalize URL inputs for cache lookups and Google favicon requests.
+   */
+  _normalizeLookupUrl(url) {
+    const rawUrl = String(url || "").trim();
+    if (!rawUrl) return null;
+
     try {
-      const urlObj = new URL(url);
-      return `${type}:${urlObj.hostname}`;
+      // Keep template URLs parseable without changing non-template URLs.
+      const normalizedUrl = new URL(rawUrl.replace(/%s/g, "test"));
+      normalizedUrl.hash = "";
+
+      // Google Workspace often injects account-scoped /u/<n>/ segments.
+      // Canonicalize those paths so favicon resolution stays product-specific.
+      if (normalizedUrl.hostname === "docs.google.com") {
+        const canonicalPath = normalizedUrl.pathname.replace(
+          /^\/(document|spreadsheets|presentation|forms|drawings)\/u\/\d+(?=\/|$)/,
+          "/$1",
+        );
+        normalizedUrl.pathname = canonicalPath;
+      }
+
+      return normalizedUrl.href;
     } catch (e) {
-      // For non-URL strings (like template URLs with %s)
-      const sanitized = url.replace(/[^a-zA-Z0-9.-]/g, "_");
-      return `${type}:${sanitized}`;
+      return null;
     }
   }
 
@@ -83,14 +112,10 @@ class FaviconCacheManager {
    * Build Google favicon API URL using the full URL (not hostname only)
    */
   _getGoogleFaviconUrl(url, size = 256) {
-    try {
-      // Handle URL templates with %s
-      const cleanUrl = String(url).replace(/%s/g, "test");
-      const normalizedUrl = new URL(cleanUrl).href;
-      return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(normalizedUrl)}&sz=${size}`;
-    } catch (e) {
-      return null;
-    }
+    const normalizedUrl = this._normalizeLookupUrl(url);
+    if (!normalizedUrl) return null;
+
+    return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(normalizedUrl)}&sz=${size}`;
   }
 
   /**

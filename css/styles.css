@@ -3849,9 +3849,6 @@ textarea.notes-editor:focus {
   flex: 0 0 auto;
 }
 
-.card.prayer-times-card .prayer-list {
-}
-
 .location-display {
   display: flex;
   align-items: center;
