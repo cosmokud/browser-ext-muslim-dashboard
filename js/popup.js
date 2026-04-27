@@ -727,7 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return (
       window.prompt(
-        "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)",
+        "Paste coordinates (e.g., -2.0104945156119673, 120.13398946553744)",
       ) || ""
     );
   }
@@ -3290,9 +3290,19 @@ document.addEventListener("DOMContentLoaded", () => {
     ).trim();
 
     const baseName = String(
-      entry?.name || entry?.translated_name?.name || "",
+      entry?.name ||
+        entry?.translated_name?.name ||
+        entry?.title ||
+        entry?.text ||
+        "",
     ).trim();
-    const author = String(entry?.author_name || entry?.author || "").trim();
+    const author = String(
+      entry?.author_name ||
+        entry?.author ||
+        entry?.translated_name?.name ||
+        entry?.writer ||
+        "",
+    ).trim();
 
     let label = baseName || author || `Translation ${id}`;
     if (
@@ -3303,9 +3313,16 @@ document.addEventListener("DOMContentLoaded", () => {
       label = `${baseName} — ${author}`;
     }
 
+    const labelOverrides = {
+      33: "Indonesian Islamic Affairs Ministry",
+      134: "King Fahad Quran Complex",
+      141: "The Sabiq Company",
+    };
+    const finalLabel = labelOverrides[id] || label;
+
     return {
       id,
-      label,
+      label: finalLabel,
       language: language || "Other",
     };
   }
