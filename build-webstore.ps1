@@ -25,12 +25,18 @@ if ($manifestVersion -notmatch '^\d+\.\d+\.\d+$') {
 $zipName = "muslim-dashboard-v$manifestVersion.zip"
 $zipPath = Join-Path $distRoot $zipName
 
-$topLevelFiles = @(
-  "manifest.json",
-  "index.html",
-  "popup.html",
-  "offscreen.html"
+$topLevelFiles = @("manifest.json")
+$topLevelHtmlFiles = @(
+  Get-ChildItem -Path $repoRoot -File -Filter *.html |
+    Sort-Object -Property Name |
+    Select-Object -ExpandProperty Name
 )
+
+if ($topLevelHtmlFiles.Count -eq 0) {
+  throw "No top-level HTML files found. Expected at least one extension entry page."
+}
+
+$topLevelFiles += $topLevelHtmlFiles
 
 $runtimeDirectories = @(
   "assets",
@@ -105,6 +111,175 @@ function Write-MatchList {
   }
 }
 
+function Add-RelativePathToSet {
+  param(
+    [hashtable]$TargetSet,
+    [string]$PathValue
+  )
+
+  if ([string]::IsNullOrWhiteSpace($PathValue)) {
+    return
+  }
+
+  $candidate = $PathValue.Replace("\", "/").Trim()
+  if ([string]::IsNullOrWhiteSpace($candidate)) {
+    return
+  }
+
+  if (
+    $candidate.StartsWith("http://") -or
+    $candidate.StartsWith("https://") -or
+    $candidate.StartsWith("data:") -or
+    $candidate.StartsWith("chrome-extension://")
+  ) {
+    return
+  }
+
+  if ($candidate.Contains("*")) {
+    return
+  }
+
+  $candidate = $candidate.TrimStart("/")
+  if ([string]::IsNullOrWhiteSpace($candidate)) {
+    return
+  }
+
+  $TargetSet[$candidate] = $true
+}
+
+function Add-ManifestPathsFromValue {
+  param(
+    [hashtable]$TargetSet,
+    [object]$Value
+  )
+
+  if ($null -eq $Value) {
+    return
+  }
+
+  if ($Value -is [string]) {
+    Add-RelativePathToSet -TargetSet $TargetSet -PathValue $Value
+    return
+  }
+
+  $psProperties = @()
+  if ($null -ne $Value.PSObject) {
+    $psProperties = @($Value.PSObject.Properties)
+  }
+
+  if ($Value -is [System.Array]) {
+    foreach ($entry in $Value) {
+      Add-ManifestPathsFromValue -TargetSet $TargetSet -Value $entry
+    }
+    return
+  }
+
+  if (
+    $Value -is [System.Collections.IEnumerable] -and
+    -not ($Value -is [string]) -and
+    $psProperties.Count -eq 0
+  ) {
+    foreach ($entry in $Value) {
+      Add-ManifestPathsFromValue -TargetSet $TargetSet -Value $entry
+    }
+    return
+  }
+
+  if ($psProperties.Count -gt 0) {
+    foreach ($property in $psProperties) {
+      Add-ManifestPathsFromValue -TargetSet $TargetSet -Value $property.Value
+    }
+  }
+}
+
+function Assert-ReferencedFilesExist {
+  param(
+    [string]$RootPath,
+    [hashtable]$RelativePathSet,
+    [string]$ErrorPrefix
+  )
+
+  foreach ($relativePath in ($RelativePathSet.Keys | Sort-Object)) {
+    $absolutePath = Join-Path $RootPath $relativePath
+    if (-not (Test-Path -LiteralPath $absolutePath)) {
+      throw "$ErrorPrefix$relativePath"
+    }
+  }
+}
+
+function Get-PathWithoutQueryOrHash {
+  param([string]$Value)
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return ""
+  }
+
+  $clean = $Value
+  $hashIndex = $clean.IndexOf("#")
+  if ($hashIndex -ge 0) {
+    $clean = $clean.Substring(0, $hashIndex)
+  }
+
+  $queryIndex = $clean.IndexOf("?")
+  if ($queryIndex -ge 0) {
+    $clean = $clean.Substring(0, $queryIndex)
+  }
+
+  return $clean.Trim()
+}
+
+function Get-ObjectPropertyValue {
+  param(
+    [object]$ObjectValue,
+    [string]$PropertyName
+  )
+
+  if ($null -eq $ObjectValue) {
+    return $null
+  }
+
+  $property = $ObjectValue.PSObject.Properties[$PropertyName]
+  if ($null -eq $property) {
+    return $null
+  }
+
+  return $property.Value
+}
+
+$manifestReferencedPaths = @{}
+
+# Manifest entry points/pages
+$manifestBackground = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "background"
+$manifestAction = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "action"
+$manifestOptionsUi = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "options_ui"
+$manifestSidePanel = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "side_panel"
+$manifestSandbox = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "sandbox"
+$manifestWebAccessibleResources = Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "web_accessible_resources"
+
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifestBackground -PropertyName "service_worker")
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifestAction -PropertyName "default_popup")
+Add-ManifestPathsFromValue -TargetSet $manifestReferencedPaths -Value (Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "chrome_url_overrides")
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "options_page")
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "devtools_page")
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifestOptionsUi -PropertyName "page")
+Add-RelativePathToSet -TargetSet $manifestReferencedPaths -PathValue (Get-ObjectPropertyValue -ObjectValue $manifestSidePanel -PropertyName "default_path")
+Add-ManifestPathsFromValue -TargetSet $manifestReferencedPaths -Value (Get-ObjectPropertyValue -ObjectValue $manifestSandbox -PropertyName "pages")
+
+# Manifest assets
+Add-ManifestPathsFromValue -TargetSet $manifestReferencedPaths -Value (Get-ObjectPropertyValue -ObjectValue $manifest -PropertyName "icons")
+Add-ManifestPathsFromValue -TargetSet $manifestReferencedPaths -Value (Get-ObjectPropertyValue -ObjectValue $manifestAction -PropertyName "default_icon")
+
+if ($manifestWebAccessibleResources) {
+  foreach ($entry in $manifestWebAccessibleResources) {
+    Add-ManifestPathsFromValue -TargetSet $manifestReferencedPaths -Value (Get-ObjectPropertyValue -ObjectValue $entry -PropertyName "resources")
+  }
+}
+
+Assert-ReferencedFilesExist `
+  -RootPath $repoRoot `
+  -RelativePathSet $manifestReferencedPaths `
+  -ErrorPrefix "manifest.json references a missing source file: "
+
 if (Test-Path -LiteralPath $distRoot) {
   Remove-Item -LiteralPath $distRoot -Recurse -Force
 }
@@ -129,12 +304,86 @@ foreach ($dir in $runtimeDirectories) {
   Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $packageRoot $dir) -Recurse -Force
 }
 
+Assert-ReferencedFilesExist `
+  -RootPath $packageRoot `
+  -RelativePathSet $manifestReferencedPaths `
+  -ErrorPrefix "Packaged extension is missing manifest-referenced file: "
+
 $legacySnapshotPath = Join-Path $packageRoot "data\hisn.html"
 if (Test-Path -LiteralPath $legacySnapshotPath) {
   Remove-Item -LiteralPath $legacySnapshotPath -Force
 }
 
 $htmlFiles = Get-ChildItem -Path $packageRoot -Recurse -File -Include *.html
+
+foreach ($htmlFile in $htmlFiles) {
+  $htmlContent = Get-Content -LiteralPath $htmlFile.FullName -Raw
+  $tagMatches = [regex]::Matches(
+    $htmlContent,
+    '(?is)<(?:script\b[^>]*\bsrc|link\b[^>]*\bhref)\s*=\s*["'']([^"'']+)["'']'
+  )
+
+  foreach ($match in $tagMatches) {
+    $rawReference = $match.Groups[1].Value
+    $normalizedReference = Get-PathWithoutQueryOrHash -Value $rawReference
+    if ([string]::IsNullOrWhiteSpace($normalizedReference)) {
+      continue
+    }
+
+    if (
+      $normalizedReference.StartsWith("http://") -or
+      $normalizedReference.StartsWith("https://") -or
+      $normalizedReference.StartsWith("//") -or
+      $normalizedReference.StartsWith("data:") -or
+      $normalizedReference.StartsWith("#")
+    ) {
+      continue
+    }
+
+    $resolvedPath =
+      if ($normalizedReference.StartsWith("/")) {
+        Join-Path $packageRoot ($normalizedReference.TrimStart("/"))
+      } else {
+        Join-Path $htmlFile.Directory.FullName $normalizedReference
+      }
+
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+      throw "HTML reference missing in package: $($htmlFile.FullName) -> $normalizedReference"
+    }
+  }
+}
+
+$codeFilesForRuntimeGetUrlCheck = Get-ChildItem -Path $packageRoot -Recurse -File -Include *.js,*.html
+foreach ($codeFile in $codeFilesForRuntimeGetUrlCheck) {
+  $codeContent = Get-Content -LiteralPath $codeFile.FullName -Raw
+  $runtimeGetUrlMatches = [regex]::Matches(
+    $codeContent,
+    'chrome\.runtime\.getURL\(\s*["'']([^"'']+)["'']\s*\)'
+  )
+
+  foreach ($match in $runtimeGetUrlMatches) {
+    $rawReference = $match.Groups[1].Value
+    $normalizedReference = Get-PathWithoutQueryOrHash -Value $rawReference
+    if ([string]::IsNullOrWhiteSpace($normalizedReference)) {
+      continue
+    }
+
+    if (
+      $normalizedReference.StartsWith("http://") -or
+      $normalizedReference.StartsWith("https://") -or
+      $normalizedReference.StartsWith("data:") -or
+      $normalizedReference.Contains("*")
+    ) {
+      continue
+    }
+
+    $resolvedPath = Join-Path $packageRoot ($normalizedReference.TrimStart("/"))
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+      throw "chrome.runtime.getURL() references missing file in package: $($codeFile.FullName) -> $normalizedReference"
+    }
+  }
+}
+
 $remoteScriptMatches = @()
 if ($htmlFiles) {
   $remoteScriptMatches = @(
