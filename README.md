@@ -114,7 +114,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.6.zip`
+Example: `muslim-dashboard-v0.1.7.zip`
 
 ### Build output
 

@@ -1,3 +1,20 @@
+## [0.1.7] - 2026-04-27
+
+### What is New
+
+- Improved Prayer Times and Pocket Quran translation panel styling with better overflow handling.
+- Expanded Pocket Quran fallback translation coverage and refined fallback lookup behavior.
+
+### Bug Fixes
+
+- Fixed overflow clipping issues in prayer and translation list panels at constrained heights.
+- Fixed fallback translation retrieval edge cases where available translation text was not selected reliably.
+
+### Other Improvements
+
+- Refined popup label generation logic for cleaner UI wording.
+- Updated extension version references to 0.1.7 across runtime metadata and project documentation.
+
 ## [0.1.6] - 2026-04-24
 
 ### What is New
