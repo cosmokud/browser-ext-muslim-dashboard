@@ -750,6 +750,28 @@ class MuslimDashboard {
         this.syncSidebarModeWithLayoutEditMode();
       }, 120);
     });
+
+    // Wake/resume safeguard: some systems return from sleep without a reliable
+    // resize event, so re-assert sidebar/layout state when the tab becomes active.
+    const scheduleSidebarWakeSync = (reason = "wake") => {
+      const runSync = () => {
+        try {
+          this.gridLayout?.handleViewportResize?.(`resume-${reason}`);
+        } catch (e) {}
+        this.syncSidebarModeWithLayoutEditMode();
+      };
+
+      requestAnimationFrame(runSync);
+      setTimeout(runSync, 180);
+    };
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        scheduleSidebarWakeSync("visibility");
+      }
+    });
+    window.addEventListener("focus", () => scheduleSidebarWakeSync("focus"));
+    window.addEventListener("pageshow", () => scheduleSidebarWakeSync("pageshow"));
   }
 
   /**
