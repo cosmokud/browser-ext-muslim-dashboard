@@ -713,9 +713,20 @@ class MuslimDashboard {
 
         try {
           const s = this.storage.getSettings();
-          s.sidebarModeEnabled = false;
-          if (s.lastDashboardMode === "sidebar") {
-            s.lastDashboardMode = "normal";
+          const autoBlockedByViewport =
+            this.gridLayout?.isSidebarAutoEnableBlocked?.() === true;
+
+          // Keep user's sidebar preference when collapse was automatic due to
+          // viewport clipping (startup/small window). This allows auto-restore
+          // when space returns and across browser restarts.
+          if (!autoBlockedByViewport) {
+            s.sidebarModeEnabled = false;
+            if (s.lastDashboardMode === "sidebar") {
+              s.lastDashboardMode = "normal";
+            }
+          } else {
+            s.sidebarModeEnabled = true;
+            s.lastDashboardMode = "sidebar";
           }
           this.storage.saveSettings(s);
         } catch (e) {}
