@@ -221,12 +221,27 @@ class MuslimDashboard {
 
     // Enable JS-driven autohide mode (graceful: without JS toggle remains visible)
     menu.classList.add("autohide");
-    toggle.setAttribute("aria-hidden", "true");
+    toggle.setAttribute("inert", "");
+    toggle.setAttribute("tabindex", "-1");
 
     const setHotVisible = (visible) => {
       menu.classList.toggle("hot-visible", visible);
       try {
-        toggle.setAttribute("aria-hidden", visible ? "false" : "true");
+        if (visible) {
+          toggle.removeAttribute("inert");
+          toggle.removeAttribute("tabindex");
+          return;
+        }
+
+        // Never hide a currently focused control from the accessibility tree.
+        if (document.activeElement === toggle) {
+          try {
+            toggle.blur();
+          } catch (e) {}
+        }
+
+        toggle.setAttribute("inert", "");
+        toggle.setAttribute("tabindex", "-1");
       } catch (e) {}
     };
 
@@ -243,7 +258,7 @@ class MuslimDashboard {
 
             if (opts.returnFocusToToggle) {
               try {
-                if (toggle.getAttribute("aria-hidden") !== "true") {
+                if (!toggle.hasAttribute("inert")) {
                   toggle.focus({ preventScroll: true });
                 }
               } catch (e) {}
