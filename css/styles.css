@@ -15591,6 +15591,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin-left: var(--spacing-sm);
 }
 
+#pocketQuranCard
+  .card-header-actions
+  > .pocket-quran-header-meta
+  + .pq-search-btn {
+  margin-left: var(--spacing-sm) !important;
+}
+
 /* Bookmark Modal */
 .pq-bookmark-modal {
   position: fixed;
