@@ -2152,6 +2152,22 @@ class PocketQuranManager extends BaseManager {
     const multiplier = this.getEffectiveBlurMultiplier();
     try {
       el.style.setProperty("--ui-blur-multiplier", String(multiplier));
+      const sourceStyle = this.card ? getComputedStyle(this.card) : null;
+      [
+        "--glass-bg",
+        "--glass-bg-hover",
+        "--glass-bg-subtle",
+        "--glass-border",
+        "--glass-shadow",
+      ].forEach((prop) => {
+        const value = sourceStyle?.getPropertyValue(prop);
+        if (value) el.style.setProperty(prop, value.trim());
+      });
+      if (this.card?.dataset.glassEnabled) {
+        el.dataset.glassEnabled = this.card.dataset.glassEnabled;
+      } else {
+        delete el.dataset.glassEnabled;
+      }
     } catch (e) {}
   }
 
