@@ -1,3 +1,19 @@
+## [0.1.9] - 2026-05-15
+
+### What is New
+
+- Added wake/visibility/focus sync to re-assert sidebar layout state after sleep or tab activation.
+- Improved FAB menu accessibility with focus-safe inert handling and custom tooltip support.
+
+### Bug Fixes
+
+- Fixed sidebar layout not restoring reliably after system wake or visibility changes.
+
+### Other Improvements
+
+- Sidebar mode now preserves user preference when auto-collapsing due to viewport constraints.
+- Updated extension version references to 0.1.9 across runtime metadata and project documentation.
+
 ## [0.1.8] - 2026-04-27
 
 ### What is New

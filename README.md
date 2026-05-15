@@ -48,6 +48,7 @@ The project targets Chromium-based browsers with Manifest V3.
 - Card-level blur/glass controls for selected modules.
 - Multiple dashboard modes: grid layout, sidebar mode, floating cards, moment mode, and Quran focus mode.
 - Drag-and-drop layout editing with persisted card placement.
+- Sidebar mode auto-recovers on wake/visibility changes and preserves user preference across viewport changes.
 - Performance mode to reduce animation/effect cost on lower-end hardware.
 
 ### Navigation and discovery
@@ -55,6 +56,10 @@ The project targets Chromium-based browsers with Manifest V3.
 - Pinned Apps strip with add/edit/remove, favicon handling, and reorder support.
 - Search Bar with configurable engines and custom engine management.
 - Unified content search across quotes, adhkar, hadith, notes, and todo content.
+
+### Accessibility and UX
+
+- FAB quick menu uses focus-safe visibility handling and custom tooltips.
 
 ### Extension platform features
 
@@ -114,7 +119,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.8.zip`
+Example: `muslim-dashboard-v0.1.9.zip`
 
 ### Build output
 
@@ -160,6 +165,7 @@ Example: `muslim-dashboard-v0.1.8.zip`
 
 - Code of Conduct: `CODE_OF_CONDUCT.md`
 - Contributing Guide: `CONTRIBUTING.md`
+- Architecture: `ARCHITECTURE.md`
 - Security Policy: `SECURITY.md`
 - License: `LICENSE` (MIT)
 
