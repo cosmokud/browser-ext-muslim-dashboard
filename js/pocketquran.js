@@ -79,6 +79,7 @@ class PocketQuranCacheManager {
     return (
       raw.includes("/chapters") ||
       raw.includes("/verses/by_chapter/") ||
+      raw.includes("/quran/translations/") ||
       raw.includes("/quran/verses/uthmani_tajweed") ||
       raw.includes("/resources/recitations") ||
       raw.includes("/recitations/") ||
@@ -646,6 +647,15 @@ class PocketQuranManager extends BaseManager {
     // Verse caching
     this._versesCache = new Map();
     this._activeVerses = null;
+    this._fullTranslationCache = new Map();
+    this._searchModal = null;
+    this._searchInput = null;
+    this._searchResultsEl = null;
+    this._searchStatusEl = null;
+    this._searchProgressEl = null;
+    this._searchProgressTextEl = null;
+    this._searchSubmitBtn = null;
+    this._isSearchLoading = false;
 
     // Virtualization state
     this._virtualContainer = null;
@@ -813,6 +823,7 @@ class PocketQuranManager extends BaseManager {
 
     // Initialize bookmark system
     this.ensureDefaultBookmarkCategory();
+    this.createPocketQuranSearchButton();
     this.createBookmarkButton();
     this.createBookmarkModals();
     this.createTranslationModal();
@@ -2618,6 +2629,150 @@ class PocketQuranManager extends BaseManager {
 
     // Reload the current surah
     this.loadSurah(this._activeSurah, { autoScroll: false });
+  }
+
+  getFullTranslationCacheKey(translationId) {
+    const id = this.normalizeTranslationId(translationId);
+    return `translation_full|${id}`;
+  }
+
+  getFullTranslationApiUrl(translationId) {
+    const id = this.normalizeTranslationId(translationId);
+    return `${PocketQuranManager.API_BASE}/quran/translations/${id}`;
+  }
+
+  getFullTranslationChapterApiUrl(surah, translationId) {
+    const chapter = this.clampNumber(surah, 1, 114, 1);
+    const id = this.normalizeTranslationId(translationId);
+    return `${PocketQuranManager.API_BASE}/verses/by_chapter/${chapter}?fields=text_uthmani,verse_number,verse_key&translations=${id}&per_page=300`;
+  }
+
+  async getCachedFullTranslation(translationId) {
+    const key = this.getFullTranslationCacheKey(translationId);
+    const memoryRecord = this._fullTranslationCache.get(key);
+    if (Array.isArray(memoryRecord?.verses) && memoryRecord.verses.length) {
+      return { ...memoryRecord, source: "memory" };
+    }
+
+    if (!this._pqCache) return null;
+
+    const cached = await this._pqCache.getJson(key);
+    if (Array.isArray(cached?.verses) && cached.verses.length) {
+      this._fullTranslationCache.set(key, cached);
+      return { ...cached, source: "indexeddb" };
+    }
+
+    return null;
+  }
+
+  async setCachedFullTranslation(translationId, record) {
+    const key = this.getFullTranslationCacheKey(translationId);
+    this._fullTranslationCache.set(key, record);
+    if (this._pqCache) {
+      await this._pqCache.setJson(key, record, "quran_translation_full");
+    }
+  }
+
+  async ensureFullTranslationCache(translationId, onProgress = null) {
+    const id = this.normalizeTranslationId(translationId);
+    const cached = await this.getCachedFullTranslation(id);
+    if (cached) {
+      if (typeof onProgress === "function") {
+        onProgress({ done: 114, total: 114, source: cached.source });
+      }
+      return cached;
+    }
+
+    const chapters =
+      Array.isArray(this._chapters) && this._chapters.length
+        ? this._chapters
+        : Array.from({ length: 114 }, (_, idx) => ({ id: idx + 1 }));
+    const verses = [];
+    const total = chapters.length;
+
+    for (let i = 0; i < total; i += 1) {
+      const surah = this.clampNumber(chapters[i]?.id, 1, 114, i + 1);
+      const data = await this.fetchJson(
+        this.getFullTranslationChapterApiUrl(surah, id),
+        { timeoutMs: 20000 },
+      );
+      const chapterVerses = Array.isArray(data?.verses) ? data.verses : [];
+
+      chapterVerses.forEach((verse) => {
+        if (!verse?.verse_key && !Number.isFinite(verse?.verse_number)) return;
+        verses.push({
+          ...verse,
+          chapter_id: verse.chapter_id || surah,
+          verse_key: verse.verse_key || `${surah}:${verse.verse_number}`,
+        });
+      });
+
+      if (typeof onProgress === "function") {
+        onProgress({ done: i + 1, total, source: "network" });
+      }
+    }
+
+    verses.sort((a, b) => {
+      const [aSurah, aAyah] = String(a.verse_key || "0:0")
+        .split(":")
+        .map((n) => parseInt(n, 10) || 0);
+      const [bSurah, bAyah] = String(b.verse_key || "0:0")
+        .split(":")
+        .map((n) => parseInt(n, 10) || 0);
+      return aSurah === bSurah ? aAyah - bAyah : aSurah - bSurah;
+    });
+
+    const record = {
+      translationId: id,
+      sourceUrl: this.getFullTranslationApiUrl(id),
+      verses,
+      fetchedAt: Date.now(),
+    };
+    await this.setCachedFullTranslation(id, record);
+    return { ...record, source: "network" };
+  }
+
+  buildPocketQuranSearchResults(query, verses) {
+    const normalizedQuery = String(query || "").replace(/\s+/g, " ").trim();
+    if (!normalizedQuery) return [];
+
+    const terms = normalizedQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    const cleanHtml =
+      typeof this.stripHtmlToText === "function"
+        ? (value) => this.stripHtmlToText(value)
+        : (value) =>
+            String(value || "")
+              .replace(/<sup[^>]*>.*?<\/sup>/gi, "")
+              .replace(/<[^>]*>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+
+    return (Array.isArray(verses) ? verses : [])
+      .map((verse) => {
+        const rawTranslation = Array.isArray(verse?.translations)
+          ? verse.translations[0]?.text
+          : "";
+        const translationText = cleanHtml(rawTranslation || "");
+        const verseKey = String(verse?.verse_key || "");
+        const [keySurah, keyAyah] = verseKey
+          .split(":")
+          .map((n) => parseInt(n, 10) || 0);
+        const surah = verse?.chapter_id || keySurah;
+        const ayah = verse?.verse_number || keyAyah;
+
+        return {
+          verseKey: verseKey || `${surah}:${ayah}`,
+          surah,
+          ayah,
+          arabicText: verse?.text_uthmani || "",
+          translationText,
+        };
+      })
+      .filter((result) => {
+        if (!result.translationText) return false;
+        const haystack = result.translationText.toLowerCase();
+        return terms.every((term) => haystack.includes(term));
+      });
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -6351,6 +6506,234 @@ class PocketQuranManager extends BaseManager {
       console.error("Failed to import bookmarks:", e);
       return { success: false, error: e.message };
     }
+  }
+
+  /**
+   * Create the bookmark button in the header.
+   */
+  createPocketQuranSearchButton() {
+    const headerActions = this.card?.querySelector(".card-header-actions");
+    if (!headerActions) return;
+
+    if (headerActions.querySelector(".pq-search-btn")) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pq-search-btn";
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9.5 3a6.5 6.5 0 0 1 5.14 10.48l4.44 4.44-1.41 1.41-4.44-4.44A6.5 6.5 0 1 1 9.5 3Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/></svg>';
+    btn.title = "Search Quran translation";
+    btn.setAttribute("aria-label", "Search Quran translation");
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openPocketQuranSearchModal();
+    });
+
+    const bookmarkBtn = headerActions.querySelector(".pq-bookmark-btn");
+    const blurMenu = headerActions.querySelector(".card-blur-menu");
+    if (bookmarkBtn) {
+      headerActions.insertBefore(btn, bookmarkBtn);
+    } else if (blurMenu) {
+      headerActions.insertBefore(btn, blurMenu);
+    } else {
+      headerActions.appendChild(btn);
+    }
+  }
+
+  createPocketQuranSearchModal() {
+    if (this._searchModal) return this._searchModal;
+
+    const modal = document.createElement("div");
+    modal.className = "pq-bookmark-modal pq-search-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "pqSearchModalTitle");
+    modal.innerHTML = `
+      <div class="pq-bookmark-modal-content pq-search-modal-content">
+        <div class="pq-bookmark-modal-header">
+          <h3 class="pq-bookmark-modal-title" id="pqSearchModalTitle">Search Quran</h3>
+          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <form class="pq-search-form">
+          <input type="search" class="pq-search-input" placeholder="Search selected translation" autocomplete="off" />
+          <button type="submit" class="pq-search-submit-btn">Search</button>
+        </form>
+        <div class="pq-search-progress" hidden>
+          <div class="pq-search-progress-ring" aria-hidden="true"></div>
+          <div class="pq-search-progress-text">Preparing search cache...</div>
+        </div>
+        <div class="pq-search-status" aria-live="polite"></div>
+        <div class="pq-search-results" role="list"></div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this._searchModal = modal;
+    this._searchInput = modal.querySelector(".pq-search-input");
+    this._searchResultsEl = modal.querySelector(".pq-search-results");
+    this._searchStatusEl = modal.querySelector(".pq-search-status");
+    this._searchProgressEl = modal.querySelector(".pq-search-progress");
+    this._searchProgressTextEl = modal.querySelector(".pq-search-progress-text");
+    this._searchSubmitBtn = modal.querySelector(".pq-search-submit-btn");
+
+    modal
+      .querySelector(".pq-bookmark-modal-close")
+      ?.addEventListener("click", () => this.closePocketQuranSearchModal());
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) this.closePocketQuranSearchModal();
+    });
+    modal.querySelector(".pq-search-form")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.runPocketQuranSearch();
+    });
+
+    return modal;
+  }
+
+  openPocketQuranSearchModal() {
+    const modal = this.createPocketQuranSearchModal();
+    modal.classList.add("show");
+    this._searchInput?.focus();
+  }
+
+  closePocketQuranSearchModal() {
+    if (!this._searchModal) return;
+    this._searchModal.classList.remove("show");
+  }
+
+  setPocketQuranSearchLoading(isLoading, progress = null) {
+    this._isSearchLoading = isLoading;
+    if (this._searchSubmitBtn) this._searchSubmitBtn.disabled = isLoading;
+    if (!this._searchProgressEl) return;
+
+    this._searchProgressEl.hidden = !isLoading;
+    if (!isLoading) return;
+
+    const done = Math.max(0, Number(progress?.done) || 0);
+    const total = Math.max(1, Number(progress?.total) || 114);
+    const percent = Math.min(100, Math.round((done / total) * 100));
+    const source = progress?.source === "indexeddb" ? "cache" : "api";
+    const ring = this._searchProgressEl.querySelector(".pq-search-progress-ring");
+    if (ring) ring.style.setProperty("--pq-search-progress", `${percent}%`);
+    if (this._searchProgressTextEl) {
+      this._searchProgressTextEl.textContent =
+        progress?.source === "indexeddb" || progress?.source === "memory"
+          ? "Loaded from IndexedDB cache"
+          : `Caching translation from ${source}: ${done}/${total} surahs`;
+    }
+  }
+
+  async runPocketQuranSearch() {
+    const query = String(this._searchInput?.value || "").trim();
+    if (!query) {
+      this.renderPocketQuranSearchMessage("Type a word or phrase to search.");
+      return;
+    }
+
+    if (this._isSearchLoading) return;
+
+    const translationId = this.normalizeTranslationId(
+      this.storage.getSettings()?.pocketQuran?.translationResourceId,
+    );
+    const translationLabel =
+      PocketQuranManager.TRANSLATIONS[translationId]?.label || "Translation";
+
+    this.renderPocketQuranSearchMessage(
+      `Preparing ${translationLabel} search cache...`,
+    );
+    this.setPocketQuranSearchLoading(true, { done: 0, total: 114 });
+
+    try {
+      const cache = await this.ensureFullTranslationCache(
+        translationId,
+        (progress) => this.setPocketQuranSearchLoading(true, progress),
+      );
+      const results = this.buildPocketQuranSearchResults(query, cache.verses);
+      this.renderPocketQuranSearchResults({
+        query,
+        results,
+        source: cache.source,
+        translationLabel,
+      });
+    } catch (e) {
+      console.error("Pocket Quran search failed:", e);
+      this.renderPocketQuranSearchMessage(
+        "Could not prepare Quran search right now. Please try again.",
+      );
+    } finally {
+      this.setPocketQuranSearchLoading(false);
+    }
+  }
+
+  renderPocketQuranSearchMessage(message) {
+    if (this._searchStatusEl) this._searchStatusEl.textContent = message;
+    if (this._searchResultsEl) this._searchResultsEl.innerHTML = "";
+  }
+
+  renderPocketQuranSearchResults({ query, results, source, translationLabel }) {
+    if (!this._searchResultsEl || !this._searchStatusEl) return;
+
+    const count = Array.isArray(results) ? results.length : 0;
+    const sourceText =
+      source === "network" ? "Cached for next time" : "Loaded from cache";
+    this._searchStatusEl.textContent = `${count} result${
+      count === 1 ? "" : "s"
+    } in ${translationLabel}. ${sourceText}.`;
+    this._searchResultsEl.innerHTML = "";
+
+    if (!count) {
+      const empty = document.createElement("div");
+      empty.className = "pq-search-empty";
+      empty.textContent = `No matches for "${query}".`;
+      this._searchResultsEl.appendChild(empty);
+      return;
+    }
+
+    const visibleResults = results.slice(0, 150);
+    visibleResults.forEach((result) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "pq-search-result";
+      item.setAttribute("role", "listitem");
+
+      const meta = document.createElement("div");
+      meta.className = "pq-search-result-meta";
+      meta.textContent = `${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`;
+
+      const arabic = document.createElement("div");
+      arabic.className = "pq-search-result-ar";
+      arabic.setAttribute("dir", "rtl");
+      arabic.textContent = result.arabicText;
+
+      const translation = document.createElement("div");
+      translation.className = "pq-search-result-tr";
+      translation.textContent = result.translationText;
+
+      item.appendChild(meta);
+      item.appendChild(arabic);
+      item.appendChild(translation);
+      item.addEventListener("click", () =>
+        this.goToPocketQuranSearchResult(result),
+      );
+      this._searchResultsEl.appendChild(item);
+    });
+
+    if (visibleResults.length < count) {
+      const capped = document.createElement("div");
+      capped.className = "pq-search-capped";
+      capped.textContent = `Showing first ${visibleResults.length} results. Refine the search to narrow it down.`;
+      this._searchResultsEl.appendChild(capped);
+    }
+  }
+
+  async goToPocketQuranSearchResult(result) {
+    this.closePocketQuranSearchModal();
+    await this.setActiveSurah(result.surah, {
+      preserveAyah: false,
+      autoScroll: false,
+    });
+    this.scrollToAyah(result.ayah, { persist: true, smooth: true });
   }
 
   /**
