@@ -11782,7 +11782,7 @@ class SettingsManager extends BaseManager {
     const isTranslation = cfg.kind === "translation";
 
     if (!fonts.length) {
-      container.innerHTML = `<div class="pq-translation-empty">No fonts found for "${this.escapeHtmlAttr(
+      container.innerHTML = `<div class="pq-translation-empty">No fonts found for "${this.escapeHtml(
         query,
       )}"</div>`;
       return;
@@ -11797,9 +11797,9 @@ class SettingsManager extends BaseManager {
         const langAttrs = isTranslation ? 'lang="en"' : 'lang="ar" dir="rtl"';
         return `<button type="button" class="pq-translation-item ${
           active ? "active" : ""
-        }" data-font-family="${this.escapeHtmlAttr(font)}">
+        }" data-font-family="${this.escapeHtml(font)}">
           <span class="pq-font-label">
-            <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+            <span class="pq-translation-name">${this.escapeHtml(font)}</span>
             <span class="${previewClass}" ${langAttrs}>${previewText}</span>
           </span>
           ${
