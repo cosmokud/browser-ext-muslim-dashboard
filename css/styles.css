@@ -10024,6 +10024,20 @@ html[data-theme-mode="light"]
   color: var(--accent-gold);
 }
 
+.flashcards-typography-row:has(#adhkarArabicFontSize) .flashcards-typography-label,
+.flashcards-typography-row:has(#adhkarRomanizationFontSize)
+  .flashcards-typography-label,
+.flashcards-typography-row:has(#adhkarEnglishFontSize) .flashcards-typography-label {
+  min-width: 112px;
+}
+
+.flashcards-typography-row:has(#adhkarArabicFontSize) .flashcards-typography-range,
+.flashcards-typography-row:has(#adhkarRomanizationFontSize)
+  .flashcards-typography-range,
+.flashcards-typography-row:has(#adhkarEnglishFontSize) .flashcards-typography-range {
+  max-width: 180px;
+}
+
 .flashcards-editor {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
