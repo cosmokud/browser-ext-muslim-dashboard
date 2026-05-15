@@ -15583,7 +15583,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .pq-bookmark-btn {
-  margin-left: var(--spacing-sm);
   font-size: 1.08rem;
 }
 
