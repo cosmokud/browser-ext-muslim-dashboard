@@ -16041,6 +16041,22 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   flex: 1;
 }
 
+.pq-font-label {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pq-font-preview {
+  color: var(--text-secondary);
+  font-size: 1.12rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .pq-translation-check {
   color: var(--accent-text);
   font-weight: bold;
