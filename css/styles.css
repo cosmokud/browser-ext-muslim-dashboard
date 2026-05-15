@@ -16085,6 +16085,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-align: right;
 }
 
+.pq-font-preview-translation {
+  font-size: 1rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
 .pq-translation-check {
   color: var(--accent-text);
   font-weight: bold;

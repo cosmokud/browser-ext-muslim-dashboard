@@ -731,6 +731,11 @@ class SettingsManager extends BaseManager {
     this.pocketQuranPopupTranslationFontFamily = document.getElementById(
       "pocketQuranPopupTranslationFontFamily",
     );
+    this.pocketQuranPopupTranslationFontPickerBtn = document.getElementById(
+      "pocketQuranPopupTranslationFontPickerBtn",
+    );
+    this.pocketQuranPopupTranslationFontPickerLabel =
+      document.getElementById("pocketQuranPopupTranslationFontPickerLabel");
     this.pocketQuranReciterPickerBtn = document.getElementById(
       "pocketQuranReciterPickerBtn",
     );
@@ -745,6 +750,12 @@ class SettingsManager extends BaseManager {
     );
     this.pocketQuranTranslationFontFamily = document.getElementById(
       "pocketQuranTranslationFontFamily",
+    );
+    this.pocketQuranTranslationFontPickerBtn = document.getElementById(
+      "pocketQuranTranslationFontPickerBtn",
+    );
+    this.pocketQuranTranslationFontPickerLabel = document.getElementById(
+      "pocketQuranTranslationFontPickerLabel",
     );
     this.pocketQuranTranslationPickerBtn = document.getElementById(
       "pocketQuranTranslationPickerBtn",
@@ -1477,6 +1488,8 @@ class SettingsManager extends BaseManager {
     this.updatePocketQuranReciterPickerLabel();
     this.updatePocketQuranArabicFontPickerLabel();
     this.updatePocketQuranPopupArabicFontPickerLabel();
+    this.updatePocketQuranTranslationFontPickerLabel();
+    this.updatePocketQuranPopupTranslationFontPickerLabel();
     this.updatePocketQuranTranslationPickerLabel();
 
     if (this.pocketQuranRecitationFloatingEnabled) {
@@ -10493,6 +10506,38 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    if (this.pocketQuranTranslationFontPickerBtn) {
+      this.pocketQuranTranslationFontPickerBtn.addEventListener("click", () => {
+        try {
+          if (window.dashboard?.pocketQuran?.openTranslationFontPickerModal) {
+            window.dashboard.pocketQuran.openTranslationFontPickerModal();
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
+    }
+
+    if (this.pocketQuranPopupTranslationFontPickerBtn) {
+      this.pocketQuranPopupTranslationFontPickerBtn.addEventListener(
+        "click",
+        () => {
+          try {
+            if (window.dashboard?.pocketQuran?.openTranslationFontPickerModal) {
+              window.dashboard.pocketQuran.openTranslationFontPickerModal({
+                target: "popup",
+                currentFont: this.normalizePocketQuranPopupTranslationFontFamily(
+                  this.pocketQuranPopupTranslationFontFamily?.value,
+                ),
+              });
+            }
+          } catch (e) {
+            // ignore
+          }
+        },
+      );
+    }
+
     if (this.pocketQuranReciterPickerBtn) {
       this.pocketQuranReciterPickerBtn.addEventListener("click", () => {
         try {
@@ -10600,6 +10645,19 @@ class SettingsManager extends BaseManager {
       if (this.pocketQuranTranslationFontFamily) {
         this.pocketQuranTranslationFontFamily.value = normalized;
       }
+      this.updatePocketQuranTranslationFontPickerLabel();
+      this.scheduleAutoSave(120);
+    });
+
+    document.addEventListener("md:pq-popup-translation-font-selected", (e) => {
+      const normalized = this.normalizePocketQuranPopupTranslationFontFamily(
+        e?.detail?.fontFamily,
+      );
+      if (this.pocketQuranPopupTranslationFontFamily) {
+        this.pocketQuranPopupTranslationFontFamily.value = normalized;
+      }
+      this.updatePocketQuranPopupTranslationFontPickerLabel();
+      this.scheduleAutoSave(120);
     });
 
     // Pocket Quran bookmark export/import
@@ -11457,6 +11515,49 @@ class SettingsManager extends BaseManager {
 
     labelEl.textContent = font;
     btn.title = `Current popup Arabic font: ${font}`;
+  }
+
+  updatePocketQuranTranslationFontPickerLabel() {
+    const btn = this.pocketQuranTranslationFontPickerBtn;
+    const labelEl = this.pocketQuranTranslationFontPickerLabel;
+    if (!btn || !labelEl) return;
+
+    const pq = this.storage.getSettings()?.pocketQuran || {};
+    const font = this.normalizePocketQuranTranslationFontFamily(
+      this.pocketQuranTranslationFontFamily?.value ||
+        pq.translationFontFamily ||
+        "Poppins",
+    );
+
+    if (this.pocketQuranTranslationFontFamily) {
+      this.pocketQuranTranslationFontFamily.value = font;
+    }
+
+    labelEl.textContent = font;
+    btn.title = `Current translation font: ${font}`;
+  }
+
+  updatePocketQuranPopupTranslationFontPickerLabel() {
+    const btn = this.pocketQuranPopupTranslationFontPickerBtn;
+    const labelEl = this.pocketQuranPopupTranslationFontPickerLabel;
+    if (!btn || !labelEl) return;
+
+    const settings = this.storage.getSettings() || {};
+    const pq = settings.pocketQuran || {};
+    const pqPopup = settings.pocketQuranPopup || {};
+    const font = this.normalizePocketQuranPopupTranslationFontFamily(
+      this.pocketQuranPopupTranslationFontFamily?.value ||
+        pqPopup.translationFontFamily ||
+        pq.translationFontFamily ||
+        "Poppins",
+    );
+
+    if (this.pocketQuranPopupTranslationFontFamily) {
+      this.pocketQuranPopupTranslationFontFamily.value = font;
+    }
+
+    labelEl.textContent = font;
+    btn.title = `Current popup translation font: ${font}`;
   }
 
   updatePocketQuranTranslationPickerLabel() {

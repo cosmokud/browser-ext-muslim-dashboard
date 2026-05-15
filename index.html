@@ -5563,15 +5563,30 @@
             >
               <label
                 class="setting-label"
-                for="pocketQuranTranslationFontFamily"
+                for="pocketQuranTranslationFontPickerBtn"
                 >Translation Font Family</label
               >
               <p class="setting-hint">
                 Choose the translation font used in the Pocket Quran card.
               </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranTranslationFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranTranslationFontPickerLabel"
+                  >Select translation font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
               <select
                 class="setting-select"
                 id="pocketQuranTranslationFontFamily"
+                hidden
+                aria-hidden="true"
+                tabindex="-1"
               >
                 <option value="Poppins" selected>Poppins</option>
                 <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
@@ -5678,15 +5693,30 @@
             >
               <label
                 class="setting-label"
-                for="pocketQuranPopupTranslationFontFamily"
+                for="pocketQuranPopupTranslationFontPickerBtn"
                 >Popup Translation Font Family</label
               >
               <p class="setting-hint">
                 Choose the translation font used in popup mode.
               </p>
+              <button
+                type="button"
+                class="setting-select pq-translation-picker"
+                id="pocketQuranPopupTranslationFontPickerBtn"
+                aria-haspopup="dialog"
+                aria-controls="pqFontModal"
+              >
+                <span id="pocketQuranPopupTranslationFontPickerLabel"
+                  >Select translation font…</span
+                >
+                <span aria-hidden="true">▾</span>
+              </button>
               <select
                 class="setting-select"
                 id="pocketQuranPopupTranslationFontFamily"
+                hidden
+                aria-hidden="true"
+                tabindex="-1"
               >
                 <option value="Poppins" selected>Poppins</option>
                 <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
