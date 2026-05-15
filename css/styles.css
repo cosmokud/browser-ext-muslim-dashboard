@@ -15587,6 +15587,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-size: 1.08rem;
 }
 
+.pq-search-btn {
+  margin-left: var(--spacing-sm);
+}
+
 /* Bookmark Modal */
 .pq-bookmark-modal {
   position: fixed;
