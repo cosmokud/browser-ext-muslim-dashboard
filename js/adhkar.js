@@ -25,6 +25,14 @@ class AdhkarManager extends BaseManager {
     "KFGQPC AlJalil Dot",
     "KFGQPC Sindhi Naskh Regular",
   ];
+  static TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
 
   static DEFAULT_SETS = [
     {
@@ -150,6 +158,7 @@ class AdhkarManager extends BaseManager {
 
     // Arabic font picker state
     this._arabicFontFamily = "KFGQPC Uthman Taha Naskh";
+    this._translationFontFamily = "Poppins";
     this._fontModal = null;
     this.defaultSets = [];
 
@@ -196,6 +205,10 @@ class AdhkarManager extends BaseManager {
     this.applyArabicFontFamily(this.getAdhkarSettings().arabicFontFamily, {
       persist: false,
     });
+    this.applyTranslationFontFamily(
+      this.getAdhkarSettings().translationFontFamily,
+      { persist: false },
+    );
     this.applyTypography();
     this.createSetSelectorButton();
     this.createSetSelectorModal();
@@ -1082,6 +1095,21 @@ class AdhkarManager extends BaseManager {
     return "KFGQPC Uthman Taha Naskh";
   }
 
+  normalizeTranslationFontFamily(value) {
+    const v = String(value || "").trim();
+    if (AdhkarManager.TRANSLATION_FONT_FAMILIES.includes(v)) return v;
+    return "Poppins";
+  }
+
+  resolveTranslationFontCssValue(fontFamily) {
+    if (fontFamily === "Georgia") return '"Georgia", serif';
+    if (fontFamily === "Courier New") return '"Courier New", monospace';
+    if (fontFamily === "Cascadia Code") {
+      return '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+    return `"${fontFamily}", var(--font-primary)`;
+  }
+
   applyArabicFontFamily(fontFamily, opts = {}) {
     const { persist = false } = opts;
     const normalized = this.normalizeArabicFontFamily(fontFamily);
@@ -1100,6 +1128,23 @@ class AdhkarManager extends BaseManager {
 
     if (persist) {
       this.setAdhkarSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  applyTranslationFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeTranslationFontFamily(fontFamily);
+    this._translationFontFamily = normalized;
+
+    if (this.cardEl) {
+      this.cardEl.style.setProperty(
+        "--adhkar-translation-font-family",
+        this.resolveTranslationFontCssValue(normalized),
+      );
+    }
+
+    if (persist) {
+      this.setAdhkarSettings({ translationFontFamily: normalized });
     }
   }
 

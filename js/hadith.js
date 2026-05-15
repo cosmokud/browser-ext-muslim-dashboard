@@ -14,6 +14,24 @@ class HadithManager extends BaseManager {
   static FONT_SCALE_MIN = 0.5;
   static FONT_SCALE_MAX = 2.5;
   static FONT_SCALE_STEP = 0.1;
+  static ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
+  static TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
 
   static DEFAULT_SETS = [
     {
@@ -110,6 +128,9 @@ class HadithManager extends BaseManager {
     this._autoAdvanceTimer = null;
     this._hoverPauseAutoAdvance = false;
 
+    this._arabicFontFamily = "Noto Naskh Arabic";
+    this._translationFontFamily = "Poppins";
+
     // Set selector modal state
     this._setModalPage = 1;
     this._setModalSearchQuery = "";
@@ -160,6 +181,13 @@ class HadithManager extends BaseManager {
 
   async init() {
     await this.ensureDefaultSets();
+    this.applyArabicFontFamily(this.getHadithSettings().arabicFontFamily, {
+      persist: false,
+    });
+    this.applyTranslationFontFamily(
+      this.getHadithSettings().translationFontFamily,
+      { persist: false },
+    );
     this.applyTypography();
     this.createLanguageSelectorButton();
     this.createLanguageSelectorModal();
@@ -893,10 +921,12 @@ class HadithManager extends BaseManager {
 
     if (this.titleEl) {
       this.titleEl.textContent = item ? this.getCardTitle(item) : "Loading...";
+      this.applyTextLanguageStyling(this.titleEl, this.titleEl.textContent);
     }
 
     if (this.textEl) {
       this.textEl.textContent = item ? this.getCardText(item) : "";
+      this.applyTextLanguageStyling(this.textEl, this.textEl.textContent);
     }
 
     const narrator = item?.narrator ? String(item.narrator) : "";
@@ -906,6 +936,7 @@ class HadithManager extends BaseManager {
       const metaText =
         narrator || reference ? `Narrated by: ${narrator} - ${reference}` : "";
       this.metaEl.textContent = metaText;
+      this.applyTextLanguageStyling(this.metaEl, metaText);
       this.metaEl.toggleAttribute("hidden", !metaText);
     }
 
@@ -1100,6 +1131,72 @@ class HadithManager extends BaseManager {
     this.cardEl.style.setProperty("--hadith-text-font-size", `${text}px`);
     this.cardEl.style.setProperty("--hadith-meta-font-size", `${meta}px`);
     this.updateFontScaleButtons();
+  }
+
+  normalizeArabicFontFamily(value) {
+    const v = String(value || "").trim();
+    if (HadithManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
+    return "Noto Naskh Arabic";
+  }
+
+  normalizeTranslationFontFamily(value) {
+    const v = String(value || "").trim();
+    if (HadithManager.TRANSLATION_FONT_FAMILIES.includes(v)) return v;
+    return "Poppins";
+  }
+
+  resolveTranslationFontCssValue(fontFamily) {
+    if (fontFamily === "Georgia") return '"Georgia", serif';
+    if (fontFamily === "Courier New") return '"Courier New", monospace';
+    if (fontFamily === "Cascadia Code") {
+      return '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+    return `"${fontFamily}", var(--font-primary)`;
+  }
+
+  applyArabicFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeArabicFontFamily(fontFamily);
+    this._arabicFontFamily = normalized;
+
+    if (this.cardEl) {
+      this.cardEl.style.setProperty(
+        "--hadith-arabic-font-family",
+        `"${normalized}", var(--font-arabic)`,
+      );
+    }
+
+    if (persist) {
+      this.setHadithSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  applyTranslationFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeTranslationFontFamily(fontFamily);
+    this._translationFontFamily = normalized;
+
+    if (this.cardEl) {
+      this.cardEl.style.setProperty(
+        "--hadith-translation-font-family",
+        this.resolveTranslationFontCssValue(normalized),
+      );
+    }
+
+    if (persist) {
+      this.setHadithSettings({ translationFontFamily: normalized });
+    }
+  }
+
+  containsArabicText(value) {
+    return /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/.test(
+      String(value || ""),
+    );
+  }
+
+  applyTextLanguageStyling(element, textValue) {
+    if (!element) return;
+    element.classList.toggle("arabic-text", this.containsArabicText(textValue));
   }
 
   getFontScale() {

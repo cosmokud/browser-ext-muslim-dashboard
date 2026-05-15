@@ -4,6 +4,25 @@
  */
 
 class QuotesManager extends BaseManager {
+  static ARABIC_FONT_FAMILIES = [
+    "Noto Naskh Arabic",
+    "Amiri",
+    "KFGQPC Uthman Taha Naskh",
+    "KFGQPC KSA Regular",
+    "KFGQPC Kufi Stylistic Regular",
+    "KFGQPC AN Regular",
+    "KFGQPC AlJalil Dot",
+    "KFGQPC Sindhi Naskh Regular",
+  ];
+  static TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
+
   constructor(storage) {
     super();
     this.storage = storage;
@@ -46,6 +65,8 @@ class QuotesManager extends BaseManager {
     this.quoteShuffleBtn = null;
 
     this.quoteContainer = this.quoteText?.closest(".quote-container") || null;
+    this._arabicFontFamily = "Noto Naskh Arabic";
+    this._translationFontFamily = "Poppins";
 
     // Quotes settings elements
     this.quotesListContainer = document.getElementById("userQuotesList");
@@ -73,6 +94,13 @@ class QuotesManager extends BaseManager {
     await this.loadDefaultQuotes();
     this.loadUserQuotes();
     this.applyLayoutStyle();
+    this.applyArabicFontFamily(this.storage.getSettings()?.quoteArabicFontFamily, {
+      persist: false,
+    });
+    this.applyTranslationFontFamily(
+      this.storage.getSettings()?.quoteTranslationFontFamily,
+      { persist: false },
+    );
     this.syncQuoteBehaviorFromSettings({ applyTimer: false });
 
     // Default quotes language selector UI (top-right of quoteSection)
@@ -109,6 +137,65 @@ class QuotesManager extends BaseManager {
 
     // Add the selected style class
     this.quoteContainer.classList.add(`quote-style-${style}`);
+  }
+
+  normalizeArabicFontFamily(value) {
+    const v = String(value || "").trim();
+    if (QuotesManager.ARABIC_FONT_FAMILIES.includes(v)) return v;
+    return "Noto Naskh Arabic";
+  }
+
+  normalizeTranslationFontFamily(value) {
+    const v = String(value || "").trim();
+    if (QuotesManager.TRANSLATION_FONT_FAMILIES.includes(v)) return v;
+    return "Poppins";
+  }
+
+  resolveTranslationFontCssValue(fontFamily) {
+    if (fontFamily === "Georgia") return '"Georgia", serif';
+    if (fontFamily === "Courier New") return '"Courier New", monospace';
+    if (fontFamily === "Cascadia Code") {
+      return '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+    return `"${fontFamily}", var(--font-primary)`;
+  }
+
+  applyArabicFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeArabicFontFamily(fontFamily);
+    this._arabicFontFamily = normalized;
+
+    if (this.quoteContainer) {
+      this.quoteContainer.style.setProperty(
+        "--quote-arabic-font-family",
+        `"${normalized}", var(--font-arabic)`,
+      );
+    }
+
+    if (persist) {
+      const settings = this.storage.getSettings();
+      settings.quoteArabicFontFamily = normalized;
+      this.storage.saveSettings(settings);
+    }
+  }
+
+  applyTranslationFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeTranslationFontFamily(fontFamily);
+    this._translationFontFamily = normalized;
+
+    if (this.quoteContainer) {
+      this.quoteContainer.style.setProperty(
+        "--quote-translation-font-family",
+        this.resolveTranslationFontCssValue(normalized),
+      );
+    }
+
+    if (persist) {
+      const settings = this.storage.getSettings();
+      settings.quoteTranslationFontFamily = normalized;
+      this.storage.saveSettings(settings);
+    }
   }
 
   syncQuoteBehaviorFromSettings({ applyTimer = true } = {}) {

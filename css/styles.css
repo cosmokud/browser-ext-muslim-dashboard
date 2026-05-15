@@ -1345,6 +1345,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .quote-container {
+  --quote-arabic-font-family: var(--font-arabic);
+  --quote-translation-font-family: var(--font-primary);
   position: relative;
   background: var(--glass-bg);
   backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
@@ -1374,6 +1376,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .quote-text {
+  font-family: var(--quote-translation-font-family, var(--font-primary));
   font-size: clamp(1.1rem, 2.5vw, 1.4rem);
   line-height: 1.8;
   color: var(--text-primary);
@@ -1384,7 +1387,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   margin-right: auto;
 }
 
+.quote-text.arabic-text {
+  font-family: var(--quote-arabic-font-family, var(--font-arabic));
+}
+
 .quote-source {
+  font-family: var(--quote-translation-font-family, var(--font-primary));
   font-size: 0.95rem;
   color: var(--accent-gold);
   font-weight: 500;
@@ -9232,6 +9240,7 @@ html[data-theme-mode="light"]
   display: flex;
   flex-direction: column;
   --flashcard-arabic-font-family: var(--font-arabic);
+  --flashcard-translation-font-family: var(--font-primary);
 }
 
 .card.flashcard-card .card-header {
@@ -9700,6 +9709,7 @@ html[data-theme-mode="light"]
 
 .flashcard-face-content.flashcard-question,
 .flashcard-question {
+  font-family: var(--flashcard-translation-font-family, var(--font-primary));
   font-size: var(--flashcard-question-font-size, 22px);
   font-weight: 600;
   line-height: 1.45;
@@ -9707,6 +9717,7 @@ html[data-theme-mode="light"]
 
 .flashcard-face-content.flashcard-answer,
 .flashcard-answer {
+  font-family: var(--flashcard-translation-font-family, var(--font-primary));
   font-size: var(--flashcard-answer-font-size, 18px);
   color: var(--text-secondary);
   line-height: 1.55;
@@ -16091,6 +16102,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-align: left;
 }
 
+.settings-font-picker-btn {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
 .pq-translation-check {
   color: var(--accent-text);
   font-weight: bold;
@@ -16781,6 +16798,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   --hadith-title-font-size: 22px;
   --hadith-text-font-size: 18px;
   --hadith-meta-font-size: 14px;
+  --hadith-arabic-font-family: var(--font-arabic);
+  --hadith-translation-font-family: var(--font-primary);
 }
 
 .hadith-viewer {
@@ -16805,6 +16824,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .hadith-title {
   /* Center the title so it aligns with the rest of the content */
   align-self: center;
+  font-family: var(--hadith-translation-font-family, var(--font-primary));
   font-size: var(--hadith-title-font-size);
   font-weight: 700;
   color: var(--accent-gold-light);
@@ -16817,6 +16837,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .hadith-text {
   /* Keep the body centered under the title */
   align-self: center;
+  font-family: var(--hadith-translation-font-family, var(--font-primary));
   font-size: var(--hadith-text-font-size);
   color: var(--text-primary);
   line-height: 1.6;
@@ -16827,12 +16848,19 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .hadith-meta {
   /* Include meta as part of the centered block */
   align-self: center;
+  font-family: var(--hadith-translation-font-family, var(--font-primary));
   font-size: var(--hadith-meta-font-size);
   color: var(--text-muted);
   font-style: italic;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.hadith-title.arabic-text,
+.hadith-text.arabic-text,
+.hadith-meta.arabic-text {
+  font-family: var(--hadith-arabic-font-family, var(--font-arabic));
 }
 
 /* Dashboard card typography */
@@ -16842,6 +16870,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   min-height: 700px;
   --adhkar-title-font-size: 20px;
   --adhkar-arabic-font-family: var(--font-arabic);
+  --adhkar-translation-font-family: var(--font-primary);
   --adhkar-arabic-font-size: 28px;
   --adhkar-romanization-font-size: 18px;
   --adhkar-english-font-size: 18px;
@@ -16920,6 +16949,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-top {
+  font-family: var(--adhkar-translation-font-family, var(--font-primary));
   font-size: var(--adhkar-romanization-font-size);
   color: var(--text-primary);
   line-height: 1.5;
@@ -16955,6 +16985,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-english {
+  font-family: var(--adhkar-translation-font-family, var(--font-primary));
   font-size: var(--adhkar-english-font-size);
   color: var(--text-secondary);
   line-height: 1.55;

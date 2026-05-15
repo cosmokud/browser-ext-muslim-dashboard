@@ -25,6 +25,14 @@ class FlashcardManager extends BaseManager {
     "KFGQPC AlJalil Dot",
     "KFGQPC Sindhi Naskh Regular",
   ];
+  static TRANSLATION_FONT_FAMILIES = [
+    "Poppins",
+    "Noto Naskh Arabic",
+    "Amiri",
+    "Georgia",
+    "Cascadia Code",
+    "Courier New",
+  ];
 
   // Default sets that are provided read-only to all users.
   // Each entry: { id, name, file, parser } where parser may be 'csv' or 'pipe'.
@@ -137,6 +145,7 @@ class FlashcardManager extends BaseManager {
 
     // Arabic font picker state
     this._arabicFontFamily = "Noto Naskh Arabic";
+    this._translationFontFamily = "Poppins";
     this._fontModal = null;
     this.defaultSets = [];
 
@@ -157,6 +166,10 @@ class FlashcardManager extends BaseManager {
     this.applyArabicFontFamily(this.getFlashcardSettings().arabicFontFamily, {
       persist: false,
     });
+    this.applyTranslationFontFamily(
+      this.getFlashcardSettings().translationFontFamily,
+      { persist: false },
+    );
     this.applyTypography();
     this.createSetSelectorButton();
     this.createSetSelectorModal();
@@ -1494,6 +1507,21 @@ class FlashcardManager extends BaseManager {
     return "Noto Naskh Arabic";
   }
 
+  normalizeTranslationFontFamily(value) {
+    const v = String(value || "").trim();
+    if (FlashcardManager.TRANSLATION_FONT_FAMILIES.includes(v)) return v;
+    return "Poppins";
+  }
+
+  resolveTranslationFontCssValue(fontFamily) {
+    if (fontFamily === "Georgia") return '"Georgia", serif';
+    if (fontFamily === "Courier New") return '"Courier New", monospace';
+    if (fontFamily === "Cascadia Code") {
+      return '"Cascadia Code", "JetBrains Mono", Consolas, monospace';
+    }
+    return `"${fontFamily}", var(--font-primary)`;
+  }
+
   applyArabicFontFamily(fontFamily, opts = {}) {
     const { persist = false } = opts;
     const normalized = this.normalizeArabicFontFamily(fontFamily);
@@ -1512,6 +1540,23 @@ class FlashcardManager extends BaseManager {
 
     if (persist) {
       this.setFlashcardSettings({ arabicFontFamily: normalized });
+    }
+  }
+
+  applyTranslationFontFamily(fontFamily, opts = {}) {
+    const { persist = false } = opts;
+    const normalized = this.normalizeTranslationFontFamily(fontFamily);
+    this._translationFontFamily = normalized;
+
+    if (this.cardEl) {
+      this.cardEl.style.setProperty(
+        "--flashcard-translation-font-family",
+        this.resolveTranslationFontCssValue(normalized),
+      );
+    }
+
+    if (persist) {
+      this.setFlashcardSettings({ translationFontFamily: normalized });
     }
   }
 
@@ -1593,13 +1638,17 @@ class FlashcardManager extends BaseManager {
     );
 
     const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    const arabicPreview = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
     let html = "";
     for (const font of fonts) {
       const isActive = font === current;
       html += `<button type="button" class="pq-translation-item ${
         isActive ? "active" : ""
       }" data-font-family="${this.escapeHtmlAttr(font)}">
-        <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+        <span class="pq-font-label">
+          <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+          <span class="pq-font-preview" lang="ar" dir="rtl">${arabicPreview}</span>
+        </span>
         ${
           isActive
             ? `<span class="pq-translation-check">${this._getIcon("✓", {
@@ -1619,6 +1668,12 @@ class FlashcardManager extends BaseManager {
     }
 
     container.innerHTML = html;
+    container.querySelectorAll(".pq-font-preview").forEach((preview) => {
+      const font = preview
+        .closest(".pq-translation-item")
+        ?.getAttribute("data-font-family");
+      if (font) preview.style.fontFamily = `"${font}", var(--font-arabic)`;
+    });
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
       btn.addEventListener("click", () => {
         const font = btn.getAttribute("data-font-family");
