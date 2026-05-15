@@ -18905,7 +18905,7 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--spacing-sm);
-  padding: 0 var(--spacing-lg) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md);
 }
 
 .pq-search-input {
@@ -19037,6 +19037,13 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 .pq-search-result-tr {
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.pq-search-highlight {
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.32);
+  color: inherit;
+  padding: 0 0.12em;
 }
 
 .pq-search-empty,
