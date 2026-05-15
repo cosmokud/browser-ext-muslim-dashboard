@@ -19043,14 +19043,21 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   border-radius: 4px;
   background: rgba(245, 158, 11, 0.32);
   color: inherit;
-  padding: 0 0.12em;
+  padding: 0;
 }
 
-.pq-search-empty,
-.pq-search-capped {
+.pq-search-empty {
   color: var(--text-secondary);
   padding: var(--spacing-md);
   text-align: center;
+}
+
+.pq-search-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
 }
 
 @media (max-width: 520px) {

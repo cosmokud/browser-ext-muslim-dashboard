@@ -652,11 +652,18 @@ class PocketQuranManager extends BaseManager {
     this._searchModal = null;
     this._searchInput = null;
     this._searchResultsEl = null;
+    this._searchPaginationEl = null;
     this._searchStatusEl = null;
     this._searchProgressEl = null;
     this._searchProgressTextEl = null;
     this._searchSubmitBtn = null;
     this._isSearchLoading = false;
+    this._searchRenderedResults = [];
+    this._searchRenderedQuery = "";
+    this._searchRenderedTranslationLabel = "";
+    this._searchRenderedSource = "";
+    this._searchRenderedTotal = 0;
+    this._searchResultPage = 1;
 
     // Virtualization state
     this._virtualContainer = null;
@@ -2677,7 +2684,7 @@ class PocketQuranManager extends BaseManager {
   getSearchApiUrl(query, translationId, page = 1) {
     const params = new URLSearchParams();
     params.set("q", String(query || "").trim());
-    params.set("size", "50");
+    params.set("size", "100");
     params.set("page", String(Math.max(1, parseInt(page, 10) || 1)));
     params.set("language", this.getSearchLanguageCode(translationId));
     params.set("translations", String(this.normalizeTranslationId(translationId)));
@@ -2697,12 +2704,26 @@ class PocketQuranManager extends BaseManager {
     const url = this.getSearchApiUrl(query, translationId, 1);
     const data = await this.fetchJson(url, { timeoutMs: 15000 });
     const search = data?.search || {};
+    const results = Array.isArray(search.results) ? [...search.results] : [];
+    const totalPages = Number(search.total_pages) || 1;
+
+    for (let page = 2; page <= totalPages; page += 1) {
+      const pageData = await this.fetchJson(
+        this.getSearchApiUrl(query, translationId, page),
+        { timeoutMs: 15000 },
+      );
+      const pageResults = Array.isArray(pageData?.search?.results)
+        ? pageData.search.results
+        : [];
+      results.push(...pageResults);
+    }
+
     return {
       query: search.query || query,
       totalResults: Number(search.total_results) || 0,
       currentPage: Number(search.current_page) || 1,
-      totalPages: Number(search.total_pages) || 1,
-      results: Array.isArray(search.results) ? search.results : [],
+      totalPages,
+      results,
     };
   }
 
@@ -6576,6 +6597,7 @@ class PocketQuranManager extends BaseManager {
         </div>
         <div class="pq-search-status" aria-live="polite"></div>
         <div class="pq-search-results" role="list"></div>
+        <div class="pq-search-pagination"></div>
       </div>
     `;
 
@@ -6583,6 +6605,7 @@ class PocketQuranManager extends BaseManager {
     this._searchModal = modal;
     this._searchInput = modal.querySelector(".pq-search-input");
     this._searchResultsEl = modal.querySelector(".pq-search-results");
+    this._searchPaginationEl = modal.querySelector(".pq-search-pagination");
     this._searchStatusEl = modal.querySelector(".pq-search-status");
     this._searchProgressEl = modal.querySelector(".pq-search-progress");
     this._searchProgressTextEl = modal.querySelector(".pq-search-progress-text");
@@ -6697,6 +6720,7 @@ class PocketQuranManager extends BaseManager {
   renderPocketQuranSearchMessage(message) {
     if (this._searchStatusEl) this._searchStatusEl.textContent = message;
     if (this._searchResultsEl) this._searchResultsEl.innerHTML = "";
+    if (this._searchPaginationEl) this._searchPaginationEl.innerHTML = "";
   }
 
   renderPocketQuranSearchResults({
@@ -6710,14 +6734,17 @@ class PocketQuranManager extends BaseManager {
 
     const count = Array.isArray(results) ? results.length : 0;
     const total = Math.max(count, Number(totalResults) || 0);
-    const sourceText =
-      source === "api" ? "Quran.com search" : "Loaded from cache";
-    this._searchStatusEl.textContent = `Showing ${count} of ${total} result${
-      total === 1 ? "" : "s"
-    } in ${translationLabel}. ${sourceText}.`;
-    this._searchResultsEl.innerHTML = "";
+    this._searchRenderedResults = Array.isArray(results) ? results : [];
+    this._searchRenderedQuery = query;
+    this._searchRenderedTranslationLabel = translationLabel;
+    this._searchRenderedSource = source;
+    this._searchRenderedTotal = total;
+    this._searchResultPage = 1;
 
     if (!count) {
+      this._searchStatusEl.textContent = `No results in ${translationLabel}.`;
+      if (this._searchPaginationEl) this._searchPaginationEl.innerHTML = "";
+      this._searchResultsEl.innerHTML = "";
       const empty = document.createElement("div");
       empty.className = "pq-search-empty";
       empty.textContent = `No matches for "${query}".`;
@@ -6725,7 +6752,33 @@ class PocketQuranManager extends BaseManager {
       return;
     }
 
-    const visibleResults = results.slice(0, 150);
+    this.renderPocketQuranSearchResultPage(1);
+  }
+
+  renderPocketQuranSearchResultPage(page = 1) {
+    if (!this._searchResultsEl || !this._searchStatusEl) return;
+
+    const perPage = 100;
+    const results = this._searchRenderedResults;
+    const count = results.length;
+    const totalPages = Math.max(1, Math.ceil(count / perPage));
+    const currentPage = this.clampNumber(page, 1, totalPages, 1);
+    const start = (currentPage - 1) * perPage;
+    const visibleResults = results.slice(start, start + perPage);
+    const sourceText =
+      this._searchRenderedSource === "api"
+        ? "Quran.com search"
+        : "Loaded from cache";
+
+    this._searchResultPage = currentPage;
+    this._searchStatusEl.textContent = `Showing ${start + 1}-${Math.min(
+      start + visibleResults.length,
+      count,
+    )} of ${this._searchRenderedTotal} result${
+      this._searchRenderedTotal === 1 ? "" : "s"
+    } in ${this._searchRenderedTranslationLabel}. ${sourceText}.`;
+    this._searchResultsEl.innerHTML = "";
+
     visibleResults.forEach((result) => {
       const item = document.createElement("button");
       item.type = "button";
@@ -6739,11 +6792,19 @@ class PocketQuranManager extends BaseManager {
       const arabic = document.createElement("div");
       arabic.className = "pq-search-result-ar";
       arabic.setAttribute("dir", "rtl");
-      this.appendHighlightedText(arabic, result.arabicText, query);
+      this.appendHighlightedText(
+        arabic,
+        result.arabicText,
+        this._searchRenderedQuery,
+      );
 
       const translation = document.createElement("div");
       translation.className = "pq-search-result-tr";
-      this.appendHighlightedText(translation, result.translationText, query);
+      this.appendHighlightedText(
+        translation,
+        result.translationText,
+        this._searchRenderedQuery,
+      );
 
       item.appendChild(meta);
       item.appendChild(arabic);
@@ -6754,12 +6815,20 @@ class PocketQuranManager extends BaseManager {
       this._searchResultsEl.appendChild(item);
     });
 
-    if (visibleResults.length < count) {
-      const capped = document.createElement("div");
-      capped.className = "pq-search-capped";
-      capped.textContent = `Showing first ${visibleResults.length} results. Refine the search to narrow it down.`;
-      this._searchResultsEl.appendChild(capped);
-    }
+    this.renderPocketQuranSearchPagination(totalPages, currentPage);
+  }
+
+  renderPocketQuranSearchPagination(totalPages, currentPage) {
+    if (!this._searchPaginationEl) return;
+    this._searchPaginationEl.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    this.renderPagination(
+      this._searchPaginationEl,
+      totalPages,
+      currentPage,
+      (page) => this.renderPocketQuranSearchResultPage(page),
+    );
   }
 
   async goToPocketQuranSearchResult(result) {
