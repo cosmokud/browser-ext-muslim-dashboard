@@ -1181,13 +1181,17 @@ class AdhkarManager extends BaseManager {
     );
 
     const current = this.normalizeArabicFontFamily(this._arabicFontFamily);
+    const arabicPreview = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
     let html = "";
     for (const font of fonts) {
       const isActive = font === current;
       html += `<button type="button" class="pq-translation-item ${
         isActive ? "active" : ""
       }" data-font-family="${this.escapeHtmlAttr(font)}">
-        <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+        <span class="pq-font-label">
+          <span class="pq-translation-name">${this.escapeHtmlAttr(font)}</span>
+          <span class="pq-font-preview" lang="ar" dir="rtl">${arabicPreview}</span>
+        </span>
         ${
           isActive
             ? `<span class="pq-translation-check">${this._getIcon("✓", {
@@ -1207,6 +1211,12 @@ class AdhkarManager extends BaseManager {
     }
 
     container.innerHTML = html;
+    container.querySelectorAll(".pq-font-preview").forEach((preview) => {
+      const font = preview
+        .closest(".pq-translation-item")
+        ?.getAttribute("data-font-family");
+      if (font) preview.style.fontFamily = `"${font}", var(--font-arabic)`;
+    });
     container.querySelectorAll(".pq-translation-item").forEach((btn) => {
       btn.addEventListener("click", () => {
         const font = btn.getAttribute("data-font-family");
