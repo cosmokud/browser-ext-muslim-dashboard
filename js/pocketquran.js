@@ -657,6 +657,10 @@ class PocketQuranManager extends BaseManager {
     this._searchProgressEl = null;
     this._searchProgressTextEl = null;
     this._searchSubmitBtn = null;
+    this._searchArabicSizeRange = null;
+    this._searchTranslationSizeRange = null;
+    this._searchArabicSizeValue = null;
+    this._searchTranslationSizeValue = null;
     this._isSearchLoading = false;
     this._searchRenderedResults = [];
     this._searchRenderedQuery = "";
@@ -6585,7 +6589,19 @@ class PocketQuranManager extends BaseManager {
       <div class="pq-bookmark-modal-content pq-search-modal-content">
         <div class="pq-bookmark-modal-header">
           <h3 class="pq-bookmark-modal-title" id="pqSearchModalTitle">Search Quran</h3>
-          <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+          <div class="pq-search-header-actions">
+            <label class="pq-search-size-control">
+              <span>Arabic</span>
+              <input type="range" class="pq-search-arabic-size" min="18" max="56" step="1" />
+              <output class="pq-search-arabic-size-value"></output>
+            </label>
+            <label class="pq-search-size-control">
+              <span>Translation</span>
+              <input type="range" class="pq-search-translation-size" min="12" max="28" step="1" />
+              <output class="pq-search-translation-size-value"></output>
+            </label>
+            <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
+          </div>
         </div>
         <form class="pq-search-form">
           <input type="search" class="pq-search-input" placeholder="Search selected translation" autocomplete="off" />
@@ -6610,6 +6626,17 @@ class PocketQuranManager extends BaseManager {
     this._searchProgressEl = modal.querySelector(".pq-search-progress");
     this._searchProgressTextEl = modal.querySelector(".pq-search-progress-text");
     this._searchSubmitBtn = modal.querySelector(".pq-search-submit-btn");
+    this._searchArabicSizeRange = modal.querySelector(".pq-search-arabic-size");
+    this._searchTranslationSizeRange = modal.querySelector(
+      ".pq-search-translation-size",
+    );
+    this._searchArabicSizeValue = modal.querySelector(
+      ".pq-search-arabic-size-value",
+    );
+    this._searchTranslationSizeValue = modal.querySelector(
+      ".pq-search-translation-size-value",
+    );
+    this.syncSearchResultFontControls();
 
     modal
       .querySelector(".pq-bookmark-modal-close")
@@ -6620,6 +6647,18 @@ class PocketQuranManager extends BaseManager {
     modal.querySelector(".pq-search-form")?.addEventListener("submit", (e) => {
       e.preventDefault();
       this.runPocketQuranSearch();
+    });
+    this._searchArabicSizeRange?.addEventListener("input", () => {
+      this.applySearchResultFontSizes(
+        this._searchArabicSizeRange.value,
+        this._searchTranslationSizeRange?.value,
+      );
+    });
+    this._searchTranslationSizeRange?.addEventListener("input", () => {
+      this.applySearchResultFontSizes(
+        this._searchArabicSizeRange?.value,
+        this._searchTranslationSizeRange.value,
+      );
     });
 
     return modal;
@@ -6634,6 +6673,64 @@ class PocketQuranManager extends BaseManager {
   closePocketQuranSearchModal() {
     if (!this._searchModal) return;
     this._searchModal.classList.remove("active");
+  }
+
+  getSearchResultFontDefaults() {
+    const readPx = (name, fallback) => {
+      try {
+        const value = getComputedStyle(this.card).getPropertyValue(name);
+        const parsed = parseFloat(String(value || "").trim());
+        return Number.isFinite(parsed) ? parsed : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    };
+
+    return {
+      arabic: this.clampNumber(readPx("--pq-arabic-size", 32), 18, 56, 32),
+      translation: this.clampNumber(
+        readPx("--pq-translation-size", 16),
+        12,
+        28,
+        16,
+      ),
+    };
+  }
+
+  syncSearchResultFontControls() {
+    if (!this._searchModal) return;
+    const sizes = this.getSearchResultFontDefaults();
+    this.applySearchResultFontSizes(sizes.arabic, sizes.translation);
+  }
+
+  applySearchResultFontSizes(arabicPx, translationPx) {
+    if (!this._searchModal) return;
+
+    const arabic = this.clampNumber(arabicPx, 18, 56, 32);
+    const translation = this.clampNumber(translationPx, 12, 28, 16);
+    this._searchModal.style.setProperty(
+      "--pq-search-arabic-size",
+      `${arabic}px`,
+    );
+    this._searchModal.style.setProperty(
+      "--pq-search-translation-size",
+      `${translation}px`,
+    );
+
+    if (this._searchArabicSizeRange) {
+      this._searchArabicSizeRange.value = String(arabic);
+      this.updateRangeProgress(this._searchArabicSizeRange);
+    }
+    if (this._searchTranslationSizeRange) {
+      this._searchTranslationSizeRange.value = String(translation);
+      this.updateRangeProgress(this._searchTranslationSizeRange);
+    }
+    if (this._searchArabicSizeValue) {
+      this._searchArabicSizeValue.textContent = `${arabic}px`;
+    }
+    if (this._searchTranslationSizeValue) {
+      this._searchTranslationSizeValue.textContent = `${translation}px`;
+    }
   }
 
   setPocketQuranSearchLoading(isLoading, progress = null) {
