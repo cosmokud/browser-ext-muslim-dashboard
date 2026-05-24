@@ -1748,6 +1748,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return "KFGQPC Uthman Taha Naskh";
   }
 
+  function isPocketQuranTajweedAllowedForFont(fontFamily) {
+    return normalizePocketQuranArabicFontFamily(fontFamily).startsWith(
+      "KFGQPC ",
+    );
+  }
+
+  function isPocketQuranPopupTajweedAllowed(settings = storage.getSettings()) {
+    return isPocketQuranTajweedAllowedForFont(
+      resolvePocketQuranPopupTypography(settings).arabicFontFamily,
+    );
+  }
+
   function normalizePocketQuranTranslationFontFamily(value) {
     const normalized = String(value || "").trim();
     if (pocketQuranPopupTranslationFontFamilies.includes(normalized)) {
@@ -2995,6 +3007,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function buildPocketQuranFallbackState(settings = storage.getSettings()) {
     const pqSettings = settings?.pocketQuran || {};
+    const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(settings);
     const activeSurah = clampNumber(pqSettings.lastSurahNumber, 1, 114, 1);
     const activeAyah = clampNumber(
       pqSettings.lastAyahNumber,
@@ -3019,7 +3032,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isAutoplay: pqSettings.reciterAutoplay === true,
       isAutoplayNextSurah: pqSettings.reciterAutoplayNextSurah === true,
       isAutoScroll: pqSettings.reciterAutoScroll === true,
-      isTajweedMode: pqSettings.tajweedMode === true,
+      isTajweedMode: pqSettings.tajweedMode === true && isTajweedAllowed,
       showArabicText: pqSettings.showArabicText !== false,
       showTranslationText: pqSettings.showTranslationText !== false,
       translationResourceId: clampNumber(
@@ -3037,6 +3050,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
     const fallback = buildPocketQuranFallbackState(settings);
     if (!rawState || typeof rawState !== "object") return fallback;
+    const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(settings);
 
     const activeSurah = clampNumber(
       rawState.activeSurah,
@@ -3088,7 +3102,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isAutoplayNextSurah: rawState.isAutoplayNextSurah === true,
       isAutoScroll: rawState.isAutoScroll === true,
       isTajweedMode:
-        typeof rawState.isTajweedMode === "boolean"
+        isTajweedAllowed && typeof rawState.isTajweedMode === "boolean"
           ? rawState.isTajweedMode
           : fallback.isTajweedMode,
       showArabicText:
@@ -3552,7 +3566,9 @@ document.addEventListener("DOMContentLoaded", () => {
       10000,
       85,
     );
-    const isTajweedMode = pocketQuranState.isTajweedMode === true;
+    const isTajweedMode =
+      isPocketQuranPopupTajweedAllowed(storage.getSettings()) &&
+      pocketQuranState.isTajweedMode === true;
     const snippetKey = `${target.surah}:${target.ayah}:${translationId}:${isTajweedMode ? "1" : "0"}`;
 
     if (
@@ -3695,14 +3711,29 @@ document.addEventListener("DOMContentLoaded", () => {
       pocketQuranState.isAutoScroll === true ? "true" : "false",
     );
 
+    const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(
+      storage.getSettings(),
+    );
     popupPqMiniTajweedToggle?.classList.toggle(
       "active",
-      pocketQuranState.isTajweedMode === true,
+      isTajweedAllowed && pocketQuranState.isTajweedMode === true,
     );
     popupPqMiniTajweedToggle?.setAttribute(
       "aria-pressed",
-      pocketQuranState.isTajweedMode === true ? "true" : "false",
+      isTajweedAllowed && pocketQuranState.isTajweedMode === true
+        ? "true"
+        : "false",
     );
+    if (popupPqMiniTajweedToggle) {
+      popupPqMiniTajweedToggle.disabled = !isTajweedAllowed;
+      popupPqMiniTajweedToggle.setAttribute(
+        "aria-disabled",
+        isTajweedAllowed ? "false" : "true",
+      );
+      popupPqMiniTajweedToggle.title = isTajweedAllowed
+        ? "Toggle Tajweed color-coded Arabic text"
+        : "Tajweed disabled for this font";
+    }
 
     if (!popupPqTranslationPanel?.hidden) {
       renderPocketQuranTranslationOptions();
@@ -4509,10 +4540,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       case pocketQuranCommandTypes.toggleTajweed: {
+        const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(
+          storage.getSettings(),
+        );
         const nextTajweedMode =
-          typeof payload.desiredIsTajweedMode === "boolean"
+          isTajweedAllowed && typeof payload.desiredIsTajweedMode === "boolean"
             ? payload.desiredIsTajweedMode
-            : !(state.isTajweedMode === true);
+            : isTajweedAllowed && !(state.isTajweedMode === true);
 
         pocketQuranState = normalizePocketQuranState(
           {
@@ -5773,7 +5807,22 @@ document.addEventListener("DOMContentLoaded", () => {
         trigger.dataset.popupPqFont,
       );
       persistPocketQuranPopupTypography({ arabicFontFamily: selectedFont });
+      if (!isPocketQuranTajweedAllowedForFont(selectedFont)) {
+        persistPocketQuranSettingsPatch({ tajweedMode: false });
+        pocketQuranState = normalizePocketQuranState(
+          {
+            ...(pocketQuranState ||
+              buildPocketQuranFallbackState(storage.getSettings())),
+            isTajweedMode: false,
+          },
+          storage.getSettings(),
+        );
+        sendPocketQuranCommand(pocketQuranCommandTypes.toggleTajweed, {
+          desiredIsTajweedMode: false,
+        });
+      }
       applyPocketQuranPopupTypography(storage.getSettings());
+      renderPocketQuranControls();
       closePocketQuranFontPanel();
     });
 
@@ -6078,7 +6127,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     popupPqMiniTajweedToggle?.addEventListener("click", () => {
-      const nextTajweedMode = !(pocketQuranState?.isTajweedMode === true);
+      const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(
+        storage.getSettings(),
+      );
+      const nextTajweedMode =
+        isTajweedAllowed && !(pocketQuranState?.isTajweedMode === true);
       pocketQuranState = normalizePocketQuranState(
         {
           ...(pocketQuranState ||
