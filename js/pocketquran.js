@@ -6964,26 +6964,38 @@ class PocketQuranManager extends BaseManager {
       item.className = "pq-search-result";
       item.setAttribute("role", "listitem");
 
-      const meta = document.createElement("button");
-      meta.type = "button";
+      const meta = document.createElement("div");
       meta.className = "pq-search-result-meta";
-      meta.setAttribute(
-        "aria-label",
-        `Open ${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`,
-      );
 
       const metaText = document.createElement("span");
       metaText.className = "pq-search-result-meta-text";
       metaText.textContent = `${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`;
 
-      const metaIcon = document.createElement("span");
+      const metaIcon = document.createElement("button");
+      metaIcon.type = "button";
       metaIcon.className = "pq-search-result-meta-icon";
-      metaIcon.setAttribute("aria-hidden", "true");
+      metaIcon.setAttribute(
+        "aria-label",
+        `Open ${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`,
+      );
+      metaIcon.title = `Open ${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`;
       metaIcon.innerHTML =
-        '<svg viewBox="0 0 24 24" width="14" height="14" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>';
+        '<svg viewBox="0 0 24 24" width="14" height="14" focusable="false" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>';
+
+      const copyButton = document.createElement("button");
+      copyButton.type = "button";
+      copyButton.className = "pq-search-result-copy";
+      copyButton.setAttribute(
+        "aria-label",
+        `Copy ayah ${result.surah}:${result.ayah}`,
+      );
+      copyButton.title = `Copy ayah ${result.surah}:${result.ayah}`;
+      copyButton.innerHTML =
+        '<svg viewBox="0 0 24 24" width="14" height="14" focusable="false" aria-hidden="true"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
       meta.appendChild(metaText);
       meta.appendChild(metaIcon);
+      meta.appendChild(copyButton);
 
       const arabic = document.createElement("div");
       arabic.className = "pq-search-result-ar";
@@ -7005,9 +7017,22 @@ class PocketQuranManager extends BaseManager {
       item.appendChild(meta);
       item.appendChild(arabic);
       item.appendChild(translation);
-      meta.addEventListener("click", () =>
+      metaIcon.addEventListener("click", () =>
         this.goToPocketQuranSearchResult(result),
       );
+      copyButton.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const copied = await this.copyPocketQuranAyah(
+          {
+            text_uthmani: result.arabicText,
+            translations: [{ text: result.translationText }],
+          },
+          result.surah,
+          result.ayah,
+        );
+        if (copied) this.showPocketQuranCopyIndicator(copyButton);
+      });
       this._searchResultsEl.appendChild(item);
     });
 

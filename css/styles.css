@@ -19162,31 +19162,55 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 }
 
 .pq-search-result-meta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.4rem;
-  width: fit-content;
+  width: 100%;
   border: 0;
-  border-radius: 6px;
   background: transparent;
   color: var(--accent-gold);
   font-size: 0.82rem;
   font-weight: 700;
-  font: inherit;
   padding: 0;
   text-align: start;
+  cursor: text;
+  user-select: text;
+}
+
+.pq-search-result-meta-text {
+  min-width: 0;
+  user-select: text;
+}
+
+.pq-search-result-meta-icon,
+.pq-search-result-copy {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent-gold);
+  padding: 0;
   cursor: pointer;
   user-select: none;
 }
 
-.pq-search-result-meta:focus-visible {
+.pq-search-result-copy {
+  margin-inline-start: auto;
+}
+
+.pq-search-result-meta-icon:focus-visible,
+.pq-search-result-copy:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 3px;
 }
 
-.pq-search-result-meta-icon {
-  display: inline-flex;
-  flex: 0 0 auto;
+.pq-search-result-copy.copied {
+  color: var(--success-color, #4ade80);
 }
 
 .pq-search-result-ar {
