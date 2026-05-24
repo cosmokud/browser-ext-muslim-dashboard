@@ -134,33 +134,29 @@ class FastingManager {
     // Monday/Thursday fasts (weekday-based)
     // Max days in-between is 6, so width uses total=6 (full scale)
     if (visibility.monday !== false) {
-      const monday = this._weekdayCountdown(nowStart, 1);
-      if (!this._fastingDateIsForbidden(monday.target, adjustment)) {
-        items.push({
-          key: "monday",
-          title: "Monday Fast",
-          subtitle: "Weekly Sunnah",
-          daysLeft: monday.daysLeft,
-          totalDays: 6,
-          meta: this._daysLeftText(monday.daysLeft),
-          aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
-        });
-      }
+      const monday = this._weekdayCountdown(nowStart, 1, hijriNow, adjustment);
+      items.push({
+        key: "monday",
+        title: "Monday Fast",
+        subtitle: "Weekly Sunnah",
+        daysLeft: monday.daysLeft,
+        totalDays: monday.totalDays,
+        meta: this._daysLeftText(monday.daysLeft),
+        aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
+      });
     }
 
     if (visibility.thursday !== false) {
-      const thursday = this._weekdayCountdown(nowStart, 4);
-      if (!this._fastingDateIsForbidden(thursday.target, adjustment)) {
-        items.push({
-          key: "thursday",
-          title: "Thursday Fast",
-          subtitle: "Weekly Sunnah",
-          daysLeft: thursday.daysLeft,
-          totalDays: 6,
-          meta: this._daysLeftText(thursday.daysLeft),
-          aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
-        });
-      }
+      const thursday = this._weekdayCountdown(nowStart, 4, hijriNow, adjustment);
+      items.push({
+        key: "thursday",
+        title: "Thursday Fast",
+        subtitle: "Weekly Sunnah",
+        daysLeft: thursday.daysLeft,
+        totalDays: thursday.totalDays,
+        meta: this._daysLeftText(thursday.daysLeft),
+        aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
+      });
     }
 
     // 13th of Hijri months (Ayyam al-Beed) – exception: hide during Ramadan
@@ -429,10 +425,23 @@ class FastingManager {
     };
   }
 
-  _weekdayCountdown(nowStart, targetDow) {
+  _weekdayCountdown(nowStart, targetDow, hijriNow, adjustment) {
     const todayDow = nowStart.getDay(); // 0=Sun
     const delta = (targetDow - todayDow + 7) % 7;
-    return { daysLeft: delta, target: this._addDays(nowStart, delta) };
+    const target = this._addDays(nowStart, delta);
+
+    if (this._weeklyFastMayHitForbiddenDay(hijriNow, delta)) {
+      const hijriTarget = this.hijri.toHijri(target, adjustment);
+      if (this._hijriFastDayIsForbidden(hijriTarget.month, hijriTarget.day)) {
+        return {
+          daysLeft: delta + 7,
+          target: this._addDays(target, 7),
+          totalDays: 7,
+        };
+      }
+    }
+
+    return { daysLeft: delta, target, totalDays: 6 };
   }
 
   _ramadanCountdown(nowStart, hijriNow, adjustment) {
@@ -570,6 +579,18 @@ class FastingManager {
   _fastingDateIsForbidden(date, adjustment) {
     const hijriDate = this.hijri.toHijri(date, adjustment);
     return this._hijriFastDayIsForbidden(hijriDate.month, hijriDate.day);
+  }
+
+  _weeklyFastMayHitForbiddenDay(hijriNow, daysAhead) {
+    if (!hijriNow || daysAhead < 0 || daysAhead > 6) return false;
+
+    const hm = Number(hijriNow.month || 0);
+    const hd = Number(hijriNow.day || 0);
+
+    if (hm === 10) return hd === 1;
+    if (hm === 12) return hd <= 13 && hd + daysAhead >= 10;
+
+    return false;
   }
 
   _hijriFastDayIsForbidden(month, day) {
