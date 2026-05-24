@@ -6346,7 +6346,12 @@ class PocketQuranManager extends BaseManager {
     const t = this.clampNumber(translationPx, 8, 144, 18);
 
     if (this.card) {
+      const badgeOffset = Math.max(0, (a * 1.95 - 34) / 2);
       this.card.style.setProperty("--pq-arabic-size", `${a}px`);
+      this.card.style.setProperty(
+        "--pq-ayah-badge-align-offset",
+        `${badgeOffset.toFixed(2)}px`,
+      );
       this.card.style.setProperty("--pq-translation-size", `${t}px`);
     }
 
