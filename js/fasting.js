@@ -135,28 +135,32 @@ class FastingManager {
     // Max days in-between is 6, so width uses total=6 (full scale)
     if (visibility.monday !== false) {
       const monday = this._weekdayCountdown(nowStart, 1);
-      items.push({
-        key: "monday",
-        title: "Monday Fast",
-        subtitle: "Weekly Sunnah",
-        daysLeft: monday.daysLeft,
-        totalDays: 6,
-        meta: this._daysLeftText(monday.daysLeft),
-        aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
-      });
+      if (!this._fastingDateIsForbidden(monday.target, adjustment)) {
+        items.push({
+          key: "monday",
+          title: "Monday Fast",
+          subtitle: "Weekly Sunnah",
+          daysLeft: monday.daysLeft,
+          totalDays: 6,
+          meta: this._daysLeftText(monday.daysLeft),
+          aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
+        });
+      }
     }
 
     if (visibility.thursday !== false) {
       const thursday = this._weekdayCountdown(nowStart, 4);
-      items.push({
-        key: "thursday",
-        title: "Thursday Fast",
-        subtitle: "Weekly Sunnah",
-        daysLeft: thursday.daysLeft,
-        totalDays: 6,
-        meta: this._daysLeftText(thursday.daysLeft),
-        aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
-      });
+      if (!this._fastingDateIsForbidden(thursday.target, adjustment)) {
+        items.push({
+          key: "thursday",
+          title: "Thursday Fast",
+          subtitle: "Weekly Sunnah",
+          daysLeft: thursday.daysLeft,
+          totalDays: 6,
+          meta: this._daysLeftText(thursday.daysLeft),
+          aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
+        });
+      }
     }
 
     // 13th of Hijri months (Ayyam al-Beed) – exception: hide during Ramadan
@@ -428,7 +432,7 @@ class FastingManager {
   _weekdayCountdown(nowStart, targetDow) {
     const todayDow = nowStart.getDay(); // 0=Sun
     const delta = (targetDow - todayDow + 7) % 7;
-    return { daysLeft: delta };
+    return { daysLeft: delta, target: this._addDays(nowStart, delta) };
   }
 
   _ramadanCountdown(nowStart, hijriNow, adjustment) {
@@ -475,24 +479,6 @@ class FastingManager {
     const hm = hijriNow.month;
     const hd = hijriNow.day;
 
-    // Ayyam al-Beed are the 13th–15th of each Hijri month.
-    // If we're currently within that window, it should count as "Today".
-    if (hd >= 13 && hd <= 15) {
-      const monthName = this.hijri.monthNames.en[hm - 1];
-      // Show the current Hijri day (e.g., "14 Ramadan") while treating it as Today.
-      const badge = `${hd} ${monthName}`;
-      return {
-        key: "thirteenth",
-        title: "Ayyam al-Beed",
-        subtitle: "13th - 15th of each Hijri month",
-        daysLeft: 0,
-        totalDays: 29,
-        meta: "Today",
-        aria: `Ayyam al-Beed (${badge}): Today`,
-        badge,
-      };
-    }
-
     let targetYear = hy;
     let targetMonth = hm;
     // After the 15th, the next Ayyam window starts next month.
@@ -504,16 +490,56 @@ class FastingManager {
       }
     }
 
-    const target = this._targetGregorianForHijri(
-      targetYear,
-      targetMonth,
-      13,
-      adjustment,
-    );
+    let target = null;
+    let targetDay = null;
+
+    while (!target) {
+      const firstVisibleDay = this._firstPermittedAyyamDay(
+        targetYear,
+        targetMonth,
+        adjustment,
+      );
+      const startDay = targetYear === hy && targetMonth === hm
+        ? Math.max(13, hd)
+        : 13;
+
+      for (let day = startDay; day <= 15; day += 1) {
+        const candidate = this._targetGregorianForHijri(
+          targetYear,
+          targetMonth,
+          day,
+          adjustment,
+        );
+        if (
+          day >= firstVisibleDay &&
+          this._diffDays(nowStart, candidate) >= 0 &&
+          !this._fastingDateIsForbidden(candidate, adjustment)
+        ) {
+          target = candidate;
+          targetDay = day;
+          break;
+        }
+      }
+
+      if (!target) {
+        targetMonth += 1;
+        if (targetMonth > 12) {
+          targetMonth = 1;
+          targetYear += 1;
+        }
+      }
+    }
+
     const daysLeft = this._diffDays(nowStart, target);
 
     const monthName = this.hijri.monthNames.en[targetMonth - 1];
-    const badge = `13–15 ${monthName}`;
+    const badgeStart = this._firstPermittedAyyamDay(
+      targetYear,
+      targetMonth,
+      adjustment,
+    );
+    const badge = `${badgeStart}-15 ${monthName}`;
+    const meta = this._daysLeftText(daysLeft);
 
     return {
       key: "thirteenth",
@@ -521,10 +547,39 @@ class FastingManager {
       subtitle: "13th - 15th of each Hijri month",
       daysLeft,
       totalDays: 29,
-      meta: this._daysLeftText(daysLeft),
-      aria: `Ayyam al-Beed (${badge}): ${this._daysLeftText(daysLeft)}`,
+      meta,
+      aria: `Ayyam al-Beed (${targetDay} ${monthName}): ${meta}`,
       badge,
     };
+  }
+
+  _firstPermittedAyyamDay(targetYear, targetMonth, adjustment) {
+    for (let day = 13; day <= 15; day += 1) {
+      const date = this._targetGregorianForHijri(
+        targetYear,
+        targetMonth,
+        day,
+        adjustment,
+      );
+      if (!this._fastingDateIsForbidden(date, adjustment)) return day;
+    }
+
+    return 13;
+  }
+
+  _fastingDateIsForbidden(date, adjustment) {
+    const hijriDate = this.hijri.toHijri(date, adjustment);
+    return this._hijriFastDayIsForbidden(hijriDate.month, hijriDate.day);
+  }
+
+  _hijriFastDayIsForbidden(month, day) {
+    const hm = Number(month || 0);
+    const hd = Number(day || 0);
+
+    return (
+      (hm === 10 && hd === 1) ||
+      (hm === 12 && hd >= 10 && hd <= 13)
+    );
   }
 
   _hijriCountdownWithin(
