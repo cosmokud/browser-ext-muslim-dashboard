@@ -1505,12 +1505,19 @@ class PocketQuranManager extends BaseManager {
     if (!this._virtualContainer || !this._activeVerses?.length) return null;
 
     const scrollTop = this._virtualContainer.scrollTop;
-    const index = this.getFirstVisibleRenderedAyahIndex(scrollTop);
+    const index = this.getAyahAtOffset(scrollTop);
     if (!Number.isFinite(index)) return null;
+    const ayahOffset = this.getAyahOffset(index);
+    const ayahHeight = this._ayahHeights.get(index) ?? this._avgAyahHeight;
 
     return {
       index,
-      offsetWithinAyah: scrollTop - this.getAyahOffset(index),
+      offsetWithinAyah: this.clampNumber(
+        scrollTop - ayahOffset,
+        0,
+        ayahHeight,
+        0,
+      ),
       wasNearBottom:
         this._virtualContainer.scrollHeight -
           this._virtualContainer.clientHeight -
