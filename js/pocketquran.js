@@ -1576,11 +1576,13 @@ class PocketQuranManager extends BaseManager {
   /**
    * Render only the visible ayahs within the given range.
    */
-  renderVisibleAyahs() {
+  renderVisibleAyahs(opts = {}) {
     if (!this._virtualContent || !this._activeVerses?.length) return;
 
+    const force = opts?.force === true;
     const total = this._activeVerses.length;
     if (
+      !force &&
       this._renderedRange.start === 0 &&
       this._renderedRange.end === total - 1 &&
       this._virtualContent.childElementCount === total
@@ -1605,6 +1607,22 @@ class PocketQuranManager extends BaseManager {
     this._virtualContent.appendChild(fragment);
 
     this.scheduleRenderedAyahMeasurement();
+  }
+
+  refreshRenderedAyahs({ preserveScroll = true } = {}) {
+    if (!this._activeVerses?.length) return;
+
+    const scrollTop = this._virtualContainer?.scrollTop || 0;
+    this._ayahHeights.clear();
+    this.renderVisibleAyahs({ force: true });
+
+    if (preserveScroll) {
+      requestAnimationFrame(() => {
+        if (this._virtualContainer) {
+          this._virtualContainer.scrollTop = scrollTop;
+        }
+      });
+    }
   }
 
   /**
@@ -2614,6 +2632,18 @@ class PocketQuranManager extends BaseManager {
     this.headerMeta.textContent = `${surah}. ${surahName} · ${versesCount} ayahs · ${translation}${tajweedIndicator}`;
   }
 
+  refreshSurahHeaderMeta() {
+    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    if (!chapter) return;
+
+    this.renderSurahHeader({
+      surah: this._activeSurah,
+      surahName: chapter.name_simple || `Surah ${this._activeSurah}`,
+      surahNameAr: chapter.name_arabic || "",
+      versesCount: this._activeVerses?.length || 0,
+    });
+  }
+
   /**
    * Reload the current surah with a new translation.
    * Called when user changes translation from settings or modal.
@@ -2820,7 +2850,6 @@ class PocketQuranManager extends BaseManager {
    */
   async toggleTajweedMode() {
     if (!this.isTajweedAllowedForFont(this._arabicFontFamily)) {
-      // Enforce off when not allowed
       this.disableTajweedMode();
       this.syncTajweedAvailabilityForFont();
       return;
@@ -2830,40 +2859,17 @@ class PocketQuranManager extends BaseManager {
     this.persistPocketQuranSettings({ tajweedMode: this._isTajweedMode });
     this.updateTajweedToggleUI();
 
-    // Re-render the current surah with or without Tajweed
-    const scrollTop = this._virtualContainer?.scrollTop || 0;
-    const currentAyah = this._activeAyah;
-
-    // Preload Tajweed verses if enabling Tajweed mode
     if (this._isTajweedMode && this._activeSurah) {
       await this.preloadTajweedVerses(this._activeSurah);
+      if (!this.isTajweedAllowedForFont(this._arabicFontFamily)) {
+        this.disableTajweedMode();
+        this.syncTajweedAvailabilityForFont();
+        return;
+      }
     }
 
-    // Invalidate height cache since Tajweed font may have different sizing
-    this._ayahHeights.clear();
-
-    // Re-render visible ayahs
-    if (this._activeVerses?.length) {
-      this.recalculateVirtualization();
-
-      // Restore scroll position
-      requestAnimationFrame(() => {
-        if (this._virtualContainer) {
-          this._virtualContainer.scrollTop = scrollTop;
-        }
-      });
-    }
-
-    // Update header to show Tajweed indicator
-    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
-    if (chapter) {
-      this.renderSurahHeader({
-        surah: this._activeSurah,
-        surahName: chapter.name_simple || `Surah ${this._activeSurah}`,
-        surahNameAr: chapter.name_arabic || "",
-        versesCount: this._activeVerses?.length || 0,
-      });
-    }
+    this.refreshRenderedAyahs({ preserveScroll: true });
+    this.refreshSurahHeaderMeta();
   }
 
   /**
@@ -2956,7 +2962,7 @@ class PocketQuranManager extends BaseManager {
 
   isTajweedAllowedForFont(fontFamily) {
     const f = this.normalizeArabicFontFamily(fontFamily);
-    return !(f === "Noto Naskh Arabic" || f === "Amiri");
+    return f.startsWith("KFGQPC ");
   }
 
   syncTajweedAvailabilityForFont() {
@@ -2979,36 +2985,15 @@ class PocketQuranManager extends BaseManager {
   }
 
   disableTajweedMode() {
-    if (!this._isTajweedMode) {
-      this.persistPocketQuranSettings({ tajweedMode: false });
-      this.updateTajweedToggleUI();
-      return;
-    }
+    const wasEnabled = this._isTajweedMode === true;
 
     this._isTajweedMode = false;
     this.persistPocketQuranSettings({ tajweedMode: false });
     this.updateTajweedToggleUI();
 
-    const scrollTop = this._virtualContainer?.scrollTop || 0;
-
-    this._ayahHeights.clear();
-    if (this._activeVerses?.length) {
-      this.recalculateVirtualization();
-      requestAnimationFrame(() => {
-        if (this._virtualContainer) {
-          this._virtualContainer.scrollTop = scrollTop;
-        }
-      });
-    }
-
-    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
-    if (chapter) {
-      this.renderSurahHeader({
-        surah: this._activeSurah,
-        surahName: chapter.name_simple || `Surah ${this._activeSurah}`,
-        surahNameAr: chapter.name_arabic || "",
-        versesCount: this._activeVerses?.length || 0,
-      });
+    if (wasEnabled) {
+      this.refreshRenderedAyahs({ preserveScroll: true });
+      this.refreshSurahHeaderMeta();
     }
   }
 

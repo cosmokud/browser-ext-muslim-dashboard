@@ -13879,6 +13879,20 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   flex: 0 0 auto;
 }
 
+.pocket-quran-header.pq-has-recitation-controls .card-title {
+  order: 1;
+}
+
+.pocket-quran-header.pq-has-recitation-controls .card-header-actions {
+  order: 2;
+}
+
+.pocket-quran-header.pq-has-recitation-controls
+  .pq-recitation-controls:not(.pq-recitation-controls-floating) {
+  order: 3;
+  flex-basis: 100%;
+}
+
 .pocket-quran-header-meta {
   margin-top: 2px;
   padding: 0.45rem 0.75rem;
