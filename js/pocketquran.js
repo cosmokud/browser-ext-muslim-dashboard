@@ -1323,52 +1323,44 @@ class PocketQuranManager extends BaseManager {
     this._pendingMeasureAfterScroll = false;
     this._lastScrollTop = 0;
 
-    // Clear previous content
     this.contentEl.innerHTML = "";
     this._ayahHeights.clear();
-    this._renderedRange = { start: 0, end: 0 };
+    this._renderedRange = { start: -1, end: -1 };
 
-    // Create virtual scroll container (CSS handles height - fixed in normal mode, flex in focus mode)
     this._virtualContainer = document.createElement("div");
     this._virtualContainer.className = "pq-virtual-container";
 
-    // Create spacer that determines total scroll height
     this._virtualSpacer = document.createElement("div");
     this._virtualSpacer.className = "pq-virtual-spacer";
     this._virtualSpacer.style.cssText = `
       position: relative;
       width: 100%;
-      pointer-events: none;
+      pointer-events: auto;
     `;
 
-    // Create content container for rendered ayahs
     this._virtualContent = document.createElement("div");
     this._virtualContent.className = "pq-virtual-content";
     this._virtualContent.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: relative;
+      top: auto;
+      left: auto;
+      right: auto;
       display: flex;
       flex-direction: column;
       gap: var(--spacing-md);
+      transform: none;
     `;
 
     this._virtualSpacer.appendChild(this._virtualContent);
     this._virtualContainer.appendChild(this._virtualSpacer);
     this.contentEl.appendChild(this._virtualContainer);
 
-    // Calculate initial total height
-    this.updateTotalHeight();
-
-    // Attach scroll listener with throttling
     this._virtualContainer.addEventListener(
       "scroll",
       this.handleVirtualScroll.bind(this),
       { passive: true },
     );
 
-    // If the user starts interacting, cancel any programmatic scroll lock
     const cancelProgrammaticScroll = () => {
       this._programmaticScroll = null;
     };
@@ -1386,67 +1378,24 @@ class PocketQuranManager extends BaseManager {
       { passive: true },
     );
 
-    // Observe container resize
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
     }
     this._resizeObserver = new ResizeObserver(() => {
-      this.recalculateVirtualization();
+      this.scheduleRenderedAyahMeasurement();
     });
     this._resizeObserver.observe(this._virtualContainer);
 
-    // Initial render
-    this.renderVisibleAyahs(0);
+    this.renderVisibleAyahs();
   }
 
   /**
    * Calculate the total scrollable height based on estimated/measured ayah heights.
    */
-  updateTotalHeight(opts = {}) {
-    if (!this._virtualSpacer || !this._activeVerses?.length) return;
+  updateTotalHeight() {
+    if (!this._virtualSpacer) return;
 
-    const preserveBottomEdge = opts?.preserveBottomEdge === true;
-    const container = this._virtualContainer;
-    let previousScrollTop = 0;
-    let previousMaxScrollTop = 0;
-    let wasNearBottom = false;
-
-    if (preserveBottomEdge && container) {
-      previousScrollTop = container.scrollTop;
-      previousMaxScrollTop = Math.max(
-        0,
-        container.scrollHeight - container.clientHeight,
-      );
-      wasNearBottom =
-        previousMaxScrollTop - previousScrollTop <=
-        PocketQuranManager.BOTTOM_LOCK_THRESHOLD_PX;
-    }
-
-    let totalHeight = 0;
-    const total = this._activeVerses.length;
-    const gap = 16; // var(--spacing-md) ≈ 16px
-
-    for (let i = 0; i < total; i++) {
-      const measuredHeight = this._ayahHeights.get(i);
-      totalHeight += (measuredHeight ?? this._avgAyahHeight) + gap;
-    }
-
-    this._virtualSpacer.style.height = `${totalHeight}px`;
-
-    if (!preserveBottomEdge || !container) return;
-
-    const nextMaxScrollTop = Math.max(
-      0,
-      container.scrollHeight - container.clientHeight,
-    );
-
-    if (wasNearBottom) {
-      container.scrollTop = nextMaxScrollTop;
-    } else if (previousScrollTop > nextMaxScrollTop) {
-      container.scrollTop = nextMaxScrollTop;
-    }
-
-    this._lastScrollTop = container.scrollTop;
+    this._virtualSpacer.style.height = "";
   }
 
   /**
@@ -1493,54 +1442,33 @@ class PocketQuranManager extends BaseManager {
   getFirstVisibleRenderedAyahIndex(scrollTop = null) {
     if (!this._activeVerses?.length) return null;
 
+    const ayahEls = this._virtualContent?.querySelectorAll(
+      ".pocket-quran-ayah",
+    );
+    if (ayahEls?.length && this._virtualContainer) {
+      const containerRect = this._virtualContainer.getBoundingClientRect();
+      const thresholdY =
+        containerRect.top +
+        Math.max(0, PocketQuranManager.ACTIVE_AYAH_VISIBILITY_PX);
+
+      for (const el of ayahEls) {
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom > thresholdY) {
+          const index = parseInt(el.dataset.index, 10);
+          return Number.isFinite(index) ? index : null;
+        }
+      }
+
+      const lastEl = ayahEls[ayahEls.length - 1];
+      const lastIndex = parseInt(lastEl?.dataset.index, 10);
+      return Number.isFinite(lastIndex) ? lastIndex : null;
+    }
+
     const resolvedScrollTop = Number.isFinite(scrollTop)
       ? scrollTop
       : (this._virtualContainer?.scrollTop ?? 0);
-    const threshold = Math.max(0, PocketQuranManager.ACTIVE_AYAH_VISIBILITY_PX);
 
-    return this.getAyahAtOffset(resolvedScrollTop + threshold);
-  }
-
-  captureVirtualScrollAnchor() {
-    if (!this._virtualContainer || !this._activeVerses?.length) return null;
-
-    const scrollTop = this._virtualContainer.scrollTop;
-    const index = this.getAyahAtOffset(scrollTop);
-    if (!Number.isFinite(index)) return null;
-    const ayahOffset = this.getAyahOffset(index);
-    const ayahHeight = this._ayahHeights.get(index) ?? this._avgAyahHeight;
-
-    return {
-      index,
-      offsetWithinAyah: this.clampNumber(
-        scrollTop - ayahOffset,
-        0,
-        ayahHeight,
-        0,
-      ),
-      wasNearBottom:
-        this._virtualContainer.scrollHeight -
-          this._virtualContainer.clientHeight -
-          scrollTop <=
-        PocketQuranManager.BOTTOM_LOCK_THRESHOLD_PX,
-    };
-  }
-
-  preserveVirtualScrollAnchor(anchor) {
-    if (!anchor || !this._virtualContainer || !this._activeVerses?.length) {
-      return;
-    }
-    if (anchor.wasNearBottom) return;
-
-    const maxIndex = this._activeVerses.length - 1;
-    const index = this.clampNumber(anchor.index, 0, maxIndex, 0);
-    const nextScrollTop = Math.max(
-      0,
-      this.getAyahOffset(index) + Number(anchor.offsetWithinAyah || 0),
-    );
-
-    this._virtualContainer.scrollTop = nextScrollTop;
-    this._lastScrollTop = nextScrollTop;
+    return this.getAyahAtOffset(resolvedScrollTop);
   }
 
   markVirtualScrollActivity() {
@@ -1589,34 +1517,9 @@ class PocketQuranManager extends BaseManager {
 
       const scrollTop = this._virtualContainer.scrollTop;
 
-      // Track scroll direction
       this._scrollDirection = scrollTop > this._lastScrollTop ? "down" : "up";
       this._lastScrollTop = scrollTop;
 
-      // Find the ayah at current scroll position
-      const firstVisibleIndex = this.getAyahAtOffset(scrollTop);
-
-      // Calculate visible range with buffer
-      const buffer = PocketQuranManager.BUFFER_AYAHS;
-      const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
-      const total = this._activeVerses?.length || 0;
-
-      const start = Math.max(0, firstVisibleIndex - buffer);
-      const end = Math.min(
-        total - 1,
-        firstVisibleIndex + visibleCount + buffer,
-      );
-
-      // Only re-render if range changed significantly
-      if (
-        start !== this._renderedRange.start ||
-        end !== this._renderedRange.end
-      ) {
-        this.renderVisibleAyahs(start, end);
-      }
-
-      // During programmatic smooth scroll, keep the active ayah pinned so
-      // nav buttons don't read a scroll-updated value mid-animation.
       if (this._programmaticScroll) {
         const now =
           typeof performance !== "undefined" && performance.now
@@ -1628,8 +1531,6 @@ class PocketQuranManager extends BaseManager {
         const delta = Math.abs(scrollTop - targetOffset);
         const timedOut = now - startedAt > 2000;
 
-        // Always pin UI to the requested ayah while the lock exists, and do
-        // not fall through to scroll-derived updates in the same RAF tick.
         const activeAyahChanged = this._activeAyah !== targetAyah;
         this._activeAyah = targetAyah;
         if (
@@ -1649,12 +1550,10 @@ class PocketQuranManager extends BaseManager {
         return;
       }
 
-      // Update active ayah for UI
-      const offsetVisibleIndex =
-        this.getFirstVisibleRenderedAyahIndex(scrollTop);
-      const activeIndex = Number.isFinite(offsetVisibleIndex)
-        ? offsetVisibleIndex
-        : firstVisibleIndex;
+      const visibleIndex = this.getFirstVisibleRenderedAyahIndex(scrollTop);
+      const activeIndex = Number.isFinite(visibleIndex)
+        ? visibleIndex
+        : this.getAyahAtOffset(scrollTop);
 
       const nextActiveAyah = activeIndex + 1;
       const activeAyahChanged = this._activeAyah !== nextActiveAyah;
@@ -1677,34 +1576,24 @@ class PocketQuranManager extends BaseManager {
   /**
    * Render only the visible ayahs within the given range.
    */
-  renderVisibleAyahs(start, end) {
+  renderVisibleAyahs() {
     if (!this._virtualContent || !this._activeVerses?.length) return;
 
     const total = this._activeVerses.length;
-    start = Math.max(0, start ?? 0);
-    end = Math.min(
-      total - 1,
-      end ?? start + PocketQuranManager.VISIBLE_AYAH_COUNT - 1,
-    );
-
-    // Skip if same range
     if (
-      start === this._renderedRange.start &&
-      end === this._renderedRange.end
+      this._renderedRange.start === 0 &&
+      this._renderedRange.end === total - 1 &&
+      this._virtualContent.childElementCount === total
     ) {
       return;
     }
 
-    this._renderedRange = { start, end };
+    this._renderedRange = { start: 0, end: total - 1 };
+    this._virtualContent.style.transform = "none";
 
-    // Calculate top offset for positioning
-    const topOffset = this.getAyahOffset(start);
-    this._virtualContent.style.transform = `translateY(${topOffset}px)`;
-
-    // Build fragment for new ayahs
     const fragment = document.createDocumentFragment();
 
-    for (let i = start; i <= end; i++) {
+    for (let i = 0; i < total; i++) {
       const verse = this._activeVerses[i];
       if (!verse) continue;
 
@@ -1712,11 +1601,9 @@ class PocketQuranManager extends BaseManager {
       fragment.appendChild(ayahEl);
     }
 
-    // Replace content
     this._virtualContent.innerHTML = "";
     this._virtualContent.appendChild(fragment);
 
-    // Avoid forcing layout reads during active scroll; commit measurement on idle.
     this.scheduleRenderedAyahMeasurement();
   }
 
@@ -1726,8 +1613,6 @@ class PocketQuranManager extends BaseManager {
   measureRenderedAyahs() {
     if (!this._virtualContent) return;
 
-    const anchor = this.captureVirtualScrollAnchor();
-    const renderedStart = this._renderedRange.start;
     const ayahEls = this._virtualContent.querySelectorAll(".pocket-quran-ayah");
     let totalMeasured = 0;
     let measureCount = 0;
@@ -1754,22 +1639,8 @@ class PocketQuranManager extends BaseManager {
       }
     });
 
-    // Update average height
     if (measureCount > 0 && heightsChanged) {
-      const newAvg = totalMeasured / measureCount;
-      // Smooth the average to avoid sudden jumps
-      this._avgAyahHeight = this._avgAyahHeight * 0.7 + newAvg * 0.3;
-    }
-
-    // Commit scroll height only when actual measurements changed.
-    if (heightsChanged) {
-      this.updateTotalHeight({ preserveBottomEdge: true });
-      if (Number.isFinite(renderedStart) && renderedStart >= 0) {
-        this._virtualContent.style.transform = `translateY(${this.getAyahOffset(
-          renderedStart,
-        )}px)`;
-      }
-      this.preserveVirtualScrollAnchor(anchor);
+      this._avgAyahHeight = totalMeasured / measureCount;
     }
   }
 
@@ -1779,21 +1650,8 @@ class PocketQuranManager extends BaseManager {
   recalculateVirtualization() {
     if (!this._virtualContainer || !this._activeVerses?.length) return;
 
-    const scrollTop = this._virtualContainer.scrollTop;
-    const firstVisible = this.getAyahAtOffset(scrollTop);
-
-    this.updateTotalHeight();
-
-    const buffer = PocketQuranManager.BUFFER_AYAHS;
-    const visibleCount = PocketQuranManager.VISIBLE_AYAH_COUNT;
-    const total = this._activeVerses.length;
-
-    const start = Math.max(0, firstVisible - buffer);
-    const end = Math.min(total - 1, firstVisible + visibleCount + buffer);
-
-    // Force re-render
-    this._renderedRange = { start: -1, end: -1 };
-    this.renderVisibleAyahs(start, end);
+    this.scheduleRenderedAyahMeasurement();
+    this.handleVirtualScroll();
   }
 
   refreshPocketQuranContentArea(opts = {}) {
