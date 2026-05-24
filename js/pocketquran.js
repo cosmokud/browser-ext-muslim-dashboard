@@ -2023,7 +2023,22 @@ class PocketQuranManager extends BaseManager {
 
     const badge = document.createElement("div");
     badge.className = "pocket-quran-ayah-badge";
-    badge.textContent = String(ayahNumber);
+    badge.textContent = `${surah}:${ayahNumber}`;
+    badge.setAttribute("role", "button");
+    badge.setAttribute("tabindex", "0");
+    badge.setAttribute("aria-label", `Copy ayah ${surah}:${ayahNumber}`);
+    badge.title = `Copy ayah ${surah}:${ayahNumber}`;
+    badge.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.copyPocketQuranAyah(verse, surah, ayahNumber);
+    });
+    badge.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.copyPocketQuranAyah(verse, surah, ayahNumber);
+    });
 
     const ar = document.createElement("div");
     ar.className = "pocket-quran-ayah-ar";
@@ -2071,18 +2086,60 @@ class PocketQuranManager extends BaseManager {
       this.togglePlayPause(surah, ayahNumber);
     });
 
-    // Bottom-left stacked controls (top-to-bottom): star, play, badge
+    // Bottom-left stacked controls (top-to-bottom): star, play
     const controlsStack = document.createElement("div");
     controlsStack.className = "pq-ayah-controls-stack";
     controlsStack.appendChild(starBtn);
     controlsStack.appendChild(playBtn);
-    controlsStack.appendChild(badge);
 
     ayahEl.appendChild(controlsStack);
+    ayahEl.appendChild(badge);
     ayahEl.appendChild(ar);
     ayahEl.appendChild(tr);
 
     return ayahEl;
+  }
+
+  formatPocketQuranAyahCopy(verse, surah, ayahNumber) {
+    const settings = this.storage?.getSettings ? this.storage.getSettings() : {};
+    const includeArabic = settings?.pocketQuran?.copyIncludeArabic === true;
+    const surahName = this.getSurahNameSimple(surah);
+    const rawTranslation = Array.isArray(verse?.translations)
+      ? verse.translations[0]?.text
+      : "";
+    const translation = this.stripHtmlToText(rawTranslation || "").trim();
+    const arabic = String(verse?.text_uthmani || "").trim();
+    const reference = `(${surahName} ${surah}:${ayahNumber})`;
+    const translatedLine = `"${translation}" ${reference}`;
+
+    if (includeArabic && arabic) {
+      return `${arabic}\n${translatedLine}`;
+    }
+
+    return translatedLine;
+  }
+
+  async copyPocketQuranAyah(verse, surah, ayahNumber) {
+    const text = this.formatPocketQuranAyahCopy(verse, surah, ayahNumber);
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    } catch (error) {
+      console.warn("Failed to copy Pocket Quran ayah", error);
+    }
   }
 
   /**

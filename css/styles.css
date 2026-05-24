@@ -15016,9 +15016,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-badge {
-  position: static;
-  width: 34px;
+  position: absolute;
+  right: var(--spacing-md);
+  bottom: var(--spacing-md);
+  min-width: 44px;
   height: 34px;
+  padding: 0 0.55rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -15026,8 +15029,24 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.82rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  z-index: 2;
+  transition: all var(--transition-fast);
+}
+
+.pocket-quran-ayah-badge:hover {
+  background: var(--glass-bg-hover);
+  transform: scale(1.05);
+}
+
+.pocket-quran-ayah-badge:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
 }
 
 .pocket-quran-ayah-star {

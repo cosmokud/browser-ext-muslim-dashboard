@@ -433,6 +433,7 @@ class StorageManager {
         recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: false,
         recitationFloatingAppearance: "opaque",
+        copyIncludeArabic: false,
         lastSurahNumber: 1,
         lastAyahNumber: 1,
         tajweedMode: false,

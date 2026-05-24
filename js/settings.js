@@ -778,6 +778,10 @@ class SettingsManager extends BaseManager {
         'input[name="pocketQuranRecitationFloatingAppearance"]',
       );
 
+    this.pocketQuranCopyIncludeArabic = document.getElementById(
+      "pocketQuranCopyIncludeArabic",
+    );
+
     this.pocketQuranTajweedColors = document.getElementById(
       "pocketQuranTajweedColors",
     );
@@ -1512,6 +1516,11 @@ class SettingsManager extends BaseManager {
       `input[name="pocketQuranRecitationFloatingAppearance"][value="${floatingAppearance}"]`,
     );
     if (floatingAppearanceRadio) floatingAppearanceRadio.checked = true;
+
+    if (this.pocketQuranCopyIncludeArabic) {
+      this.pocketQuranCopyIncludeArabic.checked =
+        pq.copyIncludeArabic === true;
+    }
 
     // Pocket Quran Tajweed colors
     this.renderPocketQuranTajweedColorPickers(pq.tajweedColors);
@@ -7408,6 +7417,9 @@ class SettingsManager extends BaseManager {
         )?.value === "theme"
           ? "theme"
           : "opaque",
+      copyIncludeArabic: this.pocketQuranCopyIncludeArabic
+        ? this.pocketQuranCopyIncludeArabic.checked
+        : existingPocketQuran.copyIncludeArabic === true,
     };
 
     const existingPocketQuranPopup =
