@@ -1,16 +1,26 @@
-## [0.1.9] - 2026-05-15
+## [0.1.9] - 2026-05-25
 
 ### What is New
 
+- Added Pocket Quran translation search with a dedicated modal, term highlighting, pagination, and jump-to-ayah results.
+- Added search modal controls to tune Arabic and translation font sizes per search session.
+- Added translation font pickers for Pocket Quran (card and popup).
+- Added Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, with richer font previews.
+- Added forbidden-day aware fasting countdowns that skip prohibited fast dates.
 - Added wake/visibility/focus sync to re-assert sidebar layout state after sleep or tab activation.
-- Improved FAB menu accessibility with focus-safe inert handling and custom tooltip support.
+- Improved FAB menu accessibility with focus-safe inert handling and custom tooltips.
 
 ### Bug Fixes
 
 - Fixed sidebar layout not restoring reliably after system wake or visibility changes.
+- Escaped translation font picker content to prevent unsafe HTML injection.
 
 ### Other Improvements
 
+- Simplified font picker labels (removed the "Aa" prefix) and increased preview sample sizes.
+- Refined typography settings layout spacing for quotes and flashcards.
+- Refined Pocket Quran header button alignment and search modal sizing/pagination styling.
+- Synced Pocket Quran dropdown glass styling with the card's glass surface and blur multiplier.
 - Sidebar mode now preserves user preference when auto-collapsing due to viewport constraints.
 - Updated extension version references to 0.1.9 across runtime metadata and project documentation.
 

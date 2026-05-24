@@ -19,14 +19,17 @@ The project targets Chromium-based browsers with Manifest V3.
 - Qibla compass with directional bearing.
 - Calendar card with Hijri and Gregorian views, month navigation, and current-date details.
 - Fasting card with day progress and date-aware fasting context.
+- Forbidden-day aware fasting countdowns that skip prohibited fast dates (Eid and Tashreeq).
 - Fasting notifications with configurable Suhur lead-time and per-fast toggles (including Monday/Thursday, Ayyam al-Beed, Ashura, Arafah, Ramadan, and Dhu al-Hijjah windows).
 - Lunar phase card with current phase and metadata.
 
 ### Quran, Hadith, and Adhkar
 
 - Pocket Quran reader with surah and ayah navigation, bookmarks, and audio playback that can continue across tabs.
+- Pocket Quran translation search with highlighted matches, pagination, and jump-to-ayah results, plus adjustable Arabic and translation sizes in the search modal.
 - Quran translation and recitation support.
-- Tajweed display mode and Arabic font options for Quran reading.
+- Tajweed display mode and Arabic/translation font options for Quran reading (card and popup).
+- Translation font pickers for the Pocket Quran card and popup.
 - Adjustable Arabic and translation font sizes.
 - Hadith card with bundled datasets and pagination controls.
 - Adhkar card with multiple bundled collections, script/romanization toggle, repeat metadata, and auto-advance controls.
@@ -44,6 +47,7 @@ The project targets Chromium-based browsers with Manifest V3.
 
 - Dynamic backgrounds with category and rotation configuration.
 - Theme system with palette controls, glass/blur tuning, component opacity, and color customization.
+- Content typography settings now include Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, with preview samples.
 - Icon theme system for dashboard icon styling.
 - Card-level blur/glass controls for selected modules.
 - Multiple dashboard modes: grid layout, sidebar mode, floating cards, moment mode, and Quran focus mode.
@@ -148,6 +152,7 @@ Example: `muslim-dashboard-v0.1.9.zip`
 - Weather data: Open-Meteo APIs.
 - Geocoding: OpenStreetMap Nominatim and Open-Meteo geocoding.
 - Quran APIs/recitation sources are accessed via host permissions declared in `manifest.json`.
+- Pocket Quran search uses Quran.com search and translation endpoints, with cached translation fallback.
 
 ## Permissions Rationale
 
