@@ -2646,8 +2646,9 @@ class PocketQuranManager extends BaseManager {
 
   getSearchLanguageCode(translationId) {
     const language =
-      PocketQuranManager.TRANSLATIONS[this.normalizeTranslationId(translationId)]
-        ?.language || "English";
+      PocketQuranManager.TRANSLATIONS[
+        this.normalizeTranslationId(translationId)
+      ]?.language || "English";
     const key = String(language || "English").toLowerCase();
     const map = {
       albanian: "sq",
@@ -2692,7 +2693,10 @@ class PocketQuranManager extends BaseManager {
     params.set("size", "100");
     params.set("page", String(Math.max(1, parseInt(page, 10) || 1)));
     params.set("language", this.getSearchLanguageCode(translationId));
-    params.set("translations", String(this.normalizeTranslationId(translationId)));
+    params.set(
+      "translations",
+      String(this.normalizeTranslationId(translationId)),
+    );
     return `${PocketQuranManager.API_BASE}/search?${params.toString()}`;
   }
 
@@ -2747,12 +2751,16 @@ class PocketQuranManager extends BaseManager {
     const translations = Array.isArray(translationData?.translations)
       ? translationData.translations
       : [];
-    const normalizedQuery = String(query || "").toLowerCase().trim();
+    const normalizedQuery = String(query || "")
+      .toLowerCase()
+      .trim();
     const terms = normalizedQuery.split(/\s+/).filter(Boolean);
 
     return translations
       .filter((translation) => {
-        const text = this.stripHtmlToText(translation?.text || "").toLowerCase();
+        const text = this.stripHtmlToText(
+          translation?.text || "",
+        ).toLowerCase();
         return terms.every((term) => text.includes(term));
       })
       .map((translation) => ({
@@ -2765,7 +2773,9 @@ class PocketQuranManager extends BaseManager {
   }
 
   buildPocketQuranSearchResults(query, verses) {
-    const normalizedQuery = String(query || "").replace(/\s+/g, " ").trim();
+    const normalizedQuery = String(query || "")
+      .replace(/\s+/g, " ")
+      .trim();
     if (!normalizedQuery) return [];
 
     const terms = normalizedQuery.toLowerCase().split(/\s+/).filter(Boolean);
@@ -5995,7 +6005,7 @@ class PocketQuranManager extends BaseManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content pq-translation-modal-content">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">Aa Arabic Font</h3>
+          <h3 class="pq-bookmark-modal-title">Arabic Font</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
@@ -6041,7 +6051,7 @@ class PocketQuranManager extends BaseManager {
       this.normalizeArabicFontFamily(requestedCurrentFont);
 
     const title = modal.querySelector(".pq-bookmark-modal-title");
-    if (title) title.textContent = "Aa Arabic Font";
+    if (title) title.textContent = "Arabic Font";
 
     const searchInput = modal.querySelector(".pq-font-search");
     if (searchInput) searchInput.value = "";
@@ -6070,7 +6080,7 @@ class PocketQuranManager extends BaseManager {
       this.normalizeTranslationFontFamily(requestedCurrentFont);
 
     const title = modal.querySelector(".pq-bookmark-modal-title");
-    if (title) title.textContent = "Aa Translation Font";
+    if (title) title.textContent = "Translation Font";
 
     const searchInput = modal.querySelector(".pq-font-search");
     if (searchInput) searchInput.value = "";
@@ -6107,9 +6117,7 @@ class PocketQuranManager extends BaseManager {
     const availableFonts = isTranslationPicker
       ? PocketQuranManager.TRANSLATION_FONT_FAMILIES
       : PocketQuranManager.ARABIC_FONT_FAMILIES;
-    const fonts = availableFonts.filter((f) =>
-      f.toLowerCase().includes(q),
-    );
+    const fonts = availableFonts.filter((f) => f.toLowerCase().includes(q));
 
     const current = isTranslationPicker
       ? this.normalizeTranslationFontFamily(
@@ -6702,7 +6710,9 @@ class PocketQuranManager extends BaseManager {
     this._searchPaginationEl = modal.querySelector(".pq-search-pagination");
     this._searchStatusEl = modal.querySelector(".pq-search-status");
     this._searchProgressEl = modal.querySelector(".pq-search-progress");
-    this._searchProgressTextEl = modal.querySelector(".pq-search-progress-text");
+    this._searchProgressTextEl = modal.querySelector(
+      ".pq-search-progress-text",
+    );
     this._searchSubmitBtn = modal.querySelector(".pq-search-submit-btn");
     this._searchArabicSizeRange = modal.querySelector(".pq-search-arabic-size");
     this._searchTranslationSizeRange = modal.querySelector(
@@ -6823,7 +6833,9 @@ class PocketQuranManager extends BaseManager {
     const total = Math.max(1, Number(progress?.total) || 114);
     const percent = Math.min(100, Math.round((done / total) * 100));
     const source = progress?.source === "indexeddb" ? "cache" : "api";
-    const ring = this._searchProgressEl.querySelector(".pq-search-progress-ring");
+    const ring = this._searchProgressEl.querySelector(
+      ".pq-search-progress-ring",
+    );
     if (ring) ring.style.setProperty("--pq-search-progress", `${percent}%`);
     if (this._searchProgressTextEl) {
       if (!progress) {

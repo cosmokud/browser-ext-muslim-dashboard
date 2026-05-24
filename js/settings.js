@@ -734,8 +734,9 @@ class SettingsManager extends BaseManager {
     this.pocketQuranPopupTranslationFontPickerBtn = document.getElementById(
       "pocketQuranPopupTranslationFontPickerBtn",
     );
-    this.pocketQuranPopupTranslationFontPickerLabel =
-      document.getElementById("pocketQuranPopupTranslationFontPickerLabel");
+    this.pocketQuranPopupTranslationFontPickerLabel = document.getElementById(
+      "pocketQuranPopupTranslationFontPickerLabel",
+    );
     this.pocketQuranReciterPickerBtn = document.getElementById(
       "pocketQuranReciterPickerBtn",
     );
@@ -10530,9 +10531,10 @@ class SettingsManager extends BaseManager {
             if (window.dashboard?.pocketQuran?.openTranslationFontPickerModal) {
               window.dashboard.pocketQuran.openTranslationFontPickerModal({
                 target: "popup",
-                currentFont: this.normalizePocketQuranPopupTranslationFontFamily(
-                  this.pocketQuranPopupTranslationFontFamily?.value,
-                ),
+                currentFont:
+                  this.normalizePocketQuranPopupTranslationFontFamily(
+                    this.pocketQuranPopupTranslationFontFamily?.value,
+                  ),
               });
             }
           } catch (e) {
@@ -11528,7 +11530,7 @@ class SettingsManager extends BaseManager {
         kind: "arabic",
         btnId: "quotesArabicFontPickerBtn",
         labelId: "quotesArabicFontPickerLabel",
-        title: "Aa Quotes Arabic Font",
+        title: "Quotes Arabic Font",
         manager: this.quotes,
       },
       {
@@ -11536,7 +11538,7 @@ class SettingsManager extends BaseManager {
         kind: "translation",
         btnId: "quotesTranslationFontPickerBtn",
         labelId: "quotesTranslationFontPickerLabel",
-        title: "Aa Quotes Translation Font",
+        title: "Quotes Translation Font",
         manager: this.quotes,
       },
       {
@@ -11544,7 +11546,7 @@ class SettingsManager extends BaseManager {
         kind: "arabic",
         btnId: "flashcardsArabicFontPickerBtn",
         labelId: "flashcardsArabicFontPickerLabel",
-        title: "Aa Flashcards Arabic Font",
+        title: "Flashcards Arabic Font",
         manager: this.flashcards,
       },
       {
@@ -11552,7 +11554,7 @@ class SettingsManager extends BaseManager {
         kind: "translation",
         btnId: "flashcardsTranslationFontPickerBtn",
         labelId: "flashcardsTranslationFontPickerLabel",
-        title: "Aa Flashcards Translation Font",
+        title: "Flashcards Translation Font",
         manager: this.flashcards,
       },
       {
@@ -11560,7 +11562,7 @@ class SettingsManager extends BaseManager {
         kind: "arabic",
         btnId: "hadithArabicFontPickerBtn",
         labelId: "hadithArabicFontPickerLabel",
-        title: "Aa Hadith Arabic Font",
+        title: "Hadith Arabic Font",
         manager: this.hadith,
       },
       {
@@ -11568,7 +11570,7 @@ class SettingsManager extends BaseManager {
         kind: "translation",
         btnId: "hadithTranslationFontPickerBtn",
         labelId: "hadithTranslationFontPickerLabel",
-        title: "Aa Hadith Translation Font",
+        title: "Hadith Translation Font",
         manager: this.hadith,
       },
       {
@@ -11576,7 +11578,7 @@ class SettingsManager extends BaseManager {
         kind: "arabic",
         btnId: "adhkarArabicFontPickerBtn",
         labelId: "adhkarArabicFontPickerLabel",
-        title: "Aa Adhkar Arabic Font",
+        title: "Adhkar Arabic Font",
         manager: this.adhkar,
       },
       {
@@ -11584,7 +11586,7 @@ class SettingsManager extends BaseManager {
         kind: "translation",
         btnId: "adhkarTranslationFontPickerBtn",
         labelId: "adhkarTranslationFontPickerLabel",
-        title: "Aa Adhkar Translation Font",
+        title: "Adhkar Translation Font",
         manager: this.adhkar,
       },
     ];
@@ -11645,7 +11647,8 @@ class SettingsManager extends BaseManager {
       cfg?.kind === "translation"
         ? manager?._translationFontFamily
         : manager?._arabicFontFamily;
-    const fallback = cfg?.kind === "translation" ? "Poppins" : "Noto Naskh Arabic";
+    const fallback =
+      cfg?.kind === "translation" ? "Poppins" : "Noto Naskh Arabic";
     return typeof normalizer === "function"
       ? normalizer.call(manager, current)
       : fallback;
@@ -11700,7 +11703,7 @@ class SettingsManager extends BaseManager {
       if (!btn || !label) return;
       const font = this.getCurrentContentFont(cfg);
       label.textContent = font;
-      btn.title = `Current ${cfg.title.replace(/^Aa /, "").toLowerCase()}: ${font}`;
+      btn.title = `Current ${cfg.title.replace(/^/, "").toLowerCase()}: ${font}`;
     });
   }
 
@@ -11714,7 +11717,7 @@ class SettingsManager extends BaseManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content pq-translation-modal-content">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">Aa Font</h3>
+          <h3 class="pq-bookmark-modal-title">Font</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
@@ -11770,10 +11773,15 @@ class SettingsManager extends BaseManager {
     const container = modal?.querySelector(".settings-content-font-items");
     if (!modal || !container) return;
 
-    const cfg = this.getContentFontConfig(modal.dataset.card, modal.dataset.kind);
+    const cfg = this.getContentFontConfig(
+      modal.dataset.card,
+      modal.dataset.kind,
+    );
     if (!cfg) return;
 
-    const q = String(query || "").trim().toLowerCase();
+    const q = String(query || "")
+      .trim()
+      .toLowerCase();
     const fonts = this.getContentFontFamilies(cfg.kind).filter((font) =>
       font.toLowerCase().includes(q),
     );

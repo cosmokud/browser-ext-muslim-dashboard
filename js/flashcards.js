@@ -1569,7 +1569,7 @@ class FlashcardManager extends BaseManager {
     modal.innerHTML = `
       <div class="pq-bookmark-modal-content pq-translation-modal-content">
         <div class="pq-bookmark-modal-header">
-          <h3 class="pq-bookmark-modal-title">Aa Arabic Font</h3>
+          <h3 class="pq-bookmark-modal-title">Arabic Font</h3>
           <button type="button" class="pq-bookmark-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="pq-bookmark-modal-body">
