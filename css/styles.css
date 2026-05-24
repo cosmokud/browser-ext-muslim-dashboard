@@ -15083,6 +15083,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   transform: scale(1.1);
 }
 
+.pocket-quran-ayah-copy-badge.copied {
+  border-color: var(--accent-gold);
+  background: color-mix(in srgb, var(--accent-gold) 24%, var(--glass-bg));
+  color: var(--accent-gold);
+}
+
 .pocket-quran-ayah-copy-badge:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 3px;

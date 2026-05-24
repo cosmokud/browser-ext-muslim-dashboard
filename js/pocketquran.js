@@ -2038,10 +2038,11 @@ class PocketQuranManager extends BaseManager {
       '<svg viewBox="0 0 24 24" width="14" height="14" focusable="false"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
 
     copyBadge.appendChild(copyBadgeIcon);
-    copyBadge.addEventListener("click", (e) => {
+    copyBadge.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.copyPocketQuranAyah(verse, surah, ayahNumber);
+      const copied = await this.copyPocketQuranAyah(verse, surah, ayahNumber);
+      if (copied) this.showPocketQuranCopyIndicator(copyBadge);
     });
 
     const ar = document.createElement("div");
@@ -2130,7 +2131,7 @@ class PocketQuranManager extends BaseManager {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
-        return;
+        return true;
       }
 
       const textarea = document.createElement("textarea");
@@ -2140,11 +2141,28 @@ class PocketQuranManager extends BaseManager {
       textarea.style.left = "-9999px";
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand("copy");
+      const copied = document.execCommand("copy");
       textarea.remove();
+      return copied === true;
     } catch (error) {
       console.warn("Failed to copy Pocket Quran ayah", error);
+      return false;
     }
+  }
+
+  showPocketQuranCopyIndicator(copyButton) {
+    if (!copyButton) return;
+
+    copyButton.classList.add("copied");
+
+    if (copyButton._pocketQuranCopyTimer) {
+      clearTimeout(copyButton._pocketQuranCopyTimer);
+    }
+
+    copyButton._pocketQuranCopyTimer = setTimeout(() => {
+      copyButton.classList.remove("copied");
+      copyButton._pocketQuranCopyTimer = null;
+    }, 1100);
   }
 
   /**
