@@ -4319,8 +4319,11 @@ class PocketQuranManager extends BaseManager {
     const header = this.card?.querySelector(".pocket-quran-header");
     if (!header || !this._headerControlsBox) return false;
 
+    const actions = header.querySelector(".card-header-actions");
     const title = header.querySelector(".card-title");
-    if (title) {
+    if (actions) {
+      actions.after(this._headerControlsBox);
+    } else if (title) {
       title.after(this._headerControlsBox);
     } else {
       header.appendChild(this._headerControlsBox);

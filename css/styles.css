@@ -13879,18 +13879,27 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   flex: 0 0 auto;
 }
 
+.pocket-quran-header.pq-has-recitation-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
 .pocket-quran-header.pq-has-recitation-controls .card-title {
-  order: 1;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .pocket-quran-header.pq-has-recitation-controls .card-header-actions {
-  order: 2;
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .pocket-quran-header.pq-has-recitation-controls
   .pq-recitation-controls:not(.pq-recitation-controls-floating) {
-  order: 3;
-  flex-basis: 100%;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
 }
 
 .pocket-quran-header-meta {
