@@ -15018,7 +15018,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pocket-quran-ayah-badge {
   position: absolute;
   right: var(--spacing-md);
-  bottom: var(--spacing-md);
+  top: var(--spacing-md);
   min-width: 44px;
   height: 34px;
   padding: 0 0.55rem;
