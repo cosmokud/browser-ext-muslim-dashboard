@@ -6967,14 +6967,30 @@ class PocketQuranManager extends BaseManager {
     this._searchResultsEl.innerHTML = "";
 
     visibleResults.forEach((result) => {
-      const item = document.createElement("button");
-      item.type = "button";
+      const item = document.createElement("div");
       item.className = "pq-search-result";
       item.setAttribute("role", "listitem");
 
-      const meta = document.createElement("div");
+      const meta = document.createElement("button");
+      meta.type = "button";
       meta.className = "pq-search-result-meta";
-      meta.textContent = `${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`;
+      meta.setAttribute(
+        "aria-label",
+        `Open ${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`,
+      );
+
+      const metaText = document.createElement("span");
+      metaText.className = "pq-search-result-meta-text";
+      metaText.textContent = `${this.getSurahNameSimple(result.surah)} ${result.surah}:${result.ayah}`;
+
+      const metaIcon = document.createElement("span");
+      metaIcon.className = "pq-search-result-meta-icon";
+      metaIcon.setAttribute("aria-hidden", "true");
+      metaIcon.innerHTML =
+        '<svg viewBox="0 0 24 24" width="14" height="14" focusable="false"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>';
+
+      meta.appendChild(metaText);
+      meta.appendChild(metaIcon);
 
       const arabic = document.createElement("div");
       arabic.className = "pq-search-result-ar";
@@ -6996,7 +7012,7 @@ class PocketQuranManager extends BaseManager {
       item.appendChild(meta);
       item.appendChild(arabic);
       item.appendChild(translation);
-      item.addEventListener("click", () =>
+      meta.addEventListener("click", () =>
         this.goToPocketQuranSearchResult(result),
       );
       this._searchResultsEl.appendChild(item);

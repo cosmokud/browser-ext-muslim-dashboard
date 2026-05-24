@@ -19114,19 +19114,36 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   padding: var(--spacing-md);
-  cursor: pointer;
-}
-
-.pq-search-result:focus-visible {
-  border-color: var(--accent-gold);
-  background: var(--glass-bg-hover);
-  outline: none;
+  cursor: text;
+  user-select: text;
 }
 
 .pq-search-result-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--accent-gold);
   font-size: 0.82rem;
   font-weight: 700;
+  font: inherit;
+  padding: 0;
+  text-align: start;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pq-search-result-meta:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+}
+
+.pq-search-result-meta-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
 }
 
 .pq-search-result-ar {
