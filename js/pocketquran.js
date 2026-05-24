@@ -1501,6 +1501,41 @@ class PocketQuranManager extends BaseManager {
     return this.getAyahAtOffset(resolvedScrollTop + threshold);
   }
 
+  captureVirtualScrollAnchor() {
+    if (!this._virtualContainer || !this._activeVerses?.length) return null;
+
+    const scrollTop = this._virtualContainer.scrollTop;
+    const index = this.getFirstVisibleRenderedAyahIndex(scrollTop);
+    if (!Number.isFinite(index)) return null;
+
+    return {
+      index,
+      offsetWithinAyah: scrollTop - this.getAyahOffset(index),
+      wasNearBottom:
+        this._virtualContainer.scrollHeight -
+          this._virtualContainer.clientHeight -
+          scrollTop <=
+        PocketQuranManager.BOTTOM_LOCK_THRESHOLD_PX,
+    };
+  }
+
+  preserveVirtualScrollAnchor(anchor) {
+    if (!anchor || !this._virtualContainer || !this._activeVerses?.length) {
+      return;
+    }
+    if (anchor.wasNearBottom) return;
+
+    const maxIndex = this._activeVerses.length - 1;
+    const index = this.clampNumber(anchor.index, 0, maxIndex, 0);
+    const nextScrollTop = Math.max(
+      0,
+      this.getAyahOffset(index) + Number(anchor.offsetWithinAyah || 0),
+    );
+
+    this._virtualContainer.scrollTop = nextScrollTop;
+    this._lastScrollTop = nextScrollTop;
+  }
+
   markVirtualScrollActivity() {
     this._isScrolling = true;
     if (this._scrollIdleTimer) {
@@ -1684,6 +1719,8 @@ class PocketQuranManager extends BaseManager {
   measureRenderedAyahs() {
     if (!this._virtualContent) return;
 
+    const anchor = this.captureVirtualScrollAnchor();
+    const renderedStart = this._renderedRange.start;
     const ayahEls = this._virtualContent.querySelectorAll(".pocket-quran-ayah");
     let totalMeasured = 0;
     let measureCount = 0;
@@ -1720,6 +1757,12 @@ class PocketQuranManager extends BaseManager {
     // Commit scroll height only when actual measurements changed.
     if (heightsChanged) {
       this.updateTotalHeight({ preserveBottomEdge: true });
+      if (Number.isFinite(renderedStart) && renderedStart >= 0) {
+        this._virtualContent.style.transform = `translateY(${this.getAyahOffset(
+          renderedStart,
+        )}px)`;
+      }
+      this.preserveVirtualScrollAnchor(anchor);
     }
   }
 
