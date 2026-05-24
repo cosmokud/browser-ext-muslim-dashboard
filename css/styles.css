@@ -19117,7 +19117,6 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   cursor: pointer;
 }
 
-.pq-search-result:hover,
 .pq-search-result:focus-visible {
   border-color: var(--accent-gold);
   background: var(--glass-bg-hover);
