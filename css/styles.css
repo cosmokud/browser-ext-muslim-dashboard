@@ -11020,6 +11020,53 @@ html[data-theme-mode="light"]
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* FAB menu controls share the dashboard theme surface, including injected items. */
+.fab-menu :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+):not(.active):not(.is-locked) {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+.fab-menu :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+):not(.active):not(.is-locked):hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border);
+}
+
+[data-glass-enabled="false"] .fab-menu :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* Individual Sticky Note */
 .sticky-note {
   position: fixed;
