@@ -16410,6 +16410,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   row-gap: 2px;
   flex: 1 1 auto;
   min-width: min(180px, 100%);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .pq-recitation-ayah {
