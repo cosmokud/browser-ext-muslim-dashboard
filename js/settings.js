@@ -1518,8 +1518,7 @@ class SettingsManager extends BaseManager {
     if (floatingAppearanceRadio) floatingAppearanceRadio.checked = true;
 
     if (this.pocketQuranCopyIncludeArabic) {
-      this.pocketQuranCopyIncludeArabic.checked =
-        pq.copyIncludeArabic === true;
+      this.pocketQuranCopyIncludeArabic.checked = pq.copyIncludeArabic === true;
     }
 
     // Pocket Quran Tajweed colors
@@ -2528,9 +2527,7 @@ class SettingsManager extends BaseManager {
     }
 
     // Fallback for environments that block clipboard reads
-    const manual = window.prompt(
-      "Paste coordinates (e.g., -7.918300911805475, 112.60764545030851)",
-    );
+    const manual = window.prompt("Paste coordinates (e.g., 21.4225, -39.8262)");
     return manual || "";
   }
 

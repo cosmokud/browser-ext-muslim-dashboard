@@ -226,7 +226,10 @@ document.addEventListener("DOMContentLoaded", () => {
     89: { label: "Albanian Translation (Sherif Ahmeti)", language: "Albanian" },
     236: { label: "Ramdane At Mansour", language: "Amazigh" },
     87: { label: "Sadiq and Sani", language: "Amharic" },
-    120: { label: "Shaykh Rafeequl Islam Habibur-Rahman", language: "Assamese" },
+    120: {
+      label: "Shaykh Rafeequl Islam Habibur-Rahman",
+      language: "Assamese",
+    },
     75: { label: "Alikhan Musayev", language: "Azeri" },
     23: { label: "Azerbaijani", language: "Azeri" },
     795: { label: "Suliman Kanti", language: "Bambara" },
@@ -239,9 +242,15 @@ document.addEventListener("DOMContentLoaded", () => {
     25: { label: "Muhamed Mehanović", language: "Bosnian" },
     126: { label: "Besim Korkut", language: "Bosnian" },
     237: { label: "Tzvetan Theophanov", language: "Bulgarian" },
-    128: { label: "Cambodian Muslim Community Development", language: "Central Khmer" },
+    128: {
+      label: "Cambodian Muslim Community Development",
+      language: "Central Khmer",
+    },
     106: { label: "Magomed Magomedov", language: "Chechen" },
-    56: { label: "Chinese Translation (Simplified) - Ma Jian", language: "Chinese" },
+    56: {
+      label: "Chinese Translation (Simplified) - Ma Jian",
+      language: "Chinese",
+    },
     109: { label: "Muhammad Makin", language: "Chinese" },
     26: { label: "Czech", language: "Czech" },
     785: { label: "Mawlawi Muhammad Anwar Badkhashani", language: "Dari" },
@@ -272,7 +281,10 @@ document.addEventListener("DOMContentLoaded", () => {
     122: { label: "Maulana Azizul Haque al-Umari", language: "Hindi" },
     134: { label: "King Fahad Quran Complex", language: "Indonesian" },
     141: { label: "The Sabiq Company", language: "Indonesian" },
-    33: { label: "Indonesian Islamic Affairs Ministry", language: "Indonesian" },
+    33: {
+      label: "Indonesian Islamic Affairs Ministry",
+      language: "Indonesian",
+    },
     153: { label: "Hamza Roberto Piccardo", language: "Italian" },
     209: { label: "Othman al-Sharif", language: "Italian" },
     35: { label: "Ryoichi Mita", language: "Japanese" },
@@ -280,18 +292,33 @@ document.addEventListener("DOMContentLoaded", () => {
     771: { label: "Kannada Translation", language: "Kannada" },
     222: { label: "Khalifa Altay", language: "Kazakh" },
     113: { label: "Khalifah Altai", language: "Kazakh" },
-    774: { label: "The Rwanda Muslims Association team", language: "Kinyarwanda" },
+    774: {
+      label: "The Rwanda Muslims Association team",
+      language: "Kinyarwanda",
+    },
     36: { label: "Korean", language: "Korean" },
     219: { label: "Hamed Choi", language: "Korean" },
     81: { label: "Burhan Muhammad-Amin", language: "Kurdish" },
     143: { label: "Muhammad Saleh Bamoki", language: "Kurdish" },
     39: { label: "Abdullah Muhammad Basmeih", language: "Malay" },
-    80: { label: "Muhammad Karakunnu and Vanidas Elayavoor", language: "Malayalam" },
-    224: { label: "Abdul-Hamid Haidar & Kanhi Muhammad", language: "Malayalam" },
-    37: { label: "Malayalam Translation (Abdul Hameed and Kunhi)", language: "Malayalam" },
+    80: {
+      label: "Muhammad Karakunnu and Vanidas Elayavoor",
+      language: "Malayalam",
+    },
+    224: {
+      label: "Abdul-Hamid Haidar & Kanhi Muhammad",
+      language: "Malayalam",
+    },
+    37: {
+      label: "Malayalam Translation (Abdul Hameed and Kunhi)",
+      language: "Malayalam",
+    },
     38: { label: "Maranao", language: "Maranao" },
     226: { label: "Muhammad Shafi'i Ansari", language: "Marathi" },
-    108: { label: "Ahl Al-Hadith Central Society of Nepal", language: "Nepali" },
+    108: {
+      label: "Ahl Al-Hadith Central Society of Nepal",
+      language: "Nepali",
+    },
     41: { label: "Norwegian", language: "Norwegian" },
     111: { label: "Ghali Apapur Apaghuna", language: "Oromo" },
     118: { label: "Zakaria Abulsalam", language: "Pashto" },
@@ -311,7 +338,10 @@ document.addEventListener("DOMContentLoaded", () => {
     83: { label: "Sheikh Isa Garcia", language: "Spanish" },
     140: { label: "Montada Islamic Foundation", language: "Spanish" },
     199: { label: "Noor International Center", language: "Spanish" },
-    231: { label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis", language: "Swahili" },
+    231: {
+      label: "Dr. Abdullah Muhammad Abu Bakr and Sheikh Nasir Khamis",
+      language: "Swahili",
+    },
     49: { label: "Ali Muhsin Al-Barwani", language: "Swahili" },
     48: { label: "Knut Bernström", language: "Swedish" },
     211: { label: "Dar Al-Salam Center", language: "Tagalog" },
@@ -324,7 +354,10 @@ document.addEventListener("DOMContentLoaded", () => {
     53: { label: "Tatar", language: "Tatar" },
     227: { label: "Maulana Abder-Rahim ibn Muhammad", language: "Telugu" },
     230: { label: "Society of Institutes and Universities", language: "Thai" },
-    51: { label: "Thai Translation (King Fahad Quran Complex)", language: "Thai" },
+    51: {
+      label: "Thai Translation (King Fahad Quran Complex)",
+      language: "Thai",
+    },
     210: { label: "Dar Al-Salam Center", language: "Turkish" },
     77: { label: "Turkish Translation (Diyanet)", language: "Turkish" },
     124: { label: "Muslim Shahin", language: "Turkish" },
@@ -335,7 +368,10 @@ document.addEventListener("DOMContentLoaded", () => {
     234: { label: "Fatah Muhammad Jalandhari", language: "Urdu" },
     54: { label: "Maulana Muhammad Junagarhi", language: "Urdu" },
     156: { label: "Fe Zilal al-Qur'an (Sayyid Qutb)", language: "Urdu" },
-    151: { label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)", language: "Urdu" },
+    151: {
+      label: "Shaykh al-Hind Mahmud al-Hasan (with Tafsir E Usmani)",
+      language: "Urdu",
+    },
     158: { label: "Bayan-ul-Quran (Dr. Israr Ahmad)", language: "Urdu" },
     97: { label: "Tafheem e Qur'an - Syed Abu Ali Maududi", language: "Urdu" },
     831: { label: "Abul Ala Maududi (Roman Urdu)", language: "Urdu" },
@@ -839,11 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // ignored: prompt fallback below
     }
 
-    return (
-      window.prompt(
-        "Paste coordinates (e.g., -2.0104945156119673, 120.13398946553744)",
-      ) || ""
-    );
+    return window.prompt("Paste coordinates (e.g., 21.4225, -39.8262)") || "";
   }
 
   function applyPopupLatLngToInputs(panelRoot, latLng) {
