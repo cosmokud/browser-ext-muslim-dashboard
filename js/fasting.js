@@ -135,6 +135,10 @@ class FastingManager {
     // Max days in-between is 6, so width uses total=6 (full scale)
     if (visibility.monday !== false) {
       const monday = this._weekdayCountdown(nowStart, 1, hijriNow, adjustment);
+      const mondayHijriDate = this._formatHijriDayMonth(
+        monday.target,
+        adjustment,
+      );
       items.push({
         key: "monday",
         title: "Monday Fast",
@@ -142,12 +146,17 @@ class FastingManager {
         daysLeft: monday.daysLeft,
         totalDays: monday.totalDays,
         meta: this._daysLeftText(monday.daysLeft),
-        aria: `Monday fast: ${this._daysLeftText(monday.daysLeft)}`,
+        aria: `Monday fast (${mondayHijriDate}): ${this._daysLeftText(monday.daysLeft)}`,
+        badge: mondayHijriDate,
       });
     }
 
     if (visibility.thursday !== false) {
       const thursday = this._weekdayCountdown(nowStart, 4, hijriNow, adjustment);
+      const thursdayHijriDate = this._formatHijriDayMonth(
+        thursday.target,
+        adjustment,
+      );
       items.push({
         key: "thursday",
         title: "Thursday Fast",
@@ -155,7 +164,8 @@ class FastingManager {
         daysLeft: thursday.daysLeft,
         totalDays: thursday.totalDays,
         meta: this._daysLeftText(thursday.daysLeft),
-        aria: `Thursday fast: ${this._daysLeftText(thursday.daysLeft)}`,
+        aria: `Thursday fast (${thursdayHijriDate}): ${this._daysLeftText(thursday.daysLeft)}`,
+        badge: thursdayHijriDate,
       });
     }
 
@@ -442,6 +452,12 @@ class FastingManager {
     }
 
     return { daysLeft: delta, target, totalDays: 6 };
+  }
+
+  _formatHijriDayMonth(date, adjustment) {
+    const hijriDate = this.hijri.toHijri(date, adjustment);
+    const monthName = this.hijri.monthNames.en[hijriDate.month - 1];
+    return `${hijriDate.day} ${monthName}`;
   }
 
   _ramadanCountdown(nowStart, hijriNow, adjustment) {
