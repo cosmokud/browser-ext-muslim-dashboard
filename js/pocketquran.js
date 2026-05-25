@@ -1721,46 +1721,100 @@ class PocketQuranManager extends BaseManager {
       .filter((word) => word.normalized.length > 0);
   }
 
-  appendTajweedTextToRecitationWords(
-    text,
-    ensureWordEl,
-    closeWord,
-    plainWords,
-  ) {
-    String(text || "")
-      .split(/(\s+)/)
-      .filter((part) => part.length > 0)
-      .forEach((part) => {
-        if (/^\s+$/.test(part)) return;
+  isArabicCombiningMark(char) {
+    return /^[\u064b-\u065f\u0670\u06d6-\u06ed]$/.test(String(char || ""));
+  }
 
-        if (this.isAyahNumberMarkerText(part)) {
-          closeWord();
-          if (ensureWordEl.currentWordIndex > 0) {
-            ensureWordEl.container.appendChild(document.createTextNode(" "));
-          }
-          this.appendAyahNumberMarker(ensureWordEl.container, part);
+  splitArabicTextClusters(text) {
+    const clusters = [];
+    Array.from(String(text || "")).forEach((char) => {
+      if (this.isArabicCombiningMark(char) && clusters.length) {
+        clusters[clusters.length - 1] += char;
+      } else {
+        clusters.push(char);
+      }
+    });
+    return clusters;
+  }
+
+  appendTajweedClusterToWord(wordEl, cluster, ancestors = []) {
+    if (!wordEl || !cluster) return;
+
+    if (!ancestors.length) {
+      wordEl.appendChild(document.createTextNode(cluster));
+      return;
+    }
+
+    let parent = wordEl;
+    ancestors.forEach((ancestor) => {
+      const clone = ancestor.cloneNode(false);
+      parent.appendChild(clone);
+      parent = clone;
+    });
+    parent.appendChild(document.createTextNode(cluster));
+  }
+
+  appendTajweedNodeToRecitationWords(node, state, ancestors = []) {
+    if (!node || !state) return;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || "";
+      if (this.isAyahNumberMarkerText(text)) {
+        state.closeWord();
+        state.appendMarker(text);
+        return;
+      }
+
+      this.splitArabicTextClusters(text).forEach((cluster) => {
+        if (!cluster || /^\s+$/.test(cluster)) return;
+
+        if (this.isAyahNumberMarkerText(cluster)) {
+          state.closeWord();
+          state.appendMarker(cluster);
           return;
         }
 
-        const normalized = this.normalizeArabicWordForRecitation(part);
+        const normalized = this.normalizeArabicWordForRecitation(cluster);
+        if (!normalized && !state.currentWordEl) return;
+
+        const wordEl = state.ensureWordEl();
+        if (!wordEl) {
+          if (normalized || this.isAyahNumberMarkerText(cluster)) {
+            state.appendMarker(cluster);
+          }
+          return;
+        }
+
+        this.appendTajweedClusterToWord(wordEl, cluster, ancestors);
         if (!normalized) return;
 
-        const wordEl = ensureWordEl();
-        if (!wordEl) return;
-
-        wordEl.appendChild(document.createTextNode(part));
-        const targetWord = plainWords[ensureWordEl.currentWordIndex - 1];
+        const targetWord = state.plainWords[state.currentWordIndex - 1];
         const currentWordNormalized =
-          (ensureWordEl.currentWordNormalized || "") + normalized;
-        ensureWordEl.currentWordNormalized = currentWordNormalized;
+          (state.currentWordNormalized || "") + normalized;
+        state.currentWordNormalized = currentWordNormalized;
 
         if (
           targetWord &&
           currentWordNormalized.length >= targetWord.normalized.length
         ) {
-          closeWord();
+          state.closeWord();
         }
       });
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    if (this.isAyahNumberMarkerText(node.textContent)) {
+      state.closeWord();
+      state.appendMarker(node);
+      return;
+    }
+
+    const nextAncestors = [...ancestors, node];
+    node.childNodes.forEach((child) => {
+      this.appendTajweedNodeToRecitationWords(child, state, nextAncestors);
+    });
   }
 
   renderArabicWordSpans(container, text, verseKey) {
@@ -1807,6 +1861,19 @@ class PocketQuranManager extends BaseManager {
     let wordIndex = 0;
     let currentWordEl = null;
 
+    const closeWord = () => {
+      currentWordEl = null;
+      state.currentWordEl = null;
+      state.currentWordNormalized = "";
+    };
+
+    const appendMarker = (content) => {
+      if (wordIndex > 0) {
+        container.appendChild(document.createTextNode(" "));
+      }
+      this.appendAyahNumberMarker(container, content);
+    };
+
     const ensureWordEl = () => {
       if (currentWordEl) return currentWordEl;
       if (plainWords.length && wordIndex >= plainWords.length) return null;
@@ -1822,27 +1889,26 @@ class PocketQuranManager extends BaseManager {
       currentWordEl.dataset.wordIndex = String(wordIndex);
       currentWordEl.dataset.recitationKey = `${verseKey}:${wordIndex}`;
       container.appendChild(currentWordEl);
-      ensureWordEl.currentWordIndex = wordIndex;
-      ensureWordEl.currentWordNormalized = "";
+      state.currentWordEl = currentWordEl;
+      state.currentWordIndex = wordIndex;
+      state.currentWordNormalized = "";
       return currentWordEl;
     };
-    ensureWordEl.container = container;
-    ensureWordEl.currentWordIndex = 0;
-    ensureWordEl.currentWordNormalized = "";
-
-    const closeWord = () => {
-      currentWordEl = null;
-      ensureWordEl.currentWordNormalized = "";
+    const state = {
+      container,
+      plainWords,
+      currentWordEl: null,
+      currentWordIndex: 0,
+      currentWordNormalized: "",
+      ensureWordEl,
+      closeWord,
+      appendMarker,
     };
 
     const appendText = (text) => {
       if (plainWords.length) {
-        this.appendTajweedTextToRecitationWords(
-          text,
-          ensureWordEl,
-          closeWord,
-          plainWords,
-        );
+        const node = document.createTextNode(text);
+        this.appendTajweedNodeToRecitationWords(node, state);
         return;
       }
 
@@ -1867,6 +1933,11 @@ class PocketQuranManager extends BaseManager {
     };
 
     template.content.childNodes.forEach((node) => {
+      if (plainWords.length) {
+        this.appendTajweedNodeToRecitationWords(node, state);
+        return;
+      }
+
       if (node.nodeType === Node.TEXT_NODE) {
         appendText(node.textContent);
         return;
