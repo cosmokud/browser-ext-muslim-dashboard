@@ -838,7 +838,6 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
-    const previousSettings = this.cloneSettingsSnapshot(settings);
     const dashboardQualityState = this.resolveDashboardQualityState(
       settings.performanceModeEnabled === true,
       settings?.theme?.highestVisualFidelityEnabled === true,
@@ -7266,6 +7265,7 @@ class SettingsManager extends BaseManager {
     }
 
     const settings = this.storage.getSettings();
+    const previousSettings = this.cloneSettingsSnapshot(settings);
 
     // Location settings
     const locationRadio = document.querySelector(
@@ -7529,10 +7529,6 @@ class SettingsManager extends BaseManager {
         settings,
       );
 
-    if (closeModal) {
-      this.closeModal();
-    }
-
     // Apply immediate preview (if dashboard exists)
     if (
       !isDelayOnlyPocketQuranSave &&
@@ -7560,6 +7556,14 @@ class SettingsManager extends BaseManager {
 
     if (showToast) {
       this.showToast("Settings saved successfully!", "success");
+    }
+
+    if (closeModal) {
+      this.showSaveButtonSavedState();
+      if (this._saveSettingsCloseTimer) {
+        clearTimeout(this._saveSettingsCloseTimer);
+      }
+      this._saveSettingsCloseTimer = setTimeout(() => this.closeModal(), 420);
     }
 
     return true;
@@ -9557,6 +9561,7 @@ class SettingsManager extends BaseManager {
    */
   openModal() {
     this.loadSettings();
+    this.resetSaveButtonState();
     if (this.quotes) {
       this.quotes.renderQuotesList();
     }
@@ -9578,12 +9583,19 @@ class SettingsManager extends BaseManager {
     this.updateSettingsRangeProgress();
 
     this.updateSettingsTabsMinWidth();
+    this.updateSettingsVisualPreviewMode(this.getActiveSettingsTabName());
   }
 
   /**
    * Close modal
    */
   closeModal() {
+    if (this._saveSettingsCloseTimer) {
+      clearTimeout(this._saveSettingsCloseTimer);
+      this._saveSettingsCloseTimer = null;
+    }
+    this.resetSaveButtonState();
+    this.updateSettingsVisualPreviewMode(null);
     this.flushPendingAutoSaveBeforeClose();
     this.closeDetachedEditorModal();
     this.closeChangelogModal();
@@ -9651,6 +9663,69 @@ class SettingsManager extends BaseManager {
 
     const activePanel = document.getElementById(`${tabName}Panel`);
     this.updateSettingsRangeProgress(activePanel);
+    this.updateSettingsVisualPreviewMode(tabName);
+  }
+
+  getActiveSettingsTabName() {
+    const activeTab = Array.from(this.tabs || []).find((tab) =>
+      tab.classList.contains("active"),
+    );
+    return activeTab?.dataset?.tab || null;
+  }
+
+  isVisualPreviewSettingsTab(tabName) {
+    return ["background", "heading", "themes"].includes(tabName);
+  }
+
+  updateSettingsVisualPreviewMode(tabName) {
+    if (!this.modal) return;
+
+    const enabled =
+      this.modal.classList.contains("active") &&
+      this.isVisualPreviewSettingsTab(tabName);
+
+    this.modal.classList.toggle("settings-visual-preview", enabled);
+  }
+
+  resetSaveButtonState() {
+    if (!this.saveBtn) return;
+
+    if (this._saveButtonSavedTimer) {
+      clearTimeout(this._saveButtonSavedTimer);
+      this._saveButtonSavedTimer = null;
+    }
+
+    if (!this.saveBtn.dataset.defaultLabel) {
+      this.saveBtn.dataset.defaultLabel =
+        this.saveBtn.textContent.trim() || "💾 Save Settings";
+    }
+
+    this.saveBtn.classList.remove("is-saved");
+    this.saveBtn.textContent = this.saveBtn.dataset.defaultLabel;
+  }
+
+  showSaveButtonSavedState() {
+    if (!this.saveBtn) return;
+
+    if (!this.saveBtn.dataset.defaultLabel) {
+      this.saveBtn.dataset.defaultLabel =
+        this.saveBtn.textContent.trim() || "💾 Save Settings";
+    }
+
+    if (this._saveButtonSavedTimer) {
+      clearTimeout(this._saveButtonSavedTimer);
+    }
+
+    this.saveBtn.classList.add("is-saved");
+    this.saveBtn.textContent = "✓ Saved";
+    this.saveBtn.setAttribute("aria-live", "polite");
+
+    this._saveButtonSavedTimer = setTimeout(() => {
+      this._saveButtonSavedTimer = null;
+      if (!this.modal?.classList.contains("active")) return;
+      this.saveBtn.classList.remove("is-saved");
+      this.saveBtn.textContent = this.saveBtn.dataset.defaultLabel;
+    }, 1600);
   }
 
   applyDebugModeVisibility() {
