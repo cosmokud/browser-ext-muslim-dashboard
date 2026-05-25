@@ -3445,7 +3445,7 @@ class PocketQuranManager extends BaseManager {
   normalizeRecitationHighlightDelayMs(value) {
     const parsed = parseInt(value, 10);
     if (Number.isFinite(parsed)) {
-      return Math.max(-1000, Math.min(1000, parsed));
+      return Math.max(-10000, Math.min(10000, parsed));
     }
     return 0;
   }

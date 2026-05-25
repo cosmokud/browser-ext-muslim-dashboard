@@ -838,6 +838,7 @@ class SettingsManager extends BaseManager {
 
     // Apply UI settings immediately (not only after Save)
     const settings = this.storage.getSettings();
+    const previousSettings = this.cloneSettingsSnapshot(settings);
     const dashboardQualityState = this.resolveDashboardQualityState(
       settings.performanceModeEnabled === true,
       settings?.theme?.highestVisualFidelityEnabled === true,
@@ -1446,8 +1447,8 @@ class SettingsManager extends BaseManager {
     if (this.pocketQuranHighlighterDelay) {
       const clamped = this.clampNumber(
         pq.reciterHighlighterDelayMs,
-        -1000,
-        1000,
+        -10000,
+        10000,
         0,
       );
       this.pocketQuranHighlighterDelay.value = String(clamped);
@@ -1733,8 +1734,8 @@ class SettingsManager extends BaseManager {
 
     const clamped = this.clampNumber(
       parseInt(this.pocketQuranHighlighterDelay.value, 10),
-      -1000,
-      1000,
+      -10000,
+      10000,
       0,
     );
 
@@ -7439,8 +7440,8 @@ class SettingsManager extends BaseManager {
       ),
       reciterHighlighterDelayMs: this.clampNumber(
         parseInt(this.pocketQuranHighlighterDelay?.value, 10),
-        -1000,
-        1000,
+        -10000,
+        10000,
         existingPocketQuran.reciterHighlighterDelayMs ?? 0,
       ),
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
@@ -7522,12 +7523,19 @@ class SettingsManager extends BaseManager {
     // Save to storage
     this.storage.saveSettings(settings);
 
+    const isDelayOnlyPocketQuranSave =
+      this.isOnlyPocketQuranHighlighterDelayChanged(
+        previousSettings,
+        settings,
+      );
+
     if (closeModal) {
       this.closeModal();
     }
 
     // Apply immediate preview (if dashboard exists)
     if (
+      !isDelayOnlyPocketQuranSave &&
       window.dashboard &&
       typeof window.dashboard.applyComponentVisibility === "function"
     ) {
@@ -7539,7 +7547,11 @@ class SettingsManager extends BaseManager {
     }
 
     // Apply changes live
-    this.applySettings(settings);
+    if (!isDelayOnlyPocketQuranSave) {
+      this.applySettings(settings);
+    } else {
+      this.dispatchSettingsApplied(settings);
+    }
 
     if (source === "manual" && this._backgroundSettingsDirty) {
       this.refreshBackgroundAfterSettingsSave(settings);
@@ -7575,6 +7587,55 @@ class SettingsManager extends BaseManager {
     } catch (e) {
       // ignore non-critical background refresh failures
     }
+  }
+
+  cloneSettingsSnapshot(settings) {
+    try {
+      return JSON.parse(JSON.stringify(settings || {}));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  normalizePocketQuranHighlighterDelayMs(value) {
+    return this.clampNumber(parseInt(value, 10), -10000, 10000, 0);
+  }
+
+  isOnlyPocketQuranHighlighterDelayChanged(previousSettings, nextSettings) {
+    if (!previousSettings || !nextSettings) return false;
+
+    const previousDelay = this.normalizePocketQuranHighlighterDelayMs(
+      previousSettings.pocketQuran?.reciterHighlighterDelayMs,
+    );
+    const nextDelay = this.normalizePocketQuranHighlighterDelayMs(
+      nextSettings.pocketQuran?.reciterHighlighterDelayMs,
+    );
+    if (previousDelay === nextDelay) return false;
+
+    const previousComparable = this.cloneSettingsSnapshot(previousSettings);
+    const nextComparable = this.cloneSettingsSnapshot(nextSettings);
+    if (!previousComparable || !nextComparable) return false;
+
+    previousComparable.pocketQuran = {
+      ...(previousComparable.pocketQuran || {}),
+    };
+    nextComparable.pocketQuran = {
+      ...(nextComparable.pocketQuran || {}),
+    };
+    delete previousComparable.pocketQuran.reciterHighlighterDelayMs;
+    delete nextComparable.pocketQuran.reciterHighlighterDelayMs;
+
+    return JSON.stringify(previousComparable) === JSON.stringify(nextComparable);
+  }
+
+  dispatchSettingsApplied(settings) {
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:settings-applied", {
+          detail: { settings },
+        }),
+      );
+    } catch (e) {}
   }
 
   /**
