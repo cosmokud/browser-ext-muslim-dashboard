@@ -1693,6 +1693,61 @@ class PocketQuranManager extends BaseManager {
     });
   }
 
+  renderTajweedWordSpans(container, html, verseKey) {
+    if (!container) return;
+
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    container.textContent = "";
+
+    let wordIndex = 0;
+    let currentWordEl = null;
+
+    const ensureWordEl = () => {
+      if (currentWordEl) return currentWordEl;
+
+      wordIndex += 1;
+      currentWordEl = document.createElement("span");
+      currentWordEl.className = "pq-recitation-word";
+      currentWordEl.dataset.verseKey = verseKey;
+      currentWordEl.dataset.wordIndex = String(wordIndex);
+      currentWordEl.dataset.recitationKey = `${verseKey}:${wordIndex}`;
+      container.appendChild(currentWordEl);
+      return currentWordEl;
+    };
+
+    const closeWord = () => {
+      currentWordEl = null;
+    };
+
+    const appendText = (text) => {
+      String(text || "")
+        .split(/(\s+)/)
+        .filter((part) => part.length > 0)
+        .forEach((part) => {
+          if (/^\s+$/.test(part)) {
+            container.appendChild(document.createTextNode(part));
+            closeWord();
+            return;
+          }
+
+          ensureWordEl().appendChild(document.createTextNode(part));
+        });
+    };
+
+    template.content.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        appendText(node.textContent);
+        return;
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const clone = node.cloneNode(true);
+        ensureWordEl().appendChild(clone);
+      }
+    });
+  }
+
   /**
    * Recalculate virtualization after resize or content changes.
    */
@@ -2012,7 +2067,7 @@ class PocketQuranManager extends BaseManager {
       const tajweedText = this.getTajweedTextForVerse(ayahNumber);
       if (tajweedText) {
         ar.classList.add("tajweed-mode");
-        ar.innerHTML = tajweedText;
+        this.renderTajweedWordSpans(ar, tajweedText, verseKey);
       } else {
         // Fallback to plain text if Tajweed not available
         this.renderArabicWordSpans(ar, verse?.text_uthmani || "", verseKey);
