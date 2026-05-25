@@ -3185,7 +3185,12 @@ class PocketQuranManager extends BaseManager {
   }
 
   getActiveSurahAyahCount() {
-    const chapter = this._chapters.find((c) => c.id === this._activeSurah);
+    return this.getSurahAyahCount(this._activeSurah);
+  }
+
+  getSurahAyahCount(surah) {
+    const surahNumber = this.clampNumber(surah, 1, 114, null);
+    const chapter = this._chapters.find((c) => c.id === surahNumber);
     const count = chapter?.verses_count;
     return Number.isFinite(count) ? count : null;
   }
@@ -3929,11 +3934,27 @@ class PocketQuranManager extends BaseManager {
 
     const fallbackTarget = this.getRecitationControlTargetAyah();
     const surah = this.clampNumber(targetSurah, 1, 114, fallbackTarget.surah);
-    const chapter = this._chapters.find((c) => c.id === surah);
-    const maxAyah =
-      (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
+    const maxAyah = this.getSurahAyahCount(surah) || 286;
     const ayah = this.clampNumber(targetAyah, 1, maxAyah, fallbackTarget.ayah);
     const previousAyah = this.clampNumber(ayah - 1, 1, maxAyah, ayah);
+
+    if (ayah <= 1 && this._isAutoplayNextSurah) {
+      const previousSurah = this.getPreviousSurahNumber(surah);
+      if (!Number.isFinite(previousSurah)) {
+        return;
+      }
+
+      const previousSurahMaxAyah = this.getSurahAyahCount(previousSurah) || 286;
+      this.stopOffscreenPlaybackBestEffort();
+
+      if (desiredIsPlaying) {
+        this.playAyah(previousSurah, previousSurahMaxAyah);
+        return;
+      }
+
+      this.setPausedRecitationTarget(previousSurah, previousSurahMaxAyah);
+      return;
+    }
 
     if (previousAyah === ayah) {
       return;
@@ -3961,12 +3982,27 @@ class PocketQuranManager extends BaseManager {
 
     const fallbackTarget = this.getRecitationControlTargetAyah();
     const surah = this.clampNumber(targetSurah, 1, 114, fallbackTarget.surah);
-    const chapter = this._chapters.find((c) => c.id === surah);
-    const max =
-      (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
+    const max = this.getSurahAyahCount(surah) || 286;
     const ayah = this.clampNumber(targetAyah, 1, max, fallbackTarget.ayah);
 
     const nextAyah = this.clampNumber(ayah + 1, 1, max, ayah);
+    if (nextAyah === ayah && this._isAutoplayNextSurah) {
+      const nextSurah = this.getNextSurahNumber(surah);
+      if (!Number.isFinite(nextSurah)) {
+        return;
+      }
+
+      this.stopOffscreenPlaybackBestEffort();
+
+      if (desiredIsPlaying) {
+        this.playAyah(nextSurah, 1);
+        return;
+      }
+
+      this.setPausedRecitationTarget(nextSurah, 1);
+      return;
+    }
+
     if (nextAyah === ayah) {
       return;
     }
@@ -3979,6 +4015,27 @@ class PocketQuranManager extends BaseManager {
     }
 
     this.setPausedRecitationTarget(surah, nextAyah);
+  }
+
+  getPreviousSurahNumber(currentSurah) {
+    const surah = this.clampNumber(currentSurah, 1, 114, 1);
+
+    if (Array.isArray(this._chapters) && this._chapters.length > 0) {
+      const currentIndex = this._chapters.findIndex((chapter) => {
+        return this.clampNumber(chapter?.id, 1, 114, NaN) === surah;
+      });
+
+      if (currentIndex > 0) {
+        return this.clampNumber(
+          this._chapters[currentIndex - 1]?.id,
+          1,
+          114,
+          null,
+        );
+      }
+    }
+
+    return surah > 1 ? surah - 1 : null;
   }
 
   getNextSurahNumber(currentSurah) {
