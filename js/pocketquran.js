@@ -5311,15 +5311,17 @@ class PocketQuranManager extends BaseManager {
         )}" />
       </div>
       <div class="pq-recitation-options">
-        <button type="button" class="pq-recitation-btn pq-loop-btn pq-loop-surah-btn ${
-          this._isSurahLooping ? "active" : ""
-        }" title="Loop surah">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/><path fill="currentColor" d="M17.4 3.2h3.4v1.6H19v1.8h-1.6z"/></svg>
-        </button>
         <button type="button" class="pq-recitation-btn pq-loop-btn pq-loop-ayah-btn ${
           this._isLooping ? "active" : ""
         }" title="Loop current ayah">
           <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+          <span class="pq-icon-badge pq-icon-badge-one" aria-hidden="true">1</span>
+        </button>
+        <button type="button" class="pq-recitation-btn pq-loop-btn pq-loop-surah-btn ${
+          this._isSurahLooping ? "active" : ""
+        }" title="Loop surah">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+          <span class="pq-icon-badge pq-icon-badge-bookmark" aria-hidden="true"><svg viewBox="0 0 24 24" width="9" height="9" focusable="false"><path fill="currentColor" d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></span>
         </button>
         <button type="button" class="pq-recitation-btn pq-autoplay-btn ${
           this._isAutoplay ? "active" : ""
@@ -5331,7 +5333,8 @@ class PocketQuranManager extends BaseManager {
         }" title="Auto Play Next Surah" aria-pressed="${
           this._isAutoplayNextSurah ? "true" : "false"
         }">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5.5 3A1.5 1.5 0 0 0 4 4.5v10.26c0 .6.67.95 1.17.62L8.5 13.3l3.33 2.08a.75.75 0 0 0 1.17-.62V4.5A1.5 1.5 0 0 0 11.5 3h-6z"/><path fill="currentColor" d="M15.28 7.47a.75.75 0 0 1 1.06 0l3.2 3.2a1.9 1.9 0 0 1 0 2.68l-3.2 3.2a.75.75 0 1 1-1.06-1.06L18.47 12l-3.2-3.2a.75.75 0 0 1 0-1.06z"/><path fill="currentColor" d="M11 18.25h8a.75.75 0 0 1 0 1.5h-8a.75.75 0 0 1 0-1.5z"/></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+          <span class="pq-icon-badge pq-icon-badge-bookmark" aria-hidden="true"><svg viewBox="0 0 24 24" width="9" height="9" focusable="false"><path fill="currentColor" d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></span>
         </button>
         <button type="button" class="pq-recitation-btn pq-autoscroll-btn ${
           this._isAutoScroll ? "active" : ""

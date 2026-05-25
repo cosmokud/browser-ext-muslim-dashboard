@@ -11266,6 +11266,7 @@ html[data-theme-mode="light"]
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -16462,8 +16463,32 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.pq-icon-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 10px;
+  height: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: currentColor;
+  pointer-events: none;
+}
+
+.pq-icon-badge-one {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.pq-icon-badge-bookmark svg {
+  display: block;
 }
 
 .pq-recitation-btn.pq-loop-btn,
