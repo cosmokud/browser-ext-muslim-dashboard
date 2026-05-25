@@ -68,11 +68,26 @@ class BaseManager {
     return div.innerHTML;
   }
 
+  resolveResourceUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return raw;
+
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(raw) || raw.startsWith("/")) {
+      return raw;
+    }
+
+    if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
+      return chrome.runtime.getURL(raw.replace(/^\.\//, ""));
+    }
+
+    return raw;
+  }
+
   async fetchJsonResource(
     url,
     { cache = "no-store", label = "Resource" } = {},
   ) {
-    const response = await fetch(url, { cache });
+    const response = await fetch(this.resolveResourceUrl(url), { cache });
     if (!response.ok) {
       throw new Error(`${label} request failed: HTTP ${response.status}`);
     }
@@ -88,7 +103,7 @@ class BaseManager {
     url,
     { cache = "no-store", label = "Resource" } = {},
   ) {
-    const response = await fetch(url, { cache });
+    const response = await fetch(this.resolveResourceUrl(url), { cache });
     if (!response.ok) {
       throw new Error(`${label} request failed: HTTP ${response.status}`);
     }
