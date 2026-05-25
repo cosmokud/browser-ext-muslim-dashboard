@@ -3206,8 +3206,8 @@
             <div class="setting-group" id="headerSurfaceBackgroundsGroup">
               <label class="setting-label">Header Quick Controls</label>
               <p class="setting-hint">
-                Toggle visibility, surface background, and glow for each header
-                item.
+                Toggle visibility, surface background, text color, and glow for
+                each header item.
               </p>
 
               <div class="header-control-grid" aria-label="Header controls">
@@ -3215,6 +3215,7 @@
                   <span class="header-control-cell component">Item</span>
                   <span class="header-control-cell center">Show</span>
                   <span class="header-control-cell center">Surface</span>
+                  <span class="header-control-cell center">Text</span>
                   <span class="header-control-cell center">Glow</span>
                 </div>
 
@@ -3234,6 +3235,26 @@
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
 
+                  <div class="header-control-color">
+                    <input
+                      type="color"
+                      id="headerGreetingTextColor"
+                      class="header-text-color"
+                      value="#ffffff"
+                      data-theme-default="true"
+                      aria-label="Greeting text color"
+                    />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerGreetingTextColorReset"
+                      title="Reset Greeting Text Color"
+                      aria-label="Reset greeting text color"
+                    >
+                      R
+                    </button>
+                  </div>
+
                   <div class="header-control-glow">
                     <label class="header-control-toggle" title="Greeting Glow">
                       <input type="checkbox" id="headerGreetingGlowEnabled" />
@@ -3246,6 +3267,15 @@
                       value="#ffffff"
                       aria-label="Greeting glow color"
                     />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerGreetingGlowColorReset"
+                      title="Reset Greeting Glow Color"
+                      aria-label="Reset greeting glow color"
+                    >
+                      R
+                    </button>
                     <button
                       class="header-glow-popover-btn"
                       type="button"
@@ -3307,6 +3337,26 @@
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
 
+                  <div class="header-control-color">
+                    <input
+                      type="color"
+                      id="headerTimeTextColor"
+                      class="header-text-color"
+                      value="#ffffff"
+                      data-theme-default="true"
+                      aria-label="Clock text color"
+                    />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerTimeTextColorReset"
+                      title="Reset Clock Text Color"
+                      aria-label="Reset clock text color"
+                    >
+                      R
+                    </button>
+                  </div>
+
                   <div class="header-control-glow">
                     <label class="header-control-toggle" title="Clock Glow">
                       <input type="checkbox" id="headerTimeGlowEnabled" />
@@ -3319,6 +3369,15 @@
                       value="#ffffff"
                       aria-label="Clock glow color"
                     />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerTimeGlowColorReset"
+                      title="Reset Clock Glow Color"
+                      aria-label="Reset clock glow color"
+                    >
+                      R
+                    </button>
                     <button
                       class="header-glow-popover-btn"
                       type="button"
@@ -3380,6 +3439,26 @@
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
 
+                  <div class="header-control-color">
+                    <input
+                      type="color"
+                      id="headerDateTextColor"
+                      class="header-text-color"
+                      value="#ffffff"
+                      data-theme-default="true"
+                      aria-label="Date text color"
+                    />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerDateTextColorReset"
+                      title="Reset Date Text Color"
+                      aria-label="Reset date text color"
+                    >
+                      R
+                    </button>
+                  </div>
+
                   <div class="header-control-glow">
                     <label class="header-control-toggle" title="Date Glow">
                       <input type="checkbox" id="headerDateGlowEnabled" />
@@ -3392,6 +3471,15 @@
                       value="#ffffff"
                       aria-label="Date glow color"
                     />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerDateGlowColorReset"
+                      title="Reset Date Glow Color"
+                      aria-label="Reset date glow color"
+                    >
+                      R
+                    </button>
                     <button
                       class="header-glow-popover-btn"
                       type="button"
@@ -3456,6 +3544,26 @@
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
 
+                  <div class="header-control-color">
+                    <input
+                      type="color"
+                      id="headerCompactWeatherTextColor"
+                      class="header-text-color"
+                      value="#ffffff"
+                      data-theme-default="true"
+                      aria-label="Compact weather text color"
+                    />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerCompactWeatherTextColorReset"
+                      title="Reset Weather Text Color"
+                      aria-label="Reset compact weather text color"
+                    >
+                      R
+                    </button>
+                  </div>
+
                   <div class="header-control-glow">
                     <label class="header-control-toggle" title="Weather Glow">
                       <input
@@ -3471,6 +3579,15 @@
                       value="#ffffff"
                       aria-label="Compact weather glow color"
                     />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerCompactWeatherGlowColorReset"
+                      title="Reset Weather Glow Color"
+                      aria-label="Reset compact weather glow color"
+                    >
+                      R
+                    </button>
                     <button
                       class="header-glow-popover-btn"
                       type="button"
@@ -3540,6 +3657,26 @@
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
 
+                  <div class="header-control-color">
+                    <input
+                      type="color"
+                      id="headerNextPrayerTextColor"
+                      class="header-text-color"
+                      value="#ffffff"
+                      data-theme-default="true"
+                      aria-label="Next prayer text color"
+                    />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerNextPrayerTextColorReset"
+                      title="Reset Next Prayer Text Color"
+                      aria-label="Reset next prayer text color"
+                    >
+                      R
+                    </button>
+                  </div>
+
                   <div class="header-control-glow">
                     <label
                       class="header-control-toggle"
@@ -3555,6 +3692,15 @@
                       value="#ffffff"
                       aria-label="Next prayer glow color"
                     />
+                    <button
+                      class="header-color-reset-btn"
+                      type="button"
+                      id="headerNextPrayerGlowColorReset"
+                      title="Reset Next Prayer Glow Color"
+                      aria-label="Reset next prayer glow color"
+                    >
+                      R
+                    </button>
                     <button
                       class="header-glow-popover-btn"
                       type="button"

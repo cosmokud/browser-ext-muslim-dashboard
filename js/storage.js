@@ -520,6 +520,13 @@ class StorageManager {
         nextPrayerBackgroundEnabled: false,
         compactWeatherBackgroundEnabled: false,
 
+        // Header text colors (empty means theme default)
+        greetingTextColor: "",
+        dateTextColor: "",
+        timeTextColor: "",
+        nextPrayerTextColor: "",
+        compactWeatherTextColor: "",
+
         // Header glow settings
         greetingGlowEnabled: false,
         greetingGlowColor: "",

@@ -2616,6 +2616,20 @@ class MuslimDashboard {
     el.style.removeProperty("--header-glow-radius");
   }
 
+  applyHeaderTextColor(targets, preferredColor) {
+    const normalized = this.normalizeHexColor(preferredColor);
+    const targetList = Array.isArray(targets) ? targets : [targets];
+
+    targetList.filter(Boolean).forEach((target) => {
+      if (!normalized) {
+        target.style.removeProperty("color");
+        return;
+      }
+
+      target.style.color = normalized;
+    });
+  }
+
   /**
    * Format Gregorian date based on a combined Date Format value
    */
@@ -2910,6 +2924,30 @@ class MuslimDashboard {
     toggleHeaderSurface(
       compactWeather,
       headingSettings.compactWeatherBackgroundEnabled === true,
+    );
+
+    this.applyHeaderTextColor(this.greeting, headingSettings.greetingTextColor);
+    this.applyHeaderTextColor(this.dateDisplay, headingSettings.dateTextColor);
+    this.applyHeaderTextColor(
+      [this.currentTime || timeMainRow, currentSeconds],
+      headingSettings.timeTextColor,
+    );
+    this.applyHeaderTextColor(
+      [
+        this.headerNextPrayer,
+        this.headerNextPrayerName,
+        this.headerNextPrayerCountdown,
+      ],
+      headingSettings.nextPrayerTextColor,
+    );
+    this.applyHeaderTextColor(
+      compactWeather
+        ? [
+            compactWeather.querySelector(".compact-weather-temp"),
+            compactWeather.querySelector(".compact-weather-desc"),
+          ]
+        : compactWeather,
+      headingSettings.compactWeatherTextColor,
     );
 
     const greetingGlowColor = this.resolveHeaderGlowColor(
