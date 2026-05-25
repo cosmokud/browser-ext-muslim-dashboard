@@ -743,6 +743,12 @@ class SettingsManager extends BaseManager {
     this.pocketQuranReciterPickerLabel = document.getElementById(
       "pocketQuranReciterPickerLabel",
     );
+    this.pocketQuranHighlighterDelay = document.getElementById(
+      "pocketQuranHighlighterDelay",
+    );
+    this.pocketQuranHighlighterDelayValue = document.getElementById(
+      "pocketQuranHighlighterDelaySettingValue",
+    );
     this.pocketQuranArabicFontPickerBtn = document.getElementById(
       "pocketQuranArabicFontPickerBtn",
     );
@@ -1437,6 +1443,17 @@ class SettingsManager extends BaseManager {
       this.updatePocketQuranTranslationSizeLabel();
     }
 
+    if (this.pocketQuranHighlighterDelay) {
+      const clamped = this.clampNumber(
+        pq.reciterHighlighterDelayMs,
+        0,
+        1000,
+        0,
+      );
+      this.pocketQuranHighlighterDelay.value = String(clamped);
+      this.updatePocketQuranHighlighterDelayLabel();
+    }
+
     if (this.pocketQuranTranslationFontFamily) {
       this.pocketQuranTranslationFontFamily.value =
         this.normalizePocketQuranTranslationFontFamily(
@@ -1705,6 +1722,24 @@ class SettingsManager extends BaseManager {
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
+  }
+
+  updatePocketQuranHighlighterDelayLabel() {
+    if (
+      !this.pocketQuranHighlighterDelay ||
+      !this.pocketQuranHighlighterDelayValue
+    )
+      return;
+
+    const clamped = this.clampNumber(
+      parseInt(this.pocketQuranHighlighterDelay.value, 10),
+      0,
+      1000,
+      0,
+    );
+
+    this.pocketQuranHighlighterDelay.value = String(clamped);
+    this.pocketQuranHighlighterDelayValue.textContent = `${clamped}ms`;
   }
 
   updatePocketQuranPopupArabicSizeLabel() {
@@ -7402,6 +7437,12 @@ class SettingsManager extends BaseManager {
         10000,
         existingPocketQuran.translationResourceId ?? 85,
       ),
+      reciterHighlighterDelayMs: this.clampNumber(
+        parseInt(this.pocketQuranHighlighterDelay?.value, 10),
+        0,
+        1000,
+        existingPocketQuran.reciterHighlighterDelayMs ?? 0,
+      ),
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
         ? this.pocketQuranRecitationFloatingEnabled.checked
         : existingPocketQuran.recitationFloatingEnabled === true,
@@ -10492,6 +10533,11 @@ class SettingsManager extends BaseManager {
     if (this.pocketQuranTranslationSize) {
       this.pocketQuranTranslationSize.addEventListener("input", () => {
         this.updatePocketQuranTranslationSizeLabel();
+      });
+    }
+    if (this.pocketQuranHighlighterDelay) {
+      this.pocketQuranHighlighterDelay.addEventListener("input", () => {
+        this.updatePocketQuranHighlighterDelayLabel();
       });
     }
     if (this.pocketQuranPopupArabicSize) {

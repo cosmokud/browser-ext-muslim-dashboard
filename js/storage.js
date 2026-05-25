@@ -430,6 +430,7 @@ class StorageManager {
         translationResourceId: 85, // M.A.S. Abdel Haleem
         reciterAutoplay: true,
         reciterAutoplayNextSurah: true,
+        reciterHighlighterDelayMs: 0,
         recitationFloatingEnabled: false,
         recitationAutoDockOnVisible: false,
         recitationFloatingAppearance: "opaque",

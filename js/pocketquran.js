@@ -551,9 +551,8 @@ class PocketQuranManager extends BaseManager {
   // slightly lower for better readability during recitation.
   static RECITATION_AUTOSCROLL_OFFSET_PX = 10;
 
-  // Browser media currentTime can run slightly ahead of audible output.
-  // Delay word highlighting a touch so it tracks what the user hears.
-  static RECITATION_WORD_HIGHLIGHT_LAG_MS = 180;
+  // Brief cooldown for reciters/surahs whose Quran.com timing data is missing.
+  static RECITATION_TIMING_RETRY_COOLDOWN_MS = 30000;
 
   // Bookmark constants
   static BOOKMARKS_PER_PAGE = 10;
@@ -732,6 +731,7 @@ class PocketQuranManager extends BaseManager {
     this._recitationTimingFetches = new Map();
     this._activeRecitationWordKey = null;
     this._isRecitationHighlighterEnabled = true;
+    this._recitationWordHighlightLagMs = 0;
     this._isRecitationWordSyncDisabled = false;
     this._reciterModal = null;
     this._headerControlsBox = null;
@@ -3314,6 +3314,8 @@ class PocketQuranManager extends BaseManager {
     this._isAutoplayNextSurah = pq.reciterAutoplayNextSurah === true;
     this._isAutoScroll = pq.reciterAutoScroll || false;
     this._isRecitationHighlighterEnabled = pq.reciterHighlighter !== false;
+    this._recitationWordHighlightLagMs =
+      this.normalizeRecitationHighlightDelayMs(pq.reciterHighlighterDelayMs);
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible = pq.recitationAutoDockOnVisible === true;
     this._recitationFloatingAppearance =
@@ -3432,12 +3434,20 @@ class PocketQuranManager extends BaseManager {
     return `${this._activeReciterId}:${surah}:${ayah}`;
   }
 
-  getRecitationTimingCacheKey(surah) {
-    return `${this._activeReciterId}:${surah}`;
+  getRecitationTimingCacheKey(surah, reciterId = this._activeReciterId) {
+    return `${reciterId}:${surah}`;
   }
 
-  getRecitationTimingUrl(surah) {
-    return `${PocketQuranManager.API_BASE}/recitations/${this._activeReciterId}/by_chapter/${surah}?fields=segments,duration&per_page=50`;
+  getRecitationTimingUrl(surah, reciterId = this._activeReciterId) {
+    return `${PocketQuranManager.API_BASE}/recitations/${reciterId}/by_chapter/${surah}?fields=segments,duration&per_page=50`;
+  }
+
+  normalizeRecitationHighlightDelayMs(value) {
+    const parsed = parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.min(1000, parsed));
+    }
+    return 0;
   }
 
   normalizeRecitationSegments(segments) {
@@ -3480,16 +3490,23 @@ class PocketQuranManager extends BaseManager {
     const chapter = this.clampNumber(surah, 1, 114, null);
     if (!chapter || !Number.isFinite(this._activeReciterId)) return null;
 
-    const cacheKey = this.getRecitationTimingCacheKey(chapter);
+    const reciterId = this._activeReciterId;
+    const cacheKey = this.getRecitationTimingCacheKey(chapter, reciterId);
     const cached = this._recitationTimingsCache?.get(cacheKey);
-    if (cached) return cached;
+    if (
+      cached &&
+      (cached.failed !== true ||
+        Date.now() < (Number(cached.retryAfter) || 0))
+    ) {
+      return cached;
+    }
 
     const pending = this._recitationTimingFetches?.get(cacheKey);
     if (pending) return pending;
 
     const request = (async () => {
       try {
-        const url = this.getRecitationTimingUrl(chapter);
+        const url = this.getRecitationTimingUrl(chapter, reciterId);
         const data = await this.fetchJson(url, { timeoutMs: 15000 });
         const audioFiles = Array.isArray(data?.audio_files)
           ? data.audio_files
@@ -3510,12 +3527,31 @@ class PocketQuranManager extends BaseManager {
           });
         });
 
-        const result = { fetchedAt: Date.now(), timings };
+        const result =
+          timings.size > 0
+            ? { fetchedAt: Date.now(), failed: false, timings }
+            : {
+                fetchedAt: Date.now(),
+                failed: true,
+                retryAfter:
+                  Date.now() +
+                  PocketQuranManager.RECITATION_TIMING_RETRY_COOLDOWN_MS,
+                timings,
+              };
         this._recitationTimingsCache.set(cacheKey, result);
         return result;
       } catch (e) {
         console.warn("PocketQuran: failed to fetch recitation timings", e);
-        return null;
+        const result = {
+          fetchedAt: Date.now(),
+          failed: true,
+          retryAfter:
+            Date.now() +
+            PocketQuranManager.RECITATION_TIMING_RETRY_COOLDOWN_MS,
+          timings: new Map(),
+        };
+        this._recitationTimingsCache.set(cacheKey, result);
+        return result;
       } finally {
         this._recitationTimingFetches.delete(cacheKey);
       }
@@ -3528,12 +3564,18 @@ class PocketQuranManager extends BaseManager {
   getCachedRecitationTimingForAyah(surah, ayah) {
     const cacheKey = this.getRecitationTimingCacheKey(surah);
     const cached = this._recitationTimingsCache?.get(cacheKey);
+    if (cached?.failed === true) return null;
     return cached?.timings?.get(`${surah}:${ayah}`) || null;
   }
 
   primeRecitationTimingsForPlayback(surah, ayah) {
-    this.fetchRecitationTimingsForSurah(surah).then(() => {
+    const reciterId = this._activeReciterId;
+    this.fetchRecitationTimingsForSurah(surah).then((result) => {
       if (
+        result &&
+        result.failed !== true &&
+        this._activeReciterId === reciterId &&
+        result.timings?.has(`${surah}:${ayah}`) &&
         this._playingAyah?.surah === surah &&
         this._playingAyah?.ayah === ayah
       ) {
@@ -3569,21 +3611,14 @@ class PocketQuranManager extends BaseManager {
     const timing = this.getCachedRecitationTimingForAyah(surah, ayah);
 
     if (!timing) {
-      this.fetchRecitationTimingsForSurah(surah).then(() => {
-        if (
-          this._playingAyah?.surah === surah &&
-          this._playingAyah?.ayah === ayah
-        ) {
-          this.syncActiveRecitationWord();
-        }
-      });
+      void this.fetchRecitationTimingsForSurah(surah);
       return;
     }
 
     const currentMs = Math.max(
       0,
       this._audioElement.currentTime * 1000 -
-        PocketQuranManager.RECITATION_WORD_HIGHLIGHT_LAG_MS,
+        this._recitationWordHighlightLagMs,
     );
     const activeSegment = this.normalizeRecitationSegments(timing.segments).find(
       (segment) => currentMs >= segment.fromMs && currentMs <= segment.toMs,
@@ -3818,6 +3853,7 @@ class PocketQuranManager extends BaseManager {
     this.clearActiveRecitationWordHighlight();
     this._audioSrcCache = new Map();
     this._preloadedAudios = new Map();
+    this._recitationTimingFetches = new Map();
   }
 
   tryPlayAyahImmediateFromCache(surah, ayah) {
@@ -4531,6 +4567,8 @@ class PocketQuranManager extends BaseManager {
     this._recitationFloatingEnabled = pq.recitationFloatingEnabled === true;
     this._recitationAutoDockOnVisible = pq.recitationAutoDockOnVisible === true;
     this._isRecitationHighlighterEnabled = pq.reciterHighlighter !== false;
+    this._recitationWordHighlightLagMs =
+      this.normalizeRecitationHighlightDelayMs(pq.reciterHighlighterDelayMs);
     this._recitationFloatingAppearance =
       this.normalizeRecitationFloatingAppearance(
         pq.recitationFloatingAppearance,
