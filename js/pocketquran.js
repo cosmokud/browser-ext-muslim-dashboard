@@ -4646,6 +4646,29 @@ class PocketQuranManager extends BaseManager {
     );
   }
 
+  hasUsableSyncedRecitationTarget(state) {
+    if (!state || typeof state !== "object") return false;
+
+    const target =
+      state?.recitationAyah && typeof state.recitationAyah === "object"
+        ? state.recitationAyah
+        : null;
+    if (!target) return false;
+
+    const surah = Number(target.surah);
+    const ayah = Number(target.ayah);
+    if (!Number.isFinite(surah) || !Number.isFinite(ayah)) return false;
+
+    const normalizedSurah = this.clampNumber(surah, 1, 114, NaN);
+    if (!Number.isFinite(normalizedSurah)) return false;
+
+    const chapter = this._chapters?.find((c) => c.id === normalizedSurah);
+    const maxAyah =
+      (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
+
+    return ayah >= 1 && ayah <= maxAyah;
+  }
+
   getRecitationControlTargetAyah() {
     const activeSurah = this.clampNumber(this._activeSurah, 1, 114, 1);
     const activeChapter = this._chapters?.find((c) => c.id === activeSurah);
@@ -4769,8 +4792,9 @@ class PocketQuranManager extends BaseManager {
         if (
           existingState &&
           typeof existingState === "object" &&
-          existingState.source === "offscreen" &&
-          existingState.isPlaying === true
+          ((existingState.source === "offscreen" &&
+            existingState.isPlaying === true) ||
+            this.hasUsableSyncedRecitationTarget(existingState))
         ) {
           return;
         }
