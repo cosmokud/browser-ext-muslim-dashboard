@@ -1281,6 +1281,10 @@ class ThemeManager {
     if (!colors || typeof colors !== "object") return;
 
     const mainContainer = document.querySelector(".main-container");
+    const sidebarContainers = [
+      document.getElementById("sidebarLeft"),
+      document.getElementById("sidebarRight"),
+    ].filter(Boolean);
 
     const applyToComponent = (component, bgColor, hoverColor, borderColor) => {
       // Keep explicit per-card overrides from readability menus authoritative.
@@ -1315,8 +1319,11 @@ class ThemeManager {
 
       const isInMainLayout =
         !!mainContainer && mainContainer.contains(component);
+      const isInSidebar = sidebarContainers.some((container) =>
+        container.contains(component),
+      );
       const isFloating = component.classList.contains("floating-card");
-      if (!isInMainLayout && !isFloating) return;
+      if (!isInMainLayout && !isInSidebar && !isFloating) return;
 
       applyToComponent(component, bgColor, hoverColor, borderColor);
     });
