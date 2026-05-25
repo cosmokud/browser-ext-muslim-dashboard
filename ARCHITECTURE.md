@@ -24,7 +24,7 @@ The main app initializes and coordinates the following major modules:
 
 Dashboard modes are mutually exclusive where needed (sidebar mode, Quran focus mode, moment mode). Layout edit mode cooperates with the sidebar and grid layout systems to preserve card placement and mode state.
 
-Version 0.1.9 adds a wake/visibility synchronization pass that re-asserts sidebar layout state after the tab becomes active and preserves the user preference when viewport constraints temporarily force a collapse. The same release adds Pocket Quran translation search (Quran.com search with cached translation fallback) and shared font picker modals for Arabic/translation typography across content cards.
+Version 0.1.9 adds a wake/visibility synchronization pass that re-asserts sidebar layout state after the tab becomes active and preserves the user preference when viewport constraints temporarily force a collapse. The same release adds Pocket Quran translation search (Quran.com search with cached translation fallback), ayah copy controls (optional Arabic inclusion), Tajweed toggle gating based on font support, and shared font picker modals for Arabic/translation typography across content cards.
 
 ## Accessibility and UI behavior
 
@@ -32,4 +32,4 @@ The FAB menu uses focus-safe visibility handling and custom tooltips to avoid hi
 
 ## Data and assets
 
-Static datasets live in data/ (adhkar, hadith, quotes, flashcards, changelog). Visual assets are stored in assets/, icons/, fonts/, and css/. PocketQuranCacheManager uses IndexedDB to cache Quran.com JSON and audio assets; search reuses cached JSON when available and falls back to full translation data when direct search yields no hits.
+Static datasets live in data/ (adhkar, hadith, quotes, flashcards, changelog). Visual assets are stored in assets/, icons/, fonts/, and css/. BaseManager resolves relative resource URLs to extension URLs before fetching. PocketQuranCacheManager uses IndexedDB to cache Quran.com JSON and audio assets; search reuses cached JSON when available and falls back to full translation data when direct search yields no hits.

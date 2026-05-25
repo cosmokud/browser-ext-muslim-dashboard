@@ -4,9 +4,12 @@
 
 - Added Pocket Quran translation search with a dedicated modal, term highlighting, pagination, and jump-to-ayah results.
 - Added search modal controls to tune Arabic and translation font sizes per search session.
+- Added ayah copy controls in Pocket Quran, with a setting to include Arabic text when copying.
+- Added quick open/copy actions in Pocket Quran search results with improved accessibility.
 - Added translation font pickers for Pocket Quran (card and popup).
 - Added Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, with richer font previews.
 - Added forbidden-day aware fasting countdowns that skip prohibited fast dates.
+- Tajweed toggle availability now respects Arabic font compatibility.
 - Added wake/visibility/focus sync to re-assert sidebar layout state after sleep or tab activation.
 - Improved FAB menu accessibility with focus-safe inert handling and custom tooltips.
 
@@ -14,13 +17,17 @@
 
 - Fixed sidebar layout not restoring reliably after system wake or visibility changes.
 - Escaped translation font picker content to prevent unsafe HTML injection.
+- Improved virtual scroll stability by preserving anchor positions and refining scroll offsets.
 
 ### Other Improvements
 
 - Simplified font picker labels (removed the "Aa" prefix) and increased preview sample sizes.
 - Refined typography settings layout spacing for quotes and flashcards.
 - Refined Pocket Quran header button alignment and search modal sizing/pagination styling.
+- Reorganized Pocket Quran header controls with a grid layout and safer scroll preservation.
+- Enhanced ayah copy badge feedback and adjusted ayah badge alignment for clearer layout.
 - Synced Pocket Quran dropdown glass styling with the card's glass surface and blur multiplier.
+- Extension resource fetches now resolve relative URLs in extension contexts.
 - Sidebar mode now preserves user preference when auto-collapsing due to viewport constraints.
 - Updated extension version references to 0.1.9 across runtime metadata and project documentation.
 

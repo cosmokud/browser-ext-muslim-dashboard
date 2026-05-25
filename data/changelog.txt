@@ -4,21 +4,27 @@
 
 - New Pocket Quran translation search with highlighting, pagination, and jump-to-ayah results.
 - Search modal includes Arabic and translation font size controls and cache-aware status updates.
+- Pocket Quran now includes ayah copy controls (with optional Arabic inclusion) and search result copy/open actions.
 - New Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, plus translation fonts for the Pocket Quran card and popup.
 - Fasting countdowns now skip forbidden fast dates (Eid and Tashreeq).
+- Tajweed toggle availability now respects Arabic font compatibility.
 - Sidebar wake/visibility sync and improved FAB menu accessibility.
 
 ### Bug Fixes
 
 - Fixed sidebar layout not restoring reliably after wake/visibility changes.
 - Escaped font picker labels and queries to prevent unsafe HTML injection.
+- Improved virtual scroll stability by preserving anchor positions and refining scroll offsets.
 
 ### Other Improvements
 
 - Font picker previews now include larger samples with Arabic text and cleaned labels.
 - Typography settings layout spacing for quotes and flashcards refined.
 - Pocket Quran search modal sizing/pagination styles and header button alignment refined.
+- Pocket Quran header controls now use a grid layout, with safer scroll preservation.
+- Enhanced ayah copy badge feedback and adjusted badge alignment for clearer layout.
 - Glass styling for Pocket Quran dropdowns now syncs with the card surface.
+- Extension resource fetches now resolve relative URLs in extension contexts.
 
 ## [0.1.8] - 2026-04-27
 

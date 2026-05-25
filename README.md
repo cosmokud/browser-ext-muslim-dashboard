@@ -27,10 +27,13 @@ The project targets Chromium-based browsers with Manifest V3.
 
 - Pocket Quran reader with surah and ayah navigation, bookmarks, and audio playback that can continue across tabs.
 - Pocket Quran translation search with highlighted matches, pagination, and jump-to-ayah results, plus adjustable Arabic and translation sizes in the search modal.
+- Ayah copy controls with optional Arabic inclusion, plus copy actions inside search results.
 - Quran translation and recitation support.
 - Tajweed display mode and Arabic/translation font options for Quran reading (card and popup).
+- Tajweed toggle availability adapts to the selected Arabic font.
 - Translation font pickers for the Pocket Quran card and popup.
 - Adjustable Arabic and translation font sizes.
+- Virtualized Quran scrolling now preserves position more reliably during refreshes.
 - Hadith card with bundled datasets and pagination controls.
 - Adhkar card with multiple bundled collections, script/romanization toggle, repeat metadata, and auto-advance controls.
 
