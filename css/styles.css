@@ -13289,8 +13289,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .header-control-row {
   display: grid;
-  grid-template-columns: minmax(120px, 1.45fr) repeat(4, minmax(88px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns:
+    minmax(108px, 1fr) 56px 72px 72px
+    minmax(176px, max-content);
+  gap: var(--spacing-xs);
   align-items: center;
   background: var(--glass-bg);
   border-radius: var(--radius-md);
@@ -13423,6 +13425,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .header-color-reset-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.header-color-reset-btn svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .header-glow-popover-btn {
