@@ -4637,6 +4637,15 @@ class PocketQuranManager extends BaseManager {
     return `${surahPrefix}${surahName} · ${ayahPart}`;
   }
 
+  isDashboardRecitationActivelyPlaying() {
+    return (
+      this._isPlaying === true ||
+      (this._audioElement &&
+        this._audioElement.paused === false &&
+        this._audioElement.ended === false)
+    );
+  }
+
   getRecitationControlTargetAyah() {
     const activeSurah = this.clampNumber(this._activeSurah, 1, 114, 1);
     const activeChapter = this._chapters?.find((c) => c.id === activeSurah);
@@ -4664,12 +4673,20 @@ class PocketQuranManager extends BaseManager {
       return { surah, ayah };
     };
 
-    const localTarget = normalizeTarget(this._playingAyah);
-    if (localTarget) return localTarget;
-
     try {
       const syncState = this.storage?.get(this._popupSyncStateKey, null);
       const syncedTarget = normalizeTarget(syncState?.recitationAyah);
+      if (
+        syncedTarget &&
+        syncState?.isPlaying === true &&
+        !this.isDashboardRecitationActivelyPlaying()
+      ) {
+        return syncedTarget;
+      }
+
+      const localTarget = normalizeTarget(this._playingAyah);
+      if (localTarget) return localTarget;
+
       if (
         syncedTarget &&
         syncState?.source &&
@@ -4681,6 +4698,9 @@ class PocketQuranManager extends BaseManager {
       // no-op
     }
 
+    const localTarget = normalizeTarget(this._playingAyah);
+    if (localTarget) return localTarget;
+
     return { surah: activeSurah, ayah: activeAyah };
   }
 
@@ -4691,10 +4711,7 @@ class PocketQuranManager extends BaseManager {
       (Number.isFinite(chapter?.verses_count) && chapter.verses_count) || 286;
     const activeAyah = this.clampNumber(this._activeAyah, 1, maxAyah, 1);
 
-    const recitationTarget = this._playingAyah || {
-      surah: activeSurah,
-      ayah: activeAyah,
-    };
+    const recitationTarget = this.getRecitationControlTargetAyah();
     const recitationSurah = this.clampNumber(
       recitationTarget?.surah,
       1,
@@ -5316,17 +5333,26 @@ class PocketQuranManager extends BaseManager {
     // Add event listeners
     controlsBox
       .querySelector(".pq-prev-btn")
-      .addEventListener("click", () => this.playPreviousAyah());
+      .addEventListener("click", () => {
+        const target = this.getRecitationControlTargetAyah();
+        this.playPreviousAyah({
+          targetSurah: target.surah,
+          targetAyah: target.ayah,
+        });
+      });
     controlsBox
       .querySelector(".pq-next-btn")
-      .addEventListener("click", () => this.playNextAyah());
+      .addEventListener("click", () => {
+        const target = this.getRecitationControlTargetAyah();
+        this.playNextAyah({
+          targetSurah: target.surah,
+          targetAyah: target.ayah,
+        });
+      });
     controlsBox
       .querySelector(".pq-play-pause-btn")
       .addEventListener("click", () => {
-        const target = this._playingAyah || {
-          surah: this._activeSurah,
-          ayah: this._activeAyah,
-        };
+        const target = this.getRecitationControlTargetAyah();
         this.togglePlayPause(target.surah, target.ayah);
       });
     controlsBox
