@@ -3927,10 +3927,7 @@ class PocketQuranManager extends BaseManager {
   } = {}) {
     this.markPocketQuranControlInteraction();
 
-    const fallbackTarget = this._playingAyah || {
-      surah: this._activeSurah,
-      ayah: this._activeAyah,
-    };
+    const fallbackTarget = this.getRecitationControlTargetAyah();
     const surah = this.clampNumber(targetSurah, 1, 114, fallbackTarget.surah);
     const chapter = this._chapters.find((c) => c.id === surah);
     const maxAyah =
@@ -3962,10 +3959,7 @@ class PocketQuranManager extends BaseManager {
   } = {}) {
     this.markPocketQuranControlInteraction();
 
-    const fallbackTarget = this._playingAyah || {
-      surah: this._activeSurah,
-      ayah: this._activeAyah,
-    };
+    const fallbackTarget = this.getRecitationControlTargetAyah();
     const surah = this.clampNumber(targetSurah, 1, 114, fallbackTarget.surah);
     const chapter = this._chapters.find((c) => c.id === surah);
     const max =
@@ -4641,6 +4635,53 @@ class PocketQuranManager extends BaseManager {
     const surahPrefix = Number.isFinite(s) ? `${s}. ` : "";
     const ayahPart = Number.isFinite(a) ? `Ayah ${a}` : "Ayah";
     return `${surahPrefix}${surahName} · ${ayahPart}`;
+  }
+
+  getRecitationControlTargetAyah() {
+    const activeSurah = this.clampNumber(this._activeSurah, 1, 114, 1);
+    const activeChapter = this._chapters?.find((c) => c.id === activeSurah);
+    const activeMaxAyah =
+      (Number.isFinite(activeChapter?.verses_count) &&
+        activeChapter.verses_count) ||
+      286;
+    const activeAyah = this.clampNumber(
+      this._activeAyah,
+      1,
+      activeMaxAyah,
+      1,
+    );
+
+    const normalizeTarget = (target) => {
+      if (!target || typeof target !== "object") return null;
+
+      const surah = this.clampNumber(target.surah, 1, 114, activeSurah);
+      const chapter = this._chapters?.find((c) => c.id === surah);
+      const maxAyah =
+        (Number.isFinite(chapter?.verses_count) && chapter.verses_count) ||
+        286;
+      const ayah = this.clampNumber(target.ayah, 1, maxAyah, activeAyah);
+
+      return { surah, ayah };
+    };
+
+    const localTarget = normalizeTarget(this._playingAyah);
+    if (localTarget) return localTarget;
+
+    try {
+      const syncState = this.storage?.get(this._popupSyncStateKey, null);
+      const syncedTarget = normalizeTarget(syncState?.recitationAyah);
+      if (
+        syncedTarget &&
+        syncState?.source &&
+        syncState.source !== "dashboard"
+      ) {
+        return syncedTarget;
+      }
+    } catch (e) {
+      // no-op
+    }
+
+    return { surah: activeSurah, ayah: activeAyah };
   }
 
   buildPopupSyncState() {
