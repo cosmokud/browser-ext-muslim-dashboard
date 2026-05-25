@@ -24,7 +24,7 @@ The main app initializes and coordinates the following major modules:
 
 Dashboard modes are mutually exclusive where needed (sidebar mode, Quran focus mode, moment mode). Layout edit mode cooperates with the sidebar and grid layout systems to preserve card placement and mode state.
 
-Version 0.1.10 updates Pocket Quran recitation control flow: navigation resolves a validated target ayah from synced popup state or local playback, activates the target surah before play/pause and explicit navigation actions, and supports previous/next across surah boundaries when Across Surahs is enabled.
+Recent updates add wake/visibility synchronization that re-asserts sidebar layout state after the tab becomes active and preserves the user preference when viewport constraints temporarily force a collapse, plus Pocket Quran translation search (Quran.com search with cached translation fallback), ayah copy controls (optional Arabic inclusion), Tajweed toggle gating based on font support, and shared font picker modals for Arabic/translation typography across content cards. The Pocket Quran recitation control flow now resolves a validated target ayah from synced popup state or local playback, activates the target surah before play/pause and explicit navigation actions, and supports previous/next across surah boundaries when Across Surahs is enabled.
 
 ## Accessibility and UI behavior
 

@@ -14,7 +14,6 @@
 ### Other Improvements
 
 - Centralized surah ayah-count lookup for consistent navigation logic.
-- Updated extension version references to 0.1.10 across runtime metadata and documentation.
 
 ## [0.1.9] - 2026-05-25
 
