@@ -1446,7 +1446,7 @@ class SettingsManager extends BaseManager {
     if (this.pocketQuranHighlighterDelay) {
       const clamped = this.clampNumber(
         pq.reciterHighlighterDelayMs,
-        0,
+        -1000,
         1000,
         0,
       );
@@ -1733,7 +1733,7 @@ class SettingsManager extends BaseManager {
 
     const clamped = this.clampNumber(
       parseInt(this.pocketQuranHighlighterDelay.value, 10),
-      0,
+      -1000,
       1000,
       0,
     );
@@ -7439,7 +7439,7 @@ class SettingsManager extends BaseManager {
       ),
       reciterHighlighterDelayMs: this.clampNumber(
         parseInt(this.pocketQuranHighlighterDelay?.value, 10),
-        0,
+        -1000,
         1000,
         existingPocketQuran.reciterHighlighterDelayMs ?? 0,
       ),
