@@ -551,6 +551,10 @@ class PocketQuranManager extends BaseManager {
   // slightly lower for better readability during recitation.
   static RECITATION_AUTOSCROLL_OFFSET_PX = 10;
 
+  // Browser media currentTime can run slightly ahead of audible output.
+  // Delay word highlighting a touch so it tracks what the user hears.
+  static RECITATION_WORD_HIGHLIGHT_LAG_MS = 180;
+
   // Bookmark constants
   static BOOKMARKS_PER_PAGE = 10;
   static CATEGORIES_PER_PAGE = 10;
@@ -3576,7 +3580,11 @@ class PocketQuranManager extends BaseManager {
       return;
     }
 
-    const currentMs = this._audioElement.currentTime * 1000;
+    const currentMs = Math.max(
+      0,
+      this._audioElement.currentTime * 1000 -
+        PocketQuranManager.RECITATION_WORD_HIGHLIGHT_LAG_MS,
+    );
     const activeSegment = this.normalizeRecitationSegments(timing.segments).find(
       (segment) => currentMs >= segment.fromMs && currentMs <= segment.toMs,
     );
