@@ -13402,8 +13402,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .header-color-reset-btn {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -13428,8 +13428,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .header-color-reset-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
   display: block;
 }
 
