@@ -15136,6 +15136,22 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   cursor: text;
 }
 
+.pq-recitation-word {
+  border-radius: 0.28em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.pq-recitation-word.is-reciting {
+  background: color-mix(in srgb, var(--accent-gold) 34%, transparent);
+  box-shadow: 0 0 0 0.08em color-mix(in srgb, var(--accent-gold) 28%, transparent);
+  color: var(--text-primary);
+}
+
 .pocket-quran-ayah-tr {
   margin-top: var(--spacing-sm);
   font-family: var(--pq-translation-font-family, var(--font-primary));

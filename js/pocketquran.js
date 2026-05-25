@@ -724,6 +724,10 @@ class PocketQuranManager extends BaseManager {
     this._isSurahLooping = false;
     this._volume = 1;
     this._playingAyah = null;
+    this._recitationTimingsCache = new Map();
+    this._recitationTimingFetches = new Map();
+    this._activeRecitationWordKey = null;
+    this._isRecitationWordSyncDisabled = false;
     this._reciterModal = null;
     this._headerControlsBox = null;
     this._recitationFloatingEnabled = false;
@@ -1607,6 +1611,7 @@ class PocketQuranManager extends BaseManager {
     this._virtualContent.appendChild(fragment);
 
     this.scheduleRenderedAyahMeasurement();
+    this.syncActiveRecitationWord();
   }
 
   refreshRenderedAyahs({ preserveScroll = true } = {}) {
@@ -1660,6 +1665,32 @@ class PocketQuranManager extends BaseManager {
     if (measureCount > 0 && heightsChanged) {
       this._avgAyahHeight = totalMeasured / measureCount;
     }
+  }
+
+  renderArabicWordSpans(container, text, verseKey) {
+    if (!container) return;
+
+    container.textContent = "";
+    const words = String(text || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (!words.length) return;
+
+    words.forEach((word, index) => {
+      if (index > 0) {
+        container.appendChild(document.createTextNode(" "));
+      }
+
+      const wordEl = document.createElement("span");
+      wordEl.className = "pq-recitation-word";
+      wordEl.dataset.verseKey = verseKey;
+      wordEl.dataset.wordIndex = String(index + 1);
+      wordEl.dataset.recitationKey = `${verseKey}:${index + 1}`;
+      wordEl.textContent = word;
+      container.appendChild(wordEl);
+    });
   }
 
   /**
@@ -1976,6 +2007,7 @@ class PocketQuranManager extends BaseManager {
     ar.setAttribute("dir", "rtl");
 
     // Check if Tajweed mode is enabled and we have Tajweed text
+    const verseKey = verse?.verse_key || `${surah}:${ayahNumber}`;
     if (this._isTajweedMode) {
       const tajweedText = this.getTajweedTextForVerse(ayahNumber);
       if (tajweedText) {
@@ -1983,10 +2015,10 @@ class PocketQuranManager extends BaseManager {
         ar.innerHTML = tajweedText;
       } else {
         // Fallback to plain text if Tajweed not available
-        ar.textContent = verse?.text_uthmani || "";
+        this.renderArabicWordSpans(ar, verse?.text_uthmani || "", verseKey);
       }
     } else {
-      ar.textContent = verse?.text_uthmani || "";
+      this.renderArabicWordSpans(ar, verse?.text_uthmani || "", verseKey);
     }
 
     const tr = document.createElement("div");
@@ -3242,11 +3274,13 @@ class PocketQuranManager extends BaseManager {
     this._onAudioError = (e) => {
       console.error("PocketQuran: Audio error", e);
       this._isPlaying = false;
+      this.clearActiveRecitationWordHighlight();
       this.updatePlaybackUI();
     };
     this._onAudioPlaying = (event) => {
       this.enforceSingleRecitationAudioOwner();
       this._isPlaying = true;
+      this.syncActiveRecitationWord();
       this.updatePlaybackUI();
     };
     this._onAudioPause = (event) => {
@@ -3255,8 +3289,10 @@ class PocketQuranManager extends BaseManager {
         sourceAudio || this._audioElement,
       );
       this._isPlaying = false;
+      this.clearActiveRecitationWordHighlight();
       this.updatePlaybackUI();
     };
+    this._onAudioTimeUpdate = () => this.syncActiveRecitationWord();
 
     // Create audio element
     this._audioElement = new Audio();
@@ -3279,6 +3315,7 @@ class PocketQuranManager extends BaseManager {
     audio.addEventListener("error", this._onAudioError);
     audio.addEventListener("playing", this._onAudioPlaying);
     audio.addEventListener("pause", this._onAudioPause);
+    audio.addEventListener("timeupdate", this._onAudioTimeUpdate);
   }
 
   detachAudioListeners(audio) {
@@ -3287,6 +3324,7 @@ class PocketQuranManager extends BaseManager {
     audio.removeEventListener("error", this._onAudioError);
     audio.removeEventListener("playing", this._onAudioPlaying);
     audio.removeEventListener("pause", this._onAudioPause);
+    audio.removeEventListener("timeupdate", this._onAudioTimeUpdate);
   }
 
   setActiveAudioElement(audio) {
@@ -3331,6 +3369,191 @@ class PocketQuranManager extends BaseManager {
 
   buildRecitationCacheKey(surah, ayah) {
     return `${this._activeReciterId}:${surah}:${ayah}`;
+  }
+
+  getRecitationTimingCacheKey(surah) {
+    return `${this._activeReciterId}:${surah}`;
+  }
+
+  getRecitationTimingUrl(surah) {
+    return `${PocketQuranManager.API_BASE}/recitations/${this._activeReciterId}/by_chapter/${surah}?fields=segments,duration&per_page=50`;
+  }
+
+  normalizeRecitationSegments(segments) {
+    if (!Array.isArray(segments)) return [];
+
+    return segments
+      .map((segment) => {
+        const source = Array.isArray(segment)
+          ? {
+              wordStart: segment[0],
+              wordEnd: segment[1],
+              fromMs: segment[2],
+              toMs: segment[3],
+            }
+          : segment;
+        if (!source || typeof source !== "object") return null;
+
+        const wordStart = parseInt(source.wordStart, 10);
+        const wordEnd = parseInt(source.wordEnd, 10);
+        const fromMs = Number(source.fromMs);
+        const toMs = Number(source.toMs);
+
+        if (
+          !Number.isFinite(wordStart) ||
+          !Number.isFinite(wordEnd) ||
+          !Number.isFinite(fromMs) ||
+          !Number.isFinite(toMs) ||
+          wordEnd <= wordStart ||
+          toMs < fromMs
+        ) {
+          return null;
+        }
+
+        return { wordStart, wordEnd, fromMs, toMs };
+      })
+      .filter(Boolean);
+  }
+
+  async fetchRecitationTimingsForSurah(surah) {
+    const chapter = this.clampNumber(surah, 1, 114, null);
+    if (!chapter || !Number.isFinite(this._activeReciterId)) return null;
+
+    const cacheKey = this.getRecitationTimingCacheKey(chapter);
+    const cached = this._recitationTimingsCache?.get(cacheKey);
+    if (cached) return cached;
+
+    const pending = this._recitationTimingFetches?.get(cacheKey);
+    if (pending) return pending;
+
+    const request = (async () => {
+      try {
+        const url = this.getRecitationTimingUrl(chapter);
+        const data = await this.fetchJson(url, { timeoutMs: 15000 });
+        const audioFiles = Array.isArray(data?.audio_files)
+          ? data.audio_files
+          : [];
+        const timings = new Map();
+
+        audioFiles.forEach((audioFile) => {
+          const verseKey = String(audioFile?.verse_key || "");
+          const segments = this.normalizeRecitationSegments(
+            audioFile?.segments,
+          );
+          if (!verseKey || !segments.length) return;
+
+          timings.set(verseKey, {
+            verseKey,
+            duration: Number(audioFile?.duration) || null,
+            segments,
+          });
+        });
+
+        const result = { fetchedAt: Date.now(), timings };
+        this._recitationTimingsCache.set(cacheKey, result);
+        return result;
+      } catch (e) {
+        console.warn("PocketQuran: failed to fetch recitation timings", e);
+        return null;
+      } finally {
+        this._recitationTimingFetches.delete(cacheKey);
+      }
+    })();
+
+    this._recitationTimingFetches.set(cacheKey, request);
+    return request;
+  }
+
+  getCachedRecitationTimingForAyah(surah, ayah) {
+    const cacheKey = this.getRecitationTimingCacheKey(surah);
+    const cached = this._recitationTimingsCache?.get(cacheKey);
+    return cached?.timings?.get(`${surah}:${ayah}`) || null;
+  }
+
+  primeRecitationTimingsForPlayback(surah, ayah) {
+    this.fetchRecitationTimingsForSurah(surah).then(() => {
+      if (
+        this._playingAyah?.surah === surah &&
+        this._playingAyah?.ayah === ayah
+      ) {
+        this.syncActiveRecitationWord();
+      }
+    });
+  }
+
+  clearActiveRecitationWordHighlight() {
+    const root = this.card || document;
+    root
+      ?.querySelectorAll?.("[data-recitation-key].is-reciting")
+      ?.forEach((el) => {
+        el.classList.remove("is-reciting");
+        el.removeAttribute("aria-current");
+      });
+    this._activeRecitationWordKey = null;
+  }
+
+  syncActiveRecitationWord() {
+    if (
+      !this._audioElement ||
+      !this._playingAyah ||
+      !this._isPlaying ||
+      this._isRecitationWordSyncDisabled
+    ) {
+      this.clearActiveRecitationWordHighlight();
+      return;
+    }
+
+    const { surah, ayah } = this._playingAyah;
+    const timing = this.getCachedRecitationTimingForAyah(surah, ayah);
+
+    if (!timing) {
+      this.fetchRecitationTimingsForSurah(surah).then(() => {
+        if (
+          this._playingAyah?.surah === surah &&
+          this._playingAyah?.ayah === ayah
+        ) {
+          this.syncActiveRecitationWord();
+        }
+      });
+      return;
+    }
+
+    const currentMs = this._audioElement.currentTime * 1000;
+    const activeSegment = this.normalizeRecitationSegments(timing.segments).find(
+      (segment) => currentMs >= segment.fromMs && currentMs <= segment.toMs,
+    );
+
+    if (!activeSegment) {
+      this.clearActiveRecitationWordHighlight();
+      return;
+    }
+
+    const verseKey = `${surah}:${ayah}`;
+    const recitationKey = `${verseKey}:${activeSegment.wordStart}-${activeSegment.wordEnd}`;
+    if (this._activeRecitationWordKey === recitationKey) return;
+
+    this.clearActiveRecitationWordHighlight();
+
+    const ayahEl = this._virtualContent?.querySelector(
+      `.pocket-quran-ayah[data-ayah="${ayah}"]`,
+    );
+    if (!ayahEl) return;
+
+    ayahEl.querySelectorAll("[data-recitation-key]").forEach((wordEl) => {
+      if (wordEl.dataset.verseKey !== verseKey) return;
+
+      const wordIndex = parseInt(wordEl.dataset.wordIndex, 10);
+      if (
+        Number.isFinite(wordIndex) &&
+        wordIndex > activeSegment.wordStart &&
+        wordIndex <= activeSegment.wordEnd
+      ) {
+        wordEl.classList.add("is-reciting");
+        wordEl.setAttribute("aria-current", "true");
+      }
+    });
+
+    this._activeRecitationWordKey = recitationKey;
   }
 
   _revokeAllRecitationBlobUrls() {
@@ -3526,6 +3749,7 @@ class PocketQuranManager extends BaseManager {
     } catch (e) {}
 
     this._revokeAllRecitationBlobUrls();
+    this.clearActiveRecitationWordHighlight();
     this._audioSrcCache = new Map();
     this._preloadedAudios = new Map();
   }
@@ -3542,6 +3766,8 @@ class PocketQuranManager extends BaseManager {
       this.setActiveAudioElement(preloaded);
 
       this._playingAyah = { surah, ayah };
+      this._isRecitationWordSyncDisabled = false;
+      this.primeRecitationTimingsForPlayback(surah, ayah);
       this._audioElement.volume = this._volume;
 
       try {
@@ -3575,6 +3801,8 @@ class PocketQuranManager extends BaseManager {
     const cachedSrc = this._audioSrcCache?.get(cacheKey);
     if (cachedSrc) {
       this._playingAyah = { surah, ayah };
+      this._isRecitationWordSyncDisabled = false;
+      this.primeRecitationTimingsForPlayback(surah, ayah);
       this._audioElement.volume = this._volume;
       if (this._audioElement.src !== cachedSrc) {
         this._audioElement.src = cachedSrc;
@@ -3733,6 +3961,8 @@ class PocketQuranManager extends BaseManager {
 
       // Set up playback
       this._playingAyah = { surah, ayah };
+      this._isRecitationWordSyncDisabled = false;
+      this.primeRecitationTimingsForPlayback(surah, ayah);
       this._audioElement.volume = this._volume;
       if (this._audioElement.src !== audioUrl) {
         this._audioElement.src = audioUrl;
@@ -3751,6 +3981,8 @@ class PocketQuranManager extends BaseManager {
         // Fallback: chapter recitation URL (usually download.quranicaudio.com)
         const chapterUrl = await this.getChapterRecitationAudioUrl(surah);
         if (chapterUrl) {
+          this._isRecitationWordSyncDisabled = true;
+          this.clearActiveRecitationWordHighlight();
           this._audioElement.src = chapterUrl;
           this.enforceSingleRecitationAudioOwner();
           await this._audioElement.play();
