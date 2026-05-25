@@ -26,6 +26,7 @@ The project targets Chromium-based browsers with Manifest V3.
 ### Quran, Hadith, and Adhkar
 
 - Pocket Quran reader with surah and ayah navigation, bookmarks, and audio playback that can continue across tabs.
+- Recitation controls support previous/next across surahs when Across Surahs (autoplay next surah) is enabled, with synced targets between dashboard and popup playback.
 - Pocket Quran translation search with highlighted matches, pagination, and jump-to-ayah results, plus adjustable Arabic and translation sizes in the search modal.
 - Ayah copy controls with optional Arabic inclusion, plus copy actions inside search results.
 - Quran translation and recitation support.
@@ -126,7 +127,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.9.zip`
+Example: `muslim-dashboard-v0.1.10.zip`
 
 ### Build output
 

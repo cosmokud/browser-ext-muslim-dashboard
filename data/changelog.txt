@@ -1,3 +1,21 @@
+## [0.1.10] - 2026-05-25
+
+### Highlights
+
+- Pocket Quran recitation previous/next now crosses surah boundaries when Across Surahs is enabled, including popup controls.
+- Recitation target resolution now validates synced popup state and activates the target surah before playback actions.
+- Updated recitation control icons and labels for loop, floating, and across-surah controls.
+
+### Bug Fixes
+
+- Fixed previous/next controls using stale ayah targets when a synced popup session was active.
+- Fixed popup previous/next navigation at surah boundaries to persist the correct surah/ayah state.
+
+### Other Improvements
+
+- Centralized surah ayah-count lookup for consistent navigation logic.
+- Updated extension version references to 0.1.10 across runtime metadata and documentation.
+
 ## [0.1.9] - 2026-05-25
 
 ### Highlights
