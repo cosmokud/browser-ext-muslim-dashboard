@@ -3925,7 +3925,7 @@ class PocketQuranManager extends BaseManager {
   /**
    * Go to previous ayah in playback.
    */
-  playPreviousAyah({
+  async playPreviousAyah({
     desiredIsPlaying = this._isPlaying === true,
     targetSurah = null,
     targetAyah = null,
@@ -3946,9 +3946,12 @@ class PocketQuranManager extends BaseManager {
 
       const previousSurahMaxAyah = this.getSurahAyahCount(previousSurah) || 286;
       this.stopOffscreenPlaybackBestEffort();
+      await this.activateRecitationTargetSurah(previousSurah);
 
       if (desiredIsPlaying) {
-        this.playAyah(previousSurah, previousSurahMaxAyah);
+        await this.playAyah(previousSurah, previousSurahMaxAyah, {
+          forceRestart: true,
+        });
         return;
       }
 
@@ -3963,7 +3966,7 @@ class PocketQuranManager extends BaseManager {
     this.stopOffscreenPlaybackBestEffort();
 
     if (desiredIsPlaying) {
-      this.playAyah(surah, previousAyah);
+      await this.playAyah(surah, previousAyah);
       return;
     }
 
@@ -3973,7 +3976,7 @@ class PocketQuranManager extends BaseManager {
   /**
    * Go to next ayah in playback.
    */
-  playNextAyah({
+  async playNextAyah({
     desiredIsPlaying = this._isPlaying === true,
     targetSurah = null,
     targetAyah = null,
@@ -3993,9 +3996,10 @@ class PocketQuranManager extends BaseManager {
       }
 
       this.stopOffscreenPlaybackBestEffort();
+      await this.activateRecitationTargetSurah(nextSurah);
 
       if (desiredIsPlaying) {
-        this.playAyah(nextSurah, 1);
+        await this.playAyah(nextSurah, 1, { forceRestart: true });
         return;
       }
 
@@ -4010,7 +4014,7 @@ class PocketQuranManager extends BaseManager {
     this.stopOffscreenPlaybackBestEffort();
 
     if (desiredIsPlaying) {
-      this.playAyah(surah, nextAyah);
+      await this.playAyah(surah, nextAyah);
       return;
     }
 
@@ -4036,6 +4040,23 @@ class PocketQuranManager extends BaseManager {
     }
 
     return surah > 1 ? surah - 1 : null;
+  }
+
+  async activateRecitationTargetSurah(surah) {
+    const targetSurah = this.clampNumber(surah, 1, 114, this._activeSurah);
+    const versesAlreadyRendered = Boolean(
+      this.contentEl?.querySelector?.(".pocket-quran-ayah"),
+    );
+
+    if (targetSurah === this._activeSurah && versesAlreadyRendered) {
+      return;
+    }
+
+    await this.setActiveSurah(targetSurah, {
+      preserveAyah: false,
+      autoScroll: false,
+      preserveDashboardScroll: true,
+    });
   }
 
   getNextSurahNumber(currentSurah) {
@@ -5079,13 +5100,7 @@ class PocketQuranManager extends BaseManager {
             114,
             fallbackTarget.surah,
           );
-          const targetChapter = this._chapters.find(
-            (c) => c.id === targetSurah,
-          );
-          const targetMaxAyah =
-            (Number.isFinite(targetChapter?.verses_count) &&
-              targetChapter.verses_count) ||
-            286;
+          const targetMaxAyah = this.getSurahAyahCount(targetSurah) || 286;
           const targetAyah = this.clampNumber(
             payload.ayah,
             1,
@@ -5099,25 +5114,19 @@ class PocketQuranManager extends BaseManager {
 
           if (desiredIsPlaying === true) {
             this.enableAutoplayOnFirstPlayIfNeeded();
-            this.playAyah(targetSurah, targetAyah);
+            await this.activateRecitationTargetSurah(targetSurah);
+            await this.playAyah(targetSurah, targetAyah);
             break;
           }
 
           if (desiredIsPlaying === false) {
-            try {
-              if (this._audioElement) {
-                this._audioElement.pause();
-              }
-            } catch (e) {
-              // no-op
-            }
-            this._isPlaying = false;
-            this._playingAyah = { surah: targetSurah, ayah: targetAyah };
-            this.updatePlaybackUI();
+            await this.activateRecitationTargetSurah(targetSurah);
+            this.setPausedRecitationTarget(targetSurah, targetAyah);
             break;
           }
 
-          this.togglePlayPause(targetSurah, targetAyah);
+          await this.activateRecitationTargetSurah(targetSurah);
+          await this.togglePlayPause(targetSurah, targetAyah);
           break;
         }
         case "playPreviousAyah": {
@@ -5134,13 +5143,7 @@ class PocketQuranManager extends BaseManager {
             114,
             fallbackTarget.surah,
           );
-          const targetChapter = this._chapters.find(
-            (c) => c.id === targetSurah,
-          );
-          const targetMaxAyah =
-            (Number.isFinite(targetChapter?.verses_count) &&
-              targetChapter.verses_count) ||
-            286;
+          const targetMaxAyah = this.getSurahAyahCount(targetSurah) || 286;
           const explicitAyah = this.clampNumber(
             payload.ayah,
             1,
@@ -5153,13 +5156,14 @@ class PocketQuranManager extends BaseManager {
               : this._isPlaying === true;
 
           if (Number.isFinite(explicitAyah)) {
+            await this.activateRecitationTargetSurah(targetSurah);
             if (desiredIsPlaying) {
-              this.playAyah(targetSurah, explicitAyah);
+              await this.playAyah(targetSurah, explicitAyah);
             } else {
               this.setPausedRecitationTarget(targetSurah, explicitAyah);
             }
           } else {
-            this.playPreviousAyah({ desiredIsPlaying });
+            await this.playPreviousAyah({ desiredIsPlaying });
           }
           break;
         }
@@ -5177,13 +5181,7 @@ class PocketQuranManager extends BaseManager {
             114,
             fallbackTarget.surah,
           );
-          const targetChapter = this._chapters.find(
-            (c) => c.id === targetSurah,
-          );
-          const targetMaxAyah =
-            (Number.isFinite(targetChapter?.verses_count) &&
-              targetChapter.verses_count) ||
-            286;
+          const targetMaxAyah = this.getSurahAyahCount(targetSurah) || 286;
           const explicitAyah = this.clampNumber(
             payload.ayah,
             1,
@@ -5196,13 +5194,14 @@ class PocketQuranManager extends BaseManager {
               : this._isPlaying === true;
 
           if (Number.isFinite(explicitAyah)) {
+            await this.activateRecitationTargetSurah(targetSurah);
             if (desiredIsPlaying) {
-              this.playAyah(targetSurah, explicitAyah);
+              await this.playAyah(targetSurah, explicitAyah);
             } else {
               this.setPausedRecitationTarget(targetSurah, explicitAyah);
             }
           } else {
-            this.playNextAyah({ desiredIsPlaying });
+            await this.playNextAyah({ desiredIsPlaying });
           }
           break;
         }

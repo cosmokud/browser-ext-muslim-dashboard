@@ -3037,6 +3037,27 @@ document.addEventListener("DOMContentLoaded", () => {
     return currentSurah < 114 ? currentSurah + 1 : null;
   }
 
+  function getPocketQuranPreviousSurahId(surah) {
+    const currentSurah = clampNumber(surah, 1, 114, 1);
+
+    if (Array.isArray(pocketQuranChapters) && pocketQuranChapters.length > 0) {
+      const currentIndex = pocketQuranChapters.findIndex((chapter) => {
+        return clampNumber(chapter?.id, 1, 114, NaN) === currentSurah;
+      });
+
+      if (currentIndex > 0) {
+        return clampNumber(
+          pocketQuranChapters[currentIndex - 1]?.id,
+          1,
+          114,
+          null,
+        );
+      }
+    }
+
+    return currentSurah > 1 ? currentSurah - 1 : null;
+  }
+
   function buildPocketQuranFallbackState(settings = storage.getSettings()) {
     const pqSettings = settings?.pocketQuran || {};
     const isTajweedAllowed = isPocketQuranPopupTajweedAllowed(settings);
@@ -4304,7 +4325,8 @@ document.addEventListener("DOMContentLoaded", () => {
           getPocketQuranSurahMaxAyah(targetSurah),
           NaN,
         );
-        const targetAyah = Number.isFinite(explicitAyah)
+        let navigationSurah = targetSurah;
+        let targetAyah = Number.isFinite(explicitAyah)
           ? explicitAyah
           : clampNumber(
               currentTarget.ayah - 1,
@@ -4314,11 +4336,24 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
         if (
+          !Number.isFinite(explicitAyah) &&
+          currentTarget.ayah <= 1 &&
+          state.isAutoplayNextSurah === true
+        ) {
+          const previousSurah = getPocketQuranPreviousSurahId(targetSurah);
+          if (Number.isFinite(previousSurah)) {
+            navigationSurah = previousSurah;
+            targetAyah = getPocketQuranSurahMaxAyah(previousSurah);
+          }
+        }
+
+        if (
+          navigationSurah !== currentTarget.surah ||
           targetAyah !== currentTarget.ayah ||
           Number.isFinite(explicitAyah)
         ) {
           if (desiredIsPlaying) {
-            await playPocketQuranAyahLocally(targetSurah, targetAyah);
+            await playPocketQuranAyahLocally(navigationSurah, targetAyah);
           } else {
             if (pocketQuranLocalAudio) {
               try {
@@ -4332,10 +4367,10 @@ document.addEventListener("DOMContentLoaded", () => {
             pocketQuranState = normalizePocketQuranState(
               {
                 ...state,
-                activeSurah: targetSurah,
+                activeSurah: navigationSurah,
                 activeAyah: targetAyah,
                 recitationAyah: {
-                  surah: targetSurah,
+                  surah: navigationSurah,
                   ayah: targetAyah,
                 },
                 isPlaying: false,
@@ -4348,7 +4383,7 @@ document.addEventListener("DOMContentLoaded", () => {
               pocketQuranStateSourcePopup,
             );
             persistPocketQuranSettingsPatch({
-              lastSurahNumber: targetSurah,
+              lastSurahNumber: navigationSurah,
               lastAyahNumber: targetAyah,
             });
           }
@@ -4373,7 +4408,8 @@ document.addEventListener("DOMContentLoaded", () => {
           getPocketQuranSurahMaxAyah(targetSurah),
           NaN,
         );
-        const targetAyah = Number.isFinite(explicitAyah)
+        let navigationSurah = targetSurah;
+        let targetAyah = Number.isFinite(explicitAyah)
           ? explicitAyah
           : clampNumber(
               currentTarget.ayah + 1,
@@ -4383,11 +4419,24 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
         if (
+          !Number.isFinite(explicitAyah) &&
+          currentTarget.ayah >= getPocketQuranSurahMaxAyah(targetSurah) &&
+          state.isAutoplayNextSurah === true
+        ) {
+          const nextSurah = getPocketQuranNextSurahId(targetSurah);
+          if (Number.isFinite(nextSurah)) {
+            navigationSurah = nextSurah;
+            targetAyah = 1;
+          }
+        }
+
+        if (
+          navigationSurah !== currentTarget.surah ||
           targetAyah !== currentTarget.ayah ||
           Number.isFinite(explicitAyah)
         ) {
           if (desiredIsPlaying) {
-            await playPocketQuranAyahLocally(targetSurah, targetAyah);
+            await playPocketQuranAyahLocally(navigationSurah, targetAyah);
           } else {
             if (pocketQuranLocalAudio) {
               try {
@@ -4401,10 +4450,10 @@ document.addEventListener("DOMContentLoaded", () => {
             pocketQuranState = normalizePocketQuranState(
               {
                 ...state,
-                activeSurah: targetSurah,
+                activeSurah: navigationSurah,
                 activeAyah: targetAyah,
                 recitationAyah: {
-                  surah: targetSurah,
+                  surah: navigationSurah,
                   ayah: targetAyah,
                 },
                 isPlaying: false,
@@ -4417,7 +4466,7 @@ document.addEventListener("DOMContentLoaded", () => {
               pocketQuranStateSourcePopup,
             );
             persistPocketQuranSettingsPatch({
-              lastSurahNumber: targetSurah,
+              lastSurahNumber: navigationSurah,
               lastAyahNumber: targetAyah,
             });
           }
@@ -6014,32 +6063,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
     popupPqPrevBtn?.addEventListener("click", () => {
       const target = getPocketQuranCurrentTargetAyah();
-      const previousAyah = clampNumber(
+      let targetSurah = target.surah;
+      let targetAyah = clampNumber(
         target.ayah - 1,
         1,
         getPocketQuranSurahMaxAyah(target.surah),
         target.ayah,
       );
-      setLocalPocketQuranTargetAyah(target.surah, previousAyah);
+
+      if (
+        target.ayah <= 1 &&
+        pocketQuranState?.isAutoplayNextSurah === true
+      ) {
+        const previousSurah = getPocketQuranPreviousSurahId(target.surah);
+        if (Number.isFinite(previousSurah)) {
+          targetSurah = previousSurah;
+          targetAyah = getPocketQuranSurahMaxAyah(previousSurah);
+        }
+      }
+
+      setLocalPocketQuranTargetAyah(targetSurah, targetAyah);
       sendPocketQuranCommand(pocketQuranCommandTypes.playPreviousAyah, {
-        surah: target.surah,
-        ayah: previousAyah,
+        surah: targetSurah,
+        ayah: targetAyah,
         desiredIsPlaying: pocketQuranState?.isPlaying === true,
       });
     });
 
     popupPqNextBtn?.addEventListener("click", () => {
       const target = getPocketQuranCurrentTargetAyah();
-      const nextAyah = clampNumber(
+      let targetSurah = target.surah;
+      let targetAyah = clampNumber(
         target.ayah + 1,
         1,
         getPocketQuranSurahMaxAyah(target.surah),
         target.ayah,
       );
-      setLocalPocketQuranTargetAyah(target.surah, nextAyah);
+
+      if (
+        target.ayah >= getPocketQuranSurahMaxAyah(target.surah) &&
+        pocketQuranState?.isAutoplayNextSurah === true
+      ) {
+        const nextSurah = getPocketQuranNextSurahId(target.surah);
+        if (Number.isFinite(nextSurah)) {
+          targetSurah = nextSurah;
+          targetAyah = 1;
+        }
+      }
+
+      setLocalPocketQuranTargetAyah(targetSurah, targetAyah);
       sendPocketQuranCommand(pocketQuranCommandTypes.playNextAyah, {
-        surah: target.surah,
-        ayah: nextAyah,
+        surah: targetSurah,
+        ayah: targetAyah,
         desiredIsPlaying: pocketQuranState?.isPlaying === true,
       });
     });
