@@ -1698,6 +1698,71 @@ class PocketQuranManager extends BaseManager {
     container.appendChild(marker);
   }
 
+  normalizeArabicWordForRecitation(text) {
+    return String(text || "")
+      .normalize("NFKD")
+      .replace(/[\u061c\u200e\u200f]/g, "")
+      .replace(/[\u0640\u064b-\u065f\u0670\u06d6-\u06ed]/g, "")
+      .replace(/[إأآٱٲ]/g, "ا")
+      .replace(/\s+/g, "")
+      .trim();
+  }
+
+  getPlainArabicRecitationWords(text) {
+    return String(text || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((word) => !this.isAyahNumberMarkerText(word))
+      .map((word) => ({
+        text: word,
+        normalized: this.normalizeArabicWordForRecitation(word),
+      }))
+      .filter((word) => word.normalized.length > 0);
+  }
+
+  appendTajweedTextToRecitationWords(
+    text,
+    ensureWordEl,
+    closeWord,
+    plainWords,
+  ) {
+    String(text || "")
+      .split(/(\s+)/)
+      .filter((part) => part.length > 0)
+      .forEach((part) => {
+        if (/^\s+$/.test(part)) return;
+
+        if (this.isAyahNumberMarkerText(part)) {
+          closeWord();
+          if (ensureWordEl.currentWordIndex > 0) {
+            ensureWordEl.container.appendChild(document.createTextNode(" "));
+          }
+          this.appendAyahNumberMarker(ensureWordEl.container, part);
+          return;
+        }
+
+        const normalized = this.normalizeArabicWordForRecitation(part);
+        if (!normalized) return;
+
+        const wordEl = ensureWordEl();
+        if (!wordEl) return;
+
+        wordEl.appendChild(document.createTextNode(part));
+        const targetWord = plainWords[ensureWordEl.currentWordIndex - 1];
+        const currentWordNormalized =
+          (ensureWordEl.currentWordNormalized || "") + normalized;
+        ensureWordEl.currentWordNormalized = currentWordNormalized;
+
+        if (
+          targetWord &&
+          currentWordNormalized.length >= targetWord.normalized.length
+        ) {
+          closeWord();
+        }
+      });
+  }
+
   renderArabicWordSpans(container, text, verseKey) {
     if (!container) return;
 
@@ -1731,9 +1796,10 @@ class PocketQuranManager extends BaseManager {
     });
   }
 
-  renderTajweedWordSpans(container, html, verseKey) {
+  renderTajweedWordSpans(container, html, verseKey, plainText = "") {
     if (!container) return;
 
+    const plainWords = this.getPlainArabicRecitationWords(plainText);
     const template = document.createElement("template");
     template.innerHTML = html;
     container.textContent = "";
@@ -1743,22 +1809,43 @@ class PocketQuranManager extends BaseManager {
 
     const ensureWordEl = () => {
       if (currentWordEl) return currentWordEl;
+      if (plainWords.length && wordIndex >= plainWords.length) return null;
 
       wordIndex += 1;
+      if (wordIndex > 1) {
+        container.appendChild(document.createTextNode(" "));
+      }
+
       currentWordEl = document.createElement("span");
       currentWordEl.className = "pq-recitation-word";
       currentWordEl.dataset.verseKey = verseKey;
       currentWordEl.dataset.wordIndex = String(wordIndex);
       currentWordEl.dataset.recitationKey = `${verseKey}:${wordIndex}`;
       container.appendChild(currentWordEl);
+      ensureWordEl.currentWordIndex = wordIndex;
+      ensureWordEl.currentWordNormalized = "";
       return currentWordEl;
     };
+    ensureWordEl.container = container;
+    ensureWordEl.currentWordIndex = 0;
+    ensureWordEl.currentWordNormalized = "";
 
     const closeWord = () => {
       currentWordEl = null;
+      ensureWordEl.currentWordNormalized = "";
     };
 
     const appendText = (text) => {
+      if (plainWords.length) {
+        this.appendTajweedTextToRecitationWords(
+          text,
+          ensureWordEl,
+          closeWord,
+          plainWords,
+        );
+        return;
+      }
+
       String(text || "")
         .split(/(\s+)/)
         .filter((part) => part.length > 0)
@@ -1787,13 +1874,35 @@ class PocketQuranManager extends BaseManager {
 
       if (node.nodeType === Node.ELEMENT_NODE) {
         if (this.isAyahNumberMarkerText(node.textContent)) {
+          if (plainWords.length && wordIndex > 0) {
+            container.appendChild(document.createTextNode(" "));
+          }
           this.appendAyahNumberMarker(container, node);
           closeWord();
           return;
         }
 
         const clone = node.cloneNode(true);
-        ensureWordEl().appendChild(clone);
+        const wordEl = ensureWordEl();
+        if (!wordEl) return;
+        wordEl.appendChild(clone);
+
+        if (plainWords.length) {
+          const targetWord = plainWords[ensureWordEl.currentWordIndex - 1];
+          const normalized = this.normalizeArabicWordForRecitation(
+            node.textContent,
+          );
+          const currentWordNormalized =
+            (ensureWordEl.currentWordNormalized || "") + normalized;
+          ensureWordEl.currentWordNormalized = currentWordNormalized;
+
+          if (
+            targetWord &&
+            currentWordNormalized.length >= targetWord.normalized.length
+          ) {
+            closeWord();
+          }
+        }
       }
     });
   }
@@ -2117,7 +2226,12 @@ class PocketQuranManager extends BaseManager {
       const tajweedText = this.getTajweedTextForVerse(ayahNumber);
       if (tajweedText) {
         ar.classList.add("tajweed-mode");
-        this.renderTajweedWordSpans(ar, tajweedText, verseKey);
+        this.renderTajweedWordSpans(
+          ar,
+          tajweedText,
+          verseKey,
+          verse?.text_uthmani || "",
+        );
       } else {
         // Fallback to plain text if Tajweed not available
         this.renderArabicWordSpans(ar, verse?.text_uthmani || "", verseKey);
