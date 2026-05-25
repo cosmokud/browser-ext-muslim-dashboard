@@ -1672,6 +1672,32 @@ class PocketQuranManager extends BaseManager {
     }
   }
 
+  isAyahNumberMarkerText(text) {
+    const normalized = String(text || "")
+      .replace(/[\u061c\u200e\u200f]/g, "")
+      .trim();
+    if (!normalized) return false;
+
+    return /^[\s\u06dd\u06de\u06e9\u06fd\u06fe\ufd3c-\ufd3f()[\]{}<>﴾﴿۝]*[\u0660-\u0669\u06F0-\u06F90-9]+[\s\u06dd\u06de\u06e9\u06fd\u06fe\ufd3c-\ufd3f()[\]{}<>﴾﴿۝]*$/.test(
+      normalized,
+    );
+  }
+
+  appendAyahNumberMarker(container, content) {
+    if (!container) return;
+
+    const marker = document.createElement("span");
+    marker.className = "pq-ayah-number-marker";
+
+    if (content && typeof content.cloneNode === "function") {
+      marker.appendChild(content.cloneNode(true));
+    } else {
+      marker.textContent = String(content || "");
+    }
+
+    container.appendChild(marker);
+  }
+
   renderArabicWordSpans(container, text, verseKey) {
     if (!container) return;
 
@@ -1683,16 +1709,23 @@ class PocketQuranManager extends BaseManager {
 
     if (!words.length) return;
 
+    let wordIndex = 0;
     words.forEach((word, index) => {
       if (index > 0) {
         container.appendChild(document.createTextNode(" "));
       }
 
+      if (this.isAyahNumberMarkerText(word)) {
+        this.appendAyahNumberMarker(container, word);
+        return;
+      }
+
+      wordIndex += 1;
       const wordEl = document.createElement("span");
       wordEl.className = "pq-recitation-word";
       wordEl.dataset.verseKey = verseKey;
-      wordEl.dataset.wordIndex = String(index + 1);
-      wordEl.dataset.recitationKey = `${verseKey}:${index + 1}`;
+      wordEl.dataset.wordIndex = String(wordIndex);
+      wordEl.dataset.recitationKey = `${verseKey}:${wordIndex}`;
       wordEl.textContent = word;
       container.appendChild(wordEl);
     });
@@ -1736,6 +1769,12 @@ class PocketQuranManager extends BaseManager {
             return;
           }
 
+          if (this.isAyahNumberMarkerText(part)) {
+            this.appendAyahNumberMarker(container, part);
+            closeWord();
+            return;
+          }
+
           ensureWordEl().appendChild(document.createTextNode(part));
         });
     };
@@ -1747,6 +1786,12 @@ class PocketQuranManager extends BaseManager {
       }
 
       if (node.nodeType === Node.ELEMENT_NODE) {
+        if (this.isAyahNumberMarkerText(node.textContent)) {
+          this.appendAyahNumberMarker(container, node);
+          closeWord();
+          return;
+        }
+
         const clone = node.cloneNode(true);
         ensureWordEl().appendChild(clone);
       }
@@ -3642,6 +3687,7 @@ class PocketQuranManager extends BaseManager {
 
     ayahEl.querySelectorAll("[data-recitation-key]").forEach((wordEl) => {
       if (wordEl.dataset.verseKey !== verseKey) return;
+      if (this.isAyahNumberMarkerText(wordEl.textContent)) return;
 
       const wordIndex = parseInt(wordEl.dataset.wordIndex, 10);
       if (
