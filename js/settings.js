@@ -428,6 +428,9 @@ class SettingsManager extends BaseManager {
     this.headerGreetingGlowColor = document.getElementById(
       "headerGreetingGlowColor",
     );
+    this.headerGreetingGlowColorReset = document.getElementById(
+      "headerGreetingGlowColorReset",
+    );
     this.headerGreetingGlowPopoverBtn = document.getElementById(
       "headerGreetingGlowPopoverBtn",
     );
@@ -450,6 +453,9 @@ class SettingsManager extends BaseManager {
       "headerDateGlowEnabled",
     );
     this.headerDateGlowColor = document.getElementById("headerDateGlowColor");
+    this.headerDateGlowColorReset = document.getElementById(
+      "headerDateGlowColorReset",
+    );
     this.headerDateGlowPopoverBtn = document.getElementById(
       "headerDateGlowPopoverBtn",
     );
@@ -470,6 +476,9 @@ class SettingsManager extends BaseManager {
       "headerTimeGlowEnabled",
     );
     this.headerTimeGlowColor = document.getElementById("headerTimeGlowColor");
+    this.headerTimeGlowColorReset = document.getElementById(
+      "headerTimeGlowColorReset",
+    );
     this.headerTimeGlowPopoverBtn = document.getElementById(
       "headerTimeGlowPopoverBtn",
     );
@@ -491,6 +500,9 @@ class SettingsManager extends BaseManager {
     );
     this.headerNextPrayerGlowColor = document.getElementById(
       "headerNextPrayerGlowColor",
+    );
+    this.headerNextPrayerGlowColorReset = document.getElementById(
+      "headerNextPrayerGlowColorReset",
     );
     this.headerNextPrayerGlowPopoverBtn = document.getElementById(
       "headerNextPrayerGlowPopoverBtn",
@@ -516,6 +528,9 @@ class SettingsManager extends BaseManager {
     this.headerCompactWeatherGlowColor = document.getElementById(
       "headerCompactWeatherGlowColor",
     );
+    this.headerCompactWeatherGlowColorReset = document.getElementById(
+      "headerCompactWeatherGlowColorReset",
+    );
     this.headerCompactWeatherGlowPopoverBtn = document.getElementById(
       "headerCompactWeatherGlowPopoverBtn",
     );
@@ -536,6 +551,36 @@ class SettingsManager extends BaseManager {
     );
     this.headerSurfaceBackgroundsGroup = document.getElementById(
       "headerSurfaceBackgroundsGroup",
+    );
+    this.headerControlTabs = document.querySelectorAll(".header-control-tab");
+    this.headerControlPanels = document.querySelectorAll(
+      ".header-control-panel",
+    );
+    this.headerGreetingFontColor = document.getElementById(
+      "headerGreetingFontColor",
+    );
+    this.headerGreetingFontColorReset = document.getElementById(
+      "headerGreetingFontColorReset",
+    );
+    this.headerTimeFontColor = document.getElementById("headerTimeFontColor");
+    this.headerTimeFontColorReset = document.getElementById(
+      "headerTimeFontColorReset",
+    );
+    this.headerDateFontColor = document.getElementById("headerDateFontColor");
+    this.headerDateFontColorReset = document.getElementById(
+      "headerDateFontColorReset",
+    );
+    this.headerCompactWeatherFontColor = document.getElementById(
+      "headerCompactWeatherFontColor",
+    );
+    this.headerCompactWeatherFontColorReset = document.getElementById(
+      "headerCompactWeatherFontColorReset",
+    );
+    this.headerNextPrayerFontColor = document.getElementById(
+      "headerNextPrayerFontColor",
+    );
+    this.headerNextPrayerFontColorReset = document.getElementById(
+      "headerNextPrayerFontColorReset",
     );
     this.dateCalendarRadios = document.querySelectorAll(
       'input[name="dateCalendar"]',
@@ -2137,6 +2182,13 @@ class SettingsManager extends BaseManager {
       );
     }
 
+    this.getHeaderGlowControlConfigs().forEach((config) => {
+      this.setHeaderColorControlValue(config, heading[config.settingKey]);
+    });
+    this.getHeaderFontColorControlConfigs().forEach((config) => {
+      this.setHeaderColorControlValue(config, heading[config.settingKey]);
+    });
+
     this.updateHeaderGlowTuningUi();
     this.updateHeaderGlowColorLockState();
 
@@ -2736,6 +2788,23 @@ class SettingsManager extends BaseManager {
     return this.rgbToHex(255 - rgb.r, 255 - rgb.g, 255 - rgb.b);
   }
 
+  getAutoHeaderFontColor(targetSelector, fallback = "#ffffff") {
+    if (typeof window.getComputedStyle !== "function") return fallback;
+
+    const target =
+      typeof targetSelector === "string"
+        ? document.querySelector(targetSelector)
+        : targetSelector;
+
+    const source = target || document.body;
+    if (!source) return fallback;
+
+    const rgb = this.parseCssRgbColor(window.getComputedStyle(source).color);
+    if (!rgb) return fallback;
+
+    return this.rgbToHex(rgb.r, rgb.g, rgb.b);
+  }
+
   clampHeaderGlowOpacity(value, fallback = 72) {
     return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
   }
@@ -2748,8 +2817,12 @@ class SettingsManager extends BaseManager {
     return [
       {
         key: "greeting",
+        settingKey: "greetingGlowColor",
         toggle: this.headerGreetingGlowEnabled,
         color: this.headerGreetingGlowColor,
+        reset: this.headerGreetingGlowColorReset,
+        autoSelector: "#greeting",
+        autoType: "glow",
         button: this.headerGreetingGlowPopoverBtn,
         popover: this.headerGreetingGlowPopover,
         opacity: this.headerGreetingGlowOpacity,
@@ -2759,8 +2832,12 @@ class SettingsManager extends BaseManager {
       },
       {
         key: "date",
+        settingKey: "dateGlowColor",
         toggle: this.headerDateGlowEnabled,
         color: this.headerDateGlowColor,
+        reset: this.headerDateGlowColorReset,
+        autoSelector: "#dateDisplay",
+        autoType: "glow",
         button: this.headerDateGlowPopoverBtn,
         popover: this.headerDateGlowPopover,
         opacity: this.headerDateGlowOpacity,
@@ -2770,8 +2847,12 @@ class SettingsManager extends BaseManager {
       },
       {
         key: "time",
+        settingKey: "timeGlowColor",
         toggle: this.headerTimeGlowEnabled,
         color: this.headerTimeGlowColor,
+        reset: this.headerTimeGlowColorReset,
+        autoSelector: "#currentTime",
+        autoType: "glow",
         button: this.headerTimeGlowPopoverBtn,
         popover: this.headerTimeGlowPopover,
         opacity: this.headerTimeGlowOpacity,
@@ -2781,8 +2862,12 @@ class SettingsManager extends BaseManager {
       },
       {
         key: "nextPrayer",
+        settingKey: "nextPrayerGlowColor",
         toggle: this.headerNextPrayerGlowEnabled,
         color: this.headerNextPrayerGlowColor,
+        reset: this.headerNextPrayerGlowColorReset,
+        autoSelector: "#headerNextPrayer",
+        autoType: "glow",
         button: this.headerNextPrayerGlowPopoverBtn,
         popover: this.headerNextPrayerGlowPopover,
         opacity: this.headerNextPrayerGlowOpacity,
@@ -2792,8 +2877,12 @@ class SettingsManager extends BaseManager {
       },
       {
         key: "compactWeather",
+        settingKey: "compactWeatherGlowColor",
         toggle: this.headerCompactWeatherGlowEnabled,
         color: this.headerCompactWeatherGlowColor,
+        reset: this.headerCompactWeatherGlowColorReset,
+        autoSelector: "#compactWeather .compact-weather-temp",
+        autoType: "glow",
         button: this.headerCompactWeatherGlowPopoverBtn,
         popover: this.headerCompactWeatherGlowPopover,
         opacity: this.headerCompactWeatherGlowOpacity,
@@ -2802,6 +2891,77 @@ class SettingsManager extends BaseManager {
         radiusValue: this.headerCompactWeatherGlowRadiusValue,
       },
     ];
+  }
+
+  getHeaderFontColorControlConfigs() {
+    return [
+      {
+        key: "greeting",
+        settingKey: "greetingFontColor",
+        input: this.headerGreetingFontColor,
+        reset: this.headerGreetingFontColorReset,
+        autoSelector: "#greeting",
+      },
+      {
+        key: "time",
+        settingKey: "timeFontColor",
+        input: this.headerTimeFontColor,
+        reset: this.headerTimeFontColorReset,
+        autoSelector: "#currentTime",
+      },
+      {
+        key: "date",
+        settingKey: "dateFontColor",
+        input: this.headerDateFontColor,
+        reset: this.headerDateFontColorReset,
+        autoSelector: "#dateDisplay",
+      },
+      {
+        key: "compactWeather",
+        settingKey: "compactWeatherFontColor",
+        input: this.headerCompactWeatherFontColor,
+        reset: this.headerCompactWeatherFontColorReset,
+        autoSelector: "#compactWeather .compact-weather-temp",
+      },
+      {
+        key: "nextPrayer",
+        settingKey: "nextPrayerFontColor",
+        input: this.headerNextPrayerFontColor,
+        reset: this.headerNextPrayerFontColorReset,
+        autoSelector: "#headerNextPrayer",
+      },
+    ];
+  }
+
+  getHeaderColorAutoValue(config, fallback = "#ffffff") {
+    if (config?.autoType === "glow") {
+      return this.getAutoHeaderGlowColor(config.autoSelector, fallback);
+    }
+
+    return this.getAutoHeaderFontColor(config?.autoSelector, fallback);
+  }
+
+  setHeaderColorControlValue(config, preferredColor) {
+    const input = config?.input || config?.color;
+    if (!input) return;
+
+    const normalized = this.normalizeColorHex(preferredColor, "");
+    input.value = normalized || this.getHeaderColorAutoValue(config);
+    input.dataset.themeDefault = normalized ? "false" : "true";
+  }
+
+  getHeaderColorControlSaveValue(input) {
+    if (!input || input.dataset.themeDefault === "true") return "";
+    return this.normalizeColorHex(input.value, "");
+  }
+
+  resetHeaderColorControlToTheme(config) {
+    const input = config?.input || config?.color;
+    if (!input) return;
+
+    input.value = this.getHeaderColorAutoValue(config);
+    input.dataset.themeDefault = "true";
+    this.applyHeaderQuickControlsInstantly();
   }
 
   updateHeaderGlowTuningUi() {
@@ -2877,6 +3037,22 @@ class SettingsManager extends BaseManager {
           this.applyHeaderQuickControlsInstantly();
         });
       }
+
+      if (config.color) {
+        const markCustom = () => {
+          config.color.dataset.themeDefault = "false";
+          this.applyHeaderQuickControlsInstantly();
+        };
+        config.color.addEventListener("input", markCustom);
+        config.color.addEventListener("change", markCustom);
+      }
+
+      if (config.reset) {
+        config.reset.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.resetHeaderColorControlToTheme(config);
+        });
+      }
     });
 
     if (this.modal && this.modal.dataset.headerGlowPopoverBound !== "1") {
@@ -2894,6 +3070,41 @@ class SettingsManager extends BaseManager {
         }
       });
     }
+  }
+
+  setupHeaderColorControls() {
+    this.headerControlTabs?.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const activeTab = tab.dataset.headerControlTab || "visibility";
+        this.headerControlTabs.forEach((candidate) => {
+          candidate.classList.toggle("active", candidate === tab);
+        });
+        this.headerControlPanels?.forEach((panel) => {
+          panel.classList.toggle(
+            "active",
+            panel.dataset.headerControlPanel === activeTab,
+          );
+        });
+      });
+    });
+
+    this.getHeaderFontColorControlConfigs().forEach((config) => {
+      if (config.input) {
+        const markCustom = () => {
+          config.input.dataset.themeDefault = "false";
+          this.applyHeaderQuickControlsInstantly();
+        };
+        config.input.addEventListener("input", markCustom);
+        config.input.addEventListener("change", markCustom);
+      }
+
+      if (config.reset) {
+        config.reset.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.resetHeaderColorControlToTheme(config);
+        });
+      }
+    });
   }
 
   /**
@@ -3488,7 +3699,7 @@ class SettingsManager extends BaseManager {
     settings.heading.greetingGlowEnabled =
       this.headerGreetingGlowEnabled?.checked === true;
     settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
-      ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerGreetingGlowColor)
       : "";
     settings.heading.greetingGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerGreetingGlowOpacity?.value,
@@ -3502,7 +3713,7 @@ class SettingsManager extends BaseManager {
     settings.heading.dateGlowEnabled =
       this.headerDateGlowEnabled?.checked === true;
     settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
-      ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerDateGlowColor)
       : "";
     settings.heading.dateGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerDateGlowOpacity?.value,
@@ -3516,7 +3727,7 @@ class SettingsManager extends BaseManager {
     settings.heading.timeGlowEnabled =
       this.headerTimeGlowEnabled?.checked === true;
     settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
-      ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerTimeGlowColor)
       : "";
     settings.heading.timeGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerTimeGlowOpacity?.value,
@@ -3531,7 +3742,7 @@ class SettingsManager extends BaseManager {
       this.headerNextPrayerGlowEnabled?.checked === true;
     settings.heading.nextPrayerGlowColor = settings.heading
       .nextPrayerGlowEnabled
-      ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerNextPrayerGlowColor)
       : "";
     settings.heading.nextPrayerGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerNextPrayerGlowOpacity?.value,
@@ -3546,7 +3757,7 @@ class SettingsManager extends BaseManager {
       this.headerCompactWeatherGlowEnabled?.checked === true;
     settings.heading.compactWeatherGlowColor = settings.heading
       .compactWeatherGlowEnabled
-      ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerCompactWeatherGlowColor)
       : "";
     settings.heading.compactWeatherGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerCompactWeatherGlowOpacity?.value,
@@ -3555,6 +3766,21 @@ class SettingsManager extends BaseManager {
     settings.heading.compactWeatherGlowRadius = this.clampHeaderGlowRadius(
       this.headerCompactWeatherGlowRadius?.value,
       14,
+    );
+
+    settings.heading.greetingFontColor = this.getHeaderColorControlSaveValue(
+      this.headerGreetingFontColor,
+    );
+    settings.heading.timeFontColor = this.getHeaderColorControlSaveValue(
+      this.headerTimeFontColor,
+    );
+    settings.heading.dateFontColor = this.getHeaderColorControlSaveValue(
+      this.headerDateFontColor,
+    );
+    settings.heading.compactWeatherFontColor =
+      this.getHeaderColorControlSaveValue(this.headerCompactWeatherFontColor);
+    settings.heading.nextPrayerFontColor = this.getHeaderColorControlSaveValue(
+      this.headerNextPrayerFontColor,
     );
 
     this.storage.saveSettings(settings);
@@ -7725,7 +7951,7 @@ class SettingsManager extends BaseManager {
     settings.heading.greetingGlowEnabled =
       this.headerGreetingGlowEnabled?.checked === true;
     settings.heading.greetingGlowColor = settings.heading.greetingGlowEnabled
-      ? this.normalizeColorHex(this.headerGreetingGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerGreetingGlowColor)
       : "";
     settings.heading.greetingGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerGreetingGlowOpacity?.value,
@@ -7739,7 +7965,7 @@ class SettingsManager extends BaseManager {
     settings.heading.dateGlowEnabled =
       this.headerDateGlowEnabled?.checked === true;
     settings.heading.dateGlowColor = settings.heading.dateGlowEnabled
-      ? this.normalizeColorHex(this.headerDateGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerDateGlowColor)
       : "";
     settings.heading.dateGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerDateGlowOpacity?.value,
@@ -7753,7 +7979,7 @@ class SettingsManager extends BaseManager {
     settings.heading.timeGlowEnabled =
       this.headerTimeGlowEnabled?.checked === true;
     settings.heading.timeGlowColor = settings.heading.timeGlowEnabled
-      ? this.normalizeColorHex(this.headerTimeGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerTimeGlowColor)
       : "";
     settings.heading.timeGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerTimeGlowOpacity?.value,
@@ -7768,7 +7994,7 @@ class SettingsManager extends BaseManager {
       this.headerNextPrayerGlowEnabled?.checked === true;
     settings.heading.nextPrayerGlowColor = settings.heading
       .nextPrayerGlowEnabled
-      ? this.normalizeColorHex(this.headerNextPrayerGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerNextPrayerGlowColor)
       : "";
     settings.heading.nextPrayerGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerNextPrayerGlowOpacity?.value,
@@ -7783,7 +8009,7 @@ class SettingsManager extends BaseManager {
       this.headerCompactWeatherGlowEnabled?.checked === true;
     settings.heading.compactWeatherGlowColor = settings.heading
       .compactWeatherGlowEnabled
-      ? this.normalizeColorHex(this.headerCompactWeatherGlowColor?.value, "")
+      ? this.getHeaderColorControlSaveValue(this.headerCompactWeatherGlowColor)
       : "";
     settings.heading.compactWeatherGlowOpacity = this.clampHeaderGlowOpacity(
       this.headerCompactWeatherGlowOpacity?.value,
@@ -7792,6 +8018,21 @@ class SettingsManager extends BaseManager {
     settings.heading.compactWeatherGlowRadius = this.clampHeaderGlowRadius(
       this.headerCompactWeatherGlowRadius?.value,
       14,
+    );
+
+    settings.heading.greetingFontColor = this.getHeaderColorControlSaveValue(
+      this.headerGreetingFontColor,
+    );
+    settings.heading.timeFontColor = this.getHeaderColorControlSaveValue(
+      this.headerTimeFontColor,
+    );
+    settings.heading.dateFontColor = this.getHeaderColorControlSaveValue(
+      this.headerDateFontColor,
+    );
+    settings.heading.compactWeatherFontColor =
+      this.getHeaderColorControlSaveValue(this.headerCompactWeatherFontColor);
+    settings.heading.nextPrayerFontColor = this.getHeaderColorControlSaveValue(
+      this.headerNextPrayerFontColor,
     );
   }
 
@@ -11516,6 +11757,7 @@ class SettingsManager extends BaseManager {
     }
 
     this.setupHeaderGlowPopoverControls();
+    this.setupHeaderColorControls();
 
     [
       this.headerGreetingGlowEnabled,
