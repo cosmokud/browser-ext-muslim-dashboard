@@ -6358,11 +6358,7 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .save-btn.is-saved {
-  background: linear-gradient(
-    135deg,
-    var(--accent-bg),
-    var(--primary-light)
-  );
+  background: linear-gradient(135deg, var(--accent-bg), var(--primary-light));
   box-shadow:
     0 4px 14px color-mix(in srgb, var(--accent-bg) 32%, transparent),
     0 0 0 2px color-mix(in srgb, var(--accent-bg) 24%, transparent);
@@ -11044,16 +11040,17 @@ html[data-theme-mode="light"]
 }
 
 /* FAB menu controls share the dashboard theme surface, including injected items. */
-.fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-):not(.active):not(.is-locked) {
+.fab-menu
+  :is(
+    .fab-menu-toggle,
+    .fab-menu-items button,
+    .sticky-note-fab,
+    .moment-mode-btn,
+    .quran-focus-btn,
+    .layout-edit-btn,
+    .refresh-bg-btn,
+    .settings-btn
+  ):not(.active):not(.is-locked) {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
@@ -11062,30 +11059,33 @@ html[data-theme-mode="light"]
   -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
-.fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-):not(.active):not(.is-locked):hover {
+.fab-menu
+  :is(
+    .fab-menu-toggle,
+    .fab-menu-items button,
+    .sticky-note-fab,
+    .moment-mode-btn,
+    .quran-focus-btn,
+    .layout-edit-btn,
+    .refresh-bg-btn,
+    .settings-btn
+  ):not(.active):not(.is-locked):hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border);
 }
 
-[data-glass-enabled="false"] .fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-) {
+[data-glass-enabled="false"]
+  .fab-menu
+  :is(
+    .fab-menu-toggle,
+    .fab-menu-items button,
+    .sticky-note-fab,
+    .moment-mode-btn,
+    .quran-focus-btn,
+    .layout-edit-btn,
+    .refresh-bg-btn,
+    .settings-btn
+  ) {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -13402,8 +13402,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .header-color-reset-btn {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -13428,8 +13428,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .header-color-reset-btn svg {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   display: block;
 }
 
@@ -15257,7 +15257,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pq-recitation-word.is-reciting {
   background: color-mix(in srgb, var(--accent-gold) 34%, transparent);
-  box-shadow: 0 0 0 0.08em color-mix(in srgb, var(--accent-gold) 28%, transparent);
+  box-shadow: 0 0 0 0.08em
+    color-mix(in srgb, var(--accent-gold) 28%, transparent);
   color: var(--text-primary);
 }
 
