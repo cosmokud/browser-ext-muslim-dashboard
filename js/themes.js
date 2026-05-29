@@ -1491,6 +1491,12 @@ class ThemeManager {
     return this.clampNumber(value, 0, 100, fallback);
   }
 
+  clampNumber(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.min(max, Math.max(min, Math.round(numeric)));
+  }
+
   _clampGlassOpacity(value, fallback = 50) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return fallback;
