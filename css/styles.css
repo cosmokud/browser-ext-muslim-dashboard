@@ -179,6 +179,12 @@
     var(--primary-color)
   );
   --theme-highlight-border: var(--primary-light);
+  --theme-highlight-light-bg: var(--primary-light);
+  --theme-highlight-light-subtle-bg: color-mix(
+    in srgb,
+    var(--primary-light) 14%,
+    transparent
+  );
   --theme-highlight-shadow: 0 8px 18px
     color-mix(in srgb, var(--primary-dark) 32%, transparent);
   --action-btn-bg-hover: var(--theme-highlight-bg-hover);
@@ -2796,13 +2802,9 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-toolbar.ql-toolbar.ql-snow {
-  border: 1px solid var(--primary-light);
+  border: 1px solid var(--theme-highlight-border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(
-    135deg,
-    var(--primary-dark),
-    var(--primary-color)
-  );
+  background: var(--theme-highlight-active-bg);
   margin-bottom: var(--spacing-sm);
   position: relative;
   overflow: visible;
@@ -3983,11 +3985,7 @@ textarea.notes-editor:focus {
   margin-top: 0;
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);
-  background: linear-gradient(
-    135deg,
-    var(--primary-dark),
-    var(--primary-color)
-  );
+  background: var(--theme-highlight-active-bg);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -9413,7 +9411,7 @@ html[data-theme-mode="light"]
 
 #adhkarScriptToggleBtn[aria-pressed="true"] .mode-icon {
   text-shadow: 0 0 12px
-    color-mix(in srgb, var(--primary-light) 58%, transparent 42%);
+    color-mix(in srgb, var(--theme-highlight-light-bg) 58%, transparent 42%);
 }
 
 #pocketQuranTajweedToggle[aria-pressed="true"]:not(:disabled) {
@@ -9425,7 +9423,7 @@ html[data-theme-mode="light"]
 
 #pocketQuranTajweedToggle[aria-pressed="true"] .pq-tajweed-toggle-icon {
   text-shadow: 0 0 12px
-    color-mix(in srgb, var(--primary-light) 58%, transparent 42%);
+    color-mix(in srgb, var(--theme-highlight-light-bg) 58%, transparent 42%);
 }
 
 /* Auto-advance control inside the jump container */
@@ -12685,12 +12683,8 @@ body:not(.sidebar-mode)
 }
 
 .weather-forecast-day.selected {
-  border-color: var(--primary-light);
-  background: linear-gradient(
-    135deg,
-    var(--primary-dark),
-    var(--primary-color)
-  );
+  border-color: var(--theme-highlight-border);
+  background: var(--theme-highlight-active-bg);
 }
 
 .weather-forecast-day .day-name {
@@ -14366,11 +14360,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 #pocketQuranSurahList,
 #pocketQuranAyahList {
-  background: linear-gradient(
-    135deg,
-    var(--primary-dark),
-    var(--primary-color)
-  );
+  background: var(--theme-highlight-active-bg);
   color: var(--on-primary-text);
 }
 
@@ -15006,7 +14996,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.6rem 0.7rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  background: color-mix(in srgb, var(--primary-light) 14%, transparent);
+  background: var(--theme-highlight-light-subtle-bg);
   color: var(--on-primary-text);
   cursor: pointer;
   transition:
@@ -15018,8 +15008,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-surah-item:hover,
 .pocket-quran-ayah-option:hover {
-  background: var(--primary-light);
-  border-color: var(--primary-light);
+  background: var(--theme-highlight-light-bg);
+  border-color: var(--theme-highlight-border);
   color: var(--on-primary-text);
   box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-1px);
@@ -15027,8 +15017,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-surah-item.active,
 .pocket-quran-ayah-option.active {
-  background: var(--primary-light);
-  border-color: var(--primary-light);
+  background: var(--theme-highlight-light-bg);
+  border-color: var(--theme-highlight-border);
   color: var(--on-primary-text);
   box-shadow: var(--theme-highlight-shadow);
 }
@@ -15186,7 +15176,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.55rem 0.8rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  background: color-mix(in srgb, var(--primary-light) 14%, transparent);
+  background: var(--theme-highlight-light-subtle-bg);
   color: var(--on-primary-text);
   cursor: pointer;
   text-align: left;
@@ -16549,11 +16539,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   0%,
   100% {
     box-shadow: 0 0 0 0
-      color-mix(in srgb, var(--primary-light) 42%, transparent);
+      color-mix(in srgb, var(--theme-highlight-light-bg) 42%, transparent);
   }
   50% {
     box-shadow: 0 0 0 8px
-      color-mix(in srgb, var(--primary-light) 0%, transparent);
+      color-mix(in srgb, var(--theme-highlight-light-bg) 0%, transparent);
   }
 }
 

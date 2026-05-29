@@ -1277,6 +1277,15 @@ class ThemeManager {
 
   _extractRgbChannels(value) {
     if (typeof value !== "string") return null;
+    const normalizedHex = this._normalizeHexColor(value);
+    if (normalizedHex) {
+      return {
+        r: parseInt(normalizedHex.slice(1, 3), 16),
+        g: parseInt(normalizedHex.slice(3, 5), 16),
+        b: parseInt(normalizedHex.slice(5, 7), 16),
+      };
+    }
+
     const match = value
       .replace(/\s+/g, "")
       .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
@@ -1379,12 +1388,27 @@ class ThemeManager {
         component.style.removeProperty("--glass-bg-hover");
         component.style.removeProperty("--glass-border");
         component.style.removeProperty("--glass-shadow");
+        component.style.removeProperty("--theme-highlight-bg-hover");
+        component.style.removeProperty("--theme-highlight-active-bg");
+        component.style.removeProperty("--theme-highlight-border");
+        component.style.removeProperty("--theme-highlight-light-bg");
+        component.style.removeProperty("--theme-highlight-light-subtle-bg");
+        component.style.removeProperty("--theme-highlight-shadow");
         return;
       }
 
       component.style.setProperty("--glass-bg", bgColor);
       component.style.setProperty("--glass-bg-hover", hoverColor);
       component.style.setProperty("--glass-border", borderColor);
+      component.style.setProperty("--theme-highlight-bg-hover", highlightHoverBg);
+      component.style.setProperty("--theme-highlight-active-bg", highlightActiveBg);
+      component.style.setProperty("--theme-highlight-border", highlightBorder);
+      component.style.setProperty("--theme-highlight-light-bg", highlightLightBg);
+      component.style.setProperty(
+        "--theme-highlight-light-subtle-bg",
+        highlightLightSubtleBg,
+      );
+      component.style.setProperty("--theme-highlight-shadow", highlightShadow);
       component.style.removeProperty("--glass-shadow");
     };
 
@@ -1392,6 +1416,26 @@ class ThemeManager {
     const bgColor = this._setColorAlpha(colors.glassBg, alphas.bg);
     const hoverColor = this._setColorAlpha(colors.glassBgHover, alphas.hover);
     const borderColor = this._setColorAlpha(colors.glassBorder, alphas.border);
+    const highlightDarkBg = this._setColorAlpha(colors.primaryDark, alphas.bg);
+    const highlightPrimaryBg = this._setColorAlpha(colors.primary, alphas.bg);
+    const highlightDarkHover = this._setColorAlpha(
+      colors.primaryDark,
+      alphas.hover,
+    );
+    const highlightPrimaryHover = this._setColorAlpha(
+      colors.primary,
+      alphas.hover,
+    );
+    const highlightBorder = this._setColorAlpha(colors.primaryLight, alphas.border);
+    const highlightLightBg = this._setColorAlpha(colors.primaryLight, alphas.hover);
+    const highlightLightSubtleBg = this._setColorAlpha(
+      colors.primaryLight,
+      alphas.bg * 0.14,
+    );
+    const highlightShadowColor = this._setColorAlpha(colors.primaryDark, alphas.bg * 0.32);
+    const highlightHoverBg = `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`;
+    const highlightActiveBg = `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`;
+    const highlightShadow = `0 8px 18px ${highlightShadowColor}`;
 
     ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
       const component = document.getElementById(componentId);
