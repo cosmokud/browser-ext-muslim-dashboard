@@ -8309,6 +8309,9 @@ html[data-theme-mode="light"]
 .pinned-app-item {
   position: relative;
   width: var(--pinned-app-width);
+  min-width: 0;
+  max-width: var(--pinned-app-width);
+  flex: 0 0 var(--pinned-app-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8454,6 +8457,8 @@ html[data-theme-mode="light"]
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   text-decoration: none;
   color: var(--text-primary);
   gap: var(--spacing-xs);
@@ -8513,9 +8518,15 @@ html[data-theme-mode="light"]
 }
 
 .pinned-app-name {
+  display: block;
+  width: 100%;
   font-size: 0.75rem;
   color: var(--text-secondary);
   max-width: var(--pinned-app-width);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.2;
   pointer-events: none;
 }
 
