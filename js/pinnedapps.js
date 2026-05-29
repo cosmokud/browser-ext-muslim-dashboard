@@ -1311,23 +1311,86 @@ class PinnedAppsManager extends BaseManager {
   getClosestNonDraggingItemAtPoint(x, y) {
     const direct = document.elementFromPoint(x, y)?.closest(".pinned-app-item");
     if (direct && !direct.classList.contains("dragging")) return direct;
+    if (direct?.classList.contains("dragging")) return null;
 
-    // Fallback: closest by center distance
+    const draggedRect = this.draggedElement?.getBoundingClientRect();
+    if (
+      draggedRect &&
+      x >= draggedRect.left &&
+      x <= draggedRect.right &&
+      y >= draggedRect.top &&
+      y <= draggedRect.bottom
+    ) {
+      return null;
+    }
+
     const items = this.getPinnedItemElements().filter(
       (el) => !el.classList.contains("dragging"),
     );
-    let best = null;
-    let bestDist = Infinity;
-    for (const el of items) {
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
-      if (d < bestDist) {
-        bestDist = d;
-        best = el;
+    if (!items.length) return null;
+
+    const measured = items.map((el) => {
+      const rect = el.getBoundingClientRect();
+      return {
+        el,
+        rect,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+      };
+    });
+
+    const rows = [];
+    for (const item of measured) {
+      let row = rows.find(
+        (candidate) =>
+          Math.abs(candidate.centerY - item.centerY) <=
+          Math.max(candidate.height, item.rect.height) / 2,
+      );
+
+      if (!row) {
+        row = {
+          items: [],
+          top: item.rect.top,
+          bottom: item.rect.bottom,
+          centerY: item.centerY,
+          height: item.rect.height,
+        };
+        rows.push(row);
+      }
+
+      row.items.push(item);
+      row.top = Math.min(row.top, item.rect.top);
+      row.bottom = Math.max(row.bottom, item.rect.bottom);
+      row.centerY = (row.top + row.bottom) / 2;
+      row.height = row.bottom - row.top;
+    }
+
+    let activeRow = null;
+    let activeRowDistance = Infinity;
+    for (const row of rows) {
+      const slop = Math.max(12, row.height * 0.35);
+      if (y < row.top - slop || y > row.bottom + slop) continue;
+
+      const distance = Math.abs(y - row.centerY);
+      if (distance < activeRowDistance) {
+        activeRow = row;
+        activeRowDistance = distance;
       }
     }
+
+    const candidates = activeRow ? activeRow.items : measured;
+    let best = null;
+    let bestDist = Infinity;
+    for (const item of candidates) {
+      const dx = x - item.centerX;
+      const dy = activeRow ? 0 : y - item.centerY;
+      const d = dx * dx + dy * dy;
+      if (d < bestDist) {
+        bestDist = d;
+        best = item.el;
+      }
+    }
+
     return best;
   }
 
@@ -1366,6 +1429,37 @@ class PinnedAppsManager extends BaseManager {
     const rect = targetEl.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const deadZone = rect.width * 0.08; // small hysteresis to avoid oscillation
+    const draggedRect = this.draggedElement?.getBoundingClientRect();
+    const targetRowItems = this.getPinnedItemElements().filter((el) => {
+      if (el.classList.contains("dragging")) return false;
+      const rowRect = el.getBoundingClientRect();
+      const rowCenterY = rowRect.top + rowRect.height / 2;
+      const targetCenterY = rect.top + rect.height / 2;
+      return Math.abs(rowCenterY - targetCenterY) <= rect.height / 2;
+    });
+    const isPointerInsideTarget =
+      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    const isDraggingFromEarlierRow =
+      draggedRect && draggedRect.top + draggedRect.height / 2 < rect.top;
+
+    if (
+      targetRowItems.length === 1 &&
+      isPointerInsideTarget &&
+      isDraggingFromEarlierRow
+    ) {
+      targetEl.classList.add("drag-over");
+      this.currentDropTarget = targetApp;
+
+      const beforeRects = this.captureRects(true);
+      [this.apps[draggedIndex], this.apps[targetIndex]] = [
+        this.apps[targetIndex],
+        this.apps[draggedIndex],
+      ];
+
+      this.syncDomOrderToApps();
+      this.animateFlip(beforeRects);
+      return;
+    }
 
     let insertionIndex = targetIndex;
     if (x > centerX + deadZone) insertionIndex = targetIndex + 1;
