@@ -12014,6 +12014,13 @@ body.sticky-note-resizing {
   box-shadow: var(--theme-highlight-shadow) !important;
 }
 
+.fab-menu.open .fab-menu-toggle {
+  background: var(--theme-highlight-active-bg) !important;
+  border-color: var(--theme-highlight-border) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow: var(--theme-highlight-shadow) !important;
+}
+
 /* ========================================
    LUNAR PHASE CARD
    ======================================== */
