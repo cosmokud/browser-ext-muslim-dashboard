@@ -30,6 +30,10 @@ class ThemeManager {
     "headerNextPrayer",
     "compactWeather",
   ];
+  static MAIN_GRID_COMPONENT_SELECTORS = [
+    "#notesToolbar",
+    ".weather-forecast-day.selected",
+  ];
 
   // Theme definitions with color palettes for both dark and light modes
   static THEMES = {
@@ -1326,6 +1330,12 @@ class ThemeManager {
       if (!isInMainLayout && !isInSidebar && !isFloating) return;
 
       applyToComponent(component, bgColor, hoverColor, borderColor);
+    });
+
+    ThemeManager.MAIN_GRID_COMPONENT_SELECTORS.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((component) => {
+        applyToComponent(component, bgColor, hoverColor, borderColor);
+      });
     });
   }
 
