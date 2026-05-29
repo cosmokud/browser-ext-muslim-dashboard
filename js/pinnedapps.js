@@ -1378,6 +1378,17 @@ class PinnedAppsManager extends BaseManager {
       }
     }
 
+    if (!activeRow) {
+      const containerRect = this.container.getBoundingClientRect();
+      const isInsideContainer =
+        x >= containerRect.left &&
+        x <= containerRect.right &&
+        y >= containerRect.top &&
+        y <= containerRect.bottom;
+
+      if (isInsideContainer) return null;
+    }
+
     const candidates = activeRow ? activeRow.items : measured;
     let best = null;
     let bestDist = Infinity;
