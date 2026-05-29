@@ -875,7 +875,16 @@ document.addEventListener("DOMContentLoaded", () => {
       // ignored: prompt fallback below
     }
 
-    return window.prompt("Paste coordinates (e.g., 21.4225, -39.8262)") || "";
+    return (
+      window.prompt(
+        `Paste coordinates (e.g., ${getPopupCoordinateExampleText()})`,
+      ) || ""
+    );
+  }
+
+  function getPopupCoordinateExampleText() {
+    const example = storage.getCoordinateExample();
+    return example?.text || "40.7128, -74.0060";
   }
 
   function applyPopupLatLngToInputs(panelRoot, latLng) {

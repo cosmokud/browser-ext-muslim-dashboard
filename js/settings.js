@@ -336,6 +336,9 @@ class SettingsManager extends BaseManager {
     // Themes panel elements
     this.themeModeButtons = document.querySelectorAll(".theme-mode-btn");
     this.themeGlassEnabled = document.getElementById("themeGlassEnabled");
+    this.themeBackgroundAwareFontColorEnabled = document.getElementById(
+      "themeBackgroundAwareFontColorEnabled",
+    );
     this.themeBlurPower = document.getElementById("themeBlurPower");
     this.themeBlurPowerValue = document.getElementById("themeBlurPowerValue");
     this.themeBlurGroup = document.getElementById("themeBlurGroup");
@@ -870,6 +873,7 @@ class SettingsManager extends BaseManager {
 
     this.updateNotesCountHint();
     this.updatePocketQuranBookmarkStats();
+    this.applyCoordinateExamples();
 
     // Initialize themes panel
     this.initThemesPanel();
@@ -2611,8 +2615,33 @@ class SettingsManager extends BaseManager {
     }
 
     // Fallback for environments that block clipboard reads
-    const manual = window.prompt("Paste coordinates (e.g., 21.4225, -39.8262)");
+    const manual = window.prompt(
+      `Paste coordinates (e.g., ${this.storage.getCoordinateExample().text})`,
+    );
     return manual || "";
+  }
+
+  applyCoordinateExamples() {
+    const example = this.storage.getCoordinateExample();
+    const text = example?.text || "";
+    if (!text) return;
+
+    [
+      [this.latitudeInput, this.longitudeInput, this.pasteCoordsBtn],
+      [
+        this.weatherLatitudeInput,
+        this.weatherLongitudeInput,
+        this.weatherPasteCoordsBtn,
+      ],
+    ].forEach(([latInput, lngInput, pasteButton]) => {
+      if (latInput) latInput.placeholder = String(example.latitude);
+      if (lngInput) lngInput.placeholder = String(example.longitude);
+      if (pasteButton) {
+        const label = `Paste coordinates from clipboard (e.g., "${text}")`;
+        pasteButton.title = label;
+        pasteButton.setAttribute("aria-label", label);
+      }
+    });
   }
 
   _applyLatLngToInputs(latInput, lngInput, latLng) {
@@ -3409,6 +3438,10 @@ class SettingsManager extends BaseManager {
     const glassEnabled = themeSettings.glassEnabled !== false;
     if (this.themeGlassEnabled) {
       this.themeGlassEnabled.checked = glassEnabled;
+    }
+    if (this.themeBackgroundAwareFontColorEnabled) {
+      this.themeBackgroundAwareFontColorEnabled.checked =
+        themeSettings.backgroundAwareFontColorEnabled === true;
     }
     this.updateThemeBlurGroupState(glassEnabled);
 
@@ -4692,6 +4725,16 @@ class SettingsManager extends BaseManager {
         this.applyDashboardQualityState("highest");
       });
     }
+
+    if (this.themeBackgroundAwareFontColorEnabled) {
+      this.themeBackgroundAwareFontColorEnabled.addEventListener("change", () => {
+        const enabled = this.themeBackgroundAwareFontColorEnabled.checked;
+        window.dashboard?.themes?.setBackgroundAwareFontColorEnabled?.(
+          enabled,
+          false,
+        );
+      });
+    }
   }
 
   /**
@@ -4720,6 +4763,8 @@ class SettingsManager extends BaseManager {
       100,
       0,
     );
+    const backgroundAwareFontColorEnabled =
+      this.themeBackgroundAwareFontColorEnabled?.checked === true;
     // Get active theme
     let activeTheme = "emerald";
     const activeCard =
@@ -4755,6 +4800,7 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
+      backgroundAwareFontColorEnabled: backgroundAwareFontColorEnabled,
       highestVisualFidelityEnabled:
         dashboardQualityState.highestVisualFidelityEnabled,
       customAccent: customAccent,
@@ -4839,6 +4885,15 @@ class SettingsManager extends BaseManager {
         typeof themeManager.setMainGridComponentOpacity === "function"
       ) {
         themeManager.setMainGridComponentOpacity(componentOpacity, false);
+      }
+
+      if (
+        typeof themeManager.setBackgroundAwareFontColorEnabled === "function"
+      ) {
+        themeManager.setBackgroundAwareFontColorEnabled(
+          backgroundAwareFontColorEnabled,
+          false,
+        );
       }
 
       if (typeof window.dashboard.applyHeadingSettings === "function") {

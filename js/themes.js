@@ -685,6 +685,7 @@ class ThemeManager {
     this._glassEnabled = true;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
+    this._backgroundAwareFontColorEnabled = false;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -696,7 +697,74 @@ class ThemeManager {
 
   init() {
     this.loadThemeSettings();
+    this.setupBackgroundAwareFontColorListeners();
     this.applyTheme();
+  }
+
+  clampNumber(value, min, max, fallback) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return Math.min(max, Math.max(min, number));
+  }
+
+  setupBackgroundAwareFontColorListeners() {
+    if (this._backgroundAwareFontColorListenersBound) return;
+    this._backgroundAwareFontColorListenersBound = true;
+    document.addEventListener("md:background-visual-change", () => {
+      if (this._backgroundAwareFontColorEnabled) {
+        this.applyTheme();
+      }
+    });
+  }
+
+  estimateEffectiveTextBackgroundColor(colors) {
+    return colors?.bodyBg || (this._currentMode === "light" ? "#ffffff" : "#000000");
+  }
+
+  calculateWcagContrastRatio(foreground, background) {
+    const fg = this.hexToRgb(this._colorToHex(foreground, "#ffffff"));
+    const bg = this.hexToRgb(this._colorToHex(background, "#000000"));
+    if (!fg || !bg) return 1;
+
+    const luminance = ({ r, g, b }) => {
+      const channels = [r, g, b].map((channel) => {
+        const value = channel / 255;
+        return value <= 0.03928
+          ? value / 12.92
+          : Math.pow((value + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+
+    const l1 = luminance(fg);
+    const l2 = luminance(bg);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+
+  calculateApcaContrast(foreground, background) {
+    return this.calculateWcagContrastRatio(foreground, background) * 10;
+  }
+
+  resolveBackgroundAwareTextColors(colors) {
+    const apcaLight = this.calculateApcaContrast("#ffffff", colors.bodyBg);
+    const wcagLight = this.calculateWcagContrastRatio("#ffffff", colors.bodyBg);
+    const background = this.estimateEffectiveTextBackgroundColor(colors);
+    const wcagDark = this.calculateWcagContrastRatio("#111827", background);
+    const useLight = apcaLight >= 45 || wcagLight >= wcagDark;
+
+    return {
+      ...colors,
+      textPrimary: useLight ? "#ffffff" : "#111827",
+      textSecondary: useLight
+        ? "rgba(255, 255, 255, 0.84)"
+        : "rgba(17, 24, 39, 0.78)",
+      textMuted: useLight
+        ? "rgba(255, 255, 255, 0.62)"
+        : "rgba(17, 24, 39, 0.58)",
+      textPlaceholder: useLight
+        ? "rgba(255, 255, 255, 0.5)"
+        : "rgba(17, 24, 39, 0.48)",
+    };
   }
 
   _isPureTheme(themeName) {
@@ -799,6 +867,8 @@ class ThemeManager {
       themeSettings.componentOpacity,
       0,
     );
+    this._backgroundAwareFontColorEnabled =
+      themeSettings.backgroundAwareFontColorEnabled === true;
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -849,10 +919,11 @@ class ThemeManager {
     settings.theme = {
       name: this._currentTheme,
       mode: this._currentMode,
-      glassEnabled: this._glassEnabled,
-      glassOpacity: this._glassOpacity,
-      componentOpacity: this._mainGridComponentOpacity,
-      customAccent: this._customAccent,
+        glassEnabled: this._glassEnabled,
+        glassOpacity: this._glassOpacity,
+        componentOpacity: this._mainGridComponentOpacity,
+        backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
+        customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
     this.storage.saveSettings(settings);
@@ -975,6 +1046,15 @@ class ThemeManager {
       opacityPercent,
       this._mainGridComponentOpacity,
     );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  setBackgroundAwareFontColorEnabled(enabled, save = true) {
+    this._backgroundAwareFontColorEnabled = enabled === true;
     this.applyTheme();
 
     if (save) {
@@ -1602,8 +1682,11 @@ class ThemeManager {
    * Apply current theme to the document
    */
   applyTheme() {
-    const colors = this.getThemeColors();
+    let colors = this.getThemeColors();
     if (!colors) return;
+    if (this._backgroundAwareFontColorEnabled) {
+      colors = this.resolveBackgroundAwareTextColors(colors);
+    }
 
     const root = document.documentElement;
 

@@ -221,6 +221,10 @@ function configurePrayTimes(prayTimes, settings) {
   }
 }
 
+function getServiceWorkerCoordinateExample() {
+  return { latitude: 40.7128, longitude: -74.006, city: "Coordinate Example" };
+}
+
 function pickLocation(settings, lastLocation) {
   if (
     settings.locationMethod === "manual" &&
@@ -246,8 +250,7 @@ function pickLocation(settings, lastLocation) {
     };
   }
 
-  // Default: Mecca
-  return { latitude: 21.4225, longitude: 39.8262, city: "Mecca (Default)" };
+  return getServiceWorkerCoordinateExample();
 }
 
 async function clearPrayerAlarms() {

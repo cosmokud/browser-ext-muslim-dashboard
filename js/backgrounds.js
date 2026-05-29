@@ -471,6 +471,7 @@ class BackgroundManager extends BaseManager {
 
   updateDisplayMode(mode) {
     this.applyBackgroundDisplayMode(mode);
+    this.notifyBackgroundVisualChange();
   }
 
   applyBackgroundVisualEffects({ dim, blur } = {}) {
@@ -496,6 +497,11 @@ class BackgroundManager extends BaseManager {
       el.style.filter = blurCss;
       el.style.webkitFilter = blurCss;
     });
+    this.notifyBackgroundVisualChange();
+  }
+
+  notifyBackgroundVisualChange() {
+    document.dispatchEvent(new CustomEvent("md:background-visual-change"));
   }
 
   updateDim(dim) {
