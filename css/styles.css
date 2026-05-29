@@ -9389,47 +9389,27 @@ html[data-theme-mode="light"]
 }
 
 #adhkarScriptToggleBtn[aria-pressed="true"]:not(:disabled) {
-  border-color: color-mix(
-    in srgb,
-    var(--accent-gold) 56%,
-    var(--glass-border) 44%
-  );
-  background: color-mix(
-    in srgb,
-    var(--accent-gold) 20%,
-    var(--action-btn-bg) 80%
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent-gold) 45%, transparent 55%),
-    0 0 18px color-mix(in srgb, var(--accent-gold) 42%, transparent 58%),
-    var(--action-btn-shadow-hover);
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 #adhkarScriptToggleBtn[aria-pressed="true"] .mode-icon {
   text-shadow: 0 0 12px
-    color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
+    color-mix(in srgb, var(--primary-light) 58%, transparent 42%);
 }
 
 #pocketQuranTajweedToggle[aria-pressed="true"]:not(:disabled) {
-  border-color: color-mix(
-    in srgb,
-    var(--accent-gold) 56%,
-    var(--glass-border) 44%
-  );
-  background: color-mix(
-    in srgb,
-    var(--accent-gold) 20%,
-    var(--action-btn-bg) 80%
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent-gold) 45%, transparent 55%),
-    0 0 18px color-mix(in srgb, var(--accent-gold) 42%, transparent 58%),
-    var(--action-btn-shadow-hover);
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 #pocketQuranTajweedToggle[aria-pressed="true"] .pq-tajweed-toggle-icon {
   text-shadow: 0 0 12px
-    color-mix(in srgb, var(--accent-gold) 58%, transparent 42%);
+    color-mix(in srgb, var(--primary-light) 58%, transparent 42%);
 }
 
 /* Auto-advance control inside the jump container */
@@ -15516,14 +15496,20 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   cursor: not-allowed;
 }
 
-.pq-tajweed-toggle.active {
-  background: linear-gradient(
-    135deg,
-    rgba(212, 175, 55, 0.25),
-    rgba(212, 175, 55, 0.15)
-  );
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+.pq-tajweed-toggle.active,
+.pq-tajweed-toggle[aria-pressed="true"] {
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
+}
+
+.pq-tajweed-toggle:not(.active):not(:disabled):hover,
+.pq-tajweed-toggle[aria-pressed="false"]:not(:disabled):hover {
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-tajweed-toggle-icon {
@@ -16504,25 +16490,29 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-ayah-play-btn:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
   transform: scale(1.1);
-  border-color: var(--accent-gold);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-ayah-play-btn.playing {
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--theme-highlight-active-bg);
+  color: var(--on-primary-text);
+  border-color: var(--theme-highlight-border);
   animation: pqPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pqPulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--primary-light) 42%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+    box-shadow: 0 0 0 8px
+      color-mix(in srgb, var(--primary-light) 0%, transparent);
   }
 }
 
@@ -16774,26 +16764,31 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-btn:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
   transform: scale(1.05);
 }
 
 .pq-recitation-btn.active {
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--theme-highlight-active-bg);
+  color: var(--on-primary-text);
+  border-color: var(--theme-highlight-border);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-recitation-btn.pq-play-pause-btn {
   width: 44px;
   height: 44px;
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--theme-highlight-active-bg);
+  color: var(--on-primary-text);
+  border-color: var(--theme-highlight-border);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-recitation-btn.pq-play-pause-btn:hover {
-  background: var(--accent-gold-light);
+  background: var(--theme-highlight-bg-hover);
 }
 
 .pq-recitation-btn.pq-stop-btn:hover {
