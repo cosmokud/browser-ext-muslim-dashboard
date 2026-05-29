@@ -8518,14 +8518,19 @@ html[data-theme-mode="light"]
 }
 
 .pinned-app-name {
-  display: block;
+  display: -webkit-box;
   width: 100%;
   font-size: 0.75rem;
   color: var(--text-secondary);
   max-width: var(--pinned-app-width);
+  max-height: 2.4em;
   white-space: normal;
+  overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   line-height: 1.2;
   pointer-events: none;
 }
