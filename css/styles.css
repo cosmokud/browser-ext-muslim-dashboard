@@ -11998,6 +11998,22 @@ body.sticky-note-resizing {
   }
 }
 
+.fab-menu.open :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+):hover {
+  background: var(--theme-highlight-bg-hover) !important;
+  border-color: var(--theme-highlight-border) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow: var(--theme-highlight-shadow) !important;
+}
+
 /* ========================================
    LUNAR PHASE CARD
    ======================================== */
