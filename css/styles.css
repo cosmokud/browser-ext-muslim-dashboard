@@ -2786,9 +2786,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-toolbar.ql-toolbar.ql-snow {
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--primary-light);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--glass-bg-hover) 85%, transparent 15%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary-color)
+  );
   margin-bottom: var(--spacing-sm);
   position: relative;
   overflow: visible;
@@ -12604,8 +12608,12 @@ body:not(.sidebar-mode)
 }
 
 .weather-forecast-day.selected {
-  border-color: var(--accent-gold);
-  background: var(--glass-bg-hover);
+  border-color: var(--primary-light);
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary-color)
+  );
 }
 
 .weather-forecast-day .day-name {
