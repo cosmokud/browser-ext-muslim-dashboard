@@ -2846,6 +2846,15 @@ class SettingsManager extends BaseManager {
     this.applyHeaderQuickControlsInstantly();
   }
 
+  refreshThemeDefaultHeaderTextColorControls() {
+    this.getHeaderTextColorControlConfigs().forEach((config) => {
+      const input = config?.input;
+      if (!input || input.dataset.themeDefault !== "true") return;
+
+      this.loadHeaderColorControlValue(config, "");
+    });
+  }
+
   clampHeaderGlowOpacity(value, fallback = 72) {
     return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
   }
@@ -3303,6 +3312,10 @@ class SettingsManager extends BaseManager {
     // Listen for icon theme changes and update theme picker grid
     document.addEventListener("md:icon-theme-change", () => {
       this.renderThemePickerGrid();
+    });
+
+    document.addEventListener("md:theme-change", () => {
+      this.refreshThemeDefaultHeaderTextColorControls();
     });
   }
 
