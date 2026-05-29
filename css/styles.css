@@ -2365,16 +2365,18 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-list-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-1px);
 }
 
 .notes-list-item.active {
-  border-color: rgba(212, 175, 55, 0.75);
-  box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.72),
-    0 0 0 4px rgba(212, 175, 55, 0.18),
-    0 12px 30px rgba(212, 175, 55, 0.28);
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .notes-list-item:focus-visible {
@@ -2467,7 +2469,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 }
 
 .notes-title-input:focus {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .notes-toolbar {
@@ -3946,22 +3951,23 @@ textarea.notes-editor:focus {
   align-items: center;
   padding: var(--spacing-md);
   background: var(--glass-bg);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
 .prayer-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .prayer-item.active {
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
   color: var(--on-primary-text);
-  box-shadow: 0 4px 15px rgba(26, 95, 74, 0.4);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .prayer-item.active .prayer-name,
@@ -4198,8 +4204,10 @@ textarea.notes-editor:focus {
 
 .todo-input:focus {
   outline: none;
-  border-color: var(--accent-gold);
-  background: var(--glass-bg-hover);
+  border-color: var(--theme-highlight-border);
+  background: var(--theme-highlight-bg-hover);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .todo-input::placeholder {
@@ -8936,8 +8944,10 @@ html[data-theme-mode="light"]
 }
 
 .calendar-nav-btn:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--accent-gold);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .calendar-month-year {
@@ -9526,7 +9536,10 @@ html[data-theme-mode="light"]
 }
 
 .flashcard-nav:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-50%) scale(1.02);
 }
 
