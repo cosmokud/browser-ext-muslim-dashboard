@@ -1365,6 +1365,16 @@ class PinnedAppsManager extends BaseManager {
       row.height = row.bottom - row.top;
     }
 
+    const containerRect = this.container.getBoundingClientRect();
+    const isInsideContainer =
+      x >= containerRect.left &&
+      x <= containerRect.right &&
+      y >= containerRect.top &&
+      y <= containerRect.bottom;
+    const isInsideAnyRow = rows.some((row) => y >= row.top && y <= row.bottom);
+
+    if (isInsideContainer && !isInsideAnyRow) return null;
+
     let activeRow = null;
     let activeRowDistance = Infinity;
     for (const row of rows) {
@@ -1379,13 +1389,6 @@ class PinnedAppsManager extends BaseManager {
     }
 
     if (!activeRow) {
-      const containerRect = this.container.getBoundingClientRect();
-      const isInsideContainer =
-        x >= containerRect.left &&
-        x <= containerRect.right &&
-        y >= containerRect.top &&
-        y <= containerRect.bottom;
-
       if (isInsideContainer) return null;
     }
 
