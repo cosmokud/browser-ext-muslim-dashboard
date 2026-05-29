@@ -496,6 +496,22 @@ class BackgroundManager extends BaseManager {
       el.style.filter = blurCss;
       el.style.webkitFilter = blurCss;
     });
+
+    this.notifyBackgroundVisualChange();
+  }
+
+  notifyBackgroundVisualChange() {
+    try {
+      document.dispatchEvent(
+        new CustomEvent("md:background-visual-change", {
+          detail: {
+            imageUrl: this.currentImageUrl,
+            dim: this.backgroundDim,
+            blur: this.backgroundBlur,
+          },
+        }),
+      );
+    } catch (e) {}
   }
 
   updateDim(dim) {
@@ -1379,6 +1395,7 @@ class BackgroundManager extends BaseManager {
       this.currentBg = this.currentBg === 1 ? 2 : 1;
       this.currentImageUrl = this._normalizeImageUrl(imgObj.url);
       this.updateAttribution({ ...imgObj, credit: "", href: "" });
+      this.notifyBackgroundVisualChange();
       return;
     }
 
@@ -1391,6 +1408,7 @@ class BackgroundManager extends BaseManager {
       currentBgEl.classList.remove("active");
       this.currentImageUrl = "";
       this.updateAttribution(imgObj);
+      this.notifyBackgroundVisualChange();
       return;
     }
 
@@ -1408,6 +1426,7 @@ class BackgroundManager extends BaseManager {
       this.currentBg = this.currentBg === 1 ? 2 : 1;
       this.currentImageUrl = this._normalizeImageUrl(imgObj.url);
       this.updateAttribution(imgObj);
+      this.notifyBackgroundVisualChange();
     };
     img.onerror = () => {
       if (requestId !== this._setBackgroundRequestId) {
@@ -1421,6 +1440,7 @@ class BackgroundManager extends BaseManager {
       currentBgEl.classList.remove("active");
       this.currentImageUrl = "";
       this.updateAttribution(imgObj);
+      this.notifyBackgroundVisualChange();
     };
     img.src = fullUrl;
   }

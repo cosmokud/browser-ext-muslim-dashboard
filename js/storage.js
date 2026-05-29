@@ -234,6 +234,7 @@ class StorageManager {
         glassEnabled: true,
         glassOpacity: 50,
         componentOpacity: 0,
+        backgroundAwareFontColorEnabled: false,
         highestVisualFidelityEnabled: false,
         customAccent: null,
         customPalettes: {},
