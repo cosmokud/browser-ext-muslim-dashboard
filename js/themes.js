@@ -685,9 +685,6 @@ class ThemeManager {
     this._glassEnabled = true;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
-    this._backgroundAwareFontColorEnabled = false;
-    this._backgroundAverageColorCache = new Map();
-    this._backgroundAverageColorPending = new Set();
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -700,7 +697,6 @@ class ThemeManager {
   init() {
     this.loadThemeSettings();
     this.applyTheme();
-    this.setupBackgroundAwareFontColorListeners();
   }
 
   _isPureTheme(themeName) {
@@ -803,8 +799,6 @@ class ThemeManager {
       themeSettings.componentOpacity,
       0,
     );
-    this._backgroundAwareFontColorEnabled =
-      themeSettings.backgroundAwareFontColorEnabled === true;
     this._customAccent = themeSettings.customAccent || null;
     this._customPalettes = themeSettings.customPalettes || {};
 
@@ -858,9 +852,6 @@ class ThemeManager {
       glassEnabled: this._glassEnabled,
       glassOpacity: this._glassOpacity,
       componentOpacity: this._mainGridComponentOpacity,
-      backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
-      highestVisualFidelityEnabled:
-        settings.theme?.highestVisualFidelityEnabled === true,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
     };
@@ -900,10 +891,6 @@ class ThemeManager {
    */
   getMainGridComponentOpacity() {
     return this._mainGridComponentOpacity;
-  }
-
-  isBackgroundAwareFontColorEnabled() {
-    return this._backgroundAwareFontColorEnabled === true;
   }
 
   /**
@@ -988,15 +975,6 @@ class ThemeManager {
       opacityPercent,
       this._mainGridComponentOpacity,
     );
-    this.applyTheme();
-
-    if (save) {
-      this.saveThemeSettings();
-    }
-  }
-
-  setBackgroundAwareFontColorEnabled(enabled, save = true) {
-    this._backgroundAwareFontColorEnabled = enabled === true;
     this.applyTheme();
 
     if (save) {
@@ -1193,308 +1171,6 @@ class ThemeManager {
     colors.textPlaceholder = colors.textPlaceholder || colors.textMuted;
 
     return colors;
-  }
-
-  setupBackgroundAwareFontColorListeners() {
-    if (this._backgroundAwareFontColorListenersBound) return;
-    this._backgroundAwareFontColorListenersBound = true;
-
-    document.addEventListener("md:background-visual-change", () => {
-      if (this._backgroundAwareFontColorEnabled) {
-        this.applyTheme();
-      }
-    });
-
-    document.addEventListener("md:ui-blur-update", () => {
-      if (this._backgroundAwareFontColorEnabled) {
-        this.applyTheme();
-      }
-    });
-  }
-
-  resolveBackgroundAwareTextColors(colors) {
-    if (!this._backgroundAwareFontColorEnabled || !colors) return colors;
-
-    const darkTextColors =
-      this.getThemeColors(this._currentTheme, "dark") || colors;
-    const lightTextColors =
-      this.getThemeColors(this._currentTheme, "light") || colors;
-    const effectiveBackground =
-      this.estimateEffectiveTextBackgroundColor(colors);
-
-    const darkScore = this.scoreTextPaletteContrast(
-      darkTextColors,
-      effectiveBackground,
-    );
-    const lightScore = this.scoreTextPaletteContrast(
-      lightTextColors,
-      effectiveBackground,
-    );
-    const chosen =
-      darkScore.score >= lightScore.score ? darkTextColors : lightTextColors;
-
-    return {
-      ...colors,
-      textPrimary: chosen.textPrimary,
-      textSecondary: chosen.textSecondary,
-      textMuted: chosen.textMuted,
-      textPlaceholder: chosen.textPlaceholder || chosen.textMuted,
-    };
-  }
-
-  scoreTextPaletteContrast(palette, effectiveBackground) {
-    const text = this.parseThemeColorToRgb(palette?.textPrimary);
-    const samples = effectiveBackground?.samples?.length
-      ? effectiveBackground.samples
-      : [effectiveBackground?.primary].filter(Boolean);
-
-    if (!text || samples.length === 0) return { score: 0 };
-
-    const sampleScores = samples.map((background) => {
-      const apca = Math.abs(this.calculateApcaContrast(text, background));
-      const wcag = this.calculateWcagContrastRatio(text, background);
-      const wcagPenalty = wcag >= 4.5 ? 0 : (4.5 - wcag) * 24;
-      return apca + Math.min(wcag, 7) * 6 - wcagPenalty;
-    });
-
-    return { score: Math.min(...sampleScores) };
-  }
-
-  calculateApcaContrast(textRgb, backgroundRgb) {
-    const textY = this.sRgbToApcaY(textRgb);
-    const backgroundY = this.sRgbToApcaY(backgroundRgb);
-    const blkThrs = 0.022;
-    const blkClmp = 1.414;
-    const loClip = 0.1;
-    const deltaYmin = 0.0005;
-    const scaleBoW = 1.14;
-    const scaleWoB = 1.14;
-    const loBoWoffset = 0.027;
-    const loWoBoffset = 0.027;
-    const clampY = (y) =>
-      y >= blkThrs ? y : y + Math.pow(blkThrs - y, blkClmp);
-
-    const txtY = clampY(textY);
-    const bgY = clampY(backgroundY);
-    if (Math.abs(bgY - txtY) < deltaYmin) return 0;
-
-    if (bgY > txtY) {
-      const sapc =
-        (Math.pow(bgY, 0.56) - Math.pow(txtY, 0.57)) * scaleBoW;
-      return sapc < loClip ? 0 : (sapc - loBoWoffset) * 100;
-    }
-
-    const sapc =
-      (Math.pow(bgY, 0.65) - Math.pow(txtY, 0.62)) * scaleWoB;
-    return sapc > -loClip ? 0 : (sapc + loWoBoffset) * 100;
-  }
-
-  calculateWcagContrastRatio(colorA, colorB) {
-    const lumA = this.calculateRelativeLuminance(colorA);
-    const lumB = this.calculateRelativeLuminance(colorB);
-    const lighter = Math.max(lumA, lumB);
-    const darker = Math.min(lumA, lumB);
-    return (lighter + 0.05) / (darker + 0.05);
-  }
-
-  estimateEffectiveTextBackgroundColor(colors) {
-    const settings = this.storage.getSettings();
-    const base = this.getCurrentBackgroundBaseColor(colors);
-    const backgroundDim = this.clampPercent(settings.bgDim, 100);
-    const overlayAlpha = (backgroundDim / 100) * 0.63;
-    const dimmed = this.blendRgb(
-      { r: 13, g: 37, b: 47 },
-      base,
-      overlayAlpha,
-    );
-
-    if (!this._glassEnabled) {
-      return { primary: dimmed, samples: [dimmed] };
-    }
-
-    const glassRgb =
-      this.parseThemeColorToRgb(colors.glassBg) ||
-      this.parseThemeColorToRgb(colors.primary) ||
-      dimmed;
-    const opacityBasis =
-      this._mainGridComponentOpacity > 0
-        ? this._mainGridComponentOpacity
-        : this._glassOpacity;
-    const glassAlpha = this._getGlassOpacityAlphas(opacityBasis).bg;
-    const surface = this.blendRgb(glassRgb, dimmed, glassAlpha);
-    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
-    const backgroundBlur = this.clampNumber(settings.bgBlur, 0, 24, 0);
-    const blurConfidence = Math.min(
-      1,
-      Math.max(blurPower / 160, backgroundBlur / 18),
-    );
-    const uncertainty = (1 - glassAlpha) * (1 - blurConfidence * 0.45);
-    const samples = [surface];
-
-    if (uncertainty > 0.28) samples.push(dimmed);
-    if (uncertainty > 0.52) samples.push(base);
-
-    return { primary: surface, samples };
-  }
-
-  getCurrentBackgroundBaseColor(colors) {
-    const fallback =
-      this.parseThemeColorToRgb(colors?.bodyBg) || { r: 26, g: 26, b: 46 };
-    const backgrounds = window.dashboard?.backgrounds;
-    const currentUrl = String(backgrounds?.currentImageUrl || "");
-    const solidColor = this.parseSolidBackgroundColor(currentUrl);
-
-    if (solidColor) return solidColor;
-
-    const activeBackground = document.querySelector(".background-image.active");
-    if (activeBackground && typeof window.getComputedStyle === "function") {
-      const activeColor = this.parseThemeColorToRgb(
-        window.getComputedStyle(activeBackground).backgroundColor,
-      );
-      if (activeColor) return activeColor;
-    }
-
-    if (currentUrl) {
-      const cached = this._backgroundAverageColorCache.get(currentUrl);
-      if (cached) return cached;
-      this.sampleAverageBackgroundImageColor(currentUrl, backgrounds);
-    }
-
-    return fallback;
-  }
-
-  parseSolidBackgroundColor(value) {
-    const raw = String(value || "");
-    if (!raw.startsWith("solid:")) return null;
-    return this.parseThemeColorToRgb(raw.slice("solid:".length));
-  }
-
-  sampleAverageBackgroundImageColor(url, backgrounds) {
-    if (
-      this._backgroundAverageColorCache.has(url) ||
-      this._backgroundAverageColorPending.has(url) ||
-      typeof Image !== "function"
-    ) {
-      return;
-    }
-
-    const imageUrl =
-      typeof backgrounds?.getImageUrl === "function"
-        ? backgrounds.getImageUrl(url)
-        : url;
-    if (!imageUrl || String(imageUrl).startsWith("solid:")) return;
-
-    this._backgroundAverageColorPending.add(url);
-    const img = new Image();
-    if (/^https?:\/\//i.test(String(imageUrl))) {
-      img.crossOrigin = "anonymous";
-    }
-
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        const size = 24;
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        if (!ctx) return;
-
-        ctx.drawImage(img, 0, 0, size, size);
-        const data = ctx.getImageData(0, 0, size, size).data;
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        let count = 0;
-
-        for (let i = 0; i < data.length; i += 4) {
-          const alpha = data[i + 3] / 255;
-          if (alpha <= 0) continue;
-          r += data[i] * alpha;
-          g += data[i + 1] * alpha;
-          b += data[i + 2] * alpha;
-          count += alpha;
-        }
-
-        if (count > 0) {
-          this._backgroundAverageColorCache.set(url, {
-            r: Math.round(r / count),
-            g: Math.round(g / count),
-            b: Math.round(b / count),
-          });
-          if (
-            this._backgroundAwareFontColorEnabled &&
-            window.dashboard?.backgrounds?.currentImageUrl === url
-          ) {
-            this.applyTheme();
-          }
-        }
-      } catch (e) {
-        // Cross-origin images can block canvas reads; fallback color remains active.
-      } finally {
-        this._backgroundAverageColorPending.delete(url);
-      }
-    };
-
-    img.onerror = () => {
-      this._backgroundAverageColorPending.delete(url);
-    };
-    img.src = imageUrl;
-  }
-
-  parseThemeColorToRgb(value) {
-    const hex = this._normalizeHexColor(value);
-    if (hex) return this.hexToRgb(hex);
-
-    const rgb = this._extractRgbChannels(value);
-    if (!rgb) return null;
-
-    const alpha = this._parseRgbaAlpha(value);
-    if (alpha === 0) return null;
-
-    return rgb;
-  }
-
-  blendRgb(foreground, background, alpha) {
-    const a = Math.max(0, Math.min(1, Number(alpha)));
-    const blend = (fg, bg) => Math.round(fg * a + bg * (1 - a));
-    return {
-      r: blend(foreground.r, background.r),
-      g: blend(foreground.g, background.g),
-      b: blend(foreground.b, background.b),
-    };
-  }
-
-  sRgbToApcaY(rgb) {
-    return (
-      Math.pow(rgb.r / 255, 2.4) * 0.2126729 +
-      Math.pow(rgb.g / 255, 2.4) * 0.7151522 +
-      Math.pow(rgb.b / 255, 2.4) * 0.072175
-    );
-  }
-
-  calculateRelativeLuminance(rgb) {
-    const linearize = (channel) => {
-      const value = channel / 255;
-      return value <= 0.04045
-        ? value / 12.92
-        : Math.pow((value + 0.055) / 1.055, 2.4);
-    };
-
-    return (
-      linearize(rgb.r) * 0.2126 +
-      linearize(rgb.g) * 0.7152 +
-      linearize(rgb.b) * 0.0722
-    );
-  }
-
-  clampPercent(value, fallback = 0) {
-    return this.clampNumber(value, 0, 100, fallback);
-  }
-
-  clampNumber(value, min, max, fallback) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return fallback;
-    return Math.min(max, Math.max(min, Math.round(numeric)));
   }
 
   _clampGlassOpacity(value, fallback = 50) {
@@ -1926,9 +1602,7 @@ class ThemeManager {
    * Apply current theme to the document
    */
   applyTheme() {
-    const colors = this.resolveBackgroundAwareTextColors(
-      this.getThemeColors(),
-    );
+    const colors = this.getThemeColors();
     if (!colors) return;
 
     const root = document.documentElement;

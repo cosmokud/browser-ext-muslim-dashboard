@@ -349,9 +349,6 @@ class SettingsManager extends BaseManager {
     this.themeComponentOpacityValue = document.getElementById(
       "themeComponentOpacityValue",
     );
-    this.themeBackgroundAwareFontColorEnabled = document.getElementById(
-      "themeBackgroundAwareFontColorEnabled",
-    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -3415,11 +3412,6 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeBlurGroupState(glassEnabled);
 
-    if (this.themeBackgroundAwareFontColorEnabled) {
-      this.themeBackgroundAwareFontColorEnabled.checked =
-        themeSettings.backgroundAwareFontColorEnabled === true;
-    }
-
     // Load blur power
     const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
     if (this.themeBlurPower) {
@@ -4395,23 +4387,6 @@ class SettingsManager extends BaseManager {
       });
     }
 
-    if (this.themeBackgroundAwareFontColorEnabled) {
-      this.themeBackgroundAwareFontColorEnabled.addEventListener(
-        "change",
-        () => {
-          const enabled =
-            this.themeBackgroundAwareFontColorEnabled.checked === true;
-          if (window.dashboard?.themes?.setBackgroundAwareFontColorEnabled) {
-            window.dashboard.themes.setBackgroundAwareFontColorEnabled(
-              enabled,
-              false,
-            );
-          }
-          this.scheduleAutoSave(120);
-        },
-      );
-    }
-
     const themeSliderDefaults = {
       blurPower: 100,
       glassOpacity: 50,
@@ -4733,8 +4708,6 @@ class SettingsManager extends BaseManager {
 
     // Get glass enabled
     const glassEnabled = this.themeGlassEnabled?.checked !== false;
-    const backgroundAwareFontColorEnabled =
-      this.themeBackgroundAwareFontColorEnabled?.checked === true;
     const glassOpacity = this.clampNumber(
       parseInt(this.themeGlassOpacity?.value, 10),
       0,
@@ -4782,7 +4755,6 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
-      backgroundAwareFontColorEnabled: backgroundAwareFontColorEnabled,
       highestVisualFidelityEnabled:
         dashboardQualityState.highestVisualFidelityEnabled,
       customAccent: customAccent,
@@ -4836,10 +4808,6 @@ class SettingsManager extends BaseManager {
         typeof themeManager.getMainGridComponentOpacity === "function"
           ? themeManager.getMainGridComponentOpacity()
           : null;
-      const currentBackgroundAwareFontColorEnabled =
-        typeof themeManager.isBackgroundAwareFontColorEnabled === "function"
-          ? themeManager.isBackgroundAwareFontColorEnabled()
-          : null;
 
       if (
         currentTheme !== activeTheme &&
@@ -4871,17 +4839,6 @@ class SettingsManager extends BaseManager {
         typeof themeManager.setMainGridComponentOpacity === "function"
       ) {
         themeManager.setMainGridComponentOpacity(componentOpacity, false);
-      }
-
-      if (
-        currentBackgroundAwareFontColorEnabled !==
-          backgroundAwareFontColorEnabled &&
-        typeof themeManager.setBackgroundAwareFontColorEnabled === "function"
-      ) {
-        themeManager.setBackgroundAwareFontColorEnabled(
-          backgroundAwareFontColorEnabled,
-          false,
-        );
       }
 
       if (typeof window.dashboard.applyHeadingSettings === "function") {
