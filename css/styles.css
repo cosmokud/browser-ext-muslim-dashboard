@@ -14364,6 +14364,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   overflow: auto;
 }
 
+#pocketQuranSurahList,
+#pocketQuranAyahList {
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary-color)
+  );
+  color: var(--on-primary-text);
+}
+
 .pocket-quran-controls {
   overflow: visible;
 }
@@ -14996,8 +15006,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.6rem 0.7rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary-light) 14%, transparent);
+  color: var(--on-primary-text);
   cursor: pointer;
   transition:
     transform var(--transition-fast),
@@ -15008,8 +15018,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-surah-item:hover,
 .pocket-quran-ayah-option:hover {
-  background: var(--theme-highlight-bg-hover);
-  border-color: var(--theme-highlight-border);
+  background: var(--primary-light);
+  border-color: var(--primary-light);
   color: var(--on-primary-text);
   box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-1px);
@@ -15017,8 +15027,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 .pocket-quran-surah-item.active,
 .pocket-quran-ayah-option.active {
-  background: var(--theme-highlight-active-bg);
-  border-color: var(--theme-highlight-border);
+  background: var(--primary-light);
+  border-color: var(--primary-light);
   color: var(--on-primary-text);
   box-shadow: var(--theme-highlight-shadow);
 }
@@ -15176,8 +15186,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.55rem 0.8rem;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary-light) 14%, transparent);
+  color: var(--on-primary-text);
   cursor: pointer;
   text-align: left;
   font-variant-numeric: tabular-nums;
