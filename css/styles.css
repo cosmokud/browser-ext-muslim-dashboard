@@ -168,10 +168,10 @@
   --action-btn-color: var(--text-primary);
   --action-btn-border-color: var(--glass-border);
   --action-btn-bg: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
-  --theme-highlight-bg-hover: color-mix(
-    in srgb,
-    var(--primary-color) 28%,
-    var(--glass-bg-hover) 72%
+  --theme-highlight-bg-hover: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--primary-color)
   );
   --theme-highlight-active-bg: linear-gradient(
     135deg,
@@ -181,11 +181,7 @@
   --theme-highlight-border: var(--primary-light);
   --theme-highlight-shadow: 0 8px 18px
     color-mix(in srgb, var(--primary-dark) 32%, transparent);
-  --action-btn-bg-hover: color-mix(
-    in srgb,
-    var(--theme-highlight-bg-hover) 88%,
-    var(--glass-bg) 12%
-  );
+  --action-btn-bg-hover: var(--theme-highlight-bg-hover);
   --action-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
   --action-btn-shadow-hover: 0 8px 18px rgba(0, 0, 0, 0.2);
   --action-btn-focus-ring: color-mix(
@@ -4919,7 +4915,10 @@ textarea.notes-editor:focus {
   .refresh-bg-btn,
   .settings-btn
 ):hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  color: var(--on-primary-text);
+  border-color: var(--theme-highlight-border);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 [data-glass-enabled="false"] .fab-menu :is(
@@ -13151,7 +13150,7 @@ body:not(.sidebar-mode)
   border-color: var(--theme-highlight-border);
   border-color: var(--theme-highlight-border) !important;
   box-shadow: var(--theme-highlight-shadow);
-  color: var(--text-primary);
+  color: var(--on-primary-text);
 }
 
 :where(
