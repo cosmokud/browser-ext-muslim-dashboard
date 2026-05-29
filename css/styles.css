@@ -11146,8 +11146,10 @@ html[data-theme-mode="light"]
     .refresh-bg-btn,
     .settings-btn
   ):not(.active):not(.is-locked):hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 [data-glass-enabled="false"]
