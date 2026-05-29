@@ -4370,6 +4370,7 @@ textarea.notes-editor:focus {
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
   background: var(--glass-bg);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-sm);
   animation: slideIn 0.3s ease-out;
@@ -4388,7 +4389,22 @@ textarea.notes-editor:focus {
 }
 
 .todo-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
+}
+
+.todo-item:is(.active, .selected, [aria-selected="true"]) {
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
+}
+
+.todo-item:hover .todo-text,
+.todo-item:is(.active, .selected, [aria-selected="true"]) .todo-text {
+  color: var(--on-primary-text);
 }
 
 .todo-item.completed .todo-text {
@@ -14209,9 +14225,18 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   overflow: hidden;
 }
 
-.pocket-quran-combobox-with-nav:focus-within {
-  background: var(--glass-bg-hover);
-  border-color: rgba(212, 175, 55, 0.45);
+.pocket-quran-combobox-with-nav:is(:focus-within, .pq-open) {
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
+}
+
+.pocket-quran-combobox-with-nav:is(:focus-within, .pq-open)
+  .pocket-quran-pill-input-with-nav,
+.pocket-quran-combobox-with-nav:is(:focus-within, .pq-open)
+  .pocket-quran-inline-nav-btn {
+  color: var(--on-primary-text);
 }
 
 /* Inline nav buttons (prev/next inside combobox) */
@@ -14234,18 +14259,16 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   outline: none;
 }
 
-.pocket-quran-inline-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+.pocket-quran-inline-nav-btn:hover,
+.pocket-quran-inline-nav-btn:focus-visible {
+  background: var(--theme-highlight-bg-hover);
+  color: var(--on-primary-text);
+  box-shadow: inset 0 0 0 1px var(--theme-highlight-border);
 }
 
 .pocket-quran-inline-nav-btn:active {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.pocket-quran-inline-nav-btn:focus-visible {
-  background: rgba(212, 175, 55, 0.2);
-  color: var(--text-primary);
+  background: var(--theme-highlight-active-bg);
+  color: var(--on-primary-text);
 }
 
 .pocket-quran-inline-nav-prev {
@@ -14292,8 +14315,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-pill-input:focus {
-  background: var(--glass-bg-hover);
-  border-color: rgba(212, 175, 55, 0.45);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pocket-quran-dropdown {
@@ -14321,6 +14346,11 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   -webkit-backdrop-filter: blur(calc(22px * var(--ui-blur-multiplier)));
   pointer-events: none;
   z-index: 0;
+}
+
+.pocket-quran-combobox.pq-open .pocket-quran-dropdown {
+  border-color: var(--theme-highlight-border);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pocket-quran-dropdown-list {
@@ -14976,14 +15006,21 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-align: left;
 }
 
-.pocket-quran-surah-item:hover {
-  background: var(--glass-bg-hover);
+.pocket-quran-surah-item:hover,
+.pocket-quran-ayah-option:hover {
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-1px);
 }
 
-.pocket-quran-surah-item.active {
-  background: var(--glass-bg-hover);
-  border-color: rgba(212, 175, 55, 0.55);
+.pocket-quran-surah-item.active,
+.pocket-quran-ayah-option.active {
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-surah-num {
@@ -15102,7 +15139,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-nav-btn:hover {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
   transform: translateY(-1px);
 }
 
@@ -15127,7 +15167,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-input:focus {
-  background: var(--glass-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  color: var(--on-primary-text);
 }
 
 .pocket-quran-ayah-option {
@@ -15144,16 +15185,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     transform var(--transition-fast),
     background var(--transition-fast),
     border-color var(--transition-fast);
-}
-
-.pocket-quran-ayah-option:hover {
-  background: var(--glass-bg-hover);
-  transform: translateY(-1px);
-}
-
-.pocket-quran-ayah-option.active {
-  background: var(--glass-bg-hover);
-  border-color: rgba(212, 175, 55, 0.55);
 }
 
 .pocket-quran-size-controls {
