@@ -16337,15 +16337,19 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   transition: all var(--transition-fast);
 }
 
-.pq-bookmark-page-btn:hover:not(:disabled) {
-  background: var(--glass-bg-hover);
-  color: var(--text-primary);
+.pq-bookmark-page-btn:hover:not(:disabled),
+.pq-bookmark-page-btn:focus-visible {
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-bookmark-page-btn.active {
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--component-highlight-active-bg);
+  color: var(--on-primary-text);
+  border-color: var(--component-highlight-border);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-bookmark-page-btn:disabled {
@@ -18036,15 +18040,19 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   transition: all var(--transition-fast);
 }
 
-.adhkar-set-page-btn:hover:not(:disabled) {
-  background: var(--glass-bg-hover);
-  color: var(--text-primary);
+.adhkar-set-page-btn:hover:not(:disabled),
+.adhkar-set-page-btn:focus-visible {
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .adhkar-set-page-btn.active {
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--component-highlight-active-bg);
+  color: var(--on-primary-text);
+  border-color: var(--component-highlight-border);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .adhkar-set-page-btn:disabled {
