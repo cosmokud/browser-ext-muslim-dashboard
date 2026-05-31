@@ -740,6 +740,8 @@ class IconThemeManager {
     this.storage = storage;
     this._currentTheme = "monochrome";
     this._isDarkMode = true;
+    this._pendingDomIconifyRoots = new Set();
+    this._domIconifyFrame = null;
     this.init();
   }
 
@@ -817,7 +819,7 @@ class IconThemeManager {
       for (const m of mutations) {
         for (const n of m.addedNodes) {
           if (n && n.nodeType === 1) {
-            this.applyDomIconReplacements(n);
+            this._queueDomIconify(n);
           }
         }
       }
@@ -826,6 +828,25 @@ class IconThemeManager {
     this._domIconObserver.observe(document.body, {
       childList: true,
       subtree: true,
+    });
+  }
+
+  _queueDomIconify(root) {
+    if (!root || typeof root.querySelectorAll !== "function") return;
+    this._pendingDomIconifyRoots.add(root);
+    if (this._domIconifyFrame !== null) return;
+
+    const schedule =
+      typeof requestAnimationFrame === "function"
+        ? requestAnimationFrame
+        : (callback) => setTimeout(callback, 0);
+    this._domIconifyFrame = schedule(() => {
+      this._domIconifyFrame = null;
+      const pendingRoots = [...this._pendingDomIconifyRoots];
+      this._pendingDomIconifyRoots.clear();
+      pendingRoots.forEach((pendingRoot) => {
+        this.applyDomIconReplacements(pendingRoot);
+      });
     });
   }
 

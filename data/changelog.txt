@@ -1,3 +1,19 @@
+## [0.1.11] - 2026-05-31
+
+### Highlights
+
+- Pocket Quran recitation can now highlight synchronized words during playback, with Tajweed-aware rendering, ayah markers, a reciter toggle, and adjustable timing delay.
+- Monday and Thursday fasting countdowns now show their upcoming Hijri dates.
+- Header Quick Controls now include per-item text colors and reset actions.
+- Optional background-aware font colors improve text readability as dashboard visuals change.
+- Pinned Apps drag-and-drop now handles responsive rows and boundaries more reliably.
+
+### Other Improvements
+
+- Added Settings preview and save-state feedback.
+- Refined theme-aware styling across dashboard controls.
+- Reduced repeated theme, icon, and clock update work for smoother dashboard rendering.
+
 ## [0.1.10] - 2026-05-25
 
 ### Highlights

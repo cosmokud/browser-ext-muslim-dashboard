@@ -20,6 +20,7 @@ The project targets Chromium-based browsers with Manifest V3.
 - Calendar card with Hijri and Gregorian views, month navigation, and current-date details.
 - Fasting card with day progress and date-aware fasting context.
 - Forbidden-day aware fasting countdowns that skip prohibited fast dates (Eid and Tashreeq).
+- Monday and Thursday fasting countdowns include their upcoming Hijri dates.
 - Fasting notifications with configurable Suhur lead-time and per-fast toggles (including Monday/Thursday, Ayyam al-Beed, Ashura, Arafah, Ramadan, and Dhu al-Hijjah windows).
 - Lunar phase card with current phase and metadata.
 
@@ -27,6 +28,7 @@ The project targets Chromium-based browsers with Manifest V3.
 
 - Pocket Quran reader with surah and ayah navigation, bookmarks, and audio playback that can continue across tabs.
 - Recitation controls support previous/next across surahs when Across Surahs (autoplay next surah) is enabled, with synced targets between dashboard and popup playback.
+- Recitation playback can highlight synchronized words with Tajweed-aware Arabic clustering, ayah markers, a per-reciter toggle, and an adjustable timing delay.
 - Pocket Quran translation search with highlighted matches, pagination, and jump-to-ayah results, plus adjustable Arabic and translation sizes in the search modal.
 - Ayah copy controls with optional Arabic inclusion, plus copy actions inside search results.
 - Quran translation and recitation support.
@@ -51,11 +53,14 @@ The project targets Chromium-based browsers with Manifest V3.
 
 - Dynamic backgrounds with category and rotation configuration.
 - Theme system with palette controls, glass/blur tuning, component opacity, and color customization.
+- Optional background-aware font colors adapt dashboard text contrast as background visuals change.
+- Header Quick Controls include per-item surface, text color, glow color, and reset controls.
 - Content typography settings now include Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, with preview samples.
 - Icon theme system for dashboard icon styling.
 - Card-level blur/glass controls for selected modules.
 - Multiple dashboard modes: grid layout, sidebar mode, floating cards, moment mode, and Quran focus mode.
 - Drag-and-drop layout editing with persisted card placement.
+- Pinned Apps reordering includes row-aware placement and boundary guards for responsive layouts.
 - Sidebar mode auto-recovers on wake/visibility changes and preserves user preference across viewport changes.
 - Performance mode to reduce animation/effect cost on lower-end hardware.
 
@@ -127,7 +132,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.10.zip`
+Example: `muslim-dashboard-v0.1.11.zip`
 
 ### Build output
 

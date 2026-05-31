@@ -686,6 +686,7 @@ class ThemeManager {
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
     this._backgroundAwareFontColorEnabled = false;
+    this._backgroundAwareFontColorFrame = null;
     // Legacy single-color accent override (kept for backward compatibility)
     this._customAccent = null;
     // New: per-theme per-mode palette overrides for customizable themes
@@ -711,6 +712,24 @@ class ThemeManager {
     if (this._backgroundAwareFontColorListenersBound) return;
     this._backgroundAwareFontColorListenersBound = true;
     document.addEventListener("md:background-visual-change", () => {
+      this.queueBackgroundAwareFontColorRefresh();
+    });
+  }
+
+  queueBackgroundAwareFontColorRefresh() {
+    if (
+      !this._backgroundAwareFontColorEnabled ||
+      this._backgroundAwareFontColorFrame !== null
+    ) {
+      return;
+    }
+
+    const schedule =
+      typeof requestAnimationFrame === "function"
+        ? requestAnimationFrame
+        : (callback) => setTimeout(callback, 0);
+    this._backgroundAwareFontColorFrame = schedule(() => {
+      this._backgroundAwareFontColorFrame = null;
       if (this._backgroundAwareFontColorEnabled) {
         this.applyTheme();
       }

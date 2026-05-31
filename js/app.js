@@ -2342,12 +2342,15 @@ class MuslimDashboard {
 
     const safeHours = String(hoursText || "00");
     const safeMinutes = String(minutesText || "00");
+    const timeText = `${safeHours}:${safeMinutes}`;
+    if (this.currentTime.dataset.timeText === timeText) return;
+    this.currentTime.dataset.timeText = timeText;
 
     this.currentTime.innerHTML =
       `<span class="time-hours">${safeHours}</span>` +
       `<span class="time-separator">:</span>` +
       `<span class="time-minutes">${safeMinutes}</span>`;
-    this.currentTime.setAttribute("aria-label", `${safeHours}:${safeMinutes}`);
+    this.currentTime.setAttribute("aria-label", timeText);
   }
 
   /**
@@ -2392,17 +2395,19 @@ class MuslimDashboard {
     }
 
     if (this.currentSeconds) {
-      this.currentSeconds.textContent = `:${seconds}`;
+      const secondsText = `:${seconds}`;
+      if (this.currentSeconds.textContent !== secondsText) {
+        this.currentSeconds.textContent = secondsText;
+      }
     }
 
-    this.updateHeaderNextPrayer();
+    this.updateHeaderNextPrayer(settings);
   }
 
   /**
    * Update header next-prayer display (shown underneath the clock)
    */
-  updateHeaderNextPrayer() {
-    const settings = this.storage.getSettings();
+  updateHeaderNextPrayer(settings = this.storage.getSettings()) {
     const headingSettings = settings.heading || {};
     const visibility = settings.componentVisibility || {};
     const shouldShow =
@@ -2411,11 +2416,14 @@ class MuslimDashboard {
       headingSettings.showNextPrayer === true;
 
     if (this.headerNextPrayer) {
-      this.headerNextPrayer.style.display = shouldShow ? "inline-flex" : "none";
-      this.headerNextPrayer.setAttribute(
-        "aria-hidden",
-        shouldShow ? "false" : "true",
-      );
+      const display = shouldShow ? "inline-flex" : "none";
+      const ariaHidden = shouldShow ? "false" : "true";
+      if (this.headerNextPrayer.style.display !== display) {
+        this.headerNextPrayer.style.display = display;
+      }
+      if (this.headerNextPrayer.getAttribute("aria-hidden") !== ariaHidden) {
+        this.headerNextPrayer.setAttribute("aria-hidden", ariaHidden);
+      }
     }
 
     if (!shouldShow) return;
@@ -2427,13 +2435,17 @@ class MuslimDashboard {
         : null;
 
     if (this.headerNextPrayerName) {
-      this.headerNextPrayerName.textContent =
-        nextPrayerInfo?.name || "Loading...";
+      const name = nextPrayerInfo?.name || "Loading...";
+      if (this.headerNextPrayerName.textContent !== name) {
+        this.headerNextPrayerName.textContent = name;
+      }
     }
 
     if (this.headerNextPrayerCountdown) {
-      this.headerNextPrayerCountdown.textContent =
-        nextPrayerInfo?.countdown || "--:--:--";
+      const countdown = nextPrayerInfo?.countdown || "--:--:--";
+      if (this.headerNextPrayerCountdown.textContent !== countdown) {
+        this.headerNextPrayerCountdown.textContent = countdown;
+      }
     }
   }
 
