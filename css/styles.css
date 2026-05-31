@@ -138,15 +138,19 @@
     var(--surface-base-bg) 62%,
     var(--primary-color) 38%
   );
+  --modal-opacity: 95%;
+  --modal-gradient-start-opacity: var(--modal-opacity);
+  --modal-gradient-end-opacity: min(100%, calc(var(--modal-opacity) + 3%));
   --modal-gradient-start: color-mix(
     in srgb,
-    var(--modal-surface-base) 95%,
-    transparent 5%
+    var(--modal-surface-base) var(--modal-gradient-start-opacity),
+    transparent calc(100% - var(--modal-gradient-start-opacity))
   );
   --modal-gradient-end: color-mix(
     in srgb,
-    color-mix(in srgb, var(--surface-base-bg) 74%, var(--primary-dark) 26%) 98%,
-    transparent 2%
+    color-mix(in srgb, var(--surface-base-bg) 74%, var(--primary-dark) 26%)
+      var(--modal-gradient-end-opacity),
+    transparent calc(100% - var(--modal-gradient-end-opacity))
   );
   --modal-surface-bg: color-mix(
     in srgb,

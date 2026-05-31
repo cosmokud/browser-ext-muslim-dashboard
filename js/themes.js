@@ -685,6 +685,7 @@ class ThemeManager {
     this._glassEnabled = true;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
+    this._modalOpacity = 95;
     this._backgroundAwareFontColorEnabled = false;
     this._backgroundAwareFontColorFrame = null;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -886,6 +887,10 @@ class ThemeManager {
       themeSettings.componentOpacity,
       0,
     );
+    this._modalOpacity = this._clampGlassOpacity(
+      themeSettings.modalOpacity,
+      95,
+    );
     this._backgroundAwareFontColorEnabled =
       themeSettings.backgroundAwareFontColorEnabled === true;
     this._customAccent = themeSettings.customAccent || null;
@@ -941,6 +946,7 @@ class ThemeManager {
         glassEnabled: this._glassEnabled,
         glassOpacity: this._glassOpacity,
         componentOpacity: this._mainGridComponentOpacity,
+        modalOpacity: this._modalOpacity,
         backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
         customAccent: this._customAccent,
       customPalettes: this._customPalettes,
@@ -981,6 +987,13 @@ class ThemeManager {
    */
   getMainGridComponentOpacity() {
     return this._mainGridComponentOpacity;
+  }
+
+  /**
+   * Get current modal panel opacity percentage
+   */
+  getModalOpacity() {
+    return this._modalOpacity;
   }
 
   /**
@@ -1064,6 +1077,21 @@ class ThemeManager {
     this._mainGridComponentOpacity = this._clampGlassOpacity(
       opacityPercent,
       this._mainGridComponentOpacity,
+    );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  /**
+   * Set modal panel opacity percentage
+   */
+  setModalOpacity(opacityPercent, save = true) {
+    this._modalOpacity = this._clampGlassOpacity(
+      opacityPercent,
+      this._modalOpacity,
     );
     this.applyTheme();
 
@@ -1383,6 +1411,11 @@ class ThemeManager {
       glassBgHover: this._setColorAlpha(colors.glassBgHover, alphas.hover),
       glassBorder: this._setColorAlpha(colors.glassBorder, alphas.border),
     };
+  }
+
+  _applyModalOpacity() {
+    const root = document.documentElement;
+    root.style.setProperty("--modal-opacity", String(this._modalOpacity) + "%");
   }
 
   _applyMainGridComponentOpacity(colors) {
@@ -1836,6 +1869,7 @@ class ThemeManager {
 
     // Restrict component opacity overrides to main grid components only.
     this._applyMainGridComponentOpacity(colors);
+    this._applyModalOpacity();
 
     // Set data attributes for CSS hooks
     root.dataset.theme = this._currentTheme;
@@ -1860,6 +1894,7 @@ class ThemeManager {
           glassEnabled: this._glassEnabled,
           glassOpacity: this._glassOpacity,
           componentOpacity: this._mainGridComponentOpacity,
+          modalOpacity: this._modalOpacity,
         },
       }),
     );

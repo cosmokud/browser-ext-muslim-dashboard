@@ -352,6 +352,10 @@ class SettingsManager extends BaseManager {
     this.themeComponentOpacityValue = document.getElementById(
       "themeComponentOpacityValue",
     );
+    this.themeModalOpacity = document.getElementById("themeModalOpacity");
+    this.themeModalOpacityValue = document.getElementById(
+      "themeModalOpacityValue",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(
@@ -3476,6 +3480,18 @@ class SettingsManager extends BaseManager {
     }
     this.updateThemeComponentOpacityLabel();
 
+    // Load modal panel opacity
+    const modalOpacity = this.clampNumber(
+      themeSettings.modalOpacity,
+      0,
+      100,
+      window.dashboard?.themes?.getModalOpacity?.() ?? 95,
+    );
+    if (this.themeModalOpacity) {
+      this.themeModalOpacity.value = String(modalOpacity);
+    }
+    this.updateThemeModalOpacityLabel();
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -3593,6 +3609,22 @@ class SettingsManager extends BaseManager {
       );
       this.themeComponentOpacity.value = String(clamped);
       this.themeComponentOpacityValue.textContent = clamped + "%";
+    }
+  }
+
+  /**
+   * Update modal panel opacity label
+   */
+  updateThemeModalOpacityLabel() {
+    if (this.themeModalOpacityValue && this.themeModalOpacity) {
+      const clamped = this.clampNumber(
+        parseInt(this.themeModalOpacity.value, 10),
+        0,
+        100,
+        95,
+      );
+      this.themeModalOpacity.value = String(clamped);
+      this.themeModalOpacityValue.textContent = clamped + "%";
     }
   }
 
@@ -4424,6 +4456,7 @@ class SettingsManager extends BaseManager {
       blurPower: 100,
       glassOpacity: 50,
       componentOpacity: 0,
+      modalOpacity: 95,
     };
     const themeSliderDebounceMs = 120;
 
@@ -4458,6 +4491,12 @@ class SettingsManager extends BaseManager {
     const applyThemeComponentOpacity = (opacity) => {
       if (window.dashboard?.themes?.setMainGridComponentOpacity) {
         window.dashboard.themes.setMainGridComponentOpacity(opacity, false);
+      }
+    };
+
+    const applyThemeModalOpacity = (opacity) => {
+      if (window.dashboard?.themes?.setModalOpacity) {
+        window.dashboard.themes.setModalOpacity(opacity, false);
       }
     };
 
@@ -4726,6 +4765,37 @@ class SettingsManager extends BaseManager {
       });
     }
 
+    // Modal panel opacity slider
+    if (this.themeModalOpacity) {
+      this.themeModalOpacity.addEventListener("input", () => {
+        this.updateThemeModalOpacityLabel();
+        const opacity = parseInt(this.themeModalOpacity.value, 10);
+
+        scheduleThemeSliderUpdate("modalOpacity", () =>
+          applyThemeModalOpacity(opacity),
+        );
+      });
+
+      this.themeModalOpacity.addEventListener("change", () => {
+        this.updateThemeModalOpacityLabel();
+        const opacity = parseInt(this.themeModalOpacity.value, 10);
+        flushThemeSliderUpdate("modalOpacity", () =>
+          applyThemeModalOpacity(opacity),
+        );
+      });
+
+      this.themeModalOpacity.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.themeModalOpacity.value = String(themeSliderDefaults.modalOpacity);
+        this.updateThemeModalOpacityLabel();
+        const opacity = parseInt(this.themeModalOpacity.value, 10);
+        flushThemeSliderUpdate("modalOpacity", () =>
+          applyThemeModalOpacity(opacity),
+        );
+        this.scheduleAutoSave(120);
+      });
+    }
+
     if (this.themeBackgroundAwareFontColorEnabled) {
       this.themeBackgroundAwareFontColorEnabled.addEventListener("change", () => {
         const enabled = this.themeBackgroundAwareFontColorEnabled.checked;
@@ -4762,6 +4832,12 @@ class SettingsManager extends BaseManager {
       0,
       100,
       0,
+    );
+    const modalOpacity = this.clampNumber(
+      parseInt(this.themeModalOpacity?.value, 10),
+      0,
+      100,
+      95,
     );
     const backgroundAwareFontColorEnabled =
       this.themeBackgroundAwareFontColorEnabled?.checked === true;
@@ -4800,6 +4876,7 @@ class SettingsManager extends BaseManager {
       glassEnabled: glassEnabled,
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
+      modalOpacity: modalOpacity,
       backgroundAwareFontColorEnabled: backgroundAwareFontColorEnabled,
       highestVisualFidelityEnabled:
         dashboardQualityState.highestVisualFidelityEnabled,
@@ -4854,6 +4931,10 @@ class SettingsManager extends BaseManager {
         typeof themeManager.getMainGridComponentOpacity === "function"
           ? themeManager.getMainGridComponentOpacity()
           : null;
+      const currentModalOpacity =
+        typeof themeManager.getModalOpacity === "function"
+          ? themeManager.getModalOpacity()
+          : null;
 
       if (
         currentTheme !== activeTheme &&
@@ -4885,6 +4966,13 @@ class SettingsManager extends BaseManager {
         typeof themeManager.setMainGridComponentOpacity === "function"
       ) {
         themeManager.setMainGridComponentOpacity(componentOpacity, false);
+      }
+
+      if (
+        currentModalOpacity !== modalOpacity &&
+        typeof themeManager.setModalOpacity === "function"
+      ) {
+        themeManager.setModalOpacity(modalOpacity, false);
       }
 
       if (
