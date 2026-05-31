@@ -3485,7 +3485,7 @@ class SettingsManager extends BaseManager {
       themeSettings.modalOpacity,
       0,
       100,
-      window.dashboard?.themes?.getModalOpacity?.() ?? 95,
+      window.dashboard?.themes?.getModalOpacity?.() ?? 90,
     );
     if (this.themeModalOpacity) {
       this.themeModalOpacity.value = String(modalOpacity);
@@ -3621,7 +3621,7 @@ class SettingsManager extends BaseManager {
         parseInt(this.themeModalOpacity.value, 10),
         0,
         100,
-        95,
+        90,
       );
       this.themeModalOpacity.value = String(clamped);
       this.themeModalOpacityValue.textContent = clamped + "%";
@@ -4456,7 +4456,7 @@ class SettingsManager extends BaseManager {
       blurPower: 100,
       glassOpacity: 50,
       componentOpacity: 0,
-      modalOpacity: 95,
+      modalOpacity: 90,
     };
     const themeSliderDebounceMs = 120;
 
@@ -4837,7 +4837,7 @@ class SettingsManager extends BaseManager {
       parseInt(this.themeModalOpacity?.value, 10),
       0,
       100,
-      95,
+      90,
     );
     const backgroundAwareFontColorEnabled =
       this.themeBackgroundAwareFontColorEnabled?.checked === true;

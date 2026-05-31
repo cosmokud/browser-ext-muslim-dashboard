@@ -138,7 +138,7 @@
     var(--surface-base-bg) 62%,
     var(--primary-color) 38%
   );
-  --modal-opacity: 95%;
+  --modal-opacity: 90%;
   --modal-gradient-start-opacity: var(--modal-opacity);
   --modal-gradient-end-opacity: min(100%, calc(var(--modal-opacity) + 3%));
   --modal-gradient-start: color-mix(
@@ -154,8 +154,8 @@
   );
   --modal-surface-bg: color-mix(
     in srgb,
-    var(--modal-surface-base) 95%,
-    transparent 5%
+    var(--modal-surface-base) var(--modal-opacity),
+    transparent calc(100% - var(--modal-opacity))
   );
   --modal-popover-bg: color-mix(
     in srgb,
@@ -14665,7 +14665,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.35),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
