@@ -187,6 +187,10 @@
   );
   --theme-highlight-shadow: 0 8px 18px
     color-mix(in srgb, var(--primary-dark) 32%, transparent);
+  --component-highlight-bg-hover: var(--theme-highlight-bg-hover);
+  --component-highlight-active-bg: var(--theme-highlight-active-bg);
+  --component-highlight-border: var(--theme-highlight-border);
+  --component-highlight-shadow: var(--theme-highlight-shadow);
   --action-btn-bg-hover: var(--theme-highlight-bg-hover);
   --action-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
   --action-btn-shadow-hover: 0 8px 18px rgba(0, 0, 0, 0.2);
@@ -16165,21 +16169,26 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-bookmark-category:hover {
-  background: var(--glass-bg-hover);
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   transform: translateX(4px);
 }
 
 .pq-bookmark-category.active {
-  border-color: color-mix(in srgb, var(--accent-bg) 58%, var(--glass-border));
-  background: color-mix(in srgb, var(--accent-bg) 16%, var(--glass-bg));
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-bookmark-category.active .pq-bookmark-category-name {
-  color: var(--accent-text);
+  color: var(--on-primary-text);
 }
 
 .pq-bookmark-category.active .pq-bookmark-category-count {
-  color: color-mix(in srgb, var(--accent-text) 74%, var(--text-secondary));
+  color: color-mix(in srgb, var(--on-primary-text) 74%, transparent);
 }
 
 .pq-bookmark-category-info {
@@ -16460,15 +16469,19 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-align: left;
 }
 
-.pq-translation-item:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border);
+.pq-translation-item:hover,
+.pq-translation-item:focus-visible {
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-translation-item.active {
-  background: color-mix(in srgb, var(--accent-bg) 18%, var(--glass-bg));
-  border-color: color-mix(in srgb, var(--accent-bg) 62%, var(--glass-border));
-  color: var(--accent-text);
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   font-weight: 600;
 }
 
@@ -17116,13 +17129,18 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .flashcard-set-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   transform: translateX(4px);
 }
 
 .flashcard-set-item.active {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .flashcard-set-item-info {
@@ -17139,6 +17157,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .flashcard-set-item-meta {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.flashcard-set-item:is(:hover, .active) .flashcard-set-item-name {
+  color: var(--on-primary-text);
+}
+
+.flashcard-set-item:is(:hover, .active) .flashcard-set-item-meta {
+  color: color-mix(in srgb, var(--on-primary-text) 74%, transparent);
 }
 
 .flashcard-set-item-lock {
@@ -17933,13 +17959,18 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-set-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   transform: translateX(4px);
 }
 
 .adhkar-set-item.active {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .adhkar-set-item-info {
@@ -17956,6 +17987,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .adhkar-set-item-meta {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.adhkar-set-item:is(:hover, .active) .adhkar-set-item-name {
+  color: var(--on-primary-text);
+}
+
+.adhkar-set-item:is(:hover, .active) .adhkar-set-item-meta {
+  color: color-mix(in srgb, var(--on-primary-text) 74%, transparent);
 }
 
 .adhkar-set-item-lock {

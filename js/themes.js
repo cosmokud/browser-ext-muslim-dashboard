@@ -1388,6 +1388,7 @@ class ThemeManager {
   _applyMainGridComponentOpacity(colors) {
     if (!colors || typeof colors !== "object") return;
 
+    const root = document.documentElement;
     const mainContainer = document.querySelector(".main-container");
     const sidebarContainers = [
       document.getElementById("sidebarLeft"),
@@ -1455,6 +1456,18 @@ class ThemeManager {
     const highlightHoverBg = `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`;
     const highlightActiveBg = `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`;
     const highlightShadow = `0 8px 18px ${highlightShadowColor}`;
+
+    if (this._glassEnabled) {
+      root.style.setProperty("--component-highlight-bg-hover", highlightHoverBg);
+      root.style.setProperty("--component-highlight-active-bg", highlightActiveBg);
+      root.style.setProperty("--component-highlight-border", highlightBorder);
+      root.style.setProperty("--component-highlight-shadow", highlightShadow);
+    } else {
+      root.style.removeProperty("--component-highlight-bg-hover");
+      root.style.removeProperty("--component-highlight-active-bg");
+      root.style.removeProperty("--component-highlight-border");
+      root.style.removeProperty("--component-highlight-shadow");
+    }
 
     ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
       const component = document.getElementById(componentId);
