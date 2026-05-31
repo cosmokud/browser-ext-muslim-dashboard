@@ -14395,7 +14395,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 
 #pocketQuranSurahList,
 #pocketQuranAyahList {
-  background: var(--theme-highlight-active-bg);
+  background: var(--component-highlight-active-bg);
   color: var(--on-primary-text);
 }
 
