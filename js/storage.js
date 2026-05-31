@@ -547,6 +547,7 @@ class StorageManager {
         showIslamicEvents: true,
 
         // Header surface backgrounds
+        wholeComponentSurfaceEnabled: false,
         greetingBackgroundEnabled: false,
         dateBackgroundEnabled: false,
         timeBackgroundEnabled: false,

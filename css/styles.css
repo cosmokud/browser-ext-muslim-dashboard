@@ -959,6 +959,15 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   gap: var(--spacing-lg);
 }
 
+.header.header-whole-surface-enabled {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  padding: var(--spacing-lg);
+}
+
 .greeting-section {
   flex: 1;
   display: flex;

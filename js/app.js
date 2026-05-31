@@ -2867,6 +2867,13 @@ class MuslimDashboard {
     }
 
     const compactWeather = document.getElementById("compactWeather");
+    const header = document.querySelector(".header");
+    const wholeComponentSurfaceEnabled =
+      headingSettings.wholeComponentSurfaceEnabled === true;
+    header?.classList.toggle(
+      "header-whole-surface-enabled",
+      wholeComponentSurfaceEnabled,
+    );
     const toggleHeaderSurface = (el, enabled) => {
       if (!el) return;
       el.classList.toggle("header-surface-enabled", enabled === true);
@@ -2919,23 +2926,29 @@ class MuslimDashboard {
 
     toggleHeaderSurface(
       this.greeting,
-      headingSettings.greetingBackgroundEnabled === true,
+      !wholeComponentSurfaceEnabled &&
+        headingSettings.greetingBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.dateDisplay,
-      headingSettings.dateBackgroundEnabled === true,
+      !wholeComponentSurfaceEnabled &&
+        headingSettings.dateBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       timeMainRow,
-      !clockSurfaceLocked && headingSettings.timeBackgroundEnabled === true,
+      !wholeComponentSurfaceEnabled &&
+        !clockSurfaceLocked &&
+        headingSettings.timeBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       this.headerNextPrayer,
-      headingSettings.nextPrayerBackgroundEnabled === true,
+      !wholeComponentSurfaceEnabled &&
+        headingSettings.nextPrayerBackgroundEnabled === true,
     );
     toggleHeaderSurface(
       compactWeather,
-      headingSettings.compactWeatherBackgroundEnabled === true,
+      !wholeComponentSurfaceEnabled &&
+        headingSettings.compactWeatherBackgroundEnabled === true,
     );
 
     this.applyHeaderTextColor(this.greeting, headingSettings.greetingTextColor);

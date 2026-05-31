@@ -9,6 +9,7 @@ class ThemeManager {
   static DEFAULT_THEME = "emerald";
   static DEFAULT_MODE = "dark";
   static MAIN_GRID_COMPONENT_IDS = [
+    "header",
     "pinnedAppsSection",
     "searchBarSection",
     "quoteSection",

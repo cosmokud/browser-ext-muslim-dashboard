@@ -418,6 +418,9 @@ class SettingsManager extends BaseManager {
     this.showDate = document.getElementById("showDate");
     this.showIslamicEvents = document.getElementById("showIslamicEvents");
     this.dateFormatSelect = document.getElementById("dateFormatSelect");
+    this.headerWholeComponentSurfaceEnabled = document.getElementById(
+      "headerWholeComponentSurfaceEnabled",
+    );
     this.headerGreetingBgEnabled = document.getElementById(
       "headerGreetingBgEnabled",
     );
@@ -2055,6 +2058,10 @@ class SettingsManager extends BaseManager {
     );
     if (dateCalendarRadio) dateCalendarRadio.checked = true;
 
+    if (this.headerWholeComponentSurfaceEnabled) {
+      this.headerWholeComponentSurfaceEnabled.checked =
+        heading.wholeComponentSurfaceEnabled === true;
+    }
     if (this.headerGreetingBgEnabled) {
       this.headerGreetingBgEnabled.checked =
         heading.greetingBackgroundEnabled === true;
@@ -3644,15 +3651,17 @@ class SettingsManager extends BaseManager {
 
     const selectedStyle = clockStyle || this.getSelectedClockStyleValue();
     const locked = this.isClockSurfaceLockedByStyle(selectedStyle);
+    const wholeComponentSurfaceEnabled =
+      this.headerWholeComponentSurfaceEnabled?.checked === true;
 
     if (locked) {
       this.headerTimeBgEnabled.checked = false;
     }
 
-    this.headerTimeBgEnabled.disabled = locked;
+    this.headerTimeBgEnabled.disabled = locked || wholeComponentSurfaceEnabled;
     this.headerTimeBgEnabled.setAttribute(
       "aria-disabled",
-      locked ? "true" : "false",
+      locked || wholeComponentSurfaceEnabled ? "true" : "false",
     );
 
     const label = this.headerTimeBgEnabled.closest(".header-surface-cell");
@@ -3661,8 +3670,11 @@ class SettingsManager extends BaseManager {
         label.dataset.defaultTitle = label.getAttribute("title") || "";
       }
 
-      label.classList.toggle("disabled", locked);
-      label.setAttribute("aria-disabled", locked ? "true" : "false");
+      label.classList.toggle("disabled", locked || wholeComponentSurfaceEnabled);
+      label.setAttribute(
+        "aria-disabled",
+        locked || wholeComponentSurfaceEnabled ? "true" : "false",
+      );
       label.setAttribute(
         "title",
         locked
@@ -3673,6 +3685,8 @@ class SettingsManager extends BaseManager {
   }
 
   updateHeaderSurfaceBackgroundsLockState() {
+    const wholeComponentSurfaceEnabled =
+      this.headerWholeComponentSurfaceEnabled?.checked === true;
     const controls = [
       this.headerGreetingBgEnabled,
       this.headerDateBgEnabled,
@@ -3683,7 +3697,14 @@ class SettingsManager extends BaseManager {
 
     controls.forEach((control) => {
       if (!control) return;
-      control.disabled = false;
+      control.disabled = wholeComponentSurfaceEnabled;
+      control.setAttribute(
+        "aria-disabled",
+        wholeComponentSurfaceEnabled ? "true" : "false",
+      );
+      control
+        .closest(".header-surface-cell")
+        ?.classList.toggle("disabled", wholeComponentSurfaceEnabled);
     });
 
     if (this.headerSurfaceBackgroundsGroup) {
@@ -3757,6 +3778,8 @@ class SettingsManager extends BaseManager {
     settings.compactWeatherEnabled =
       this.compactWeatherEnabled?.checked ?? false;
 
+    settings.heading.wholeComponentSurfaceEnabled =
+      this.headerWholeComponentSurfaceEnabled?.checked === true;
     settings.heading.greetingBackgroundEnabled =
       this.headerGreetingBgEnabled?.checked === true;
     settings.heading.dateBackgroundEnabled =
@@ -8089,6 +8112,8 @@ class SettingsManager extends BaseManager {
     );
     settings.heading.dateCalendar = dateCalendarRadio?.value || "hijri";
 
+    settings.heading.wholeComponentSurfaceEnabled =
+      this.headerWholeComponentSurfaceEnabled?.checked === true;
     settings.heading.greetingBackgroundEnabled =
       this.headerGreetingBgEnabled?.checked === true;
     settings.heading.dateBackgroundEnabled =
@@ -11927,6 +11952,13 @@ class SettingsManager extends BaseManager {
         this.applyHeaderQuickControlsInstantly();
       });
     });
+
+    if (this.headerWholeComponentSurfaceEnabled) {
+      this.headerWholeComponentSurfaceEnabled.addEventListener("change", () => {
+        this.updateHeaderSurfaceBackgroundsLockState();
+        this.applyHeaderQuickControlsInstantly();
+      });
+    }
 
     [
       this.showGreeting,
