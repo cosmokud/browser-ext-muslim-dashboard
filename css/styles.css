@@ -6301,9 +6301,21 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   padding-right: calc(var(--spacing-md) + 42px);
 }
 
-.content-search-result:hover {
-  background: var(--glass-bg-hover);
+.content-search-result:hover,
+.content-search-result:focus-within {
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   transform: translateX(4px);
+}
+
+.content-search-result:is(:hover, :focus-within) :is(
+    .content-search-result-title,
+    .content-search-result-snippet,
+    .content-search-result-meta-chip
+  ) {
+  color: var(--on-primary-text);
 }
 
 .content-search-result-delete {
@@ -18370,13 +18382,18 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .adhkar-lang-item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
   transform: translateX(4px);
 }
 
 .adhkar-lang-item.active {
-  border-color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .adhkar-lang-item .flag {
@@ -18397,6 +18414,14 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .adhkar-lang-item-native {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.adhkar-lang-item:is(:hover, .active) :is(
+    .adhkar-lang-item-name,
+    .adhkar-lang-item-native,
+    .adhkar-lang-item-code
+  ) {
+  color: var(--on-primary-text);
 }
 
 .adhkar-lang-empty {
@@ -19469,8 +19494,10 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 }
 
 .pq-search-input:focus-visible {
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-search-submit-btn {
