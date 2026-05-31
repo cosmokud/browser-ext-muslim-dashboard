@@ -138,7 +138,7 @@
     var(--surface-base-bg) 62%,
     var(--primary-color) 38%
   );
-  --modal-opacity: 90%;
+  --modal-opacity: 97%;
   --modal-gradient-start-opacity: var(--modal-opacity);
   --modal-gradient-end-opacity: min(100%, calc(var(--modal-opacity) + 3%));
   --modal-gradient-start: color-mix(

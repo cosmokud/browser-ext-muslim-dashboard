@@ -685,7 +685,7 @@ class ThemeManager {
     this._glassEnabled = true;
     this._glassOpacity = 50;
     this._mainGridComponentOpacity = 0;
-    this._modalOpacity = 90;
+    this._modalOpacity = 97;
     this._backgroundAwareFontColorEnabled = false;
     this._backgroundAwareFontColorFrame = null;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -889,7 +889,7 @@ class ThemeManager {
     );
     this._modalOpacity = this._clampGlassOpacity(
       themeSettings.modalOpacity,
-      90,
+      97,
     );
     this._backgroundAwareFontColorEnabled =
       themeSettings.backgroundAwareFontColorEnabled === true;
