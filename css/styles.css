@@ -19502,16 +19502,27 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
 
 .pq-search-submit-btn {
   min-height: 42px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--component-highlight-border);
   border-radius: var(--radius-md);
-  background: var(--glass-bg-hover);
-  color: var(--text-primary);
+  background: var(--component-highlight-active-bg);
+  color: var(--on-primary-text);
   padding: 0 var(--spacing-md);
   cursor: pointer;
 }
 
-.pq-search-submit-btn:hover:not(:disabled) {
-  border-color: var(--accent-gold);
+.pq-search-submit-btn:hover:not(:disabled),
+.pq-search-submit-btn:focus-visible {
+  background: var(--component-highlight-bg-hover);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
+}
+
+.pq-search-submit-btn:active:not(:disabled) {
+  background: var(--component-highlight-active-bg);
+  border-color: var(--component-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--component-highlight-shadow);
 }
 
 .pq-search-submit-btn:disabled {
