@@ -16587,21 +16587,56 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-ayah-play-btn.playing {
-  background: var(--theme-highlight-active-bg);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 84%, transparent),
+    color-mix(in srgb, var(--primary-color) 88%, transparent)
+  );
   color: var(--on-primary-text);
-  border-color: var(--theme-highlight-border);
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 82%,
+    var(--on-primary-text) 18%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--primary-light) 28%, transparent),
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   animation: pqPulse 1.5s ease-in-out infinite;
+}
+
+.pq-ayah-play-btn.playing:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 90%, transparent),
+    color-mix(in srgb, var(--primary-color) 94%, transparent)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 90%,
+    var(--on-primary-text) 10%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--primary-light) 34%, transparent),
+    0 10px 22px color-mix(in srgb, var(--primary-dark) 42%, transparent);
 }
 
 @keyframes pqPulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0
-      color-mix(in srgb, var(--theme-highlight-light-bg) 42%, transparent);
+    box-shadow:
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--primary-light) 28%, transparent),
+      0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 8px
-      color-mix(in srgb, var(--theme-highlight-light-bg) 0%, transparent);
+    box-shadow:
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+      0 0 0 8px color-mix(in srgb, var(--primary-light) 0%, transparent),
+      0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   }
 }
 
