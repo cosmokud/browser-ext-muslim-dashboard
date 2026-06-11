@@ -1949,7 +1949,7 @@ class SearchBarManager extends BaseManager {
     if (!fetchUrl) return null;
 
     if (/^(data|blob|chrome-extension):/i.test(fetchUrl)) {
-      return { url: fetchUrl, revoke: null };
+      return this._normalizeFaviconSampleToPngUrl(fetchUrl);
     }
 
     if (force) {
@@ -1975,13 +1975,76 @@ class SearchBarManager extends BaseManager {
       if (!blob || blob.size <= 0) return null;
 
       const objectUrl = URL.createObjectURL(blob);
+      const sample = await this._normalizeFaviconSampleToPngUrl(objectUrl);
       return {
-        url: objectUrl,
-        revoke: () => URL.revokeObjectURL(objectUrl),
+        url: sample?.url || objectUrl,
+        revoke: () => {
+          if (typeof sample?.revoke === "function") sample.revoke();
+          URL.revokeObjectURL(objectUrl);
+        },
       };
     } catch (e) {
       return null;
     }
+  }
+
+  _normalizeFaviconSampleToPngUrl(sourceUrl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.decoding = "async";
+
+      const cleanup = () => {
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.onload = () => {
+        try {
+          const size = 64;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d", {
+            willReadFrequently: true,
+          });
+          if (!ctx) {
+            cleanup();
+            resolve(null);
+            return;
+          }
+
+          ctx.clearRect(0, 0, size, size);
+          ctx.drawImage(img, 0, 0, size, size);
+
+          canvas.toBlob(
+            (pngBlob) => {
+              cleanup();
+              if (!pngBlob || pngBlob.size <= 0) {
+                resolve(null);
+                return;
+              }
+
+              const pngUrl = URL.createObjectURL(pngBlob);
+              resolve({
+                url: pngUrl,
+                revoke: () => URL.revokeObjectURL(pngUrl),
+              });
+            },
+            "image/png",
+          );
+        } catch (e) {
+          cleanup();
+          resolve(null);
+        }
+      };
+
+      img.onerror = () => {
+        cleanup();
+        resolve(null);
+      };
+
+      img.src = sourceUrl;
+    });
   }
 
   async _computeFaviconDominantRgb(url, { force = false } = {}) {
