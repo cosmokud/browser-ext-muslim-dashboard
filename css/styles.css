@@ -8217,7 +8217,7 @@ html[data-theme-mode="light"]
   border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
   background: rgba(var(--sb-accent-rgb), 0.12);
   color: var(--text-primary);
-  caret-color: var(--accent-gold);
+  caret-color: rgb(var(--sb-accent-rgb));
   outline: none;
   transition:
     border-color var(--transition-fast),
@@ -8247,13 +8247,15 @@ html[data-theme-mode="light"]
   transition:
     transform var(--transition-fast),
     background-color var(--transition-fast),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .search-bar-btn:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(var(--sb-accent-rgb), 0.14);
   border-color: rgba(var(--sb-accent-rgb), 0.38);
+  box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.16);
 }
 
 .search-bar-btn:active {

@@ -1494,7 +1494,9 @@ class SearchBarManager extends BaseManager {
     if (this._isValidRgbString(engine.accentRgb)) return;
 
     const faviconUrl =
-      engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
+      engine.cachedFavicon ||
+      engine.favicon ||
+      this.getFaviconUrlFromTemplate(engine.url);
     if (!faviconUrl) return;
 
     // Ensure favicon is stored for future loads.
@@ -2062,6 +2064,12 @@ class SearchBarManager extends BaseManager {
         }
         // Update engine object
         engine.cachedFavicon = cached;
+        if (
+          String(this.selectedId) === String(engine.id) &&
+          !this._isValidRgbString(engine.accentRgb)
+        ) {
+          this._ensureDefaultAccentForEngine(engine).catch(() => {});
+        }
       }
     } catch (e) {
       // Silently fail
