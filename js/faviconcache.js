@@ -276,7 +276,23 @@ class FaviconCacheManager {
       }
     }
 
-    // Keep automatic favicons URL-based to avoid CORS fetch failures.
+    try {
+      const resp = await fetch(faviconUrl, {
+        cache: forceRefresh ? "reload" : "force-cache",
+      });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob && blob.size > 0) {
+          const dataUrl = await this._blobToDataUrl(blob);
+          await this.setCached(url, dataUrl, type, false);
+          this.sessionFetched.add(cacheKey);
+          return dataUrl;
+        }
+      }
+    } catch (e) {
+      // Fall back to the display-safe Google favicon URL below.
+    }
+
     await this.setCached(url, faviconUrl, type, false);
     this.sessionFetched.add(cacheKey);
     return faviconUrl;

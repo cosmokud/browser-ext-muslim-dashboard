@@ -251,6 +251,9 @@ class SearchBarManager extends BaseManager {
           typeof s.accentRgb === "string" ? String(s.accentRgb) : null;
         const accentRgbSource =
           s.accentRgbSource === "custom" ? "custom" : "favicon";
+        const faviconDominantRgb = this._normalizeOptionalRgbString(
+          s.faviconDominantRgb,
+        );
 
         if (this._isExtensionFaviconUrl(favicon)) {
           const migratedFavicon = this.getFaviconUrlFromTemplate(url);
@@ -268,6 +271,7 @@ class SearchBarManager extends BaseManager {
           cachedFavicon,
           accentRgb,
           accentRgbSource,
+          faviconDominantRgb,
         };
       })
       .filter((s) => s.name && s.url);
@@ -1029,6 +1033,7 @@ class SearchBarManager extends BaseManager {
       cachedFavicon,
       accentRgb: null,
       accentRgbSource: "favicon",
+      faviconDominantRgb: null,
     };
 
     this.searches.push(entry);
@@ -1465,6 +1470,7 @@ class SearchBarManager extends BaseManager {
       url: normalized.url,
       favicon,
       cachedFavicon,
+      faviconDominantRgb: this.searches[idx].faviconDominantRgb || null,
     };
 
     if (this.searches[idx].accentRgbSource !== "custom") {
@@ -1513,7 +1519,6 @@ class SearchBarManager extends BaseManager {
 
   async _ensureDefaultAccentForEngine(engine, { force = false } = {}) {
     if (!engine) return;
-    if (engine.accentRgbSource === "custom") return;
 
     const faviconUrl =
       engine.cachedFavicon ||
@@ -1531,10 +1536,25 @@ class SearchBarManager extends BaseManager {
     if (!dominant) return;
 
     const normalizedDominant = this._normalizeRgbString(dominant);
+    const previousDominant = this._normalizeOptionalRgbString(
+      engine.faviconDominantRgb,
+    );
+    engine.faviconDominantRgb = normalizedDominant;
+
+    if (engine.accentRgbSource === "custom") {
+      if (previousDominant !== normalizedDominant) {
+        this.persist();
+      }
+      return;
+    }
+
     if (
       engine.accentRgbSource === "favicon" &&
       this._normalizeRgbString(engine.accentRgb) === normalizedDominant
     ) {
+      if (previousDominant !== normalizedDominant) {
+        this.persist();
+      }
       return;
     }
 
@@ -1732,6 +1752,12 @@ class SearchBarManager extends BaseManager {
     return `${r}, ${g}, ${b}`;
   }
 
+  _normalizeOptionalRgbString(rgbString) {
+    return this._isValidRgbString(rgbString)
+      ? this._normalizeRgbString(rgbString)
+      : null;
+  }
+
   _hexToRgbString(hex) {
     const s = String(hex || "").trim();
     const m = s.match(/^#?([0-9a-fA-F]{6})$/);
@@ -1878,103 +1904,34 @@ class SearchBarManager extends BaseManager {
       } catch (e) {}
     }
 
-    let blob;
+    if (typeof window.FastAverageColor !== "function") return null;
+
+    const fac = new FastAverageColor();
     try {
-      const resp = await fetch(fetchUrl, {
-        cache: force ? "reload" : "force-cache",
+      const color = await fac.getColorAsync(fetchUrl, {
+        algorithm: "dominant",
+        mode: "precision",
+        step: 1,
+        width: 32,
+        height: 32,
+        dominantDivider: 8,
+        ignoredColor: [
+          [255, 255, 255, 255, 24],
+          [0, 0, 0, 255, 24],
+          [0, 0, 0, 0, 255],
+        ],
+        crossOrigin: "anonymous",
+        silent: true,
       });
-      if (!resp.ok) return null;
-      blob = await resp.blob();
+      const rgb = Array.isArray(color?.rgb) ? color.rgb : color?.value;
+      if (!Array.isArray(rgb) || rgb.length < 3) return null;
+      return `${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(
+        rgb[2],
+      )}`;
     } catch (e) {
       return null;
-    }
-
-    const objectUrl = URL.createObjectURL(blob);
-    try {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.decoding = "async";
-      img.src = objectUrl;
-
-      if (typeof img.decode === "function") {
-        try {
-          await img.decode();
-        } catch (e) {
-          await new Promise((resolve, reject) => {
-            img.onload = () => resolve();
-            img.onerror = reject;
-          });
-        }
-      } else {
-        await new Promise((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = reject;
-        });
-      }
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return null;
-      canvas.width = 32;
-      canvas.height = 32;
-
-      try {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        const buckets = new Map();
-        const fallbackBuckets = new Map();
-        const bucketStep = 8;
-        const clampBucket = (value) =>
-          Math.max(0, Math.min(255, Math.round(value / bucketStep) * bucketStep));
-        const addBucket = (map, r, g, b) => {
-          const key = `${clampBucket(r)},${clampBucket(g)},${clampBucket(b)}`;
-          const existing = map.get(key) || { count: 0, r: 0, g: 0, b: 0 };
-          existing.count += 1;
-          existing.r += r;
-          existing.g += g;
-          existing.b += b;
-          map.set(key, existing);
-        };
-        const isNeutral = (r, g, b) => {
-          const max = Math.max(r, g, b);
-          const min = Math.min(r, g, b);
-          const saturation = max === 0 ? 0 : (max - min) / max;
-          const lightness = (max + min) / 510;
-          return saturation < 0.14 || lightness > 0.94 || lightness < 0.06;
-        };
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const a = data[i + 3];
-          if (a == null || a < 32) continue;
-          addBucket(fallbackBuckets, r, g, b);
-          if (!isNeutral(r, g, b)) {
-            addBucket(buckets, r, g, b);
-          }
-        }
-
-        const source = buckets.size > 0 ? buckets : fallbackBuckets;
-        let best = null;
-        source.forEach((entry) => {
-          if (!best || entry.count > best.count) {
-            best = entry;
-          }
-        });
-        if (!best) return null;
-
-        const r = Math.round(best.r / best.count);
-        const g = Math.round(best.g / best.count);
-        const b = Math.round(best.b / best.count);
-        return `${r}, ${g}, ${b}`;
-      } catch (e) {
-        return null;
-      }
     } finally {
-      try {
-        URL.revokeObjectURL(objectUrl);
-      } catch (e) {}
+      fac.destroy();
     }
   }
 
@@ -2008,11 +1965,7 @@ class SearchBarManager extends BaseManager {
       this.getFaviconUrlFromTemplate(engine.url);
     const cachedDominant = this.getCachedFaviconDominantRgb(faviconUrl);
     const knownDominant =
-      cachedDominant ||
-      (engine.accentRgbSource === "favicon" &&
-      this._isValidRgbString(engine.accentRgb)
-        ? this._normalizeRgbString(engine.accentRgb)
-        : null);
+      cachedDominant || this._normalizeOptionalRgbString(engine.faviconDominantRgb);
     if (knownDominant) {
       this._renderSwatches(paletteEl, [...rainbow29, knownDominant], {
         dominantIndex: rainbow29.length,
@@ -2048,6 +2001,8 @@ class SearchBarManager extends BaseManager {
     this._renderSwatches(paletteEl, [...rainbow29, dominant], {
       dominantIndex: rainbow29.length,
     });
+    engine.faviconDominantRgb = this._normalizeRgbString(dominant);
+    this.persist();
     if (applyDominant && engine.accentRgbSource !== "custom") {
       const normalizedDominant = this._normalizeRgbString(dominant);
       this.setEngineAccent(engine.id, normalizedDominant, { source: "favicon" });
