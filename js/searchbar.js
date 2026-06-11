@@ -249,6 +249,8 @@ class SearchBarManager extends BaseManager {
           typeof s.cachedFavicon === "string" ? s.cachedFavicon : null;
         const accentRgb =
           typeof s.accentRgb === "string" ? String(s.accentRgb) : null;
+        const accentRgbSource =
+          s.accentRgbSource === "custom" ? "custom" : "favicon";
 
         if (this._isExtensionFaviconUrl(favicon)) {
           const migratedFavicon = this.getFaviconUrlFromTemplate(url);
@@ -258,7 +260,15 @@ class SearchBarManager extends BaseManager {
           }
         }
 
-        return { id, name, url, favicon, cachedFavicon, accentRgb };
+        return {
+          id,
+          name,
+          url,
+          favicon,
+          cachedFavicon,
+          accentRgb,
+          accentRgbSource,
+        };
       })
       .filter((s) => s.name && s.url);
 
@@ -891,7 +901,10 @@ class SearchBarManager extends BaseManager {
     this.contextMenu.dataset.engineId = String(engineId);
 
     // Refresh the palette for the current engine.
-    this._renderAccentPaletteForEngine(engineId);
+    this._renderAccentPaletteForEngine(engineId, {
+      refreshDominant: true,
+      applyDominant: true,
+    });
 
     this.contextMenu.style.left = `${x}px`;
     this.contextMenu.style.top = `${y}px`;
@@ -912,7 +925,7 @@ class SearchBarManager extends BaseManager {
     delete this.contextMenu.dataset.engineId;
   }
 
-  setEngineAccent(engineId, rgbString) {
+  setEngineAccent(engineId, rgbString, { source = "custom" } = {}) {
     const idx = this.searches.findIndex(
       (s) => String(s.id) === String(engineId),
     );
@@ -922,6 +935,7 @@ class SearchBarManager extends BaseManager {
     this.searches[idx] = {
       ...this.searches[idx],
       accentRgb: normalized,
+      accentRgbSource: source,
     };
 
     // If this engine is selected, apply immediately.
@@ -1014,18 +1028,17 @@ class SearchBarManager extends BaseManager {
       favicon,
       cachedFavicon,
       accentRgb: null,
+      accentRgbSource: "favicon",
     };
 
     this.searches.push(entry);
     this.selectedId = entry.id;
+    await this._ensureDefaultAccentForEngine(entry);
     this.persist();
 
     this.hideAddModal();
     this.render();
     this.input?.focus();
-
-    // Best-effort: set default accent from favicon immediately after adding.
-    this._ensureDefaultAccentForEngine(entry).catch(() => {});
   }
 
   _getEngineTabElements() {
@@ -1453,6 +1466,11 @@ class SearchBarManager extends BaseManager {
       cachedFavicon,
     };
 
+    if (this.searches[idx].accentRgbSource !== "custom") {
+      this.searches[idx].accentRgb = null;
+      this.searches[idx].accentRgbSource = "favicon";
+    }
+
     // Keep selection stable
     this.selectedId = this.searches[idx].id;
     this.persist();
@@ -1460,6 +1478,7 @@ class SearchBarManager extends BaseManager {
     this.hideEditModal();
     this.render();
     this.input?.focus();
+    this._ensureDefaultAccentForEngine(this.searches[idx]).catch(() => {});
   }
 
   setPlaceholder(text) {
@@ -1491,7 +1510,7 @@ class SearchBarManager extends BaseManager {
 
   async _ensureDefaultAccentForEngine(engine) {
     if (!engine) return;
-    if (this._isValidRgbString(engine.accentRgb)) return;
+    if (engine.accentRgbSource === "custom") return;
 
     const faviconUrl =
       engine.cachedFavicon ||
@@ -1508,8 +1527,43 @@ class SearchBarManager extends BaseManager {
     const dominant = await this._getFaviconDominantRgb(faviconUrl);
     if (!dominant) return;
 
+    const normalizedDominant = this._normalizeRgbString(dominant);
+    if (
+      engine.accentRgbSource === "favicon" &&
+      this._normalizeRgbString(engine.accentRgb) === normalizedDominant
+    ) {
+      return;
+    }
+
     // Persist default accent for this engine.
-    this.setEngineAccent(engine.id, dominant);
+    this.setEngineAccent(engine.id, normalizedDominant, { source: "favicon" });
+  }
+
+  async refreshEngineFaviconForDominantColor(engine) {
+    if (!engine || !window.faviconCache) return null;
+
+    let refreshedFavicon = null;
+    try {
+      refreshedFavicon = await window.faviconCache.refreshFromGoogle(
+        engine.url,
+        "search",
+      );
+    } catch (e) {
+      refreshedFavicon = null;
+    }
+
+    if (!refreshedFavicon) return null;
+
+    engine.cachedFavicon = refreshedFavicon;
+    engine.favicon = refreshedFavicon;
+    this.persist();
+    return refreshedFavicon;
+  }
+
+  getCachedFaviconDominantRgb(faviconUrl) {
+    const key = String(faviconUrl || "");
+    if (!key) return null;
+    return this.faviconDominantCache.get(key) || null;
   }
 
   ensureSelectionInView() {
@@ -1619,20 +1673,7 @@ class SearchBarManager extends BaseManager {
     return /^chrome-extension:\/\/[^/]+\/_favicon\/\?/i.test(raw);
   }
 
-  _isGoogleFaviconServiceUrl(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return false;
-
-    try {
-      const parsed = new URL(raw);
-      return (
-        parsed.hostname === "www.google.com" &&
-        parsed.pathname === "/s2/favicons"
-      );
-    } catch (e) {
-      return false;
-    }
-  }
+  
 
   runSearch() {
     const engine = this.getSelected();
@@ -1668,8 +1709,8 @@ class SearchBarManager extends BaseManager {
     const rgb = this._normalizeRgbString(engine?.accentRgb);
     this.shell.style.setProperty("--sb-accent-rgb", rgb);
 
-    // If unset, default to dominant favicon color (best-effort).
-    if (engine && !this._isValidRgbString(engine.accentRgb)) {
+    // Keep automatic accents synced to the current favicon dominant color.
+    if (engine && engine.accentRgbSource !== "custom") {
       this._ensureDefaultAccentForEngine(engine).catch(() => {});
     }
   }
@@ -1780,9 +1821,13 @@ class SearchBarManager extends BaseManager {
     return out;
   }
 
-  async _getFaviconDominantRgb(faviconUrl) {
+  async _getFaviconDominantRgb(faviconUrl, { force = false } = {}) {
     const key = String(faviconUrl || "");
     if (!key) return null;
+
+    if (force) {
+      this.faviconDominantCache.delete(key);
+    }
 
     const cached = this.faviconDominantCache.get(key);
     if (cached) return cached;
@@ -1814,12 +1859,6 @@ class SearchBarManager extends BaseManager {
   }
 
   async _computeFaviconDominantRgb(url) {
-    // Google's favicon endpoint is display-safe as <img> but unreliable for fetch()
-    // due redirects/CORS. Skip to avoid noisy errors.
-    if (this._isGoogleFaviconServiceUrl(url)) {
-      return null;
-    }
-
     // "Hack" dominant color: draw the whole image into a 1x1 canvas.
     // We still fetch->blob->objectURL to avoid CORS/canvas taint issues.
     let blob;
@@ -1879,7 +1918,10 @@ class SearchBarManager extends BaseManager {
     }
   }
 
-  async _renderAccentPaletteForEngine(engineId) {
+  async _renderAccentPaletteForEngine(
+    engineId,
+    { refreshDominant = false, applyDominant = false } = {},
+  ) {
     if (!this.contextMenu) return;
     const paletteEl = this.contextMenu.querySelector(
       '[data-role="accent-palette"]',
@@ -1900,18 +1942,29 @@ class SearchBarManager extends BaseManager {
     const engine = this.searches.find((s) => String(s.id) === String(engineId));
     if (!engine) return;
 
-    const initialDominant = this._isValidRgbString(engine.accentRgb)
-      ? this._normalizeRgbString(engine.accentRgb)
-      : rainbow29[0] || "255, 255, 255";
+    let faviconUrl =
+      engine.cachedFavicon ||
+      engine.favicon ||
+      this.getFaviconUrlFromTemplate(engine.url);
+    const cachedDominant = this.getCachedFaviconDominantRgb(faviconUrl);
+    const initialDominant = cachedDominant || rainbow29[0] || "255, 255, 255";
     this._renderSwatches(paletteEl, [initialDominant, ...rainbow29]);
 
-    const faviconUrl =
-      engine.favicon || this.getFaviconUrlFromTemplate(engine.url);
+    if (refreshDominant) {
+      const refreshedFavicon =
+        await this.refreshEngineFaviconForDominantColor(engine);
+      if (refreshedFavicon) {
+        faviconUrl = refreshedFavicon;
+      }
+    }
+
     if (!faviconUrl) return;
 
     let dominant;
     try {
-      dominant = await this._getFaviconDominantRgb(faviconUrl);
+      dominant = await this._getFaviconDominantRgb(faviconUrl, {
+        force: refreshDominant,
+      });
     } catch (e) {
       dominant = null;
     }
@@ -1922,6 +1975,10 @@ class SearchBarManager extends BaseManager {
       return;
 
     this._renderSwatches(paletteEl, [dominant, ...rainbow29]);
+    if (applyDominant && engine.accentRgbSource !== "custom") {
+      const normalizedDominant = this._normalizeRgbString(dominant);
+      this.setEngineAccent(engine.id, normalizedDominant, { source: "favicon" });
+    }
   }
 
   _renderSwatches(paletteEl, rgbList) {
@@ -2066,7 +2123,7 @@ class SearchBarManager extends BaseManager {
         engine.cachedFavicon = cached;
         if (
           String(this.selectedId) === String(engine.id) &&
-          !this._isValidRgbString(engine.accentRgb)
+          engine.accentRgbSource !== "custom"
         ) {
           this._ensureDefaultAccentForEngine(engine).catch(() => {});
         }
