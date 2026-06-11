@@ -773,6 +773,18 @@ class QuotesManager extends BaseManager {
     return this._quoteShufflePlaylist[this._quoteShufflePlaylistIndex];
   }
 
+  getPreviousQuoteFromShufflePlaylist(quotes) {
+    this.ensureQuoteShufflePlaylist(quotes);
+    if (this._quoteShufflePlaylist.length === 0) return null;
+
+    this._quoteShufflePlaylistIndex -= 1;
+    if (this._quoteShufflePlaylistIndex < 0) {
+      this._quoteShufflePlaylistIndex = this._quoteShufflePlaylist.length - 1;
+    }
+
+    return this._quoteShufflePlaylist[this._quoteShufflePlaylistIndex];
+  }
+
   /**
    * Display random quote
    */
@@ -834,6 +846,13 @@ class QuotesManager extends BaseManager {
       if (currentIndex >= 0) {
         this._sequentialQuoteCursor = currentIndex;
       }
+    } else {
+      const quotes = this.getAvailableQuotes();
+      this.ensureQuoteShufflePlaylist(quotes);
+      const currentIndex = this._quoteShufflePlaylist.indexOf(quote);
+      if (currentIndex >= 0) {
+        this._quoteShufflePlaylistIndex = currentIndex;
+      }
     }
 
     this.animateQuote(quote);
@@ -868,6 +887,26 @@ class QuotesManager extends BaseManager {
       this.setCurrentQuote(q, { pushToHistory: false });
       return;
     }
+
+    const quotes = this.getAvailableQuotes();
+    if (quotes.length === 0) return;
+
+    if (this.quoteShuffleEnabled !== false) {
+      const q = this.getPreviousQuoteFromShufflePlaylist(quotes);
+      this.setCurrentQuote(q, { pushToHistory: true });
+      return;
+    }
+
+    const currentIndex = quotes.indexOf(this.currentQuote);
+    let previousIndex =
+      currentIndex >= 0 ? currentIndex : this._sequentialQuoteCursor;
+
+    previousIndex -= 1;
+    if (previousIndex < 0) {
+      previousIndex = quotes.length - 1;
+    }
+
+    this.setCurrentQuote(quotes[previousIndex], { pushToHistory: true });
   }
 
   showNextQuote() {
