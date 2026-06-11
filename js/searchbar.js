@@ -23,7 +23,7 @@ class SearchBarManager extends BaseManager {
     this.customColorInput = null;
     this.customColorPickerEngineId = null;
 
-    // Favicon-derived dominant color cache (1px-canvas hack)
+    // Favicon-derived dominant color cache.
     this.faviconDominantCache = new Map();
     this.faviconDominantInFlight = new Map();
 
@@ -737,6 +737,12 @@ class SearchBarManager extends BaseManager {
           })}</span>
           <span>Custom color…</span>
         </button>
+        <button class="context-menu-item context-menu-accent-dominant" type="button">
+          <span class="context-menu-icon">${this._getIcon("🎯", {
+            size: 16,
+          })}</span>
+          <span>Dominant color</span>
+        </button>
       </div>
       <div class="context-menu-divider" role="separator"></div>
       <button class="context-menu-item context-menu-delete" type="button">
@@ -802,6 +808,21 @@ class SearchBarManager extends BaseManager {
         } catch (error) {
           this.customColorInput.click();
         }
+      });
+
+    this.contextMenu
+      .querySelector(".context-menu-accent-dominant")
+      .addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const engineId = this.contextMenu?.dataset?.engineId;
+        if (!engineId) return;
+
+        await this.applyDominantAccentForEngine(engineId, {
+          force: true,
+          closeMenu: true,
+        });
       });
 
     if (this.customColorInput) {
@@ -1583,6 +1604,42 @@ class SearchBarManager extends BaseManager {
     return refreshedFavicon;
   }
 
+  async applyDominantAccentForEngine(
+    engineId,
+    { force = true, closeMenu = true } = {},
+  ) {
+    const engine = this.searches.find((s) => String(s.id) === String(engineId));
+    if (!engine) return;
+
+    this.selectEngine(engine.id);
+
+    let faviconUrl = await this.refreshEngineFaviconForDominantColor(engine);
+    if (!faviconUrl) {
+      faviconUrl =
+        engine.cachedFavicon ||
+        engine.favicon ||
+        this.getFaviconUrlFromTemplate(engine.url);
+    }
+    if (!faviconUrl) {
+      this.notify("Could not find a favicon to sample.", "error");
+      return;
+    }
+
+    const dominant = await this._getFaviconDominantRgb(faviconUrl, { force });
+    if (!dominant) {
+      this.notify("Could not read the favicon dominant color.", "error");
+      return;
+    }
+
+    const normalizedDominant = this._normalizeRgbString(dominant);
+    engine.faviconDominantRgb = normalizedDominant;
+    this.setEngineAccent(engine.id, normalizedDominant, { source: "favicon" });
+
+    if (closeMenu) {
+      this.hideContextMenu();
+    }
+  }
+
   getCachedFaviconDominantRgb(faviconUrl) {
     const key = String(faviconUrl || "");
     if (!key) return null;
@@ -1887,10 +1944,14 @@ class SearchBarManager extends BaseManager {
     return this.faviconDominantCache.get(key) || null;
   }
 
-  async _computeFaviconDominantRgb(url, { force = false } = {}) {
-    // Dominant color: sample a small grid and use the most frequent color bucket.
-    // We still fetch->blob->objectURL to avoid CORS/canvas taint issues.
+  async _createReadableFaviconSampleUrl(url, { force = false } = {}) {
     let fetchUrl = String(url || "");
+    if (!fetchUrl) return null;
+
+    if (/^(data|blob|chrome-extension):/i.test(fetchUrl)) {
+      return { url: fetchUrl, revoke: null };
+    }
+
     if (force) {
       try {
         const parsedUrl = new URL(fetchUrl);
@@ -1904,11 +1965,35 @@ class SearchBarManager extends BaseManager {
       } catch (e) {}
     }
 
+    try {
+      const resp = await fetch(fetchUrl, {
+        cache: force ? "reload" : "force-cache",
+      });
+      if (!resp.ok) return null;
+
+      const blob = await resp.blob();
+      if (!blob || blob.size <= 0) return null;
+
+      const objectUrl = URL.createObjectURL(blob);
+      return {
+        url: objectUrl,
+        revoke: () => URL.revokeObjectURL(objectUrl),
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async _computeFaviconDominantRgb(url, { force = false } = {}) {
+    // Dominant color: use fast-average-color against a readable favicon asset.
     if (typeof window.FastAverageColor !== "function") return null;
+
+    const sample = await this._createReadableFaviconSampleUrl(url, { force });
+    if (!sample?.url) return null;
 
     const fac = new FastAverageColor();
     try {
-      const color = await fac.getColorAsync(fetchUrl, {
+      const color = await fac.getColorAsync(sample.url, {
         algorithm: "dominant",
         mode: "precision",
         step: 1,
@@ -1920,7 +2005,6 @@ class SearchBarManager extends BaseManager {
           [0, 0, 0, 255, 24],
           [0, 0, 0, 0, 255],
         ],
-        crossOrigin: "anonymous",
         silent: true,
       });
       const rgb = Array.isArray(color?.rgb) ? color.rgb : color?.value;
@@ -1931,6 +2015,9 @@ class SearchBarManager extends BaseManager {
     } catch (e) {
       return null;
     } finally {
+      if (typeof sample.revoke === "function") {
+        sample.revoke();
+      }
       fac.destroy();
     }
   }

@@ -24,7 +24,7 @@
     "https://geocoding-api.open-meteo.com/*",
     "https://nominatim.openstreetmap.org/*",
     "https://www.google.com/s2/*",
-    "https://www.gstatic.com/*"
+    "https://*.gstatic.com/*"
   ],
   "background": {
     "service_worker": "js/service-worker.js"
