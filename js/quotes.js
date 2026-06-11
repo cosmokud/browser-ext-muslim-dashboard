@@ -51,6 +51,9 @@ class QuotesManager extends BaseManager {
     this.quoteAutoRotatePaused = false;
     this.quoteShuffleEnabled = true;
     this._sequentialQuoteCursor = -1;
+    this._quoteShufflePlaylist = [];
+    this._quoteShufflePlaylistIndex = -1;
+    this._quoteShufflePlaylistKey = "";
 
     // Track running animations so we can cancel cleanly
     this._activeAnimations = [];
@@ -109,6 +112,7 @@ class QuotesManager extends BaseManager {
     this.createLanguageSelectorModal();
     this.updateLanguageSelectorButton();
     this.updateQuoteControlButtons();
+    this.resetQuoteShufflePlaylist();
 
     this.displayRandomQuote();
     this.setupEventListeners();
@@ -205,6 +209,7 @@ class QuotesManager extends BaseManager {
 
     if (this.quoteShuffleEnabled) {
       this._sequentialQuoteCursor = -1;
+      this.resetQuoteShufflePlaylist();
     } else {
       const quotes = this.getAvailableQuotes();
       this._sequentialQuoteCursor = quotes.indexOf(this.currentQuote);
@@ -247,6 +252,7 @@ class QuotesManager extends BaseManager {
 
     if (this.quoteShuffleEnabled) {
       this._sequentialQuoteCursor = -1;
+      this.resetQuoteShufflePlaylist();
     } else {
       const quotes = this.getAvailableQuotes();
       this._sequentialQuoteCursor = quotes.indexOf(this.currentQuote);
@@ -715,6 +721,58 @@ class QuotesManager extends BaseManager {
     return quotes;
   }
 
+  getQuoteShufflePlaylistKey(quotes) {
+    return quotes
+      .map((quote, index) => {
+        const id = quote?.id ?? index;
+        const source = String(quote?.source || "").trim();
+        const text = this.getQuoteText(quote);
+        return `${id}:${source}:${text}`;
+      })
+      .join("\n");
+  }
+
+  resetQuoteShufflePlaylist(quotes = this.getAvailableQuotes()) {
+    this._quoteShufflePlaylist = quotes.slice();
+    this._quoteShufflePlaylistKey = this.getQuoteShufflePlaylistKey(quotes);
+    this._quoteShufflePlaylistIndex = -1;
+
+    for (let i = this._quoteShufflePlaylist.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this._quoteShufflePlaylist[i], this._quoteShufflePlaylist[j]] = [
+        this._quoteShufflePlaylist[j],
+        this._quoteShufflePlaylist[i],
+      ];
+    }
+
+    const currentIndex = this._quoteShufflePlaylist.indexOf(this.currentQuote);
+    if (currentIndex >= 0) {
+      this._quoteShufflePlaylistIndex = currentIndex;
+    }
+  }
+
+  ensureQuoteShufflePlaylist(quotes) {
+    const key = this.getQuoteShufflePlaylistKey(quotes);
+    if (
+      this._quoteShufflePlaylist.length !== quotes.length ||
+      this._quoteShufflePlaylistKey !== key
+    ) {
+      this.resetQuoteShufflePlaylist(quotes);
+    }
+  }
+
+  getNextQuoteFromShufflePlaylist(quotes) {
+    this.ensureQuoteShufflePlaylist(quotes);
+    if (this._quoteShufflePlaylist.length === 0) return null;
+
+    this._quoteShufflePlaylistIndex += 1;
+    if (this._quoteShufflePlaylistIndex >= this._quoteShufflePlaylist.length) {
+      this._quoteShufflePlaylistIndex = 0;
+    }
+
+    return this._quoteShufflePlaylist[this._quoteShufflePlaylistIndex];
+  }
+
   /**
    * Display random quote
    */
@@ -731,22 +789,11 @@ class QuotesManager extends BaseManager {
       this.currentQuote = null;
       this._quoteHistory = [];
       this._quoteHistoryIndex = -1;
+      this.resetQuoteShufflePlaylist([]);
       return;
     }
 
-    const isSameAsCurrent = (candidate) => {
-      if (!this.currentQuote || !candidate) return false;
-      if (candidate === this.currentQuote) return true;
-
-      const currentText = this.getQuoteText(this.currentQuote);
-      const candidateText = this.getQuoteText(candidate);
-      const currentSource = String(this.currentQuote?.source || "").trim();
-      const candidateSource = String(candidate?.source || "").trim();
-
-      return currentText === candidateText && currentSource === candidateSource;
-    };
-
-    // Shuffle mode: random quote; non-shuffle mode: deterministic sequential quote.
+    // Shuffle mode: page playlist; non-shuffle mode: deterministic sequential quote.
     let newQuote;
     if (quotes.length === 1) {
       newQuote = quotes[0];
@@ -766,21 +813,7 @@ class QuotesManager extends BaseManager {
       newQuote = quotes[nextIndex];
       this._sequentialQuoteCursor = nextIndex;
     } else {
-      let tries = 0;
-      const maxTries = Math.max(8, quotes.length * 2);
-
-      do {
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        newQuote = quotes[randomIndex];
-        tries += 1;
-      } while (isSameAsCurrent(newQuote) && tries < maxTries);
-
-      if (isSameAsCurrent(newQuote)) {
-        const fallback = quotes.find((quote) => !isSameAsCurrent(quote));
-        if (fallback) {
-          newQuote = fallback;
-        }
-      }
+      newQuote = this.getNextQuoteFromShufflePlaylist(quotes);
     }
 
     this.setCurrentQuote(newQuote, { pushToHistory: true });
@@ -829,24 +862,15 @@ class QuotesManager extends BaseManager {
   }
 
   showPreviousQuote() {
-    if (this.quoteShuffleEnabled !== false) {
-      this.displayRandomQuote();
-      return;
-    }
-
     if (this._quoteHistoryIndex > 0) {
       this._quoteHistoryIndex -= 1;
       const q = this._quoteHistory[this._quoteHistoryIndex];
       this.setCurrentQuote(q, { pushToHistory: false });
+      return;
     }
   }
 
   showNextQuote() {
-    if (this.quoteShuffleEnabled !== false) {
-      this.displayRandomQuote();
-      return;
-    }
-
     // If we have forward history (user went back), use it.
     if (this._quoteHistoryIndex >= 0) {
       const canForward =
@@ -859,7 +883,7 @@ class QuotesManager extends BaseManager {
       }
     }
 
-    // Otherwise, pick a new random quote and extend history.
+    // Otherwise, pick the next quote and extend history.
     this.displayRandomQuote();
   }
 
