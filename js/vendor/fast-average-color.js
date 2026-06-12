@@ -55,6 +55,16 @@
       return this._buildResult(rgba);
     }
 
+    getColorFromArray4(pixels, options = {}) {
+      const rgba =
+        options.algorithm === "dominant"
+          ? this._getDominantColor(pixels, options)
+          : this._getAverageColor(pixels, options);
+
+      if (!rgba) return null;
+      return this._buildResult(rgba);
+    }
+
     _loadResource(resource, options) {
       if (
         resource instanceof HTMLImageElement ||
@@ -112,7 +122,11 @@
         }
       });
 
-      if (!best) return options.defaultColor || DEFAULT_COLOR;
+      if (!best) {
+        return Object.prototype.hasOwnProperty.call(options, "defaultColor")
+          ? options.defaultColor
+          : DEFAULT_COLOR;
+      }
       return [
         Math.round(best.r / best.count),
         Math.round(best.g / best.count),
@@ -147,7 +161,11 @@
         a += pxA;
       }
 
-      if (!count) return options.defaultColor || DEFAULT_COLOR;
+      if (!count) {
+        return Object.prototype.hasOwnProperty.call(options, "defaultColor")
+          ? options.defaultColor
+          : DEFAULT_COLOR;
+      }
       return [
         Math.round(r / count),
         Math.round(g / count),
@@ -174,6 +192,7 @@
     }
 
     _buildResult(rgba) {
+      if (!rgba) return null;
       const r = Math.max(0, Math.min(255, Number(rgba[0]) || 0));
       const g = Math.max(0, Math.min(255, Number(rgba[1]) || 0));
       const b = Math.max(0, Math.min(255, Number(rgba[2]) || 0));

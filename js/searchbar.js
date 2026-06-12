@@ -2047,28 +2047,93 @@ class SearchBarManager extends BaseManager {
     });
   }
 
+  async _createReadableFaviconSample(url, { force = false } = {}) {
+    const sampleUrl = await this._createReadableFaviconSampleUrl(url, {
+      force,
+    });
+    if (!sampleUrl?.url) return null;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.decoding = "async";
+
+      const cleanup = () => {
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.onload = () => {
+        try {
+          const size = 64;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d", {
+            willReadFrequently: true,
+          });
+          if (!ctx) {
+            cleanup();
+            if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
+            resolve(null);
+            return;
+          }
+
+          ctx.clearRect(0, 0, size, size);
+          ctx.drawImage(img, 0, 0, size, size);
+          cleanup();
+
+          resolve({
+            ctx,
+            width: size,
+            height: size,
+            revoke: () => {
+              if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
+              canvas.width = 0;
+              canvas.height = 0;
+            },
+          });
+        } catch (e) {
+          cleanup();
+          if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
+          resolve(null);
+        }
+      };
+
+      img.onerror = () => {
+        cleanup();
+        if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
+        resolve(null);
+      };
+
+      img.src = sampleUrl.url;
+    });
+  }
+
   async _computeFaviconDominantRgb(url, { force = false } = {}) {
-    // Dominant color: use fast-average-color against a readable favicon asset.
+    // Dominant color: use fast-average-color against decoded favicon pixels.
     if (typeof window.FastAverageColor !== "function") return null;
 
-    const sample = await this._createReadableFaviconSampleUrl(url, { force });
-    if (!sample?.url) return null;
+    const sample = await this._createReadableFaviconSample(url, { force });
+    if (!sample?.ctx) return null;
 
     const fac = new FastAverageColor();
     try {
-      const color = await fac.getColorAsync(sample.url, {
+      const imageData = sample.ctx.getImageData(
+        0,
+        0,
+        sample.width,
+        sample.height,
+      );
+      const color = fac.getColorFromArray4(imageData.data, {
         algorithm: "dominant",
-        mode: "precision",
         step: 1,
-        width: 32,
-        height: 32,
-        dominantDivider: 8,
+        dominantDivider: 12,
         ignoredColor: [
-          [255, 255, 255, 255, 24],
-          [0, 0, 0, 255, 24],
+          [255, 255, 255, 255, 32],
+          [0, 0, 0, 255, 48],
           [0, 0, 0, 0, 255],
         ],
-        silent: true,
+        defaultColor: null,
       });
       const rgb = Array.isArray(color?.rgb) ? color.rgb : color?.value;
       if (!Array.isArray(rgb) || rgb.length < 3) return null;

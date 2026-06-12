@@ -850,6 +850,12 @@ class MuslimDashboard {
     // Initialize search bar (synchronous - uses localStorage)
     this.searchBar = new SearchBarManager(this.storage);
 
+    if (window.faviconCache?.initializeAll) {
+      window.faviconCache
+        .initializeAll(this.pinnedApps.apps, this.searchBar.searches)
+        .catch(() => {});
+    }
+
     // Initialize calendar (synchronous - uses localStorage)
     this.calendar = new CalendarManager(this.storage, this.hijri);
     this.calendar.init();

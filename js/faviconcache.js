@@ -14,6 +14,7 @@ class FaviconCacheManager {
   static DB_VERSION = 1;
   static STORE_NAME = "favicons";
   static MAX_SIZE = 256; // Maximum dimension for stored favicons
+  static LOCAL_STORAGE_PREFIX = "muslim-dashboard:favicon:";
 
   constructor() {
     this.db = null;
@@ -80,6 +81,52 @@ class FaviconCacheManager {
     return `${type}:${sanitized}`;
   }
 
+  _getLocalStorageKey(cacheKey) {
+    return `${FaviconCacheManager.LOCAL_STORAGE_PREFIX}${cacheKey}`;
+  }
+
+  _isOfflineCacheableDataUrl(dataUrl) {
+    return /^data:image\//i.test(String(dataUrl || ""));
+  }
+
+  _getLocalStorageCached(cacheKey) {
+    try {
+      const raw = localStorage.getItem(this._getLocalStorageKey(cacheKey));
+      if (!raw) return null;
+
+      const record = JSON.parse(raw);
+      if (!this._isOfflineCacheableDataUrl(record?.dataUrl)) return null;
+      return record;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  _setLocalStorageCached(cacheKey, record) {
+    try {
+      if (!this._isOfflineCacheableDataUrl(record?.dataUrl)) return false;
+      localStorage.setItem(
+        this._getLocalStorageKey(cacheKey),
+        JSON.stringify(record),
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  _clearLocalStorageCache() {
+    try {
+      const prefix = FaviconCacheManager.LOCAL_STORAGE_PREFIX;
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(prefix)) keys.push(key);
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+    } catch (e) {}
+  }
+
   /**
    * Normalize URL inputs for cache lookups and favicon service requests.
    */
@@ -113,9 +160,9 @@ class FaviconCacheManager {
    * @returns {Promise<string|null>} - Cached favicon URL string or null
    */
   async getCached(url, type = "pinned") {
+    const key = this._getCacheKey(url, type);
     try {
       const db = await this._ensureDB();
-      const key = this._getCacheKey(url, type);
 
       return new Promise((resolve) => {
         const transaction = db.transaction(
@@ -130,7 +177,12 @@ class FaviconCacheManager {
           if (result && result.dataUrl) {
             resolve(result.dataUrl);
           } else {
-            resolve(null);
+            const localRecord = this._getLocalStorageCached(key);
+            if (localRecord?.dataUrl) {
+              resolve(localRecord.dataUrl);
+            } else {
+              resolve(null);
+            }
           }
         };
 
@@ -144,7 +196,8 @@ class FaviconCacheManager {
       });
     } catch (e) {
       console.warn("FaviconCache: getCached error", e);
-      return null;
+      const localRecord = this._getLocalStorageCached(key);
+      return localRecord?.dataUrl || null;
     }
   }
 
@@ -176,6 +229,7 @@ class FaviconCacheManager {
           timestamp: Date.now(),
         };
 
+        this._setLocalStorageCached(key, record);
         const request = store.put(record);
 
         request.onsuccess = () => resolve(true);
@@ -290,10 +344,12 @@ class FaviconCacheManager {
         }
       }
     } catch (e) {
-      // Fall back to the display-safe Google favicon URL below.
+      // Fall through to stored data URL or display-safe Google URL below.
     }
 
-    await this.setCached(url, faviconUrl, type, false);
+    const fallbackCached = await this.getCached(url, type);
+    if (fallbackCached) return fallbackCached;
+
     this.sessionFetched.add(cacheKey);
     return faviconUrl;
   }
@@ -571,6 +627,7 @@ class FaviconCacheManager {
 
         request.onsuccess = () => {
           this.sessionFetched.clear();
+          this._clearLocalStorageCache();
           resolve(true);
         };
 
@@ -581,6 +638,7 @@ class FaviconCacheManager {
       });
     } catch (e) {
       console.warn("FaviconCache: clearAll error", e);
+      this._clearLocalStorageCache();
       return false;
     }
   }
