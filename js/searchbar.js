@@ -26,6 +26,7 @@ class SearchBarManager extends BaseManager {
     // Favicon-derived dominant color cache.
     this.faviconDominantCache = new Map();
     this.faviconDominantInFlight = new Map();
+    this.faviconDominantFailureReason = null;
 
     // Drag state (reorder engines, Pinned Apps-style)
     this.draggedEngine = null;
@@ -1627,7 +1628,11 @@ class SearchBarManager extends BaseManager {
 
     const dominant = await this._getFaviconDominantRgb(faviconUrl, { force });
     if (!dominant) {
-      this.notify("Could not read the favicon dominant color.", "error");
+      this.notify(
+        this.faviconDominantFailureReason ||
+          "Could not read the favicon dominant color.",
+        "error",
+      );
       return;
     }
 
@@ -1644,6 +1649,11 @@ class SearchBarManager extends BaseManager {
     const key = String(faviconUrl || "");
     if (!key) return null;
     return this.faviconDominantCache.get(key) || null;
+  }
+
+  _setFaviconDominantFailure(message) {
+    this.faviconDominantFailureReason = String(message || "");
+    return null;
   }
 
   ensureSelectionInView() {
@@ -1909,7 +1919,12 @@ class SearchBarManager extends BaseManager {
 
   async _getFaviconDominantRgb(faviconUrl, { force = false } = {}) {
     const key = String(faviconUrl || "");
-    if (!key) return null;
+    this.faviconDominantFailureReason = null;
+    if (!key) {
+      return this._setFaviconDominantFailure(
+        "Favicon dominant color failed: no favicon URL was available.",
+      );
+    }
 
     if (force) {
       this.faviconDominantCache.delete(key);
@@ -1946,7 +1961,11 @@ class SearchBarManager extends BaseManager {
 
   async _createReadableFaviconSampleUrl(url, { force = false } = {}) {
     let fetchUrl = String(url || "");
-    if (!fetchUrl) return null;
+    if (!fetchUrl) {
+      return this._setFaviconDominantFailure(
+        "Favicon dominant color failed: no favicon URL was available.",
+      );
+    }
 
     if (/^(data|blob|chrome-extension):/i.test(fetchUrl)) {
       return this._normalizeFaviconSampleToPngUrl(fetchUrl);
@@ -1969,10 +1988,18 @@ class SearchBarManager extends BaseManager {
       const resp = await fetch(fetchUrl, {
         cache: force ? "reload" : "force-cache",
       });
-      if (!resp.ok) return null;
+      if (!resp.ok) {
+        return this._setFaviconDominantFailure(
+          `Favicon dominant color failed: favicon fetch returned HTTP ${resp.status}.`,
+        );
+      }
 
       const blob = await resp.blob();
-      if (!blob || blob.size <= 0) return null;
+      if (!blob || blob.size <= 0) {
+        return this._setFaviconDominantFailure(
+          "Favicon dominant color failed: favicon fetch returned an empty image.",
+        );
+      }
 
       const objectUrl = URL.createObjectURL(blob);
       const sample = await this._normalizeFaviconSampleToPngUrl(objectUrl);
@@ -1984,7 +2011,9 @@ class SearchBarManager extends BaseManager {
         },
       };
     } catch (e) {
-      return null;
+      return this._setFaviconDominantFailure(
+        "Favicon dominant color failed: favicon fetch failed.",
+      );
     }
   }
 
@@ -2009,7 +2038,11 @@ class SearchBarManager extends BaseManager {
           });
           if (!ctx) {
             cleanup();
-            resolve(null);
+            resolve(
+              this._setFaviconDominantFailure(
+                "Favicon dominant color failed: canvas is unavailable.",
+              ),
+            );
             return;
           }
 
@@ -2020,7 +2053,11 @@ class SearchBarManager extends BaseManager {
             (pngBlob) => {
               cleanup();
               if (!pngBlob || pngBlob.size <= 0) {
-                resolve(null);
+                resolve(
+                  this._setFaviconDominantFailure(
+                    "Favicon dominant color failed: canvas PNG export failed.",
+                  ),
+                );
                 return;
               }
 
@@ -2034,13 +2071,21 @@ class SearchBarManager extends BaseManager {
           );
         } catch (e) {
           cleanup();
-          resolve(null);
+          resolve(
+            this._setFaviconDominantFailure(
+              "Favicon dominant color failed: favicon image draw failed.",
+            ),
+          );
         }
       };
 
       img.onerror = () => {
         cleanup();
-        resolve(null);
+        resolve(
+          this._setFaviconDominantFailure(
+            "Favicon dominant color failed: favicon image decode failed.",
+          ),
+        );
       };
 
       img.src = sourceUrl;
@@ -2051,7 +2096,14 @@ class SearchBarManager extends BaseManager {
     const sampleUrl = await this._createReadableFaviconSampleUrl(url, {
       force,
     });
-    if (!sampleUrl?.url) return null;
+    if (!sampleUrl?.url) {
+      if (!this.faviconDominantFailureReason) {
+        this._setFaviconDominantFailure(
+          "Favicon dominant color failed: favicon image decode failed.",
+        );
+      }
+      return null;
+    }
 
     return new Promise((resolve) => {
       const img = new Image();
@@ -2074,7 +2126,11 @@ class SearchBarManager extends BaseManager {
           if (!ctx) {
             cleanup();
             if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
-            resolve(null);
+            resolve(
+              this._setFaviconDominantFailure(
+                "Favicon dominant color failed: canvas is unavailable.",
+              ),
+            );
             return;
           }
 
@@ -2095,14 +2151,22 @@ class SearchBarManager extends BaseManager {
         } catch (e) {
           cleanup();
           if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
-          resolve(null);
+          resolve(
+            this._setFaviconDominantFailure(
+              "Favicon dominant color failed: favicon image draw failed.",
+            ),
+          );
         }
       };
 
       img.onerror = () => {
         cleanup();
         if (typeof sampleUrl.revoke === "function") sampleUrl.revoke();
-        resolve(null);
+        resolve(
+          this._setFaviconDominantFailure(
+            "Favicon dominant color failed: favicon image decode failed.",
+          ),
+        );
       };
 
       img.src = sampleUrl.url;
@@ -2110,43 +2174,78 @@ class SearchBarManager extends BaseManager {
   }
 
   async _computeFaviconDominantRgb(url, { force = false } = {}) {
-    // Dominant color: use fast-average-color against decoded favicon pixels.
-    if (typeof window.FastAverageColor !== "function") return null;
+    // Dominant color: use Color Thief against decoded favicon pixels.
+    if (typeof window.ColorThief?.getColorSync !== "function") {
+      return this._setFaviconDominantFailure(
+        "Favicon dominant color failed: Color Thief is not loaded.",
+      );
+    }
 
     const sample = await this._createReadableFaviconSample(url, { force });
-    if (!sample?.ctx) return null;
+    if (!sample?.ctx) {
+      if (!this.faviconDominantFailureReason) {
+        this._setFaviconDominantFailure(
+          "Favicon dominant color failed: favicon image decode failed.",
+        );
+      }
+      return null;
+    }
 
-    const fac = new FastAverageColor();
     try {
-      const imageData = sample.ctx.getImageData(
-        0,
-        0,
-        sample.width,
-        sample.height,
-      );
-      const color = fac.getColorFromArray4(imageData.data, {
-        algorithm: "dominant",
-        step: 1,
-        dominantDivider: 12,
-        ignoredColor: [
-          [255, 255, 255, 255, 32],
-          [0, 0, 0, 255, 48],
-          [0, 0, 0, 0, 255],
-        ],
-        defaultColor: null,
-      });
-      const rgb = Array.isArray(color?.rgb) ? color.rgb : color?.value;
-      if (!Array.isArray(rgb) || rgb.length < 3) return null;
+      let imageData = null;
+      try {
+        imageData = sample.ctx.getImageData(
+          0,
+          0,
+          sample.width,
+          sample.height,
+        );
+      } catch (e) {
+        return this._setFaviconDominantFailure(
+          "Favicon dominant color failed: canvas pixel read failed.",
+        );
+      }
+
+      let color = null;
+      try {
+        color = ColorThief.getColorSync(imageData, {
+          colorCount: 8,
+          quality: 1,
+          ignoredColor: [
+            [255, 255, 255, 255, 32],
+            [0, 0, 0, 255, 48],
+            [0, 0, 0, 0, 255],
+          ],
+          defaultColor: null,
+        });
+      } catch (e) {
+        return this._setFaviconDominantFailure(
+          "Favicon dominant color failed: color extractor failed.",
+        );
+      }
+
+      const rgb =
+        typeof color?.array === "function"
+          ? color.array()
+          : Array.isArray(color)
+            ? color
+            : null;
+      if (!Array.isArray(rgb) || rgb.length < 3) {
+        return this._setFaviconDominantFailure(
+          "Favicon dominant color failed: no usable color found after filtering favicon pixels.",
+        );
+      }
       return `${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(
         rgb[2],
       )}`;
     } catch (e) {
-      return null;
+      return this._setFaviconDominantFailure(
+        "Favicon dominant color failed: unexpected color scan error.",
+      );
     } finally {
       if (typeof sample.revoke === "function") {
         sample.revoke();
       }
-      fac.destroy();
     }
   }
 
