@@ -2174,13 +2174,6 @@ class SearchBarManager extends BaseManager {
   }
 
   async _computeFaviconDominantRgb(url, { force = false } = {}) {
-    // Dominant color: use Color Thief against decoded favicon pixels.
-    if (typeof window.ColorThief?.getColorSync !== "function") {
-      return this._setFaviconDominantFailure(
-        "Favicon dominant color failed: Color Thief is not loaded.",
-      );
-    }
-
     const sample = await this._createReadableFaviconSample(url, { force });
     if (!sample?.ctx) {
       if (!this.faviconDominantFailureReason) {
@@ -2206,33 +2199,10 @@ class SearchBarManager extends BaseManager {
         );
       }
 
-      let color = null;
-      try {
-        color = ColorThief.getColorSync(imageData, {
-          colorCount: 8,
-          quality: 1,
-          ignoredColor: [
-            [255, 255, 255, 255, 32],
-            [0, 0, 0, 255, 48],
-            [0, 0, 0, 0, 255],
-          ],
-          defaultColor: null,
-        });
-      } catch (e) {
-        return this._setFaviconDominantFailure(
-          "Favicon dominant color failed: color extractor failed.",
-        );
-      }
-
-      const rgb =
-        typeof color?.array === "function"
-          ? color.array()
-          : Array.isArray(color)
-            ? color
-            : null;
+      const rgb = this._getDominantFaviconRgbFromImageData(imageData);
       if (!Array.isArray(rgb) || rgb.length < 3) {
         return this._setFaviconDominantFailure(
-          "Favicon dominant color failed: no usable color found after filtering favicon pixels.",
+          "Favicon dominant color failed: favicon has no visible pixels.",
         );
       }
       return `${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(
@@ -2247,6 +2217,111 @@ class SearchBarManager extends BaseManager {
         sample.revoke();
       }
     }
+  }
+
+  _getDominantFaviconRgbFromImageData(imageData) {
+    const pixels = imageData?.data;
+    if (!pixels || pixels.length < 4) return null;
+
+    return (
+      this._pickDominantFaviconRgb(pixels, {
+        ignoreNearWhite: true,
+        ignoreNearBlack: true,
+        minAlpha: 24,
+      }) ||
+      this._pickDominantFaviconRgb(pixels, {
+        ignoreNearWhite: false,
+        ignoreNearBlack: false,
+        minAlpha: 24,
+      }) ||
+      this._pickDominantFaviconRgb(pixels, {
+        ignoreNearWhite: false,
+        ignoreNearBlack: false,
+        minAlpha: 1,
+      })
+    );
+  }
+
+  _pickDominantFaviconRgb(
+    pixels,
+    {
+      ignoreNearWhite = true,
+      ignoreNearBlack = true,
+      minAlpha = 24,
+      divider = 16,
+    } = {},
+  ) {
+    const buckets = new Map();
+    const step = 4;
+
+    for (let i = 0; i < pixels.length; i += step) {
+      const r = Number(pixels[i]) || 0;
+      const g = Number(pixels[i + 1]) || 0;
+      const b = Number(pixels[i + 2]) || 0;
+      const a = Number(pixels[i + 3]) || 0;
+      if (a < minAlpha) {
+        continue;
+      }
+      if (ignoreNearWhite && this._isNearWhiteRgb(r, g, b)) {
+        continue;
+      }
+      if (ignoreNearBlack && this._isNearBlackRgb(r, g, b)) {
+        continue;
+      }
+
+      const bucketKey = [
+        Math.round(r / divider),
+        Math.round(g / divider),
+        Math.round(b / divider),
+      ].join(",");
+      const alphaWeight = Math.max(0.05, a / 255);
+      const bucket = buckets.get(bucketKey) || {
+        weight: 0,
+        r: 0,
+        g: 0,
+        b: 0,
+      };
+      bucket.weight += alphaWeight;
+      bucket.r += r * alphaWeight;
+      bucket.g += g * alphaWeight;
+      bucket.b += b * alphaWeight;
+      buckets.set(bucketKey, bucket);
+    }
+
+    let best = null;
+    for (const bucket of buckets.values()) {
+      const rgb = [
+        Math.round(bucket.r / bucket.weight),
+        Math.round(bucket.g / bucket.weight),
+        Math.round(bucket.b / bucket.weight),
+      ];
+      const score = bucket.weight * (0.72 + this._getRgbSaturation(rgb) * 0.8);
+      if (!best || score > best.score) {
+        best = { rgb, score };
+      }
+    }
+
+    return best?.rgb || null;
+  }
+
+  _isNearWhiteRgb(r, g, b) {
+    return r >= 244 && g >= 244 && b >= 244 && Math.max(r, g, b) - Math.min(r, g, b) <= 18;
+  }
+
+  _isNearBlackRgb(r, g, b) {
+    return r <= 42 && g <= 42 && b <= 42;
+  }
+
+  _getRgbSaturation(rgb) {
+    const r = rgb[0] / 255;
+    const g = rgb[1] / 255;
+    const b = rgb[2] / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    if (max === min) return 0;
+    const lightness = (max + min) / 2;
+    const delta = max - min;
+    return delta / (1 - Math.abs(2 * lightness - 1));
   }
 
   async _renderAccentPaletteForEngine(
