@@ -45,6 +45,7 @@ The project targets Chromium-based browsers with Manifest V3.
 - Flashcards with bundled datasets (including 99 Names) and custom-set workflows.
 - Flashcard study controls: flip, jump-to-index, autoplay, quiz/study behavior, and Arabic font scaling.
 - CSV import/export for custom flashcard sets.
+- Quotes module with deterministic cycling or shuffle playlists, previous/next navigation, and typography controls.
 - To-Do list with create/read/update/delete, filters, pagination, and clear-completed actions.
 - Notes module with rich-text editing, markdown-oriented workflows, list and checklist support, table actions, link/image insertion, and undo/redo.
 - Sticky notes support for lightweight freeform note capture.
@@ -52,9 +53,9 @@ The project targets Chromium-based browsers with Manifest V3.
 ### Personalization and layout
 
 - Dynamic backgrounds with category and rotation configuration.
-- Theme system with palette controls, glass/blur tuning, component opacity, and color customization.
-- Optional background-aware font colors adapt dashboard text contrast as background visuals change.
-- Header Quick Controls include per-item surface, text color, glow color, and reset controls.
+- Theme system with palette controls, glass/blur tuning, main-grid and modal opacity control, and color customization.
+- Header Quick Controls include per-item visibility, surface, whole-component surface, text color, glow color, and reset controls.
+- Settings visual preview and save-state feedback help validate theme changes more clearly.
 - Content typography settings now include Arabic and translation font pickers for Quotes, Flashcards, Hadith, and Adhkar, with preview samples.
 - Icon theme system for dashboard icon styling.
 - Card-level blur/glass controls for selected modules.
@@ -66,8 +67,8 @@ The project targets Chromium-based browsers with Manifest V3.
 
 ### Navigation and discovery
 
-- Pinned Apps strip with add/edit/remove, favicon handling, and reorder support.
-- Search Bar with configurable engines and custom engine management.
+- Pinned Apps strip with add/edit/remove, cached favicon handling, and reorder support.
+- Search Bar with configurable engines, custom engine management, and favicon-derived accent colors.
 - Unified content search across quotes, adhkar, hadith, notes, and todo content.
 
 ### Accessibility and UX

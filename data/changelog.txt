@@ -1,18 +1,22 @@
-## [0.1.11] - 2026-05-31
+## [0.1.11] - 2026-06-16
 
 ### Highlights
 
 - Pocket Quran recitation can now highlight synchronized words during playback, with Tajweed-aware rendering, ayah markers, a reciter toggle, and adjustable timing delay.
 - Monday and Thursday fasting countdowns now show their upcoming Hijri dates.
-- Header Quick Controls now include per-item text colors and reset actions.
-- Optional background-aware font colors improve text readability as dashboard visuals change.
+- Header Quick Controls now include per-item text colors, reset actions, and a whole-component surface toggle.
+- Theme settings now include modal opacity control for modal panels.
+- Quotes now support shuffle playlists with previous navigation in shuffle mode.
+- Search engines can now derive accent colors from cached favicons.
 - Pinned Apps drag-and-drop now handles responsive rows and boundaries more reliably.
 
 ### Other Improvements
 
 - Added Settings preview and save-state feedback.
-- Refined theme-aware styling across dashboard controls.
+- Refined theme-aware styling across dashboard controls, quotes, search results, notes focus states, and Pocket Quran actions.
 - Reduced repeated theme, icon, and clock update work for smoother dashboard rendering.
+- Replaced vendor-based favicon color sampling with the built-in favicon extractor pipeline.
+- Removed the background-aware font-color toggle from the final `0.1.11` settings surface.
 
 ## [0.1.10] - 2026-05-25
 

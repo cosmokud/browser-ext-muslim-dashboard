@@ -1,25 +1,31 @@
-## [0.1.11] - 2026-05-31
+## [0.1.11] - 2026-06-16
 
 ### What is New
 
 - Added synchronized Pocket Quran recitation word highlighting during playback, with Tajweed-aware Arabic clustering, ayah number markers, reciter-level enablement, and an adjustable timing delay from `-10000ms` to `10000ms`.
 - Added upcoming Hijri date labels to Monday and Thursday fasting countdowns.
-- Added per-item header text color controls with reset actions alongside the existing surface and glow controls.
-- Added optional background-aware dashboard font colors that recompute readable text contrast when background visuals change.
+- Added per-item header text color controls with reset actions plus a `Whole Component Surface` toggle for Header Quick Controls.
+- Added modal opacity control so settings can tune modal panels independently from the main dashboard surfaces.
+- Added quote shuffle playlists with previous-quote support while shuffle mode is enabled.
+- Added favicon-derived accent colors for custom search engines, with persisted accent-source selection and cached dominant-color reuse.
 
 ### Bug Fixes
 
-- Improved Pocket Quran word normalization and Tajweed marker handling so recitation highlighting follows rendered Arabic text more reliably.
+- Improved Pocket Quran word normalization, Tajweed marker handling, and ayah-marker rendering so recitation highlighting follows rendered Arabic text more reliably.
 - Prevented Pinned Apps drag-and-drop from placing items outside the container or outside valid rows.
 - Improved Pinned Apps placement for sparse rows and responsive layouts while preserving item order.
+- Normalized favicon samples to PNG and cached per-site favicon data to make search-engine accent extraction more consistent across refreshes.
 
 ### Other Improvements
 
 - Added Settings visual preview and save-state feedback.
-- Refined FAB menu, Pocket Quran, Todo, Flashcards, Notes, prayer controls, inputs, and light-theme button states for more consistent theme-aware hover, active, and highlight styling.
-- Updated theme application for sidebar and main-grid component opacity behavior.
-- Batched background-aware theme refreshes and dynamic icon replacements per animation frame to reduce repeated style and DOM work.
+- Refined FAB menu, Pocket Quran, Todo, Flashcards, Quotes, Notes, prayer controls, inputs, search results, and light-theme button states for more consistent theme-aware hover, active, focus, and highlight styling.
+- Updated theme application for sidebar and main-grid component opacity behavior, and tuned modal panel opacity defaults for more consistent overlay contrast.
+- Batched theme and dynamic icon refreshes per animation frame to reduce repeated style and DOM work.
 - Reduced clock tick work by reusing the current settings snapshot and skipping unchanged clock and next-prayer DOM writes.
+- Updated Search Bar accent styling to use shared `--sb-accent-rgb` values and prefer cached favicon data when available.
+- Replaced vendor-based favicon color sampling with the local favicon extractor pipeline.
+- Removed the background-aware font-color toggle from the final `0.1.11` settings surface.
 - Removed tracked developer-only Serena metadata and replaced local workspace paths in ignored workflow notes with relative references.
 - Updated extension version references to 0.1.11 across runtime metadata and project documentation.
 
