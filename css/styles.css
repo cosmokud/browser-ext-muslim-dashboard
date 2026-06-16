@@ -2994,6 +2994,14 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   min-height: 320px;
   max-height: 65vh;
   overflow: visible;
+  transition: all var(--transition-fast);
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow:focus-within {
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip {
@@ -3183,6 +3191,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
+.notes-editor.notes-editor-quill.ql-container.ql-snow:focus-within .ql-editor {
+  color: var(--on-primary-text);
+}
+
 .notes-editor.notes-editor-quill .ql-editor::-webkit-scrollbar {
   width: var(--scrollbar-size-thin);
   height: var(--scrollbar-size-thin);
@@ -3202,6 +3214,11 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .notes-editor.notes-editor-quill .ql-editor.ql-blank::before {
   color: color-mix(in srgb, var(--text-primary) 56%, transparent 44%);
   font-style: normal;
+}
+
+.notes-editor.notes-editor-quill.ql-container.ql-snow:focus-within
+  .ql-editor.ql-blank::before {
+  color: color-mix(in srgb, var(--on-primary-text) 72%, transparent 28%);
 }
 
 .notes-editor.notes-editor-quill .ql-editor h1,
