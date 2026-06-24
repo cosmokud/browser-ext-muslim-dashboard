@@ -851,7 +851,13 @@ class GridLayoutManager {
     // Focus mode and main layout keep separate edit-mode state.
     const settings = this.storage.getSettings();
     const editModeStorageKey = this.getEditModeStorageKey();
-    this.isEditModeEnabled = settings[editModeStorageKey] === true;
+    if (this.isQuranFocusModeContext) {
+      settings[editModeStorageKey] = false;
+      this.storage.saveSettings(settings);
+      this.isEditModeEnabled = false;
+    } else {
+      this.isEditModeEnabled = settings[editModeStorageKey] === true;
+    }
 
     const toggleBtn = document.getElementById("layoutEditBtn");
     this.updateEditModeUI(toggleBtn);
