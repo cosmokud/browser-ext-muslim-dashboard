@@ -14823,6 +14823,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
 }
 
+.card-blur-menu .card-blur-btn:hover:not(:disabled),
+.card-blur-menu.blur-menu-open .card-blur-btn:hover:not(:disabled) {
+  background: var(--action-btn-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--action-btn-shadow-hover);
+  transform: translateY(-1px);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    BLUR SETTINGS POPUP
    ═══════════════════════════════════════════════════════════════════════════ */
