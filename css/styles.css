@@ -12144,6 +12144,17 @@ body.sticky-note-resizing {
 }
 
 .fab-menu.open :is(
+  .layout-edit-btn.active:hover,
+  .layout-edit-btn[aria-pressed="true"]:not(.is-locked):hover
+) {
+  animation: none !important;
+  background: var(--theme-highlight-bg-hover) !important;
+  border-color: var(--theme-highlight-border) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow: var(--theme-highlight-shadow) !important;
+}
+
+.fab-menu.open :is(
   .quran-focus-btn.active,
   .quran-focus-btn[aria-pressed="true"]
 ) {
