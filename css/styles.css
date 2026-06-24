@@ -17011,10 +17011,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-btn.pq-play-pause-btn {
   width: 44px;
   height: 44px;
-  background: var(--theme-highlight-active-bg);
-  color: var(--on-primary-text);
-  border-color: var(--theme-highlight-border);
-  box-shadow: var(--theme-highlight-shadow);
 }
 
 .pq-recitation-btn.pq-play-pause-btn:hover {
