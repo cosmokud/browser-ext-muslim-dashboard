@@ -12122,6 +12122,69 @@ body.sticky-note-resizing {
   box-shadow: var(--theme-highlight-shadow) !important;
 }
 
+.fab-menu.open :is(
+  .layout-edit-btn.active,
+  .layout-edit-btn[aria-pressed="true"]:not(.is-locked)
+) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 88%, transparent),
+    color-mix(in srgb, var(--primary-color) 94%, transparent)
+  ) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 90%,
+    var(--on-primary-text) 10%
+  ) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--primary-light) 34%, transparent),
+    0 10px 24px color-mix(in srgb, var(--primary-dark) 44%, transparent) !important;
+}
+
+.fab-menu.open :is(
+  .quran-focus-btn.active,
+  .quran-focus-btn[aria-pressed="true"]
+) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 88%, transparent),
+    color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%)
+  ) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--accent-bg) 78%,
+    var(--on-primary-text) 22%
+  ) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--accent-bg) 34%, transparent),
+    0 10px 24px color-mix(in srgb, var(--primary-dark) 44%, transparent) !important;
+}
+
+.fab-menu.open :is(
+  .sticky-note-toggle-btn[aria-pressed="true"],
+  .sticky-note-toggle-btn[data-sticky-notes-state="visible"]
+) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 88%, transparent),
+    color-mix(in srgb, var(--accent-bg) 58%, var(--primary-color) 42%)
+  ) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--accent-bg) 76%,
+    var(--on-primary-text) 24%
+  ) !important;
+  color: var(--on-primary-text) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--accent-bg) 32%, transparent),
+    0 10px 24px color-mix(in srgb, var(--primary-dark) 44%, transparent) !important;
+}
+
 /* ========================================
    LUNAR PHASE CARD
    ======================================== */
