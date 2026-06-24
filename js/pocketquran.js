@@ -5941,7 +5941,9 @@ class PocketQuranManager extends BaseManager {
         <button type="button" class="pq-recitation-btn pq-prev-btn" title="Previous ayah">
           <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
         </button>
-        <button type="button" class="pq-recitation-btn pq-play-pause-btn" title="Play/Pause">
+        <button type="button" class="pq-recitation-btn pq-play-pause-btn ${
+          this._isPlaying ? "active" : ""
+        }" title="Play/Pause" aria-pressed="${this._isPlaying ? "true" : "false"}">
           ${
             this._isPlaying
               ? '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
@@ -6160,6 +6162,11 @@ class PocketQuranManager extends BaseManager {
         playPauseBtn.innerHTML = this._isPlaying
           ? '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
           : '<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+        playPauseBtn.classList.toggle("active", this._isPlaying);
+        playPauseBtn.setAttribute(
+          "aria-pressed",
+          this._isPlaying ? "true" : "false",
+        );
       }
 
       const loopAyahBtn =
