@@ -5047,7 +5047,7 @@ textarea.notes-editor:focus {
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--primary-dark) 84%, transparent),
-    color-mix(in srgb, var(--primary-color) 88%, transparent)
+    color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%)
   );
   border-color: color-mix(
     in srgb,
@@ -12129,7 +12129,7 @@ body.sticky-note-resizing {
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--primary-dark) 88%, transparent),
-    color-mix(in srgb, var(--primary-color) 94%, transparent)
+    color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%)
   ) !important;
   border-color: color-mix(
     in srgb,
