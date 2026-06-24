@@ -5044,11 +5044,21 @@ textarea.notes-editor:focus {
 }
 
 .layout-edit-btn.active {
-  background: color-mix(in srgb, var(--primary-color) 18%, transparent);
-  border-color: color-mix(in srgb, var(--primary-light) 52%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 84%, transparent),
+    color-mix(in srgb, var(--primary-color) 88%, transparent)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 82%,
+    var(--on-primary-text) 18%
+  );
+  color: var(--on-primary-text);
   box-shadow:
-    0 4px 16px color-mix(in srgb, var(--primary-color) 42%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--primary-light) 28%, transparent),
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   animation: layoutEditPulse 2s ease-in-out infinite;
 }
 
@@ -5056,13 +5066,17 @@ textarea.notes-editor:focus {
   0%,
   100% {
     box-shadow:
-      0 4px 16px color-mix(in srgb, var(--primary-color) 42%, transparent),
-      0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent);
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--primary-light) 28%, transparent),
+      0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   }
   50% {
     box-shadow:
-      0 4px 24px color-mix(in srgb, var(--primary-color) 58%, transparent),
-      0 0 0 4px color-mix(in srgb, var(--primary-light) 30%, transparent);
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+      0 0 0 5px color-mix(in srgb, var(--primary-light) 24%, transparent),
+      0 10px 24px color-mix(in srgb, var(--primary-dark) 42%, transparent);
   }
 }
 
@@ -5095,11 +5109,11 @@ textarea.notes-editor:focus {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #2e7d32, #4caf50);
-  border: 1px solid rgba(99, 190, 104, 0.28);
+  background: var(--glass-bg-subtle);
+  border: 1px solid color-mix(in srgb, var(--primary-light) 30%, var(--glass-border));
   color: var(--text-primary);
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--primary-dark) 22%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5113,16 +5127,29 @@ textarea.notes-editor:focus {
 
 .quran-focus-btn:hover {
   transform: scale(1.06);
-  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.5);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .quran-focus-btn.active {
-  background: linear-gradient(135deg, #3f8f44, #63be68);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 84%, transparent),
+    color-mix(in srgb, var(--accent-bg) 64%, var(--primary-color) 36%)
+  );
   border-width: 2px;
-  border-color: rgba(195, 252, 204, 0.9);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-bg) 72%,
+    var(--on-primary-text) 28%
+  );
+  color: var(--on-primary-text);
   box-shadow:
-    0 4px 16px rgba(63, 143, 68, 0.48),
-    0 0 0 2px rgba(99, 190, 104, 0.24);
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--accent-bg) 30%, transparent),
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   animation: quranFocusPulse 2s ease-in-out infinite;
 }
 
@@ -5130,18 +5157,22 @@ textarea.notes-editor:focus {
   0%,
   100% {
     box-shadow:
-      0 4px 16px rgba(63, 143, 68, 0.48),
-      0 0 0 2px rgba(99, 190, 104, 0.24);
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--accent-bg) 30%, transparent),
+      0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
   }
   50% {
     box-shadow:
-      0 4px 24px rgba(63, 143, 68, 0.62),
-      0 0 0 4px rgba(99, 190, 104, 0.26);
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--on-primary-text) 22%, transparent),
+      0 0 0 5px color-mix(in srgb, var(--accent-bg) 26%, transparent),
+      0 10px 24px color-mix(in srgb, var(--primary-dark) 42%, transparent);
   }
 }
 
 .quran-focus-btn:focus-visible {
-  outline: 2px solid #63be68;
+  outline: 2px solid color-mix(in srgb, var(--accent-bg) 70%, var(--primary-light) 30%);
   outline-offset: 3px;
 }
 
