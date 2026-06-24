@@ -5057,9 +5057,9 @@ textarea.notes-editor:focus {
   color: var(--on-primary-text);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--primary-light) 28%, transparent),
-    0 8px 18px color-mix(in srgb, var(--primary-dark) 36%, transparent);
-  animation: layoutEditPulse 2s ease-in-out infinite;
+    0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent),
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent);
+  animation: none;
 }
 
 @keyframes layoutEditPulse {
@@ -12138,20 +12138,10 @@ body.sticky-note-resizing {
   ) !important;
   color: var(--on-primary-text) !important;
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--primary-light) 34%, transparent),
-    0 10px 24px color-mix(in srgb, var(--primary-dark) 44%, transparent) !important;
-}
-
-.fab-menu.open :is(
-  .layout-edit-btn.active:hover,
-  .layout-edit-btn[aria-pressed="true"]:not(.is-locked):hover
-) {
+    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent),
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent) !important;
   animation: none !important;
-  background: var(--theme-highlight-bg-hover) !important;
-  border-color: var(--theme-highlight-border) !important;
-  color: var(--on-primary-text) !important;
-  box-shadow: var(--theme-highlight-shadow) !important;
 }
 
 .fab-menu.open :is(
