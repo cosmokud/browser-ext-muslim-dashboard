@@ -34,6 +34,7 @@ The project targets Chromium-based browsers with Manifest V3.
 - Quran translation and recitation support.
 - Tajweed display mode and Arabic/translation font options for Quran reading (card and popup).
 - Tajweed toggle availability adapts to the selected Arabic font.
+- Recitation play/pause button uses `aria-pressed` and an `active` class to convey playback state to assistive technology.
 - Translation font pickers for the Pocket Quran card and popup.
 - Adjustable Arabic and translation font sizes.
 - Virtualized Quran scrolling now preserves position more reliably during refreshes.
@@ -60,7 +61,8 @@ The project targets Chromium-based browsers with Manifest V3.
 - Icon theme system for dashboard icon styling.
 - Card-level blur/glass controls for selected modules.
 - Multiple dashboard modes: grid layout, sidebar mode, floating cards, moment mode, and Quran focus mode.
-- Drag-and-drop layout editing with persisted card placement.
+- Drag-and-drop layout editing with persisted card placement; edit mode is automatically disabled in Quran focus context to keep state separate.
+- Active grid-draggable elements are hidden by default with smooth transitions when not in edit mode.
 - Pinned Apps reordering includes row-aware placement and boundary guards for responsive layouts.
 - Sidebar mode auto-recovers on wake/visibility changes and preserves user preference across viewport changes.
 - Performance mode to reduce animation/effect cost on lower-end hardware.
@@ -74,6 +76,7 @@ The project targets Chromium-based browsers with Manifest V3.
 ### Accessibility and UX
 
 - FAB quick menu uses focus-safe visibility handling and custom tooltips.
+- Recitation play/pause controls expose playback state via `aria-pressed` and CSS state classes.
 
 ### Extension platform features
 
@@ -133,7 +136,7 @@ Use the PowerShell packaging script rather than manually zipping the repository.
 muslim-dashboard-v<manifest-version>.zip
 ```
 
-Example: `muslim-dashboard-v0.1.11.zip`
+Example: `muslim-dashboard-v0.1.12.zip`
 
 ### Build output
 

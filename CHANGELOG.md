@@ -1,3 +1,24 @@
+## [0.1.12] - 2026-06-25
+
+### What is New
+
+- Edit mode is now disabled in Quran focus context, keeping focus mode and main layout edit-mode state separate.
+- Recitation play/pause button now includes an `active` class and `aria-pressed` attribute for better accessibility and visual state feedback.
+- Active grid-draggable elements are hidden by default with smooth opacity/transform transitions.
+
+### Other Improvements
+
+- Refactored sidebar action button hover/transition behavior for more responsive controls and standardized hover backgrounds using `--action-btn-bg`.
+- Added hover styles for quote-top-actions, card-header-actions, and card-blur-menu buttons with themed background, border, text color, shadow, and subtle translateY lift.
+- Refactored FAB menu buttons (layout-edit-btn, quran-focus-btn, sticky-note-toggle-btn) to use `color-mix()` theme variables instead of hardcoded gradients and shadows.
+- Added dedicated active/pressed and highlight styles for FAB menu buttons when the menu is open.
+- Replaced flat recitation button active styles with layered gradients, refined borders, and multi-layer box-shadows, with dedicated hover/active variants.
+- Removed theme-specific style overrides from the recitation play/pause button so it inherits default dashboard styling.
+- Reduced focus shadow intensity and disabled the layoutEditPulse animation for subtler visual feedback.
+- Softened sticky note and FAB menu shadows with reduced color-mix alpha and spread values.
+- Updated note background gradients to include `--accent-bg` in color-mix for more consistent theming.
+- Updated extension version references to 0.1.12 across runtime metadata and project documentation.
+
 ## [0.1.11] - 2026-06-16
 
 ### What is New
