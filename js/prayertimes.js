@@ -167,13 +167,15 @@ class PrayerTimesManager {
    */
   async requestLocation() {
     if (!navigator.geolocation) {
-      this._showLocationInFabTooltip("Geolocation is not supported by your browser");
       return;
     }
 
     if (this.locationText) {
       this.locationText.textContent = "Requesting permission...";
     }
+
+    // Keep the current location as fallback in case the request fails
+    const previousLocation = this.location;
 
     try {
       // Request with high accuracy for desktop
@@ -191,74 +193,32 @@ class PrayerTimesManager {
         city: "Current Location",
       };
 
-      // Try to get city name
-      await this.reverseGeocode(
+      // Try to get city name via reverse geocode
+      const geocodeOk = await this.reverseGeocode(
         position.coords.latitude,
         position.coords.longitude,
       );
 
+      if (!geocodeOk) {
+        // Restore previous location instead of saving an incomplete one
+        this.location = previousLocation || this.location;
+        throw new Error("Unable to refresh location");
+      }
+
       // Save location
       this.storage.saveLastLocation(this.location);
-
       this.updatePrayerTimes();
     } catch (error) {
       console.error("Geolocation error:", error);
 
-      let label;
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          label = "Permission denied";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          label = "Position unavailable";
-          break;
-        case error.TIMEOUT:
-          label = "Request timed out";
-          break;
-        default:
-          label = "Unknown error";
-      }
-
-      this._showLocationInFabTooltip("Location: " + label);
-
-      // Fall back to stored or default location
+      // Restore previous location when geolocation itself fails
+      this.location = previousLocation || this.location;
       if (!this.location) {
         this.useDefaultLocation();
       }
+
+      throw error;
     }
-  }
-
-  /**
-   * Show a temporary location status message in the FAB tooltip.
-   * Falls back to console if the tooltip element doesn't exist.
-   */
-  _showLocationInFabTooltip(text) {
-    const tip = document.getElementById("fabMenuTooltip");
-    if (!tip) {
-      console.info(text);
-      return;
-    }
-
-    tip.textContent = text;
-    tip.classList.add("active");
-    tip.setAttribute("aria-hidden", "false");
-
-    // Position near the FAB area (bottom-right of viewport)
-    tip.style.left = "";
-    tip.style.top = "";
-    const rect = tip.getBoundingClientRect();
-    const margin = 10;
-    const left = Math.max(margin, window.innerWidth - rect.width - margin);
-    const top = Math.max(margin, window.innerHeight - rect.height - 70);
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
-
-    // Auto-hide after 4 seconds
-    clearTimeout(this._locationTooltipTimer);
-    this._locationTooltipTimer = setTimeout(() => {
-      tip.classList.remove("active");
-      tip.setAttribute("aria-hidden", "true");
-    }, 4000);
   }
 
   /**
@@ -376,11 +336,13 @@ class PrayerTimesManager {
             this.locationText.textContent = city;
           }
           this.storage.saveLastLocation(this.location);
+          return true;
         }
       }
     } catch (e) {
       console.error("Reverse geocode error:", e);
     }
+    return false;
   }
 
   /**
