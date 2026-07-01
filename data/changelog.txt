@@ -2,21 +2,21 @@
 
 ### Highlights
 
-- Edit mode is now disabled in Quran focus context, keeping focus mode and main layout edit-mode state separate.
-- Recitation play/pause button uses `aria-pressed` and an active CSS class for better accessibility and state feedback.
-- Active grid-draggable elements are hidden by default with smooth opacity/transform transitions.
+- Edit mode now stays off when you enter Quran Focus mode, so both modes keep their own setting.
+- The play/pause button for recitation now clearly shows when it's active and works better with screen readers.
+- Draggable grid items are now hidden when not being edited, making the page cleaner.
 
 ### Other Improvements
 
-- Refined sidebar action button hover/transition behavior for more responsive controls and standardized backgrounds.
-- Added hover styles for quote-top-actions, card-header-actions, and card-blur-menu buttons.
-- Refactored FAB menu buttons to use `color-mix()` theme variables instead of hardcoded gradients and shadows.
-- Added dedicated active/pressed and highlight styles for FAB buttons when the menu is open.
-- Replaced flat recitation button active styles with layered gradients and multi-layer shadows, plus hover/active variants.
-- Removed theme-specific style overrides from the recitation play/pause button.
-- Reduced focus shadow intensity and disabled the layoutEditPulse animation.
-- Softened sticky note and FAB menu shadows.
-- Updated note background gradients to include accent-bg for more consistent theming.
+- Sidebar buttons react faster and look more consistent when you hover over them.
+- Buttons in quote actions, card headers, and the blur menu now have the same hover look and feel.
+- FAB menu buttons now use your theme colors instead of fixed colors, so they blend in better.
+- Active and pressed states for FAB buttons now stand out more clearly when the menu is open.
+- Recitation buttons now look richer with better colors and shadows, especially when hovered or active.
+- The play/pause button no longer has its own theme overrides, so it matches your dashboard style.
+- Focus shadows are softer and the pulsing animation is gone for a calmer experience.
+- Sticky note and FAB menu shadows are lighter and less intense.
+- Note backgrounds now include your accent color for a more consistent look.
 
 ## [0.1.11] - 2026-06-16
 
