@@ -213,6 +213,9 @@ class PrayerTimesManager {
 
       // Restore previous location when geolocation itself fails
       this.location = previousLocation || this.location;
+      if (this.locationText && this.location) {
+        this.locationText.textContent = this.location.city;
+      }
       if (!this.location) {
         this.useDefaultLocation();
       }
