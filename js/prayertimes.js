@@ -167,7 +167,7 @@ class PrayerTimesManager {
    */
   async requestLocation() {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      this._showLocationInFabTooltip("Geolocation is not supported by your browser");
       return;
     }
 
@@ -204,28 +204,61 @@ class PrayerTimesManager {
     } catch (error) {
       console.error("Geolocation error:", error);
 
-      let message = "Could not get location. ";
+      let label;
       switch (error.code) {
         case error.PERMISSION_DENIED:
-          message += "Please allow location access in your browser settings.";
+          label = "Permission denied";
           break;
         case error.POSITION_UNAVAILABLE:
-          message += "Location information unavailable.";
+          label = "Position unavailable";
           break;
         case error.TIMEOUT:
-          message += "Location request timed out.";
+          label = "Request timed out";
           break;
         default:
-          message += "Unknown error occurred.";
+          label = "Unknown error";
       }
 
-      alert(message);
+      this._showLocationInFabTooltip("Location: " + label);
 
       // Fall back to stored or default location
       if (!this.location) {
         this.useDefaultLocation();
       }
     }
+  }
+
+  /**
+   * Show a temporary location status message in the FAB tooltip.
+   * Falls back to console if the tooltip element doesn't exist.
+   */
+  _showLocationInFabTooltip(text) {
+    const tip = document.getElementById("fabMenuTooltip");
+    if (!tip) {
+      console.info(text);
+      return;
+    }
+
+    tip.textContent = text;
+    tip.classList.add("active");
+    tip.setAttribute("aria-hidden", "false");
+
+    // Position near the FAB area (bottom-right of viewport)
+    tip.style.left = "";
+    tip.style.top = "";
+    const rect = tip.getBoundingClientRect();
+    const margin = 10;
+    const left = Math.max(margin, window.innerWidth - rect.width - margin);
+    const top = Math.max(margin, window.innerHeight - rect.height - 70);
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+
+    // Auto-hide after 4 seconds
+    clearTimeout(this._locationTooltipTimer);
+    this._locationTooltipTimer = setTimeout(() => {
+      tip.classList.remove("active");
+      tip.setAttribute("aria-hidden", "true");
+    }, 4000);
   }
 
   /**
