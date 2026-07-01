@@ -270,11 +270,20 @@ class PrayerTimesManager {
           city: "Current Location",
         };
 
-        // Try to get city name
-        await this.reverseGeocode(
+        // Try to get city name via reverse geocode
+        const geocodeOk = await this.reverseGeocode(
           position.coords.latitude,
           position.coords.longitude,
         );
+
+        if (!geocodeOk) {
+          // Keep the previous stored location instead of saving an incomplete one
+          this.location = lastLocation || this.location;
+          if (this.locationText) {
+            this.locationText.textContent = this.location.city;
+          }
+          return;
+        }
 
         // Save location
         this.storage.saveLastLocation(this.location);
