@@ -301,6 +301,10 @@ class StorageManager {
       // Pinned Apps settings
       pinnedApps: [],
       pinnedAppsPerRow: 10,
+      pinnedAppsOpenInNewTab: true,
+
+      // Search Bar settings
+      searchBarOpenInNewTab: true,
 
       // Weather settings
       weatherUnit: "celsius", // 'celsius' or 'fahrenheit'

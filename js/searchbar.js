@@ -1786,7 +1786,13 @@ class SearchBarManager extends BaseManager {
     this.persist();
 
     try {
-      window.open(url, "_blank", "noopener,noreferrer");
+      const settings = this.storage.getSettings();
+      const openInNewTab = settings.searchBarOpenInNewTab !== false;
+      if (openInNewTab) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = url;
+      }
       this.input.value = "";
     } catch (e) {
       this.notify("Could not open the search URL.", "error");

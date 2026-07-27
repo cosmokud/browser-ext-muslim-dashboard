@@ -954,10 +954,15 @@ class PinnedAppsManager extends BaseManager {
       app.cachedFavicon || app.favicon || this.getFaviconUrl(app.url);
     const fallbackIcon = app.name.charAt(0).toUpperCase();
 
+    // Determine link target from settings
+    const settings = this.storage.getSettings();
+    const linkTarget = settings.pinnedAppsOpenInNewTab !== false ? "_blank" : "_self";
+    const linkRel = linkTarget === "_blank" ? ' rel="noopener noreferrer"' : "";
+
     el.innerHTML = `
       <a href="${
         app.url
-      }" class="pinned-app-link" target="_blank" rel="noopener noreferrer">
+      }" class="pinned-app-link" target="${linkTarget}"${linkRel}>
         <div class="pinned-app-icon">
           ${
             faviconUrl

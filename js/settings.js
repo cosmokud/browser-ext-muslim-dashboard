@@ -737,6 +737,14 @@ class SettingsManager extends BaseManager {
     this.pinnedAppsPerRowValue = document.getElementById(
       "pinnedAppsPerRowValue",
     );
+    this.pinnedAppsOpenInNewTab = document.getElementById(
+      "pinnedAppsOpenInNewTab",
+    );
+
+    // Search Bar tab elements
+    this.searchBarOpenInNewTab = document.getElementById(
+      "searchBarOpenInNewTab",
+    );
 
     // Notes tab elements
     this.importNotesBtn = document.getElementById("importNotesBtn");
@@ -1477,6 +1485,16 @@ class SettingsManager extends BaseManager {
       const clamped = this.clampNumber(settings.pinnedAppsPerRow, 3, 20, 10);
       this.pinnedAppsPerRow.value = String(clamped);
       this.updatePinnedAppsPerRowLabel();
+    }
+    if (this.pinnedAppsOpenInNewTab) {
+      this.pinnedAppsOpenInNewTab.checked =
+        settings.pinnedAppsOpenInNewTab !== false;
+    }
+
+    // Search Bar settings
+    if (this.searchBarOpenInNewTab) {
+      this.searchBarOpenInNewTab.checked =
+        settings.searchBarOpenInNewTab !== false;
     }
 
     // Pocket Quran settings
@@ -7808,6 +7826,12 @@ class SettingsManager extends BaseManager {
       20,
       10,
     );
+    settings.pinnedAppsOpenInNewTab =
+      this.pinnedAppsOpenInNewTab?.checked ?? true;
+
+    // Search Bar settings
+    settings.searchBarOpenInNewTab =
+      this.searchBarOpenInNewTab?.checked ?? true;
 
     // Pocket Quran settings
     const existingPocketQuran =
