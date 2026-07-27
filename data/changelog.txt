@@ -1,3 +1,15 @@
+## [0.1.13] - 2026-07-03
+
+### Highlights
+
+- New "Open Link In" settings for Pinned Apps and Search Bar — choose whether links open in a new tab or the same tab.
+- Improved geolocation handling gracefully retains the previous location when a refresh fails, with no disruptive alerts.
+
+### Other Improvements
+
+- Location error handling now shows a tooltip instead of an alert for a smoother experience.
+- Reverse geocode failures preserve the last stored location instead of saving an incomplete one.
+
 ## [0.1.12] - 2026-06-25
 
 ### Highlights
