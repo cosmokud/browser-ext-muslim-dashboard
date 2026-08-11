@@ -7521,11 +7521,14 @@ html[data-theme-mode="light"]
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  /* Prayer name column width: just fits the longest name ("Midnight") */
+  --prayer-title-col: 100px;
 }
 
 .prayer-settings-list-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px 70px minmax(0, auto);
+  grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 44px 70px
+    minmax(0, 1fr);
   gap: var(--spacing-sm);
   padding: 0 var(--spacing-sm);
   color: var(--text-muted);
@@ -7559,7 +7562,8 @@ html[data-theme-mode="light"]
 
 .prayer-settings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px 70px minmax(0, auto);
+  grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 44px 70px
+    minmax(0, 1fr);
   gap: var(--spacing-sm);
   align-items: center;
   padding: var(--spacing-sm);
@@ -7630,6 +7634,42 @@ html[data-theme-mode="light"]
   outline-offset: 3px;
 }
 
+/* At Time: round checkmark toggle (distinct from the Show/Notify pill) */
+.prayer-settings-at-time .toggle-switch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--text-muted);
+  background: transparent;
+  transform: none;
+}
+
+.prayer-settings-at-time .toggle-switch::after {
+  top: 4px;
+  left: 7px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--on-primary-text);
+  border-width: 0 2.5px 2.5px 0;
+  border-radius: 0;
+  background: transparent;
+  transform: rotate(45deg);
+  opacity: 0;
+}
+
+.prayer-settings-at-time input[type="checkbox"]:checked + .toggle-switch {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.prayer-settings-at-time
+  input[type="checkbox"]:checked
+  + .toggle-switch::after {
+  left: 7px;
+  background: transparent;
+  opacity: 1;
+}
+
 .prayer-settings-adjust {
   padding: var(--spacing-sm);
   background: var(--glass-bg);
@@ -7680,7 +7720,8 @@ html[data-theme-mode="light"]
 @media (max-width: 520px) {
   .prayer-settings-list-header,
   .prayer-settings-row {
-    grid-template-columns: minmax(0, 1fr) 38px 56px minmax(0, auto);
+    grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 38px 56px
+      minmax(0, 1fr);
     gap: 4px;
   }
   .prayer-settings-list-header {
@@ -7691,11 +7732,14 @@ html[data-theme-mode="light"]
     padding: var(--spacing-xs);
   }
   .prayer-settings-notify-group {
-    grid-template-columns: 38px 38px 62px 62px;
+    grid-template-columns: 38px 38px 58px 58px;
     gap: 4px;
   }
   .prayer-settings-toggle .toggle-switch {
     transform: scale(0.74);
+  }
+  .prayer-settings-at-time .toggle-switch {
+    transform: none;
   }
   .prayer-settings-notify-offset {
     padding: 0.3rem 0.1rem;
