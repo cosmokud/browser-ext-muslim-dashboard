@@ -1140,6 +1140,19 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         schedulePopupPrayerMethodAutoSave({ immediate: true });
       }
+
+      // Grey out At Time / Before / After when per-prayer Notify is off
+      if (target instanceof HTMLInputElement && target.type === "checkbox") {
+        const notifyKey = popupPrayerKeys.find(
+          (key) => target.id === `notify${popupPrayerIdSuffixByKey[key]}`,
+        );
+        if (notifyKey) {
+          const row = target.closest?.(".prayer-settings-row");
+          if (row instanceof Element) {
+            row.classList.toggle("notify-disabled", !target.checked);
+          }
+        }
+      }
     });
 
     panelRoot.addEventListener("input", (event) => {
@@ -1397,6 +1410,22 @@ document.addEventListener("DOMContentLoaded", () => {
             : defaultAfterMinutes;
         afterInput.value = String(afterMinutes);
       }
+
+      const atTimeInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}AtTime`,
+      );
+      if (atTimeInput instanceof HTMLInputElement) {
+        atTimeInput.checked =
+          entry && typeof entry === "object"
+            ? entry.atTimeEnabled !== false
+            : true;
+      }
+
+      const row = notifyInput?.closest?.(".prayer-settings-row");
+      if (row instanceof Element) {
+        row.classList.toggle("notify-disabled", !notifyInput.checked);
+      }
     });
 
     updatePopupPrayerMethodAnglesDisplay(panelRoot);
@@ -1638,6 +1667,10 @@ document.addEventListener("DOMContentLoaded", () => {
         panelRoot,
         `#notify${suffix}AfterMinutes`,
       );
+      const atTimeInput = getPopupPanelElement(
+        panelRoot,
+        `#notify${suffix}AtTime`,
+      );
 
       settings.prayerNotifications.perPrayer[key] = {
         enabled:
@@ -1655,6 +1688,10 @@ document.addEventListener("DOMContentLoaded", () => {
           180,
           existingAfterMinutes,
         ),
+        atTimeEnabled:
+          atTimeInput instanceof HTMLInputElement
+            ? atTimeInput.checked === true
+            : true,
       };
     });
 

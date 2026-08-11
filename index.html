@@ -2772,9 +2772,12 @@
                   <span>Prayer</span>
                   <span>Show</span>
                   <span>Offset (mins)</span>
-                  <span>Notify</span>
-                  <span>Before (mins)</span>
-                  <span>After (mins)</span>
+                  <div class="prayer-settings-notify-group">
+                    <span>Notify</span>
+                    <span>At Time</span>
+                    <span>Before (mins)</span>
+                    <span>After (mins)</span>
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -2795,11 +2798,19 @@
                     max="60"
                     aria-label="Adjust Fajr (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Fajr"
                   >
                     <input type="checkbox" id="notifyFajr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Fajr time"
+                  >
+                    <input type="checkbox" id="notifyFajrAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -2820,6 +2831,7 @@
                     max="180"
                     aria-label="Notify after Fajr (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -2843,11 +2855,19 @@
                     max="60"
                     aria-label="Adjust Sunrise (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Sunrise"
                   >
                     <input type="checkbox" id="notifySunrise" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Sunrise time"
+                  >
+                    <input type="checkbox" id="notifySunriseAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -2868,6 +2888,7 @@
                     max="180"
                     aria-label="Notify after Sunrise (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -2888,11 +2909,19 @@
                     max="60"
                     aria-label="Adjust Duha (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Duha"
                   >
                     <input type="checkbox" id="notifyDuha" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Duha time"
+                  >
+                    <input type="checkbox" id="notifyDuhaAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -2913,6 +2942,7 @@
                     max="180"
                     aria-label="Notify after Duha (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -2933,11 +2963,19 @@
                     max="60"
                     aria-label="Adjust Dhuhr (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Dhuhr"
                   >
                     <input type="checkbox" id="notifyDhuhr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Dhuhr time"
+                  >
+                    <input type="checkbox" id="notifyDhuhrAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -2958,6 +2996,7 @@
                     max="180"
                     aria-label="Notify after Dhuhr (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -2978,11 +3017,19 @@
                     max="60"
                     aria-label="Adjust Asr (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Asr"
                   >
                     <input type="checkbox" id="notifyAsr" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Asr time"
+                  >
+                    <input type="checkbox" id="notifyAsrAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -3003,6 +3050,7 @@
                     max="180"
                     aria-label="Notify after Asr (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -3026,11 +3074,19 @@
                     max="60"
                     aria-label="Adjust Maghrib (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Maghrib"
                   >
                     <input type="checkbox" id="notifyMaghrib" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Maghrib time"
+                  >
+                    <input type="checkbox" id="notifyMaghribAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -3051,6 +3107,7 @@
                     max="180"
                     aria-label="Notify after Maghrib (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -3071,11 +3128,19 @@
                     max="60"
                     aria-label="Adjust Isha (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Isha"
                   >
                     <input type="checkbox" id="notifyIsha" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Isha time"
+                  >
+                    <input type="checkbox" id="notifyIshaAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -3096,6 +3161,7 @@
                     max="180"
                     aria-label="Notify after Isha (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -3119,11 +3185,19 @@
                     max="60"
                     aria-label="Adjust Midnight (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Midnight"
                   >
                     <input type="checkbox" id="notifyMidnight" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Midnight time"
+                  >
+                    <input type="checkbox" id="notifyMidnightAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -3144,6 +3218,7 @@
                     max="180"
                     aria-label="Notify after Midnight (minutes)"
                   />
+                  </div>
                 </div>
 
                 <div class="prayer-settings-row" role="listitem">
@@ -3164,11 +3239,19 @@
                     max="60"
                     aria-label="Adjust Qiyam (minutes)"
                   />
+                  <div class="prayer-settings-notify-group">
                   <label
                     class="prayer-settings-toggle"
                     aria-label="Notify for Qiyam"
                   >
                     <input type="checkbox" id="notifyQiyam" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                  </label>
+                  <label
+                    class="prayer-settings-toggle prayer-settings-at-time"
+                    aria-label="Notify at Qiyam time"
+                  >
+                    <input type="checkbox" id="notifyQiyamAtTime" checked />
                     <span class="toggle-switch" aria-hidden="true"></span>
                   </label>
                   <input
@@ -3189,6 +3272,7 @@
                     max="180"
                     aria-label="Notify after Qiyam (minutes)"
                   />
+                  </div>
                 </div>
               </div>
 

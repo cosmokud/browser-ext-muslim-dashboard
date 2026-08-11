@@ -7525,11 +7525,11 @@ html[data-theme-mode="light"]
 
 .prayer-settings-list-header {
   display: grid;
-  grid-template-columns: 1fr 60px 90px 60px 90px 90px;
-  gap: var(--spacing-md);
-  padding: 0 var(--spacing-md);
+  grid-template-columns: minmax(0, 1fr) 44px 70px minmax(0, auto);
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-sm);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 }
 
 .prayer-settings-list-header span {
@@ -7537,19 +7537,32 @@ html[data-theme-mode="light"]
 }
 
 .prayer-settings-list-header span:nth-child(2),
-.prayer-settings-list-header span:nth-child(3),
-.prayer-settings-list-header span:nth-child(4),
-.prayer-settings-list-header span:nth-child(5),
-.prayer-settings-list-header span:nth-child(6) {
+.prayer-settings-list-header span:nth-child(3) {
   text-align: center;
+}
+
+.prayer-settings-list-header .prayer-settings-notify-group span {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prayer-settings-notify-group {
+  display: grid;
+  grid-template-columns: 44px 44px 72px 72px;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .prayer-settings-row {
   display: grid;
-  grid-template-columns: 1fr 60px 90px 60px 90px 90px;
-  gap: var(--spacing-md);
+  grid-template-columns: minmax(0, 1fr) 44px 70px minmax(0, auto);
+  gap: var(--spacing-sm);
   align-items: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
@@ -7565,13 +7578,21 @@ html[data-theme-mode="light"]
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.prayer-settings-title > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prayer-settings-icon {
-  width: 28px;
+  width: 24px;
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
+  flex-shrink: 0;
 }
 
 .prayer-settings-toggle {
@@ -7591,7 +7612,7 @@ html[data-theme-mode="light"]
 }
 
 .prayer-settings-toggle .toggle-switch {
-  transform: scale(0.9);
+  transform: scale(0.84);
 }
 
 /* Checked-state visuals for prayer settings toggles */
@@ -7615,12 +7636,13 @@ html[data-theme-mode="light"]
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   /* Ensure numeric values are centered across browsers */
   text-align: center;
   text-align-last: center;
   -webkit-text-align-last: center;
   width: 100%;
+  min-width: 0;
 }
 
 .prayer-settings-adjust:focus {
@@ -7629,17 +7651,18 @@ html[data-theme-mode="light"]
 }
 
 .prayer-settings-notify-offset {
-  padding: var(--spacing-sm);
+  padding: 0.3rem 0.15rem;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   /* Ensure numeric values are centered across browsers */
   text-align: center;
   text-align-last: center;
   -webkit-text-align-last: center;
   width: 100%;
+  min-width: 0;
 }
 
 .prayer-settings-notify-offset:focus {
@@ -7647,18 +7670,36 @@ html[data-theme-mode="light"]
   border-color: var(--accent-gold);
 }
 
+/* Grey out At Time / Before / After controls when per-prayer Notify is off */
+.prayer-settings-row.notify-disabled .prayer-settings-at-time,
+.prayer-settings-row.notify-disabled .prayer-settings-notify-offset {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 @media (max-width: 520px) {
+  .prayer-settings-list-header,
+  .prayer-settings-row {
+    grid-template-columns: minmax(0, 1fr) 38px 56px minmax(0, auto);
+    gap: 4px;
+  }
   .prayer-settings-list-header {
-    grid-template-columns: 1fr 54px 80px 54px 70px 70px;
-    padding: 0 var(--spacing-sm);
+    padding: 0 var(--spacing-xs);
+    font-size: 0.62rem;
   }
   .prayer-settings-row {
-    grid-template-columns: 1fr 54px 80px 54px 70px 70px;
-    padding: var(--spacing-sm);
-    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
   }
-  .prayer-notification-offset-input {
-    width: 120px;
+  .prayer-settings-notify-group {
+    grid-template-columns: 38px 38px 62px 62px;
+    gap: 4px;
+  }
+  .prayer-settings-toggle .toggle-switch {
+    transform: scale(0.74);
+  }
+  .prayer-settings-notify-offset {
+    padding: 0.3rem 0.1rem;
+    font-size: 0.74rem;
   }
 }
 

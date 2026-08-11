@@ -238,6 +238,18 @@ class SettingsManager extends BaseManager {
       qiyam: document.getElementById("notifyQiyamAfterMinutes"),
     };
 
+    this.notificationAtTimeCheckboxes = {
+      fajr: document.getElementById("notifyFajrAtTime"),
+      sunrise: document.getElementById("notifySunriseAtTime"),
+      duha: document.getElementById("notifyDuhaAtTime"),
+      dhuhr: document.getElementById("notifyDhuhrAtTime"),
+      asr: document.getElementById("notifyAsrAtTime"),
+      maghrib: document.getElementById("notifyMaghribAtTime"),
+      isha: document.getElementById("notifyIshaAtTime"),
+      midnight: document.getElementById("notifyMidnightAtTime"),
+      qiyam: document.getElementById("notifyQiyamAtTime"),
+    };
+
     // Quote elements
     this.useDefaultQuotes = document.getElementById("useDefaultQuotes");
     this.useUserQuotes = document.getElementById("useUserQuotes");
@@ -1395,7 +1407,18 @@ class SettingsManager extends BaseManager {
         this.notificationAfterMinutesInputs[prayer].value =
           String(afterMinutes);
       }
+
+      const atTimeEnabled =
+        entry && typeof entry === "object"
+          ? entry.atTimeEnabled !== false
+          : true;
+
+      if (this.notificationAtTimeCheckboxes?.[prayer]) {
+        this.notificationAtTimeCheckboxes[prayer].checked = atTimeEnabled;
+      }
     }
+
+    this.updatePrayerNotificationRowStates();
 
     // Quote settings
     if (this.useDefaultQuotes)
@@ -1652,6 +1675,28 @@ class SettingsManager extends BaseManager {
 
     this.updateNotesCountHint();
     this.updateSettingsRangeProgress();
+  }
+
+  /**
+   * Grey out At Time / Before / After controls for every prayer row whose
+   * Notify toggle is off.
+   */
+  updatePrayerNotificationRowStates() {
+    for (const prayer in this.notificationCheckboxes) {
+      this.updatePrayerNotificationRowState(prayer);
+    }
+  }
+
+  /**
+   * Grey out At Time / Before / After controls for one prayer row when its
+   * Notify toggle is off.
+   */
+  updatePrayerNotificationRowState(prayer) {
+    const checkbox = this.notificationCheckboxes?.[prayer];
+    if (!checkbox) return;
+    const row = checkbox.closest(".prayer-settings-row");
+    if (!row) return;
+    row.classList.toggle("notify-disabled", !checkbox.checked);
   }
 
   normalizeCssHexColor(value, fallback) {
@@ -7770,6 +7815,8 @@ class SettingsManager extends BaseManager {
         enabled,
         beforeMinutes,
         afterMinutes,
+        atTimeEnabled:
+          this.notificationAtTimeCheckboxes?.[prayer]?.checked ?? true,
       };
     }
 
@@ -10944,6 +10991,15 @@ class SettingsManager extends BaseManager {
             return;
           this.searchWeatherCity();
         }
+      });
+    }
+
+    // Prayer notify toggle: grey out At Time / Before / After when off
+    for (const prayer in this.notificationCheckboxes) {
+      const checkbox = this.notificationCheckboxes[prayer];
+      if (!checkbox) continue;
+      checkbox.addEventListener("change", () => {
+        this.updatePrayerNotificationRowState(prayer);
       });
     }
 

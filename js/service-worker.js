@@ -320,7 +320,7 @@ function getPrayerNotificationsSettings(settings) {
             180,
             defaultAfterMinutes,
           ),
-          atTimeEnabled: true,
+          atTimeEnabled: entry.atTimeEnabled !== false,
         };
       }
     }
@@ -330,8 +330,8 @@ function getPrayerNotificationsSettings(settings) {
     enabled: Boolean(pn.enabled),
     defaultBeforeMinutes,
     defaultAfterMinutes,
-    // at-time notification always on when enabled
-    atTimeEnabled: true,
+    // at-time notification defaults to on when not explicitly configured
+    atTimeEnabled: pn.atTimeEnabled !== false,
     perPrayer,
   };
 }
@@ -357,7 +357,7 @@ function getPrayerNotificationConfig(prayerKey, settings, pn) {
     enabled: true,
     beforeMinutes: pn.defaultBeforeMinutes,
     afterMinutes: pn.defaultAfterMinutes,
-    atTimeEnabled: true,
+    atTimeEnabled: pn.atTimeEnabled !== false,
   };
 }
 

@@ -277,11 +277,6 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   overflow-x: auto;
 }
 
-#popupPrayerMethodPanelHost .prayer-settings-list-header,
-#popupPrayerMethodPanelHost .prayer-settings-row {
-  min-width: max-content;
-}
-
 .popup-prayer-settings-clone-host .settings-panel {
   display: block;
   animation: none;
@@ -311,22 +306,27 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-prayer-settings-clone-host .prayer-settings-list-header,
 .popup-prayer-settings-clone-host .prayer-settings-row {
-  grid-template-columns: minmax(110px, 1fr) 44px 64px 44px 64px 64px;
-  gap: var(--spacing-xs);
+  grid-template-columns: minmax(0, 1fr) 36px 52px minmax(0, auto);
+  gap: 4px;
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-list-header {
   padding: 0 var(--spacing-xs);
-  font-size: 0.7rem;
+  font-size: 0.6rem;
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-row {
   padding: var(--spacing-sm) var(--spacing-xs);
 }
 
+.popup-prayer-settings-clone-host .prayer-settings-notify-group {
+  grid-template-columns: 36px 36px 58px 58px;
+  gap: 4px;
+}
+
 .popup-prayer-settings-clone-host .prayer-settings-title {
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-title > span:last-child {
@@ -341,25 +341,34 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-toggle .toggle-switch {
-  transform: scale(0.78);
+  transform: scale(0.7);
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-adjust,
 .popup-prayer-settings-clone-host .prayer-settings-notify-offset {
   min-width: 0;
-  padding: 0.4rem 0.2rem;
-  font-size: 0.78rem;
+  padding: 0.35rem 0.15rem;
+  font-size: 0.72rem;
 }
 
 @media (max-width: 430px) {
   .popup-prayer-settings-clone-host .prayer-settings-list-header,
   .popup-prayer-settings-clone-host .prayer-settings-row {
-    grid-template-columns: minmax(92px, 1fr) 40px 56px 40px 56px 56px;
-    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 34px 48px minmax(0, auto);
+    gap: 3px;
+  }
+
+  .popup-prayer-settings-clone-host .prayer-settings-list-header {
+    font-size: 0.58rem;
+  }
+
+  .popup-prayer-settings-clone-host .prayer-settings-notify-group {
+    grid-template-columns: 34px 34px 56px 56px;
+    gap: 3px;
   }
 
   .popup-prayer-settings-clone-host .prayer-settings-row {
-    padding: 0.44rem 0.35rem;
+    padding: 0.4rem var(--spacing-xs);
   }
 }
 
