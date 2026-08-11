@@ -6,7 +6,7 @@ Security fixes are prioritized for the latest published release line.
 
 | Version               | Supported                                         |
 | --------------------- | ------------------------------------------------- |
-| 0.1.13 (current)      | Yes                                               |
+| 0.1.14 (current)      | Yes                                               |
 | 0.1.12 (older)        | Best effort (if reproducible on current codebase) |
 | 0.1.x (older patches) | Best effort (if reproducible on current codebase) |
 | 0.1.5 (older)         | Best effort (if reproducible on current codebase) |

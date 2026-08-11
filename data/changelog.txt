@@ -1,3 +1,15 @@
+## [0.1.14] - 2026-08-11
+
+### Highlights
+
+- Each prayer now has its own "At Time" switch (on by default) so you can turn off the notification at the exact prayer time while keeping your "before" and "after" reminders.
+- The prayer notification settings are easier to use: turning off "Notify" for a prayer greys out its At Time / Before / After controls, so it's clear they're inactive.
+
+### Other Improvements
+
+- The "At Time" option uses a round checkmark toggle so it's easy to tell apart from the Show/Notify switches.
+- Prayer settings rows now line up better on all screen sizes and stay tidy on narrow windows.
+
 ## [0.1.13] - 2026-07-03
 
 ### Highlights

@@ -1,3 +1,16 @@
+## [0.1.14] - 2026-08-11
+
+### What is New
+
+- Added "At Time" notification option for each prayer, so users can choose whether a notification fires exactly at prayer time instead of it always being enabled; it defaults to enabled when not explicitly configured.
+- Per-prayer notify rows now grey out the At Time / Before / After controls when the Notify toggle is off, in both the dashboard settings and the popup.
+
+### Other Improvements
+
+- Added a distinct round checkmark toggle style for the At Time control, visually separate from the Show/Notify pill toggles.
+- Refactored prayer settings grid columns to grow and shrink together via `minmax()` tracks, with centered notify groups and wider row/header padding for better alignment and responsiveness.
+- Extended the compact prayer settings layout to viewports up to 640px wide, with synchronized column tracks and gap values.
+
 ## [0.1.13] - 2026-07-03
 
 ### What is New
