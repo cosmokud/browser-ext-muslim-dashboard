@@ -7527,10 +7527,12 @@ html[data-theme-mode="light"]
 
 .prayer-settings-list-header {
   display: grid;
-  grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 44px 70px
-    minmax(0, 1fr);
+  /* Title fits the longest name; Show / Offset / notify group grow and
+     shrink together to fill the row, each centered in its column */
+  grid-template-columns: minmax(0, var(--prayer-title-col, 100px))
+    minmax(44px, 1fr) minmax(70px, 1fr) minmax(250px, 1fr);
   gap: var(--spacing-sm);
-  padding: 0 var(--spacing-sm);
+  padding: 0 var(--spacing-md);
   color: var(--text-muted);
   font-size: 0.72rem;
 }
@@ -7553,20 +7555,23 @@ html[data-theme-mode="light"]
 
 .prayer-settings-notify-group {
   display: grid;
+  /* Track sum + gaps = 250px — keep the row/header group column
+     minmax(250px, 1fr) in sync with this */
   grid-template-columns: 44px 44px 72px 72px;
   gap: 6px;
   align-items: center;
+  justify-content: center;
   min-width: 0;
   overflow: hidden;
 }
 
 .prayer-settings-row {
   display: grid;
-  grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 44px 70px
-    minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--prayer-title-col, 100px))
+    minmax(44px, 1fr) minmax(70px, 1fr) minmax(250px, 1fr);
   gap: var(--spacing-sm);
   align-items: center;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--glass-bg);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
@@ -7717,11 +7722,12 @@ html[data-theme-mode="light"]
   pointer-events: none;
 }
 
-@media (max-width: 520px) {
+/* Modal is 90% wide, so the compact grid is needed until ~640px viewport */
+@media (max-width: 640px) {
   .prayer-settings-list-header,
   .prayer-settings-row {
-    grid-template-columns: minmax(0, var(--prayer-title-col, 100px)) 38px 56px
-      minmax(0, 1fr);
+    grid-template-columns: minmax(0, var(--prayer-title-col, 100px))
+      minmax(38px, 1fr) minmax(56px, 1fr) minmax(204px, 1fr);
     gap: 4px;
   }
   .prayer-settings-list-header {
@@ -7732,6 +7738,7 @@ html[data-theme-mode="light"]
     padding: var(--spacing-xs);
   }
   .prayer-settings-notify-group {
+    /* 38+38+58+58 + 3x4 gaps = 204px — matches minmax(204px, 1fr) */
     grid-template-columns: 38px 38px 58px 58px;
     gap: 4px;
   }

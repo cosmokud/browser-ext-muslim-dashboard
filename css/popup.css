@@ -308,8 +308,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-prayer-settings-clone-host .prayer-settings-list-header,
 .popup-prayer-settings-clone-host .prayer-settings-row {
-  grid-template-columns: minmax(0, var(--prayer-title-col, 90px)) 36px 52px
-    minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--prayer-title-col, 90px))
+    minmax(36px, 1fr) minmax(52px, 1fr) minmax(200px, 1fr);
   gap: 4px;
 }
 
@@ -323,6 +323,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-notify-group {
+  /* 36+36+58+58 + 3x4 gaps = 200px — matches minmax(200px, 1fr) */
   grid-template-columns: 36px 36px 58px 58px;
   gap: 4px;
 }
@@ -361,8 +362,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 @media (max-width: 430px) {
   .popup-prayer-settings-clone-host .prayer-settings-list-header,
   .popup-prayer-settings-clone-host .prayer-settings-row {
-    grid-template-columns: minmax(0, var(--prayer-title-col, 90px)) 34px 48px
-      minmax(0, 1fr);
+    grid-template-columns: minmax(0, var(--prayer-title-col, 90px))
+      minmax(34px, 1fr) minmax(48px, 1fr) minmax(181px, 1fr);
     gap: 3px;
   }
 
@@ -371,6 +372,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   }
 
   .popup-prayer-settings-clone-host .prayer-settings-notify-group {
+    /* 34+34+52+52 + 3x3 gaps = 181px — matches minmax(181px, 1fr) */
     grid-template-columns: 34px 34px 52px 52px;
     gap: 3px;
   }
