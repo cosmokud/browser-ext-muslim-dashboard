@@ -2,6 +2,10 @@
 /scripts
 .venv/
 .vscode/
-tests/
 .serena/
 docs/
+node_modules/
+# code graph index, local tooling
+.codegraph/
+# review specs
+.spec/

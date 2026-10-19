@@ -1,0 +1,8 @@
+{
+  "name": "browser-ext-muslim-dashboard",
+  "private": true,
+  "description": "Test tooling only. The extension ships as-is with no build step.",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}

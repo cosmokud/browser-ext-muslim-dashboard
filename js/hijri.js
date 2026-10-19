@@ -405,5 +405,6 @@ class HijriDate {
   }
 }
 
-// Export for use
-window.HijriDate = HijriDate;
+// Export for use. globalThis rather than window: the service worker
+// importScripts this file, and `window` does not exist there.
+globalThis.HijriDate = HijriDate;
