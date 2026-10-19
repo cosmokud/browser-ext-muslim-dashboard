@@ -487,9 +487,7 @@ class FloatingModeManager {
       card?.id ||
       null;
 
-    const quranFocusModeActive =
-      !!document.body?.classList?.contains("quran-focus-mode") ||
-      window.dashboard?._quranFocusModeActive === true;
+    const quranFocusModeActive = this.isQuranFocusModeActive();
 
     // In Quran Focus mode, preserve sidebar origin from persisted sidebar state
     // instead of replacing it with a temporary middle-grid anchor.
@@ -1361,17 +1359,11 @@ class FloatingModeManager {
   }
 
   isQuranFocusModeActive() {
-    return (
-      !!document.body?.classList?.contains("quran-focus-mode") ||
-      window.dashboard?._quranFocusModeActive === true
-    );
+    return window.dashboard?.modes?.isActive?.("quranFocus") === true;
   }
 
   isMomentModeActive() {
-    return (
-      !!document.body?.classList?.contains("moment-mode") ||
-      window.dashboard?._momentModeActive === true
-    );
+    return window.dashboard?.modes?.isActive?.("moment") === true;
   }
 
   isRuntimeModeDeferred() {
@@ -2426,9 +2418,7 @@ class FloatingModeManager {
       let inserted = false;
 
       const gridLayoutActive = this._isGridLayoutActive();
-      const quranFocusModeActive =
-        !!document.body?.classList?.contains("quran-focus-mode") ||
-        window.dashboard?._quranFocusModeActive === true;
+      const quranFocusModeActive = this.isQuranFocusModeActive();
       const placeholderParent = placeholder?.parentNode || null;
       const restoreToSidebarSlot =
         card.classList.contains("sidebar-detached") ||

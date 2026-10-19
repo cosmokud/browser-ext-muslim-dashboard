@@ -6,8 +6,10 @@
  */
 
 class GridLayoutManager {
-  constructor(storage) {
+  constructor(storage, modes) {
     this.storage = storage;
+    // Which presentation modes are on (js/modes.js).
+    this.modes = modes;
     this.grid = null;
     this.gridItems = [];
     this.rows = [];
@@ -16,7 +18,6 @@ class GridLayoutManager {
     this.draggedItemRect = null;
     this.placeholder = null;
     this.isDragging = false;
-    this.isEditModeEnabled = false; // Drag-drop mode disabled by default
     this.isEditModeLocked = false;
     this.isQuranFocusModeContext = false;
 
@@ -814,18 +815,12 @@ class GridLayoutManager {
   }
 
   isQuranFocusModeContextActive() {
-    const bodyHasFocusClass =
-      !!document.body && document.body.classList.contains("quran-focus-mode");
-
-    if (!bodyHasFocusClass && this.isQuranFocusModeContext) {
-      const dashboardFocusActive =
-        !!window.dashboard && window.dashboard._quranFocusModeActive === true;
-      if (!dashboardFocusActive) {
-        this.isQuranFocusModeContext = false;
-      }
-    }
-
-    return this.isQuranFocusModeContext || bodyHasFocusClass;
+    // The app notifies this grid when it switches layouts; the module is the
+    // second opinion, so neither side alone has to be trusted.
+    return (
+      this.isQuranFocusModeContext ||
+      this.modes?.isActive?.("quranFocus") === true
+    );
   }
 
   getEditModeStorageKey() {
@@ -854,9 +849,9 @@ class GridLayoutManager {
     if (this.isQuranFocusModeContext) {
       settings[editModeStorageKey] = false;
       this.storage.saveSettings(settings);
-      this.isEditModeEnabled = false;
+      this.modes.exit("edit");
     } else {
-      this.isEditModeEnabled = settings[editModeStorageKey] === true;
+      this.modes.set("edit", settings[editModeStorageKey] === true);
     }
 
     const toggleBtn = document.getElementById("layoutEditBtn");
@@ -1966,8 +1961,7 @@ class GridLayoutManager {
 
     // Load edit mode state from settings (default OFF)
     const settings = this.storage.getSettings();
-    this.isEditModeEnabled =
-      settings[this.getMainEditModeStorageKey()] === true;
+    this.modes.set("edit", settings[this.getMainEditModeStorageKey()] === true);
 
     // Calculate initial responsive layout based on viewport
     this.lastViewportWidth = this.getSidebarViewportWidthForMiddleLayout();
@@ -2041,7 +2035,7 @@ class GridLayoutManager {
     if (this.isEditModeLocked) {
       // Safety: if lock is active, ensure edit mode is off.
       if (this.isEditModeEnabled) {
-        this.isEditModeEnabled = false;
+        this.modes.exit("edit");
 
         const settings = this.storage.getSettings();
         settings[editModeStorageKey] = false;
@@ -2055,7 +2049,7 @@ class GridLayoutManager {
     }
 
     this.temporarilyDisableLayoutToggleAnimations();
-    this.isEditModeEnabled = !this.isEditModeEnabled;
+    this.modes.toggle("edit");
 
     // Save state to settings
     const settings = this.storage.getSettings();
@@ -2066,12 +2060,10 @@ class GridLayoutManager {
     const toggleBtn = document.getElementById("layoutEditBtn");
     this.updateEditModeUI(toggleBtn);
 
-    // Update grid state
+    // Update grid state (the body class belongs to the mode module)
     if (this.grid) {
       this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
     }
-    // Also add to body so sidebar CSS selectors work
-    document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
 
     if (!this.isEditModeEnabled) {
       this.endMiddleLayoutResize();
@@ -2137,8 +2129,6 @@ class GridLayoutManager {
     if (this.grid) {
       this.grid.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
     }
-    // Also add to body so sidebar CSS selectors work
-    document.body.classList.toggle("grid-edit-mode", this.isEditModeEnabled);
   }
 
   temporarilyDisableLayoutToggleAnimations() {
@@ -4871,7 +4861,7 @@ class GridLayoutManager {
     const editModeStorageKey = this.getEditModeStorageKey();
 
     if (this.isEditModeLocked && this.isEditModeEnabled) {
-      this.isEditModeEnabled = false;
+      this.modes.exit("edit");
 
       const settings = this.storage.getSettings();
       settings[editModeStorageKey] = false;
@@ -4881,6 +4871,14 @@ class GridLayoutManager {
     const toggleBtn = document.getElementById("layoutEditBtn");
     this.updateEditModeUI(toggleBtn);
     this.syncSidebarModeForEditState();
+  }
+
+  /**
+   * Whether layout edit mode is on, as the mode module knows it. Every change
+   * goes through the module, so this is the one place it is read from.
+   */
+  get isEditModeEnabled() {
+    return this.modes?.isActive?.("edit") === true;
   }
 
   /**

@@ -30,16 +30,14 @@ class MomentModeManager {
     if (!this.momentBtn || !this.layoutRoot) return;
 
     if (!debugEnabled) {
-      this.dashboard._momentModeActive = false;
-      this.dashboard._setMomentModeEnabled = null;
-      document.body.classList.remove("moment-mode");
+      this.dashboard.modes.exit("moment");
       this.layoutRoot.setAttribute("aria-hidden", "true");
       this.saveModeState(false);
       return;
     }
 
-    this.dashboard._momentModeActive = false;
-    this.dashboard._setMomentModeEnabled = (enabled) => {
+    this.dashboard.modes.exit("moment");
+    this.dashboard.modeSetters.moment = (enabled) => {
       this.setEnabled(enabled === true);
     };
 
@@ -288,33 +286,17 @@ class MomentModeManager {
   }
 
   enterMode() {
-    try {
-      if (
-        this.dashboard._quranFocusModeActive &&
-        typeof this.dashboard._setQuranFocusModeEnabled === "function"
-      ) {
-        this.dashboard._setQuranFocusModeEnabled(false);
-      }
-    } catch (e) {}
-
-    try {
-      if (
-        this.dashboard.sidebarModeEnabled &&
-        typeof this.dashboard._setSidebarModeEnabled === "function"
-      ) {
-        this.dashboard._setSidebarModeEnabled(false);
-      }
-    } catch (e) {}
+    // Moment takes over the screen: turn off the modes it excludes first.
+    this.dashboard.exitExcludedModes("moment");
+    this.dashboard.modes.enter("moment");
 
     this.setEditModeLocked(true);
 
     this.active = true;
-    this.dashboard._momentModeActive = true;
 
     this.momentBtn.classList.add("active");
     this.momentBtn.setAttribute("aria-pressed", "true");
 
-    document.body.classList.add("moment-mode");
     this.layoutRoot.setAttribute("aria-hidden", "false");
 
     // Keep Moment layout deterministic by suspending active floating runtime.
@@ -348,12 +330,11 @@ class MomentModeManager {
 
   exitMode() {
     this.active = false;
-    this.dashboard._momentModeActive = false;
+    this.dashboard.modes.exit("moment");
 
     this.momentBtn.classList.remove("active");
     this.momentBtn.setAttribute("aria-pressed", "false");
 
-    document.body.classList.remove("moment-mode");
     this.layoutRoot.setAttribute("aria-hidden", "true");
 
     this.restoreComponentsFromMomentLayout();

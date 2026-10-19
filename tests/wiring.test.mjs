@@ -1,12 +1,12 @@
 /**
- * Wiring: a page that asks the Islamic day module for something must load it
- * first, and the card must be able to label every prohibited day the module
- * reports. The service worker's own wiring is covered by its scheduling test,
- * which fails outright when the module is missing.
+ * Wiring: a page that asks a module for something must load it first, and the
+ * module that owns a state must be its only writer. The Islamic-day side is
+ * covered by the page-order test and the service worker's scheduling test;
+ * the mode side by the mode module's own tests.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 import { loadSandbox, localDay, repoRoot } from "./harness.mjs";
@@ -21,6 +21,18 @@ const CONSUMERS = [
 ];
 const NEEDED_BEFORE = ["js/praytimes.js", "js/hijri.js", "js/islamic-day.js"];
 const MODULE_FILES = ["js/hijri.js", "js/praytimes.js", "js/islamic-day.js"];
+const MODE_CONSUMERS = [
+  "js/app.js",
+  "js/gridlayout.js",
+  "js/floating.js",
+  "js/moment.js",
+];
+const MODE_CLASSES = [
+  "quran-focus-mode",
+  "moment-mode",
+  "sidebar-mode",
+  "grid-edit-mode",
+];
 
 function scriptSrcs(page) {
   const html = readFileSync(path.join(repoRoot, page), "utf8");
@@ -44,6 +56,43 @@ test("a page loads the module before the code that asks it for a day", () => {
       );
     }
   }
+});
+
+test("a page loads the mode module before the code that reads modes from it", () => {
+  for (const page of PAGES) {
+    const srcs = scriptSrcs(page);
+    const consumers = MODE_CONSUMERS.filter((file) => srcs.includes(file));
+    if (consumers.length === 0) continue;
+
+    const at = srcs.indexOf("js/modes.js");
+    assert.ok(at >= 0, `${page} never loads js/modes.js`);
+
+    for (const consumer of consumers) {
+      assert.ok(
+        at < srcs.indexOf(consumer),
+        `${page} loads js/modes.js after ${consumer}, which reads modes from it`,
+      );
+    }
+  }
+});
+
+test("the mode module is the only writer of the mode classes", () => {
+  const writers = [];
+
+  for (const file of readdirSync(path.join(repoRoot, "js"))) {
+    if (!file.endsWith(".js") || file === "modes.js") continue;
+    const source = readFileSync(path.join(repoRoot, "js", file), "utf8");
+    const pattern = new RegExp(
+      `body\\.classList\\.(?:add|remove|toggle)\\(\\s*"(${MODE_CLASSES.join("|")})"`,
+      "g",
+    );
+
+    for (const match of source.matchAll(pattern)) {
+      writers.push(`js/${file} writes ${match[1]}`);
+    }
+  }
+
+  assert.deepEqual(writers, [], "body classes belong to the mode module");
 });
 
 test("the calculator the pages configure is the module's", () => {

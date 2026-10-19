@@ -27,6 +27,9 @@ export function loadSandbox(
     console,
     setTimeout,
     clearTimeout,
+    // A page always has these; deferred so a test's own assertions run first.
+    requestAnimationFrame: (callback) => setTimeout(() => callback(Date.now()), 0),
+    cancelAnimationFrame: clearTimeout,
     ...globals,
   });
 
@@ -61,6 +64,26 @@ export function loadSandbox(
 /** Local calendar date, the way the extension reads "today". */
 export function localDay(year, month, day, hour = 0, minute = 0) {
   return new Date(year, month - 1, day, hour, minute);
+}
+
+/**
+ * A document with a class list, for modules that only touch body classes.
+ */
+export function makeDocument() {
+  const classes = new Set();
+  const classList = {
+    add: (...names) => names.forEach((name) => classes.add(name)),
+    remove: (...names) => names.forEach((name) => classes.delete(name)),
+    contains: (name) => classes.has(name),
+    toggle: (name, force) => {
+      const on = force === undefined ? !classes.has(name) : force === true;
+      if (on) classes.add(name);
+      else classes.delete(name);
+      return on;
+    },
+  };
+
+  return { body: { classList }, classes };
 }
 
 /**
