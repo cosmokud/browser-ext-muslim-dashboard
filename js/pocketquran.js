@@ -787,12 +787,13 @@ class PocketQuranManager extends BaseManager {
       pq.translationResourceId,
     );
 
-    const arabicFontSize = this.clampNumber(pq.arabicFontSize, 8, 144, 40);
-    const translationFontSize = this.clampNumber(
+    const arabicFontSize = SettingsRegistry.coerce(
+      "arabicFontSize",
+      pq.arabicFontSize,
+    );
+    const translationFontSize = SettingsRegistry.coerce(
+      "translationFontSize",
       pq.translationFontSize,
-      8,
-      144,
-      18,
     );
 
     this.applyFontSizes(arabicFontSize, translationFontSize, {

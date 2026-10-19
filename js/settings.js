@@ -1505,7 +1505,10 @@ class SettingsManager extends BaseManager {
 
     // Pinned Apps settings
     if (this.pinnedAppsPerRow) {
-      const clamped = this.clampNumber(settings.pinnedAppsPerRow, 3, 20, 10);
+      const clamped = SettingsRegistry.coerce(
+        "pinnedAppsPerRow",
+        settings.pinnedAppsPerRow,
+      );
       this.pinnedAppsPerRow.value = String(clamped);
       this.updatePinnedAppsPerRowLabel();
     }
@@ -1525,13 +1528,16 @@ class SettingsManager extends BaseManager {
     const pqPopup = settings.pocketQuranPopup || {};
 
     if (this.pocketQuranArabicSize) {
-      const clamped = this.clampNumber(pq.arabicFontSize, 8, 144, 40);
+      const clamped = SettingsRegistry.coerce("arabicFontSize", pq.arabicFontSize);
       this.pocketQuranArabicSize.value = String(clamped);
       this.updatePocketQuranArabicSizeLabel();
     }
 
     if (this.pocketQuranTranslationSize) {
-      const clamped = this.clampNumber(pq.translationFontSize, 8, 144, 18);
+      const clamped = SettingsRegistry.coerce(
+        "translationFontSize",
+        pq.translationFontSize,
+      );
       this.pocketQuranTranslationSize.value = String(clamped);
       this.updatePocketQuranTranslationSizeLabel();
     }
@@ -1555,22 +1561,20 @@ class SettingsManager extends BaseManager {
     }
 
     if (this.pocketQuranPopupArabicSize) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "arabicFontSize",
         pqPopup.arabicFontSize,
-        8,
-        144,
-        this.clampNumber(pq.arabicFontSize, 8, 144, 40),
+        SettingsRegistry.coerce("arabicFontSize", pq.arabicFontSize),
       );
       this.pocketQuranPopupArabicSize.value = String(clamped);
       this.updatePocketQuranPopupArabicSizeLabel();
     }
 
     if (this.pocketQuranPopupTranslationSize) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "translationFontSize",
         pqPopup.translationFontSize,
-        8,
-        144,
-        this.clampNumber(pq.translationFontSize, 8, 144, 18),
+        SettingsRegistry.coerce("translationFontSize", pq.translationFontSize),
       );
       this.pocketQuranPopupTranslationSize.value = String(clamped);
       this.updatePocketQuranPopupTranslationSizeLabel();
@@ -1813,11 +1817,9 @@ class SettingsManager extends BaseManager {
 
   updatePocketQuranArabicSizeLabel() {
     if (!this.pocketQuranArabicSize || !this.pocketQuranArabicSizeValue) return;
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "arabicFontSize",
       parseInt(this.pocketQuranArabicSize.value, 10),
-      8,
-      144,
-      40,
     );
     this.pocketQuranArabicSize.value = String(clamped);
     this.pocketQuranArabicSizeValue.textContent = `${clamped}px`;
@@ -1829,11 +1831,9 @@ class SettingsManager extends BaseManager {
       !this.pocketQuranTranslationSizeValue
     )
       return;
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "translationFontSize",
       parseInt(this.pocketQuranTranslationSize.value, 10),
-      8,
-      144,
-      18,
     );
     this.pocketQuranTranslationSize.value = String(clamped);
     this.pocketQuranTranslationSizeValue.textContent = `${clamped}px`;
@@ -1864,11 +1864,9 @@ class SettingsManager extends BaseManager {
     )
       return;
 
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "arabicFontSize",
       parseInt(this.pocketQuranPopupArabicSize.value, 10),
-      8,
-      144,
-      40,
     );
 
     this.pocketQuranPopupArabicSize.value = String(clamped);
@@ -1882,11 +1880,9 @@ class SettingsManager extends BaseManager {
     )
       return;
 
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "translationFontSize",
       parseInt(this.pocketQuranPopupTranslationSize.value, 10),
-      8,
-      144,
-      18,
     );
 
     this.pocketQuranPopupTranslationSize.value = String(clamped);
@@ -7888,17 +7884,15 @@ class SettingsManager extends BaseManager {
 
     settings.pocketQuran = {
       ...existingPocketQuran,
-      arabicFontSize: this.clampNumber(
+      arabicFontSize: SettingsRegistry.coerce(
+        "arabicFontSize",
         parseInt(this.pocketQuranArabicSize?.value, 10),
-        8,
-        144,
-        existingPocketQuran.arabicFontSize ?? 40,
+        existingPocketQuran.arabicFontSize,
       ),
-      translationFontSize: this.clampNumber(
+      translationFontSize: SettingsRegistry.coerce(
+        "translationFontSize",
         parseInt(this.pocketQuranTranslationSize?.value, 10),
-        8,
-        144,
-        existingPocketQuran.translationFontSize ?? 18,
+        existingPocketQuran.translationFontSize,
       ),
       translationFontFamily: this.normalizePocketQuranTranslationFontFamily(
         this.pocketQuranTranslationFontFamily?.value ||
@@ -7941,21 +7935,17 @@ class SettingsManager extends BaseManager {
 
     settings.pocketQuranPopup = {
       ...existingPocketQuranPopup,
-      arabicFontSize: this.clampNumber(
+      arabicFontSize: SettingsRegistry.coerce(
+        "arabicFontSize",
         parseInt(this.pocketQuranPopupArabicSize?.value, 10),
-        8,
-        144,
         existingPocketQuranPopup.arabicFontSize ??
-          existingPocketQuran.arabicFontSize ??
-          40,
+          existingPocketQuran.arabicFontSize,
       ),
-      translationFontSize: this.clampNumber(
+      translationFontSize: SettingsRegistry.coerce(
+        "translationFontSize",
         parseInt(this.pocketQuranPopupTranslationSize?.value, 10),
-        8,
-        144,
         existingPocketQuranPopup.translationFontSize ??
-          existingPocketQuran.translationFontSize ??
-          18,
+          existingPocketQuran.translationFontSize,
       ),
       arabicFontFamily: this.normalizePocketQuranArabicFontFamily(
         this.pocketQuranPopupArabicFontFamily?.value ||

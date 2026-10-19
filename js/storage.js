@@ -233,8 +233,8 @@ class StorageManager {
       bgIntervalCustom: null, // custom interval in minutes
       bgCategory: "all",
       bgDisplayMode: "fill", // fill, fit, stretch, tile, center, span
-      bgDim: 100, // background overlay intensity percentage
-      bgBlur: 0, // background image blur radius in px
+      bgDim: SettingsRegistry.defaultOf("bgDim"), // background overlay intensity percentage
+      bgBlur: SettingsRegistry.defaultOf("bgBlur"), // background image blur radius in px
       bgShuffle: true, // true = random order, false = ordered cycling
       lastBgChange: null,
       currentBgIndex: 0,
@@ -264,7 +264,7 @@ class StorageManager {
         name: "emerald",
         mode: "dark",
         glassEnabled: true,
-        glassOpacity: 50,
+        glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
         componentOpacity: 0,
         backgroundAwareFontColorEnabled: false,
         highestVisualFidelityEnabled: false,
@@ -300,7 +300,7 @@ class StorageManager {
 
       // Pinned Apps settings
       pinnedApps: [],
-      pinnedAppsPerRow: 10,
+      pinnedAppsPerRow: SettingsRegistry.defaultOf("pinnedAppsPerRow"),
       pinnedAppsOpenInNewTab: true,
 
       // Search Bar settings
@@ -458,10 +458,10 @@ class StorageManager {
 
       // Pocket Quran settings
       pocketQuran: {
-        arabicFontSize: 40,
+        arabicFontSize: SettingsRegistry.defaultOf("arabicFontSize"),
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         showArabicText: true,
-        translationFontSize: 18,
+        translationFontSize: SettingsRegistry.defaultOf("translationFontSize"),
         translationFontFamily: "Poppins",
         showTranslationText: true,
         translationResourceId: 85, // M.A.S. Abdel Haleem
@@ -497,10 +497,10 @@ class StorageManager {
       },
 
       pocketQuranPopup: {
-        arabicFontSize: 40,
+        arabicFontSize: SettingsRegistry.defaultOf("arabicFontSize"),
         arabicFontFamily: "KFGQPC Uthman Taha Naskh",
         showArabicText: true,
-        translationFontSize: 18,
+        translationFontSize: SettingsRegistry.defaultOf("translationFontSize"),
         translationFontFamily: "Poppins",
         showTranslationText: true,
       },
@@ -664,17 +664,8 @@ class StorageManager {
     merged.bgDisplayMode = allowedBgDisplayModes.has(normalizedBgDisplayMode)
       ? normalizedBgDisplayMode
       : defaults.bgDisplayMode;
-    let mergedBgDim = Number(merged.bgDim);
-    if (!Number.isFinite(mergedBgDim)) {
-      mergedBgDim = defaults.bgDim;
-    }
-    merged.bgDim = Math.min(100, Math.max(0, Math.round(mergedBgDim)));
-
-    let mergedBgBlur = Number(merged.bgBlur);
-    if (!Number.isFinite(mergedBgBlur)) {
-      mergedBgBlur = defaults.bgBlur;
-    }
-    merged.bgBlur = Math.min(40, Math.max(0, Math.round(mergedBgBlur)));
+    merged.bgDim = SettingsRegistry.coerce("bgDim", merged.bgDim);
+    merged.bgBlur = SettingsRegistry.coerce("bgBlur", merged.bgBlur);
 
     merged.bgShuffle = merged.bgShuffle !== false;
 
@@ -803,16 +794,13 @@ class StorageManager {
         : Number.isFinite(parsedLegacyPower)
           ? parsedLegacyPower
           : merged[mapping.blurPowerKey];
-      blurPower = Math.min(200, Math.max(0, Math.round(blurPower)));
+      blurPower = SettingsRegistry.coerce("blurPower", blurPower);
 
       const parsedOpacity = Number(rawOpacity);
       let glassOpacity = Number.isFinite(parsedOpacity)
         ? parsedOpacity
         : Number(merged?.theme?.glassOpacity);
-      if (!Number.isFinite(glassOpacity)) {
-        glassOpacity = 50;
-      }
-      glassOpacity = Math.min(100, Math.max(0, Math.round(glassOpacity)));
+      glassOpacity = SettingsRegistry.coerce("glassOpacity", glassOpacity);
 
       if (state === "off") {
         blurPowerEnabled = false;
@@ -896,22 +884,13 @@ class StorageManager {
     )
       ? normalizedBgDisplayMode
       : defaults.bgDisplayMode;
-    let normalizedBgDim = Number(normalizedSettings.bgDim);
-    if (!Number.isFinite(normalizedBgDim)) {
-      normalizedBgDim = defaults.bgDim;
-    }
-    normalizedSettings.bgDim = Math.min(
-      100,
-      Math.max(0, Math.round(normalizedBgDim)),
+    normalizedSettings.bgDim = SettingsRegistry.coerce(
+      "bgDim",
+      normalizedSettings.bgDim,
     );
-
-    let normalizedBgBlur = Number(normalizedSettings.bgBlur);
-    if (!Number.isFinite(normalizedBgBlur)) {
-      normalizedBgBlur = defaults.bgBlur;
-    }
-    normalizedSettings.bgBlur = Math.min(
-      40,
-      Math.max(0, Math.round(normalizedBgBlur)),
+    normalizedSettings.bgBlur = SettingsRegistry.coerce(
+      "bgBlur",
+      normalizedSettings.bgBlur,
     );
 
     normalizedSettings.bgShuffle = normalizedSettings.bgShuffle !== false;

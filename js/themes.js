@@ -1302,9 +1302,7 @@ class ThemeManager {
   }
 
   _clampGlassOpacity(value, fallback = 50) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return fallback;
-    return Math.min(100, Math.max(0, Math.round(numeric)));
+    return SettingsRegistry.coerce("glassOpacity", value, fallback);
   }
 
   _getGlassOpacityAlphas(opacityPercent = this._glassOpacity) {

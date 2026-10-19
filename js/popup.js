@@ -1866,17 +1866,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     return {
-      arabicFontSize: clampNumber(
+      arabicFontSize: SettingsRegistry.coerce(
+        "arabicFontSize",
         merged.arabicFontSize,
-        8,
-        144,
-        clampNumber(mainTypography.arabicFontSize, 8, 144, 40),
+        SettingsRegistry.coerce("arabicFontSize", mainTypography.arabicFontSize),
       ),
-      translationFontSize: clampNumber(
+      translationFontSize: SettingsRegistry.coerce(
+        "translationFontSize",
         merged.translationFontSize,
-        8,
-        144,
-        clampNumber(mainTypography.translationFontSize, 8, 144, 18),
+        SettingsRegistry.coerce(
+          "translationFontSize",
+          mainTypography.translationFontSize,
+        ),
       ),
       arabicFontFamily: normalizePocketQuranArabicFontFamily(
         merged.arabicFontFamily || mainTypography.arabicFontFamily,
@@ -2207,7 +2208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getDashboardGlassOpacityPercent() {
     const settings = storage.getSettings();
-    return clampNumber(settings?.theme?.glassOpacity, 0, 100, 0);
+    return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity, 0);
   }
 
   function getGlassOpacityAlphas(opacityPercent) {
@@ -6300,22 +6301,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const syncArabicSizeFromSlider = () => {
-      const nextValue = clampNumber(
+      const nextValue = SettingsRegistry.coerce(
+        "arabicFontSize",
         parseInt(popupPqArabicSizeRange?.value, 10),
-        8,
-        144,
-        popupPqTypographyState?.arabicFontSize || 40,
+        popupPqTypographyState?.arabicFontSize,
       );
       persistPocketQuranPopupTypography({ arabicFontSize: nextValue });
       applyPocketQuranPopupTypography(storage.getSettings());
     };
 
     const syncTranslationSizeFromSlider = () => {
-      const nextValue = clampNumber(
+      const nextValue = SettingsRegistry.coerce(
+        "translationFontSize",
         parseInt(popupPqTranslationSizeRange?.value, 10),
-        8,
-        144,
-        popupPqTypographyState?.translationFontSize || 18,
+        popupPqTypographyState?.translationFontSize,
       );
       persistPocketQuranPopupTypography({ translationFontSize: nextValue });
       applyPocketQuranPopupTypography(storage.getSettings());

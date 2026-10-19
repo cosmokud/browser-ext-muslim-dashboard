@@ -385,15 +385,11 @@ class BackgroundManager extends BaseManager {
   }
 
   normalizeBackgroundDim(value, fallback = 100) {
-    const parsed = Number(value);
-    const safe = Number.isFinite(parsed) ? parsed : fallback;
-    return Math.min(100, Math.max(0, Math.round(safe)));
+    return SettingsRegistry.coerce("bgDim", value, fallback);
   }
 
   normalizeBackgroundBlur(value, fallback = 0) {
-    const parsed = Number(value);
-    const safe = Number.isFinite(parsed) ? parsed : fallback;
-    return Math.min(40, Math.max(0, Math.round(safe)));
+    return SettingsRegistry.coerce("bgBlur", value, fallback);
   }
 
   isShuffleEnabled(settings = null) {

@@ -1082,9 +1082,7 @@ class MuslimDashboard {
     const getDashboardGlassOpacity = () => {
       try {
         const settings = this.storage.getSettings();
-        const numeric = Number(settings?.theme?.glassOpacity);
-        if (!Number.isFinite(numeric)) return 50;
-        return Math.min(100, Math.max(0, Math.round(numeric)));
+        return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity);
       } catch (e) {
         return 50;
       }
@@ -1099,11 +1097,8 @@ class MuslimDashboard {
     const validBlurStates = new Set(["off", "dashboard", "on"]);
     const normalizeBlurState = (value) =>
       validBlurStates.has(value) ? value : "dashboard";
-    const normalizeBlurPower = (value) => {
-      const numeric = Number(value);
-      if (!Number.isFinite(numeric)) return 100;
-      return Math.min(200, Math.max(0, Math.round(numeric)));
-    };
+    const normalizeBlurPower = (value) =>
+      SettingsRegistry.coerce("blurPower", value, 100);
     const normalizeGlassOpacity = (
       value,
       fallback = getDashboardGlassOpacity(),
@@ -1112,9 +1107,7 @@ class MuslimDashboard {
         return fallback;
       }
 
-      const numeric = Number(value);
-      if (!Number.isFinite(numeric)) return fallback;
-      return Math.min(100, Math.max(0, Math.round(numeric)));
+      return SettingsRegistry.coerce("glassOpacity", value, fallback);
     };
 
     const blurPopupByCardId = new Map();
@@ -2271,12 +2264,12 @@ class MuslimDashboard {
 
   applyPinnedAppsSettings(perRowOverride) {
     const settings = this.storage.getSettings();
-    const perRowRaw = Number.isFinite(perRowOverride)
-      ? perRowOverride
-      : Number(settings.pinnedAppsPerRow);
-    const perRow = Number.isFinite(perRowRaw)
-      ? Math.min(20, Math.max(3, perRowRaw))
-      : 10;
+    const perRow = SettingsRegistry.coerce(
+      "pinnedAppsPerRow",
+      Number.isFinite(perRowOverride)
+        ? perRowOverride
+        : Number(settings.pinnedAppsPerRow),
+    );
 
     const appCount = Array.isArray(this.pinnedApps?.apps)
       ? this.pinnedApps.apps.length
