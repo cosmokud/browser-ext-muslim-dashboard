@@ -14,6 +14,13 @@
  *   - Forbidden fasting days (Eid and Tashreeq)
  */
 
+const FORBIDDEN_TOOLTIPS = {
+  eidAlFitr: "Fasting is prohibited on Eid al-Fitr (1 Shawwal).",
+  eidAlAdha: "Fasting is prohibited on Eid al-Adha (10 Dhu al-Hijjah).",
+  tashreeq:
+    "Fasting is prohibited during the Days of Tashreeq (11-13 Dhu al-Hijjah).",
+};
+
 class FastingManager {
   /**
    * @param {StorageManager} storage
@@ -22,6 +29,10 @@ class FastingManager {
   constructor(storage, hijri) {
     this.storage = storage;
     this.hijri = hijri;
+
+    // The day rule and its predicates. render() rebuilds this from the current
+    // settings; until then the predicates still answer for a passed-in day.
+    this._islamicDay = new IslamicDay({});
 
     this.card = document.getElementById("fastingCard");
     this.subtitle = document.getElementById("fastingHijriNow");
@@ -106,8 +117,11 @@ class FastingManager {
       30,
     );
 
+    // Reads the day the suhur alert reads.
+    this._islamicDay = new IslamicDay(settings);
+
     // Required: derive Hijri first (with adjustment)
-    const hijriNow = this.hijri.toHijri(now, adjustment);
+    const hijriNow = this._islamicDay.dayFor(now);
 
     if (this.subtitle) {
       // Use full month name (no abbreviation)
@@ -323,20 +337,14 @@ class FastingManager {
 
     const hm = Number(hijriNow.month || 0);
     const hd = Number(hijriNow.day || 0);
+    const prohibited = this._islamicDay.prohibitedFastFor(hijriNow);
 
     let mode = "";
     let tooltip = "";
 
-    if (hm === 10 && hd === 1) {
+    if (prohibited) {
       mode = "fasting-subtitle--forbidden";
-      tooltip = "Fasting is prohibited on Eid al-Fitr (1 Shawwal).";
-    } else if (hm === 12 && hd === 10) {
-      mode = "fasting-subtitle--forbidden";
-      tooltip = "Fasting is prohibited on Eid al-Adha (10 Dhu al-Hijjah).";
-    } else if (hm === 12 && hd >= 11 && hd <= 13) {
-      mode = "fasting-subtitle--forbidden";
-      tooltip =
-        "Fasting is prohibited during the Days of Tashreeq (11-13 Dhu al-Hijjah).";
+      tooltip = FORBIDDEN_TOOLTIPS[prohibited.type];
     } else if (showRecommendations && hm === 8) {
       mode = "fasting-subtitle--recommendation";
       tooltip =
@@ -442,7 +450,7 @@ class FastingManager {
 
     if (this._weeklyFastMayHitForbiddenDay(hijriNow, delta)) {
       const hijriTarget = this.hijri.toHijri(target, adjustment);
-      if (this._hijriFastDayIsForbidden(hijriTarget.month, hijriTarget.day)) {
+      if (this._islamicDay.prohibitedFastFor(hijriTarget)) {
         return {
           daysLeft: delta + 7,
           target: this._addDays(target, 7),
@@ -594,7 +602,7 @@ class FastingManager {
 
   _fastingDateIsForbidden(date, adjustment) {
     const hijriDate = this.hijri.toHijri(date, adjustment);
-    return this._hijriFastDayIsForbidden(hijriDate.month, hijriDate.day);
+    return this._islamicDay.prohibitedFastFor(hijriDate) !== null;
   }
 
   _weeklyFastMayHitForbiddenDay(hijriNow, daysAhead) {
@@ -607,16 +615,6 @@ class FastingManager {
     if (hm === 12) return hd <= 13 && hd + daysAhead >= 10;
 
     return false;
-  }
-
-  _hijriFastDayIsForbidden(month, day) {
-    const hm = Number(month || 0);
-    const hd = Number(day || 0);
-
-    return (
-      (hm === 10 && hd === 1) ||
-      (hm === 12 && hd >= 10 && hd <= 13)
-    );
   }
 
   _hijriCountdownWithin(

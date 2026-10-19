@@ -2474,7 +2474,7 @@ class MuslimDashboard {
     let dateText = "";
 
     if (dateCalendar === "hijri" || dateCalendar === "both") {
-      const hijriDate = this.hijri.toHijri(now, settings.hijriAdjustment || 0);
+      const hijriDate = new IslamicDay(settings).dayFor(now);
       dateText = this.hijri.format(hijriDate, dateFormat, "en");
 
       // Check for Islamic events

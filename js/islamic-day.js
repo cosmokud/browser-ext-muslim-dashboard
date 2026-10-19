@@ -39,6 +39,11 @@ class IslamicDay {
     );
   }
 
+  /** The configured calculator, for callers that need its tables. */
+  calculator() {
+    return this.prayTimes;
+  }
+
   /**
    * The fast this day calls for, or null when it calls for none.
    *

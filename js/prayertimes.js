@@ -7,7 +7,8 @@
 class PrayerTimesManager {
   constructor(storage) {
     this.storage = storage;
-    this.prayTimes = new PrayTimes();
+    // The Islamic day module owns the calculator configuration.
+    this.prayTimes = new IslamicDay({}).calculator();
     this.times = {};
     this.location = null;
     this.countdownInterval = null;
@@ -88,32 +89,7 @@ class PrayerTimesManager {
    * Configure the prayer times calculator
    */
   configureCalculator(settings) {
-    // Set calculation method
-    this.prayTimes.setMethod(settings.calculationMethod);
-
-    // Set custom angles if using Custom method
-    if (settings.calculationMethod === "Custom") {
-      this.prayTimes.setFajrAngle(settings.customFajrAngle);
-      this.prayTimes.setIshaAngle(
-        settings.customIshaAngle,
-        settings.customIshaMinutes,
-      );
-    }
-
-    // Set Asr method
-    this.prayTimes.setAsrMethod(settings.asrMethod);
-
-    // Set higher latitude method
-    this.prayTimes.setHighLatMethod(settings.highLatMethod);
-
-    // Set midnight method
-    this.prayTimes.setMidnightMethod(settings.midnightMethod);
-
-    // Set Duha offset
-    this.prayTimes.setDuhaOffset(settings.duhaOffset);
-
-    // Set adjustments
-    this.prayTimes.tune(settings.adjustments);
+    this.prayTimes = new IslamicDay(settings).calculator();
   }
 
   /**

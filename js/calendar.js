@@ -626,7 +626,8 @@ class CalendarManager {
    */
   updateTodayDisplay() {
     const today = new Date();
-    const hijri = this.hijriConverter.toHijri(today, this.hijriAdjustment);
+    // The day rule the header, the card and the suhur alert read.
+    const hijri = new IslamicDay(this.storage.getSettings()).dayFor(today);
 
     if (this.hijriDisplay) {
       const hijriMonthName = this.hijriConverter.getHijriMonthName(hijri.month);
