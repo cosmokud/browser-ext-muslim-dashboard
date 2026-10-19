@@ -1123,17 +1123,14 @@ class PocketQuranManager extends BaseManager {
     // Font size controls
     if (this.arabicSizeRange) {
       this.arabicSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(
+        const a = SettingsRegistry.coerce(
+          "arabicFontSize",
           parseInt(this.arabicSizeRange.value, 10),
-          8,
-          144,
           32,
         );
-        const t = this.clampNumber(
+        const t = SettingsRegistry.coerce(
+          "translationFontSize",
           parseInt(this.translationSizeRange?.value, 10),
-          8,
-          144,
-          18,
         );
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
         // Invalidate height cache when font size changes
@@ -1142,11 +1139,9 @@ class PocketQuranManager extends BaseManager {
       });
       this.arabicSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          arabicFontSize: this.clampNumber(
+          arabicFontSize: SettingsRegistry.coerce(
+            "arabicFontSize",
             parseInt(this.arabicSizeRange.value, 10),
-            8,
-            144,
-            40,
           ),
         });
       });
@@ -1154,17 +1149,13 @@ class PocketQuranManager extends BaseManager {
 
     if (this.translationSizeRange) {
       this.translationSizeRange.addEventListener("input", () => {
-        const a = this.clampNumber(
+        const a = SettingsRegistry.coerce(
+          "arabicFontSize",
           parseInt(this.arabicSizeRange?.value, 10),
-          8,
-          144,
-          40,
         );
-        const t = this.clampNumber(
+        const t = SettingsRegistry.coerce(
+          "translationFontSize",
           parseInt(this.translationSizeRange.value, 10),
-          8,
-          144,
-          18,
         );
         this.applyFontSizes(a, t, { syncInputs: true, persist: false });
         // Invalidate height cache when font size changes
@@ -1173,11 +1164,9 @@ class PocketQuranManager extends BaseManager {
       });
       this.translationSizeRange.addEventListener("change", () => {
         this.persistPocketQuranSettings({
-          translationFontSize: this.clampNumber(
+          translationFontSize: SettingsRegistry.coerce(
+            "translationFontSize",
             parseInt(this.translationSizeRange.value, 10),
-            8,
-            144,
-            18,
           ),
         });
       });
