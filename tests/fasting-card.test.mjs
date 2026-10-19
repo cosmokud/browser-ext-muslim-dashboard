@@ -108,6 +108,20 @@ test("weekly fasts move when the coming week holds a forbidden day", () => {
   assert.equal(skipsThursday.daysLeft, 12, "Thursday skips a forbidden Thursday later this week");
 });
 
+test("a dated fast row shows its Hijri day and month", () => {
+  const { manager } = makeCard();
+
+  // 2 Mar 2026 is 13 Ramadan 1447; 26 May 2026 is 9 Dhu al-Hijjah 1447.
+  assert.equal(
+    manager._formatHijriDayMonth(manager._startOfDay(new Date(2026, 2, 2)), 0),
+    "13 Ramadan",
+  );
+  assert.equal(
+    manager._formatHijriDayMonth(manager._startOfDay(new Date(2026, 4, 26)), 0),
+    "9 Dhu al-Hijjah",
+  );
+});
+
 test("a week that holds no forbidden day answers without converting", () => {
   const { hijri, manager } = makeCard();
 

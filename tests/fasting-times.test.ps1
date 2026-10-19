@@ -15,11 +15,8 @@ function Assert-Matches {
   }
 }
 
-Assert-Matches `
-  -Haystack $source `
-  -Pattern '_formatHijriDayMonth\(date,\s*adjustment\)[\s\S]*?this\.hijri\.toHijri\(date,\s*adjustment\)[\s\S]*?return `\$\{hijriDate\.day\} \$\{monthName\}`;' `
-  -Message "Fasting Times needs a Hijri day-month formatter for dated fast rows."
-
+# The formatter's output is covered by tests/fasting-card.test.mjs; what is left
+# here is the row wiring, which has no behavioural seam without a DOM.
 Assert-Matches `
   -Haystack $source `
   -Pattern 'const mondayHijriDate = this\._formatHijriDayMonth\([\s\S]*?monday\.target,[\s\S]*?adjustment,[\s\S]*?\);[\s\S]*?title: "Monday Fast",[\s\S]*?subtitle: "Weekly Sunnah",[\s\S]*?aria: `Monday fast \(\$\{mondayHijriDate\}\): \$\{this\._daysLeftText\(monday\.daysLeft\)\}`,[\s\S]*?badge: mondayHijriDate,' `
