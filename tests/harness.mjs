@@ -19,7 +19,10 @@ function runFile(relPath, context) {
   vm.runInContext(source, context, { filename: relPath });
 }
 
-export function loadSandbox(relPaths, { globals = {}, window = true } = {}) {
+export function loadSandbox(
+  relPaths,
+  { globals = {}, window = true, now } = {},
+) {
   const context = vm.createContext({
     console,
     setTimeout,
@@ -28,6 +31,25 @@ export function loadSandbox(relPaths, { globals = {}, window = true } = {}) {
   });
 
   if (window) vm.runInContext("globalThis.window = globalThis;", context);
+
+  // A fixed clock, so a module that reads the current time can be driven to a
+  // specific local day. Date with arguments behaves normally.
+  if (now) {
+    context.__fixedNow = now.getTime();
+    vm.runInContext(
+      `{
+        const FixedDate = class extends Date {
+          constructor(...args) {
+            if (args.length === 0) super(globalThis.__fixedNow);
+            else super(...args);
+          }
+          static now() { return globalThis.__fixedNow; }
+        };
+        globalThis.Date = FixedDate;
+      }`,
+      context,
+    );
+  }
 
   context.importScripts = (...names) =>
     names.forEach((name) => runFile(`js/${name}`, context));

@@ -3,9 +3,9 @@
  * Schedules prayer-time notifications using chrome.alarms + chrome.notifications.
  */
 
-/* global PrayTimes */
+/* global IslamicDay */
 
-importScripts("praytimes.js");
+importScripts("praytimes.js", "hijri.js", "islamic-day.js");
 
 const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
@@ -200,27 +200,6 @@ function parseTimeToDate(timeStr, baseDate) {
   );
 }
 
-function configurePrayTimes(prayTimes, settings) {
-  prayTimes.setMethod(settings.calculationMethod || "MWL");
-
-  if (settings.calculationMethod === "Custom") {
-    prayTimes.setFajrAngle(settings.customFajrAngle ?? 18);
-    prayTimes.setIshaAngle(
-      settings.customIshaAngle ?? 17,
-      settings.customIshaMinutes ?? false,
-    );
-  }
-
-  prayTimes.setAsrMethod(settings.asrMethod || "Standard");
-  prayTimes.setHighLatMethod(settings.highLatMethod || "None");
-  prayTimes.setMidnightMethod(settings.midnightMethod || "Standard");
-  prayTimes.setDuhaOffset(settings.duhaOffset ?? 20);
-
-  if (settings.adjustments && typeof settings.adjustments === "object") {
-    prayTimes.tune(settings.adjustments);
-  }
-}
-
 function getServiceWorkerCoordinateExample() {
   return { latitude: 40.7128, longitude: -74.006, city: "Coordinate Example" };
 }
@@ -387,20 +366,13 @@ async function schedulePrayerNotifications() {
   if (!pn.enabled) return;
 
   const location = pickLocation(settings, lastLocation);
-  const prayTimes = new PrayTimes();
-  configurePrayTimes(prayTimes, settings);
+  const day = new IslamicDay(settings);
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const timeFormat = settings.timeFormat || "24h";
 
-  const times = prayTimes.getTimes(
-    today,
-    [location.latitude, location.longitude],
-    "auto",
-    "auto",
-    timeFormat,
-  );
+  const times = day.timesFor(today, location);
 
   // Store a small cache for debugging/visibility.
   await storageSet({
@@ -531,24 +503,14 @@ function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
   const visiblePrayers = getVisiblePrayerDefs(settings);
   if (visiblePrayers.length === 0) return null;
 
-  const prayTimes = new PrayTimes();
-  configurePrayTimes(prayTimes, settings || {});
-
-  const timeFormat = settings?.timeFormat || "24h";
-  const coords = [location.latitude, location.longitude];
+  const day = new IslamicDay(settings || {});
 
   const today = new Date(
     nowDate.getFullYear(),
     nowDate.getMonth(),
     nowDate.getDate(),
   );
-  const todayTimes = prayTimes.getTimes(
-    today,
-    coords,
-    "auto",
-    "auto",
-    timeFormat,
-  );
+  const todayTimes = day.timesFor(today, location);
 
   for (const def of visiblePrayers) {
     const at = parseTimeToDate(todayTimes[def.key], today);
@@ -565,13 +527,7 @@ function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
 
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowTimes = prayTimes.getTimes(
-    tomorrow,
-    coords,
-    "auto",
-    "auto",
-    timeFormat,
-  );
+  const tomorrowTimes = day.timesFor(tomorrow, location);
 
   for (const def of visiblePrayers) {
     const at = parseTimeToDate(tomorrowTimes[def.key], tomorrow);
@@ -781,103 +737,6 @@ async function showPrayerNotification(prayerKey, kind) {
 // ============================================================================
 
 /**
- * Simple Hijri date calculation for fasting notifications.
- * Based on Umm al-Qura approximation.
- */
-function gregorianToHijri(date) {
-  const jd =
-    Math.floor((date.getTime() - Date.UTC(1970, 0, 1)) / 86400000) + 2440588;
-  const l = jd - 1948440 + 10632;
-  const n = Math.floor((l - 1) / 10631);
-  const l2 = l - 10631 * n + 354;
-  const j =
-    Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) +
-    Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
-  const l3 =
-    l2 -
-    Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
-    Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
-    29;
-  const month = Math.floor((24 * l3) / 709);
-  const day = l3 - Math.floor((709 * month) / 24);
-  const year = 30 * n + j - 30;
-  return { year, month, day };
-}
-
-/**
- * Check if today is a fasting day based on settings.
- * Returns the type of fast or null if not a fasting day.
- */
-function getTodayFastingType(settings, today) {
-  const fasting = settings.fasting || {};
-  const notify = fasting.notifications?.notify || {};
-  const adjustment = Number(settings.hijriAdjustment || 0);
-
-  // Adjust the date for Hijri calculation
-  const adjustedDate = new Date(today);
-  adjustedDate.setDate(adjustedDate.getDate() + adjustment);
-  const hijri = gregorianToHijri(adjustedDate);
-
-  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 4=Thu
-
-  // Check Ramadan (month 9)
-  if (notify.ramadan !== false && hijri.month === 9) {
-    return { type: "ramadan", label: "Ramadan (month 9)" };
-  }
-
-  // Check Day of Arafah (9 Dhu al-Hijjah, month 12)
-  if (notify.arafah !== false && hijri.month === 12 && hijri.day === 9) {
-    return { type: "arafah", label: "Day of Arafah (9 Dhu al-Hijjah)" };
-  }
-
-  // Check Dhu al-Hijjah first 9 days (month 12, days 1-9)
-  if (
-    notify.dhuAlHijjah !== false &&
-    hijri.month === 12 &&
-    hijri.day >= 1 &&
-    hijri.day <= 9
-  ) {
-    return {
-      type: "dhuAlHijjah",
-      label: "First 9 days of Dhu al-Hijjah (1-9 Dhu al-Hijjah)",
-    };
-  }
-
-  // Check Tasu'a and Ashura (9-10 Muharram)
-  if (notify.ashuraDays !== false && hijri.month === 1 && hijri.day === 9) {
-    return { type: "tasua", label: "Tasu'a (9 Muharram)" };
-  }
-  if (notify.ashuraDays !== false && hijri.month === 1 && hijri.day === 10) {
-    return { type: "ashura", label: "Ashura (10 Muharram)" };
-  }
-
-  // Check Ayyam al-Beed (13th-15th of any Hijri month, except Ramadan)
-  if (
-    notify.ayyamAlBeed !== false &&
-    hijri.month !== 9 &&
-    hijri.day >= 13 &&
-    hijri.day <= 15
-  ) {
-    return {
-      type: "ayyamAlBeed",
-      label: "Ayyam al-Beed (13th-15th of each Hijri month)",
-    };
-  }
-
-  // Check Monday fast
-  if (notify.monday !== false && dayOfWeek === 1) {
-    return { type: "monday", label: "Monday Fast" };
-  }
-
-  // Check Thursday fast
-  if (notify.thursday !== false && dayOfWeek === 4) {
-    return { type: "thursday", label: "Thursday Fast" };
-  }
-
-  return null;
-}
-
-/**
  * Schedule fasting Suhur notification for today (if applicable).
  */
 async function scheduleFastingNotifications() {
@@ -914,8 +773,10 @@ async function scheduleFastingNotifications() {
     today.getDate(),
   );
 
+  const day = new IslamicDay(settings);
+
   // Check if today is a fasting day
-  const fastingType = getTodayFastingType(settings, todayStart);
+  const fastingType = day.fastingDayFor(day.dayFor(todayStart));
   if (!fastingType) {
     await storageSet({
       md_fasting_status: {
@@ -930,17 +791,9 @@ async function scheduleFastingNotifications() {
 
   // Get Fajr time for today
   const location = pickLocation(settings, lastLocation);
-  const prayTimes = new PrayTimes();
-  configurePrayTimes(prayTimes, settings);
 
   const timeFormat = settings.timeFormat || "24h";
-  const times = prayTimes.getTimes(
-    todayStart,
-    [location.latitude, location.longitude],
-    "auto",
-    "auto",
-    timeFormat,
-  );
+  const times = day.timesFor(todayStart, location);
 
   const fajrTimeStr = times.fajr;
   const fajrDate = parseTimeToDate(fajrTimeStr, todayStart);
@@ -1023,7 +876,9 @@ async function showFastingNotification() {
     today.getMonth(),
     today.getDate(),
   );
-  const fastingType = getTodayFastingType(settings, todayStart);
+
+  const day = new IslamicDay(settings);
+  const fastingType = day.fastingDayFor(day.dayFor(todayStart));
 
   const title = "🌙 Suhur Time";
   let message = `Time to prepare for Suhur! Fajr is in ${minutesBefore} minutes.`;
