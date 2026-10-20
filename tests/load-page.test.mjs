@@ -268,56 +268,68 @@ function makePage() {
   };
 }
 
-function scriptSrcs() {
-  const html = readFileSync(path.join(repoRoot, "index.html"), "utf8");
+function scriptSrcs(page) {
+  const html = readFileSync(path.join(repoRoot, page), "utf8");
   return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(
     (match) => match[1],
   );
 }
 
-test("every script the page loads runs to the end and defines what the next one needs", () => {
-  const context = vm.createContext({
-    console,
-    setTimeout,
-    clearTimeout,
-    setInterval,
-    clearInterval,
-    URL: URL,
-    TextEncoder,
-    TextDecoder,
-    ...makePage(),
-    chrome: makeChrome().chrome,
-  });
-  // `self` and `window` both name the global in a page.
-  vm.runInContext("globalThis.window = globalThis; globalThis.self = globalThis;", context);
-
-  const srcs = scriptSrcs();
-  assert.ok(srcs.length > 10, "the page loads its scripts as tags");
-
-  for (const src of srcs) {
-    // Vendor bundles need a real DOM (quill alone wants Node, Element and a
-    // tree walker); they are unmodified third-party code, not our seam.
-    if (src.includes("/vendor/")) continue;
-
-    const source = readFileSync(path.join(repoRoot, src), "utf8");
-    try {
-      vm.runInContext(source, context, { filename: src });
-    } catch (error) {
-      assert.fail(`${src} throws while loading: ${error.message}`);
-    }
-  }
-
-  for (const name of [
+const REQUIRED = {
+  "index.html": [
     "Modes",
     "IslamicDay",
     "HijriDate",
+    "SettingsRegistry",
+    "StorageManager",
     "GridLayoutManager",
     "MuslimDashboard",
-  ]) {
-    assert.notEqual(
-      vm.runInContext(`typeof ${name}`, context),
-      "undefined",
-      `${name} is not defined after loading the page's scripts`,
+  ],
+  "popup.html": ["SettingsRegistry", "StorageManager", "ThemeManager"],
+};
+
+for (const page of Object.keys(REQUIRED)) {
+  test(`${page}: every script runs to the end and defines what the next one needs`, () => {
+    const context = vm.createContext({
+      console,
+      setTimeout,
+      clearTimeout,
+      setInterval,
+      clearInterval,
+      URL: URL,
+      TextEncoder,
+      TextDecoder,
+      ...makePage(),
+      chrome: makeChrome().chrome,
+    });
+    // `self` and `window` both name the global in a page.
+    vm.runInContext(
+      "globalThis.window = globalThis; globalThis.self = globalThis;",
+      context,
     );
-  }
-});
+
+    const srcs = scriptSrcs(page);
+    assert.ok(srcs.length >= 4, "the page loads its scripts as tags");
+
+    for (const src of srcs) {
+      // Vendor bundles need a real DOM (quill alone wants Node, Element and a
+      // tree walker); they are unmodified third-party code, not our seam.
+      if (src.includes("/vendor/")) continue;
+
+      const source = readFileSync(path.join(repoRoot, src), "utf8");
+      try {
+        vm.runInContext(source, context, { filename: src });
+      } catch (error) {
+        assert.fail(`${src} throws while loading: ${error.message}`);
+      }
+    }
+
+    for (const name of REQUIRED[page]) {
+      assert.notEqual(
+        vm.runInContext(`typeof ${name}`, context),
+        "undefined",
+        `${name} is not defined after loading the page's scripts`,
+      );
+    }
+  });
+}
