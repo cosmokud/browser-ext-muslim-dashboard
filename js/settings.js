@@ -1351,17 +1351,13 @@ class SettingsManager extends BaseManager {
       this.enablePrayerNotifications.checked = pn.enabled === true;
     }
 
-    const defaultBeforeMinutes = this.clampNumber(
+    const defaultBeforeMinutes = SettingsRegistry.coerce(
+      "prayerNotifications.beforeMinutes",
       parseInt(pn.beforeMinutes, 10),
-      0,
-      180,
-      10,
     );
-    const defaultAfterMinutes = this.clampNumber(
+    const defaultAfterMinutes = SettingsRegistry.coerce(
+      "prayerNotifications.afterMinutes",
       parseInt(pn.afterMinutes, 10),
-      0,
-      180,
-      0,
     );
 
     const perPrayerRaw =
@@ -1383,21 +1379,17 @@ class SettingsManager extends BaseManager {
 
       const beforeMinutes =
         entry && typeof entry === "object"
-          ? this.clampNumber(
-              parseInt(entry.beforeMinutes, 10),
-              0,
-              180,
-              defaultBeforeMinutes,
-            )
+          ? SettingsRegistry.coerce(
+            "prayerNotifications.beforeMinutes",
+            parseInt(entry.beforeMinutes, 10), defaultBeforeMinutes,
+          )
           : defaultBeforeMinutes;
       const afterMinutes =
         entry && typeof entry === "object"
-          ? this.clampNumber(
-              parseInt(entry.afterMinutes, 10),
-              0,
-              180,
-              defaultAfterMinutes,
-            )
+          ? SettingsRegistry.coerce(
+            "prayerNotifications.afterMinutes",
+            parseInt(entry.afterMinutes, 10), defaultAfterMinutes,
+          )
           : defaultAfterMinutes;
 
       if (this.notificationBeforeMinutesInputs?.[prayer]) {
@@ -1483,7 +1475,10 @@ class SettingsManager extends BaseManager {
     if (settings.containerWidth === "custom") {
       this.toggleCustomWidth(true);
       if (this.containerWidthCustom) {
-        const clamped = SettingsRegistry.coerce("containerWidthCustom", settings.containerWidthCustom);
+        const clamped = SettingsRegistry.coerce(
+          "containerWidthCustom",
+          settings.containerWidthCustom,
+        );
         this.containerWidthCustom.value = String(clamped);
       }
       this.updateCustomWidthLabel();
@@ -1980,11 +1975,9 @@ class SettingsManager extends BaseManager {
 
   updatePinnedAppsPerRowLabel() {
     if (!this.pinnedAppsPerRow || !this.pinnedAppsPerRowValue) return;
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "pinnedAppsPerRow",
       parseInt(this.pinnedAppsPerRow.value, 10),
-      3,
-      20,
-      10,
     );
     this.pinnedAppsPerRow.value = String(clamped);
     this.pinnedAppsPerRowValue.textContent = String(clamped);
@@ -2431,20 +2424,24 @@ class SettingsManager extends BaseManager {
 
     // Within days settings
     if (this.fastingDhuAlHijjahWithinDays) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "fasting.dhuAlHijjahWithinDays",
         fasting.dhuAlHijjahWithinDays,
-        7,
-        365,
-        30,
       );
       this.fastingDhuAlHijjahWithinDays.value = String(clamped);
     }
     if (this.fastingArafahWithinDays) {
-      const clamped = this.clampNumber(fasting.arafahWithinDays, 7, 365, 30);
+      const clamped = SettingsRegistry.coerce(
+        "fasting.arafahWithinDays",
+        fasting.arafahWithinDays,
+      );
       this.fastingArafahWithinDays.value = String(clamped);
     }
     if (this.fastingAshuraWithinDays) {
-      const clamped = this.clampNumber(fasting.ashuraWithinDays, 7, 365, 30);
+      const clamped = SettingsRegistry.coerce(
+        "fasting.ashuraWithinDays",
+        fasting.ashuraWithinDays,
+      );
       this.fastingAshuraWithinDays.value = String(clamped);
     }
 
@@ -2950,7 +2947,7 @@ class SettingsManager extends BaseManager {
   }
 
   clampHeaderGlowOpacity(value, fallback = 72) {
-    return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
+    return SettingsRegistry.coerce("bgDim", parseInt(value, 10), fallback);
   }
 
   clampHeaderGlowRadius(value, fallback = 14) {
@@ -3280,7 +3277,7 @@ class SettingsManager extends BaseManager {
   }
 
   applyUiBlurPower(powerPercent) {
-    const clamped = this.clampNumber(powerPercent, 0, 200, 100);
+    const clamped = SettingsRegistry.coerce("uiBlurPower", powerPercent);
     const baseMultiplier = clamped / 100;
     const highestVisualFidelityEnabled = this.isHighestVisualFidelityEnabled();
     const effectiveMultiplier = highestVisualFidelityEnabled
@@ -3514,10 +3511,9 @@ class SettingsManager extends BaseManager {
     this.updateThemeBlurPowerLabel();
 
     // Load glass opacity
-    const glassOpacity = this.clampNumber(
+    const glassOpacity = SettingsRegistry.coerce(
+      "glassOpacity",
       themeSettings.glassOpacity,
-      0,
-      100,
       window.dashboard?.themes?.getGlassOpacity?.() ?? 50,
     );
     if (this.themeGlassOpacity) {
@@ -3526,10 +3522,9 @@ class SettingsManager extends BaseManager {
     this.updateThemeGlassOpacityLabel();
 
     // Load main grid component opacity
-    const componentOpacity = this.clampNumber(
+    const componentOpacity = SettingsRegistry.coerce(
+      "componentOpacity",
       themeSettings.componentOpacity,
-      0,
-      100,
       window.dashboard?.themes?.getMainGridComponentOpacity?.() ?? 0,
     );
     if (this.themeComponentOpacity) {
@@ -3538,10 +3533,9 @@ class SettingsManager extends BaseManager {
     this.updateThemeComponentOpacityLabel();
 
     // Load modal panel opacity
-    const modalOpacity = this.clampNumber(
+    const modalOpacity = SettingsRegistry.coerce(
+      "modalOpacity",
       themeSettings.modalOpacity,
-      0,
-      100,
       window.dashboard?.themes?.getModalOpacity?.() ?? 97,
     );
     if (this.themeModalOpacity) {
@@ -3556,7 +3550,10 @@ class SettingsManager extends BaseManager {
     if (settings.containerWidth === "custom") {
       this.toggleThemeCustomWidth(true);
       if (this.themeContainerWidthCustom) {
-        const clamped = SettingsRegistry.coerce("containerWidthCustom", settings.containerWidthCustom);
+        const clamped = SettingsRegistry.coerce(
+          "containerWidthCustom",
+          settings.containerWidthCustom,
+        );
         this.themeContainerWidthCustom.value = String(clamped);
       }
       this.updateThemeCustomWidthLabel();
@@ -3621,11 +3618,9 @@ class SettingsManager extends BaseManager {
    */
   updateThemeBlurPowerLabel() {
     if (this.themeBlurPowerValue && this.themeBlurPower) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "blurPower",
         parseInt(this.themeBlurPower.value, 10),
-        0,
-        200,
-        100,
       );
       this.themeBlurPower.value = String(clamped);
       this.themeBlurPowerValue.textContent = clamped + "%";
@@ -3637,11 +3632,9 @@ class SettingsManager extends BaseManager {
    */
   updateThemeGlassOpacityLabel() {
     if (this.themeGlassOpacityValue && this.themeGlassOpacity) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "glassOpacity",
         parseInt(this.themeGlassOpacity.value, 10),
-        0,
-        100,
-        50,
       );
       this.themeGlassOpacity.value = String(clamped);
       this.themeGlassOpacityValue.textContent = clamped + "%";
@@ -3653,11 +3646,9 @@ class SettingsManager extends BaseManager {
    */
   updateThemeComponentOpacityLabel() {
     if (this.themeComponentOpacityValue && this.themeComponentOpacity) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "componentOpacity",
         parseInt(this.themeComponentOpacity.value, 10),
-        0,
-        100,
-        0,
       );
       this.themeComponentOpacity.value = String(clamped);
       this.themeComponentOpacityValue.textContent = clamped + "%";
@@ -3669,11 +3660,9 @@ class SettingsManager extends BaseManager {
    */
   updateThemeModalOpacityLabel() {
     if (this.themeModalOpacityValue && this.themeModalOpacity) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "modalOpacity",
         parseInt(this.themeModalOpacity.value, 10),
-        0,
-        100,
-        97,
       );
       this.themeModalOpacity.value = String(clamped);
       this.themeModalOpacityValue.textContent = clamped + "%";
@@ -3962,11 +3951,9 @@ class SettingsManager extends BaseManager {
    */
   updateThemeCustomWidthLabel() {
     if (this.themeCustomWidthValue && this.themeContainerWidthCustom) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "containerWidthCustom",
         parseInt(this.themeContainerWidthCustom.value, 10),
-        20,
-        98,
-        70,
       );
       this.themeContainerWidthCustom.value = String(clamped);
       this.themeCustomWidthValue.textContent = clamped + "%";
@@ -4889,23 +4876,17 @@ class SettingsManager extends BaseManager {
 
     // Get glass enabled
     const glassEnabled = this.themeGlassEnabled?.checked !== false;
-    const glassOpacity = this.clampNumber(
+    const glassOpacity = SettingsRegistry.coerce(
+      "glassOpacity",
       parseInt(this.themeGlassOpacity?.value, 10),
-      0,
-      100,
-      50,
     );
-    const componentOpacity = this.clampNumber(
+    const componentOpacity = SettingsRegistry.coerce(
+      "componentOpacity",
       parseInt(this.themeComponentOpacity?.value, 10),
-      0,
-      100,
-      0,
     );
-    const modalOpacity = this.clampNumber(
+    const modalOpacity = SettingsRegistry.coerce(
+      "modalOpacity",
       parseInt(this.themeModalOpacity?.value, 10),
-      0,
-      100,
-      97,
     );
     const backgroundAwareFontColorEnabled =
       this.themeBackgroundAwareFontColorEnabled?.checked === true;
@@ -5202,11 +5183,11 @@ class SettingsManager extends BaseManager {
   }
 
   normalizeBackgroundDim(value, fallback = 100) {
-    return this.clampNumber(parseInt(value, 10), 0, 100, fallback);
+    return SettingsRegistry.coerce("bgDim", parseInt(value, 10), fallback);
   }
 
   normalizeBackgroundBlur(value, fallback = 0) {
-    return this.clampNumber(parseInt(value, 10), 0, 40, fallback);
+    return SettingsRegistry.coerce("bgBlur", parseInt(value, 10), fallback);
   }
 
   isCustomBackgroundToken(value) {
@@ -7752,17 +7733,13 @@ class SettingsManager extends BaseManager {
     // Prayer notifications
     settings.prayerNotifications = settings.prayerNotifications || {};
 
-    const existingBeforeMinutes = this.clampNumber(
+    const existingBeforeMinutes = SettingsRegistry.coerce(
+      "prayerNotifications.beforeMinutes",
       settings.prayerNotifications.beforeMinutes,
-      0,
-      180,
-      10,
     );
-    const existingAfterMinutes = this.clampNumber(
+    const existingAfterMinutes = SettingsRegistry.coerce(
+      "prayerNotifications.afterMinutes",
       settings.prayerNotifications.afterMinutes,
-      0,
-      180,
-      0,
     );
 
     settings.prayerNotifications.enabled =
@@ -7776,16 +7753,14 @@ class SettingsManager extends BaseManager {
     for (const prayer in this.notificationCheckboxes) {
       const enabled = this.notificationCheckboxes[prayer]?.checked || false;
 
-      const beforeMinutes = this.clampNumber(
+      const beforeMinutes = SettingsRegistry.coerce(
+        "prayerNotifications.beforeMinutes",
         parseInt(this.notificationBeforeMinutesInputs?.[prayer]?.value, 10),
-        0,
-        180,
         existingBeforeMinutes,
       );
-      const afterMinutes = this.clampNumber(
+      const afterMinutes = SettingsRegistry.coerce(
+        "prayerNotifications.afterMinutes",
         parseInt(this.notificationAfterMinutesInputs?.[prayer]?.value, 10),
-        0,
-        180,
         existingAfterMinutes,
       );
 
@@ -7868,81 +7843,81 @@ class SettingsManager extends BaseManager {
         "arabicFontSize",
         parseInt(this.pocketQuranArabicSize?.value, 10),
         existingPocketQuran.arabicFontSize,
-      ),
-      translationFontSize: SettingsRegistry.coerce(
+        ),
+        translationFontSize: SettingsRegistry.coerce(
         "translationFontSize",
         parseInt(this.pocketQuranTranslationSize?.value, 10),
         existingPocketQuran.translationFontSize,
-      ),
-      translationFontFamily: this.normalizePocketQuranTranslationFontFamily(
+        ),
+        translationFontFamily: this.normalizePocketQuranTranslationFontFamily(
         this.pocketQuranTranslationFontFamily?.value ||
-          existingPocketQuran.translationFontFamily ||
-          "Poppins",
-      ),
-      translationResourceId: this.clampNumber(
+        existingPocketQuran.translationFontFamily ||
+        "Poppins",
+        ),
+        translationResourceId: this.clampNumber(
         parseInt(this.pocketQuranTranslationSelect?.value, 10),
         1,
         10000,
         existingPocketQuran.translationResourceId ?? 85,
-      ),
-      reciterHighlighterDelayMs: SettingsRegistry.coerce(
+        ),
+        reciterHighlighterDelayMs: SettingsRegistry.coerce(
         "quran.reciterHighlighterDelayMs",
         parseInt(this.pocketQuranHighlighterDelay?.value, 10),
         existingPocketQuran.reciterHighlighterDelayMs ?? 0,
-      ),
-      recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
+        ),
+        recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled
         ? this.pocketQuranRecitationFloatingEnabled.checked
         : existingPocketQuran.recitationFloatingEnabled === true,
-      recitationAutoDockOnVisible: this.pocketQuranRecitationAutoDockOnVisible
+        recitationAutoDockOnVisible: this.pocketQuranRecitationAutoDockOnVisible
         ? this.pocketQuranRecitationAutoDockOnVisible.checked
         : existingPocketQuran.recitationAutoDockOnVisible === true,
-      recitationFloatingAppearance:
+        recitationFloatingAppearance:
         document.querySelector(
-          'input[name="pocketQuranRecitationFloatingAppearance"]:checked',
+        'input[name="pocketQuranRecitationFloatingAppearance"]:checked',
         )?.value === "theme"
-          ? "theme"
-          : "opaque",
-      copyIncludeArabic: this.pocketQuranCopyIncludeArabic
+        ? "theme"
+        : "opaque",
+        copyIncludeArabic: this.pocketQuranCopyIncludeArabic
         ? this.pocketQuranCopyIncludeArabic.checked
         : existingPocketQuran.copyIncludeArabic === true,
-    };
-
-    const existingPocketQuranPopup =
-      settings.pocketQuranPopup && typeof settings.pocketQuranPopup === "object"
+        };
+        
+        const existingPocketQuranPopup =
+        settings.pocketQuranPopup && typeof settings.pocketQuranPopup === "object"
         ? settings.pocketQuranPopup
         : {};
-
-    settings.pocketQuranPopup = {
-      ...existingPocketQuranPopup,
-      arabicFontSize: SettingsRegistry.coerce(
+        
+        settings.pocketQuranPopup = {
+        ...existingPocketQuranPopup,
+        arabicFontSize: SettingsRegistry.coerce(
         "arabicFontSize",
         parseInt(this.pocketQuranPopupArabicSize?.value, 10),
         existingPocketQuranPopup.arabicFontSize ??
-          existingPocketQuran.arabicFontSize,
-      ),
-      translationFontSize: SettingsRegistry.coerce(
+        existingPocketQuran.arabicFontSize,
+        ),
+        translationFontSize: SettingsRegistry.coerce(
         "translationFontSize",
         parseInt(this.pocketQuranPopupTranslationSize?.value, 10),
         existingPocketQuranPopup.translationFontSize ??
-          existingPocketQuran.translationFontSize,
-      ),
-      arabicFontFamily: this.normalizePocketQuranArabicFontFamily(
-        this.pocketQuranPopupArabicFontFamily?.value ||
-          existingPocketQuranPopup.arabicFontFamily ||
-          existingPocketQuran.arabicFontFamily ||
-          "KFGQPC Uthman Taha Naskh",
-      ),
-      translationFontFamily:
-        this.normalizePocketQuranPopupTranslationFontFamily(
-          this.pocketQuranPopupTranslationFontFamily?.value ||
-            existingPocketQuranPopup.translationFontFamily ||
-            "Poppins",
+        existingPocketQuran.translationFontSize,
         ),
-    };
-
-    settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(
-      this.notesCardFontFamily?.value || settings.notesCardFontFamily,
-    );
+        arabicFontFamily: this.normalizePocketQuranArabicFontFamily(
+        this.pocketQuranPopupArabicFontFamily?.value ||
+        existingPocketQuranPopup.arabicFontFamily ||
+        existingPocketQuran.arabicFontFamily ||
+        "KFGQPC Uthman Taha Naskh",
+        ),
+        translationFontFamily:
+        this.normalizePocketQuranPopupTranslationFontFamily(
+        this.pocketQuranPopupTranslationFontFamily?.value ||
+        existingPocketQuranPopup.translationFontFamily ||
+        "Poppins",
+        ),
+        };
+        
+        settings.notesCardFontFamily = this.normalizeNotesCardFontFamily(
+        this.notesCardFontFamily?.value || settings.notesCardFontFamily,
+      );
     this.applyNotesCardFontFamily(settings.notesCardFontFamily);
 
     // Save heading settings
@@ -8044,7 +8019,7 @@ class SettingsManager extends BaseManager {
   }
 
   normalizePocketQuranHighlighterDelayMs(value) {
-    return this.clampNumber(parseInt(value, 10), -10000, 10000, 0);
+    return SettingsRegistry.coerce("quran.reciterHighlighterDelayMs", parseInt(value, 10));
   }
 
   isOnlyPocketQuranHighlighterDelayChanged(previousSettings, nextSettings) {
@@ -8324,23 +8299,17 @@ class SettingsManager extends BaseManager {
       this.fastingShowRecommendations?.checked ?? true;
 
     // Within days settings
-    settings.fasting.dhuAlHijjahWithinDays = this.clampNumber(
+    settings.fasting.dhuAlHijjahWithinDays = SettingsRegistry.coerce(
+      "fasting.dhuAlHijjahWithinDays",
       parseInt(this.fastingDhuAlHijjahWithinDays?.value, 10),
-      7,
-      365,
-      30,
     );
-    settings.fasting.arafahWithinDays = this.clampNumber(
+    settings.fasting.arafahWithinDays = SettingsRegistry.coerce(
+      "fasting.arafahWithinDays",
       parseInt(this.fastingArafahWithinDays?.value, 10),
-      7,
-      365,
-      30,
     );
-    settings.fasting.ashuraWithinDays = this.clampNumber(
+    settings.fasting.ashuraWithinDays = SettingsRegistry.coerce(
+      "fasting.ashuraWithinDays",
       parseInt(this.fastingAshuraWithinDays?.value, 10),
-      7,
-      365,
-      30,
     );
 
     // Notification settings
@@ -8349,8 +8318,8 @@ class SettingsManager extends BaseManager {
       minutesBefore: SettingsRegistry.coerce(
         "fasting.notifications.minutesBefore",
         parseInt(this.fastingNotificationMinutesBefore?.value, 10),
-      ),
-      notify: {
+        ),
+        notify: {
         monday: this.fastingNotifyMonday?.checked ?? true,
         thursday: this.fastingNotifyThursday?.checked ?? true,
         ayyamAlBeed: this.fastingNotifyAyyamAlBeed?.checked ?? true,
@@ -8358,43 +8327,43 @@ class SettingsManager extends BaseManager {
         dhuAlHijjah: this.fastingNotifyDhuAlHijjah?.checked ?? true,
         arafah: this.fastingNotifyArafah?.checked ?? true,
         ramadan: this.fastingNotifyRamadan?.checked ?? true,
-      },
-    };
-
-    // Trigger reschedule of fasting notifications
-    try {
-      if (
+        },
+        };
+        
+        // Trigger reschedule of fasting notifications
+        try {
+        if (
         typeof chrome !== "undefined" &&
         chrome.runtime &&
         chrome.runtime.sendMessage
-      ) {
+        ) {
         chrome.runtime.sendMessage({ type: "md_reschedule_fasting" });
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  /**
-   * Apply settings to components
-   */
-  applySettings(settings) {
-    // Update prayer times
-    if (this.prayerTimes) {
-      this.prayerTimes.updateSettings(settings);
-    }
-
-    // Update location if manual
-    const hasManualCoordinates =
-      Number.isFinite(settings.latitude) && Number.isFinite(settings.longitude);
-
-    if (settings.locationMethod === "manual" && hasManualCoordinates) {
-      if (this.prayerTimes) {
+        }
+        } catch (e) {
+        // ignore
+        }
+        }
+        
+        /**
+        * Apply settings to components
+        */
+        applySettings(settings) {
+        // Update prayer times
+        if (this.prayerTimes) {
+        this.prayerTimes.updateSettings(settings);
+        }
+        
+        // Update location if manual
+        const hasManualCoordinates =
+        Number.isFinite(settings.latitude) && Number.isFinite(settings.longitude);
+        
+        if (settings.locationMethod === "manual" && hasManualCoordinates) {
+        if (this.prayerTimes) {
         this.prayerTimes.setManualLocation(
-          settings.latitude,
-          settings.longitude,
-          settings.city,
-        );
+        settings.latitude,
+        settings.longitude,
+        settings.city,
+      );
       }
       if (this.qibla) {
         this.qibla.updateLocation(settings.latitude, settings.longitude);
@@ -8701,7 +8670,7 @@ class SettingsManager extends BaseManager {
       case "custom":
         mainContainer.classList.add("container-custom");
         {
-          const clamped = this.clampNumber(customValue, 20, 98, 70);
+          const clamped = SettingsRegistry.coerce("containerWidthCustom", customValue);
           if (this.containerWidthCustom) {
             this.containerWidthCustom.value = String(clamped);
           }

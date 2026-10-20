@@ -53,11 +53,27 @@ class SettingsRegistry {
     // Dashboard glass power, the custom container width, and the highlighter's
     // lead time (shared with js/quran-recitation.js).
     uiBlurPower: { default: 100, min: 0, max: 200, round: true },
+    componentOpacity: { default: 0, min: 0, max: 100 },
+    modalOpacity: { default: 97, min: 0, max: 100 },
     containerWidthCustom: { default: 70, min: 20, max: 98 },
     "quran.reciterHighlighterDelayMs": {
       default: 0,
       min: -10000,
       max: 10000,
+      round: true,
+    },
+
+    // Offsets the worker schedules and the panel edits, per prayer.
+    "prayerNotifications.beforeMinutes": {
+      default: 10,
+      min: 0,
+      max: 180,
+      round: true,
+    },
+    "prayerNotifications.afterMinutes": {
+      default: 0,
+      min: 0,
+      max: 180,
       round: true,
     },
 

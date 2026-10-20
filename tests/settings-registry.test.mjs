@@ -212,3 +212,30 @@ test("glass power, container width and the highlighter delay read one rule each"
     "the caller's own fallback still wins",
   );
 });
+
+test("prayer notification offsets and the panel opacities read one rule each", () => {
+  const { registry, storage } = load();
+  const settings = storage.getDefaultSettings();
+
+  assert.equal(settings.prayerNotifications.beforeMinutes, 10);
+  assert.equal(settings.prayerNotifications.afterMinutes, 0);
+  assert.equal(settings.theme.componentOpacity, 0);
+  assert.equal(
+    registry.coerce("prayerNotifications.beforeMinutes", 400),
+    180,
+  );
+  assert.equal(registry.coerce("prayerNotifications.afterMinutes", -5), 0);
+  assert.equal(
+    registry.coerce("prayerNotifications.beforeMinutes", 12.4),
+    12,
+    "offsets are whole minutes",
+  );
+  assert.equal(registry.coerce("componentOpacity", 240), 100);
+  assert.equal(registry.defaultOf("modalOpacity"), 97);
+  assert.equal(registry.coerce("modalOpacity", -1), 0);
+  assert.equal(
+    registry.coerce("modalOpacity", NaN, 60),
+    60,
+    "the theme manager keeps its own fallback",
+  );
+});

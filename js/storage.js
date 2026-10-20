@@ -205,8 +205,12 @@ class StorageManager {
       // plus optional offsets before/after.
       prayerNotifications: {
         enabled: false,
-        beforeMinutes: 10,
-        afterMinutes: 0,
+        beforeMinutes: SettingsRegistry.defaultOf(
+          "prayerNotifications.beforeMinutes",
+        ),
+        afterMinutes: SettingsRegistry.defaultOf(
+          "prayerNotifications.afterMinutes",
+        ),
         perPrayer: {
           fajr: true,
           sunrise: true,
@@ -267,7 +271,7 @@ class StorageManager {
         mode: "dark",
         glassEnabled: true,
         glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
-        componentOpacity: 0,
+        componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
         backgroundAwareFontColorEnabled: false,
         highestVisualFidelityEnabled: false,
         customAccent: null,

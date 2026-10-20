@@ -884,13 +884,13 @@ class ThemeManager {
       themeSettings.glassOpacity,
       50,
     );
-    this._mainGridComponentOpacity = this._clampGlassOpacity(
+    this._mainGridComponentOpacity = SettingsRegistry.coerce(
+      "componentOpacity",
       themeSettings.componentOpacity,
-      0,
     );
-    this._modalOpacity = this._clampGlassOpacity(
+    this._modalOpacity = SettingsRegistry.coerce(
+      "modalOpacity",
       themeSettings.modalOpacity,
-      97,
     );
     this._backgroundAwareFontColorEnabled =
       themeSettings.backgroundAwareFontColorEnabled === true;
@@ -1075,7 +1075,8 @@ class ThemeManager {
    * Set main grid component opacity percentage
    */
   setMainGridComponentOpacity(opacityPercent, save = true) {
-    this._mainGridComponentOpacity = this._clampGlassOpacity(
+    this._mainGridComponentOpacity = SettingsRegistry.coerce(
+      "componentOpacity",
       opacityPercent,
       this._mainGridComponentOpacity,
     );
@@ -1090,7 +1091,8 @@ class ThemeManager {
    * Set modal panel opacity percentage
    */
   setModalOpacity(opacityPercent, save = true) {
-    this._modalOpacity = this._clampGlassOpacity(
+    this._modalOpacity = SettingsRegistry.coerce(
+      "modalOpacity",
       opacityPercent,
       this._modalOpacity,
     );

@@ -28,7 +28,7 @@ Assert-Matches `
 
 Assert-Matches `
   -Haystack $themeSource `
-  -Pattern 'this\._modalOpacity = this\._clampGlassOpacity\(\s*themeSettings\.modalOpacity,\s*97,\s*\);' `
+  -Pattern 'this\._modalOpacity = SettingsRegistry\.coerce\(\s*"modalOpacity",\s*themeSettings\.modalOpacity,\s*\);' `
   -Message "Theme manager must load persisted modal opacity with the fresh-install 97% surface default."
 
 Assert-Matches `
@@ -38,7 +38,7 @@ Assert-Matches `
 
 Assert-Matches `
   -Haystack $themeSource `
-  -Pattern 'getModalOpacity\(\)\s*\{\s*return this\._modalOpacity;\s*\}[\s\S]*?setModalOpacity\(opacityPercent, save = true\)\s*\{[\s\S]*?this\._modalOpacity = this\._clampGlassOpacity\([\s\S]*?this\.applyTheme\(\);' `
+  -Pattern 'getModalOpacity\(\)\s*\{\s*return this\._modalOpacity;\s*\}[\s\S]*?setModalOpacity\(opacityPercent, save = true\)\s*\{[\s\S]*?this\._modalOpacity = SettingsRegistry\.coerce\([\s\S]*?this\.applyTheme\(\);' `
   -Message "Theme manager must expose modal opacity live updates."
 
 Assert-Matches `
@@ -58,7 +58,7 @@ Assert-Matches `
 
 Assert-Matches `
   -Haystack $settingsSource `
-  -Pattern 'themeSettings\.modalOpacity,[\s\S]*?window\.dashboard\?\.themes\?\.getModalOpacity\?\.\(\) \?\? 97,[\s\S]*?this\.updateThemeModalOpacityLabel\(\);' `
+  -Pattern 'SettingsRegistry\.coerce\(\s*"modalOpacity",[\s\S]*?themeSettings\.modalOpacity,\s*window\.dashboard\?\.themes\?\.getModalOpacity\?\.\(\) \?\? 97[,)][\s\S]*?this\.updateThemeModalOpacityLabel\(\);' `
   -Message "Settings panel must load modal opacity."
 
 Assert-Matches `
