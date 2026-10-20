@@ -333,11 +333,15 @@ class StorageManager {
           arafah: true,
           ramadan: true,
         },
-        showRecommendations: true,
+        showRecommendations: SettingsRegistry.defaultOf(
+          "fasting.showRecommendations",
+        ),
         // Display window settings (how many days before to show countdown)
-        dhuAlHijjahWithinDays: 30,
-        arafahWithinDays: 30,
-        ashuraWithinDays: 30,
+        dhuAlHijjahWithinDays: SettingsRegistry.defaultOf(
+          "fasting.dhuAlHijjahWithinDays",
+        ),
+        arafahWithinDays: SettingsRegistry.defaultOf("fasting.arafahWithinDays"),
+        ashuraWithinDays: SettingsRegistry.defaultOf("fasting.ashuraWithinDays"),
         // Suhur notification settings
         notifications: {
           enabled: false,

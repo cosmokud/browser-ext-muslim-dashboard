@@ -97,24 +97,21 @@ class FastingManager {
     // Get fasting settings with defaults
     const fastingSettings = settings.fasting || {};
     const visibility = fastingSettings.visibility || {};
-    const showRecommendations = fastingSettings.showRecommendations !== false;
-    const dhuAlHijjahWithinDays = this._clampInt(
+    const showRecommendations = SettingsRegistry.coerce(
+      "fasting.showRecommendations",
+      fastingSettings.showRecommendations,
+    );
+    const dhuAlHijjahWithinDays = SettingsRegistry.coerce(
+      "fasting.dhuAlHijjahWithinDays",
       fastingSettings.dhuAlHijjahWithinDays,
-      7,
-      365,
-      30,
     );
-    const arafahWithinDays = this._clampInt(
+    const arafahWithinDays = SettingsRegistry.coerce(
+      "fasting.arafahWithinDays",
       fastingSettings.arafahWithinDays,
-      7,
-      365,
-      30,
     );
-    const ashuraWithinDays = this._clampInt(
+    const ashuraWithinDays = SettingsRegistry.coerce(
+      "fasting.ashuraWithinDays",
       fastingSettings.ashuraWithinDays,
-      7,
-      365,
-      30,
     );
 
     // Reads the day the suhur alert reads.

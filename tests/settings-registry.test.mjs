@@ -139,3 +139,41 @@ test("the loader fixes an out-of-range stored value in one place", () => {
     "and the pocket Quran panel clamps this one when it shows it",
   );
 });
+
+test("a dotted rule names a key inside the settings blob", () => {
+  const { registry, storage } = load();
+
+  const settings = storage.getDefaultSettings();
+
+  assert.equal(settings.fasting.showRecommendations, true);
+  assert.equal(settings.fasting.dhuAlHijjahWithinDays, 30);
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(settings, "fasting.showRecommendations"),
+    false,
+    "a nested rule never leaks into the top level",
+  );
+});
+
+test("a boolean rule is off only when explicitly switched off", () => {
+  const { registry } = load();
+
+  assert.equal(registry.coerce("fasting.showRecommendations"), true);
+  assert.equal(
+    registry.coerce("fasting.showRecommendations", false),
+    false,
+  );
+  assert.equal(
+    registry.coerce("fasting.showRecommendations", 0),
+    true,
+    "the card has always treated a stray value as on",
+  );
+});
+
+test("the fasting window is a whole number of days inside its range", () => {
+  const { registry } = load();
+
+  assert.equal(registry.coerce("fasting.arafahWithinDays", 12.6), 13);
+  assert.equal(registry.coerce("fasting.arafahWithinDays", 1000), 365);
+  assert.equal(registry.coerce("fasting.arafahWithinDays", 1), 7);
+  assert.equal(registry.coerce("fasting.arafahWithinDays", "x"), 30);
+});

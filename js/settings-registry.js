@@ -27,6 +27,28 @@ class SettingsRegistry {
     // several components' own keys, so these two rules have no single key.
     glassOpacity: { default: 50, min: 0, max: 100, round: true },
     blurPower: { min: 0, max: 200, round: true },
+
+    // Fasting card. A dotted name is a key inside the settings blob, so the
+    // blob's own defaults read from here too.
+    "fasting.showRecommendations": { default: true, boolean: true },
+    "fasting.dhuAlHijjahWithinDays": {
+      default: 30,
+      min: 7,
+      max: 365,
+      round: true,
+    },
+    "fasting.arafahWithinDays": {
+      default: 30,
+      min: 7,
+      max: 365,
+      round: true,
+    },
+    "fasting.ashuraWithinDays": {
+      default: 30,
+      min: 7,
+      max: 365,
+      round: true,
+    },
   };
 
   static has(name) {
@@ -46,6 +68,8 @@ class SettingsRegistry {
   static defaults() {
     const declared = {};
     for (const [name, rule] of Object.entries(SettingsRegistry.RULES)) {
+      // A dotted name belongs to a nested block, not to the top level.
+      if (name.includes(".")) continue;
       if (rule.default !== undefined) declared[name] = rule.default;
     }
     return declared;
@@ -60,6 +84,12 @@ class SettingsRegistry {
   static coerce(name, value, fallback) {
     const rule = SettingsRegistry.ruleFor(name);
     if (!rule) return value;
+
+    if (rule.boolean === true) {
+      // Only an explicit opposite value moves a toggle off its default; the
+      // card has always read a missing toggle as on.
+      return rule.default === true ? value !== false : value === true;
+    }
 
     const numeric = Number(value);
     let next = numeric;
