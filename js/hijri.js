@@ -1,7 +1,11 @@
 /**
  * Hijri Calendar Converter
  * Converts between Gregorian and Islamic (Hijri) calendar
- * Based on the Umm al-Qura calendar
+ *
+ * The arithmetic is the tabular calendar (30-year cycle, odd months 30 days,
+ * even months 29), not Umm al-Qura's observed month starts: the two agree most
+ * years but disagree by a day at some month boundaries. Switching calendars
+ * moves prayer and fasting dates, so it is a deliberate decision, not a bug fix.
  */
 
 class HijriDate {
