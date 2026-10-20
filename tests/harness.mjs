@@ -57,7 +57,7 @@ export function loadSandbox(
   context.importScripts = (...names) =>
     names.forEach((name) => runFile(`js/${name}`, context));
 
-  for (const relPath of relPaths) runFile(relPath, context);
+  for (const relPath of withParts(relPaths)) runFile(relPath, context);
   return context;
 }
 

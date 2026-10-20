@@ -72,7 +72,7 @@ Assert-Matches `
   -Message "Dashboard must toggle the whole-header surface class from heading settings."
 
 Assert-Matches `
-  -Haystack (Get-Content -Path (Join-Path $PSScriptRoot "..\js\weather.js") -Raw) `
+  -Haystack (Get-SourceText -Path (Join-Path $PSScriptRoot "..\js\weather.js")) `
   -Pattern 'const compactWeatherBgEnabled =\s*headingSettings\.wholeComponentSurfaceEnabled !== true &&\s*headingSettings\.compactWeatherBackgroundEnabled === true;' `
   -Message "Compact weather refreshes must keep per-item surfaces hidden while Whole Component Surface is enabled."
 

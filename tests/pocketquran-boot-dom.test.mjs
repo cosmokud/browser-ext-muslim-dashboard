@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import { JSDOM } from "jsdom";
+import { withParts } from "./harness.mjs";
 
 const SCRIPTS = [
   "js/settings-registry.js",
@@ -41,7 +42,7 @@ function boot(pocketQuran) {
   dom.window.fetch = async () => ({ ok: true, json: async () => [] });
 
   const context = dom.getInternalVMContext();
-  for (const path of SCRIPTS) {
+  for (const path of withParts(SCRIPTS)) {
     vm.runInContext(fs.readFileSync(path, "utf8"), context, { filename: path });
   }
 
