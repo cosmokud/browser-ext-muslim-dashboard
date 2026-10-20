@@ -3566,47 +3566,11 @@ class PocketQuranManager extends BaseManager {
   }
 
   normalizeRecitationHighlightDelayMs(value) {
-    const parsed = parseInt(value, 10);
-    if (Number.isFinite(parsed)) {
-      return Math.max(-10000, Math.min(10000, parsed));
-    }
-    return 0;
+    return QuranRecitation.lagMs(value);
   }
 
   normalizeRecitationSegments(segments) {
-    if (!Array.isArray(segments)) return [];
-
-    return segments
-      .map((segment) => {
-        const source = Array.isArray(segment)
-          ? {
-              wordStart: segment[0],
-              wordEnd: segment[1],
-              fromMs: segment[2],
-              toMs: segment[3],
-            }
-          : segment;
-        if (!source || typeof source !== "object") return null;
-
-        const wordStart = parseInt(source.wordStart, 10);
-        const wordEnd = parseInt(source.wordEnd, 10);
-        const fromMs = Number(source.fromMs);
-        const toMs = Number(source.toMs);
-
-        if (
-          !Number.isFinite(wordStart) ||
-          !Number.isFinite(wordEnd) ||
-          !Number.isFinite(fromMs) ||
-          !Number.isFinite(toMs) ||
-          wordEnd <= wordStart ||
-          toMs < fromMs
-        ) {
-          return null;
-        }
-
-        return { wordStart, wordEnd, fromMs, toMs };
-      })
-      .filter(Boolean);
+    return QuranRecitation.normalizeSegments(segments);
   }
 
   async fetchRecitationTimingsForSurah(surah) {
@@ -3743,8 +3707,9 @@ class PocketQuranManager extends BaseManager {
       this._audioElement.currentTime * 1000 -
         this._recitationWordHighlightLagMs,
     );
-    const activeSegment = this.normalizeRecitationSegments(timing.segments).find(
-      (segment) => currentMs >= segment.fromMs && currentMs <= segment.toMs,
+    const activeSegment = QuranRecitation.segmentAt(
+      timing.segments,
+      currentMs,
     );
 
     if (!activeSegment) {
@@ -3753,7 +3718,7 @@ class PocketQuranManager extends BaseManager {
     }
 
     const verseKey = `${surah}:${ayah}`;
-    const recitationKey = `${verseKey}:${activeSegment.wordStart}-${activeSegment.wordEnd}`;
+    const recitationKey = QuranRecitation.keyFor(verseKey, activeSegment);
     if (this._activeRecitationWordKey === recitationKey) return;
 
     this.clearActiveRecitationWordHighlight();
@@ -3768,11 +3733,7 @@ class PocketQuranManager extends BaseManager {
       if (this.isAyahNumberMarkerText(wordEl.textContent)) return;
 
       const wordIndex = parseInt(wordEl.dataset.wordIndex, 10);
-      if (
-        Number.isFinite(wordIndex) &&
-        wordIndex > activeSegment.wordStart &&
-        wordIndex <= activeSegment.wordEnd
-      ) {
+      if (QuranRecitation.coversWord(activeSegment, wordIndex)) {
         wordEl.classList.add("is-reciting");
         wordEl.setAttribute("aria-current", "true");
       }

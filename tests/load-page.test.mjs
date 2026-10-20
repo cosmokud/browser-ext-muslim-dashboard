@@ -281,6 +281,7 @@ const REQUIRED = {
     "Modes",
     "QuranCopy",
     "QuranSearch",
+    "QuranRecitation",
     "IslamicDay",
     "HijriDate",
     "SettingsRegistry",
