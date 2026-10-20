@@ -8,8 +8,6 @@
 (function () {
   "use strict";
 
-  const MAX_LAG_MS = 10000;
-
   /**
    * The API sends a segment as [wordStart, wordEnd, fromMs, toMs]; the cache
    * stores the object form. Both are accepted, and unusable entries dropped.
@@ -50,11 +48,9 @@
       .filter(Boolean);
   }
 
-  /** A positive lag moves the highlight forward; the clamp keeps it sane. */
+  /** A positive lag moves the highlight forward; the range is declared once. */
   function lagMs(value) {
-    const parsed = parseInt(value, 10);
-    if (!Number.isFinite(parsed)) return 0;
-    return Math.max(-MAX_LAG_MS, Math.min(MAX_LAG_MS, parsed));
+    return SettingsRegistry.coerce("quran.reciterHighlighterDelayMs", value);
   }
 
   /** The segment being recited at this instant, or null between words. */

@@ -1483,12 +1483,7 @@ class SettingsManager extends BaseManager {
     if (settings.containerWidth === "custom") {
       this.toggleCustomWidth(true);
       if (this.containerWidthCustom) {
-        const clamped = this.clampNumber(
-          settings.containerWidthCustom,
-          20,
-          98,
-          70,
-        );
+        const clamped = SettingsRegistry.coerce("containerWidthCustom", settings.containerWidthCustom);
         this.containerWidthCustom.value = String(clamped);
       }
       this.updateCustomWidthLabel();
@@ -1498,7 +1493,7 @@ class SettingsManager extends BaseManager {
 
     // UI blur power
     if (this.uiBlurPower) {
-      const clamped = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+      const clamped = SettingsRegistry.coerce("uiBlurPower", settings.uiBlurPower);
       this.uiBlurPower.value = String(clamped);
       this.updateUiBlurPowerLabel();
       this.applyUiBlurPower(clamped);
@@ -1544,11 +1539,9 @@ class SettingsManager extends BaseManager {
     }
 
     if (this.pocketQuranHighlighterDelay) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "quran.reciterHighlighterDelayMs",
         pq.reciterHighlighterDelayMs,
-        -10000,
-        10000,
-        0,
       );
       this.pocketQuranHighlighterDelay.value = String(clamped);
       this.updatePocketQuranHighlighterDelayLabel();
@@ -1847,11 +1840,9 @@ class SettingsManager extends BaseManager {
     )
       return;
 
-    const clamped = this.clampNumber(
+    const clamped = SettingsRegistry.coerce(
+      "quran.reciterHighlighterDelayMs",
       parseInt(this.pocketQuranHighlighterDelay.value, 10),
-      -10000,
-      10000,
-      0,
     );
 
     this.pocketQuranHighlighterDelay.value = String(clamped);
@@ -3214,11 +3205,9 @@ class SettingsManager extends BaseManager {
    */
   updateCustomWidthLabel() {
     if (this.customWidthValue && this.containerWidthCustom) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "containerWidthCustom",
         parseInt(this.containerWidthCustom.value, 10),
-        20,
-        98,
-        70,
       );
       this.containerWidthCustom.value = String(clamped);
       this.customWidthValue.textContent = clamped + "%";
@@ -3227,11 +3216,9 @@ class SettingsManager extends BaseManager {
 
   updateUiBlurPowerLabel() {
     if (this.uiBlurPowerValue && this.uiBlurPower) {
-      const clamped = this.clampNumber(
+      const clamped = SettingsRegistry.coerce(
+        "uiBlurPower",
         parseInt(this.uiBlurPower.value, 10),
-        0,
-        200,
-        100,
       );
       this.uiBlurPower.value = String(clamped);
       this.uiBlurPowerValue.textContent = clamped + "%";
@@ -3520,7 +3507,7 @@ class SettingsManager extends BaseManager {
     this.updateThemeBlurGroupState(glassEnabled);
 
     // Load blur power
-    const blurPower = this.clampNumber(settings.uiBlurPower, 0, 200, 100);
+    const blurPower = SettingsRegistry.coerce("uiBlurPower", settings.uiBlurPower);
     if (this.themeBlurPower) {
       this.themeBlurPower.value = String(blurPower);
     }
@@ -3569,12 +3556,7 @@ class SettingsManager extends BaseManager {
     if (settings.containerWidth === "custom") {
       this.toggleThemeCustomWidth(true);
       if (this.themeContainerWidthCustom) {
-        const clamped = this.clampNumber(
-          settings.containerWidthCustom,
-          20,
-          98,
-          70,
-        );
+        const clamped = SettingsRegistry.coerce("containerWidthCustom", settings.containerWidthCustom);
         this.themeContainerWidthCustom.value = String(clamped);
       }
       this.updateThemeCustomWidthLabel();
@@ -4971,22 +4953,18 @@ class SettingsManager extends BaseManager {
     };
 
     // Save blur power (now from Themes panel)
-    settings.uiBlurPower = this.clampNumber(
+    settings.uiBlurPower = SettingsRegistry.coerce(
+      "uiBlurPower",
       parseInt(this.themeBlurPower?.value, 10),
-      0,
-      200,
-      100,
     );
 
     // Save container width only when a width control is present in the UI.
     if (this.themeContainerWidth) {
       settings.containerWidth = this.themeContainerWidth.value || "narrow";
       if (settings.containerWidth === "custom") {
-        settings.containerWidthCustom = this.clampNumber(
+        settings.containerWidthCustom = SettingsRegistry.coerce(
+          "containerWidthCustom",
           parseInt(this.themeContainerWidthCustom?.value, 10),
-          20,
-          98,
-          70,
         );
       }
     }
@@ -7867,11 +7845,9 @@ class SettingsManager extends BaseManager {
     this.saveThemeSettings(settings);
 
     // Pinned Apps per-row
-    settings.pinnedAppsPerRow = this.clampNumber(
+    settings.pinnedAppsPerRow = SettingsRegistry.coerce(
+      "pinnedAppsPerRow",
       parseInt(this.pinnedAppsPerRow?.value, 10),
-      3,
-      20,
-      10,
     );
     settings.pinnedAppsOpenInNewTab =
       this.pinnedAppsOpenInNewTab?.checked ?? true;
@@ -7909,10 +7885,9 @@ class SettingsManager extends BaseManager {
         10000,
         existingPocketQuran.translationResourceId ?? 85,
       ),
-      reciterHighlighterDelayMs: this.clampNumber(
+      reciterHighlighterDelayMs: SettingsRegistry.coerce(
+        "quran.reciterHighlighterDelayMs",
         parseInt(this.pocketQuranHighlighterDelay?.value, 10),
-        -10000,
-        10000,
         existingPocketQuran.reciterHighlighterDelayMs ?? 0,
       ),
       recitationFloatingEnabled: this.pocketQuranRecitationFloatingEnabled

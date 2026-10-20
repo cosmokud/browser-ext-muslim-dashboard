@@ -150,10 +150,8 @@ Assert-Contains `
   -Needle 'pocketQuranHighlighterDelay' `
   -Message "Settings manager must wire the highlighter delay input."
 
-Assert-Matches `
-  -Haystack $settings `
-  -Pattern 'reciterHighlighterDelayMs:\s*this\.clampNumber\([\s\S]*?pocketQuranHighlighterDelay[\s\S]*?-10000[\s\S]*?10000' `
-  -Message "Saving settings must persist negative and positive highlighter delay values."
+# The delay's range (-10000..10000, default 0) is declared once in
+# js/settings-registry.js and tested behaviourally in tests/settings-registry.test.mjs.
 
 Assert-Matches `
   -Haystack $settings `

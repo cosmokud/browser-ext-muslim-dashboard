@@ -247,7 +247,9 @@ class StorageManager {
 
       // Container width settings
       containerWidth: "narrow", // 'extra-compact', 'compact', 'slim', 'narrow', 'medium', 'wide', 'full', 'custom'
-      containerWidthCustom: 70, // percentage for custom width (50-98)
+      containerWidthCustom: SettingsRegistry.defaultOf(
+        "containerWidthCustom",
+      ),
 
       // Calendar settings
       calendarType: "hijri",
@@ -255,7 +257,7 @@ class StorageManager {
 
       // UI settings
       timeFormat: "24h",
-      uiBlurPower: 100, // percentage (100 = current blur baseline)
+      uiBlurPower: SettingsRegistry.defaultOf("uiBlurPower"),
       performanceModeEnabled: false,
       iconTheme: "monochrome",
 

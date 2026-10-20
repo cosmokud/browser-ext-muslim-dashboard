@@ -918,9 +918,9 @@ class StickyNotesManager {
   getDashboardBlurPower() {
     try {
       const settings = this.storage?.getSettings?.();
-      return this.clampNumber(settings?.uiBlurPower, 0, 200, 200);
+      return SettingsRegistry.coerce("uiBlurPower", settings?.uiBlurPower);
     } catch (e) {
-      return 200;
+      return SettingsRegistry.defaultOf("uiBlurPower");
     }
   }
 

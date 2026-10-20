@@ -50,6 +50,17 @@ class SettingsRegistry {
       round: true,
     },
 
+    // Dashboard glass power, the custom container width, and the highlighter's
+    // lead time (shared with js/quran-recitation.js).
+    uiBlurPower: { default: 100, min: 0, max: 200, round: true },
+    containerWidthCustom: { default: 70, min: 20, max: 98 },
+    "quran.reciterHighlighterDelayMs": {
+      default: 0,
+      min: -10000,
+      max: 10000,
+      round: true,
+    },
+
     // The suhur reminder's lead time, read by the worker and by the panel.
     "fasting.notifications.minutesBefore": {
       default: 60,

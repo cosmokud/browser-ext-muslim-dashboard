@@ -190,3 +190,25 @@ test("the suhur reminder's lead time is the rule the worker and the panel read",
   assert.equal(registry.coerce("fasting.notifications.minutesBefore", 0), 5);
   assert.equal(registry.coerce("fasting.notifications.minutesBefore", 1000), 180);
 });
+
+test("glass power, container width and the highlighter delay read one rule each", () => {
+  const { registry, storage } = load();
+  const settings = storage.getDefaultSettings();
+
+  assert.equal(settings.uiBlurPower, 100);
+  assert.equal(settings.containerWidthCustom, 70);
+  assert.equal(registry.coerce("uiBlurPower", 500), 200);
+  assert.equal(registry.coerce("containerWidthCustom", 5), 20);
+  assert.equal(
+    registry.coerce("containerWidthCustom", 66.4),
+    66.4,
+    "a width percentage has never been rounded",
+  );
+  assert.equal(registry.coerce("quran.reciterHighlighterDelayMs", -4000), -4000);
+  assert.equal(registry.coerce("quran.reciterHighlighterDelayMs", -99999), -10000);
+  assert.equal(
+    registry.coerce("quran.reciterHighlighterDelayMs", NaN, 250),
+    250,
+    "the caller's own fallback still wins",
+  );
+});
