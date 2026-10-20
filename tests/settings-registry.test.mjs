@@ -177,3 +177,16 @@ test("the fasting window is a whole number of days inside its range", () => {
   assert.equal(registry.coerce("fasting.arafahWithinDays", 1), 7);
   assert.equal(registry.coerce("fasting.arafahWithinDays", "x"), 30);
 });
+
+test("the suhur reminder's lead time is the rule the worker and the panel read", () => {
+  const { registry } = load();
+
+  assert.equal(registry.defaultOf("fasting.notifications.minutesBefore"), 60);
+  assert.equal(
+    registry.coerce("fasting.notifications.minutesBefore", 15),
+    15,
+    "the value the reminder has always used",
+  );
+  assert.equal(registry.coerce("fasting.notifications.minutesBefore", 0), 5);
+  assert.equal(registry.coerce("fasting.notifications.minutesBefore", 1000), 180);
+});

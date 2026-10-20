@@ -49,6 +49,14 @@ class SettingsRegistry {
       max: 365,
       round: true,
     },
+
+    // The suhur reminder's lead time, read by the worker and by the panel.
+    "fasting.notifications.minutesBefore": {
+      default: 60,
+      min: 5,
+      max: 180,
+      round: true,
+    },
   };
 
   static has(name) {

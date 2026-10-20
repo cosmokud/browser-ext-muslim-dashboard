@@ -5,7 +5,12 @@
 
 /* global IslamicDay */
 
-importScripts("praytimes.js", "hijri.js", "islamic-day.js");
+importScripts(
+  "praytimes.js",
+  "hijri.js",
+  "islamic-day.js",
+  "settings-registry.js",
+);
 
 const RESCHEDULE_ALARM_NAME = "md_reschedule";
 const PRAYER_ALARM_PREFIX = "md_prayer_";
@@ -811,7 +816,10 @@ async function scheduleFastingNotifications() {
   }
 
   // Calculate Suhur notification time (minutesBefore before Fajr)
-  const minutesBefore = clampNumber(notifications.minutesBefore, 5, 180, 60);
+  const minutesBefore = SettingsRegistry.coerce(
+    "fasting.notifications.minutesBefore",
+    notifications.minutesBefore,
+  );
   const suhurTime = fajrDate.getTime() - minutesBefore * 60 * 1000;
 
   // Only schedule if the time is in the future
@@ -862,11 +870,9 @@ async function showFastingNotification() {
     settingsRaw && typeof settingsRaw === "object" ? settingsRaw : {};
 
   const fasting = settings.fasting || {};
-  const minutesBefore = clampNumber(
+  const minutesBefore = SettingsRegistry.coerce(
+    "fasting.notifications.minutesBefore",
     fasting.notifications?.minutesBefore,
-    5,
-    180,
-    60,
   );
 
   // Get today's fasting type for the notification message

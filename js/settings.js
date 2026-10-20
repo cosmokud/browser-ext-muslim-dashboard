@@ -2463,7 +2463,10 @@ class SettingsManager extends BaseManager {
       this.toggleFastingNotificationOptions(notifications.enabled === true);
     }
     if (this.fastingNotificationMinutesBefore) {
-      const clamped = this.clampNumber(notifications.minutesBefore, 5, 180, 60);
+      const clamped = SettingsRegistry.coerce(
+        "fasting.notifications.minutesBefore",
+        notifications.minutesBefore,
+      );
       this.fastingNotificationMinutesBefore.value = String(clamped);
     }
 
@@ -8368,11 +8371,9 @@ class SettingsManager extends BaseManager {
     // Notification settings
     settings.fasting.notifications = {
       enabled: this.fastingNotificationsEnabled?.checked ?? false,
-      minutesBefore: this.clampNumber(
+      minutesBefore: SettingsRegistry.coerce(
+        "fasting.notifications.minutesBefore",
         parseInt(this.fastingNotificationMinutesBefore?.value, 10),
-        5,
-        180,
-        60,
       ),
       notify: {
         monday: this.fastingNotifyMonday?.checked ?? true,

@@ -345,7 +345,10 @@ class StorageManager {
         // Suhur notification settings
         notifications: {
           enabled: false,
-          minutesBefore: 60, // minutes before Fajr
+          // Minutes before Fajr
+          minutesBefore: SettingsRegistry.defaultOf(
+            "fasting.notifications.minutesBefore",
+          ),
           // Per-fast notification toggles
           notify: {
             monday: true,
