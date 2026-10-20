@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $sourcePath = Join-Path $PSScriptRoot "..\js\pocketquran.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-Content -Path $sourcePath -Raw -Encoding UTF8
 
 function Assert-Matches {
   param(
@@ -17,7 +17,7 @@ function Assert-Matches {
 
 Assert-Matches `
   -Haystack $source `
-  -Pattern 'normalizePocketQuranCopyNestedQuotes\(text\)[\s\S]*?replace\(/"/g,[\s\S]*?\)[\s\S]*?replace\(/“/g,\s*"‘"\)[\s\S]*?replace\(/”/g,\s*"’"\)' `
+  -Pattern 'normalizePocketQuranCopyNestedQuotes\(text\)[\s\S]*?replace\(/"/g,[\s\S]*?\)[\s\S]*?replace\(/\u201C/g,\s*"\u2018"\)[\s\S]*?replace\(/\u201D/g,\s*"\u2019"\)' `
   -Message "Pocket Quran copy formatter must convert nested double quotes to single quotes."
 
 Assert-Matches `

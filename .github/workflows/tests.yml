@@ -17,3 +17,29 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  legacy:
+    # Source-text regression tests that predate the node seam. They read the
+    # scripts with -Encoding UTF8, so they behave the same on Linux as locally.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run legacy regression tests
+        shell: pwsh
+        run: |
+          $failed = @()
+          Get-ChildItem tests/*.ps1 | ForEach-Object {
+            Write-Host "::group::$($_.Name)"
+            try {
+              & $_.FullName
+            } catch {
+              $failed += "$($_.Name): $($_.Exception.Message)"
+            }
+            Write-Host "::endgroup::"
+          }
+          if ($failed.Count -gt 0) {
+            $failed | ForEach-Object { Write-Host "::error::$_" }
+            throw "$($failed.Count) legacy test(s) failed"
+          }
