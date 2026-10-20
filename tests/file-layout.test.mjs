@@ -2,10 +2,10 @@
  * File layout: no script grows past a readable size, and no script exists
  * without a page that loads it.
  *
- * A class split across files keeps its class in `<name>.js` and its parts in
- * `<name>-2.js`, `<name>-3.js`…, loaded right after it. The size limit is what
- * keeps the parts honest; the wiring check is what catches a part that is
- * written but never loaded.
+ * A class split across files lives in `<name>/`: `index.js` declares it and one
+ * file per feature adds its methods, all of them loaded in index.html order.
+ * The size limit is what keeps a feature file honest; the wiring check is what
+ * catches a file that is written but never loaded.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
