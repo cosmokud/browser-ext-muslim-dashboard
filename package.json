@@ -4,5 +4,8 @@
   "description": "Test tooling only. The extension ships as-is with no build step.",
   "scripts": {
     "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
   }
 }

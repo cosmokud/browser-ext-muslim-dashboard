@@ -15,6 +15,9 @@ jobs:
         with:
           node-version: 22
 
+      # jsdom, for tests that boot a page.
+      - run: npm ci
+
       - name: Run tests
         run: npm test
 

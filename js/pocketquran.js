@@ -620,6 +620,10 @@ class PocketQuranManager extends BaseManager {
     this._pqCache = null;
     try {
       this._pqCache = new PocketQuranCacheManager();
+      // A failed open is not a broken reader: drop the cache, keep going.
+      this._pqCache.dbReady.catch(() => {
+        this._pqCache = null;
+      });
     } catch (e) {
       this._pqCache = null;
     }
@@ -6849,8 +6853,8 @@ class PocketQuranManager extends BaseManager {
   applyFontSizes(arabicPx, translationPx, opts = {}) {
     const { syncInputs = false, persist = false } = opts;
 
-    const a = this.clampNumber(arabicPx, 8, 144, 40);
-    const t = this.clampNumber(translationPx, 8, 144, 18);
+    const a = SettingsRegistry.coerce("arabicFontSize", arabicPx, 40);
+    const t = SettingsRegistry.coerce("translationFontSize", translationPx, 18);
 
     if (this.card) {
       const badgeOffset = Math.max(0, (a * 1.95 - 34) / 2);
