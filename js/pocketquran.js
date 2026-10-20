@@ -2344,32 +2344,18 @@ class PocketQuranManager extends BaseManager {
     return ayahEl;
   }
 
-  normalizePocketQuranCopyNestedQuotes(text) {
-    return String(text || "")
-      .replace(/"/g, "'")
-      .replace(/“/g, "‘")
-      .replace(/”/g, "’");
-  }
-
   formatPocketQuranAyahCopy(verse, surah, ayahNumber) {
     const settings = this.storage?.getSettings ? this.storage.getSettings() : {};
-    const includeArabic = settings?.pocketQuran?.copyIncludeArabic === true;
-    const surahName = this.getSurahNameSimple(surah);
     const rawTranslation = Array.isArray(verse?.translations)
       ? verse.translations[0]?.text
       : "";
-    const translation = this.normalizePocketQuranCopyNestedQuotes(
-      this.stripHtmlToText(rawTranslation || "").trim(),
-    );
-    const arabic = String(verse?.text_uthmani || "").trim();
-    const reference = `(${surahName} ${surah}:${ayahNumber})`;
-    const translatedLine = `"${translation}" ${reference}`;
 
-    if (includeArabic && arabic) {
-      return `${arabic}\n${translatedLine}`;
-    }
-
-    return translatedLine;
+    return QuranCopy.ayahText({
+      arabic: verse?.text_uthmani,
+      translation: this.stripHtmlToText(rawTranslation || ""),
+      reference: `(${this.getSurahNameSimple(surah)} ${surah}:${ayahNumber})`,
+      includeArabic: settings?.pocketQuran?.copyIncludeArabic === true,
+    });
   }
 
   async copyPocketQuranAyah(verse, surah, ayahNumber) {

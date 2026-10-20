@@ -279,6 +279,7 @@ const REQUIRED = {
   "index.html": [
     "DebugClock",
     "Modes",
+    "QuranCopy",
     "IslamicDay",
     "HijriDate",
     "SettingsRegistry",
