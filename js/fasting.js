@@ -473,18 +473,20 @@ class FastingManager {
     const day = hijriNow.day;
 
     if (month === 9) {
-      const daysLeft = Math.max(0, 29 - day);
-      const isLastDay = day >= 29;
+      // Ramadan is 29 or 30 days; ask the converter instead of assuming 29.
+      const monthLength = this.hijri.getHijriDaysInMonth(hijriNow.year, 9) || 29;
+      const daysLeft = Math.max(0, monthLength - day);
+      const isLastDay = day >= monthLength;
       const meta = isLastDay ? "Last day" : this._daysLeftText(daysLeft);
       return {
         key: "ramadan",
         title: "Ramadan",
-        subtitle: "1st-29th of Ramadan (month 9)",
+        subtitle: `1st-${monthLength}th of Ramadan (month 9)`,
         daysLeft,
-        totalDays: 29,
+        totalDays: monthLength,
         meta,
-        aria: `Ramadan (to 29 Ramadan): ${meta}`,
-        badge: "29 Ramadan",
+        aria: `Ramadan (to ${monthLength} Ramadan): ${meta}`,
+        badge: `${monthLength} Ramadan`,
       };
     }
 

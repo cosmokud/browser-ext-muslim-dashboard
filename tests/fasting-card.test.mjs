@@ -140,3 +140,36 @@ test("a week that holds no forbidden day answers without converting", () => {
     hijri.toHijri = original;
   }
 });
+
+test("the Ramadan row counts the month the converter has, not a fixed 29", () => {
+  const { hijri, manager } = makeCard();
+  const year = 1447;
+  const length = hijri.getHijriDaysInMonth(year, 9);
+  assert.equal(length, 30, "Ramadan 1447 runs 18 Feb to 19 Mar 2026");
+
+  const now = manager._startOfDay(manager._targetGregorianForHijri(year, 9, 1, 0));
+  const item = manager._ramadanCountdown(now, { year, month: 9, day: 1 }, 0);
+
+  assert.equal(item.badge, `${length} Ramadan`);
+  assert.equal(item.subtitle, `1st-${length}th of Ramadan (month 9)`);
+  assert.equal(item.daysLeft, length - 1, "the month's own remaining days");
+  assert.equal(item.totalDays, length, "the bar fills over the real month");
+});
+
+test("the row reads Last day on the month's real last day", () => {
+  const { hijri, manager } = makeCard();
+  const year = 1447;
+  const length = hijri.getHijriDaysInMonth(year, 9);
+
+  const row = (day) => {
+    const now = manager._startOfDay(
+      manager._targetGregorianForHijri(year, 9, day, 0),
+    );
+    return manager._ramadanCountdown(now, { year, month: 9, day }, 0);
+  };
+
+  assert.equal(row(length - 1).meta, "Tonight", "one day left reads as tonight");
+  assert.equal(row(length - 1).daysLeft, 1);
+  assert.equal(row(length).meta, "Last day");
+  assert.equal(row(length).daysLeft, 0);
+});
