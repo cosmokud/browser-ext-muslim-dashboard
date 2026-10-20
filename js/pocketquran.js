@@ -1689,13 +1689,7 @@ class PocketQuranManager extends BaseManager {
   }
 
   normalizeArabicWordForRecitation(text) {
-    return String(text || "")
-      .normalize("NFKD")
-      .replace(/[\u061c\u200e\u200f]/g, "")
-      .replace(/[\u0640\u064b-\u065f\u0670\u06d6-\u06ed]/g, "")
-      .replace(/[إأآٱٲ]/g, "ا")
-      .replace(/\s+/g, "")
-      .trim();
+    return QuranArabic.normalizeWord(text);
   }
 
   getPlainArabicRecitationWords(text) {
@@ -1712,19 +1706,11 @@ class PocketQuranManager extends BaseManager {
   }
 
   isArabicCombiningMark(char) {
-    return /^[\u064b-\u065f\u0670\u06d6-\u06ed]$/.test(String(char || ""));
+    return QuranArabic.isCombiningMark(char);
   }
 
   splitArabicTextClusters(text) {
-    const clusters = [];
-    Array.from(String(text || "")).forEach((char) => {
-      if (this.isArabicCombiningMark(char) && clusters.length) {
-        clusters[clusters.length - 1] += char;
-      } else {
-        clusters.push(char);
-      }
-    });
-    return clusters;
+    return QuranArabic.clusters(text);
   }
 
   appendTajweedClusterToWord(wordEl, cluster, ancestors = []) {

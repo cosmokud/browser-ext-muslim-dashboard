@@ -282,6 +282,7 @@ const REQUIRED = {
     "QuranCopy",
     "QuranSearch",
     "QuranRecitation",
+    "QuranArabic",
     "IslamicDay",
     "HijriDate",
     "SettingsRegistry",
