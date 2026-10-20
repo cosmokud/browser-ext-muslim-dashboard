@@ -280,6 +280,7 @@ const REQUIRED = {
     "DebugClock",
     "Modes",
     "QuranCopy",
+    "QuranSearch",
     "IslamicDay",
     "HijriDate",
     "SettingsRegistry",

@@ -2974,55 +2974,16 @@ class PocketQuranManager extends BaseManager {
       PocketQuranManager.TRANSLATIONS[
         this.normalizeTranslationId(translationId)
       ]?.language || "English";
-    const key = String(language || "English").toLowerCase();
-    const map = {
-      albanian: "sq",
-      amazigh: "zgh",
-      arabic: "ar",
-      azerbaijani: "az",
-      bengali: "bn",
-      bosnian: "bs",
-      chinese: "zh",
-      czech: "cs",
-      dutch: "nl",
-      english: "en",
-      french: "fr",
-      german: "de",
-      hausa: "ha",
-      hindi: "hi",
-      indonesian: "id",
-      italian: "it",
-      japanese: "ja",
-      korean: "ko",
-      kurdish: "ku",
-      malay: "ms",
-      persian: "fa",
-      portuguese: "pt",
-      romanian: "ro",
-      russian: "ru",
-      spanish: "es",
-      swedish: "sv",
-      tamil: "ta",
-      thai: "th",
-      turkish: "tr",
-      urdu: "ur",
-      uzbek: "uz",
-      vietnamese: "vi",
-    };
-    return map[key] || "en";
+    return QuranSearch.languageCode(language);
   }
 
   getSearchApiUrl(query, translationId, page = 1) {
-    const params = new URLSearchParams();
-    params.set("q", String(query || "").trim());
-    params.set("size", "100");
-    params.set("page", String(Math.max(1, parseInt(page, 10) || 1)));
-    params.set("language", this.getSearchLanguageCode(translationId));
-    params.set(
-      "translations",
-      String(this.normalizeTranslationId(translationId)),
-    );
-    return `${PocketQuranManager.API_BASE}/search?${params.toString()}`;
+    return QuranSearch.url(PocketQuranManager.API_BASE, {
+      query,
+      translationId: this.normalizeTranslationId(translationId),
+      page,
+      language: this.getSearchLanguageCode(translationId),
+    });
   }
 
   getFullTranslationApiUrl(translationId) {
@@ -3098,53 +3059,9 @@ class PocketQuranManager extends BaseManager {
   }
 
   buildPocketQuranSearchResults(query, verses) {
-    const normalizedQuery = String(query || "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (!normalizedQuery) return [];
-
-    const terms = normalizedQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    const isSearchApiResults = (Array.isArray(verses) ? verses : []).some(
-      (verse) => "verse_id" in Object(verse) && "text" in Object(verse),
+    return QuranSearch.shape(query, verses, (value) =>
+      this.stripHtmlToText(value),
     );
-    const cleanHtml =
-      typeof this.stripHtmlToText === "function"
-        ? (value) => this.stripHtmlToText(value)
-        : (value) =>
-            String(value || "")
-              .replace(/<sup[^>]*>.*?<\/sup>/gi, "")
-              .replace(/<[^>]*>/g, " ")
-              .replace(/\s+/g, " ")
-              .trim();
-
-    return (Array.isArray(verses) ? verses : [])
-      .map((verse) => {
-        const rawTranslation = Array.isArray(verse?.translations)
-          ? verse.translations[0]?.text
-          : "";
-        const translationText = cleanHtml(rawTranslation || "");
-        const arabicText = verse?.text_uthmani || verse?.text || "";
-        const verseKey = String(verse?.verse_key || "");
-        const [keySurah, keyAyah] = verseKey
-          .split(":")
-          .map((n) => parseInt(n, 10) || 0);
-        const surah = verse?.chapter_id || keySurah;
-        const ayah = verse?.verse_number || keyAyah;
-
-        return {
-          verseKey: verseKey || `${surah}:${ayah}`,
-          surah,
-          ayah,
-          arabicText,
-          translationText,
-        };
-      })
-      .filter((result) => {
-        if (!result.translationText && !result.arabicText) return false;
-        if (isSearchApiResults) return true;
-        const haystack = result.translationText.toLowerCase();
-        return terms.every((term) => haystack.includes(term));
-      });
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
