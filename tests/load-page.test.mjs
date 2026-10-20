@@ -284,13 +284,19 @@ const REQUIRED = {
     "QuranRecitation",
     "QuranArabic",
     "IslamicDay",
+    "HijriCalendars",
     "HijriDate",
     "SettingsRegistry",
     "StorageManager",
     "GridLayoutManager",
     "MuslimDashboard",
   ],
-  "popup.html": ["SettingsRegistry", "StorageManager", "ThemeManager"],
+  "popup.html": [
+    "SettingsRegistry",
+    "StorageManager",
+    "ThemeManager",
+    "HijriCalendars",
+  ],
 };
 
 for (const page of Object.keys(REQUIRED)) {

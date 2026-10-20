@@ -162,6 +162,12 @@ class HijriDate {
    * Convert Julian Day Number to Hijri date
    */
   julianToHijri(jd) {
+    const calendar = HijriCalendars.getMode();
+    if (calendar !== "tabular") {
+      const converted = HijriCalendars.fromJulian(calendar, jd);
+      if (converted) return converted;
+    }
+
     jd = Math.floor(jd) + 0.5;
     const l = jd - 1948439.5 + 10632;
     const n = Math.floor((l - 1) / 10631);
@@ -185,6 +191,12 @@ class HijriDate {
    * Convert Hijri date to Julian Day Number
    */
   hijriToJulian(year, month, day) {
+    const calendar = HijriCalendars.getMode();
+    if (calendar !== "tabular") {
+      const converted = HijriCalendars.toJulian(calendar, year, month, day);
+      if (converted !== null) return converted;
+    }
+
     return (
       Math.floor((11 * year + 3) / 30) +
       354 * year +
@@ -325,18 +337,12 @@ class HijriDate {
    * @returns {number} Number of days (29 or 30)
    */
   getHijriDaysInMonth(year, month) {
-    // Odd months have 30 days, even months have 29 days
-    // Exception: Month 12 has 30 days in leap years
-    if (month % 2 === 1) {
-      return 30; // Odd months: 30 days
-    } else if (month === 12) {
-      // Check if leap year (years 2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29 in 30-year cycle)
-      const leapYears = [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29];
-      const yearInCycle = ((year - 1) % 30) + 1;
-      return leapYears.includes(yearInCycle) ? 30 : 29;
-    } else {
-      return 29; // Even months (except 12): 29 days
+    if (month === 12) {
+      return (
+        this.hijriToJulian(year + 1, 1, 1) - this.hijriToJulian(year, 12, 1)
+      );
     }
+    return this.hijriToJulian(year, month + 1, 1) - this.hijriToJulian(year, month, 1);
   }
 
   /**

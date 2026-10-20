@@ -19,7 +19,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadSandbox, localDay } from "./harness.mjs";
 
-const FILES = ["js/hijri.js", "js/praytimes.js", "js/islamic-day.js"];
+const FILES = [
+  "js/hijri-calendars.js",
+  "js/hijri.js",
+  "js/praytimes.js",
+  "js/islamic-day.js",
+];
 
 const withDay = (settings = {}, options = {}) => {
   const sandbox = loadSandbox(FILES, options);

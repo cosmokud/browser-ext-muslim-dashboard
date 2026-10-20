@@ -342,6 +342,8 @@ class StorageManager {
         showRecommendations: SettingsRegistry.defaultOf(
           "fasting.showRecommendations",
         ),
+        // Which calendar the Islamic dates come from, dashboard-wide
+        hijriCalendar: SettingsRegistry.defaultOf("fasting.hijriCalendar"),
         // Display window settings (how many days before to show countdown)
         dhuAlHijjahWithinDays: SettingsRegistry.defaultOf(
           "fasting.dhuAlHijjahWithinDays",

@@ -63,6 +63,12 @@ class SettingsRegistry {
       round: true,
     },
 
+    // Which calendar the Islamic dates come from, dashboard-wide.
+    "fasting.hijriCalendar": {
+      default: "indonesia",
+      values: ["tabular", "indonesia", "ummAlQura"],
+    },
+
     // Offsets the worker schedules and the panel edits, per prayer.
     "prayerNotifications.beforeMinutes": {
       default: 10,
@@ -119,6 +125,11 @@ class SettingsRegistry {
   static coerce(name, value, fallback) {
     const rule = SettingsRegistry.ruleFor(name);
     if (!rule) return value;
+
+    if (rule.values) {
+      if (rule.values.includes(value)) return value;
+      return fallback !== undefined ? fallback : rule.default;
+    }
 
     if (rule.boolean === true) {
       // Only an explicit opposite value moves a toggle off its default; the

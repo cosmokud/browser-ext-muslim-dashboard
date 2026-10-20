@@ -19,8 +19,18 @@ const CONSUMERS = [
   "js/app.js",
   "js/popup.js",
 ];
-const NEEDED_BEFORE = ["js/praytimes.js", "js/hijri.js", "js/islamic-day.js"];
-const MODULE_FILES = ["js/hijri.js", "js/praytimes.js", "js/islamic-day.js"];
+const NEEDED_BEFORE = [
+  "js/praytimes.js",
+  "js/hijri-calendars.js",
+  "js/hijri.js",
+  "js/islamic-day.js",
+];
+const MODULE_FILES = [
+  "js/hijri-calendars.js",
+  "js/hijri.js",
+  "js/praytimes.js",
+  "js/islamic-day.js",
+];
 const MODE_CONSUMERS = [
   "js/app.js",
   "js/gridlayout.js",

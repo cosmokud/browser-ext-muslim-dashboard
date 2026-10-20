@@ -720,6 +720,12 @@ class SettingsManager extends BaseManager {
     this.fastingAshuraWithinDays = document.getElementById(
       "fastingAshuraWithinDays",
     );
+    this.fastingHijriCalendar = document.getElementById(
+      "fastingHijriCalendar",
+    );
+    this.fastingHijriCalendarHint = document.getElementById(
+      "fastingHijriCalendarHint",
+    );
     this.fastingNotificationsEnabled = document.getElementById(
       "fastingNotificationsEnabled",
     );
@@ -2420,6 +2426,21 @@ class SettingsManager extends BaseManager {
     if (this.fastingShowRecommendations) {
       this.fastingShowRecommendations.checked =
         fasting.showRecommendations !== false;
+    }
+
+    // Which calendar the Islamic dates come from
+    if (this.fastingHijriCalendar) {
+      const calendar = SettingsRegistry.coerce(
+        "fasting.hijriCalendar",
+        fasting.hijriCalendar,
+      );
+      this.fastingHijriCalendar.value = calendar;
+      if (this.fastingHijriCalendarHint) {
+        this.fastingHijriCalendarHint.textContent =
+          calendar === "tabular"
+            ? "The arithmetic calendar: months alternate 29 and 30 days."
+            : `Covered years ${HijriCalendars.range(calendar).firstYear}-${HijriCalendars.range(calendar).lastYear} AH; outside them the arithmetic calendar answers.`;
+      }
     }
 
     // Within days settings
@@ -8298,6 +8319,11 @@ class SettingsManager extends BaseManager {
     settings.fasting.showRecommendations =
       this.fastingShowRecommendations?.checked ?? true;
 
+    settings.fasting.hijriCalendar = SettingsRegistry.coerce(
+      "fasting.hijriCalendar",
+      this.fastingHijriCalendar?.value,
+    );
+
     // Within days settings
     settings.fasting.dhuAlHijjahWithinDays = SettingsRegistry.coerce(
       "fasting.dhuAlHijjahWithinDays",
@@ -8348,6 +8374,12 @@ class SettingsManager extends BaseManager {
         * Apply settings to components
         */
         applySettings(settings) {
+        // A calendar change re-dates every Hijri surface.
+        HijriCalendars.setMode(settings?.fasting?.hijriCalendar);
+        if (window.dashboard && typeof window.dashboard.updateDate === "function") {
+          window.dashboard.updateDate();
+        }
+
         // Update prayer times
         if (this.prayerTimes) {
         this.prayerTimes.updateSettings(settings);

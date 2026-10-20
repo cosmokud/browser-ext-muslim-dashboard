@@ -12,6 +12,7 @@ import vm from "node:vm";
 import { loadSandbox } from "./harness.mjs";
 
 const FILES = [
+  "js/hijri-calendars.js",
   "js/hijri.js",
   "js/praytimes.js",
   "js/islamic-day.js",
@@ -28,7 +29,7 @@ function makeCard(settings = {}) {
   const hijri = new HijriDate();
   const manager = new FastingManager({ getSettings: () => settings }, hijri);
 
-  return { hijri, manager };
+  return { calendars: sandbox.HijriCalendars, hijri, manager };
 }
 
 /** The start of the Gregorian day that reads as this Hijri date. */
@@ -172,4 +173,23 @@ test("the row reads Last day on the month's real last day", () => {
   assert.equal(row(length - 1).daysLeft, 1);
   assert.equal(row(length).meta, "Last day");
   assert.equal(row(length).daysLeft, 0);
+});
+
+test("the calendar chosen in settings moves the day the card counts to", () => {
+  const { calendars, hijri, manager } = makeCard();
+  const iso = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const ramadanStart = () =>
+    iso(manager._targetGregorianForHijri(1447, 9, 1, 0));
+
+  calendars.setMode("tabular");
+  assert.equal(ramadanStart(), "2026-02-18", "the arithmetic calendar");
+  assert.equal(hijri.getHijriDaysInMonth(1447, 8), 29, "Sha'ban is even, so 29");
+
+  calendars.setMode("indonesia");
+  assert.equal(ramadanStart(), "2026-02-19", "Kemenag announced 19 February");
+  assert.equal(hijri.getHijriDaysInMonth(1447, 8), 30, "Sha'ban gained the day");
+
+  calendars.setMode("ummAlQura");
+  assert.equal(ramadanStart(), "2026-02-18", "Saudi Arabia began on 18 February");
 });

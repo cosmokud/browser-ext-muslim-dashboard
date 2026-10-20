@@ -4681,6 +4681,25 @@
           <!-- Fasting Times Settings -->
           <div class="settings-panel" id="fastingPanel">
             <div class="setting-group">
+              <label class="setting-label" for="fastingHijriCalendar"
+                >Hijri Calendar</label
+              >
+              <p class="setting-hint">
+                Which calendar the dashboard's Islamic dates come from. Indonesia
+                follows Kemenag's announced dates (MABIMS: moon altitude 3°,
+                elongation 6.4°). Saudi Arabia follows Umm al-Qura. The
+                arithmetic calendar is the older approximation, with no moon in
+                it. Switching re-dates every Hijri surface, fasting included.
+              </p>
+              <select class="setting-select" id="fastingHijriCalendar">
+                <option value="indonesia">Indonesia — Kemenag / MABIMS</option>
+                <option value="ummAlQura">Saudi Arabia — Umm al-Qura</option>
+                <option value="tabular">Arithmetic (previous behaviour)</option>
+              </select>
+              <p class="setting-hint" id="fastingHijriCalendarHint"></p>
+            </div>
+
+            <div class="setting-group">
               <label class="setting-label">Fasting Countdowns Visibility</label>
               <p class="setting-hint">
                 Choose which fasting countdowns to display in the Fasting Times
@@ -7931,6 +7950,7 @@
     <script src="js/config.js"></script>
     <script src="js/debug-clock.js"></script>
     <script src="js/praytimes.js"></script>
+    <script src="js/hijri-calendars.js"></script>
     <script src="js/hijri.js"></script>
     <script src="js/islamic-day.js"></script>
     <script src="js/settings-registry.js"></script>

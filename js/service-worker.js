@@ -7,6 +7,7 @@
 
 importScripts(
   "praytimes.js",
+  "hijri-calendars.js",
   "hijri.js",
   "islamic-day.js",
   "settings-registry.js",

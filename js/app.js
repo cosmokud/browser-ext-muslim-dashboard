@@ -770,6 +770,13 @@ class MuslimDashboard {
       }
     } catch (e) {}
 
+    // Which calendar "today" is on, before any card renders.
+    try {
+      HijriCalendars.setMode(
+        this.storage.getSettings()?.fasting?.hijriCalendar,
+      );
+    } catch (e) {}
+
     // Apply debug date simulation as early as possible so all modules share it.
     try {
       this.applyDebugDateSimulationFromSettings();

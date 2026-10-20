@@ -239,3 +239,15 @@ test("prayer notification offsets and the panel opacities read one rule each", (
     "the theme manager keeps its own fallback",
   );
 });
+
+test("the calendar setting only accepts the calendars that exist", () => {
+  const { registry, storage } = load();
+
+  assert.equal(storage.getDefaultSettings().fasting.hijriCalendar, "indonesia");
+  assert.equal(registry.coerce("fasting.hijriCalendar", "ummAlQura"), "ummAlQura");
+  assert.equal(
+    registry.coerce("fasting.hijriCalendar", "islamic-civil"),
+    "indonesia",
+    "an unknown calendar falls back to the default, never to a guess",
+  );
+});

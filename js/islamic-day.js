@@ -14,6 +14,7 @@ class IslamicDay {
   constructor(settings = {}) {
     this.settings = settings || {};
     this.adjustment = Number(this.settings.hijriAdjustment || 0);
+    HijriCalendars.setMode(this.settings.fasting?.hijriCalendar);
     this.timeFormat = this.settings.timeFormat || "24h";
     this.hijri = new HijriDate();
     this.prayTimes = new PrayTimes();
