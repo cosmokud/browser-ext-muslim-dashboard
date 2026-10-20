@@ -65,7 +65,7 @@ class SettingsRegistry {
 
     // Which calendar the Islamic dates come from, dashboard-wide.
     "fasting.hijriCalendar": {
-      default: "indonesia",
+      default: "ummAlQura",
       values: ["tabular", "indonesia", "ummAlQura"],
     },
 

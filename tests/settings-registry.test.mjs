@@ -243,11 +243,16 @@ test("prayer notification offsets and the panel opacities read one rule each", (
 test("the calendar setting only accepts the calendars that exist", () => {
   const { registry, storage } = load();
 
-  assert.equal(storage.getDefaultSettings().fasting.hijriCalendar, "indonesia");
+  assert.equal(storage.getDefaultSettings().fasting.hijriCalendar, "ummAlQura");
   assert.equal(registry.coerce("fasting.hijriCalendar", "ummAlQura"), "ummAlQura");
   assert.equal(
     registry.coerce("fasting.hijriCalendar", "islamic-civil"),
-    "indonesia",
+    "ummAlQura",
     "an unknown calendar falls back to the default, never to a guess",
+  );
+  assert.equal(
+    registry.coerce("fasting.hijriCalendar", "indonesia"),
+    "indonesia",
+    "Kemenag stays available",
   );
 });
