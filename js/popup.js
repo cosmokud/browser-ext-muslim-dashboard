@@ -2212,7 +2212,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getGlassOpacityAlphas(opacityPercent) {
-    const baseAlpha = clampNumber(opacityPercent, 0, 100, 35) / 100;
+    const baseAlpha = SettingsRegistry.coerce("glassOpacity", opacityPercent, 35) / 100;
     const hoverRatio = 0.45 / 0.35;
     const borderRatio = 0.4 / 0.35;
     const clampAlpha = (alpha) =>
@@ -2704,7 +2704,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.documentElement.style.setProperty(
       "--ui-blur-multiplier",
-      String(clampNumber(effectiveBlurPower, 0, 200, 100) / 100),
+      String(SettingsRegistry.coerce("blurPower", effectiveBlurPower, 100) / 100),
     );
 
     syncPopupBlurModalUi();
@@ -6329,7 +6329,11 @@ document.addEventListener("DOMContentLoaded", () => {
     popupPqArabicSizeDecreaseBtn?.addEventListener("click", () => {
       const current = popupPqTypographyState?.arabicFontSize || 40;
       persistPocketQuranPopupTypography({
-        arabicFontSize: clampNumber(current - 1, 8, 144, current),
+        arabicFontSize: SettingsRegistry.coerce(
+          "arabicFontSize",
+          current - 1,
+          current,
+        ),
       });
       applyPocketQuranPopupTypography(storage.getSettings());
     });
@@ -6337,7 +6341,11 @@ document.addEventListener("DOMContentLoaded", () => {
     popupPqArabicSizeIncreaseBtn?.addEventListener("click", () => {
       const current = popupPqTypographyState?.arabicFontSize || 40;
       persistPocketQuranPopupTypography({
-        arabicFontSize: clampNumber(current + 1, 8, 144, current),
+        arabicFontSize: SettingsRegistry.coerce(
+          "arabicFontSize",
+          current + 1,
+          current,
+        ),
       });
       applyPocketQuranPopupTypography(storage.getSettings());
     });
@@ -6345,7 +6353,11 @@ document.addEventListener("DOMContentLoaded", () => {
     popupPqTranslationSizeDecreaseBtn?.addEventListener("click", () => {
       const current = popupPqTypographyState?.translationFontSize || 18;
       persistPocketQuranPopupTypography({
-        translationFontSize: clampNumber(current - 1, 8, 144, current),
+        translationFontSize: SettingsRegistry.coerce(
+          "translationFontSize",
+          current - 1,
+          current,
+        ),
       });
       applyPocketQuranPopupTypography(storage.getSettings());
     });
@@ -6353,7 +6365,11 @@ document.addEventListener("DOMContentLoaded", () => {
     popupPqTranslationSizeIncreaseBtn?.addEventListener("click", () => {
       const current = popupPqTypographyState?.translationFontSize || 18;
       persistPocketQuranPopupTypography({
-        translationFontSize: clampNumber(current + 1, 8, 144, current),
+        translationFontSize: SettingsRegistry.coerce(
+          "translationFontSize",
+          current + 1,
+          current,
+        ),
       });
       applyPocketQuranPopupTypography(storage.getSettings());
     });

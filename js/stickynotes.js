@@ -932,7 +932,7 @@ class StickyNotesManager {
       }
 
       const settings = this.storage?.getSettings?.();
-      return this.clampNumber(settings?.theme?.glassOpacity, 0, 100, 35);
+      return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity, 35);
     } catch (e) {
       return 35;
     }
@@ -951,7 +951,7 @@ class StickyNotesManager {
       }
 
       const settings = this.storage?.getSettings?.();
-      return this.clampNumber(settings?.theme?.componentOpacity, 0, 100, 0);
+      return SettingsRegistry.coerce("componentOpacity", settings?.theme?.componentOpacity, 0);
     } catch (e) {
       return 0;
     }
@@ -1029,8 +1029,8 @@ class StickyNotesManager {
     const isLegacyDefaultGlassState =
       note.color?.glass === true &&
       note.blurState === "on" &&
-      this.clampNumber(note.blurPower, 0, 200, 100) === 200 &&
-      this.clampNumber(note.glassOpacity, 0, 100, 100) === 100;
+      SettingsRegistry.coerce("blurPower", note.blurPower, 100) === 200 &&
+      SettingsRegistry.coerce("glassOpacity", note.glassOpacity, 100) === 100;
     if (isLegacyDefaultGlassState) {
       note.blurState = "dashboard";
     }
@@ -1048,7 +1048,11 @@ class StickyNotesManager {
     const legacyBlurPower = Math.round(
       (this.clampNumber(note.blur, 0, 20, 10) / 20) * 200,
     );
-    note.blurPower = this.clampNumber(note.blurPower, 0, 200, legacyBlurPower);
+    note.blurPower = SettingsRegistry.coerce(
+      "blurPower",
+      note.blurPower,
+      legacyBlurPower,
+    );
     note.blurPowerEnabled = note.blurState === "on";
 
     note.glassOpacity = this.clampNumber(
@@ -1232,7 +1236,7 @@ class StickyNotesManager {
             class="blur-power-slider blur-opacity-slider"
             min="0"
             max="100"
-            value="${this.clampNumber(note.glassOpacity, 0, 100, 100)}"
+            value="${SettingsRegistry.coerce("glassOpacity", note.glassOpacity, 100)}"
             aria-label="Glass opacity"
           />
           <span class="blur-power-value blur-opacity-value">${this.clampNumber(
