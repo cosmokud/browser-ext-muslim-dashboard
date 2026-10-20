@@ -76,6 +76,7 @@ class MuslimDashboard {
     this._nativeDateCtor = Date;
     this._debugDateSimulationEnabled = false;
     this._debugSimulatedDateYMD = null;
+    this._debugSimulatedTimeHM = null;
 
     // Cross-context prayer refresh state (popup -> dashboard).
     this._externalPrayerSyncTimer = null;
@@ -100,39 +101,7 @@ class MuslimDashboard {
   }
 
   normalizeDebugDateYMD(rawValue) {
-    const raw = String(rawValue || "").trim();
-    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return "";
-
-    const year = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10);
-    const day = parseInt(match[3], 10);
-
-    if (
-      !Number.isFinite(year) ||
-      !Number.isFinite(month) ||
-      !Number.isFinite(day) ||
-      year < 1 ||
-      year > 9999 ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return "";
-    }
-
-    const NativeDate = this._nativeDateCtor || Date;
-    const probe = new NativeDate(year, month - 1, day);
-    if (
-      probe.getFullYear() !== year ||
-      probe.getMonth() !== month - 1 ||
-      probe.getDate() !== day
-    ) {
-      return "";
-    }
-
-    return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return DebugClock.normalizeDateYMD(rawValue, this._nativeDateCtor || Date);
   }
 
   /**
@@ -157,26 +126,15 @@ class MuslimDashboard {
       debugSettings.simulatedDate,
     );
 
+    const simulatedTime = DebugClock.normalizeTimeHM(
+      debugSettings.simulatedTime,
+    );
+
     const NativeDate = this._nativeDateCtor || Date;
 
     if (simulationEnabled && simulatedYmd) {
-      const [yearText, monthText, dayText] = simulatedYmd.split("-");
-      const simYear = parseInt(yearText, 10);
-      const simMonth = parseInt(monthText, 10);
-      const simDay = parseInt(dayText, 10);
-
-      const getSimulatedNowMs = () => {
-        const realNow = new NativeDate();
-        return new NativeDate(
-          simYear,
-          simMonth - 1,
-          simDay,
-          realNow.getHours(),
-          realNow.getMinutes(),
-          realNow.getSeconds(),
-          realNow.getMilliseconds(),
-        ).getTime();
-      };
+      const getSimulatedNowMs = () =>
+        DebugClock.now(simulatedYmd, simulatedTime, NativeDate);
 
       const SimulatedDate = class extends NativeDate {
         constructor(...args) {
@@ -203,6 +161,7 @@ class MuslimDashboard {
       window.Date = SimulatedDate;
       this._debugDateSimulationEnabled = true;
       this._debugSimulatedDateYMD = simulatedYmd;
+      this._debugSimulatedTimeHM = simulatedTime || null;
       return;
     }
 
@@ -211,6 +170,7 @@ class MuslimDashboard {
     }
     this._debugDateSimulationEnabled = false;
     this._debugSimulatedDateYMD = null;
+    this._debugSimulatedTimeHM = null;
   }
 
   setupFabMenu() {

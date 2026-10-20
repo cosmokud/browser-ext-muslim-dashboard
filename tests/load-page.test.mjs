@@ -277,6 +277,7 @@ function scriptSrcs(page) {
 
 const REQUIRED = {
   "index.html": [
+    "DebugClock",
     "Modes",
     "IslamicDay",
     "HijriDate",

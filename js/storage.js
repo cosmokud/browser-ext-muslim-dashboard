@@ -509,6 +509,7 @@ class StorageManager {
       debug: {
         simulatedDateEnabled: false,
         simulatedDate: null,
+        simulatedTime: null,
       },
 
       // Heading customization settings

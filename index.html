@@ -7039,7 +7039,8 @@
               <label class="setting-label">Simulate Date</label>
               <p class="setting-hint">
                 Simulate a specific date for testing date-sensitive behavior.
-                Pick from calendar or enter it manually as YYYY-MM-DD.
+                Pick from calendar or enter it manually as YYYY-MM-DD. Leave the
+                time empty to keep the real time of day.
               </p>
 
               <div class="setting-options">
@@ -7092,6 +7093,15 @@
                       inputmode="numeric"
                     />
                   </div>
+                </div>
+
+                <div class="setting-row debug-date-time-row">
+                  <span class="setting-sublabel">Time</span>
+                  <input
+                    type="time"
+                    class="setting-input"
+                    id="debugSimDateTime"
+                  />
                 </div>
               </div>
             </div>
@@ -7919,6 +7929,7 @@
 
     <!-- Scripts -->
     <script src="js/config.js"></script>
+    <script src="js/debug-clock.js"></script>
     <script src="js/praytimes.js"></script>
     <script src="js/hijri.js"></script>
     <script src="js/islamic-day.js"></script>

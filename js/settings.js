@@ -142,6 +142,7 @@ class SettingsManager extends BaseManager {
     this.debugSimDateYear = document.getElementById("debugSimDateYear");
     this.debugSimDateMonth = document.getElementById("debugSimDateMonth");
     this.debugSimDateDay = document.getElementById("debugSimDateDay");
+    this.debugSimDateTime = document.getElementById("debugSimDateTime");
     this.applyDebugModeVisibility();
 
     // Location elements
@@ -10242,6 +10243,7 @@ class SettingsManager extends BaseManager {
       this.debugSimDateYear,
       this.debugSimDateMonth,
       this.debugSimDateDay,
+      this.debugSimDateTime,
     ]
       .filter(Boolean)
       .forEach((el) => {
@@ -10250,38 +10252,7 @@ class SettingsManager extends BaseManager {
   }
 
   normalizeDebugDateYMD(rawValue) {
-    const raw = String(rawValue || "").trim();
-    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return "";
-
-    const year = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10);
-    const day = parseInt(match[3], 10);
-
-    if (
-      !Number.isFinite(year) ||
-      !Number.isFinite(month) ||
-      !Number.isFinite(day) ||
-      year < 1 ||
-      year > 9999 ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return "";
-    }
-
-    const probe = new Date(year, month - 1, day);
-    if (
-      probe.getFullYear() !== year ||
-      probe.getMonth() !== month - 1 ||
-      probe.getDate() !== day
-    ) {
-      return "";
-    }
-
-    return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return DebugClock.normalizeDateYMD(rawValue);
   }
 
   getDebugDateFromParts() {
@@ -10375,6 +10346,12 @@ class SettingsManager extends BaseManager {
       if (this.debugSimDateDay) this.debugSimDateDay.value = "";
     }
 
+    if (this.debugSimDateTime) {
+      this.debugSimDateTime.value = DebugClock.normalizeTimeHM(
+        debug.simulatedTime,
+      );
+    }
+
     this.setDebugDateControlsEnabled(enabled);
   }
 
@@ -10411,6 +10388,8 @@ class SettingsManager extends BaseManager {
     settings.debug.simulatedDateEnabled = enabled;
     settings.debug.simulatedDate =
       selectedDate || settings.debug.simulatedDate || null;
+    settings.debug.simulatedTime =
+      DebugClock.normalizeTimeHM(this.debugSimDateTime?.value) || null;
 
     return true;
   }
