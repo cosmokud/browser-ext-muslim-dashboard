@@ -462,26 +462,46 @@ export function bootPage(page) {
 }
 
 /**
- * A class split across files loads as `<name>.js`, then `<name>-2.js`,
- * `<name>-3.js` … in that order. Expanding here means a test names only the
- * class file it is about; the parts arrive as the page loads them.
+ * A class split across files lives in `js/<name>/`: `index.js` declares it and
+ * the other files add its methods, in the order the pages load them. Expanding
+ * here means a test names only the class file it is about; the parts arrive as
+ * the page loads them.
  */
 export function withParts(relPaths) {
   const out = [];
   for (const relPath of relPaths) {
+    const folder = relPath.replace(/\.js$/, "");
+    const folderPath = path.join(repoRoot, folder);
+    if (
+      relPath.endsWith(".js") &&
+      fs.existsSync(folderPath) &&
+      fs.statSync(folderPath).isDirectory()
+    ) {
+      out.push(...folderParts(folder));
+      continue;
+    }
     out.push(relPath);
-    const base = relPath.replace(/\.js$/, "");
-    const dir = path.dirname(path.join(repoRoot, relPath));
-    if (!fs.existsSync(dir)) continue;
-    const prefix = `${path.basename(base)}-`;
-    const parts = fs
-      .readdirSync(dir)
-      .map((name) => /^(.*)-(\d+)\.js$/.exec(name))
-      .filter((match) => match && match[1] === path.basename(base))
-      .map((match) => ({ name: match[0], order: Number(match[2]) }))
-      .sort((a, b) => a.order - b.order)
-      .map((entry) => `${path.dirname(relPath)}/${entry.name}`);
-    out.push(...parts);
   }
   return out;
+}
+
+/** Folder files in page load order, falling back to index.js then names. */
+function folderParts(folder) {
+  const onDisk = fs.readdirSync(path.join(repoRoot, folder)).filter((name) => name.endsWith(".js"));
+  const ordered = [];
+  for (const page of ["index.html", "popup.html", "offscreen.html"]) {
+    const file = path.join(repoRoot, page);
+    if (!fs.existsSync(file)) continue;
+    for (const match of fs.readFileSync(file, "utf8").matchAll(/<script src="([^"]+)"><\/script>/g)) {
+      const dir = path.posix.dirname(match[1]);
+      const name = path.posix.basename(match[1]);
+      if (dir === folder && onDisk.includes(name) && !ordered.includes(name)) ordered.push(name);
+    }
+  }
+  if (ordered.length === 0) {
+    return onDisk
+      .sort((a, b) => (a === "index.js" ? -1 : b === "index.js" ? 1 : a.localeCompare(b)))
+      .map((name) => `${folder}/${name}`);
+  }
+  return ordered.map((name) => `${folder}/${name}`);
 }

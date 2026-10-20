@@ -16,7 +16,7 @@ const CONSUMERS = [
   "js/prayertimes.js",
   "js/fasting.js",
   "js/calendar.js",
-  "js/app.js",
+  "js/app/index.js",
   "js/popup.js",
 ];
 const NEEDED_BEFORE = [
@@ -32,9 +32,9 @@ const MODULE_FILES = [
   "js/islamic-day.js",
 ];
 const MODE_CONSUMERS = [
-  "js/app.js",
-  "js/gridlayout.js",
-  "js/floating.js",
+  "js/app/index.js",
+  "js/gridlayout/index.js",
+  "js/floating/index.js",
   "js/moment.js",
 ];
 const MODE_CLASSES = [
@@ -43,6 +43,17 @@ const MODE_CLASSES = [
   "sidebar-mode",
   "grid-edit-mode",
 ];
+
+/** Every script under js/, including the class folders. */
+function jsFiles(relDir) {
+  const out = [];
+  for (const entry of readdirSync(path.join(repoRoot, relDir), { withFileTypes: true })) {
+    const rel = `${relDir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...jsFiles(rel));
+    else if (entry.name.endsWith(".js")) out.push(rel);
+  }
+  return out;
+}
 
 function scriptSrcs(page) {
   const html = readFileSync(path.join(repoRoot, page), "utf8");
