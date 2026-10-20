@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $sourcePath = Join-Path $PSScriptRoot "..\js\quotes.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-SourceText -Path $sourcePath
 
 function Assert-Contains {
   param(

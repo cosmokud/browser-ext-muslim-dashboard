@@ -1,13 +1,14 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $htmlPath = Join-Path $PSScriptRoot "..\index.html"
-$htmlSource = Get-Content -Path $htmlPath -Raw
+$htmlSource = Get-SourceText -Path $htmlPath
 $settingsPath = Join-Path $PSScriptRoot "..\js\settings.js"
-$settingsSource = Get-Content -Path $settingsPath -Raw
+$settingsSource = Get-SourceText -Path $settingsPath
 $themePath = Join-Path $PSScriptRoot "..\js\themes.js"
-$themeSource = Get-Content -Path $themePath -Raw
+$themeSource = Get-SourceText -Path $themePath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
-$styleSource = Get-Content -Path $stylesPath -Raw
+$styleSource = Get-SourceText -Path $stylesPath
 
 function Assert-Matches {
   param(

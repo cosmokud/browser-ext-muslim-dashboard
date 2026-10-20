@@ -1,15 +1,16 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $sourcePath = Join-Path $PSScriptRoot "..\js\pocketquran.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-SourceText -Path $sourcePath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
-$styles = Get-Content -Path $stylesPath -Raw
+$styles = Get-SourceText -Path $stylesPath
 $storagePath = Join-Path $PSScriptRoot "..\js\storage.js"
-$storage = Get-Content -Path $storagePath -Raw
+$storage = Get-SourceText -Path $storagePath
 $settingsPath = Join-Path $PSScriptRoot "..\js\settings.js"
-$settings = Get-Content -Path $settingsPath -Raw
+$settings = Get-SourceText -Path $settingsPath
 $indexPath = Join-Path $PSScriptRoot "..\index.html"
-$index = Get-Content -Path $indexPath -Raw
+$index = Get-SourceText -Path $indexPath
 
 function Assert-Contains {
   param(

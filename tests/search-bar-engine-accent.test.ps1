@@ -1,19 +1,20 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $sourcePath = Join-Path $PSScriptRoot "..\js\searchbar.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-SourceText -Path $sourcePath
 $faviconCachePath = Join-Path $PSScriptRoot "..\js\faviconcache.js"
-$faviconCacheSource = Get-Content -Path $faviconCachePath -Raw
+$faviconCacheSource = Get-SourceText -Path $faviconCachePath
 $colorThiefPath = Join-Path $PSScriptRoot "..\js\vendor\color-thief.js"
 $fastAverageColorPath = Join-Path $PSScriptRoot "..\js\vendor\fast-average-color.js"
 $indexPath = Join-Path $PSScriptRoot "..\index.html"
-$indexSource = Get-Content -Path $indexPath -Raw
+$indexSource = Get-SourceText -Path $indexPath
 $appPath = Join-Path $PSScriptRoot "..\js\app.js"
-$appSource = Get-Content -Path $appPath -Raw
+$appSource = Get-SourceText -Path $appPath
 $manifestPath = Join-Path $PSScriptRoot "..\manifest.json"
-$manifestSource = Get-Content -Path $manifestPath -Raw
+$manifestSource = Get-SourceText -Path $manifestPath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
-$styles = Get-Content -Path $stylesPath -Raw
+$styles = Get-SourceText -Path $stylesPath
 
 function Assert-Matches {
   param(

@@ -1,15 +1,16 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $sourcePath = Join-Path $PSScriptRoot "..\js\pocketquran.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-SourceText -Path $sourcePath
 $storagePath = Join-Path $PSScriptRoot "..\js\storage.js"
-$storage = Get-Content -Path $storagePath -Raw
+$storage = Get-SourceText -Path $storagePath
 $popupPath = Join-Path $PSScriptRoot "..\popup.html"
-$popup = Get-Content -Path $popupPath -Raw
+$popup = Get-SourceText -Path $popupPath
 $popupScriptPath = Join-Path $PSScriptRoot "..\js\popup.js"
-$popupScript = Get-Content -Path $popupScriptPath -Raw
+$popupScript = Get-SourceText -Path $popupScriptPath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
-$styles = Get-Content -Path $stylesPath -Raw
+$styles = Get-SourceText -Path $stylesPath
 
 function Assert-Matches {
   param(

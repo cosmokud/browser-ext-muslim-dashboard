@@ -1,21 +1,22 @@
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib\source.ps1")
 $sourcePath = Join-Path $PSScriptRoot "..\js\pocketquran.js"
-$source = Get-Content -Path $sourcePath -Raw
+$source = Get-SourceText -Path $sourcePath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
-$styles = Get-Content -Path $stylesPath -Raw
+$styles = Get-SourceText -Path $stylesPath
 $indexPath = Join-Path $PSScriptRoot "..\index.html"
-$index = Get-Content -Path $indexPath -Raw
+$index = Get-SourceText -Path $indexPath
 $storagePath = Join-Path $PSScriptRoot "..\js\storage.js"
-$storage = Get-Content -Path $storagePath -Raw
+$storage = Get-SourceText -Path $storagePath
 $settingsPath = Join-Path $PSScriptRoot "..\js\settings.js"
-$settingsSource = Get-Content -Path $settingsPath -Raw
+$settingsSource = Get-SourceText -Path $settingsPath
 $popupPath = Join-Path $PSScriptRoot "..\js\popup.js"
-$popupSource = Get-Content -Path $popupPath -Raw
+$popupSource = Get-SourceText -Path $popupPath
 $baseManagerPath = Join-Path $PSScriptRoot "..\js\base-manager.js"
-$baseManagerSource = Get-Content -Path $baseManagerPath -Raw
+$baseManagerSource = Get-SourceText -Path $baseManagerPath
 $serviceWorkerPath = Join-Path $PSScriptRoot "..\js\service-worker.js"
-$serviceWorkerSource = Get-Content -Path $serviceWorkerPath -Raw
+$serviceWorkerSource = Get-SourceText -Path $serviceWorkerPath
 
 function Assert-Contains {
   param(
