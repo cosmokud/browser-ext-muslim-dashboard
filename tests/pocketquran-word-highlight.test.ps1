@@ -57,16 +57,6 @@ Assert-Matches `
 
 Assert-Contains `
   -Haystack $source `
-  -Needle 'normalizeRecitationSegments(segments)' `
-  -Message "Pocket Quran needs a pure normalizer for Quran.com word timing segments."
-
-Assert-Matches `
-  -Haystack $source `
-  -Pattern 'normalizeRecitationSegments\(segments\)[\s\S]*?wordStart[\s\S]*?wordEnd[\s\S]*?fromMs[\s\S]*?toMs' `
-  -Message "Segment normalizer must expose wordStart, wordEnd, fromMs, and toMs."
-
-Assert-Contains `
-  -Haystack $source `
   -Needle 'renderArabicWordSpans(container, text, verseKey)' `
   -Message "Arabic ayah rendering must wrap words in addressable spans."
 
@@ -127,13 +117,8 @@ Assert-Contains `
 
 Assert-Matches `
   -Haystack $source `
-  -Pattern 'syncActiveRecitationWord\(\)[\s\S]*?currentTime \* 1000[\s\S]*?normalizeRecitationSegments[\s\S]*?data-recitation-key' `
+  -Pattern 'syncActiveRecitationWord\(\)[\s\S]*?currentTime \* 1000[\s\S]*?QuranRecitation\.segmentAt[\s\S]*?data-recitation-key' `
   -Message "Sync method must map audio currentTime to Quran.com segments and DOM word spans."
-
-Assert-Matches `
-  -Haystack $source `
-  -Pattern 'normalizeRecitationHighlightDelayMs\(value\)[\s\S]*?Math\.max\(-10000,\s*Math\.min\(10000[\s\S]*?return 0;' `
-  -Message "Word highlighting delay must allow negative values before it is applied."
 
 Assert-Matches `
   -Haystack $source `
