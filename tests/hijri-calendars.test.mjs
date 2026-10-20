@@ -98,3 +98,26 @@ test("an unknown mode is refused rather than guessed", () => {
   assert.equal(HijriCalendars.setMode("indonesia"), "indonesia");
   assert.equal(HijriCalendars.setMode(undefined), "tabular");
 });
+
+test("a covered month takes its length from the table alone", () => {
+  const { HijriCalendars, hijri } = calendars();
+  HijriCalendars.setMode("indonesia");
+
+  const last = HijriCalendars.range("indonesia").lastYear;
+  let month = 12;
+  while (HijriCalendars.daysInMonth("indonesia", last, month) === null) {
+    month -= 1;
+  }
+
+  // The table ends mid-year, so this month's neighbour is outside it: the old
+  // two-conversion version would have borrowed the arithmetic's answer.
+  assert.equal(
+    hijri.getHijriDaysInMonth(last, month),
+    HijriCalendars.daysInMonth("indonesia", last, month),
+  );
+  assert.ok(
+    hijri.getHijriDaysInMonth(last + 1, 1) === 29 ||
+      hijri.getHijriDaysInMonth(last + 1, 1) === 30,
+    "beyond the table the arithmetic still answers, in range",
+  );
+});

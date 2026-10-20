@@ -337,6 +337,14 @@ class HijriDate {
    * @returns {number} Number of days (29 or 30)
    */
   getHijriDaysInMonth(year, month) {
+    const calendar = HijriCalendars.getMode();
+    if (calendar !== "tabular") {
+      // Ask the table directly: the next month may be one day outside it, and
+      // two conversions from different calendars would invent a length.
+      const length = HijriCalendars.daysInMonth(calendar, year, month);
+      if (length !== null) return length;
+    }
+
     if (month === 12) {
       return (
         this.hijriToJulian(year + 1, 1, 1) - this.hijriToJulian(year, 12, 1)
