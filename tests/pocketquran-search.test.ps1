@@ -233,7 +233,7 @@ Assert-Matches `
 
 Assert-Matches `
   -Haystack $baseManagerSource `
-  -Pattern 'fetchTextResource\([\s\S]*?fetch\(this\.resolveResourceUrl\(url\), \{ cache \}\)' `
+  -Pattern 'fetchTextResource\([\s\S]*?fetch\(this\.bundledResourceUrl\(url\), \{ cache \}\)' `
   -Message "BaseManager text fetches must use resolved resource URLs."
 
 Assert-Contains `

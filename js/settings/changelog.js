@@ -130,7 +130,7 @@
 
       this._changelogLoadPromise = this.fetchTextResource(
         this.getChangelogResourceUrl(),
-        { cache: "no-store", label: "Changelog" },
+        { label: "Changelog" },
       )
         .then((markdown) => {
           const rendered = this.renderChangelogMarkdown(markdown);

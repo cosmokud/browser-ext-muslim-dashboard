@@ -83,11 +83,28 @@ class BaseManager {
     return raw;
   }
 
+  /**
+   * A bundled package file only changes when the extension updates, so the URL
+   * carries the version: one HTTP-cache entry per version instead of a re-read
+   * on every new tab.
+   */
+  bundledResourceUrl(url) {
+    const resolved = this.resolveResourceUrl(url);
+    if (!resolved || /^(?:https?:)?\/\//i.test(resolved)) return resolved;
+
+    const version =
+      typeof chrome !== "undefined" && chrome.runtime?.getManifest?.()?.version;
+    if (!version) return resolved;
+
+    const separator = resolved.includes("?") ? "&" : "?";
+    return `${resolved}${separator}v=${encodeURIComponent(version)}`;
+  }
+
   async fetchJsonResource(
     url,
-    { cache = "no-store", label = "Resource" } = {},
+    { cache = "force-cache", label = "Resource" } = {},
   ) {
-    const response = await fetch(this.resolveResourceUrl(url), { cache });
+    const response = await fetch(this.bundledResourceUrl(url), { cache });
     if (!response.ok) {
       throw new Error(`${label} request failed: HTTP ${response.status}`);
     }
@@ -101,9 +118,9 @@ class BaseManager {
 
   async fetchTextResource(
     url,
-    { cache = "no-store", label = "Resource" } = {},
+    { cache = "force-cache", label = "Resource" } = {},
   ) {
-    const response = await fetch(this.resolveResourceUrl(url), { cache });
+    const response = await fetch(this.bundledResourceUrl(url), { cache });
     if (!response.ok) {
       throw new Error(`${label} request failed: HTTP ${response.status}`);
     }

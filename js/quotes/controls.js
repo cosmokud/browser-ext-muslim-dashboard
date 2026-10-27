@@ -142,9 +142,10 @@
 
   async loadDefaultQuotes() {
     try {
-      const response = await fetch("data/quotes_default.json", {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        this.bundledResourceUrl("data/quotes_default.json"),
+        { cache: "force-cache" },
+      );
       if (response.ok) {
         const raw = await response.json();
         this.defaultQuotes = (Array.isArray(raw) ? raw : []).map((q) => ({

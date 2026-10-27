@@ -58,7 +58,6 @@
 
     try {
       const text = await this.fetchTextResource(def.file, {
-        cache: "no-store",
         label: `Flashcards default set ${def?.id || "unknown"}`,
       });
       cards =

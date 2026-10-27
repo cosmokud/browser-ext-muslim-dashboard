@@ -49,7 +49,6 @@
 
     try {
       const json = await this.fetchJsonResource(def.file, {
-        cache: "no-store",
         label: `Hadith default set ${def.id}`,
       });
       const cards = this.normalizeImportedCards(json);
