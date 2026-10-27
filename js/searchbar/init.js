@@ -148,6 +148,16 @@
             favicon = migratedFavicon;
             migratedFaviconUrl = true;
           }
+        } else if (
+          this._isLocalUrl(url) &&
+          (!favicon ||
+            /^https?:\/\/(www\.)?google\.com\/s2\/favicons/i.test(favicon))
+        ) {
+          const localFavicon = this.getFaviconUrlFromTemplate(url);
+          if (localFavicon && localFavicon !== favicon) {
+            favicon = localFavicon;
+            migratedFaviconUrl = true;
+          }
         }
 
         return {
@@ -178,10 +188,43 @@
     }
 
     this.ensureSelectionInView();
+    // The sweep saves the migrated favicon and any dropped icons in one write.
+    this._dropStaleLocalEngineIcons(migratedFaviconUrl);
+  }
 
-    if (migratedFaviconUrl) {
-      this.persist();
-    }
+  _isLocalUrl(url) {
+    return (
+      typeof FaviconCacheManager !== "undefined" &&
+      FaviconCacheManager.isLocalUrl(url)
+    );
+  }
+
+  /**
+   * Drop a local engine's stored icon unless the user picked it.
+   */
+  async _dropStaleLocalEngineIcons(migratedFavicon = false) {
+    try {
+      let changed = migratedFavicon;
+
+      if (window.faviconCache) {
+        for (const engine of this.searches) {
+          if (!engine?.url || !this._isLocalUrl(engine.url)) continue;
+          if (!engine.cachedFavicon) continue;
+          if (await window.faviconCache.isCustomFavicon(engine.url, "search")) {
+            continue;
+          }
+
+          await window.faviconCache.removeCached(engine.url, "search");
+          engine.cachedFavicon = null;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        this.persist();
+        this.render();
+      }
+    } catch (e) {}
   }
 
   persist() {

@@ -63,9 +63,23 @@ function makeIndexedDB() {
   };
 }
 
-function load({ chrome = CHROME, indexedDB = makeIndexedDB() } = {}) {
+const SEARCH_FILES = [
+  "js/base-manager.js",
+  "js/faviconcache.js",
+  "js/searchbar/index.js",
+  "js/searchbar/init.js",
+  "js/searchbar/strip.js",
+  "js/searchbar/colors.js",
+  "js/searchbar/context-menu.js",
+];
+
+function load({
+  chrome = CHROME,
+  indexedDB = makeIndexedDB(),
+  files = ["js/faviconcache.js"],
+} = {}) {
   const fetchCalls = [];
-  const sandbox = loadSandbox(["js/faviconcache.js"], {
+  const sandbox = loadSandbox(files, {
     globals: {
       URL,
       localStorage: makeLocalStorage(),
@@ -80,10 +94,64 @@ function load({ chrome = CHROME, indexedDB = makeIndexedDB() } = {}) {
   });
 
   return {
+    sandbox,
     FaviconCacheManager: sandbox.FaviconCacheManager,
     manager: new sandbox.FaviconCacheManager(),
     indexedDB,
     fetchCalls,
+  };
+}
+
+/** The real storage load, on a manager shell instead of a full page boot. */
+function makeSearchManager({ records = [], indexedDB = makeIndexedDB() } = {}) {
+  const loaded = load({ indexedDB, files: SEARCH_FILES });
+  loaded.sandbox.faviconCache = loaded.manager;
+
+  const storage = {
+    list: records.map((record) => ({ ...record })),
+    saves: [],
+    getCustomSearches() {
+      return this.list;
+    },
+    saveCustomSearches(searches) {
+      const copy = JSON.parse(JSON.stringify(searches));
+      this.saves.push(copy);
+      this.list = copy;
+    },
+    getLastCustomSearchId: () => null,
+    saveLastCustomSearchId: () => {},
+  };
+
+  const manager = Object.create(loaded.sandbox.SearchBarManager.prototype);
+  manager.searches = [];
+  manager.selectedId = null;
+  manager.scrollIndex = 0;
+  manager.storage = storage;
+
+  const renders = [];
+  manager.render = () => {
+    renders.push(manager.searches.map((engine) => ({ ...engine })));
+  };
+
+  let sweep = null;
+  const dropStale = manager._dropStaleLocalEngineIcons;
+  manager._dropStaleLocalEngineIcons = function (...args) {
+    sweep = dropStale.call(this, ...args);
+    return sweep;
+  };
+
+  return {
+    manager,
+    storage,
+    faviconCache: loaded.manager,
+    indexedDB,
+    fetchCalls: loaded.fetchCalls,
+    renders,
+    async load() {
+      sweep = null;
+      manager.loadFromStorage();
+      if (sweep) await sweep;
+    },
   };
 }
 
@@ -196,4 +264,113 @@ test("without chrome.runtime.getURL a local host degrades to null", async () => 
     assert.equal(await manager.getFaviconUrl(LOCAL_URL, "pinned", false), null);
     assert.equal(fetchCalls.length, 0);
   }
+});
+
+test("a stored local engine loses Google's favicon and stale icon in one save", async () => {
+  const googleFavicon =
+    "https://www.google.com/s2/favicons?domain_url=http%3A%2F%2Flocalhost%3A20128%2F&sz=256";
+  const staleIcon = "data:image/png;base64,Z2xvYmU=";
+  const env = makeSearchManager({
+    records: [
+      {
+        id: "local",
+        name: "Local",
+        url: LOCAL_URL,
+        favicon: googleFavicon,
+        cachedFavicon: staleIcon,
+        accentRgb: null,
+        accentRgbSource: "favicon",
+        faviconDominantRgb: null,
+      },
+    ],
+  });
+  const key = env.faviconCache._getCacheKey(LOCAL_URL, "search");
+  env.indexedDB.records.set(key, {
+    key,
+    url: LOCAL_URL,
+    dataUrl: staleIcon,
+    type: "search",
+    isCustom: false,
+    timestamp: 1,
+  });
+
+  await env.load();
+
+  const engine = env.manager.searches[0];
+  assert.equal(engine.favicon, localFaviconUrl(LOCAL_URL));
+  assert.match(engine.favicon, /\/_favicon\/\?/);
+  assert.equal(engine.cachedFavicon, null);
+  assert.equal(env.storage.saves.length, 1);
+  assert.equal(env.storage.saves[0][0].cachedFavicon, null);
+  assert.equal(env.indexedDB.records.has(key), false);
+  assert.equal(env.renders.length, 1);
+  assert.equal(env.fetchCalls.length, 0, "nothing was downloaded");
+
+  // Reloading the cleaned record must not save or render again.
+  await env.load();
+  assert.equal(env.storage.saves.length, 1);
+  assert.equal(env.renders.length, 1);
+});
+
+test("a stored local engine keeps an icon the user set", async () => {
+  const customIcon = "data:image/png;base64,bWluZQ==";
+  const env = makeSearchManager({
+    records: [
+      {
+        id: "local",
+        name: "Local",
+        url: LOCAL_URL,
+        favicon: localFaviconUrl(LOCAL_URL),
+        cachedFavicon: customIcon,
+        accentRgb: null,
+        accentRgbSource: "favicon",
+        faviconDominantRgb: null,
+      },
+    ],
+  });
+  const key = env.faviconCache._getCacheKey(LOCAL_URL, "search");
+  env.indexedDB.records.set(key, {
+    key,
+    url: LOCAL_URL,
+    dataUrl: customIcon,
+    type: "search",
+    isCustom: true,
+    timestamp: 1,
+  });
+
+  await env.load();
+
+  assert.equal(env.manager.searches[0].cachedFavicon, customIcon);
+  assert.equal(env.indexedDB.records.has(key), true, "custom record kept");
+  assert.equal(env.storage.saves.length, 0);
+  assert.equal(env.renders.length, 0);
+  assert.equal(env.fetchCalls.length, 0);
+});
+
+test("a stored public engine is untouched and still points at Google", async () => {
+  const googleFavicon =
+    "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fexample.com%2F&sz=256";
+  const env = makeSearchManager({
+    records: [
+      {
+        id: "public",
+        name: "Web",
+        url: "https://example.com/search?q=%s",
+        favicon: googleFavicon,
+        cachedFavicon: null,
+        accentRgb: null,
+        accentRgbSource: "favicon",
+        faviconDominantRgb: null,
+      },
+    ],
+  });
+
+  await env.load();
+
+  const engine = env.manager.searches[0];
+  assert.equal(engine.favicon, googleFavicon);
+  assert.equal(engine.cachedFavicon, null);
+  assert.equal(env.storage.saves.length, 0);
+  assert.equal(env.renders.length, 0);
+  assert.equal(env.fetchCalls.length, 0);
 });
