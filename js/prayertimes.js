@@ -5,6 +5,10 @@
  */
 
 class PrayerTimesManager {
+  static REVERSE_GEOCODE_CACHE_KEY = "md_reverse_geocode_cache_v1";
+  static REVERSE_GEOCODE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+  static REVERSE_GEOCODE_MAX_ENTRIES = 20;
+
   constructor(storage) {
     this.storage = storage;
     // The Islamic day module owns the calculator configuration.
@@ -296,12 +300,83 @@ class PrayerTimesManager {
   }
 
   /**
+   * Three decimals (~110 m) is both the cache key and the request grid, so a
+   * position that drifts a little lands on the same answer.
+   */
+  _reverseGeocodeKey(lat, lng) {
+    return `${Number(lat).toFixed(3)},${Number(lng).toFixed(3)}`;
+  }
+
+  _readReverseGeocodeCache() {
+    try {
+      const parsed = JSON.parse(
+        localStorage.getItem(PrayerTimesManager.REVERSE_GEOCODE_CACHE_KEY) ||
+          "{}",
+      );
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  _getCachedCity(key) {
+    const entry = this._readReverseGeocodeCache()[key];
+    if (!entry?.city) return null;
+    const age = Date.now() - Number(entry.timestamp || 0);
+    return age <= PrayerTimesManager.REVERSE_GEOCODE_TTL_MS ? entry.city : null;
+  }
+
+  _cacheCity(key, city) {
+    const cache = this._readReverseGeocodeCache();
+    cache[key] = { city, timestamp: Date.now() };
+
+    const keys = Object.keys(cache);
+    const max = PrayerTimesManager.REVERSE_GEOCODE_MAX_ENTRIES;
+    if (keys.length > max) {
+      keys
+        .sort((a, b) => (cache[a].timestamp || 0) - (cache[b].timestamp || 0))
+        .slice(0, keys.length - max)
+        .forEach((oldKey) => delete cache[oldKey]);
+    }
+
+    try {
+      localStorage.setItem(
+        PrayerTimesManager.REVERSE_GEOCODE_CACHE_KEY,
+        JSON.stringify(cache),
+      );
+    } catch (e) {}
+  }
+
+  _applyCity(city) {
+    this.location.city = city;
+    if (this.locationText) {
+      this.locationText.textContent = city;
+    }
+    this.storage.saveLastLocation(this.location);
+    return true;
+  }
+
+  /**
    * Reverse geocode to get city name
    */
   async reverseGeocode(lat, lng) {
+    const key = this._reverseGeocodeKey(lat, lng);
+
+    // The stored position is already within one rounding step and knows its
+    // city: no request at all, the fresh position only updates the times.
+    const stored = this.storage.getLastLocation?.();
+    const storedCity =
+      stored?.city &&
+      this._reverseGeocodeKey(stored.latitude, stored.longitude) === key
+        ? stored.city
+        : null;
+    const knownCity = storedCity || this._getCachedCity(key);
+    if (knownCity) return this._applyCity(knownCity);
+
+    const [roundedLat, roundedLng] = key.split(",");
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${roundedLat}&lon=${roundedLng}&zoom=10`,
         {
           headers: {
             "Accept-Language": "en",
@@ -319,12 +394,8 @@ class PrayerTimesManager {
           data.address.state;
 
         if (city) {
-          this.location.city = city;
-          if (this.locationText) {
-            this.locationText.textContent = city;
-          }
-          this.storage.saveLastLocation(this.location);
-          return true;
+          this._cacheCity(key, city);
+          return this._applyCity(city);
         }
       }
     } catch (e) {
