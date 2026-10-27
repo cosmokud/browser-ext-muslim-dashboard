@@ -72,8 +72,8 @@ Assert-Matches `
 
 Assert-Matches `
   -Haystack $faviconCacheSource `
-  -Pattern 'getCached\(url, type = "pinned"\) \{[\s\S]*?const localRecord = this\._getLocalStorageCached\(key\);[\s\S]*?resolve\(localRecord\.dataUrl\);' `
-  -Message "Favicon cache must fall back to localStorage when IndexedDB has no favicon record."
+  -Pattern 'getCached\(url, type = "pinned"\) \{[\s\S]*?request\.onsuccess = \(\) => \{[\s\S]*?this\._readCachedDataUrl\(request\.result, isLocal\) \|\|[\s\S]*?this\._readCachedDataUrl\(this\._getLocalStorageCached\(key\), isLocal\),[\s\S]*?\} catch \(e\) \{[\s\S]*?return this\._readCachedDataUrl\(this\._getLocalStorageCached\(key\), isLocal\);' `
+  -Message "Favicon cache must read the IndexedDB favicon record first and fall back to localStorage bytes in both the success and error paths."
 
 Assert-Matches `
   -Haystack $appSource `
