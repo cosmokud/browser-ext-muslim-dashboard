@@ -50,6 +50,7 @@ function makeIndexedDB() {
       records.delete(key);
       return respond(true);
     },
+    count: () => respond(records.size),
   };
   const db = { transaction: () => ({ objectStore: () => store }) };
 

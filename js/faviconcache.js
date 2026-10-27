@@ -287,26 +287,37 @@ class FaviconCacheManager {
         "readwrite",
       );
       const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
-      const request = store.getAll();
+      // Counting is cheap; loading every stored base64 icon on each write is not.
+      const countRequest = store.count();
 
-      request.onsuccess = () => {
-        const records = (request.result || []).filter(
-          (record) => record?.isCustom !== true,
-        );
-        const excess = records.length - FaviconCacheManager.MAX_ENTRIES;
-        if (excess <= 0) {
+      countRequest.onsuccess = () => {
+        if (Number(countRequest.result) <= FaviconCacheManager.MAX_ENTRIES) {
           resolve(false);
           return;
         }
 
-        records
-          .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
-          .slice(0, excess)
-          .forEach((record) => store.delete(record.key));
-        resolve(true);
+        const request = store.getAll();
+        request.onsuccess = () => {
+          const records = (request.result || []).filter(
+            (record) => record?.isCustom !== true,
+          );
+          const excess = records.length - FaviconCacheManager.MAX_ENTRIES;
+          if (excess <= 0) {
+            resolve(false);
+            return;
+          }
+
+          records
+            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+            .slice(0, excess)
+            .forEach((record) => store.delete(record.key));
+          resolve(true);
+        };
+
+        request.onerror = () => resolve(false);
       };
 
-      request.onerror = () => resolve(false);
+      countRequest.onerror = () => resolve(false);
     });
   }
 

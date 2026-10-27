@@ -23,9 +23,11 @@ function makeLocalStorage() {
   };
 }
 
-/** One store, async callbacks, and `getAll` for the prune. */
+/** One store, async callbacks, `count` for the cap guard and `getAll` for the
+ * trim. `getAllCalls` proves the cheap path never loads the records. */
 function makeIndexedDB() {
   const records = new Map();
+  const stats = { getAllCalls: 0 };
   const respond = (result) => {
     const request = { result };
     setTimeout(() => request.onsuccess?.(), 0);
@@ -42,12 +44,17 @@ function makeIndexedDB() {
       records.delete(key);
       return respond(true);
     },
-    getAll: () => respond([...records.values()]),
+    count: () => respond(records.size),
+    getAll: () => {
+      stats.getAllCalls += 1;
+      return respond([...records.values()]);
+    },
   };
   const db = { transaction: () => ({ objectStore: () => store }) };
 
   return {
     records,
+    stats,
     open: () => {
       const request = { result: db };
       setTimeout(() => request.onsuccess?.(), 0);
@@ -208,6 +215,53 @@ test("the store is capped at 300 records, the oldest going first", async () => {
   );
 
   assert.equal(await env.manager._pruneToCap(), false, "nothing left to drop");
+});
+
+test("a prune under the cap never loads the stored icons", async () => {
+  const env = load();
+  env.indexedDB.records.set("pinned:one.example", {
+    key: "pinned:one.example",
+    dataUrl: "data:image/png;base64,b25l",
+    type: "pinned",
+    isCustom: false,
+    timestamp: 1,
+  });
+
+  assert.equal(await env.manager._pruneToCap(), false);
+  assert.equal(
+    env.indexedDB.stats.getAllCalls,
+    0,
+    "the count guard kept the boot-time prune to one cheap request",
+  );
+
+  // A write still triggers the prune, and it still stays cheap.
+  await env.manager.setCached("https://two.example/", "data:image/png;base64,dHdv");
+  await wait();
+  assert.equal(env.indexedDB.stats.getAllCalls, 0, "writes stayed cheap too");
+
+  // Pushing the store past the cap is the one case that reads every record.
+  env.indexedDB.records.set("pinned:three.example", {
+    key: "pinned:three.example",
+    dataUrl: "data:image/png;base64,dGhyZWU=",
+    type: "pinned",
+    isCustom: false,
+    timestamp: 3,
+  });
+  const { FaviconCacheManager } = env;
+  for (let i = 0; i < FaviconCacheManager.MAX_ENTRIES; i += 1) {
+    env.indexedDB.records.set(`pinned:bulk-${i}.example`, {
+      key: `pinned:bulk-${i}.example`,
+      dataUrl: "data:image/png;base64,YnVsaw==",
+      type: "pinned",
+      isCustom: false,
+      timestamp: 10 + i,
+    });
+  }
+
+  assert.equal(await env.manager._pruneToCap(), true);
+  assert.equal(env.indexedDB.stats.getAllCalls, 1, "only the trim reads records");
+  assert.equal(env.indexedDB.records.size, FaviconCacheManager.MAX_ENTRIES);
+  assert.equal(env.indexedDB.records.has("pinned:one.example"), false);
 });
 
 test("a write triggers the prune, and a user's own icon survives it", async () => {
