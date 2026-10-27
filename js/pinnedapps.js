@@ -326,7 +326,7 @@ class PinnedAppsManager extends BaseManager {
       }
 
       const migratedFavicon = this.getFaviconUrl(url);
-      if (!migratedFavicon) {
+      if (!migratedFavicon || migratedFavicon === app.favicon) {
         return app;
       }
 
@@ -340,6 +340,44 @@ class PinnedAppsManager extends BaseManager {
     if (migratedFaviconUrl) {
       this.saveApps();
     }
+
+    // Icons cached from Google before local hosts changed source.
+    this._dropStaleLocalFavicons();
+  }
+
+  /**
+   * Drop local hosts' stored icons unless the user picked them.
+   */
+  async _dropStaleLocalFavicons() {
+    try {
+      if (!window.faviconCache) return;
+      let changed = false;
+
+      for (const app of this.apps) {
+        if (!app?.url || !this._isLocalUrl(app.url)) continue;
+        if (await window.faviconCache.isCustomFavicon(app.url, "pinned")) {
+          continue;
+        }
+
+        await window.faviconCache.removeCached(app.url, "pinned");
+        const favicon = this.getFaviconUrl(app.url);
+        if (app.cachedFavicon || app.favicon !== favicon) changed = true;
+        app.cachedFavicon = null;
+        app.favicon = favicon;
+      }
+
+      if (changed) {
+        this.saveApps();
+        this.render();
+      }
+    } catch (e) {}
+  }
+
+  _isLocalUrl(url) {
+    return (
+      typeof FaviconCacheManager !== "undefined" &&
+      FaviconCacheManager.isLocalUrl(url)
+    );
   }
 
   _isExtensionFaviconUrl(value) {
@@ -875,6 +913,11 @@ class PinnedAppsManager extends BaseManager {
    */
   getFaviconUrl(url) {
     try {
+      // Local hosts only have an icon in Chrome's own cache; never Google's.
+      if (this._isLocalUrl(url)) {
+        return FaviconCacheManager.getLocalFaviconUrl(url);
+      }
+
       const urlObj = new URL(url);
       const domainBaseUrl = new URL(`${urlObj.origin}/`).href;
 

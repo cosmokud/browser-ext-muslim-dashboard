@@ -14,7 +14,8 @@
     "geolocation",
     "alarms",
     "notifications",
-    "offscreen"
+    "offscreen",
+    "favicon"
   ],
   "host_permissions": [
     "https://api.quran.com/*",

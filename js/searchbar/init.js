@@ -143,7 +143,8 @@
 
         if (this._isExtensionFaviconUrl(favicon)) {
           const migratedFavicon = this.getFaviconUrlFromTemplate(url);
-          if (migratedFavicon) {
+          // A local host keeps its Chrome-cache URL instead of going to Google.
+          if (migratedFavicon && migratedFavicon !== favicon) {
             favicon = migratedFavicon;
             migratedFaviconUrl = true;
           }

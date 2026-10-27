@@ -144,13 +144,55 @@ class FaviconCacheManager {
   }
 
   /**
+   * Local hosts, whose icons Google's service does not know.
+   */
+  static isLocalUrl(url) {
+    const rawUrl = String(url || "").trim();
+    if (!rawUrl) return false;
+
+    try {
+      const hostname = new URL(rawUrl.replace(/%s/g, "test")).hostname;
+      return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Chrome's own favicon cache, the only source that can serve a local host.
+   */
+  static getLocalFaviconUrl(url, size = 32) {
+    if (!FaviconCacheManager.isLocalUrl(url)) return null;
+    if (typeof chrome === "undefined" || !chrome?.runtime?.getURL) return null;
+
+    // Chrome accepts 16 and 32 here only, so MAX_SIZE would be rejected.
+    const iconSize = Number(size) === 16 ? 16 : 32;
+    const pageUrl = encodeURIComponent(String(url).trim());
+
+    return `${chrome.runtime.getURL("/_favicon/")}?pageUrl=${pageUrl}&size=${iconSize}`;
+  }
+
+  /**
    * Build favicon service URL using a normalized domain-base URL.
    */
   _getFaviconServiceUrl(url, size = 256) {
+    // Local hosts must never reach Google, which only answers with a globe.
+    if (FaviconCacheManager.isLocalUrl(url)) return null;
+
     const normalizedUrl = this._normalizeLookupUrl(url);
     if (!normalizedUrl) return null;
 
     return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(normalizedUrl)}&sz=${size}`;
+  }
+
+  /**
+   * A stored record only counts when it holds an image, and a local host's
+   * record only when the user set it.
+   */
+  _readCachedDataUrl(record, isLocal) {
+    if (!record?.dataUrl) return null;
+    if (isLocal && record.isCustom !== true) return null;
+    return record.dataUrl;
   }
 
   /**
@@ -161,6 +203,7 @@ class FaviconCacheManager {
    */
   async getCached(url, type = "pinned") {
     const key = this._getCacheKey(url, type);
+    const isLocal = FaviconCacheManager.isLocalUrl(url);
     try {
       const db = await this._ensureDB();
 
@@ -173,17 +216,10 @@ class FaviconCacheManager {
         const request = store.get(key);
 
         request.onsuccess = () => {
-          const result = request.result;
-          if (result && result.dataUrl) {
-            resolve(result.dataUrl);
-          } else {
-            const localRecord = this._getLocalStorageCached(key);
-            if (localRecord?.dataUrl) {
-              resolve(localRecord.dataUrl);
-            } else {
-              resolve(null);
-            }
-          }
+          resolve(
+            this._readCachedDataUrl(request.result, isLocal) ||
+              this._readCachedDataUrl(this._getLocalStorageCached(key), isLocal),
+          );
         };
 
         request.onerror = () => {
@@ -196,8 +232,7 @@ class FaviconCacheManager {
       });
     } catch (e) {
       console.warn("FaviconCache: getCached error", e);
-      const localRecord = this._getLocalStorageCached(key);
-      return localRecord?.dataUrl || null;
+      return this._readCachedDataUrl(this._getLocalStorageCached(key), isLocal);
     }
   }
 
@@ -310,10 +345,20 @@ class FaviconCacheManager {
    * @returns {Promise<string|null>} - Favicon URL string or null
    */
   async fetchAndCache(url, type = "pinned", forceRefresh = false) {
+    const cacheKey = this._getCacheKey(url, type);
+
+    // Local hosts have nothing to download: Chrome already has the icon.
+    if (FaviconCacheManager.isLocalUrl(url)) {
+      const custom = await this.getCached(url, type);
+      if (custom) return custom;
+
+      // A globe cached before local hosts changed source must not win.
+      await this.removeCached(url, type);
+      return FaviconCacheManager.getLocalFaviconUrl(url);
+    }
+
     const faviconUrl = this._getFaviconServiceUrl(url, 256);
     if (!faviconUrl) return null;
-
-    const cacheKey = this._getCacheKey(url, type);
 
     // Check if already fetched this session (unless forcing refresh)
     if (!forceRefresh && this.sessionFetched.has(cacheKey)) {
@@ -355,6 +400,19 @@ class FaviconCacheManager {
   }
 
   /**
+   * Display URL for a favicon: Chrome's cache for local hosts, Google otherwise.
+   * @param {string} url - The URL to show a favicon for
+   * @param {number} size - Service size hint
+   * @returns {string|null} - Display-ready favicon URL
+   */
+  getDisplayUrl(url, size = 256) {
+    return (
+      FaviconCacheManager.getLocalFaviconUrl(url) ||
+      this._getFaviconServiceUrl(url, size)
+    );
+  }
+
+  /**
    * Get favicon URL - uses cache or returns service URL as fallback
    * @param {string} url - The URL to get favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
@@ -370,11 +428,7 @@ class FaviconCacheManager {
 
     // If preferCached is true, don't auto-fetch
     if (preferCached) {
-      const faviconUrl = this._getFaviconServiceUrl(url, 256);
-      if (faviconUrl) {
-        return faviconUrl;
-      }
-      return null;
+      return this.getDisplayUrl(url, 256);
     }
 
     // Fetch and cache
@@ -383,13 +437,7 @@ class FaviconCacheManager {
       return fetched;
     }
 
-    // Fallback to service URL
-    const faviconUrl = this._getFaviconServiceUrl(url, 256);
-    if (faviconUrl) {
-      return faviconUrl;
-    }
-
-    return null;
+    return this.getDisplayUrl(url, 256);
   }
 
   /**
@@ -601,7 +649,8 @@ class FaviconCacheManager {
   }
 
   /**
-   * Refresh favicon from service URL (force re-fetch)
+   * Refresh favicon, ignoring the cache. The name is historical: a local host
+   * resolves through Chrome's own favicon cache and never contacts Google.
    * @param {string} url - The URL to refresh favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
    * @returns {Promise<string|null>} - New favicon URL string or null

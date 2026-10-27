@@ -101,6 +101,14 @@
     const safe = String(urlTemplate || "").trim();
     if (!safe) return null;
 
+    // A local host's icon lives in Chrome's cache, not in Google's service.
+    if (
+      typeof FaviconCacheManager !== "undefined" &&
+      FaviconCacheManager.isLocalUrl(safe)
+    ) {
+      return FaviconCacheManager.getLocalFaviconUrl(safe);
+    }
+
     // Replace %s with a sentinel so URL parsing works.
     const test = safe.split("%s").join("test");
 
