@@ -31,9 +31,10 @@
       const windUnit = unit === "fahrenheit" ? "mph" : "kmh";
 
       // Two decimals (~1 km) is the request grid and the cache key, so GPS
-      // jitter no longer throws away today's forecast.
-      const latitude = Number(location.latitude).toFixed(2);
-      const longitude = Number(location.longitude).toFixed(2);
+      // jitter no longer throws away today's forecast. The extra Number() drops
+      // the "-0.00" their string form would produce at the equator.
+      const latitude = Number(Number(location.latitude).toFixed(2));
+      const longitude = Number(Number(location.longitude).toFixed(2));
 
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=7&timezone=auto&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`;
 

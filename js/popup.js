@@ -411,8 +411,100 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranLastDashboardStateAt = 0;
   let pocketQuranLocalCommandQueue = Promise.resolve();
   const pocketQuranLocalAudioUrlCache = new Map();
+  // Object URLs for ayah blobs read out of the shared cache; they die with the
+  // popup document, which is short-lived.
+  const pocketQuranLocalAudioSrcCache = new Map();
   const pocketQuranVersesCache = new Map();
   const pocketQuranTajweedVersesCache = new Map();
+
+  // Same IndexedDB schema as the reader (js/pocketquran/index.js owns it):
+  // MuslimDashboardPocketQuranCache, `json` keyed by the full request URL and
+  // `audio` keyed `${reciterId}:${surah}:${ayah}`. Opened without a version, so
+  // a first-ever open cannot claim a version before the reader creates it; any
+  // failure here just means the network path, as before.
+  const popupQuranCache = (() => {
+    let dbPromise = null;
+
+    const openDb = () => {
+      if (!dbPromise) {
+        dbPromise = new Promise((resolve) => {
+          try {
+            const request = indexedDB.open("MuslimDashboardPocketQuranCache");
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+          } catch (e) {
+            resolve(null);
+          }
+        });
+      }
+      return dbPromise;
+    };
+
+    const ask = async (storeName, mode, run) => {
+      const db = await openDb();
+      if (!db) return null;
+      return new Promise((resolve) => {
+        try {
+          const req = run(db.transaction(storeName, mode).objectStore(storeName));
+          req.onsuccess = () => resolve(req.result ?? null);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    };
+
+    return {
+      async getJson(url) {
+        const record = await ask("json", "readonly", (store) =>
+          store.get(String(url)),
+        );
+        return record?.data ?? null;
+      },
+      setJson(url, data, type = "json") {
+        return ask("json", "readwrite", (store) =>
+          store.put({
+            key: String(url),
+            url: String(url),
+            type,
+            data,
+            timestamp: Date.now(),
+          }),
+        );
+      },
+      async getAudio(key) {
+        const record = await ask("audio", "readonly", (store) =>
+          store.get(String(key)),
+        );
+        if (record) {
+          // The reader's LRU index: a popup play counts as an access.
+          void ask("audioIndex", "readwrite", (store) =>
+            store.put({
+              key: String(key),
+              size: Number(record.size) || 0,
+              lastAccessed: Date.now(),
+            }),
+          );
+        }
+        return record;
+      },
+      setAudio(record) {
+        const key = String(record?.key || "");
+        return ask("audio", "readwrite", (store) =>
+          store.put({ ...record, key, timestamp: Date.now() }),
+        ).then((stored) => {
+          void ask("audioIndex", "readwrite", (index) =>
+            index.put({
+              key,
+              size: Number(record?.size) || 0,
+              lastAccessed: Date.now(),
+            }),
+          );
+          return stored;
+        });
+      },
+    };
+  })();
   let pocketQuranSnippetRequestId = 0;
   let pocketQuranSnippetRenderedKey = "";
   let pocketQuranSnippetInFlightKey = "";
@@ -1179,7 +1271,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(getDashboardUrl("index.html"), {
-        cache: "no-store",
+        cache: "force-cache",
       });
       if (!response.ok) {
         return false;
@@ -3364,10 +3456,19 @@ document.addEventListener("DOMContentLoaded", () => {
       return pocketQuranChapters;
     }
 
+    const chaptersUrl = `${pocketQuranApiBase}/chapters?language=en`;
+    const cachedPayload = await popupQuranCache.getJson(chaptersUrl);
+    const indexedChapters = normalizePocketQuranChapterEntries(
+      cachedPayload?.chapters,
+    );
+
+    if (!forceFetch && indexedChapters.length > 0) {
+      pocketQuranChapters = indexedChapters;
+      return pocketQuranChapters;
+    }
+
     try {
-      const response = await fetch(
-        `${pocketQuranApiBase}/chapters?language=en`,
-      );
+      const response = await fetch(chaptersUrl);
       const data = await parsePocketQuranJsonResponse(
         response,
         "Pocket Quran chapters",
@@ -3378,6 +3479,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       pocketQuranChapters = chapters;
+      void popupQuranCache.setJson(chaptersUrl, data, "chapters");
 
       if (pocketQuranChapters.length > 0) {
         storage.set("pocketQuran_chapters_cache", pocketQuranChapters);
@@ -3405,6 +3507,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const url = `${pocketQuranApiBase}/verses/by_chapter/${surahId}?fields=text_uthmani,verse_number,verse_key&translations=${tid}&per_page=300`;
+
+    const cachedPayload = await popupQuranCache.getJson(url);
+    const cachedVerses = Array.isArray(cachedPayload?.verses)
+      ? cachedPayload.verses
+      : [];
+    if (cachedVerses.length > 0) {
+      pocketQuranVersesCache.set(cacheKey, cachedVerses);
+      return cachedVerses;
+    }
+
     const response = await fetch(url);
     const data = await parsePocketQuranJsonResponse(
       response,
@@ -3412,6 +3524,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     const verses = Array.isArray(data?.verses) ? data.verses : [];
     pocketQuranVersesCache.set(cacheKey, verses);
+    void popupQuranCache.setJson(url, { ...data, verses }, "verses");
     return verses;
   }
 
@@ -3439,6 +3552,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const url = `${pocketQuranApiBase}/quran/verses/uthmani_tajweed?chapter_number=${surahId}`;
+
+    const cachedPayload = await popupQuranCache.getJson(url);
+    const cachedVerses = Array.isArray(cachedPayload?.verses)
+      ? cachedPayload.verses
+      : [];
+    if (cachedVerses.length > 0) {
+      pocketQuranTajweedVersesCache.set(surahId, cachedVerses);
+      return cachedVerses;
+    }
+
     const response = await fetch(url);
     const data = await parsePocketQuranJsonResponse(
       response,
@@ -3446,6 +3569,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     const verses = Array.isArray(data?.verses) ? data.verses : [];
     pocketQuranTajweedVersesCache.set(surahId, verses);
+    void popupQuranCache.setJson(url, { ...data, verses }, "tajweed");
     return verses;
   }
 
@@ -4060,6 +4184,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cached) return cached;
 
     const endpoint = `${pocketQuranApiBase}/recitations/${reciterId}/by_ayah/${surah}:${ayah}`;
+
+    const cachedPayload = await popupQuranCache.getJson(endpoint);
+    const cachedUrl = resolvePocketQuranAudioUrl(
+      cachedPayload?.audio_files?.[0]?.url ||
+        cachedPayload?.audio_file?.url ||
+        cachedPayload?.audio_file?.audio_url,
+    );
+    if (cachedUrl) {
+      pocketQuranLocalAudioUrlCache.set(cacheKey, cachedUrl);
+      return cachedUrl;
+    }
+
     const response = await fetch(endpoint);
     const data = await parsePocketQuranJsonResponse(
       response,
@@ -4076,7 +4212,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     pocketQuranLocalAudioUrlCache.set(cacheKey, audioUrl);
+    void popupQuranCache.setJson(endpoint, data, "audio-meta");
     return audioUrl;
+  }
+
+  /** The ayah's MP3 source: the shared cache first, then one download kept there. */
+  async function resolvePocketQuranAyahAudioSrc(reciterId, surah, ayah) {
+    const cacheKey = getPocketQuranLocalAudioCacheKey(reciterId, surah, ayah);
+    const cachedSrc = pocketQuranLocalAudioSrcCache.get(cacheKey);
+    if (cachedSrc) return cachedSrc;
+
+    const cached = await popupQuranCache.getAudio(cacheKey);
+    if (cached?.blob) {
+      const blobSrc = URL.createObjectURL(cached.blob);
+      pocketQuranLocalAudioSrcCache.set(cacheKey, blobSrc);
+      return blobSrc;
+    }
+
+    const audioUrl = await fetchPocketQuranAyahAudioUrl(reciterId, surah, ayah);
+    try {
+      const response = await fetch(audioUrl);
+      const blob = response.ok ? await response.blob() : null;
+      if (!blob?.size) return audioUrl;
+
+      void popupQuranCache.setAudio({
+        key: cacheKey,
+        reciterId,
+        surah,
+        ayah,
+        audioUrl,
+        mimeType: blob.type || "audio/mpeg",
+        size: blob.size,
+        blob,
+      });
+      const blobSrc = URL.createObjectURL(blob);
+      pocketQuranLocalAudioSrcCache.set(cacheKey, blobSrc);
+      return blobSrc;
+    } catch (e) {
+      return audioUrl;
+    }
   }
 
   function ensurePocketQuranLocalAudio() {
@@ -4195,7 +4369,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pocketQuranLocalPlaybackActive = true;
 
     try {
-      const audioUrl = await fetchPocketQuranAyahAudioUrl(
+      const audioUrl = await resolvePocketQuranAyahAudioSrc(
         reciterId,
         normalizedSurah,
         normalizedAyah,

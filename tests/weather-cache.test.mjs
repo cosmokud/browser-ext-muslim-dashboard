@@ -140,3 +140,21 @@ test("a position on another grid cell is a different cache key", async () => {
   assert.equal(other.calls.length, 1, "the forecast really is for another place");
   assert.match(other.calls[0].url, /[?&]latitude=-6\.19&/);
 });
+
+test("a cell on the equator has one key, not a minus-zero twin", async () => {
+  const store = new Map();
+  const below = load({
+    store,
+    coordinates: { latitude: -0.004, longitude: 0 },
+  });
+  await below.manager.fetchWeather();
+
+  const above = load({
+    store,
+    coordinates: { latitude: 0.004, longitude: 0 },
+  });
+  await above.manager.fetchWeather();
+
+  assert.match(below.calls[0].url, /[?&]latitude=0&/);
+  assert.equal(above.calls.length, 0, "the same cell answers from the cache");
+});
