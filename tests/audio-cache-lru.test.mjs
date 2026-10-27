@@ -29,12 +29,13 @@ function makeIndexedDB() {
     const records = stores.get(name);
     return {
       get: (key) => request(records.get(key)),
+      // A refused transaction rolls its own writes back, as IndexedDB does.
       put: (record) => {
-        records.set(record.key, record);
+        if (!state.failTransactions) records.set(record.key, record);
         return request(record.key);
       },
       delete: (key) => {
-        records.delete(key);
+        if (!state.failTransactions) records.delete(key);
         return request(true);
       },
       getAll: () => request([...records.values()]),
@@ -199,4 +200,35 @@ test("a read of a missing ayah is a plain miss", async () => {
 
   assert.equal(await env.cache.getAudio("7:4:4"), null);
   assert.equal(env.index().size, 0, "a miss writes no index row");
+});
+
+test("an aborted eviction never leaves the byte total short", async () => {
+  const env = load();
+  await env.cache.dbReady;
+  env.seed("7:5:1", 600 * MB, 1);
+  env.seed("7:5:2", 100 * MB, 2);
+
+  assert.equal(await env.cache._getAudioBytes(), 700 * MB);
+
+  // The index rows are already subtracted from the running total when the
+  // delete transaction aborts, so the total must be recomputed, not trusted.
+  env.indexedDB.state.failTransactions = true;
+  assert.equal(await env.cache._evictAudioOverCap("7:5:3"), 0);
+  assert.equal(env.audio().has("7:5:1"), true, "nothing was actually dropped");
+
+  env.indexedDB.state.failTransactions = false;
+  assert.equal(
+    await env.cache._getAudioBytes(),
+    700 * MB,
+    "the total still matches what is stored",
+  );
+
+  // And the cap still works on the next write.
+  assert.equal(
+    await env.cache.setAudio({ key: "7:5:3", size: 10 * MB, blob: {} }),
+    true,
+  );
+  assert.equal(env.audio().has("7:5:1"), false, "the oldest ayah made room");
+  assert.equal(env.audio().has("7:5:2"), true);
+  assert.equal(await env.cache._getAudioBytes(), 110 * MB);
 });

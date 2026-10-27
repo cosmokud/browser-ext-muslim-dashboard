@@ -292,6 +292,8 @@ class PocketQuranCacheManager {
     });
 
     if (!dropped) {
+      // The aborted deletes left the store as it was: re-sum on the next check.
+      this.audioBytes = null;
       console.debug("PocketQuran: ayah audio could not be evicted");
     }
     return dropped ? doomed.length : 0;
