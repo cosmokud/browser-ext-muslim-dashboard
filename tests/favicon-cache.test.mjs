@@ -6,8 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadSandbox } from "./harness.mjs";
 
-const GOOGLE_FALLBACK =
-  "https://www.google.com/s2/favicons?domain_url=https%3A%2F%2Fexample.com%2F&sz=256";
+const FALLBACK_ICON = "chrome-extension://stub/icons/icon32.png";
 const PAGE_URL = "https://example.com/some/page";
 
 function makeLocalStorage() {
@@ -69,15 +68,16 @@ const CHROME = {
   runtime: { getURL: (assetPath) => `chrome-extension://stub/${assetPath}` },
 };
 
-function load({ indexedDB = makeIndexedDB(), fetch } = {}) {
+function load({ indexedDB = makeIndexedDB(), fetch, chrome = CHROME } = {}) {
   const fetchCalls = [];
   const sandbox = loadSandbox(["js/faviconcache.js"], {
     globals: {
       URL,
-      chrome: CHROME,
       FileReader: FakeFileReader,
       localStorage: makeLocalStorage(),
       indexedDB,
+      // `chrome: false` leaves the API out of the sandbox entirely.
+      ...(chrome === false ? {} : { chrome }),
       fetch: async (url, options) => {
         fetchCalls.push({ url, options });
         return fetch(url, options);
@@ -95,17 +95,15 @@ function load({ indexedDB = makeIndexedDB(), fetch } = {}) {
 
 const wait = () => new Promise((resolve) => setTimeout(resolve, 20));
 
-test("a failed fetch is remembered and not retried for a day", async () => {
+test("a failed fetch shows the bundled icon, never the Google URL", async () => {
   const deadFetch = async () => {
     throw new Error("no network");
   };
   const first = load({ fetch: deadFetch });
 
-  assert.equal(
-    await first.manager.fetchAndCache(PAGE_URL, "pinned", false),
-    GOOGLE_FALLBACK,
-    "display still falls back to the Google URL",
-  );
+  const shown = await first.manager.fetchAndCache(PAGE_URL, "pinned", false);
+  assert.equal(shown, FALLBACK_ICON, "the icon the extension already ships");
+  assert.doesNotMatch(shown, /google\.com\/s2/);
   assert.equal(first.fetchCalls.length, 1);
 
   const key = first.manager._getCacheKey(PAGE_URL, "pinned");
@@ -115,13 +113,29 @@ test("a failed fetch is remembered and not retried for a day", async () => {
   const second = load({ indexedDB: first.indexedDB, fetch: deadFetch });
   assert.equal(
     await second.manager.fetchAndCache(PAGE_URL, "pinned", false),
-    GOOGLE_FALLBACK,
+    FALLBACK_ICON,
+    "the remembered failure renders the same local icon",
   );
+  assert.doesNotMatch(FALLBACK_ICON, /google\.com\/s2/);
   assert.equal(second.fetchCalls.length, 0, "no request within the TTL");
 
   // A forced refresh is the user asking: it does try again.
   await second.manager.fetchAndCache(PAGE_URL, "pinned", true);
   assert.equal(second.fetchCalls.length, 1);
+});
+
+test("without chrome.runtime the fallback is a plain bundled path", async () => {
+  const env = load({
+    chrome: false,
+    fetch: async () => {
+      throw new Error("no network");
+    },
+  });
+
+  assert.equal(
+    await env.manager.fetchAndCache(PAGE_URL, "pinned", false),
+    "icons/icon32.png",
+  );
 });
 
 test("the failure marker expires after 24 hours", async () => {
@@ -133,7 +147,7 @@ test("the failure marker expires after 24 hours", async () => {
   // An empty body counts as a failure too.
   assert.equal(
     await env.manager.fetchAndCache(PAGE_URL, "pinned", false),
-    GOOGLE_FALLBACK,
+    FALLBACK_ICON,
   );
   assert.equal(env.indexedDB.records.get(key)?.failure, true);
 

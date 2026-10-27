@@ -175,6 +175,20 @@ class FaviconCacheManager {
   }
 
   /**
+   * The bundled icon shown when a fetch gives up. Returning the Google URL
+   * instead made every render ask Google again for an icon it cannot serve.
+   */
+  static getFallbackIconUrl() {
+    try {
+      if (typeof chrome !== "undefined" && chrome?.runtime?.getURL) {
+        return chrome.runtime.getURL("icons/icon32.png");
+      }
+    } catch (e) {}
+
+    return "icons/icon32.png";
+  }
+
+  /**
    * Build favicon service URL using a normalized domain-base URL.
    */
   _getFaviconServiceUrl(url, size = 256) {
@@ -447,7 +461,7 @@ class FaviconCacheManager {
    * @param {string} url - The URL to fetch favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
    * @param {boolean} forceRefresh - Force fetch even if cached
-   * @returns {Promise<string|null>} - Favicon URL string or null
+   * @returns {Promise<string|null>} - Data URL, or the local fallback icon
    */
   async fetchAndCache(url, type = "pinned", forceRefresh = false) {
     const cacheKey = this._getCacheKey(url, type);
@@ -480,7 +494,9 @@ class FaviconCacheManager {
       }
 
       // A miss within the failure TTL is a cache hit of its own: no request.
-      if (await this._isRecentFailure(cacheKey)) return faviconUrl;
+      if (await this._isRecentFailure(cacheKey)) {
+        return FaviconCacheManager.getFallbackIconUrl();
+      }
     }
 
     try {
@@ -497,17 +513,17 @@ class FaviconCacheManager {
         }
       }
     } catch (e) {
-      // Fall through to stored data URL or display-safe Google URL below.
+      // Fall through to the stored data URL, then the local fallback below.
     }
 
     const fallbackCached = await this.getCached(url, type);
     if (fallbackCached) return fallbackCached;
 
-    // Remember the miss: a repeat tab shows the display URL without asking.
+    // Remember the miss: a repeat tab shows the local icon without asking.
     await this._setFailure(url, type);
 
     this.sessionFetched.add(cacheKey);
-    return faviconUrl;
+    return FaviconCacheManager.getFallbackIconUrl();
   }
 
   /**
