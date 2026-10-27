@@ -11,12 +11,19 @@
 
 class PocketQuranCacheManager {
   static DB_NAME = "MuslimDashboardPocketQuranCache";
-  static DB_VERSION = 1;
+  static DB_VERSION = 2;
   static JSON_STORE = "json";
   static AUDIO_STORE = "audio";
+  // Ayah blobs are never rewritten just to touch them: size and last access
+  // live in their own store, keyed the same way. Schema owner for the popup's
+  // copy of these stores.
+  static AUDIO_INDEX_STORE = "audioIndex";
+  static AUDIO_CAP_BYTES = 500 * 1024 * 1024;
 
   constructor() {
     this.db = null;
+    // Audio bytes held by the store; null until the index is summed once.
+    this.audioBytes = null;
     this.dbReady = this._initDB();
   }
 
@@ -34,6 +41,8 @@ class PocketQuranCacheManager {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.db = request.result;
+        // Ask once for a durable quota; a refusal is not an error.
+        navigator.storage?.persist?.().catch(() => {});
         resolve(this.db);
       };
 
@@ -61,6 +70,16 @@ class PocketQuranCacheManager {
           store.createIndex("timestamp", "timestamp", { unique: false });
           store.createIndex("reciterId", "reciterId", { unique: false });
           store.createIndex("surah", "surah", { unique: false });
+        }
+
+        if (
+          !db.objectStoreNames.contains(
+            PocketQuranCacheManager.AUDIO_INDEX_STORE,
+          )
+        ) {
+          db.createObjectStore(PocketQuranCacheManager.AUDIO_INDEX_STORE, {
+            keyPath: "key",
+          });
         }
       };
     });
@@ -128,17 +147,12 @@ class PocketQuranCacheManager {
     }
   }
 
-  async getAudio(key) {
+  /** One request against one store; any failure reads as "nothing". */
+  async _request(storeName, mode, run) {
     try {
       const db = await this._ensureDB();
-      const k = String(key || "");
       return await new Promise((resolve) => {
-        const tx = db.transaction(
-          PocketQuranCacheManager.AUDIO_STORE,
-          "readonly",
-        );
-        const store = tx.objectStore(PocketQuranCacheManager.AUDIO_STORE);
-        const req = store.get(k);
+        const req = run(db.transaction(storeName, mode).objectStore(storeName));
         req.onsuccess = () => resolve(req.result ?? null);
         req.onerror = () => resolve(null);
       });
@@ -147,28 +161,140 @@ class PocketQuranCacheManager {
     }
   }
 
-  async setAudio(record) {
+  /** One transaction over the blob store and its index, with the outcome kept. */
+  async _writeAudio(run) {
     try {
       const db = await this._ensureDB();
-      const rec = {
-        ...record,
-        key: String(record?.key || ""),
-        timestamp: Date.now(),
-      };
-
       return await new Promise((resolve) => {
         const tx = db.transaction(
-          PocketQuranCacheManager.AUDIO_STORE,
+          [
+            PocketQuranCacheManager.AUDIO_STORE,
+            PocketQuranCacheManager.AUDIO_INDEX_STORE,
+          ],
           "readwrite",
         );
-        const store = tx.objectStore(PocketQuranCacheManager.AUDIO_STORE);
-        const req = store.put(rec);
-        req.onsuccess = () => resolve(true);
-        req.onerror = () => resolve(false);
+        run(
+          tx.objectStore(PocketQuranCacheManager.AUDIO_STORE),
+          tx.objectStore(PocketQuranCacheManager.AUDIO_INDEX_STORE),
+        );
+        tx.oncomplete = () => resolve(true);
+        tx.onabort = tx.onerror = () => resolve(false);
       });
     } catch (e) {
       return false;
     }
+  }
+
+  async _readAudioIndex() {
+    const entries = await this._request(
+      PocketQuranCacheManager.AUDIO_INDEX_STORE,
+      "readonly",
+      (store) => store.getAll(),
+    );
+    return Array.isArray(entries) ? entries : [];
+  }
+
+  async _getAudioBytes() {
+    if (this.audioBytes === null) {
+      const entries = await this._readAudioIndex();
+      this.audioBytes = entries.reduce(
+        (sum, entry) => sum + (Number(entry.size) || 0),
+        0,
+      );
+    }
+    return this.audioBytes;
+  }
+
+  async getAudio(key) {
+    const k = String(key || "");
+    const record = await this._request(
+      PocketQuranCacheManager.AUDIO_STORE,
+      "readonly",
+      (store) => store.get(k),
+    );
+
+    // A hit is an access, and the LRU needs to know it. One tiny record write.
+    if (record) {
+      void this._request(
+        PocketQuranCacheManager.AUDIO_INDEX_STORE,
+        "readwrite",
+        (store) =>
+          store.put({
+            key: k,
+            size: Number(record.size) || 0,
+            lastAccessed: Date.now(),
+          }),
+      );
+    }
+
+    return record;
+  }
+
+  async setAudio(record) {
+    const key = String(record?.key || "");
+    const size = Number(record?.size) || 0;
+    const previous = Number(
+      (
+        await this._request(
+          PocketQuranCacheManager.AUDIO_INDEX_STORE,
+          "readonly",
+          (store) => store.get(key),
+        )
+      )?.size,
+    ) || 0;
+    await this._getAudioBytes();
+
+    const now = Date.now();
+    const stored = await this._writeAudio((audio, index) => {
+      audio.put({ ...record, key, timestamp: now });
+      index.put({ key, size, lastAccessed: now });
+    });
+
+    if (!stored) {
+      // Silence here is why a full store re-downloaded the same ayah every tab.
+      console.debug("PocketQuran: ayah audio was not cached", key);
+      return false;
+    }
+
+    this.audioBytes += size - previous;
+    await this._evictAudioOverCap(key);
+    return true;
+  }
+
+  /**
+   * Keep the audio store under its cap by dropping the ayahs nobody played for
+   * longest. `keep` is the ayah being written now and is never a candidate.
+   */
+  async _evictAudioOverCap(keep) {
+    const cap = PocketQuranCacheManager.AUDIO_CAP_BYTES;
+    if ((await this._getAudioBytes()) <= cap) return 0;
+
+    const entries = (await this._readAudioIndex()).sort(
+      (a, b) => (Number(a.lastAccessed) || 0) - (Number(b.lastAccessed) || 0),
+    );
+    const target = cap * 0.9;
+    const doomed = [];
+
+    for (const entry of entries) {
+      if (this.audioBytes <= target) break;
+      if (entry.key === keep) continue;
+      doomed.push(entry.key);
+      this.audioBytes -= Number(entry.size) || 0;
+    }
+
+    if (!doomed.length) return 0;
+
+    const dropped = await this._writeAudio((audio, index) => {
+      for (const key of doomed) {
+        audio.delete(key);
+        index.delete(key);
+      }
+    });
+
+    if (!dropped) {
+      console.debug("PocketQuran: ayah audio could not be evicted");
+    }
+    return dropped ? doomed.length : 0;
   }
 }
 
