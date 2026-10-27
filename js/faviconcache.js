@@ -14,6 +14,8 @@ class FaviconCacheManager {
   static DB_VERSION = 1;
   static STORE_NAME = "favicons";
   static MAX_SIZE = 256; // Maximum dimension for stored favicons
+  static MAX_ENTRIES = 300; // Store cap, oldest auto-fetched icons first
+  static FAILURE_TTL_MS = 24 * 60 * 60 * 1000; // A dead icon is not retried today
   static LOCAL_STORAGE_PREFIX = "muslim-dashboard:favicon:";
 
   constructor() {
@@ -196,6 +198,105 @@ class FaviconCacheManager {
   }
 
   /**
+   * The raw stored record, failure markers included.
+   */
+  async _getRecord(key) {
+    try {
+      const db = await this._ensureDB();
+      return new Promise((resolve) => {
+        const transaction = db.transaction(
+          FaviconCacheManager.STORE_NAME,
+          "readonly",
+        );
+        const request = transaction
+          .objectStore(FaviconCacheManager.STORE_NAME)
+          .get(key);
+        request.onsuccess = () => resolve(request.result ?? null);
+        request.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * A failed fetch is remembered, so a dead icon is not retried every new tab.
+   */
+  async _isRecentFailure(key) {
+    const record = await this._getRecord(key);
+    return (
+      record?.failure === true &&
+      Date.now() - Number(record.timestamp || 0) <
+        FaviconCacheManager.FAILURE_TTL_MS
+    );
+  }
+
+  async _setFailure(url, type) {
+    try {
+      const db = await this._ensureDB();
+      const key = this._getCacheKey(url, type);
+
+      return new Promise((resolve) => {
+        const transaction = db.transaction(
+          FaviconCacheManager.STORE_NAME,
+          "readwrite",
+        );
+        const store = transaction.objectStore(
+          FaviconCacheManager.STORE_NAME,
+        );
+        const request = store.put({
+          key,
+          url,
+          type,
+          dataUrl: null,
+          failure: true,
+          timestamp: Date.now(),
+        });
+
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Keep the store bounded. The oldest records go first; an icon the user
+   * imported themselves is never dropped.
+   */
+  async _pruneToCap() {
+    const db = await this._ensureDB();
+    return new Promise((resolve) => {
+      const transaction = db.transaction(
+        FaviconCacheManager.STORE_NAME,
+        "readwrite",
+      );
+      const store = transaction.objectStore(FaviconCacheManager.STORE_NAME);
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const records = (request.result || []).filter(
+          (record) => record?.isCustom !== true,
+        );
+        const excess = records.length - FaviconCacheManager.MAX_ENTRIES;
+        if (excess <= 0) {
+          resolve(false);
+          return;
+        }
+
+        records
+          .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+          .slice(0, excess)
+          .forEach((record) => store.delete(record.key));
+        resolve(true);
+      };
+
+      request.onerror = () => resolve(false);
+    });
+  }
+
+  /**
    * Get cached favicon
    * @param {string} url - The URL to get favicon for
    * @param {string} type - Type of favicon ('pinned' or 'search')
@@ -267,7 +368,11 @@ class FaviconCacheManager {
         this._setLocalStorageCached(key, record);
         const request = store.put(record);
 
-        request.onsuccess = () => resolve(true);
+        request.onsuccess = () => {
+          resolve(true);
+          // Opportunistic, after the write: the store must stay bounded.
+          this._pruneToCap().catch(() => {});
+        };
         request.onerror = () => {
           console.warn("FaviconCache: Error storing favicon", request.error);
           reject(request.error);
@@ -373,6 +478,9 @@ class FaviconCacheManager {
         this.sessionFetched.add(cacheKey);
         return cached;
       }
+
+      // A miss within the failure TTL is a cache hit of its own: no request.
+      if (await this._isRecentFailure(cacheKey)) return faviconUrl;
     }
 
     try {
@@ -394,6 +502,9 @@ class FaviconCacheManager {
 
     const fallbackCached = await this.getCached(url, type);
     if (fallbackCached) return fallbackCached;
+
+    // Remember the miss: a repeat tab shows the display URL without asking.
+    await this._setFailure(url, type);
 
     this.sessionFetched.add(cacheKey);
     return faviconUrl;
@@ -516,12 +627,15 @@ class FaviconCacheManager {
   }
 
   /**
-   * Normalize an imported image URL without downloading/caching it.
-   * URL imports are stored as direct links.
+   * Import an image URL: the bytes are downloaded once and kept as a data URL,
+   * so later tabs read the icon from the cache instead of the network. A failed
+   * download keeps today's behaviour and stores the remote URL.
    * @param {string} imageUrl - HTTP(S) image URL
-   * @returns {Promise<string>} - Normalized URL string
+   * @param {string} url - The URL to associate this favicon with
+   * @param {string} type - Type of favicon ('pinned' or 'search')
+   * @returns {Promise<string>} - Data URL, or the remote URL when it cannot be read
    */
-  async importFromImageUrl(imageUrl, _url, _type = "pinned") {
+  async importFromImageUrl(imageUrl, url, type = "pinned") {
     const rawImageUrl = String(imageUrl || "").trim();
     if (!rawImageUrl) {
       throw new Error("Please provide an image URL.");
@@ -543,7 +657,24 @@ class FaviconCacheManager {
       throw new Error("Only HTTP(S) image URLs are supported.");
     }
 
-    return parsedUrl.href;
+    const remoteUrl = parsedUrl.href;
+    try {
+      const resp = await fetch(remoteUrl, { cache: "force-cache" });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob && blob.size > 0) {
+          const raw = await this._blobToDataUrl(blob);
+          // Same downscale as a file import; unreadable images keep their bytes.
+          const dataUrl = await this._processImage(raw).catch(() => raw);
+          await this.setCached(url, dataUrl, type, true);
+          return dataUrl;
+        }
+      }
+    } catch (e) {
+      // Fall through: the remote URL is still a usable icon link.
+    }
+
+    return remoteUrl;
   }
 
   /**
