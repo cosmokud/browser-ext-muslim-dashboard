@@ -9,6 +9,8 @@ $settingsPath = Join-Path $PSScriptRoot "..\js\settings.js"
 $settings = Get-SourceText -Path $settingsPath
 $themesPath = Join-Path $PSScriptRoot "..\js\themes.js"
 $themes = Get-SourceText -Path $themesPath
+$tokensPath = Join-Path $PSScriptRoot "..\js\theme-tokens.js"
+$tokens = Get-SourceText -Path $tokensPath
 $backgroundsPath = Join-Path $PSScriptRoot "..\js\backgrounds.js"
 $backgrounds = Get-SourceText -Path $backgroundsPath
 
@@ -82,12 +84,12 @@ Assert-Matches `
   -Message "Theme manager must expose an immediate background-aware font color setter."
 
 Assert-Matches `
-  -Haystack $themes `
-  -Pattern 'resolveBackgroundAwareTextColors\(colors\)[\s\S]*calculateApcaContrast[\s\S]*calculateWcagContrastRatio[\s\S]*estimateEffectiveTextBackgroundColor' `
+  -Haystack $tokens `
+  -Pattern 'resolveBackgroundAwareTextColors\(colors, mode = "dark"\)[\s\S]*calculateApcaContrast[\s\S]*calculateWcagContrastRatio[\s\S]*estimateEffectiveTextBackgroundColor' `
   -Message "Theme manager must choose text colors with APCA, WCAG, and effective background estimation."
 
 Assert-Matches `
-  -Haystack $themes `
+  -Haystack $tokens `
   -Pattern 'clampNumber\(value, min, max, fallback\)[\s\S]*Number\.isFinite' `
   -Message "Background-aware theme changes must not call a missing clampNumber helper."
 

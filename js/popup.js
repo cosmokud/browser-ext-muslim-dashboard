@@ -2244,29 +2244,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getGlassOpacityAlphas(opacityPercent) {
-    const baseAlpha = SettingsRegistry.coerce("glassOpacity", opacityPercent, 35) / 100;
-    const hoverRatio = 0.45 / 0.35;
-    const borderRatio = 0.4 / 0.35;
-    const clampAlpha = (alpha) =>
-      Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
-
-    return {
-      bg: clampAlpha(baseAlpha),
-      hover: clampAlpha(baseAlpha * hoverRatio),
-      border: clampAlpha(baseAlpha * borderRatio),
-    };
+    return ThemeTokens.glassAlphas(opacityPercent);
   }
 
   function setColorAlpha(value, alpha) {
-    if (typeof value !== "string") return value;
-
-    const match = value
-      .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
-    if (!match) return value;
-
-    const bounded = Number(Math.min(1, Math.max(0, Number(alpha))).toFixed(3));
-    return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${bounded})`;
+    return ThemeTokens.setColorAlpha(value, alpha);
   }
 
   function applyGlassOpacityToColors(colors) {
@@ -2404,24 +2386,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function mixHexToRgb(baseHex, mixHex, mixWeight) {
-    const base =
-      typeof themes.hexToRgb === "function"
-        ? themes.hexToRgb(baseHex)
-        : hexToRgb(baseHex);
-    const mix =
-      typeof themes.hexToRgb === "function"
-        ? themes.hexToRgb(mixHex)
-        : hexToRgb(mixHex);
-    if (!base || !mix) return null;
-
-    const weight = Math.max(0, Math.min(1, Number(mixWeight)));
-    const blend = (channelA, channelB) =>
-      Math.round(channelA * (1 - weight) + channelB * weight);
-
-    return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
-      base.b,
-      mix.b,
-    )})`;
+    return ThemeTokens.mixHexToRgb(baseHex, mixHex, mixWeight);
   }
 
   function getPopupGlassVars(colors, glassEnabled) {

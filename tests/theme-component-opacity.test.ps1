@@ -3,6 +3,8 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib\source.ps1")
 $themePath = Join-Path $PSScriptRoot "..\js\themes.js"
 $themeSource = Get-SourceText -Path $themePath
+$tokensPath = Join-Path $PSScriptRoot "..\js\theme-tokens.js"
+$tokensSource = Get-SourceText -Path $tokensPath
 $stylesPath = Join-Path $PSScriptRoot "..\css\styles.css"
 $styleSource = Get-SourceText -Path $stylesPath
 
@@ -29,8 +31,8 @@ Assert-Matches `
   -Message "Component opacity live updates must apply to components currently placed in sidebars."
 
 Assert-Matches `
-  -Haystack $themeSource `
-  -Pattern '_extractRgbChannels\(value\)\s*\{[\s\S]*?const normalizedHex = this\._normalizeHexColor\(value\);[\s\S]*?parseInt\(normalizedHex\.slice\(1,\s*3\),\s*16\)' `
+  -Haystack $tokensSource `
+  -Pattern 'extractRgbChannels\(value\)\s*\{[\s\S]*?const normalizedHex = ThemeTokens\.normalizeHexColor\(value\);[\s\S]*?parseInt\(normalizedHex\.slice\(1,\s*3\),\s*16\)' `
   -Message "Component opacity alpha conversion must support hex theme palette colors."
 
 Assert-Matches `

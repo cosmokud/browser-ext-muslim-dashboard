@@ -704,12 +704,6 @@ class ThemeManager {
     this.applyTheme();
   }
 
-  clampNumber(value, min, max, fallback) {
-    const number = Number(value);
-    if (!Number.isFinite(number)) return fallback;
-    return Math.min(max, Math.max(min, number));
-  }
-
   setupBackgroundAwareFontColorListeners() {
     if (this._backgroundAwareFontColorListenersBound) return;
     this._backgroundAwareFontColorListenersBound = true;
@@ -738,56 +732,6 @@ class ThemeManager {
     });
   }
 
-  estimateEffectiveTextBackgroundColor(colors) {
-    return colors?.bodyBg || (this._currentMode === "light" ? "#ffffff" : "#000000");
-  }
-
-  calculateWcagContrastRatio(foreground, background) {
-    const fg = this.hexToRgb(this._colorToHex(foreground, "#ffffff"));
-    const bg = this.hexToRgb(this._colorToHex(background, "#000000"));
-    if (!fg || !bg) return 1;
-
-    const luminance = ({ r, g, b }) => {
-      const channels = [r, g, b].map((channel) => {
-        const value = channel / 255;
-        return value <= 0.03928
-          ? value / 12.92
-          : Math.pow((value + 0.055) / 1.055, 2.4);
-      });
-      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    };
-
-    const l1 = luminance(fg);
-    const l2 = luminance(bg);
-    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-  }
-
-  calculateApcaContrast(foreground, background) {
-    return this.calculateWcagContrastRatio(foreground, background) * 10;
-  }
-
-  resolveBackgroundAwareTextColors(colors) {
-    const apcaLight = this.calculateApcaContrast("#ffffff", colors.bodyBg);
-    const wcagLight = this.calculateWcagContrastRatio("#ffffff", colors.bodyBg);
-    const background = this.estimateEffectiveTextBackgroundColor(colors);
-    const wcagDark = this.calculateWcagContrastRatio("#111827", background);
-    const useLight = apcaLight >= 45 || wcagLight >= wcagDark;
-
-    return {
-      ...colors,
-      textPrimary: useLight ? "#ffffff" : "#111827",
-      textSecondary: useLight
-        ? "rgba(255, 255, 255, 0.84)"
-        : "rgba(17, 24, 39, 0.78)",
-      textMuted: useLight
-        ? "rgba(255, 255, 255, 0.62)"
-        : "rgba(17, 24, 39, 0.58)",
-      textPlaceholder: useLight
-        ? "rgba(255, 255, 255, 0.5)"
-        : "rgba(17, 24, 39, 0.48)",
-    };
-  }
-
   _isPureTheme(themeName) {
     return themeName === "pureWhite" || themeName === "pureBlack";
   }
@@ -808,13 +752,13 @@ class ThemeManager {
     }
 
     const fallback = ThemeManager.THEMES?.[themeName]?.[mode]?.primary;
-    return this._normalizeHexColor(fallback) || "#ffffff";
+    return ThemeTokens.normalizeHexColor(fallback) || "#ffffff";
   }
 
   _getDefaultGlassBackgroundColor(themeName, mode) {
     const fallbackTint = this._getDefaultGlassTint(themeName, mode);
     const baseGlassBg = ThemeManager.THEMES?.[themeName]?.[mode]?.glassBg;
-    return this._colorToHex(baseGlassBg, fallbackTint);
+    return ThemeTokens.colorToHex(baseGlassBg, fallbackTint);
   }
 
   _getDefaultPureThemePalette(themeName, mode) {
@@ -826,9 +770,9 @@ class ThemeManager {
     if (!base) return null;
 
     const defaultAccentBackground =
-      this._normalizeHexColor(base.accentBackground || base.accent) ||
+      ThemeTokens.normalizeHexColor(base.accentBackground || base.accent) ||
       "#d4af37";
-    const defaultAccentText = this._resolveAccentTextColor(
+    const defaultAccentText = ThemeTokens.resolveAccentTextColor(
       base.accentText || base.accent,
       defaultAccentBackground,
       colorMode,
@@ -840,7 +784,7 @@ class ThemeManager {
       accentText: defaultAccentText,
       accentBackground: defaultAccentBackground,
       bodyBg: base.bodyBg,
-      onPrimaryText: this._resolveOnPrimaryText(
+      onPrimaryText: ThemeTokens.resolveOnPrimaryText(
         base.onPrimaryText,
         base.primary,
       ),
@@ -849,19 +793,19 @@ class ThemeManager {
     };
 
     if (this._isThemeWithCustomTextPalette(themeName)) {
-      defaultPalette.textPrimary = this._colorToHex(
+      defaultPalette.textPrimary = ThemeTokens.colorToHex(
         base.textPrimary,
         "#ffffff",
       );
-      defaultPalette.textSecondary = this._colorToHex(
+      defaultPalette.textSecondary = ThemeTokens.colorToHex(
         base.textSecondary,
         colorMode === "dark" ? "#d9d9d9" : "#4d4d4d",
       );
-      defaultPalette.textMuted = this._colorToHex(
+      defaultPalette.textMuted = ThemeTokens.colorToHex(
         base.textMuted,
         colorMode === "dark" ? "#9a9a9a" : "#7a7a7a",
       );
-      defaultPalette.textPlaceholder = this._colorToHex(
+      defaultPalette.textPlaceholder = ThemeTokens.colorToHex(
         base.textPlaceholder || base.textMuted,
         colorMode === "dark" ? "#9a9a9a" : "#7a7a7a",
       );
@@ -880,7 +824,7 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
-    this._glassOpacity = this._clampGlassOpacity(
+    this._glassOpacity = ThemeTokens.clampOpacity(
       themeSettings.glassOpacity,
       50,
     );
@@ -909,11 +853,11 @@ class ThemeManager {
         const baseDark = theme.dark;
         const baseLight = theme.light;
         const darkAccentBackground =
-          this._normalizeHexColor(
+          ThemeTokens.normalizeHexColor(
             baseDark.accentBackground || baseDark.accent,
           ) || "#d4af37";
         const lightAccentBackground =
-          this._normalizeHexColor(
+          ThemeTokens.normalizeHexColor(
             baseLight.accentBackground || baseLight.accent,
           ) || "#d4af37";
         this._customPalettes[this._currentTheme] = {
@@ -1060,7 +1004,7 @@ class ThemeManager {
    * Set global glass opacity percentage
    */
   setGlassOpacity(opacityPercent, save = true) {
-    this._glassOpacity = this._clampGlassOpacity(
+    this._glassOpacity = ThemeTokens.clampOpacity(
       opacityPercent,
       this._glassOpacity,
     );
@@ -1159,10 +1103,10 @@ class ThemeManager {
         } else {
           colors.onPrimaryText = null;
         }
-        const accentText = this._normalizeHexColor(
+        const accentText = ThemeTokens.normalizeHexColor(
           palette.accentText || palette.accent,
         );
-        const accentBackground = this._normalizeHexColor(
+        const accentBackground = ThemeTokens.normalizeHexColor(
           palette.accentBackground || palette.accent,
         );
 
@@ -1206,10 +1150,11 @@ class ThemeManager {
         }
 
         if (supportsCustomText) {
-          const textPrimary = this._colorToHex(palette.textPrimary);
-          const textSecondary = this._colorToHex(palette.textSecondary);
-          const textMuted = this._colorToHex(palette.textMuted);
-          const textPlaceholder = this._colorToHex(palette.textPlaceholder);
+          const textPrimary = ThemeTokens.colorToHex(palette.textPrimary);
+          const textSecondary = ThemeTokens.colorToHex(palette.textSecondary);
+          const textMuted = ThemeTokens.colorToHex(palette.textMuted);
+          const textPlaceholder =
+            ThemeTokens.colorToHex(palette.textPlaceholder);
 
           if (textPrimary) colors.textPrimary = textPrimary;
           if (textSecondary) colors.textSecondary = textSecondary;
@@ -1285,14 +1230,14 @@ class ThemeManager {
       }
     }
 
-    colors.onPrimaryText = this._resolveOnPrimaryText(
+    colors.onPrimaryText = ThemeTokens.resolveOnPrimaryText(
       colors.onPrimaryText,
       colors.primary,
     );
     colors.accentBackground =
-      this._normalizeHexColor(colors.accentBackground || colors.accent) ||
+      ThemeTokens.normalizeHexColor(colors.accentBackground || colors.accent) ||
       "#d4af37";
-    colors.accentText = this._resolveAccentTextColor(
+    colors.accentText = ThemeTokens.resolveAccentTextColor(
       colors.accentText || colors.accent,
       colors.accentBackground,
       colorMode,
@@ -1301,117 +1246,6 @@ class ThemeManager {
     colors.textPlaceholder = colors.textPlaceholder || colors.textMuted;
 
     return colors;
-  }
-
-  _clampGlassOpacity(value, fallback = 50) {
-    return SettingsRegistry.coerce("glassOpacity", value, fallback);
-  }
-
-  _getGlassOpacityAlphas(opacityPercent = this._glassOpacity) {
-    const bgAlpha = this._clampGlassOpacity(opacityPercent, 50) / 100;
-    const hoverRatio = 0.45 / 0.35;
-    const borderRatio = 0.4 / 0.35;
-    const clampAlpha = (alpha) => {
-      const bounded = Math.min(1, Math.max(0, alpha));
-      return Number(bounded.toFixed(3));
-    };
-
-    return {
-      bg: clampAlpha(bgAlpha),
-      hover: clampAlpha(bgAlpha * hoverRatio),
-      border: clampAlpha(bgAlpha * borderRatio),
-    };
-  }
-
-  _extractRgbChannels(value) {
-    if (typeof value !== "string") return null;
-    const normalizedHex = this._normalizeHexColor(value);
-    if (normalizedHex) {
-      return {
-        r: parseInt(normalizedHex.slice(1, 3), 16),
-        g: parseInt(normalizedHex.slice(3, 5), 16),
-        b: parseInt(normalizedHex.slice(5, 7), 16),
-      };
-    }
-
-    const match = value
-      .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
-    if (!match) return null;
-
-    return {
-      r: Number(match[1]),
-      g: Number(match[2]),
-      b: Number(match[3]),
-    };
-  }
-
-  _setColorAlpha(value, alpha) {
-    const rgb = this._extractRgbChannels(value);
-    if (!rgb) return value;
-    const bounded = Math.min(1, Math.max(0, Number(alpha)));
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number(bounded.toFixed(3))})`;
-  }
-
-  _normalizeHexColor(value) {
-    if (typeof value !== "string") return null;
-    const hex = value.trim().toLowerCase();
-    if (/^#([a-f\d]{6})$/i.test(hex)) return hex;
-
-    const short = /^#([a-f\d]{3})$/i.exec(hex);
-    if (!short) return null;
-
-    const [r, g, b] = short[1].split("");
-    return `#${r}${r}${g}${g}${b}${b}`;
-  }
-
-  _colorToHex(value, fallback = null) {
-    const normalizedHex = this._normalizeHexColor(value);
-    if (normalizedHex) return normalizedHex;
-
-    const rgb = this._extractRgbChannels(value);
-    if (!rgb) return fallback;
-
-    const toHex = (channel) =>
-      Math.max(0, Math.min(255, Number(channel)))
-        .toString(16)
-        .padStart(2, "0");
-
-    return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-  }
-
-  _resolveOnPrimaryText(candidateHex, primaryHex) {
-    const normalizedCandidate = this._normalizeHexColor(candidateHex);
-    if (normalizedCandidate) return normalizedCandidate;
-
-    const normalizedPrimary = this._normalizeHexColor(primaryHex) || "#1a5f4a";
-    return this._isDarkColor(normalizedPrimary) ? "#ffffff" : "#1a1a1a";
-  }
-
-  _resolveAccentTextColor(candidateHex, accentBackgroundHex, mode = "dark") {
-    const normalizedCandidate = this._normalizeHexColor(candidateHex);
-    if (normalizedCandidate) return normalizedCandidate;
-
-    const normalizedAccent =
-      this._normalizeHexColor(accentBackgroundHex) || "#d4af37";
-    const prefersLightText =
-      this._isDarkColor(normalizedAccent) || mode === "dark";
-
-    return prefersLightText
-      ? this._lightenColor(normalizedAccent, 48)
-      : this._darkenColor(normalizedAccent, 45);
-  }
-
-  _applyGlassOpacityToThemeColors(colors) {
-    if (!colors || typeof colors !== "object") return colors;
-
-    const alphas = this._getGlassOpacityAlphas();
-    return {
-      ...colors,
-      glassBg: this._setColorAlpha(colors.glassBg, alphas.bg),
-      glassBgHover: this._setColorAlpha(colors.glassBgHover, alphas.hover),
-      glassBorder: this._setColorAlpha(colors.glassBorder, alphas.border),
-    };
   }
 
   _applyModalOpacity() {
@@ -1466,27 +1300,48 @@ class ThemeManager {
       component.style.removeProperty("--glass-shadow");
     };
 
-    const alphas = this._getGlassOpacityAlphas(this._mainGridComponentOpacity);
-    const bgColor = this._setColorAlpha(colors.glassBg, alphas.bg);
-    const hoverColor = this._setColorAlpha(colors.glassBgHover, alphas.hover);
-    const borderColor = this._setColorAlpha(colors.glassBorder, alphas.border);
-    const highlightDarkBg = this._setColorAlpha(colors.primaryDark, alphas.bg);
-    const highlightPrimaryBg = this._setColorAlpha(colors.primary, alphas.bg);
-    const highlightDarkHover = this._setColorAlpha(
+    const alphas = ThemeTokens.glassAlphas(this._mainGridComponentOpacity);
+    const bgColor = ThemeTokens.setColorAlpha(colors.glassBg, alphas.bg);
+    const hoverColor = ThemeTokens.setColorAlpha(
+      colors.glassBgHover,
+      alphas.hover,
+    );
+    const borderColor = ThemeTokens.setColorAlpha(
+      colors.glassBorder,
+      alphas.border,
+    );
+    const highlightDarkBg = ThemeTokens.setColorAlpha(
+      colors.primaryDark,
+      alphas.bg,
+    );
+    const highlightPrimaryBg = ThemeTokens.setColorAlpha(
+      colors.primary,
+      alphas.bg,
+    );
+    const highlightDarkHover = ThemeTokens.setColorAlpha(
       colors.primaryDark,
       alphas.hover,
     );
-    const highlightPrimaryHover = this._setColorAlpha(
+    const highlightPrimaryHover = ThemeTokens.setColorAlpha(
       colors.primary,
       alphas.hover,
     );
-    const highlightBorder = this._setColorAlpha(colors.primaryLight, alphas.border);
-    const highlightLightBg = this._setColorAlpha(colors.primaryLight, alphas.hover);
-    const highlightLightSubtleBg = this._setColorAlpha(
+    const highlightBorder = ThemeTokens.setColorAlpha(
+      colors.primaryLight,
+      alphas.border,
+    );
+    const highlightLightBg = ThemeTokens.setColorAlpha(
+      colors.primaryLight,
+      alphas.hover,
+    );
+    const highlightLightSubtleBg = ThemeTokens.setColorAlpha(
       colors.primaryLight,
       alphas.bg * 0.14,
     );
-    const highlightShadowColor = this._setColorAlpha(colors.primaryDark, alphas.bg * 0.32);
+    const highlightShadowColor = ThemeTokens.setColorAlpha(
+      colors.primaryDark,
+      alphas.bg * 0.32,
+    );
     const highlightHoverBg = `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`;
     const highlightActiveBg = `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`;
     const highlightShadow = `0 8px 18px ${highlightShadowColor}`;
@@ -1537,7 +1392,7 @@ class ThemeManager {
       const defaultBodyBg =
         fallback?.bodyBg ||
         ThemeManager.THEMES[this._currentTheme][this._currentMode].bodyBg;
-      const defaultOnPrimaryText = this._resolveOnPrimaryText(
+      const defaultOnPrimaryText = ThemeTokens.resolveOnPrimaryText(
         fallback?.onPrimaryText ||
           ThemeManager.THEMES[this._currentTheme][this._currentMode]
             .onPrimaryText,
@@ -1549,7 +1404,7 @@ class ThemeManager {
           .accentBackground ||
         fallback?.accent ||
         ThemeManager.THEMES[this._currentTheme][this._currentMode].accent;
-      const defaultAccentText = this._resolveAccentTextColor(
+      const defaultAccentText = ThemeTokens.resolveAccentTextColor(
         hexColor,
         defaultAccentBackground,
         this._currentMode,
@@ -1632,20 +1487,22 @@ class ThemeManager {
 
     const defaultBase = theme[colorMode];
     const primary = palette?.primary || defaultBase.primary;
-    const onPrimaryText = this._resolveOnPrimaryText(
+    const onPrimaryText = ThemeTokens.resolveOnPrimaryText(
       palette?.onPrimaryText || defaultBase.onPrimaryText,
       primary,
     );
     const fallback = this._getDefaultPureThemePalette(themeName, colorMode);
     const supportsCustomText = this._isThemeWithCustomTextPalette(themeName);
     const accentBackground =
-      this._normalizeHexColor(palette?.accentBackground || palette?.accent) ||
-      this._normalizeHexColor(
+      ThemeTokens.normalizeHexColor(
+        palette?.accentBackground || palette?.accent,
+      ) ||
+      ThemeTokens.normalizeHexColor(
         defaultBase.accentBackground || fallback?.accentBackground,
       ) ||
-      this._normalizeHexColor(defaultBase.accent || fallback?.accent) ||
+      ThemeTokens.normalizeHexColor(defaultBase.accent || fallback?.accent) ||
       "#d4af37";
-    const accentText = this._resolveAccentTextColor(
+    const accentText = ThemeTokens.resolveAccentTextColor(
       palette?.accentText ||
         palette?.accent ||
         defaultBase.accentText ||
@@ -1667,31 +1524,31 @@ class ThemeManager {
       bodyBg: palette?.bodyBg || defaultBase.bodyBg,
       onPrimaryText,
       glassBgColor:
-        this._normalizeHexColor(palette?.glassBgColor) ||
+        ThemeTokens.normalizeHexColor(palette?.glassBgColor) ||
         fallback?.glassBgColor ||
         this._getDefaultGlassBackgroundColor(themeName, colorMode),
       glassTint:
-        this._normalizeHexColor(palette?.glassTint) ||
+        ThemeTokens.normalizeHexColor(palette?.glassTint) ||
         fallback?.glassTint ||
         this._getDefaultGlassTint(themeName, colorMode),
       ...(supportsCustomText
         ? {
             textPrimary:
-              this._colorToHex(palette?.textPrimary) ||
+              ThemeTokens.colorToHex(palette?.textPrimary) ||
               fallback?.textPrimary ||
-              this._colorToHex(defaultBase.textPrimary),
+              ThemeTokens.colorToHex(defaultBase.textPrimary),
             textSecondary:
-              this._colorToHex(palette?.textSecondary) ||
+              ThemeTokens.colorToHex(palette?.textSecondary) ||
               fallback?.textSecondary ||
-              this._colorToHex(defaultBase.textSecondary),
+              ThemeTokens.colorToHex(defaultBase.textSecondary),
             textMuted:
-              this._colorToHex(palette?.textMuted) ||
+              ThemeTokens.colorToHex(palette?.textMuted) ||
               fallback?.textMuted ||
-              this._colorToHex(defaultBase.textMuted),
+              ThemeTokens.colorToHex(defaultBase.textMuted),
             textPlaceholder:
-              this._colorToHex(palette?.textPlaceholder) ||
+              ThemeTokens.colorToHex(palette?.textPlaceholder) ||
               fallback?.textPlaceholder ||
-              this._colorToHex(
+              ThemeTokens.colorToHex(
                 defaultBase.textPlaceholder || defaultBase.textMuted,
               ),
           }
@@ -1716,86 +1573,16 @@ class ThemeManager {
   }
 
   /**
-   * Lighten a hex color by a percentage
-   */
-  _lightenColor(hex, percent) {
-    const rgb = this.hexToRgb(hex);
-    if (!rgb) return hex;
-
-    const lighten = (c) =>
-      Math.min(255, Math.round(c + (255 - c) * (percent / 100)));
-    const r = lighten(rgb.r);
-    const g = lighten(rgb.g);
-    const b = lighten(rgb.b);
-
-    return `#${r.toString(16).padStart(2, "0")}${g
-      .toString(16)
-      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-  }
-
-  /**
-   * Darken a hex color by a percentage
-   */
-  _darkenColor(hex, percent) {
-    const rgb = this.hexToRgb(hex);
-    if (!rgb) return hex;
-
-    const darken = (c) => Math.max(0, Math.round(c * (1 - percent / 100)));
-    const r = darken(rgb.r);
-    const g = darken(rgb.g);
-    const b = darken(rgb.b);
-
-    return `#${r.toString(16).padStart(2, "0")}${g
-      .toString(16)
-      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-  }
-
-  _isDarkColor(hex) {
-    const rgb = this.hexToRgb(hex);
-    if (!rgb) return false;
-    // relative luminance approximation
-    const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
-    return luminance < 0.5;
-  }
-
-  _parseRgbaAlpha(value) {
-    if (typeof value !== "string") return null;
-    const match = value
-      .replace(/\s+/g, "")
-      .match(/^rgba\((\d+),(\d+),(\d+),([0-9.]+)\)$/i);
-    if (!match) return null;
-    const alpha = Number(match[4]);
-    return Number.isFinite(alpha) ? alpha : null;
-  }
-
-  /**
-   * Mix two hex colors and return an opaque rgb() string.
-   * @param {string} baseHex
-   * @param {string} mixHex
-   * @param {number} mixWeight 0..1 amount of mixHex
-   */
-  _mixHexToRgb(baseHex, mixHex, mixWeight) {
-    const base = this.hexToRgb(baseHex);
-    const mix = this.hexToRgb(mixHex);
-    if (!base || !mix) return null;
-
-    const w = Math.max(0, Math.min(1, Number(mixWeight)));
-    const blend = (a, b) => Math.round(a * (1 - w) + b * w);
-
-    return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
-      base.b,
-      mix.b,
-    )})`;
-  }
-
-  /**
    * Apply current theme to the document
    */
   applyTheme() {
     let colors = this.getThemeColors();
     if (!colors) return;
     if (this._backgroundAwareFontColorEnabled) {
-      colors = this.resolveBackgroundAwareTextColors(colors);
+      colors = ThemeTokens.resolveBackgroundAwareTextColors(
+        colors,
+        this._currentMode,
+      );
     }
 
     const root = document.documentElement;
@@ -1804,14 +1591,14 @@ class ThemeManager {
     root.style.setProperty("--primary-color", colors.primary);
     root.style.setProperty("--primary-light", colors.primaryLight);
     root.style.setProperty("--primary-dark", colors.primaryDark);
-    const onPrimaryText = this._resolveOnPrimaryText(
+    const onPrimaryText = ThemeTokens.resolveOnPrimaryText(
       colors.onPrimaryText,
       colors.primary,
     );
     const accentBackground =
-      this._normalizeHexColor(colors.accentBackground || colors.accent) ||
+      ThemeTokens.normalizeHexColor(colors.accentBackground || colors.accent) ||
       "#d4af37";
-    const accentText = this._resolveAccentTextColor(
+    const accentText = ThemeTokens.resolveAccentTextColor(
       colors.accentText || colors.accent,
       accentBackground,
       this._currentMode,
@@ -1832,7 +1619,10 @@ class ThemeManager {
 
     // Apply glass effect or solid background
     if (this._glassEnabled) {
-      const globalGlassColors = this._applyGlassOpacityToThemeColors(colors);
+      const globalGlassColors = ThemeTokens.applyGlassOpacityToThemeColors(
+        colors,
+        this._glassOpacity,
+      );
       root.style.setProperty("--glass-bg", globalGlassColors.glassBg);
       root.style.setProperty(
         "--glass-bg-hover",
@@ -1850,13 +1640,17 @@ class ThemeManager {
       const borderMix = isLight ? 0.25 : 0.58;
 
       const solidBg =
-        this._mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
+        ThemeTokens.mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
         (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
       const solidHover =
-        this._mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
+        ThemeTokens.mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
         (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
       const solidBorder =
-        this._mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
+        ThemeTokens.mixHexToRgb(
+          colors.bodyBg,
+          colors.primaryLight,
+          borderMix,
+        ) ||
         (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
 
       root.style.setProperty("--glass-bg", solidBg);
@@ -1902,20 +1696,6 @@ class ThemeManager {
   }
 
   /**
-   * Convert hex color to RGB object
-   */
-  hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : null;
-  }
-
-  /**
    * Get preview CSS for a theme (for theme picker UI)
    */
   getThemePreviewColors(themeName, mode) {
@@ -1929,6 +1709,27 @@ class ThemeManager {
       bodyBg: colors.bodyBg,
       textPrimary: colors.textPrimary,
     };
+  }
+
+  // Kept for callers outside this file (popup, blur overrides, theme panel).
+  hexToRgb(hex) {
+    return ThemeTokens.hexToRgb(hex);
+  }
+
+  _lightenColor(hex, percent) {
+    return ThemeTokens.lighten(hex, percent);
+  }
+
+  _darkenColor(hex, percent) {
+    return ThemeTokens.darken(hex, percent);
+  }
+
+  _isDarkColor(hex) {
+    return ThemeTokens.isDark(hex);
+  }
+
+  _parseRgbaAlpha(value) {
+    return ThemeTokens.parseRgbaAlpha(value);
   }
 }
 
