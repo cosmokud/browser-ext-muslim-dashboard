@@ -122,17 +122,17 @@
     }
 
     // Initialize settings manager (needs references to other managers)
-    this.settings = new SettingsManager(
-      this.storage,
-      this.prayerTimes,
-      this.qibla,
-      this.quotes,
-      this.backgrounds,
-      this.weather,
-      this.flashcards,
-      this.hadith,
-      this.adhkar,
-    );
+    this.settings = new SettingsManager({
+      storage: this.storage,
+      prayerTimes: this.prayerTimes,
+      qibla: this.qibla,
+      quotes: this.quotes,
+      backgrounds: this.backgrounds,
+      weather: this.weather,
+      flashcards: this.flashcards,
+      hadith: this.hadith,
+      adhkar: this.adhkar,
+    });
     this.settings.init();
     this.openSettingsFromUrlIfRequested();
     window.addEventListener("hashchange", () => {

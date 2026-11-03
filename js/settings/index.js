@@ -82,7 +82,9 @@ class SettingsManager extends BaseManager {
     "Courier New",
   ];
 
-  constructor(
+  // One object, not nine positional arguments: the call site names each
+  // manager it hands over, so adding or swapping one cannot shift the rest.
+  constructor({
     storage,
     prayerTimes,
     qibla,
@@ -92,7 +94,7 @@ class SettingsManager extends BaseManager {
     flashcards,
     hadith,
     adhkar,
-  ) {
+  }) {
     super();
     this.storage = storage;
     this.prayerTimes = prayerTimes;
