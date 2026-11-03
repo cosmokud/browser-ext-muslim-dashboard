@@ -471,11 +471,10 @@ export function loadPageDom(page) {
   return dom.window.document;
 }
 
-/**
- * One line of CSS text: the stylesheet breaks long selector lists and value
+/** One line of CSS text: the stylesheet breaks long selector lists and value
  * lists across lines, so both sides of a comparison collapse the same way.
  */
-function collapse(text) {
+export function collapse(text) {
   return String(text)
     .replace(/\s+/g, " ")
     .replace(/\s*([(),])\s*/g, "$1")
