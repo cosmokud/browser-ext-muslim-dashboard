@@ -140,3 +140,56 @@ test("toggle flips the intent, and a suppressed mode still reads inactive", () =
     "a suppressed mode cannot show through its excluder",
   );
 });
+
+/** The mode to start in, as the app's three restore sites answer it today. */
+function restoreWith(settings, debugEnabled) {
+  const sandbox = loadSandbox(FILES, {
+    globals: { document: makeDocument(), ENABLE_DEBUG_MODE: debugEnabled },
+  });
+
+  return vm.runInContext("Modes", sandbox).restore(settings);
+}
+
+test("the snapshot names the mode to start in, the flags first", () => {
+  assert.equal(restoreWith({ momentModeEnabled: true }, true), "moment");
+  assert.equal(restoreWith({ quranFocusModeEnabled: true }, true), "quranFocus");
+  assert.equal(restoreWith({ sidebarModeEnabled: true }, true), "sidebar");
+  assert.equal(restoreWith({}, true), "normal");
+
+  assert.equal(
+    restoreWith({ quranFocusModeEnabled: true, momentModeEnabled: true }, true),
+    "moment",
+    "moment preempts focus, and the other two sites agree today",
+  );
+  assert.equal(
+    restoreWith({ quranFocusModeEnabled: true, sidebarModeEnabled: true }, true),
+    "quranFocus",
+    "focus excludes sidebar, so the sidebar flag does not start it on top",
+  );
+});
+
+test("a stale lastDashboardMode falls back to the flags", () => {
+  assert.equal(
+    restoreWith({ lastDashboardMode: "sidebar" }, true),
+    "normal",
+    "the sidebar flag is what starts the sidebar, not the hint left behind",
+  );
+  assert.equal(
+    restoreWith({ lastDashboardMode: "moment" }, false),
+    "normal",
+    "without the debug mode there is no moment to go back to",
+  );
+  assert.equal(restoreWith({ lastDashboardMode: "moment" }, true), "moment");
+  assert.equal(
+    restoreWith({ lastDashboardMode: "quranFocus" }, true),
+    "quranFocus",
+    "the hint alone starts the focus layout, as it always has",
+  );
+});
+
+test("a snapshot with no lastDashboardMode still names a mode", () => {
+  assert.equal(restoreWith({ momentModeEnabled: true }, true), "moment");
+  assert.equal(restoreWith({ quranFocusModeEnabled: true }, true), "quranFocus");
+  assert.equal(restoreWith({ sidebarModeEnabled: true }, true), "sidebar");
+  assert.equal(restoreWith(undefined, true), "normal", "an empty snapshot");
+});

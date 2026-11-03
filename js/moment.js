@@ -64,11 +64,7 @@ class MomentModeManager {
     this.syncLayoutVisibility();
 
     try {
-      const settings = this.storage.getSettings();
-      if (
-        settings.momentModeEnabled === true ||
-        settings.lastDashboardMode === "moment"
-      ) {
+      if (Modes.restore(this.storage.getSettings()) === "moment") {
         this.setEnabled(true);
       }
     } catch (e) {}

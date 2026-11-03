@@ -394,15 +394,7 @@
     // Restore last state from settings
     try {
       const s = this.storage.getSettings();
-      // Don't restore Quran focus if Moment mode is the last mode
-      const momentInitial =
-        globalThis.ENABLE_DEBUG_MODE === true &&
-        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
-      const initial =
-        !momentInitial &&
-        (s.quranFocusModeEnabled === true ||
-          s.lastDashboardMode === "quranFocus");
-      if (initial) {
+      if (Modes.restore(s) === "quranFocus") {
         // Capture what the user was using before focus (if we have a hint),
         // but do not restore it simultaneously.
         this._dashboardModeBeforeFocus =

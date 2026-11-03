@@ -33,6 +33,8 @@ const MODULE_FILES = [
 ];
 const MODE_CONSUMERS = [
   "js/app/index.js",
+  "js/app/sidebar-modes.js",
+  "js/app/mode-setup.js",
   "js/gridlayout/index.js",
   "js/floating/index.js",
   "js/moment.js",

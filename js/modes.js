@@ -35,6 +35,33 @@ class Modes {
     };
   }
 
+  /**
+   * Which mode a saved snapshot asks to start in. Interpreting a snapshot only:
+   * nothing is written, and the caller still drives the entry it names.
+   */
+  static restore(settings = {}) {
+    const last = settings.lastDashboardMode;
+
+    // Moment is offered in debug mode only, so a snapshot that names it starts
+    // nowhere rather than restoring a mode the user cannot leave.
+    if (
+      globalThis.ENABLE_DEBUG_MODE === true &&
+      (settings.momentModeEnabled === true || last === "moment")
+    ) {
+      return "moment";
+    }
+
+    // Focus before sidebar: focus excludes it, so the sidebar flag cannot start
+    // the sidebar on top of the layout focus is about to take over.
+    if (settings.quranFocusModeEnabled === true || last === "quranFocus") {
+      return "quranFocus";
+    }
+
+    if (settings.sidebarModeEnabled === true) return "sidebar";
+
+    return "normal";
+  }
+
   /** What entering this mode switches off. */
   static EXCLUDES = {
     quranFocus: ["moment", "sidebar"],

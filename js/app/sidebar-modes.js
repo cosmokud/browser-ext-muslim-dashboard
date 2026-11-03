@@ -147,16 +147,8 @@
     // can still opt into sidebars automatically.
     let shouldStartInSidebarLayout = false;
     try {
-      const s = this.storage.getSettings();
-      const focusInitial =
-        s.quranFocusModeEnabled === true ||
-        s.lastDashboardMode === "quranFocus";
-      const momentInitial =
-        globalThis.ENABLE_DEBUG_MODE === true &&
-        (s.momentModeEnabled === true || s.lastDashboardMode === "moment");
-
       shouldStartInSidebarLayout =
-        !focusInitial && !momentInitial && s.sidebarModeEnabled === true;
+        Modes.restore(this.storage.getSettings()) === "sidebar";
     } catch (e) {}
 
     setEnabled(shouldStartInSidebarLayout);
