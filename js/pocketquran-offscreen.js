@@ -30,10 +30,24 @@
   let pocketQuranState = null;
   let pocketQuranChapters = [];
   let pocketQuranReciters = [];
-  let pocketQuranAudio = null;
   let pocketQuranLastDashboardControlAt = 0;
   let pocketQuranCommandQueue = Promise.resolve();
   const pocketQuranAudioUrlCache = new Map();
+
+  // One element for the document, built on the first play: nothing here starts
+  // audio at boot.
+  const pocketQuranPlayer = new PocketQuranPlayer({
+    onEnded: () => {
+      void handlePocketQuranAudioEnded();
+    },
+    onError: () => {
+      const activeState = getPocketQuranActiveState();
+      publishPocketQuranState({
+        ...activeState,
+        isPlaying: false,
+      });
+    },
+  });
 
   function clampNumber(value, min, max, fallback) {
     const n = Number(value);
@@ -353,42 +367,11 @@
     return audioUrl;
   }
 
-  function ensurePocketQuranAudio() {
-    if (pocketQuranAudio) return pocketQuranAudio;
-
-    const audio = new Audio();
-    audio.preload = "auto";
-
-    audio.addEventListener("ended", () => {
-      void handlePocketQuranAudioEnded();
-    });
-
-    audio.addEventListener("error", () => {
-      const activeState = getPocketQuranActiveState();
-      publishPocketQuranState({
-        ...activeState,
-        isPlaying: false,
-      });
-    });
-
-    pocketQuranAudio = audio;
-    return pocketQuranAudio;
-  }
-
   function pausePocketQuranPlayback({
     resetTime = false,
     clearAutoplay = false,
   } = {}) {
-    const audio = ensurePocketQuranAudio();
-
-    try {
-      audio.pause();
-      if (resetTime) {
-        audio.currentTime = 0;
-      }
-    } catch (error) {
-      // no-op
-    }
+    pocketQuranPlayer.pause({ resetTime });
 
     const activeState = getPocketQuranActiveState();
     publishPocketQuranState({
@@ -403,16 +386,7 @@
   }
 
   function pausePocketQuranAudioSilently({ resetTime = false } = {}) {
-    if (!pocketQuranAudio) return;
-
-    try {
-      pocketQuranAudio.pause();
-      if (resetTime) {
-        pocketQuranAudio.currentTime = 0;
-      }
-    } catch (error) {
-      // no-op
-    }
+    pocketQuranPlayer.pause({ resetTime });
   }
 
   async function playPocketQuranAyah(
@@ -433,7 +407,6 @@
     );
 
     const reciterId = clampNumber(activeState.reciterId, 1, 10000, 7);
-    const audio = ensurePocketQuranAudio();
 
     try {
       const audioUrl = await fetchPocketQuranAyahAudioUrl(
@@ -442,21 +415,8 @@
         normalizedAyah,
       );
 
-      audio.volume = clampNumber(activeState.volume, 0, 1, 1);
-
-      if (forceRestart || audio.src !== audioUrl) {
-        audio.src = audioUrl;
-      }
-
-      if (forceRestart) {
-        try {
-          audio.currentTime = 0;
-        } catch (error) {
-          // no-op
-        }
-      }
-
-      await audio.play();
+      pocketQuranPlayer.setVolume(activeState.volume);
+      await pocketQuranPlayer.play(audioUrl, { forceRestart });
 
       publishPocketQuranState({
         ...activeState,
@@ -736,8 +696,7 @@
 
       case pocketQuranCommandTypes.setVolume: {
         const volume = clampNumber(payload.volume, 0, 1, activeState.volume);
-        const audio = ensurePocketQuranAudio();
-        audio.volume = volume;
+        pocketQuranPlayer.setVolume(volume);
 
         publishPocketQuranState({
           ...activeState,
@@ -877,18 +836,11 @@
           lastAyahNumber: targetAyah,
         });
 
-        const audio = ensurePocketQuranAudio();
         const isActivelyPlaying =
-          activeState.isPlaying === true ||
-          (audio && audio.paused === false && audio.ended === false);
+          activeState.isPlaying === true || pocketQuranPlayer.isPlaying;
 
         if (isActivelyPlaying) {
-          try {
-            audio.pause();
-            audio.currentTime = 0;
-          } catch (error) {
-            // no-op
-          }
+          pocketQuranPlayer.pause({ resetTime: true });
 
           await playPocketQuranAyah(targetSurah, targetAyah, {
             forceRestart: true,
@@ -1022,7 +974,7 @@
       storage.getSettings(),
     );
 
-    if (pocketQuranAudio && pocketQuranAudio.paused === false) {
+    if (pocketQuranPlayer.isPlaying) {
       pausePocketQuranAudioSilently({ resetTime: true });
     }
   }

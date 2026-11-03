@@ -406,7 +406,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let pocketQuranChapters = [];
   let pocketQuranReciters = [];
   let pocketQuranTranslations = [];
-  let pocketQuranLocalAudio = null;
   let pocketQuranLocalPlaybackActive = false;
   let pocketQuranLastDashboardStateAt = 0;
   let pocketQuranLocalCommandQueue = Promise.resolve();
@@ -414,6 +413,27 @@ document.addEventListener("DOMContentLoaded", () => {
   // Object URLs for ayah blobs read out of the shared cache; they die with the
   // popup document, which is short-lived.
   const pocketQuranLocalAudioSrcCache = new Map();
+  // One element for the popup, built on the first play; the state stays here.
+  const pocketQuranPlayer = new PocketQuranPlayer({
+    onEnded: () => {
+      void handlePocketQuranLocalAudioEnded();
+    },
+    onError: () => {
+      pocketQuranState = normalizePocketQuranState(
+        {
+          ...(pocketQuranState ||
+            buildPocketQuranFallbackState(storage.getSettings())),
+          isPlaying: false,
+        },
+        storage.getSettings(),
+      );
+      renderPocketQuranControls();
+      publishPocketQuranPopupState(
+        pocketQuranState,
+        pocketQuranStateSourcePopup,
+      );
+    },
+  });
   const pocketQuranVersesCache = new Map();
   const pocketQuranTajweedVersesCache = new Map();
 
@@ -4078,49 +4098,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function ensurePocketQuranLocalAudio() {
-    if (pocketQuranLocalAudio) return pocketQuranLocalAudio;
-
-    const audio = new Audio();
-    audio.preload = "auto";
-    audio.volume = clampNumber(pocketQuranState?.volume, 0, 1, 1);
-
-    audio.addEventListener("ended", () => {
-      void handlePocketQuranLocalAudioEnded();
-    });
-
-    audio.addEventListener("error", () => {
-      pocketQuranState = normalizePocketQuranState(
-        {
-          ...(pocketQuranState ||
-            buildPocketQuranFallbackState(storage.getSettings())),
-          isPlaying: false,
-        },
-        storage.getSettings(),
-      );
-      renderPocketQuranControls();
-      publishPocketQuranPopupState(
-        pocketQuranState,
-        pocketQuranStateSourcePopup,
-      );
-    });
-
-    pocketQuranLocalAudio = audio;
-    return pocketQuranLocalAudio;
-  }
-
   function deactivatePocketQuranLocalPlayback({
     publishStoppedState = false,
   } = {}) {
-    if (pocketQuranLocalAudio) {
-      try {
-        pocketQuranLocalAudio.pause();
-        pocketQuranLocalAudio.currentTime = 0;
-        pocketQuranLocalAudio.src = "";
-      } catch (e) {
-        // no-op
-      }
-    }
+    pocketQuranPlayer.stop();
 
     if (publishStoppedState && pocketQuranState?.isPlaying === true) {
       pocketQuranState = normalizePocketQuranState(
@@ -4143,16 +4124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resetTime = false,
     clearAutoplay = false,
   } = {}) {
-    if (pocketQuranLocalAudio) {
-      try {
-        pocketQuranLocalAudio.pause();
-        if (resetTime) {
-          pocketQuranLocalAudio.currentTime = 0;
-        }
-      } catch (e) {
-        // no-op
-      }
-    }
+    pocketQuranPlayer.pause({ resetTime });
 
     const baseState =
       pocketQuranState || buildPocketQuranFallbackState(storage.getSettings());
@@ -4190,7 +4162,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const reciterId = clampNumber(baseState.reciterId, 1, 10000, 7);
-    const audio = ensurePocketQuranLocalAudio();
     pocketQuranLocalPlaybackActive = true;
 
     try {
@@ -4200,21 +4171,8 @@ document.addEventListener("DOMContentLoaded", () => {
         normalizedAyah,
       );
 
-      audio.volume = clampNumber(baseState.volume, 0, 1, 1);
-
-      if (forceRestart || audio.src !== audioUrl) {
-        audio.src = audioUrl;
-      }
-
-      if (forceRestart) {
-        try {
-          audio.currentTime = 0;
-        } catch (e) {
-          // no-op
-        }
-      }
-
-      await audio.play();
+      pocketQuranPlayer.setVolume(baseState.volume);
+      await pocketQuranPlayer.play(audioUrl, { forceRestart });
 
       pocketQuranState = normalizePocketQuranState(
         {
@@ -4401,14 +4359,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (desiredIsPlaying) {
             await playPocketQuranAyahLocally(navigationSurah, targetAyah);
           } else {
-            if (pocketQuranLocalAudio) {
-              try {
-                pocketQuranLocalAudio.pause();
-                pocketQuranLocalAudio.currentTime = 0;
-              } catch (e) {
-                // no-op
-              }
-            }
+            pocketQuranPlayer.pause({ resetTime: true });
 
             pocketQuranState = normalizePocketQuranState(
               {
@@ -4484,14 +4435,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (desiredIsPlaying) {
             await playPocketQuranAyahLocally(navigationSurah, targetAyah);
           } else {
-            if (pocketQuranLocalAudio) {
-              try {
-                pocketQuranLocalAudio.pause();
-                pocketQuranLocalAudio.currentTime = 0;
-              } catch (e) {
-                // no-op
-              }
-            }
+            pocketQuranPlayer.pause({ resetTime: true });
 
             pocketQuranState = normalizePocketQuranState(
               {
@@ -4529,9 +4473,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case pocketQuranCommandTypes.setVolume: {
         const volume = clampNumber(payload.volume, 0, 1, state.volume);
-        if (pocketQuranLocalAudio) {
-          pocketQuranLocalAudio.volume = volume;
-        }
+        pocketQuranPlayer.setVolume(volume);
 
         pocketQuranState = normalizePocketQuranState(
           {
@@ -4738,20 +4680,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const isActivelyPlaying =
-          state.isPlaying === true ||
-          (pocketQuranLocalAudio &&
-            pocketQuranLocalAudio.paused === false &&
-            pocketQuranLocalAudio.ended === false);
+          state.isPlaying === true || pocketQuranPlayer.isPlaying;
 
         if (isActivelyPlaying) {
-          if (pocketQuranLocalAudio) {
-            try {
-              pocketQuranLocalAudio.pause();
-              pocketQuranLocalAudio.currentTime = 0;
-            } catch (e) {
-              // no-op
-            }
-          }
+          pocketQuranPlayer.pause({ resetTime: true });
 
           await playPocketQuranAyahLocally(targetSurah, targetAyah, {
             forceRestart: true,
@@ -4759,14 +4691,7 @@ document.addEventListener("DOMContentLoaded", () => {
           break;
         }
 
-        if (pocketQuranLocalAudio) {
-          try {
-            pocketQuranLocalAudio.pause();
-            pocketQuranLocalAudio.currentTime = 0;
-          } catch (e) {
-            // no-op
-          }
-        }
+        pocketQuranPlayer.pause({ resetTime: true });
 
         pocketQuranState = normalizePocketQuranState(
           {
