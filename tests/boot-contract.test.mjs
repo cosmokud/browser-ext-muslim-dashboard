@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import { bootPage, stubElement } from "./harness.mjs";
+import { bootPage, loadSandbox, makePage, stubElement } from "./harness.mjs";
 
 const SETTINGS_DEPENDENCIES = [
   "storage",
@@ -172,4 +172,40 @@ test("init() resolves, once its data is in, with the surfaces the app uses", asy
   assert.equal(surfaces.themes.constructor.name, "ThemeManager");
   assert.equal(surfaces.settings.constructor.name, "SettingsManager");
   assert.equal(surfaces.gridLayout.constructor.name, "GridLayoutManager");
+});
+
+/** A step is runnable only when every step it names has already run. */
+function unmetNeeds(steps) {
+  const ran = new Set();
+  const unmet = [];
+
+  for (const step of steps) {
+    for (const need of step.needs) {
+      if (!ran.has(need)) unmet.push(`${step.name} needs ${need}`);
+    }
+    ran.add(step.name);
+  }
+
+  return unmet;
+}
+
+test("the declared boot order satisfies every declared need", () => {
+  const sandbox = loadSandbox(["js/app/index.js", "js/app/boot.js"], {
+    globals: { document: makePage().document },
+  });
+  const steps = vm.runInContext(
+    "BOOT_STEPS.map((step) => ({ name: step.name, needs: step.needs }))",
+    sandbox,
+  );
+
+  assert.deepEqual(
+    unmetNeeds(steps),
+    [],
+    "a step runs before something it declares it needs",
+  );
+  assert.equal(
+    new Set(steps.map((step) => step.name)).size,
+    steps.length,
+    "two steps share a name, so a need cannot name one of them",
+  );
 });
