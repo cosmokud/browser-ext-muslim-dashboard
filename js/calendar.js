@@ -3,10 +3,16 @@
  * Handles full interactive Hijri and Gregorian calendar display
  */
 
+// Dot classes the stylesheet colours, per kind of prohibited fast day.
+const PROHIBITED_FAST_DOTS = {
+  eidAlFitr: "eid-fitr",
+  eidAlAdha: "eid-adha",
+  tashreeq: "tashreeq",
+};
+
 class CalendarManager {
-  constructor(storage, hijriConverter) {
+  constructor(storage) {
     this.storage = storage;
-    this.hijriConverter = hijriConverter;
     this.calendarType = "hijri";
     this.currentDate = new Date();
     this.viewingDate = new Date();
@@ -33,7 +39,6 @@ class CalendarManager {
   init() {
     const settings = this.storage.getSettings();
     this.calendarType = settings.calendarType || "hijri";
-    this.hijriAdjustment = settings.hijriAdjustment || 0;
 
     this.bindEvents();
     this.render();
@@ -103,6 +108,9 @@ class CalendarManager {
    * Render calendar
    */
   render() {
+    // The day rule every cell reads, rebuilt from the settings the panels save.
+    this.islamicDay = new IslamicDay(this.storage.getSettings());
+
     if (this.calendarType === "hijri") {
       this.renderHijriCalendar();
     } else {
@@ -114,22 +122,19 @@ class CalendarManager {
    * Render Hijri calendar
    */
   renderHijriCalendar() {
-    const hijriDate = this.hijriConverter.toHijri(
-      this.viewingDate,
-      this.hijriAdjustment,
-    );
+    const hijriDate = this.islamicDay.dayFor(this.viewingDate);
     const { year, month } = hijriDate;
 
     // Update header
     if (this.monthEl) {
-      this.monthEl.textContent = this.hijriConverter.getHijriMonthName(month);
+      this.monthEl.textContent = this.islamicDay.monthName(month);
     }
     if (this.yearEl) {
       this.yearEl.textContent = year + " AH";
     }
 
     // Get days in month
-    const daysInMonth = this.hijriConverter.getHijriDaysInMonth(year, month);
+    const daysInMonth = this.islamicDay.daysInMonth(year, month);
 
     // Get first day of month, aligned with the configured Hijri adjustment.
     const firstDayOfWeek = this._gregorianForDisplayedHijri(
@@ -139,10 +144,7 @@ class CalendarManager {
     ).getDay();
 
     // Get today's Hijri date for highlighting
-    const todayHijri = this.hijriConverter.toHijri(
-      new Date(),
-      this.hijriAdjustment,
-    );
+    const todayHijri = this.islamicDay.dayFor(new Date());
 
     this.renderDays(
       daysInMonth,
@@ -269,19 +271,13 @@ class CalendarManager {
       ? context.month
       : this.viewingDate.getMonth();
     const gregorianDate = new Date(year, month, day);
-    const hijriDate = this.hijriConverter.toHijri(
-      gregorianDate,
-      this.hijriAdjustment,
-    );
+    const hijriDate = this.islamicDay.dayFor(gregorianDate);
 
     return { gregorianDate, hijriDate };
   }
 
   _gregorianForDisplayedHijri(hy, hm, hd) {
-    const g = this.hijriConverter.toGregorian(hy, hm, hd);
-    const shifted = new Date(g.getFullYear(), g.getMonth(), g.getDate());
-    shifted.setDate(shifted.getDate() - Number(this.hijriAdjustment || 0));
-    return shifted;
+    return this.islamicDay.dateFor({ year: hy, month: hm, day: hd });
   }
 
   _getFastingVisibilitySettings() {
@@ -293,33 +289,21 @@ class CalendarManager {
 
   _getFastingMarkersForDate(gregorianDate, hijriDate, visibility = {}) {
     const markers = [];
-    const forbidden = [];
 
     const hm = Number(hijriDate?.month || 0);
     const hd = Number(hijriDate?.day || 0);
     const dow = gregorianDate.getDay();
 
     // Forbidden days override all other fasting categories.
-    if (hm === 10 && hd === 1) {
-      forbidden.push({
-        key: "no-fast-eid-fitr",
-        label: "No fasting: Eid al-Fitr (1 Shawwal)",
-      });
+    const prohibited = this.islamicDay.prohibitedFastFor(hijriDate);
+    if (prohibited) {
+      return [
+        {
+          key: `no-fast-${PROHIBITED_FAST_DOTS[prohibited.type]}`,
+          label: `No fasting: ${prohibited.label}`,
+        },
+      ];
     }
-    if (hm === 12 && hd === 10) {
-      forbidden.push({
-        key: "no-fast-eid-adha",
-        label: "No fasting: Eid al-Adha (10 Dhu al-Hijjah)",
-      });
-    }
-    if (hm === 12 && hd >= 11 && hd <= 13) {
-      forbidden.push({
-        key: "no-fast-tashreeq",
-        label: "No fasting: Days of Tashreeq (11-13 Dhu al-Hijjah)",
-      });
-    }
-
-    if (forbidden.length) return forbidden;
 
     // During Ramadan, show Ramadan and special Ramadan markers.
     if (hm === 9) {
@@ -627,10 +611,11 @@ class CalendarManager {
   updateTodayDisplay() {
     const today = new Date();
     // The day rule the header, the card and the suhur alert read.
-    const hijri = new IslamicDay(this.storage.getSettings()).dayFor(today);
+    const islamicDay = new IslamicDay(this.storage.getSettings());
+    const hijri = islamicDay.dayFor(today);
 
     if (this.hijriDisplay) {
-      const hijriMonthName = this.hijriConverter.getHijriMonthName(hijri.month);
+      const hijriMonthName = islamicDay.monthName(hijri.month);
       this.hijriDisplay.textContent = `${hijri.day} ${hijriMonthName} ${hijri.year} AH`;
     }
 
@@ -646,15 +631,6 @@ class CalendarManager {
         options,
       );
     }
-  }
-
-  /**
-   * Set Hijri adjustment
-   */
-  setHijriAdjustment(days) {
-    this.hijriAdjustment = days;
-    this.render();
-    this.updateTodayDisplay();
   }
 
   /**

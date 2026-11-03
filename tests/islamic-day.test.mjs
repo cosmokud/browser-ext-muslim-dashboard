@@ -162,3 +162,33 @@ function toMinutes(time) {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 }
+
+test("maps an Islamic day back to the date that reads as it", () => {
+  const on = { year: 1447, month: 12, day: 10 };
+
+  for (const [adjustment, expected] of [
+    [0, localDay(2026, 5, 27)],
+    [1, localDay(2026, 5, 26)],
+    [-1, localDay(2026, 5, 28)],
+  ]) {
+    const { day } = withDay({ hijriAdjustment: adjustment });
+    const date = day.dateFor(on);
+
+    assert.equal(
+      date.toDateString(),
+      expected.toDateString(),
+      `adjustment ${adjustment} reads ${expected.toDateString()} as 10 Dhu al-Hijjah`,
+    );
+    assert.equal(date.getHours(), 0, "the date is the start of the local day");
+    assert.deepEqual(pick(day.dayFor(date)), on, "and dayFor() reads it back");
+  }
+});
+
+test("names the month and counts its days in the calendar the settings chose", () => {
+  const { day } = withDay();
+
+  assert.equal(day.monthName(9), "Ramadan");
+  assert.equal(day.monthName(12), "Dhu al-Hijjah");
+  assert.equal(day.monthName(1, "ar"), "محرم");
+  assert.equal(day.daysInMonth(1447, 9), 30, "Ramadan 1447 runs 18 Feb to 19 Mar 2026");
+});

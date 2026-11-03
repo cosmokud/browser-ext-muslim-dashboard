@@ -72,7 +72,7 @@
     }
 
     // Initialize calendar (synchronous - uses localStorage)
-    this.calendar = new CalendarManager(this.storage, this.hijri);
+    this.calendar = new CalendarManager(this.storage);
     this.calendar.init();
 
     // Initialize fasting countdowns (synchronous - no network)

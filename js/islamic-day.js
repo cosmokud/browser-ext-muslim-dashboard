@@ -26,8 +26,36 @@ class IslamicDay {
     return this.hijri.toHijri(date, this.adjustment);
   }
 
+  /**
+   * The local calendar date that reads as this Islamic day.
+   *
+   * The inverse of dayFor(): the day the adjustment moves is the same one it
+   * adds, so a caller that maps a Hijri day back to Gregorian never shifts.
+   */
+  dateFor(hijriDay) {
+    const { year, month, day } = hijriDay;
+    const gregorian = this.hijri.toGregorian(year, month, day);
+    const date = new Date(
+      gregorian.getFullYear(),
+      gregorian.getMonth(),
+      gregorian.getDate(),
+    );
+    date.setDate(date.getDate() - this.adjustment);
+    return date;
+  }
+
   formatDay(hijriDay, format = "full", lang = "en") {
     return this.hijri.format(hijriDay, format, lang);
+  }
+
+  /** The month's name, as the header and the card show it. */
+  monthName(month, lang = "en") {
+    return this.hijri.getHijriMonthName(month, lang);
+  }
+
+  /** How many days the month has in the calendar the user chose. */
+  daysInMonth(year, month) {
+    return this.hijri.getHijriDaysInMonth(year, month);
   }
 
   timesFor(date = new Date(), location = {}) {
