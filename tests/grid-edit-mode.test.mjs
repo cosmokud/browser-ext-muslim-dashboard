@@ -80,12 +80,24 @@ function makeGrid(settings) {
   };
 }
 
+test("the grid asks the mode module which layout it is in", () => {
+  const { grid, modes } = makeGrid({});
+
+  assert.equal(grid.isQuranFocusModeContextActive(), false, "main layout");
+  modes.enter("quranFocus");
+  assert.equal(grid.isQuranFocusModeContextActive(), true);
+  modes.exit("quranFocus");
+  assert.equal(grid.isQuranFocusModeContextActive(), false);
+});
+
 test("entering the focus layout resets that layout's edit mode", () => {
   const { grid, modes, storage, document } = makeGrid({
     gridEditModeEnabled: true,
   });
   assert.equal(modes.isActive("edit"), true, "the main layout starts editing");
 
+  // The app enters the mode, then tells the grid, as mode-setup does.
+  modes.enter("quranFocus");
   grid.setQuranFocusModeActive(true);
 
   assert.equal(
@@ -104,7 +116,9 @@ test("entering the focus layout resets that layout's edit mode", () => {
 test("leaving the focus layout restores the main layout's edit mode", () => {
   const { grid, modes, document } = makeGrid({ gridEditModeEnabled: true });
 
+  modes.enter("quranFocus");
   grid.setQuranFocusModeActive(true);
+  modes.exit("quranFocus");
   grid.setQuranFocusModeActive(false);
 
   assert.equal(modes.isActive("edit"), true);

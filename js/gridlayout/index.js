@@ -20,7 +20,6 @@ class GridLayoutManager {
     this.placeholder = null;
     this.isDragging = false;
     this.isEditModeLocked = false;
-    this.isQuranFocusModeContext = false;
 
     // Sidebar mode (3-column layout) drag-drop support
     this.isSidebarModeEnabled = false;

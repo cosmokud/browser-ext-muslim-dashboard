@@ -1,5 +1,5 @@
 /**
- * GridLayoutManager: edit mode keys and quran focus flag.
+ * GridLayoutManager: edit mode keys and quran focus context.
  * Part of the class declared in js/gridlayout/index.js; load this after it.
  */
 (function (prototype, members) {
@@ -22,12 +22,7 @@
   }
 
   isQuranFocusModeContextActive() {
-    // The app notifies this grid when it switches layouts; the module is the
-    // second opinion, so neither side alone has to be trusted.
-    return (
-      this.isQuranFocusModeContext ||
-      this.modes?.isActive?.("quranFocus") === true
-    );
+    return this.modes?.isActive?.("quranFocus") === true;
   }
 
   getEditModeStorageKey() {
@@ -37,15 +32,17 @@
   }
 
   setQuranFocusModeActive(active) {
-    this.isQuranFocusModeContext = active === true;
+    // The mode module already knows the entry order: the app enters its mode
+    // before telling the grid, so this reads back the caller's decision.
+    const focusContext = this.isQuranFocusModeContextActive();
 
     // In focus mode, keep main-container resize state off so only
     // Pocket Quran width handles remain interactive.
-    if (this.isQuranFocusModeContext) {
+    if (focusContext) {
       this.endMiddleLayoutResize();
     }
 
-    if (!this.isQuranFocusModeContext) {
+    if (!focusContext) {
       const pocketQuranCard = document.getElementById("pocketQuranCard");
       this.clearQuranFocusFloatingWidthStyles(pocketQuranCard);
     }
@@ -53,7 +50,7 @@
     // Focus mode and main layout keep separate edit-mode state.
     const settings = this.storage.getSettings();
     const editModeStorageKey = this.getEditModeStorageKey();
-    if (this.isQuranFocusModeContext) {
+    if (focusContext) {
       settings[editModeStorageKey] = false;
       this.storage.saveSettings(settings);
       this.modes.exit("edit");
