@@ -44,6 +44,11 @@ class IslamicDay {
     return date;
   }
 
+  /** The Islamic event the day falls on, or null. */
+  eventFor(hijriDay) {
+    return hijriDay ? this.hijri.getTodayEvent(hijriDay) : null;
+  }
+
   formatDay(hijriDay, format = "full", lang = "en") {
     return this.hijri.format(hijriDay, format, lang);
   }

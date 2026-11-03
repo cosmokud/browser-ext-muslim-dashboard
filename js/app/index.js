@@ -58,9 +58,6 @@ class MuslimDashboard {
     // Settings will be initialized after other managers
     this.settings = null;
 
-    // Hijri date converter
-    this.hijri = new HijriDate();
-
     // UI Elements
     this.greeting = document.getElementById("greeting");
     this.dateDisplay = document.getElementById("dateDisplay");

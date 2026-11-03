@@ -135,12 +135,13 @@
     let dateText = "";
 
     if (dateCalendar === "hijri" || dateCalendar === "both") {
-      const hijriDate = new IslamicDay(settings).dayFor(now);
-      dateText = this.hijri.format(hijriDate, dateFormat, "en");
+      const islamicDay = new IslamicDay(settings);
+      const hijriDate = islamicDay.dayFor(now);
+      dateText = islamicDay.formatDay(hijriDate, dateFormat, "en");
 
       // Check for Islamic events
       if (showIslamicEvents) {
-        const event = this.hijri.getTodayEvent(hijriDate);
+        const event = islamicDay.eventFor(hijriDate);
         if (event) {
           dateText += ` • ${event.name}`;
         }

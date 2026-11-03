@@ -205,3 +205,12 @@ test("tells whether a prohibited fast day falls inside the coming week", () => {
   assert.equal(within(2026, 5, 29, 6), true, "12 Dhu al-Hijjah is still Tashreeq");
   assert.equal(within(2026, 5, 31, 6), false, "14 Dhu al-Hijjah plus a week leaves Tashreeq behind");
 });
+
+test("names the event the day falls on, and nothing on a plain day", () => {
+  const { day } = withDay();
+
+  assert.equal(day.eventFor(day.dayFor(localDay(2026, 3, 20)))?.name, "Eid al-Fitr");
+  assert.equal(day.eventFor(day.dayFor(localDay(2026, 5, 26)))?.name, "Day of Arafah");
+  assert.ok(!day.eventFor(day.dayFor(localDay(2026, 3, 23))), "4 Shawwal has no event");
+  assert.ok(!day.eventFor(null), "no day, no event");
+});
