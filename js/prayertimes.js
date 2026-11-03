@@ -484,7 +484,7 @@ class PrayerTimesManager {
   }
 
   /**
-   * Highlight next prayer
+   * Highlight the current (in-progress) and next prayer
    */
   highlightPrayer(visibility) {
     const now = new Date();
@@ -517,8 +517,28 @@ class PrayerTimesManager {
 
     // Remove existing highlights
     document.querySelectorAll(".prayer-item").forEach((item) => {
-      item.classList.remove("active", "next");
+      item.classList.remove("active", "next", "current");
     });
+
+    // Find the current prayer: the latest one whose time has already passed.
+    // Before the first prayer of the day, that is yesterday's last prayer.
+    let currentPrayer = null;
+    for (const prayer of visiblePrayers) {
+      if (prayer.minutes > currentTime) continue;
+      if (!currentPrayer || prayer.minutes > currentPrayer.minutes) {
+        currentPrayer = prayer;
+      }
+    }
+    if (!currentPrayer && visiblePrayers.length > 0) {
+      currentPrayer = visiblePrayers[visiblePrayers.length - 1];
+    }
+
+    if (currentPrayer) {
+      const currentPrayerItem = document.querySelector(
+        `[data-prayer="${currentPrayer.key}"]`,
+      );
+      currentPrayerItem?.classList.add("current");
+    }
 
     // Find next prayer
     let nextPrayer = visiblePrayers.find((p) => p.minutes > currentTime);

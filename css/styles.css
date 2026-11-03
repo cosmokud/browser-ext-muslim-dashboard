@@ -4020,6 +4020,22 @@ textarea.notes-editor:focus {
   color: var(--on-primary-text);
 }
 
+/* Current (in-progress) prayer: subtle emphasis, not a full highlight */
+.prayer-item.current {
+  background: color-mix(
+    in srgb,
+    var(--theme-highlight-light-subtle-bg) 70%,
+    transparent
+  );
+  border-color: color-mix(in srgb, var(--theme-highlight-border) 40%, transparent);
+  box-shadow: inset 3px 0 0 0
+    color-mix(in srgb, var(--accent-gold) 70%, transparent);
+}
+
+.prayer-item.current .prayer-name {
+  font-weight: 600;
+}
+
 .prayer-name {
   font-weight: 500;
   font-size: 0.95rem;
