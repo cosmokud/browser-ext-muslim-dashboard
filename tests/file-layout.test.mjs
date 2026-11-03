@@ -1,17 +1,14 @@
 /**
  * File layout: no script grows past a readable size, and no script exists
- * without a page that loads it.
- *
- * A class split across files lives in `<name>/`: `index.js` declares it and one
- * file per feature adds its methods, all of them loaded in index.html order.
- * The size limit is what keeps a feature file honest; the wiring check is what
- * catches a file that is written but never loaded.
+ * without a page that loads it. The size limit is what keeps a feature file
+ * honest; the wiring check is what catches a file that is written but never
+ * loaded. The split convention itself is declared in tests/harness.mjs.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { repoRoot } from "./harness.mjs";
+import { jsFiles, repoRoot } from "./harness.mjs";
 
 const LIMIT = 2000;
 
@@ -25,23 +22,9 @@ const EXEMPT = {
 const pages = ["index.html", "popup.html", "offscreen.html"];
 const worker = "js/service-worker.js";
 
-function scripts(dir = "js") {
-  const out = [];
-  for (const name of readdirSync(path.join(repoRoot, dir))) {
-    const relPath = `${dir}/${name}`;
-    if (statSync(path.join(repoRoot, relPath)).isDirectory()) {
-      if (name === "vendor") continue;
-      out.push(...scripts(relPath));
-      continue;
-    }
-    if (name.endsWith(".js")) out.push(relPath);
-  }
-  return out;
-}
-
 test("no script grows past the limit", () => {
   const oversized = [];
-  for (const relPath of scripts()) {
+  for (const relPath of jsFiles()) {
     const lines = readFileSync(path.join(repoRoot, relPath), "utf8").split("\n").length;
     if (lines > LIMIT && !EXEMPT[relPath]) {
       oversized.push(`${relPath} (${lines} lines)`);
@@ -60,7 +43,7 @@ test("every script is loaded by a page or the worker", () => {
     .map((page) => readFileSync(path.join(repoRoot, page), "utf8"))
     .concat(readFileSync(path.join(repoRoot, worker), "utf8"));
 
-  const unloaded = scripts().filter(
+  const unloaded = jsFiles().filter(
     (relPath) => relPath !== worker && !sources.some((source) => source.includes(`"${relPath}"`)),
   );
 
@@ -79,4 +62,22 @@ test("the exempt file is still the file that needs the exemption", () => {
       `${relPath} is ${lines} lines now: drop it from EXEMPT`,
     );
   }
+});
+
+// Four copies of this pattern and this walk drifted apart once already; a
+// convention with two readers is two conventions. Import from tests/harness.mjs.
+test("only the harness reads the script-tag pattern", () => {
+  // Split so this file does not match its own rule.
+  const scriptTag = "<script" + ' src=';
+  const offenders = readdirSync(path.join(repoRoot, "tests"))
+    .filter((name) => name.endsWith(".mjs") && name !== "harness.mjs")
+    .filter((name) =>
+      readFileSync(path.join(repoRoot, "tests", name), "utf8").includes(scriptTag),
+    );
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `read scripts through tests/harness.mjs instead of scanning HTML:\n${offenders.join("\n")}`,
+  );
 });

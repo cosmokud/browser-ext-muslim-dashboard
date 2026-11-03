@@ -3,6 +3,13 @@
  * browser. `window` is the sandbox global, as it is in a page; pass
  * `{ window: false }` for a service-worker-shaped sandbox, where `window`
  * does not exist.
+ *
+ * A class split across files lives in js/<name>/: index.js declares the class
+ * and the other files add its methods, in the order index.html loads them.
+ * Tests assert against the concatenated source so a pattern can live in any
+ * file. This file is the only reader of that convention: scriptSrcs,
+ * withParts and jsFiles are how a test names scripts, so nothing else scans a
+ * page or walks js/.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -421,6 +428,23 @@ export function makePage() {
   };
 }
 
+const PAGES = ["index.html", "popup.html", "offscreen.html"];
+
+/** Every .js under js/, vendor bundles skipped: they are not our seam. */
+export function jsFiles(relDir = "js") {
+  const out = [];
+  for (const entry of fs.readdirSync(path.join(repoRoot, relDir), { withFileTypes: true })) {
+    const relPath = `${relDir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      if (entry.name !== "vendor") out.push(...jsFiles(relPath));
+      continue;
+    }
+    if (entry.name.endsWith(".js")) out.push(relPath);
+  }
+  return out;
+}
+
+/** Script tags of a page, in the order it loads them. */
 export function scriptSrcs(page) {
   const html = fs.readFileSync(path.join(repoRoot, page), "utf8");
   return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(
@@ -489,12 +513,11 @@ export function withParts(relPaths) {
 function folderParts(folder) {
   const onDisk = fs.readdirSync(path.join(repoRoot, folder)).filter((name) => name.endsWith(".js"));
   const ordered = [];
-  for (const page of ["index.html", "popup.html", "offscreen.html"]) {
-    const file = path.join(repoRoot, page);
-    if (!fs.existsSync(file)) continue;
-    for (const match of fs.readFileSync(file, "utf8").matchAll(/<script src="([^"]+)"><\/script>/g)) {
-      const dir = path.posix.dirname(match[1]);
-      const name = path.posix.basename(match[1]);
+  for (const page of PAGES) {
+    if (!fs.existsSync(path.join(repoRoot, page))) continue;
+    for (const src of scriptSrcs(page)) {
+      const dir = path.posix.dirname(src);
+      const name = path.posix.basename(src);
       if (dir === folder && onDisk.includes(name) && !ordered.includes(name)) ordered.push(name);
     }
   }

@@ -10,12 +10,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM, VirtualConsole } from "jsdom";
-import { makeChrome, repoRoot } from "./harness.mjs";
+import { makeChrome, repoRoot, scriptSrcs } from "./harness.mjs";
 import path from "node:path";
 
-const SCRIPTS = [...fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8").matchAll(
-  /<script src="([^"]+)"><\/script>/g,
-)].map((match) => match[1]);
+const SCRIPTS = scriptSrcs("popup.html");
 
 test("the popup page boots without throwing", () => {
   const dom = new JSDOM(fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8"), {
