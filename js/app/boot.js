@@ -76,7 +76,7 @@
     this.calendar.init();
 
     // Initialize fasting countdowns (synchronous - no network)
-    this.fasting = new FastingManager(this.storage, this.hijri);
+    this.fasting = new FastingManager(this.storage);
     this.fasting.init();
 
     // Initialize sticky notes (synchronous - uses localStorage)

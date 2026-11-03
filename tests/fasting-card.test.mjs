@@ -30,7 +30,7 @@ function makeCard(settings = {}, options = {}) {
   const HijriDate = vm.runInContext("HijriDate", sandbox);
 
   const hijri = new HijriDate();
-  const manager = new FastingManager({ getSettings: () => settings }, hijri);
+  const manager = new FastingManager({ getSettings: () => settings });
 
   return { calendars: sandbox.HijriCalendars, hijri, manager };
 }
@@ -100,7 +100,7 @@ function makeCalendar(settings = {}, options = {}) {
 
 /** The start of the Gregorian day that reads as this Hijri date. */
 function startForHijri(manager, month, day, year = 1446) {
-  return manager._startOfDay(manager._targetGregorianForHijri(year, month, day, 0));
+  return manager._islamicDay.dateFor({ year, month, day });
 }
 
 test("Ayyam al-Beed skips the forbidden day of Dhu al-Hijjah", () => {
@@ -135,12 +135,12 @@ test("forbidden fast days are forbidden, and the days around them are not", () =
   const { manager } = makeCard();
 
   assert.equal(
-    manager._fastingDateIsForbidden(startForHijri(manager, 12, 10), 0),
+    manager._fastingDateIsForbidden(startForHijri(manager, 12, 10)),
     true,
     "Eid al-Adha",
   );
   assert.equal(
-    manager._fastingDateIsForbidden(startForHijri(manager, 12, 14), 0),
+    manager._fastingDateIsForbidden(startForHijri(manager, 12, 14)),
     false,
     "14 Dhu al-Hijjah",
   );
@@ -180,11 +180,11 @@ test("a dated fast row shows its Hijri day and month", () => {
 
   // 2 Mar 2026 is 13 Ramadan 1447; 26 May 2026 is 9 Dhu al-Hijjah 1447.
   assert.equal(
-    manager._formatHijriDayMonth(manager._startOfDay(new Date(2026, 2, 2)), 0),
+    manager._formatHijriDayMonth(new Date(2026, 2, 2)),
     "13 Ramadan",
   );
   assert.equal(
-    manager._formatHijriDayMonth(manager._startOfDay(new Date(2026, 4, 26)), 0),
+    manager._formatHijriDayMonth(new Date(2026, 4, 26)),
     "9 Dhu al-Hijjah",
   );
 });
@@ -192,8 +192,9 @@ test("a dated fast row shows its Hijri day and month", () => {
 test("a week that holds no forbidden day answers without converting", () => {
   const { hijri, manager } = makeCard();
 
-  const original = hijri.toHijri.bind(hijri);
-  hijri.toHijri = () => {
+  const converter = manager._islamicDay.hijri;
+  const original = converter.toHijri.bind(converter);
+  converter.toHijri = () => {
     throw new Error("converted a target outside a forbidden week");
   };
   try {
@@ -204,7 +205,7 @@ test("a week that holds no forbidden day answers without converting", () => {
       0,
     );
   } finally {
-    hijri.toHijri = original;
+    converter.toHijri = original;
   }
 });
 
@@ -214,8 +215,8 @@ test("the Ramadan row counts the month the converter has, not a fixed 29", () =>
   const length = hijri.getHijriDaysInMonth(year, 9);
   assert.equal(length, 30, "Ramadan 1447 runs 18 Feb to 19 Mar 2026");
 
-  const now = manager._startOfDay(manager._targetGregorianForHijri(year, 9, 1, 0));
-  const item = manager._ramadanCountdown(now, { year, month: 9, day: 1 }, 0);
+  const now = manager._islamicDay.dateFor({ year, month: 9, day: 1 });
+  const item = manager._ramadanCountdown(now, { year, month: 9, day: 1 });
 
   assert.equal(item.badge, `${length} Ramadan`);
   assert.equal(item.subtitle, `1st-${length}th of Ramadan (month 9)`);
@@ -230,9 +231,9 @@ test("the row reads Last day on the month's real last day", () => {
 
   const row = (day) => {
     const now = manager._startOfDay(
-      manager._targetGregorianForHijri(year, 9, day, 0),
+      manager._islamicDay.dateFor({ year, month: 9, day }),
     );
-    return manager._ramadanCountdown(now, { year, month: 9, day }, 0);
+    return manager._ramadanCountdown(now, { year, month: 9, day });
   };
 
   assert.equal(row(length - 1).meta, "Tonight", "one day left reads as tonight");
@@ -272,7 +273,7 @@ test("a week of rows reads its dates from the day the settings give", () => {
 test("the forbidden check reads the day the Hijri adjustment gives", () => {
   const eid = new Date(2026, 4, 26);
 
-  assert.equal(makeCard().manager._fastingDateIsForbidden(eid, 0), false, "9 Dhu al-Hijjah");
+  assert.equal(makeCard().manager._fastingDateIsForbidden(eid), false, "9 Dhu al-Hijjah");
   assert.equal(
     makeCard({ hijriAdjustment: 1 }).manager._fastingDateIsForbidden(eid, 1),
     true,
@@ -388,7 +389,7 @@ test("the calendar chosen in settings moves the day the card counts to", () => {
   const iso = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const ramadanStart = () =>
-    iso(manager._targetGregorianForHijri(1447, 9, 1, 0));
+    iso(manager._islamicDay.dateFor({ year: 1447, month: 9, day: 1 }));
 
   calendars.setMode("tabular");
   assert.equal(ramadanStart(), "2026-02-18", "the arithmetic calendar");

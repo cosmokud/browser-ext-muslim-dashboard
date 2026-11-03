@@ -24,15 +24,13 @@ const FORBIDDEN_TOOLTIPS = {
 class FastingManager {
   /**
    * @param {StorageManager} storage
-   * @param {HijriDate} hijri
    */
-  constructor(storage, hijri) {
+  constructor(storage) {
     this.storage = storage;
-    this.hijri = hijri;
 
     // The day rule and its predicates. render() rebuilds this from the current
-    // settings; until then the predicates still answer for a passed-in day.
-    this._islamicDay = new IslamicDay({});
+    // settings; until then it still answers for a settings snapshot.
+    this._islamicDay = new IslamicDay(this.storage?.getSettings?.() || {});
 
     this.card = document.getElementById("fastingCard");
     this.subtitle = document.getElementById("fastingHijriNow");
@@ -42,7 +40,7 @@ class FastingManager {
   }
 
   init() {
-    if (!this.card || !this.barsEl || !this.hijri) return;
+    if (!this.card || !this.barsEl) return;
 
     this.render();
     this._scheduleMidnightRefresh();
@@ -92,7 +90,6 @@ class FastingManager {
     const settings = this.storage?.getSettings
       ? this.storage.getSettings()
       : {};
-    const adjustment = Number(settings.hijriAdjustment || 0);
 
     // Get fasting settings with defaults
     const fastingSettings = settings.fasting || {};
@@ -122,7 +119,11 @@ class FastingManager {
 
     if (this.subtitle) {
       // Use full month name (no abbreviation)
-      this.subtitle.textContent = this.hijri.format(hijriNow, "full", "en");
+      this.subtitle.textContent = this._islamicDay.formatDay(
+        hijriNow,
+        "full",
+        "en",
+      );
       this._applySubtitleState(hijriNow, showRecommendations);
     }
 
@@ -132,7 +133,7 @@ class FastingManager {
     // Compute Ramadan separately so we can always place it at the bottom.
     const ramadanItem =
       visibility.ramadan !== false
-        ? this._ramadanCountdown(nowStart, hijriNow, adjustment)
+        ? this._ramadanCountdown(nowStart, hijriNow)
         : null;
 
     // During Ramadan, only show the Ramadan row.
@@ -145,11 +146,8 @@ class FastingManager {
     // Monday/Thursday fasts (weekday-based)
     // Max days in-between is 6, so width uses total=6 (full scale)
     if (visibility.monday !== false) {
-      const monday = this._weekdayCountdown(nowStart, 1, hijriNow, adjustment);
-      const mondayHijriDate = this._formatHijriDayMonth(
-        monday.target,
-        adjustment,
-      );
+      const monday = this._weekdayCountdown(nowStart, 1, hijriNow);
+      const mondayHijriDate = this._formatHijriDayMonth(monday.target);
       items.push({
         key: "monday",
         title: "Monday Fast",
@@ -163,11 +161,8 @@ class FastingManager {
     }
 
     if (visibility.thursday !== false) {
-      const thursday = this._weekdayCountdown(nowStart, 4, hijriNow, adjustment);
-      const thursdayHijriDate = this._formatHijriDayMonth(
-        thursday.target,
-        adjustment,
-      );
+      const thursday = this._weekdayCountdown(nowStart, 4, hijriNow);
+      const thursdayHijriDate = this._formatHijriDayMonth(thursday.target);
       items.push({
         key: "thursday",
         title: "Thursday Fast",
@@ -182,7 +177,7 @@ class FastingManager {
 
     // 13th of Hijri months (Ayyam al-Beed) – exception: hide during Ramadan
     if (visibility.ayyamAlBeed !== false && hijriNow.month !== 9) {
-      const ayyam = this._thirteenthCountdown(nowStart, hijriNow, adjustment);
+      const ayyam = this._thirteenthCountdown(nowStart, hijriNow);
       // Must be the third item after Thursday
       if (ayyam) items.push(ayyam);
     }
@@ -191,7 +186,6 @@ class FastingManager {
       const ashuraDays = this._ashuraCountdown(
         nowStart,
         hijriNow,
-        adjustment,
         ashuraWithinDays,
       );
       if (ashuraDays) items.push(ashuraDays);
@@ -202,7 +196,6 @@ class FastingManager {
       const dhu1 = this._hijriCountdownWithin(
         nowStart,
         hijriNow,
-        adjustment,
         12,
         1,
         dhuAlHijjahWithinDays,
@@ -225,7 +218,6 @@ class FastingManager {
       const arafah = this._hijriCountdownWithin(
         nowStart,
         hijriNow,
-        adjustment,
         12,
         9,
         arafahWithinDays,
@@ -376,7 +368,7 @@ class FastingManager {
     this.subtitle.setAttribute("tabindex", "0");
   }
 
-  _ashuraCountdown(nowStart, hijriNow, adjustment, withinDays) {
+  _ashuraCountdown(nowStart, hijriNow, withinDays) {
     const hy = hijriNow.year;
     const hm = hijriNow.month;
     const hd = hijriNow.day;
@@ -401,18 +393,16 @@ class FastingManager {
       targetYear = hy + 1;
     }
 
-    const tasuaTarget = this._targetGregorianForHijri(
-      targetYear,
-      1,
-      9,
-      adjustment,
-    );
-    const ashuraTarget = this._targetGregorianForHijri(
-      targetYear,
-      1,
-      10,
-      adjustment,
-    );
+    const tasuaTarget = this._islamicDay.dateFor({
+      year: targetYear,
+      month: 1,
+      day: 9,
+    });
+    const ashuraTarget = this._islamicDay.dateFor({
+      year: targetYear,
+      month: 1,
+      day: 10,
+    });
 
     const daysToTasua = this._diffDays(nowStart, tasuaTarget);
     const daysToAshura = this._diffDays(nowStart, ashuraTarget);
@@ -440,13 +430,13 @@ class FastingManager {
     };
   }
 
-  _weekdayCountdown(nowStart, targetDow, hijriNow, adjustment) {
+  _weekdayCountdown(nowStart, targetDow, hijriNow) {
     const todayDow = nowStart.getDay(); // 0=Sun
     const delta = (targetDow - todayDow + 7) % 7;
     const target = this._addDays(nowStart, delta);
 
-    if (this._weeklyFastMayHitForbiddenDay(hijriNow, delta)) {
-      const hijriTarget = this.hijri.toHijri(target, adjustment);
+    if (this._islamicDay.hasProhibitedFastWithin(hijriNow, delta)) {
+      const hijriTarget = this._islamicDay.dayFor(target);
       if (this._islamicDay.prohibitedFastFor(hijriTarget)) {
         return {
           daysLeft: delta + 7,
@@ -459,19 +449,19 @@ class FastingManager {
     return { daysLeft: delta, target, totalDays: 6 };
   }
 
-  _formatHijriDayMonth(date, adjustment) {
-    const hijriDate = this.hijri.toHijri(date, adjustment);
-    const monthName = this.hijri.monthNames.en[hijriDate.month - 1];
-    return `${hijriDate.day} ${monthName}`;
+  _formatHijriDayMonth(date) {
+    const hijriDate = this._islamicDay.dayFor(date);
+    return `${hijriDate.day} ${this._islamicDay.monthName(hijriDate.month)}`;
   }
 
-  _ramadanCountdown(nowStart, hijriNow, adjustment) {
+  _ramadanCountdown(nowStart, hijriNow) {
     const month = hijriNow.month;
     const day = hijriNow.day;
 
     if (month === 9) {
-      // Ramadan is 29 or 30 days; ask the converter instead of assuming 29.
-      const monthLength = this.hijri.getHijriDaysInMonth(hijriNow.year, 9) || 29;
+      // Ramadan is 29 or 30 days; ask the module instead of assuming 29.
+      const monthLength =
+        this._islamicDay.daysInMonth(hijriNow.year, 9) || 29;
       const daysLeft = Math.max(0, monthLength - day);
       const isLastDay = day >= monthLength;
       const meta = isLastDay ? "Last day" : this._daysLeftText(daysLeft);
@@ -490,7 +480,11 @@ class FastingManager {
     // Countdown to 1 Ramadan
     const hy = hijriNow.year;
     const targetYear = month > 9 ? hy + 1 : hy;
-    const target = this._targetGregorianForHijri(targetYear, 9, 1, adjustment);
+    const target = this._islamicDay.dateFor({
+      year: targetYear,
+      month: 9,
+      day: 1,
+    });
     const daysLeft = this._diffDays(nowStart, target);
 
     // Width rule: treat as whole year scale
@@ -506,7 +500,7 @@ class FastingManager {
     };
   }
 
-  _thirteenthCountdown(nowStart, hijriNow, adjustment) {
+  _thirteenthCountdown(nowStart, hijriNow) {
     const hy = hijriNow.year;
     const hm = hijriNow.month;
     const hd = hijriNow.day;
@@ -529,23 +523,21 @@ class FastingManager {
       const firstVisibleDay = this._firstPermittedAyyamDay(
         targetYear,
         targetMonth,
-        adjustment,
       );
       const startDay = targetYear === hy && targetMonth === hm
         ? Math.max(13, hd)
         : 13;
 
       for (let day = startDay; day <= 15; day += 1) {
-        const candidate = this._targetGregorianForHijri(
-          targetYear,
-          targetMonth,
+        const candidate = this._islamicDay.dateFor({
+          year: targetYear,
+          month: targetMonth,
           day,
-          adjustment,
-        );
+        });
         if (
           day >= firstVisibleDay &&
           this._diffDays(nowStart, candidate) >= 0 &&
-          !this._fastingDateIsForbidden(candidate, adjustment)
+          !this._fastingDateIsForbidden(candidate)
         ) {
           target = candidate;
           targetDay = day;
@@ -564,11 +556,10 @@ class FastingManager {
 
     const daysLeft = this._diffDays(nowStart, target);
 
-    const monthName = this.hijri.monthNames.en[targetMonth - 1];
+    const monthName = this._islamicDay.monthName(targetMonth);
     const badgeStart = this._firstPermittedAyyamDay(
       targetYear,
       targetMonth,
-      adjustment,
     );
     const badge = `${badgeStart}-15 ${monthName}`;
     const meta = this._daysLeftText(daysLeft);
@@ -585,41 +576,29 @@ class FastingManager {
     };
   }
 
-  _firstPermittedAyyamDay(targetYear, targetMonth, adjustment) {
+  _firstPermittedAyyamDay(targetYear, targetMonth) {
     for (let day = 13; day <= 15; day += 1) {
-      const date = this._targetGregorianForHijri(
-        targetYear,
-        targetMonth,
+      const date = this._islamicDay.dateFor({
+        year: targetYear,
+        month: targetMonth,
         day,
-        adjustment,
-      );
-      if (!this._fastingDateIsForbidden(date, adjustment)) return day;
+      });
+      if (!this._fastingDateIsForbidden(date)) return day;
     }
 
     return 13;
   }
 
-  _fastingDateIsForbidden(date, adjustment) {
-    const hijriDate = this.hijri.toHijri(date, adjustment);
-    return this._islamicDay.prohibitedFastFor(hijriDate) !== null;
-  }
-
-  _weeklyFastMayHitForbiddenDay(hijriNow, daysAhead) {
-    if (!hijriNow || daysAhead < 0 || daysAhead > 6) return false;
-
-    const hm = Number(hijriNow.month || 0);
-    const hd = Number(hijriNow.day || 0);
-
-    if (hm === 10) return hd === 1;
-    if (hm === 12) return hd <= 13 && hd + daysAhead >= 10;
-
-    return false;
+  _fastingDateIsForbidden(date) {
+    return (
+      this._islamicDay.prohibitedFastFor(this._islamicDay.dayFor(date)) !==
+      null
+    );
   }
 
   _hijriCountdownWithin(
     nowStart,
     hijriNow,
-    adjustment,
     targetMonth,
     targetDay,
     withinDays,
@@ -635,30 +614,16 @@ class FastingManager {
       targetYear = hy + 1;
     }
 
-    const target = this._targetGregorianForHijri(
-      targetYear,
-      targetMonth,
-      targetDay,
-      adjustment,
-    );
+    const target = this._islamicDay.dateFor({
+      year: targetYear,
+      month: targetMonth,
+      day: targetDay,
+    });
 
     const daysLeft = this._diffDays(nowStart, target);
     if (daysLeft < 0 || daysLeft > withinDays) return null;
 
     return { daysLeft, target };
-  }
-
-  _targetGregorianForHijri(hy, hm, hd, adjustment) {
-    // Keep consistent with Hijri adjustment semantics:
-    // toHijri(date, adj) uses (date + adj) to compute Hijri.
-    // Therefore, the Gregorian day that *displays* as a given Hijri date
-    // under adjustment adj is (toGregorian(hijri) - adj).
-    const g = this.hijri.toGregorian(hy, hm, hd);
-    const shifted = this._addDays(
-      this._startOfDay(g),
-      -Number(adjustment || 0),
-    );
-    return shifted;
   }
 
   _daysLeftText(daysLeft) {

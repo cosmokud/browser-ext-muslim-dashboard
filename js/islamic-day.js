@@ -132,6 +132,34 @@ class IslamicDay {
     return null;
   }
 
+  /**
+   * Whether a prohibited fast day falls within daysAhead of this day.
+   *
+   * Lets a caller skip converting a week that cannot hold one. It walks the
+   * days through prohibitedFastFor(), so the windows live in one place.
+   */
+  hasProhibitedFastWithin(hijriDay, daysAhead) {
+    if (!hijriDay || !(daysAhead >= 0)) return false;
+
+    let { year, month, day } = hijriDay;
+
+    for (let ahead = 0; ahead <= daysAhead; ahead += 1) {
+      if (this.prohibitedFastFor({ year, month, day })) return true;
+
+      day += 1;
+      if (day > this.hijri.getHijriDaysInMonth(year, month)) {
+        day = 1;
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+      }
+    }
+
+    return false;
+  }
+
   /** The single copy of the calculator configuration. */
   configurePrayTimes() {
     const settings = this.settings;

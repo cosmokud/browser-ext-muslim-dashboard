@@ -192,3 +192,16 @@ test("names the month and counts its days in the calendar the settings chose", (
   assert.equal(day.monthName(1, "ar"), "محرم");
   assert.equal(day.daysInMonth(1447, 9), 30, "Ramadan 1447 runs 18 Feb to 19 Mar 2026");
 });
+
+test("tells whether a prohibited fast day falls inside the coming week", () => {
+  const { day } = withDay();
+  const within = (year, month, date, daysAhead) =>
+    day.hasProhibitedFastWithin(day.dayFor(localDay(year, month, date)), daysAhead);
+
+  assert.equal(within(2026, 5, 24, 6), true, "7 Dhu al-Hijjah reaches Eid al-Adha");
+  assert.equal(within(2026, 5, 20, 3), false, "3 Dhu al-Hijjah plus three days stops short");
+  assert.equal(within(2026, 3, 20, 6), true, "Eid al-Fitr is today");
+  assert.equal(within(2026, 3, 22, 6), false, "3 Shawwal plus a week holds nothing prohibited");
+  assert.equal(within(2026, 5, 29, 6), true, "12 Dhu al-Hijjah is still Tashreeq");
+  assert.equal(within(2026, 5, 31, 6), false, "14 Dhu al-Hijjah plus a week leaves Tashreeq behind");
+});
