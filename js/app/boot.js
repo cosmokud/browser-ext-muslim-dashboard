@@ -2,6 +2,37 @@
  * MuslimDashboard: dashboard boot.
  * Part of the class declared in js/app/index.js; load this after it.
  */
+// What init() hands back, by the names the app uses for them. A caller can
+// await boot completion without reaching into window.dashboard.
+const BOOT_SURFACES = [
+  "storage",
+  "modes",
+  "themes",
+  "iconThemes",
+  "backgrounds",
+  "prayerTimes",
+  "qibla",
+  "quotes",
+  "todos",
+  "floating",
+  "pinnedApps",
+  "searchBar",
+  "calendar",
+  "fasting",
+  "stickyNotes",
+  "lunarPhase",
+  "notes",
+  "pocketQuran",
+  "weather",
+  "flashcards",
+  "hadith",
+  "adhkar",
+  "contentSearch",
+  "settings",
+  "gridLayout",
+  "momentMode",
+];
+
 (function (prototype, members) {
   for (const name of Object.getOwnPropertyNames(members.prototype)) {
     if (name === "constructor") continue;
@@ -269,9 +300,12 @@
       }),
     );
 
-    // Wait for all background tasks to complete (non-blocking for UI)
-    Promise.allSettled(backgroundTasks).then(() => {
-      console.log("✅ Muslim Dashboard fully loaded (all data fetched)!");
-    });
+    // Boot is done when every background task has settled: awaiting here is
+    // what makes init()'s promise mean "the dashboard is up", not just "the
+    // synchronous part ran".
+    await Promise.allSettled(backgroundTasks);
+    console.log("✅ Muslim Dashboard fully loaded (all data fetched)!");
+
+    return Object.fromEntries(BOOT_SURFACES.map((name) => [name, this[name]]));
   }
 });
