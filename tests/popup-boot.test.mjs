@@ -70,3 +70,116 @@ test("the popup reads and writes the reader's Quran cache", () => {
     "no packaged or API request bypasses the cache",
   );
 });
+
+/**
+ * The prayer method panel, opened the way a reader opens it, shown the values
+ * it would save back. The panel's markup is the dashboard's own.
+ */
+async function openPrayerMethodPanel(settings = {}) {
+  const dom = new JSDOM(fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8"), {
+    url: "https://localhost/popup.html",
+    runScripts: "outside-only",
+    pretendToBeVisual: true,
+    virtualConsole: new VirtualConsole(),
+  });
+  const context = dom.getInternalVMContext();
+  dom.window.chrome = makeChrome().chrome;
+  dom.window.localStorage.setItem(
+    "muslimDashboard_settings",
+    JSON.stringify(settings),
+  );
+  const dashboard = fs.readFileSync(path.join(repoRoot, "index.html"), "utf8");
+  dom.window.fetch = async () => ({
+    ok: true,
+    json: async () => [],
+    text: async () => dashboard,
+  });
+
+  for (const src of SCRIPTS) {
+    if (src.includes("/vendor/")) continue;
+    context.eval(fs.readFileSync(path.join(repoRoot, src), "utf8"));
+  }
+  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+  dom.window.document.getElementById("popupOpenPrayerSettingsBtn").click();
+
+  const panel = await waitFor(() => {
+    const host = dom.window.document.getElementById("popupPrayerMethodPanelHost");
+    return host?.querySelector("#calculationMethod") ? host : null;
+  });
+
+  const value = (selector) => {
+    const element = panel.querySelector(selector);
+    if (!element) return undefined;
+    return element.type === "checkbox" ? element.checked : element.value;
+  };
+
+  const values = {
+    calculationMethod: value("#calculationMethod"),
+    asrMethod: value("#asrMethod"),
+    highLatMethod: value("#highLatMethod"),
+    midnightMethod: value("#midnightMethod"),
+    duhaOffset: value("#duhaOffset"),
+    customFajrAngle: value("#customFajrAngle"),
+    customIshaAngle: value("#customIshaAngle"),
+    customIshaMinutes: value("#customIshaMinutes"),
+    adjustFajr: value("#adjustFajr"),
+    showFajr: value("#showFajr"),
+  };
+
+  dom.window.close();
+  return values;
+}
+
+async function waitFor(read, attempts = 200) {
+  for (let i = 0; i < attempts; i += 1) {
+    const found = read();
+    if (found) return found;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("the prayer method panel never filled");
+}
+
+test("the prayer panel shows the calculator configuration, not a second copy", async () => {
+  const values = await openPrayerMethodPanel({
+    calculationMethod: "Custom",
+    customFajrAngle: 20,
+    customIshaAngle: 15,
+    customIshaMinutes: true,
+    asrMethod: "Hanafi",
+    highLatMethod: "AngleBased",
+    midnightMethod: "Jafari",
+    duhaOffset: 25,
+    adjustments: { fajr: 3 },
+    prayerVisibility: { fajr: false },
+  });
+
+  assert.deepEqual(values, {
+    calculationMethod: "Custom",
+    asrMethod: "Hanafi",
+    highLatMethod: "AngleBased",
+    midnightMethod: "Jafari",
+    duhaOffset: "25",
+    customFajrAngle: "20",
+    customIshaAngle: "15",
+    customIshaMinutes: true,
+    adjustFajr: "3",
+    showFajr: false,
+  });
+});
+
+test("an unset prayer panel shows the calculator's defaults", async () => {
+  const values = await openPrayerMethodPanel({});
+
+  assert.deepEqual(values, {
+    calculationMethod: "MWL",
+    asrMethod: "Standard",
+    highLatMethod: "None",
+    midnightMethod: "Standard",
+    duhaOffset: "20",
+    customFajrAngle: "18",
+    customIshaAngle: "17",
+    customIshaMinutes: false,
+    adjustFajr: "0",
+    showFajr: true,
+  });
+});
