@@ -14,6 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import { JSDOM, VirtualConsole } from "jsdom";
 import { fileURLToPath } from "node:url";
 
 export const repoRoot = path.resolve(
@@ -450,6 +451,23 @@ export function scriptSrcs(page) {
   return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(
     (match) => match[1],
   );
+}
+
+/**
+ * A page's real markup as a DOM. The stub DOM that bootPage builds answers
+ * getElementById for any id, so only parsing the file proves an element is
+ * there and where the page put it. window.eval runs one script against that
+ * markup when a test needs the page's own code to act on it.
+ */
+export function loadPageDom(page) {
+  const dom = new JSDOM(fs.readFileSync(path.join(repoRoot, page), "utf8"), {
+    url: `https://localhost/${page}`,
+    runScripts: "outside-only",
+    pretendToBeVisual: true,
+    // Pages log what they tolerate at boot; no test reads the console.
+    virtualConsole: new VirtualConsole(),
+  });
+  return dom.window.document;
 }
 
 /**
