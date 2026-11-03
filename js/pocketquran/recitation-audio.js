@@ -42,15 +42,24 @@
     this._preloadedAudios = new Map();
     this._prefetchAheadCount = 3;
 
+    // While a continuation (autoplay / loop) is swapping the audio source or
+    // element, the old audio fires a "pause" event. Hold the playing UI so the
+    // play/pause button keeps showing the pause (playing) icon instead of
+    // flickering pause -> play -> pause between ayahs.
+    this._recitationTransitionHold = false;
+    this._recitationTransitionHoldTimer = null;
+
     // Store handlers so we can re-attach if we swap audio elements.
     this._onAudioEnded = () => this.handleAudioEnded();
     this._onAudioError = (e) => {
       console.error("PocketQuran: Audio error", e);
+      this.endRecitationTransitionHold();
       this._isPlaying = false;
       this.clearActiveRecitationWordHighlight();
       this.updatePlaybackUI();
     };
     this._onAudioPlaying = (event) => {
+      this.endRecitationTransitionHold();
       this.enforceSingleRecitationAudioOwner();
       this._isPlaying = true;
       this.syncActiveRecitationWord();
@@ -58,6 +67,12 @@
     };
     this._onAudioPause = (event) => {
       const sourceAudio = event?.currentTarget || event?.target || null;
+
+      if (this._recitationTransitionHold) {
+        // Continuation in flight: ignore the pause caused by the source swap.
+        return;
+      }
+
       this.clearRecitationAudioOwnerIfCurrent(
         sourceAudio || this._audioElement,
       );
@@ -80,6 +95,26 @@
     // Create reciter modal
     this.createReciterModal();
     this.publishPopupSyncState();
+  }
+
+  beginRecitationTransitionHold() {
+    if (this._recitationTransitionHoldTimer) {
+      clearTimeout(this._recitationTransitionHoldTimer);
+    }
+
+    this._recitationTransitionHold = true;
+    this._recitationTransitionHoldTimer = setTimeout(() => {
+      this._recitationTransitionHoldTimer = null;
+      this._recitationTransitionHold = false;
+    }, 3000);
+  }
+
+  endRecitationTransitionHold() {
+    if (this._recitationTransitionHoldTimer) {
+      clearTimeout(this._recitationTransitionHoldTimer);
+      this._recitationTransitionHoldTimer = null;
+    }
+    this._recitationTransitionHold = false;
   }
 
   attachAudioListeners(audio) {

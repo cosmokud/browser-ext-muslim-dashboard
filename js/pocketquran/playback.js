@@ -39,6 +39,12 @@
     }
 
     try {
+      // Swapping the source/element pauses the current audio; hold the playing
+      // UI so the play/pause button does not flicker mid-sequence.
+      if (this._isPlaying === true) {
+        this.beginRecitationTransitionHold();
+      }
+
       // If we already preloaded this ayah, swap to that audio element.
       const preloaded = this._preloadedAudios?.get(cacheKey);
       if (preloaded) {
@@ -100,6 +106,7 @@
       }
     } catch (e) {
       console.error("PocketQuran: Failed to play ayah", e);
+      this.endRecitationTransitionHold();
       this._isPlaying = false;
       this.updatePlaybackUI();
     }
@@ -115,6 +122,7 @@
       this._playingAyah?.surah === surah &&
       this._playingAyah?.ayah === ayah
     ) {
+      this.endRecitationTransitionHold();
       this._audioElement.pause();
     } else {
       this.enableAutoplayOnFirstPlayIfNeeded();
@@ -146,6 +154,7 @@
     this.markPocketQuranControlInteraction();
     this.stopOffscreenPlaybackBestEffort();
 
+    this.endRecitationTransitionHold();
     this._audioElement.pause();
     this._audioElement.currentTime = 0;
     this.clearRecitationAudioOwnerIfCurrent(this._audioElement);
@@ -169,6 +178,7 @@
   finishPlaybackAtSurahEnd() {
     if (!this._audioElement) return;
 
+    this.endRecitationTransitionHold();
     this._audioElement.pause();
     this._audioElement.currentTime = 0;
     this.clearRecitationAudioOwnerIfCurrent(this._audioElement);

@@ -215,6 +215,16 @@
   tryPlayAyahImmediateFromCache(surah, ayah) {
     if (!this._audioElement) return false;
 
+    const isContinuation =
+      this._isPlaying === true &&
+      (this._playingAyah?.surah !== surah || this._playingAyah?.ayah !== ayah);
+
+    if (isContinuation) {
+      // Chained playback swaps the source, which fires a pause event; hold the
+      // playing UI so the play/pause button stays on the pause icon.
+      this.beginRecitationTransitionHold();
+    }
+
     const cacheKey = this.buildRecitationCacheKey(surah, ayah);
 
     // Prefer a preloaded audio element for the fastest possible start.
