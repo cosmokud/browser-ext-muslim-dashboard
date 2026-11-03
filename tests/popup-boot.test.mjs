@@ -46,29 +46,124 @@ test("the popup page boots without throwing", () => {
   dom.window.close();
 });
 
-test("the popup reads and writes the reader's Quran cache", () => {
-  const source = fs.readFileSync(path.join(repoRoot, "js/popup.js"), "utf8");
+/**
+ * Just enough IndexedDB for the popup's cache: stores created on upgrade, one
+ * request per call, and every open recorded so the schema is observable.
+ */
+function makeIndexedDb() {
+  const stores = new Map();
+  const opens = [];
 
-  assert.match(
-    source,
-    /indexedDB\.open\("MuslimDashboardPocketQuranCache"\)/,
-    "the popup opens the schema the reader owns, without a version",
-  );
-  assert.match(
-    source,
-    /store\.put\(\{\s*key: String\(key\),\s*size: Number\(record\.size\) \|\| 0,/,
-    "a popup play touches the LRU index the reader evicts from",
-  );
-  assert.match(
-    source,
-    /key: cacheKey,\s*reciterId,\s*surah,\s*ayah,\s*audioUrl,/,
-    "the popup stores ayah audio under the reader's key",
-  );
-  assert.doesNotMatch(
-    source,
-    /cache: "no-store"/,
-    "no packaged or API request bypasses the cache",
-  );
+  const request = (result) => {
+    const req = { result };
+    setTimeout(() => req.onsuccess?.(), 0);
+    return req;
+  };
+
+  const store = (name) => {
+    if (!stores.has(name)) stores.set(name, new Map());
+    const records = stores.get(name);
+    return {
+      get: (key) => request(records.get(key)),
+      put: (record) => {
+        records.set(record.key, record);
+        return request(record.key);
+      },
+      getAll: () => request([...records.values()]),
+      createIndex() {},
+    };
+  };
+
+  const db = {
+    objectStoreNames: { contains: (name) => stores.has(name) },
+    createObjectStore: (name) => {
+      stores.set(name, new Map());
+      return store(name);
+    },
+    transaction: () => {
+      const tx = { objectStore: (name) => store(name) };
+      setTimeout(() => tx.oncomplete?.(), 10);
+      return tx;
+    },
+  };
+
+  return {
+    stores,
+    opens,
+    open: (name, version) => {
+      opens.push([name, version]);
+      const req = { result: db };
+      setTimeout(() => {
+        req.onupgradeneeded?.({ target: { result: db } });
+        req.onsuccess?.();
+      }, 0);
+      return req;
+    },
+  };
+}
+
+test("the popup reads and writes the reader's Quran cache", async () => {
+  const indexedDb = makeIndexedDb();
+  const dom = new JSDOM(fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8"), {
+    url: "https://localhost/popup.html",
+    runScripts: "outside-only",
+    pretendToBeVisual: true,
+    virtualConsole: new VirtualConsole(),
+  });
+  const context = dom.getInternalVMContext();
+  dom.window.chrome = makeChrome().chrome;
+  dom.window.indexedDB = indexedDb;
+  dom.window.fetch = async () => ({ ok: true, json: async () => [] });
+
+  try {
+    for (const src of SCRIPTS) {
+      if (src.includes("/vendor/")) continue;
+      context.eval(fs.readFileSync(path.join(repoRoot, src), "utf8"));
+    }
+    dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // jsdom fires its own DOMContentLoaded as well, so the schema is asserted
+    // once rather than the number of boots.
+    assert.deepEqual(
+      [...new Set(indexedDb.opens.map(([name, version]) => `${name}@${version}`))],
+      ["MuslimDashboardPocketQuranCache@2"],
+      "booting the popup opens the reader's database, at the reader's version",
+    );
+    assert.deepEqual(
+      [...indexedDb.stores.keys()].sort(),
+      ["audio", "audioIndex", "json"],
+      "the reader's three stores, none added by the popup",
+    );
+
+    // The class the popup booted, over the database it opened: one record shape.
+    const cache = context.eval("new PocketQuranCacheManager()");
+    const url = "https://api.quran.com/api/v4/chapters";
+    await cache.setJson(url, "payload", "chapters");
+    assert.equal(await cache.getJson(url), "payload");
+
+    // An ayah played in the popup lands under the reader's key, in both stores.
+    await cache.setAudio({ key: "7:2:255", size: 3, blob: { size: 3 } });
+    assert.ok(indexedDb.stores.get("audio").has("7:2:255"));
+    assert.ok(
+      indexedDb.stores.get("audioIndex").has("7:2:255"),
+      "the LRU entry the reader evicts by",
+    );
+
+    const source = fs.readFileSync(path.join(repoRoot, "js/popup.js"), "utf8");
+    assert.doesNotMatch(
+      source,
+      /indexedDB\.open|createObjectStore/,
+      "the popup declares no cache schema of its own",
+    );
+    assert.doesNotMatch(
+      source,
+      /cache: "no-store"/,
+      "no packaged or API request bypasses the cache",
+    );
+  } finally {
+    dom.window.close();
+  }
 });
 
 /**

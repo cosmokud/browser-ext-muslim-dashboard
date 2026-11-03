@@ -907,3 +907,5 @@ class PocketQuranManager extends BaseManager {
     });
   }
 }
+
+window.PocketQuranCacheManager = PocketQuranCacheManager;

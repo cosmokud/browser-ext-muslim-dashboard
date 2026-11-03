@@ -417,94 +417,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const pocketQuranVersesCache = new Map();
   const pocketQuranTajweedVersesCache = new Map();
 
-  // Same IndexedDB schema as the reader (js/pocketquran/index.js owns it):
-  // MuslimDashboardPocketQuranCache, `json` keyed by the full request URL and
-  // `audio` keyed `${reciterId}:${surah}:${ayah}`. Opened without a version, so
-  // a first-ever open cannot claim a version before the reader creates it; any
-  // failure here just means the network path, as before.
-  const popupQuranCache = (() => {
-    let dbPromise = null;
-
-    const openDb = () => {
-      if (!dbPromise) {
-        dbPromise = new Promise((resolve) => {
-          try {
-            const request = indexedDB.open("MuslimDashboardPocketQuranCache");
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
-          } catch (e) {
-            resolve(null);
-          }
-        });
-      }
-      return dbPromise;
-    };
-
-    const ask = async (storeName, mode, run) => {
-      const db = await openDb();
-      if (!db) return null;
-      return new Promise((resolve) => {
-        try {
-          const req = run(db.transaction(storeName, mode).objectStore(storeName));
-          req.onsuccess = () => resolve(req.result ?? null);
-          req.onerror = () => resolve(null);
-        } catch (e) {
-          resolve(null);
-        }
-      });
-    };
-
-    return {
-      async getJson(url) {
-        const record = await ask("json", "readonly", (store) =>
-          store.get(String(url)),
-        );
-        return record?.data ?? null;
-      },
-      setJson(url, data, type = "json") {
-        return ask("json", "readwrite", (store) =>
-          store.put({
-            key: String(url),
-            url: String(url),
-            type,
-            data,
-            timestamp: Date.now(),
-          }),
-        );
-      },
-      async getAudio(key) {
-        const record = await ask("audio", "readonly", (store) =>
-          store.get(String(key)),
-        );
-        if (record) {
-          // The reader's LRU index: a popup play counts as an access.
-          void ask("audioIndex", "readwrite", (store) =>
-            store.put({
-              key: String(key),
-              size: Number(record.size) || 0,
-              lastAccessed: Date.now(),
-            }),
-          );
-        }
-        return record;
-      },
-      setAudio(record) {
-        const key = String(record?.key || "");
-        return ask("audio", "readwrite", (store) =>
-          store.put({ ...record, key, timestamp: Date.now() }),
-        ).then((stored) => {
-          void ask("audioIndex", "readwrite", (index) =>
-            index.put({
-              key,
-              size: Number(record?.size) || 0,
-              lastAccessed: Date.now(),
-            }),
-          );
-          return stored;
-        });
-      },
-    };
-  })();
+  // The reader owns this schema (js/pocketquran/index.js): one database name,
+  // one key shape, one LRU index. Going through that class is what stops the
+  // popup's copy from drifting away from the reader's.
+  const popupQuranCache = new PocketQuranCacheManager();
+  // A failed open must not surface as an unhandled rejection; every call on a
+  // cache that never opened already answers null or false.
+  void popupQuranCache.dbReady.catch(() => {});
   let pocketQuranSnippetRequestId = 0;
   let pocketQuranSnippetRenderedKey = "";
   let pocketQuranSnippetInFlightKey = "";
