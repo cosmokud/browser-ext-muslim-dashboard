@@ -242,6 +242,7 @@
     }
 
     // Normal end
+    this.endRecitationTransitionHold();
     this._isPlaying = false;
     this._playingAyah = null;
 

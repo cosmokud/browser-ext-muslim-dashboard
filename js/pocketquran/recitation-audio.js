@@ -50,7 +50,18 @@
     this._recitationTransitionHoldTimer = null;
 
     // Store handlers so we can re-attach if we swap audio elements.
-    this._onAudioEnded = () => this.handleAudioEnded();
+    this._onAudioEnded = () => {
+      // The browser may fire a "pause" event as playback reaches the end; hold
+      // the playing UI right away so the pause icon does not blink when a
+      // continuation (autoplay / loop) is expected.
+      if (
+        this._isPlaying === true &&
+        (this._isLooping === true || this._isAutoplay === true)
+      ) {
+        this.beginRecitationTransitionHold();
+      }
+      this.handleAudioEnded();
+    };
     this._onAudioError = (e) => {
       console.error("PocketQuran: Audio error", e);
       this.endRecitationTransitionHold();
@@ -70,6 +81,17 @@
 
       if (this._recitationTransitionHold) {
         // Continuation in flight: ignore the pause caused by the source swap.
+        return;
+      }
+
+      const pausedElement = sourceAudio || this._audioElement;
+      if (
+        pausedElement?.ended === true &&
+        this._isPlaying === true &&
+        (this._isLooping === true || this._isAutoplay === true)
+      ) {
+        // Pause emitted at the natural end of an ayah that is about to be
+        // followed by the next one: keep the playing UI.
         return;
       }
 
