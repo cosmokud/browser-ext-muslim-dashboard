@@ -1371,19 +1371,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    setInputValue(
-      "calculationMethod",
-      settings.calculationMethod || "MWL",
-      "MWL",
-    );
-    setInputValue("asrMethod", settings.asrMethod || "Standard", "Standard");
-    setInputValue("highLatMethod", settings.highLatMethod || "None", "None");
-    setInputValue(
-      "midnightMethod",
-      settings.midnightMethod || "Standard",
-      "Standard",
-    );
-    setInputValue("duhaOffset", settings.duhaOffset || 20, 20);
+    // The configuration the dashboard calculates with, so the panel shows what
+    // the calculator has instead of a second copy of the defaults.
+    const calculator = new IslamicDay(settings).calculator();
+
+    setInputValue("calculationMethod", calculator.calcMethod, "MWL");
+    setInputValue("asrMethod", calculator.setting.asr, "Standard");
+    setInputValue("highLatMethod", calculator.setting.highLats, "None");
+    setInputValue("midnightMethod", calculator.setting.midnight, "Standard");
+    setInputValue("duhaOffset", calculator.duhaOffset, 20);
+    // The calculator carries the chosen method's angles unless the Custom
+    // method is set, and the panel saves these fields back on any method.
     setInputValue("customFajrAngle", settings.customFajrAngle || 18, 18);
     setInputValue("customIshaAngle", settings.customIshaAngle || 17, 17);
 
