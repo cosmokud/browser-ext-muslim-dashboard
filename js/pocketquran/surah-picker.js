@@ -79,34 +79,7 @@
 
   async loadChaptersAndRenderSurahPicker() {
     try {
-      const cached = this.storage.get("pocketQuran_chapters_cache", null);
-      const cachedAt = this.storage.get("pocketQuran_chapters_cache_at", 0);
-      const freshEnough =
-        Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
-
-      if (cached && Array.isArray(cached) && freshEnough) {
-        this._chapters = cached;
-        this.renderSurahList();
-        this.updateSurahInputValue({ force: true });
-        this.publishPopupSyncState();
-        return;
-      }
-
-      const url = `${PocketQuranManager.API_BASE}/chapters?language=en`;
-      const data = await this.fetchJson(url, { timeoutMs: 15000 });
-      const chapters = Array.isArray(data?.chapters) ? data.chapters : [];
-
-      this._chapters = chapters
-        .map((c) => ({
-          id: c.id,
-          name_simple: c.name_simple,
-          name_arabic: c.name_arabic,
-          verses_count: c.verses_count,
-        }))
-        .filter((c) => Number.isFinite(c.id));
-
-      this.storage.set("pocketQuran_chapters_cache", this._chapters);
-      this.storage.set("pocketQuran_chapters_cache_at", Date.now());
+      this._chapters = await new PocketQuranCatalog(this.storage).chapters();
 
       this.renderSurahList();
       this.updateSurahInputValue({ force: true });

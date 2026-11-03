@@ -15,32 +15,7 @@
 
   async loadReciters() {
     try {
-      const cached = this.storage.get("pocketQuran_reciters_cache", null);
-      const cachedAt = this.storage.get("pocketQuran_reciters_cache_at", 0);
-      const freshEnough =
-        Date.now() - (cachedAt || 0) < 1000 * 60 * 60 * 24 * 7;
-
-      if (cached && Array.isArray(cached) && freshEnough) {
-        this._reciters = cached;
-        return;
-      }
-
-      const url = `${PocketQuranManager.API_BASE}/resources/recitations`;
-      const data = await this.fetchJson(url, { timeoutMs: 15000 });
-      const recitations = Array.isArray(data?.recitations)
-        ? data.recitations
-        : [];
-
-      this._reciters = recitations
-        .map((r) => ({
-          id: r.id,
-          name: r.reciter_name || r.translated_name?.name || `Reciter ${r.id}`,
-          style: r.style || null,
-        }))
-        .filter((r) => Number.isFinite(r.id));
-
-      this.storage.set("pocketQuran_reciters_cache", this._reciters);
-      this.storage.set("pocketQuran_reciters_cache_at", Date.now());
+      this._reciters = await new PocketQuranCatalog(this.storage).reciters();
     } catch (e) {
       console.error("PocketQuran: failed to load reciters", e);
       // Provide a fallback list of common reciters
