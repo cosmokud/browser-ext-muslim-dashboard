@@ -2,7 +2,7 @@
 
 ## Overview
 
-Muslim Dashboard is a Manifest V3 new-tab extension. The new-tab surface (index.html) loads the UI shell and bootstraps the app runtime in js/app.js, which orchestrates feature managers, layout modes, and settings state.
+Muslim Dashboard is a Manifest V3 new-tab extension. The new-tab surface (index.html) loads the UI shell and bootstraps the app runtime in js/app.js, which orchestrates feature managers, layout modes, and settings state. Boot itself lives in js/app/boot.js and is data, not code position: an ordered step list where each step names the steps it needs, and `init()` resolves with the surfaces it built, so a caller can await readiness instead of reaching into `window.dashboard`.
 
 ## Runtime surfaces
 
@@ -15,7 +15,7 @@ Muslim Dashboard is a Manifest V3 new-tab extension. The new-tab surface (index.
 
 The main app initializes and coordinates the following major modules:
 
-- Storage and settings: StorageManager provides persisted settings and data.
+- Storage and settings: StorageManager provides persisted settings and data, and owns the key space under its prefix: `keys()` is what `clear()` and export walk, so a feature cannot keep a key the module cannot see.
 - Layout: GridLayoutManager, sidebar mode, floating mode, and layout edit mode.
 - Visual systems: ThemeManager, IconThemeManager, and BackgroundManager. Theme and dynamic icon refreshes are batched per animation frame to avoid redundant style and DOM work during rapid updates, while theme settings split main-grid and modal opacity controls and header surfaces can be applied per item or across whole components. Button styling across FAB menus, recitation controls, and card actions has been refactored to use `color-mix()` theme variables, replacing hardcoded gradients and shadows for consistent dynamic theming. Note background gradients include `--accent-bg` for broader accent participation.
 - Feature managers: PrayerTimes, Qibla, Calendar, Fasting, Weather, LunarPhase, Quotes, Adhkar, Hadith, Flashcards, Notes, Todo, Pinned Apps, Search Bar, and Pocket Quran (recitation, bookmarks, translation search, and caching).
@@ -38,4 +38,4 @@ Recitation play/pause controls use `aria-pressed` and CSS `active` class to comm
 
 ## Data and assets
 
-Static datasets live in data/ (adhkar, hadith, quotes, flashcards, changelog). Visual assets are stored in assets/, icons/, fonts/, and css/. BaseManager resolves relative resource URLs to extension URLs before fetching. FaviconCacheManager caches pinned-app/search-engine favicons and feeds the dominant-color pipeline used for search-bar accents. PocketQuranCacheManager uses IndexedDB to cache Quran.com JSON and audio assets; search reuses cached JSON when available and falls back to full translation data when direct search yields no hits.
+Static datasets live in data/ (adhkar, hadith, quotes, flashcards, changelog). Visual assets are stored in assets/, icons/, fonts/, and css/. BaseManager resolves relative resource URLs to extension URLs before fetching. FaviconCacheManager caches pinned-app/search-engine favicons and feeds the dominant-color pipeline used for search-bar accents. PocketQuranCacheManager uses IndexedDB to cache Quran.com JSON and audio assets; the popup reads through the same class instead of opening its own schema, and search reuses cached JSON when available and falls back to full translation data when direct search yields no hits. PocketQuranCatalog owns the chapter and reciter lists with their seven-day cache, so the dashboard, the popup and the offscreen document fetch and normalise them once. PocketQuranPlayer owns the Quran audio element, so the offscreen document and the popup's local fallback share one play/pause/stop/volume implementation.
