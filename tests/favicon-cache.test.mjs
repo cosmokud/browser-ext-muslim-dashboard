@@ -1,6 +1,7 @@
 /**
- * The favicon cache remembers what it could not fetch, downloads a URL import
- * once, and never grows past its cap.
+ * The favicon cache remembers what it could not fetch, keeps the last good icon
+ * when a refresh fails, downloads a URL import once, and never grows past its
+ * cap.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -75,13 +76,18 @@ const CHROME = {
   runtime: { getURL: (assetPath) => `chrome-extension://stub/${assetPath}` },
 };
 
-function load({ indexedDB = makeIndexedDB(), fetch, chrome = CHROME } = {}) {
+function load({
+  indexedDB = makeIndexedDB(),
+  fetch,
+  chrome = CHROME,
+  localStorage = makeLocalStorage(),
+} = {}) {
   const fetchCalls = [];
   const sandbox = loadSandbox(["js/faviconcache.js"], {
     globals: {
       URL,
       FileReader: FakeFileReader,
-      localStorage: makeLocalStorage(),
+      localStorage,
       indexedDB,
       // `chrome: false` leaves the API out of the sandbox entirely.
       ...(chrome === false ? {} : { chrome }),
@@ -93,9 +99,11 @@ function load({ indexedDB = makeIndexedDB(), fetch, chrome = CHROME } = {}) {
   });
 
   return {
+    sandbox,
     manager: new sandbox.FaviconCacheManager(),
     FaviconCacheManager: sandbox.FaviconCacheManager,
     indexedDB,
+    localStorage,
     fetchCalls,
   };
 }
@@ -364,4 +372,105 @@ test("an import that cannot be downloaded keeps the remote URL", async () => {
     null,
     "nothing unusable was cached",
   );
+});
+
+const STORED_ICON = "data:image/png;base64,c3RvcmVk";
+
+/** Every value the localStorage mirror holds, whatever key it used. */
+function mirrorValues(store) {
+  return Array.from({ length: store.length }, (_, index) =>
+    store.getItem(store.key(index)),
+  );
+}
+
+test("a failed refresh keeps the icon already stored instead of showing a globe", async () => {
+  const env = load({
+    fetch: async () => {
+      throw new Error("no network");
+    },
+  });
+  const key = env.manager._getCacheKey(PAGE_URL, "pinned");
+  env.indexedDB.records.set(key, {
+    key,
+    url: PAGE_URL,
+    dataUrl: STORED_ICON,
+    type: "pinned",
+    isCustom: false,
+    timestamp: Date.now(),
+  });
+
+  assert.equal(
+    await env.manager.fetchAndCache(PAGE_URL, "pinned", true),
+    STORED_ICON,
+    "the bytes from the last good fetch survive this one",
+  );
+  assert.equal(env.fetchCalls.length, 1, "the refresh still asked once");
+  assert.equal(env.fetchCalls[0].options.cache, "reload", "a refresh reloads");
+  assert.equal(env.indexedDB.records.get(key)?.dataUrl, STORED_ICON);
+
+  // Without a stored icon the bundled one is the only answer left.
+  const other = "https://nothing.example/";
+  const refreshed = await load({
+    fetch: async () => {
+      throw new Error("no network");
+    },
+  }).manager.fetchAndCache(other, "pinned", true);
+  assert.equal(refreshed, FALLBACK_ICON);
+  assert.equal(env.indexedDB.records.get(key)?.failure, undefined, "no miss was recorded");
+});
+
+test("a Google favicon URL never reaches the cache", async () => {
+  const env = load({
+    fetch: async () => {
+      throw new Error("no network");
+    },
+  });
+
+  const shown = await env.manager.fetchAndCache(PAGE_URL, "pinned", false);
+
+  assert.doesNotMatch(shown, /google\.com\/s2/, "the caller was not handed one");
+  for (const record of env.indexedDB.records.values()) {
+    assert.doesNotMatch(
+      String(record.dataUrl ?? ""),
+      /google\.com\/s2/,
+      "and none was written under any key",
+    );
+  }
+  for (const value of mirrorValues(env.localStorage)) {
+    assert.doesNotMatch(String(value), /google\.com\/s2/, "the mirror has none either");
+  }
+  assert.equal(env.fetchCalls[0].options.cache, "force-cache", "a plain read reuses the browser copy");
+});
+
+test("a stored icon is mirrored into localStorage and answers for it", async () => {
+  const shared = makeLocalStorage();
+  const written = load({ localStorage: shared });
+  await written.manager.setCached(PAGE_URL, STORED_ICON, "pinned");
+
+  assert.deepEqual(
+    mirrorValues(shared).map((value) => JSON.parse(value).dataUrl),
+    [STORED_ICON],
+    "the record the offline read needs",
+  );
+
+  // The IndexedDB record lost (a cleared store): the mirror is still the answer.
+  const empty = load({ localStorage: shared });
+  assert.equal(await empty.manager.getCached(PAGE_URL, "pinned"), STORED_ICON);
+
+  // The database unreadable at all: the same fallback on the error path.
+  const unreadable = load({
+    localStorage: shared,
+    indexedDB: {
+      open: () => ({
+        error: new Error("no database"),
+        set onerror(listener) {
+          setTimeout(listener, 0);
+        },
+      }),
+    },
+  });
+  // Both opens fail: the page's own singleton and this instance.
+  unreadable.sandbox.faviconCache.dbReady.catch(() => {});
+  unreadable.manager.dbReady.catch(() => {});
+  assert.equal(await unreadable.manager.getCached(PAGE_URL, "pinned"), STORED_ICON);
 });
