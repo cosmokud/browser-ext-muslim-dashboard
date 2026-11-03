@@ -102,6 +102,16 @@ function load({ indexedDB = makeIndexedDB(), fetch, chrome = CHROME } = {}) {
 
 const wait = () => new Promise((resolve) => setTimeout(resolve, 20));
 
+// setCached prunes without awaiting, so poll for the effect rather than guess a
+// delay. Gives up after about a second and names what it was waiting for.
+const waitFor = async (condition, what) => {
+  for (let i = 0; i < 50; i += 1) {
+    if (condition()) return;
+    await wait();
+  }
+  assert.fail(`timed out waiting for ${what}`);
+};
+
 test("a failed fetch shows the bundled icon, never the Google URL", async () => {
   const deadFetch = async () => {
     throw new Error("no network");
@@ -288,7 +298,10 @@ test("a write triggers the prune, and a user's own icon survives it", async () =
   }
 
   await env.manager.setCached("https://new.example/", "data:image/png;base64,bmV3");
-  await wait();
+  await waitFor(
+    () => !env.indexedDB.records.has("pinned:old-0.example"),
+    "the prune to evict the oldest auto-fetched icon",
+  );
 
   const autoRecords = [...env.indexedDB.records.values()].filter(
     (record) => record.isCustom !== true,
