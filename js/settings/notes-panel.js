@@ -15,9 +15,7 @@
 
   updateNotesCountHint() {
     if (!this.notesCountHint) return;
-    const notes = this.storage.getNotes
-      ? this.storage.getNotes()
-      : this.storage.get("notes", []);
+    const notes = this.storage.get("notes", []);
     const count = Array.isArray(notes) ? notes.length : 0;
     this.notesCountHint.textContent = `Currently stored: ${count} note${
       count === 1 ? "" : "s"
@@ -25,9 +23,7 @@
   }
 
   exportNotes() {
-    const notes = this.storage.getNotes
-      ? this.storage.getNotes()
-      : this.storage.get("notes", []);
+    const notes = this.storage.get("notes", []);
     const payload = {
       exportType: "notes",
       version: 1,
@@ -74,11 +70,9 @@
           return;
         }
 
-        const existing = this.storage.getNotes
-          ? this.storage.getNotes()
-          : Array.isArray(this.storage.get("notes", []))
-            ? this.storage.get("notes", [])
-            : [];
+        const existing = Array.isArray(this.storage.get("notes", []))
+          ? this.storage.get("notes", [])
+          : [];
 
         const byId = new Set(
           existing.map((n) => String(n && n.id ? n.id : "")),
@@ -116,8 +110,7 @@
           (a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0),
         );
 
-        if (this.storage.saveNotes) this.storage.saveNotes(merged);
-        else this.storage.set("notes", merged);
+        this.storage.set("notes", merged);
 
         this.updateNotesCountHint();
 

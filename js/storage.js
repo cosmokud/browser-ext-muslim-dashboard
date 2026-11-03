@@ -9,22 +9,6 @@ class StorageManager {
     this.prefix = "muslimDashboard_";
   }
 
-  generateCoordinateExample() {
-    const samples = [
-      { latitude: 40.7128, longitude: -74.006 },
-      { latitude: 51.5074, longitude: -0.1278 },
-      { latitude: 3.139, longitude: 101.6869 },
-      { latitude: -6.2088, longitude: 106.8456 },
-      { latitude: 41.0082, longitude: 28.9784 },
-    ];
-    const sample = samples[Math.floor(Math.random() * samples.length)] || samples[0];
-    return {
-      latitude: Number(sample.latitude.toFixed(4)),
-      longitude: Number(sample.longitude.toFixed(4)),
-      text: `${sample.latitude.toFixed(4)}, ${sample.longitude.toFixed(4)}`,
-    };
-  }
-
   getCoordinateExample() {
     const existing = this.get("coordinateExample", null);
     if (
@@ -36,7 +20,19 @@ class StorageManager {
       return existing;
     }
 
-    const generated = this.generateCoordinateExample();
+    const samples = [
+      { latitude: 40.7128, longitude: -74.006 },
+      { latitude: 51.5074, longitude: -0.1278 },
+      { latitude: 3.139, longitude: 101.6869 },
+      { latitude: -6.2088, longitude: 106.8456 },
+      { latitude: 41.0082, longitude: 28.9784 },
+    ];
+    const sample = samples[Math.floor(Math.random() * samples.length)] || samples[0];
+    const generated = {
+      latitude: Number(sample.latitude.toFixed(4)),
+      longitude: Number(sample.longitude.toFixed(4)),
+      text: `${sample.latitude.toFixed(4)}, ${sample.longitude.toFixed(4)}`,
+    };
     this.set("coordinateExample", generated);
     return generated;
   }
@@ -123,15 +119,17 @@ class StorageManager {
   }
 
   /**
-   * Notes
+   * Every key this module owns, with the prefix stripped.
    */
-  getNotes() {
-    const notes = this.get("notes", []);
-    return Array.isArray(notes) ? notes : [];
-  }
-
-  saveNotes(notes) {
-    return this.set("notes", Array.isArray(notes) ? notes : []);
+  keys() {
+    try {
+      return Object.keys(localStorage)
+        .filter((key) => key.startsWith(this.prefix))
+        .map((key) => key.slice(this.prefix.length));
+    } catch (e) {
+      console.error("Storage keys error:", e);
+      return [];
+    }
   }
 
   /**
@@ -139,9 +137,7 @@ class StorageManager {
    */
   clear() {
     try {
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith(this.prefix))
-        .forEach((key) => localStorage.removeItem(key));
+      this.keys().forEach((key) => localStorage.removeItem(this.prefix + key));
       return true;
     } catch (e) {
       console.error("Storage clear error:", e);

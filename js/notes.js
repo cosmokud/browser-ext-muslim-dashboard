@@ -1358,9 +1358,7 @@ class NotesManager extends BaseManager {
   }
 
   readNotesFromStorage() {
-    const notes = this.storage.getNotes
-      ? this.storage.getNotes()
-      : this.storage.get(NotesManager.STORAGE_KEY, []);
+    const notes = this.storage.get(NotesManager.STORAGE_KEY, []);
 
     return Array.isArray(notes) ? notes : [];
   }
@@ -1695,11 +1693,7 @@ class NotesManager extends BaseManager {
 
     this.notes = payload;
 
-    if (this.storage.saveNotes) {
-      this.storage.saveNotes(payload);
-    } else {
-      this.storage.set(NotesManager.STORAGE_KEY, payload);
-    }
+    this.storage.set(NotesManager.STORAGE_KEY, payload);
 
     this.storage.set(
       NotesManager.ACTIVE_NOTE_KEY,

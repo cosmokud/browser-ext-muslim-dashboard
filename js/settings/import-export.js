@@ -119,9 +119,7 @@
       ? this.storage.getLastCustomSearchId()
       : this.storage.get("customSearchLastId", null);
 
-    const notes = this.storage.getNotes
-      ? this.storage.getNotes()
-      : this.storage.get("notes", []);
+    const notes = this.storage.get("notes", []);
     const notesActiveId = this.storage.get("notes_active", null);
     const notesPage = this.storage.get("notes_page", 1);
 
@@ -406,8 +404,7 @@
     }
 
     if (Array.isArray(data.notes)) {
-      if (this.storage.saveNotes) this.storage.saveNotes(data.notes);
-      else this.storage.set("notes", data.notes);
+      this.storage.set("notes", data.notes);
     }
     if ("notesActiveId" in (data || {})) {
       this.storage.set("notes_active", data.notesActiveId ?? null);
