@@ -8,6 +8,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import vm from "node:vm";
 import { loadSandbox, localDay, makeChrome } from "./harness.mjs";
 
 const FASTING_ALARM = "md_fasting_suhur";
@@ -125,3 +126,31 @@ function minutesBetween(fajrTime, suhurIso) {
   );
   return Math.round((fajr.getTime() - new Date(suhurIso).getTime()) / 60000);
 }
+
+test("the worker's fallback location is a coordinate example, not a fixed city", () => {
+  const worker = loadSandbox(["js/service-worker.js"], {
+    window: false,
+    globals: { chrome: makeChrome().chrome },
+  });
+
+  const fallback = vm.runInContext("pickLocation({}, null)", worker);
+  assert.equal(fallback.latitude, 40.7128);
+  assert.equal(fallback.longitude, -74.006);
+  assert.equal(fallback.city, "Coordinate Example", "not a fixed city such as Mecca");
+
+  const manual = vm.runInContext(
+    'pickLocation({ locationMethod: "manual", latitude: 1.5, longitude: 2.5, city: "Custom" }, null)',
+    worker,
+  );
+  assert.deepEqual(
+    [manual.latitude, manual.longitude, manual.city],
+    [1.5, 2.5, "Custom"],
+    "a manually chosen place still wins",
+  );
+
+  const last = vm.runInContext(
+    'pickLocation({}, { latitude: 3, longitude: 4, city: "Last" })',
+    worker,
+  );
+  assert.equal(last.city, "Last", "and so does the last known place");
+});

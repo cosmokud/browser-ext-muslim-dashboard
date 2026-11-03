@@ -25,14 +25,18 @@ const SCRIPTS = withParts([
 const VISUAL_TABS = ["background", "heading", "themes"];
 const PLAIN_TABS = ["general", "prayer", "quotes", "pocketquran", null];
 
-function boot(stored = { theme: {} }) {
+function boot(stored = { theme: {} }, coordinateExample = null) {
   const document = loadPageDom("index.html");
   const window = document.defaultView;
   window.requestAnimationFrame = () => 0;
   for (const relPath of SCRIPTS) {
     window.eval(fs.readFileSync(path.join(repoRoot, relPath), "utf8"));
   }
-  const storage = { getSettings: () => stored, saveSettings() {} };
+  const storage = {
+    getSettings: () => stored,
+    saveSettings() {},
+    getCoordinateExample: () => coordinateExample,
+  };
   const settings = new window.SettingsManager({ storage });
   /** Applying settings is another part's job; this test only reads the calls. */
   const calls = [];
@@ -133,4 +137,27 @@ test("the save button's saved state is a visible gradient", () => {
   assert.match(background, /^linear-gradient\(/);
   assert.match(background, /var\(--accent-bg\)/);
   assert.match(background, /var\(--primary-light\)/);
+});
+
+test("the coordinate fields take their example from storage", async () => {
+  const example = { latitude: 12.5, longitude: -3.25, text: "12.5, -3.25" };
+  const { settings, window } = boot({ theme: {} }, example);
+
+  // Nothing is baked into the page: whatever shows up came from the stored one.
+  assert.equal(settings.latitudeInput.placeholder, "");
+
+  settings.applyCoordinateExamples();
+
+  assert.equal(settings.latitudeInput.placeholder, "12.5");
+  assert.equal(settings.longitudeInput.placeholder, "-3.25");
+  assert.equal(settings.weatherLatitudeInput.placeholder, "12.5", "the weather panel too");
+  assert.match(settings.pasteCoordsBtn.title, /12\.5, -3\.25/);
+
+  let prompted = "";
+  window.prompt = (text) => {
+    prompted = text;
+    return "";
+  };
+  await settings._readClipboardTextWithFallback();
+  assert.match(prompted, /12\.5, -3\.25/, "the paste fallback quotes the stored example");
 });
