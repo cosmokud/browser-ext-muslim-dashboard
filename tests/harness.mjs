@@ -14,6 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import assert from "node:assert/strict";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { fileURLToPath } from "node:url";
 
@@ -468,6 +469,76 @@ export function loadPageDom(page) {
     virtualConsole: new VirtualConsole(),
   });
   return dom.window.document;
+}
+
+/**
+ * One line of CSS text: the stylesheet breaks long selector lists and value
+ * lists across lines, so both sides of a comparison collapse the same way.
+ */
+function collapse(text) {
+  return String(text)
+    .replace(/\s+/g, " ")
+    .replace(/\s*([(),])\s*/g, "$1")
+    .trim();
+}
+
+let styleRules;
+
+/** Every rule of the shipped stylesheet, nested ones included. */
+export function stylesheetRules() {
+  if (!styleRules) {
+    const css = fs.readFileSync(path.join(repoRoot, "css/styles.css"), "utf8");
+    const dom = new JSDOM(`<style>${css}</style>`, { url: "https://localhost/" });
+    const walk = (rules) =>
+      [...rules].flatMap((rule) => [
+        rule,
+        ...(rule.cssRules ? walk(rule.cssRules) : []),
+      ]);
+    styleRules = walk(dom.window.document.styleSheets[0].cssRules);
+  }
+  return styleRules;
+}
+
+/** The shipped rule for a selector, matched on the text jsdom parsed. */
+export function ruleFor(selector) {
+  const wanted = collapse(selector);
+  return stylesheetRules().find(
+    (rule) => rule.selectorText && collapse(rule.selectorText) === wanted,
+  );
+}
+
+/** The shipped :root value of a custom property, declared exactly once. */
+export function assertRootDeclaration(property, value) {
+  const declared = stylesheetRules()
+    .filter((rule) => rule.selectorText && collapse(rule.selectorText) === ":root")
+    .map((rule) => collapse(rule.style.getPropertyValue(property)))
+    .filter(Boolean);
+  assert.deepEqual(declared, [collapse(value)], property);
+}
+
+/**
+ * A rule's declarations as jsdom parsed them. `important` lists the properties
+ * that must still carry !important; jsdom drops the vendor-prefixed ones, so a
+ * test needing those reads the CSS text directly.
+ */
+export function assertRule(selector, declarations) {
+  const rule = ruleFor(selector);
+  assert.ok(rule, `no rule for ${selector}`);
+  for (const [property, value] of Object.entries(declarations)) {
+    if (property === "important") continue;
+    assert.equal(
+      collapse(rule.style.getPropertyValue(property)),
+      collapse(value),
+      `${selector} ${property}`,
+    );
+  }
+  for (const property of declarations.important ?? []) {
+    assert.equal(
+      rule.style.getPropertyPriority(property),
+      "important",
+      `${selector} ${property} must stay !important`,
+    );
+  }
 }
 
 /**
