@@ -3,7 +3,9 @@
 .venv/
 .vscode/
 .serena/
-docs/
+docs/*
+!docs/agents/
+!docs/adr/
 node_modules/
 # code graph index, local tooling
 .codegraph/
