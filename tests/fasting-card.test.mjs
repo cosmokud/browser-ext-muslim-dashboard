@@ -261,6 +261,8 @@ test("a week of rows reads its dates from the day the settings give", () => {
   assert.equal(row(rows, "monday").subtitle, "Weekly Sunnah");
   assert.equal(row(rows, "thursday").badge, "7 Shawwal");
   assert.equal(row(rows, "thursday").aria, "Thursday fast (7 Shawwal): 3 days left");
+  assert.equal(row(rows, "thursday").title, "Thursday Fast");
+  assert.equal(row(rows, "thursday").subtitle, "Weekly Sunnah");
 
   const later = renderRows(makeCard({ hijriAdjustment: 2 }, { now: new Date(2026, 2, 23, 8, 0) }).manager);
   assert.equal(

@@ -7,8 +7,8 @@ here; see the codebase-design glossary.
 
 The civil day a Hijri date is read from: the device's **local calendar date**,
 never a UTC day. The day turns at local midnight. All surfaces read it from
-`js/islamic-day.js`, so the fasting card, the header date, the popup and the
-service worker cannot disagree about which day it is.
+`js/islamic-day.js`, so the calendar, the fasting card, the header date, the
+popup and the service worker cannot disagree about which day it is.
 
 ## Hijri adjustment
 
