@@ -223,13 +223,13 @@ async function openPrayerMethodPanel(settings = {}) {
   return values;
 }
 
-async function waitFor(read, attempts = 200) {
+async function waitFor(read, message = "the prayer method panel never filled", attempts = 200) {
   for (let i = 0; i < attempts; i += 1) {
     const found = read();
     if (found) return found;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("the prayer method panel never filled");
+  throw new Error(message);
 }
 
 test("the prayer panel shows the calculator configuration, not a second copy", async () => {
@@ -275,4 +275,197 @@ test("an unset prayer panel shows the calculator's defaults", async () => {
     adjustFajr: "0",
     showFajr: true,
   });
+});
+
+/**
+ * The popup booted over settings the dashboard already saved, and over any
+ * other storage key a test seeds. Returns the window so a test can drive it.
+ */
+async function bootPopup(settings, { storage = {} } = {}) {
+  const dom = new JSDOM(fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8"), {
+    url: "https://localhost/popup.html",
+    runScripts: "outside-only",
+    pretendToBeVisual: true,
+    virtualConsole: new VirtualConsole(),
+  });
+  const context = dom.getInternalVMContext();
+  dom.window.chrome = makeChrome().chrome;
+  dom.window.localStorage.setItem(
+    "muslimDashboard_settings",
+    JSON.stringify(settings),
+  );
+  for (const [key, value] of Object.entries(storage)) {
+    dom.window.localStorage.setItem(
+      `muslimDashboard_${key}`,
+      JSON.stringify(value),
+    );
+  }
+  const dashboard = fs.readFileSync(path.join(repoRoot, "index.html"), "utf8");
+  dom.window.fetch = async () => ({
+    ok: true,
+    json: async () => [],
+    text: async () => dashboard,
+  });
+
+  for (const src of SCRIPTS) {
+    if (src.includes("/vendor/")) continue;
+    context.eval(fs.readFileSync(path.join(repoRoot, src), "utf8"));
+  }
+  dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+  return dom;
+}
+
+/** Settings as the popup itself left them saved. */
+function savedSettings(dom) {
+  return JSON.parse(dom.window.localStorage.getItem("muslimDashboard_settings"));
+}
+
+/**
+ * Tajweed is coloured Arabic text, so it exists only for the fonts that carry
+ * it; the popup has to gate the toggle and its own state on the chosen font,
+ * not trust what was saved.
+ */
+test("Tajweed is offered only for the fonts that render it", async () => {
+  const withoutFont = await bootPopup({
+    pocketQuran: { tajweedMode: true },
+    pocketQuranPopup: { arabicFontFamily: "Amiri" },
+  });
+  const toggle = withoutFont.window.document.getElementById(
+    "popupPqMiniTajweedToggle",
+  );
+
+  try {
+    await waitFor(
+      () => toggle.disabled,
+      "the Tajweed toggle never heard about the font",
+    );
+    assert.equal(
+      toggle.getAttribute("aria-pressed"),
+      "false",
+      "the popup state carries Tajweed off for a font that cannot render it",
+    );
+    assert.equal(toggle.getAttribute("aria-disabled"), "true");
+    assert.match(toggle.title, /disabled/i);
+    assert.equal(
+      savedSettings(withoutFont).pocketQuran.tajweedMode,
+      true,
+      "only the popup state was off; the saved setting is what the toggle must override",
+    );
+
+    // jsdom drops .click() on a disabled button, so the click is dispatched:
+    // the page's own gate is what has to keep Tajweed off here.
+    toggle.dispatchEvent(new withoutFont.window.MouseEvent("click", { bubbles: true }));
+    assert.equal(
+      toggle.getAttribute("aria-pressed"),
+      "false",
+      "clicking the toggle cannot turn Tajweed on for this font",
+    );
+    assert.equal(toggle.classList.contains("active"), false);
+  } finally {
+    withoutFont.window.close();
+  }
+
+  const withFont = await bootPopup({
+    pocketQuran: { tajweedMode: true },
+    pocketQuranPopup: { arabicFontFamily: "KFGQPC KSA Regular" },
+  });
+  const allowed = withFont.window.document.getElementById(
+    "popupPqMiniTajweedToggle",
+  );
+
+  try {
+    await waitFor(
+      () => allowed.getAttribute("aria-pressed") === "true",
+      "the KFGQPC font never got its Tajweed state back",
+    );
+    assert.equal(allowed.disabled, false);
+    assert.equal(allowed.classList.contains("active"), true);
+  } finally {
+    withFont.window.close();
+  }
+});
+
+/**
+ * A reader can switch the Arabic font at any time, so a font that cannot render
+ * Tajweed has to take the saved Tajweed setting down with it.
+ */
+test("choosing a font that cannot render Tajweed saves it off", async () => {
+  const dom = await bootPopup({
+    pocketQuran: { tajweedMode: true },
+    pocketQuranPopup: { arabicFontFamily: "KFGQPC KSA Regular" },
+  });
+  const doc = dom.window.document;
+  const toggle = doc.getElementById("popupPqMiniTajweedToggle");
+
+  try {
+    await waitFor(
+      () => toggle.getAttribute("aria-pressed") === "true",
+      "the popup never showed Tajweed on for the seeded font",
+    );
+
+    doc.getElementById("popupPqArabicSizeLabel").click();
+    const option = doc.querySelector(
+      '#popupPqFontList [data-popup-pq-font="Amiri"]',
+    );
+    assert.ok(option, "the font panel offers a font that cannot render Tajweed");
+    option.click();
+
+    const saved = savedSettings(dom);
+    assert.equal(
+      saved.pocketQuran.tajweedMode,
+      false,
+      "picking that font saved Tajweed off",
+    );
+    assert.equal(saved.pocketQuranPopup.arabicFontFamily, "Amiri");
+    assert.equal(toggle.disabled, true, "the toggle is disabled in the same pass");
+  } finally {
+    dom.window.close();
+  }
+});
+
+/**
+ * The paste fallback asks for coordinates with an example, and that example is
+ * the random one storage handed out, never a string baked into the popup.
+ */
+test("the coordinate paste prompt offers the example storage picked", async () => {
+  const dom = await bootPopup(
+    {},
+    {
+      storage: {
+        coordinateExample: {
+          latitude: 12.3456,
+          longitude: 78.9012,
+          text: "12.3456, 78.9012",
+        },
+      },
+    },
+  );
+  const doc = dom.window.document;
+  const prompts = [];
+  dom.window.prompt = (message) => {
+    prompts.push(message);
+    return "";
+  };
+
+  try {
+    doc.getElementById("popupOpenPrayerSettingsBtn").click();
+    const pasteButton = await waitFor(
+      () => doc.querySelector("#popupPrayerLocationPanelHost #pasteCoordsBtn"),
+      "the location panel never loaded",
+    );
+    pasteButton.click();
+
+    await waitFor(
+      () => prompts.length,
+      "the paste button never prompted for coordinates",
+    );
+    assert.match(prompts[0], /12\.3456, 78\.9012/);
+    assert.doesNotMatch(
+      prompts[0],
+      /40\.7128/,
+      "the popup prints no example of its own",
+    );
+  } finally {
+    dom.window.close();
+  }
 });
