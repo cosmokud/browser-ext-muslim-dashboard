@@ -900,7 +900,8 @@
         // ignore
       }
 
-      // Also clear Sticky Notes (not using the StorageManager prefix).
+      // Sticky notes live under the prefix now; these raw keys are leftovers
+      // from installs that started before that moved.
       try {
         localStorage.removeItem("stickyNotes");
         localStorage.removeItem("stickyNotesVisible");

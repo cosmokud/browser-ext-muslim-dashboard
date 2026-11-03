@@ -26,15 +26,28 @@
 
   loadNotes() {
     try {
-      const saved = localStorage.getItem("stickyNotes");
-      this.notes = saved ? JSON.parse(saved) : [];
+      // Raw keys predate the storage prefix; adopt them once so keys()/clear() own them.
+      const rawNotes = localStorage.getItem("stickyNotes");
+      if (rawNotes !== null && this.storage.get("stickyNotes", null) === null) {
+        this.storage.set("stickyNotes", JSON.parse(rawNotes));
+        localStorage.removeItem("stickyNotes");
+      }
+      const rawVisible = localStorage.getItem("stickyNotesVisible");
+      if (
+        rawVisible !== null &&
+        this.storage.get("stickyNotesVisible", null) === null
+      ) {
+        this.storage.set("stickyNotesVisible", rawVisible !== "false");
+        localStorage.removeItem("stickyNotesVisible");
+      }
+
+      this.notes = this.storage.get("stickyNotes", []);
       // Find max z-index
       this.notes.forEach((note) => {
         if (note.zIndex > this.maxZIndex) this.maxZIndex = note.zIndex;
       });
       // Load visibility state
-      const visibility = localStorage.getItem("stickyNotesVisible");
-      this.isVisible = visibility !== "false";
+      this.isVisible = this.storage.get("stickyNotesVisible", null) !== false;
     } catch (e) {
       console.error("Error loading sticky notes:", e);
       this.notes = [];
@@ -43,8 +56,8 @@
 
   saveNotes() {
     try {
-      localStorage.setItem("stickyNotes", JSON.stringify(this.notes));
-      localStorage.setItem("stickyNotesVisible", String(this.isVisible));
+      this.storage.set("stickyNotes", this.notes);
+      this.storage.set("stickyNotesVisible", this.isVisible);
     } catch (e) {
       console.error("Error saving sticky notes:", e);
     }

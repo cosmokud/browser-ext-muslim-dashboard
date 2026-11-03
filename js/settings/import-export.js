@@ -129,19 +129,8 @@
     );
     const pocketQuranBookmarks = this.storage.get("pocketQuran_bookmarks", []);
 
-    let stickyNotes = [];
-    let stickyNotesVisible = null;
-    try {
-      const rawSticky = localStorage.getItem("stickyNotes");
-      stickyNotes = rawSticky ? JSON.parse(rawSticky) : [];
-    } catch (e) {
-      stickyNotes = [];
-    }
-    try {
-      stickyNotesVisible = localStorage.getItem("stickyNotesVisible");
-    } catch (e) {
-      stickyNotesVisible = null;
-    }
+    const stickyNotes = this.storage.get("stickyNotes", []);
+    const stickyNotesVisible = this.storage.get("stickyNotesVisible", null);
 
     // Custom backgrounds
     const customBackgrounds = Array.isArray(settings.customBackgrounds)
@@ -341,11 +330,11 @@
       // Custom backgrounds (also in settings.customBackgrounds but kept for clarity)
       customBackgrounds,
 
-      // Sticky Notes (not prefixed under StorageManager)
+      // Sticky Notes (owned by StorageManager)
       stickyNotes: {
         notes: Array.isArray(stickyNotes) ? stickyNotes : [],
         visible:
-          stickyNotesVisible === null ? null : stickyNotesVisible !== "false",
+          stickyNotesVisible === null ? null : stickyNotesVisible !== false,
       },
     };
 
@@ -437,23 +426,12 @@
 
     // Sticky notes (replace)
     if (data.stickyNotes && typeof data.stickyNotes === "object") {
-      try {
-        const incomingNotes = Array.isArray(data.stickyNotes.notes)
-          ? data.stickyNotes.notes
-          : [];
-        localStorage.setItem("stickyNotes", JSON.stringify(incomingNotes));
-      } catch (e) {
-        // ignore
-      }
-      try {
-        if (typeof data.stickyNotes.visible === "boolean") {
-          localStorage.setItem(
-            "stickyNotesVisible",
-            String(data.stickyNotes.visible),
-          );
-        }
-      } catch (e) {
-        // ignore
+      this.storage.set(
+        "stickyNotes",
+        Array.isArray(data.stickyNotes.notes) ? data.stickyNotes.notes : [],
+      );
+      if (typeof data.stickyNotes.visible === "boolean") {
+        this.storage.set("stickyNotesVisible", data.stickyNotes.visible);
       }
     }
 
