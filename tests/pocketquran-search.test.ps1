@@ -342,11 +342,6 @@ Assert-Contains `
   -Message "Storage must provide a one-time coordinate example value."
 
 Assert-Contains `
-  -Haystack $storage `
-  -Needle 'generateCoordinateExample()' `
-  -Message "Storage must generate valid randomized coordinate examples."
-
-Assert-Contains `
   -Haystack $settingsSource `
   -Needle 'applyCoordinateExamples()' `
   -Message "Settings must apply stored randomized coordinate examples to coordinate UI."

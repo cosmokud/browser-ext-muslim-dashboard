@@ -97,3 +97,32 @@ test("the legacy visibility flag is adopted as a boolean, not as a string", () =
   assert.equal(localStorage.stickyNotesVisible, undefined);
   assert.equal(storage.get("stickyNotesVisible", null), false);
 });
+
+// The coordinate example stopped being a second method of its own: making one
+// and storing it are the one answer, so the check is the value, not the shape
+// of the source.
+test("a coordinate example is made once, then handed back", () => {
+  const { storage } = bootStorage();
+  const first = storage.getCoordinateExample();
+
+  assert.ok(Number.isFinite(first.latitude), "latitude is a number");
+  assert.ok(Number.isFinite(first.longitude), "longitude is a number");
+  assert.match(first.text, /^-?\d+\.\d{4}, -?\d+\.\d{4}$/);
+  assert.deepEqual(plain(storage.getCoordinateExample()), plain(first));
+});
+
+test("a stored example that is not a coordinate is replaced", () => {
+  const { storage } = bootStorage({
+    muslimDashboard_coordinateExample: JSON.stringify({
+      latitude: "north",
+      longitude: null,
+      text: 42,
+    }),
+  });
+
+  const example = storage.getCoordinateExample();
+
+  assert.ok(Number.isFinite(example.latitude), "the bad value does not survive");
+  assert.ok(Number.isFinite(example.longitude));
+  assert.equal(typeof example.text, "string");
+});
