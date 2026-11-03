@@ -36,4 +36,6 @@ Thursday. Precedence is Ramadan first, weekdays last. One predicate lives in
 A day on which fasting is not observed: Eid al-Fitr (1 Shawwal), Eid al-Adha
 (10 Dhu al-Hijjah), and the Days of Tashreeq (11–13 Dhu al-Hijjah). Never a
 fasting day: the predicate returns no fast for it, whatever else the day would
-have matched.
+have matched. The calendar's day dots, the fasting card and its window search
+all read the one predicate in `js/islamic-day.js`; none of them keeps its own
+list of the three.
