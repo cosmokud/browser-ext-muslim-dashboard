@@ -60,6 +60,7 @@
   }
 
   parseCsv(text) {
+    if (!text) return [];
     // RFC4180-ish parser: handles quotes, commas, CRLF
     const rows = [];
     let row = [];

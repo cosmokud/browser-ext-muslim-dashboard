@@ -25,11 +25,9 @@
           },
         ];
 
-    const loadedDefaults = [];
-    for (const def of defs) {
-      loadedDefaults.push(await this.loadDefaultSet(def));
-    }
-    this.defaultSets = loadedDefaults;
+    this.defaultSets = await Promise.all(
+      defs.map((def) => this.loadDefaultSet(def)),
+    );
 
     // Migration cleanup: remove legacy stored copies of protected default sets.
     const stored = this.storage.get("flashcardSets", []);
@@ -52,20 +50,35 @@
     }
   }
 
+  async ensureDefaultSets() {
+    return this.ensureDefaultSet();
+  }
+
   async loadDefaultSet(def) {
     const now = new Date().toISOString();
+    if (!def || !def.file) {
+      return {
+        id: def?.id || "",
+        name: def?.name || "",
+        createdAt: now,
+        cards: [],
+      };
+    }
+
     let cards = [];
 
     try {
       const text = await this.fetchTextResource(def.file, {
-        label: `Flashcards default set ${def?.id || "unknown"}`,
+        label: `Flashcards default set ${def.id || "unknown"}`,
       });
       cards =
         def.parser === "pipe"
           ? this.parsePipeTwoColumns(text)
           : this.parseCsvTwoColumns(text);
     } catch (e) {
-      console.error(`Flashcards: failed to load default set ${def?.id}`, e);
+      if (e?.name !== "AbortError") {
+        console.warn(`Flashcards: failed to load default set ${def.id}`, e);
+      }
     }
 
     return {
