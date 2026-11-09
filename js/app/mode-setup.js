@@ -429,15 +429,13 @@
         : Number(settings.pinnedAppsPerRow),
     );
 
-    const appCount = Array.isArray(this.pinnedApps?.apps)
-      ? this.pinnedApps.apps.length
-      : 0;
-    const needsBuffer = appCount > 0 && appCount % perRow === 0;
-    const effectivePerRow = needsBuffer ? perRow + 1 : perRow;
-
+    // The "Add Site" tile is a flex child of the same track as the app items,
+    // so it claims a column of its own. Widening the track by a column would
+    // therefore show perRow + 1 apps; instead the per-row count stays honest
+    // and the add tile wraps onto a new row once the apps fill the current one.
     const grid = document.getElementById("pinnedAppsGrid");
     if (grid) {
-      grid.style.setProperty("--pinned-apps-per-row", String(effectivePerRow));
+      grid.style.setProperty("--pinned-apps-per-row", String(perRow));
     }
   }
 });

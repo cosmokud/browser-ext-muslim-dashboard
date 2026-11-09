@@ -10890,10 +10890,9 @@ html[data-theme-mode="light"]
 @media (max-width: 768px) {
   :root {
     --pinned-app-width: 60px;
-  }
-
-  .pinned-apps-track {
-    gap: var(--spacing-sm);
+    /* Must go through the variable: the track width is computed from it, so
+       overriding `gap` alone makes the track wider than its columns. */
+    --pinned-app-gap: var(--spacing-sm);
   }
 
   .pinned-app-icon {
