@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const prayerTimes = new PrayerTimesManager(storage);
 
   const prayerCard = document.getElementById("prayerTimesCard");
+  const popupPrayerNow = document.getElementById("popupPrayerNow");
   const hiddenCard = document.getElementById("popupPrayerHiddenState");
   const openDashboardButton = document.getElementById("popupOpenDashboardBtn");
   const openLocationSettingsIcon = document.getElementById(
@@ -399,6 +400,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let prayerInitialized = false;
   let resyncIntervalId = null;
+  let popupClockIntervalId = null;
+  let popupClockSettings = null;
+
+  function formatPopupPrayerNow(now, settings) {
+    const heading = settings.heading || {};
+    const clockFormat = heading.clockFormat || settings.timeFormat || "24h";
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
+    if (clockFormat === "24h") {
+      return `(Now: ${String(hours).padStart(2, "0")}:${minutes})`;
+    }
+
+    const suffix = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return heading.showAmPm === false
+      ? `(Now: ${hours}:${minutes})`
+      : `(Now: ${hours}:${minutes} ${suffix})`;
+  }
+
+  function updatePopupPrayerNow() {
+    if (!popupPrayerNow) return;
+    if (!popupClockSettings) popupClockSettings = storage.getSettings();
+    const text = formatPopupPrayerNow(new Date(), popupClockSettings);
+    if (popupPrayerNow.textContent !== text) {
+      popupPrayerNow.textContent = text;
+    }
+  }
+
+  function startPopupClock() {
+    updatePopupPrayerNow();
+    if (popupClockIntervalId) clearInterval(popupClockIntervalId);
+    popupClockIntervalId = setInterval(updatePopupPrayerNow, 1000);
+  }
+
+  function stopPopupClock() {
+    if (!popupClockIntervalId) return;
+    clearInterval(popupClockIntervalId);
+    popupClockIntervalId = null;
+  }
   let popupBlurSettings = null;
   let popupBlurPortalled = false;
   let popupBlurPositionRaf = null;
@@ -6400,6 +6441,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function refreshPopupState() {
     const settings = storage.getSettings();
+    popupClockSettings = settings;
+    updatePopupPrayerNow();
 
     applyPerformanceModeState(settings);
 
@@ -6480,6 +6523,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("beforeunload", () => {
     stopSoftResync();
+    stopPopupClock();
     clearPocketQuranResyncTimers();
     deactivatePocketQuranLocalPlayback({
       publishStoppedState: pocketQuranLocalPlaybackActive,
@@ -6494,5 +6538,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   void refreshPopupState().finally(() => {
     startSoftResync();
+    startPopupClock();
   });
 });

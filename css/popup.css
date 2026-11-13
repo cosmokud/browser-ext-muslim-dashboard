@@ -71,6 +71,14 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-prayer-card .card-title {
   font-size: 1.05rem;
+  flex-wrap: wrap;
+  row-gap: 0.1rem;
+}
+
+.popup-card-title-clock {
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .popup-prayer-card .card-header {
