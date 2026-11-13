@@ -64,7 +64,6 @@ class MuslimDashboard {
     this.currentTime = document.getElementById("currentTime");
     this.currentSeconds = document.getElementById("currentSeconds");
     this.currentAmPm = document.getElementById("currentAmPm");
-    this.prayerTimesNow = document.getElementById("prayerTimesNow");
     this.headerNextPrayer = document.getElementById("headerNextPrayer");
     this.headerNextPrayerName = document.getElementById("headerNextPrayerName");
     this.headerNextPrayerCountdown = document.getElementById(

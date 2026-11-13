@@ -75,26 +75,6 @@
     }
 
     this.updateHeaderNextPrayer(settings);
-    this.updatePrayerTimesNow(now, settings, is24h, hours, minutes, showAmPm);
-  }
-
-  updatePrayerTimesNow(now, settings, is24h, hours, minutes, showAmPm) {
-    if (!this.prayerTimesNow) return;
-
-    let clockText;
-    if (is24h) {
-      clockText = `${String(now.getHours()).padStart(2, "0")}:${minutes}`;
-    } else {
-      const suffix = now.getHours() >= 12 ? "PM" : "AM";
-      clockText = showAmPm
-        ? `${hours}:${minutes} ${suffix}`
-        : `${hours}:${minutes}`;
-    }
-
-    const text = `(Now: ${clockText})`;
-    if (this.prayerTimesNow.textContent !== text) {
-      this.prayerTimesNow.textContent = text;
-    }
   }
 
   updateHeaderNextPrayer(settings = this.storage.getSettings()) {

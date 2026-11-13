@@ -3913,12 +3913,6 @@ textarea.notes-editor:focus {
   font-size: 1.4rem;
 }
 
-.card-title-clock {
-  font-size: 0.85rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 /* Prayer Times Card */
 .card.prayer-times-card {
   display: flex;
