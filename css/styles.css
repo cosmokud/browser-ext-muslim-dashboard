@@ -4061,20 +4061,16 @@ textarea.notes-editor:focus {
   color: var(--on-primary-text);
 }
 
-.next-prayer-label {
-  font-size: 0.9rem;
-  color: color-mix(in srgb, var(--on-primary-text) 78%, transparent);
-}
-
 .next-prayer-now {
-  font-size: 0.85rem;
-  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--on-primary-text) 82%, transparent);
 }
 
 .next-prayer-dash {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   opacity: 0.5;
 }
 

@@ -154,7 +154,6 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   min-width: 0;
 }
 
-.popup-prayer-card .next-prayer-label,
 .popup-prayer-card .next-prayer-name,
 .popup-prayer-card .next-prayer-countdown,
 .popup-prayer-card .next-prayer-now,
@@ -163,7 +162,6 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   white-space: nowrap;
 }
 
-.popup-prayer-card .next-prayer-label,
 .popup-prayer-card .next-prayer-name,
 .popup-prayer-card .next-prayer-now,
 .popup-prayer-card .next-prayer-dash,
@@ -178,12 +176,13 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-card .next-prayer-now {
+  font-weight: 600;
   color: color-mix(in srgb, var(--on-primary-text) 82%, transparent);
   font-variant-numeric: tabular-nums;
-  font-family: "Courier New", monospace;
 }
 
 .popup-prayer-card .next-prayer-dash {
+  font-weight: 600;
   opacity: 0.5;
 }
 
