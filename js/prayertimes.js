@@ -39,7 +39,6 @@ class PrayerTimesManager {
     this.locationText = document.getElementById("locationText");
     this.nextPrayerName = document.getElementById("nextPrayerName");
     this.nextPrayerCountdown = document.getElementById("nextPrayerCountdown");
-    this.nextPrayerNow = document.getElementById("nextPrayerNow");
 
     // Listen for icon theme changes
     document.addEventListener("md:icon-theme-change", () => {
@@ -78,10 +77,6 @@ class PrayerTimesManager {
     if (this.nextPrayerCountdown) {
       this.nextPrayerCountdown.textContent = "--:--:--";
     }
-
-    // Keep the current time in the next-prayer caption ticking even before
-    // prayer times are available.
-    this.startCountdown();
 
     // Try to use cached location first for immediate display
     const lastLocation = this.storage.getLastLocation();
@@ -586,24 +581,6 @@ class PrayerTimesManager {
     }, 1000);
   }
 
-  formatCaptionClock(date, settings) {
-    const headingSettings = settings.heading || {};
-    const clockFormat =
-      headingSettings.clockFormat || settings.timeFormat || "24h";
-    let hours = date.getHours();
-    const minutes = this.padZero(date.getMinutes());
-
-    if (clockFormat === "24h") {
-      return `${this.padZero(hours)}:${minutes}`;
-    }
-
-    const suffix = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    return headingSettings.showAmPm === false
-      ? `${hours}:${minutes}`
-      : `${hours}:${minutes} ${suffix}`;
-  }
-
   /**
    * Update countdown display
    */
@@ -615,13 +592,6 @@ class PrayerTimesManager {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const currentSeconds = now.getSeconds();
     const visibilityKey = JSON.stringify(visibility);
-
-    if (this.nextPrayerNow) {
-      const nowText = `Now: ${this.formatCaptionClock(now, settings)}`;
-      if (this.nextPrayerNow.textContent !== nowText) {
-        this.nextPrayerNow.textContent = nowText;
-      }
-    }
 
     const shouldRefreshPrayerUi =
       this.countdownLastMinute !== currentMinutes ||
