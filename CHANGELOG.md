@@ -1,3 +1,22 @@
+## [0.1.15] - 2026-11-14
+
+### What is New
+
+- Added a dashboard-wide Hijri calendar choice (tabular, Indonesia, or Umm al-Qura), with Umm al-Qura as the new default; the header date, calendar, fasting card, and popup all read the same Islamic day.
+- The prayer list now highlights the prayer currently in progress instead of only the upcoming one.
+- The debug clock can now be set to a specific hour, not just a day, for finer date-dependent checks.
+
+### Other Improvements
+
+- The ayah audio cache is capped at 500 MB and evicts the least recently played recitations first.
+- Favicons are remembered after a failed fetch, imported URLs are cached, and the favicon store is capped; local hosts now reuse the icon Chrome itself cached, and stored local search engines migrate to it.
+- When a favicon fetch gives up, the bundled icon is shown instead of a blank tile.
+- Weather forecasts are cached on a rounded coordinate grid, and repeat reverse geocoding answers from a rounded-position cache.
+- Bundled defaults and the changelog are read through the HTTP cache keyed by extension version.
+- The page pause icon now stays steady through ayah-end, autoplay, and loop transitions.
+- Pinned apps track the configured per-row count, and flashcard default loading failures and aborts are handled without breaking the card.
+- The large managers (settings, Quran reader, grid layout, adhkar, hadith, flashcards, quotes, search bar, sticky notes, weather, floating mode) are split into focused modules, and the test suite now boots the real pages headlessly in CI.
+
 ## [0.1.14] - 2026-08-11
 
 ### What is New

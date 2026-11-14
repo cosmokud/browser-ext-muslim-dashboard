@@ -1,3 +1,20 @@
+## [0.1.15] - 2026-11-14
+
+### Highlights
+
+- You can now choose which Hijri calendar the dashboard uses: Tabular, Indonesia, or Umm al-Qura (the new default). The header date, calendar, fasting card, and popup all show the same Islamic day.
+- The prayer list highlights the prayer currently in progress, so you can see at a glance which one is happening now.
+
+### Other Improvements
+
+- Recitation audio is capped at 500 MB and old recordings are cleared out first, so the cache no longer grows without limit.
+- Site icons load faster: failures are remembered, imported icons are cached, the store has a size limit, and local sites reuse the icon your browser already has.
+- A site with no icon now shows the bundled icon instead of an empty tile.
+- Weather forecasts and repeated location lookups are cached, so they stop re-requesting the same data.
+- The play/pause button stays steady while a recitation moves from one verse to the next.
+- Pinned apps now fit the number of items per row you set, and flashcards keep working when their bundled defaults fail to load.
+- The debug date option can now set an hour as well as a day.
+
 ## [0.1.14] - 2026-08-11
 
 ### Highlights
