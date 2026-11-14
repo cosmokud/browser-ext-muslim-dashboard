@@ -372,6 +372,8 @@ foreach ($codeFile in $codeFilesForRuntimeGetUrlCheck) {
       $normalizedReference.StartsWith("http://") -or
       $normalizedReference.StartsWith("https://") -or
       $normalizedReference.StartsWith("data:") -or
+      # Chrome's built-in favicon endpoint ("favicon" permission), not a packaged file.
+      $normalizedReference.StartsWith("/_favicon/") -or
       $normalizedReference.Contains("*")
     ) {
       continue
