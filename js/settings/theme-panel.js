@@ -707,31 +707,7 @@
   }
 
   _normalizeColorInputHex(value, fallbackHex) {
-    if (typeof value !== "string") return fallbackHex;
-
-    const normalized = value.trim().toLowerCase();
-    if (/^#[a-f\d]{6}$/i.test(normalized)) return normalized;
-
-    const shortMatch = normalized.match(/^#([a-f\d]{3})$/i);
-    if (shortMatch) {
-      const [r, g, b] = shortMatch[1].split("");
-      return `#${r}${r}${g}${g}${b}${b}`;
-    }
-
-    const rgbaMatch = normalized
-      .replace(/\s+/g, "")
-      .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
-    if (rgbaMatch) {
-      const toHex = (channel) =>
-        Math.max(0, Math.min(255, Number(channel)))
-          .toString(16)
-          .padStart(2, "0");
-      return `#${toHex(rgbaMatch[1])}${toHex(rgbaMatch[2])}${toHex(
-        rgbaMatch[3],
-      )}`;
-    }
-
-    return fallbackHex;
+    return ThemeTokens.colorToHex(value, fallbackHex);
   }
 
   _toggleThemePaletteGlobalFontFields(themeName) {

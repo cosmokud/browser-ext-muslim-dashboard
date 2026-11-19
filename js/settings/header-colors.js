@@ -14,51 +14,19 @@
 })(SettingsManager.prototype, class {
 
   clampNumber(value, min, max, fallback) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return fallback;
-    return Math.min(max, Math.max(min, numeric));
+    return ThemeTokens.clampNumber(value, min, max, fallback);
   }
 
   normalizeColorHex(value, fallback = "") {
-    const raw = String(value || "").trim();
-    if (!raw) return fallback;
-
-    const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
-    if (shortHex) {
-      const expanded = shortHex[1]
-        .split("")
-        .map((c) => c + c)
-        .join("")
-        .toLowerCase();
-      return `#${expanded}`;
-    }
-
-    const fullHex = raw.match(/^#([0-9a-f]{6})$/i);
-    if (fullHex) {
-      return `#${fullHex[1].toLowerCase()}`;
-    }
-
-    return fallback;
+    return ThemeTokens.normalizeHexColor(value) || fallback;
   }
 
   parseCssRgbColor(colorValue) {
-    const value = String(colorValue || "").trim();
-    const match = value.match(
-      /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
-    );
-    if (!match) return null;
-
-    return {
-      r: Math.max(0, Math.min(255, Math.round(Number(match[1])))),
-      g: Math.max(0, Math.min(255, Math.round(Number(match[2])))),
-      b: Math.max(0, Math.min(255, Math.round(Number(match[3])))),
-    };
+    return ThemeTokens.extractRgbChannels(colorValue);
   }
 
   rgbToHex(r, g, b) {
-    const toHex = (value) =>
-      Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    return ThemeTokens.rgbToHex(r, g, b);
   }
 
   getAutoHeaderGlowColor(targetSelector, fallback = "#ffffff") {

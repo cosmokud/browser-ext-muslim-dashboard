@@ -303,9 +303,21 @@
 
     // Always apply note transparency to keep the opacity slider authoritative,
     // including 100% (alpha 1.0) for palettes with built-in alpha values.
-    const normalizedAlpha = this.clampNumber(note.transparency, 0, 1, 1);
-    const adjusted = this.adjustAlpha(bg, normalizedAlpha);
-    if (adjusted) bg = adjusted;
+    // Glass-preset notes in dashboard mode follow dashboard Component Opacity.
+    if (note.color?.glass === true && note.blurState === "dashboard") {
+      if (this.getDashboardGlassEnabled()) {
+        const componentOpacity = SettingsRegistry.coerce(
+          "componentOpacity",
+          this.getDashboardComponentOpacity(),
+        );
+        const adjusted = this.adjustAlpha(bg, componentOpacity / 100);
+        if (adjusted) bg = adjusted;
+      }
+    } else {
+      const normalizedAlpha = this.clampNumber(note.transparency, 0, 1, 1);
+      const adjusted = this.adjustAlpha(bg, normalizedAlpha);
+      if (adjusted) bg = adjusted;
+    }
 
     let styles = `
       left: ${note.x}px;

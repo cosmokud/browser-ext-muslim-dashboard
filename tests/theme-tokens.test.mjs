@@ -111,3 +111,217 @@ test("mixHexToRgb returns its own two inputs at the ends of the weight", () => {
   assert.equal(tokens.mixHexToRgb("#000000", "#ffffff", 1), "rgb(255, 255, 255)");
   assert.equal(tokens.mixHexToRgb("#000000", "#ffffff", 0.5), "rgb(128, 128, 128)");
 });
+
+test("toRgbChannelString, rgbToHex, and hslToHex convert canonical color formats", () => {
+  const tokens = load();
+
+  assert.equal(tokens.toRgbChannelString("#1a5f4a"), "26, 95, 74");
+  assert.equal(tokens.toRgbChannelString("#abc"), "170, 187, 204");
+  assert.equal(tokens.toRgbChannelString("rgba(10, 20, 30, 0.5)"), "10, 20, 30");
+  assert.equal(tokens.toRgbChannelString("  5 , 300 , 12 "), "5, 255, 12");
+  assert.equal(tokens.toRgbChannelString({ r: 12.6, g: -4, b: 260 }), "13, 0, 255");
+  assert.equal(tokens.toRgbChannelString("not-a-color", "15, 23, 42"), "15, 23, 42");
+
+  assert.equal(tokens.rgbToHex(26, 95, 74), "#1a5f4a");
+  assert.equal(tokens.rgbToHex(-10, 300, 15.6), "#00ff10");
+
+  assert.equal(tokens.hslToHex(0, 100, 50), "#ff0000");
+  assert.equal(tokens.hslToHex(120, 100, 50), "#00ff00");
+  assert.equal(tokens.hslToHex(240, 100, 50), "#0000ff");
+  assert.equal(tokens.hslToHex(360, 0, 100), "#ffffff");
+});
+
+test("resolveSurfaceTokens handles glass 0%, 35%, 50%, 100% and rule defaults", () => {
+  const tokens = load();
+  const palette = {
+    primary: "#1a5f4a",
+    primaryLight: "#2e8b6f",
+    primaryDark: "#0f3d2e",
+    bodyBg: "#0a1f18",
+    glassBg: "rgba(26, 95, 74, 0.35)",
+    glassBgHover: "rgba(26, 95, 74, 0.45)",
+    glassBorder: "rgba(26, 95, 74, 0.4)",
+  };
+
+  // 0%: strictly zero subtle alpha and blurFactor 0
+  const zeroDark = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    opacity: 0,
+    mode: "dark",
+  });
+  assert.equal(zeroDark.opacityRatio, 0);
+  assert.equal(zeroDark.blurFactor, 0);
+  assert.equal(zeroDark.glassBg, "rgba(26, 95, 74, 0)");
+  assert.equal(zeroDark.glassBgHover, "rgba(26, 95, 74, 0)");
+  assert.equal(zeroDark.glassBorder, "rgba(26, 95, 74, 0)");
+  assert.equal(zeroDark.glassBgSubtle, "rgba(255, 255, 255, 0)");
+  assert.equal(zeroDark.surfaceTintRgb, "255, 255, 255");
+  assert.equal(zeroDark.surfaceRgb, "26, 95, 74");
+
+  const zeroLight = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    opacity: 0,
+    mode: "light",
+  });
+  assert.equal(zeroLight.blurFactor, 0);
+  assert.equal(zeroLight.surfaceTintRgb, "15, 23, 42");
+  assert.equal(zeroLight.glassBgSubtle, "rgba(15, 23, 42, 0)");
+
+  // 35%
+  const thirtyFive = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    opacity: 35,
+    mode: "dark",
+  });
+  assert.equal(thirtyFive.opacityRatio, 0.35);
+  assert.equal(thirtyFive.blurFactor, 1);
+  assert.equal(thirtyFive.glassBg, "rgba(26, 95, 74, 0.35)");
+  assert.equal(thirtyFive.glassBgHover, "rgba(26, 95, 74, 0.45)");
+  assert.equal(thirtyFive.glassBorder, "rgba(26, 95, 74, 0.4)");
+  assert.equal(thirtyFive.glassBgSubtle, "rgba(255, 255, 255, 0.021)");
+
+  // Default glassOpacity rule coerces undefined to 50%; componentOpacity coerces undefined to 0%
+  const defaultGlass = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    mode: "dark",
+  });
+  assert.equal(defaultGlass.opacityRatio, 0.5);
+  assert.equal(defaultGlass.blurFactor, 1);
+  assert.equal(defaultGlass.glassBg, "rgba(26, 95, 74, 0.5)");
+  assert.equal(defaultGlass.glassBgSubtle, "rgba(255, 255, 255, 0.03)");
+
+  const defaultComponent = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    mode: "dark",
+    opacityRule: "componentOpacity",
+  });
+  assert.equal(defaultComponent.opacityRatio, 0);
+  assert.equal(defaultComponent.blurFactor, 0);
+  assert.equal(defaultComponent.glassBgSubtle, "rgba(255, 255, 255, 0)");
+
+  // 100%
+  const full = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    opacity: 100,
+    mode: "dark",
+  });
+  assert.equal(full.opacityRatio, 1);
+  assert.equal(full.blurFactor, 1);
+  assert.equal(full.glassBg, "rgba(26, 95, 74, 1)");
+  assert.equal(full.glassBgHover, "rgba(26, 95, 74, 1)");
+  assert.equal(full.glassBorder, "rgba(26, 95, 74, 1)");
+  assert.equal(full.glassBgSubtle, "rgba(255, 255, 255, 0.06)");
+});
+
+test("resolveSurfaceTokens resolves solid light and dark surfaces with safe fallbacks", () => {
+  const tokens = load();
+
+  const solidDark = tokens.resolveSurfaceTokens(
+    { primary: "#1a5f4a", primaryLight: "#2e8b6f" },
+    { glassEnabled: false, mode: "dark" },
+  );
+  assert.equal(solidDark.opacityRatio, 1);
+  assert.equal(solidDark.blurFactor, 0);
+  assert.equal(
+    solidDark.glassBg,
+    tokens.mixHexToRgb(tokens.SOLID_BASE_HEX.dark, "#1a5f4a", tokens.SOLID_MIX_WEIGHTS.dark.bg),
+  );
+  assert.equal(
+    solidDark.glassBgHover,
+    tokens.mixHexToRgb(tokens.SOLID_BASE_HEX.dark, "#1a5f4a", tokens.SOLID_MIX_WEIGHTS.dark.hover),
+  );
+  assert.equal(
+    solidDark.glassBorder,
+    tokens.mixHexToRgb(tokens.SOLID_BASE_HEX.dark, "#2e8b6f", tokens.SOLID_MIX_WEIGHTS.dark.border),
+  );
+  assert.equal(solidDark.glassBgSubtle, "rgba(255, 255, 255, 0.06)");
+  assert.equal(solidDark.surfaceRgb, tokens.toRgbChannelString(solidDark.glassBg));
+
+  const solidLight = tokens.resolveSurfaceTokens(
+    { primary: "#1a5f4a", primaryLight: "#2e8b6f" },
+    { glassEnabled: false, mode: "light" },
+  );
+  assert.equal(solidLight.opacityRatio, 1);
+  assert.equal(solidLight.blurFactor, 0);
+  assert.equal(
+    solidLight.glassBg,
+    tokens.mixHexToRgb(tokens.SOLID_BASE_HEX.light, "#1a5f4a", tokens.SOLID_MIX_WEIGHTS.light.bg),
+  );
+  assert.equal(solidLight.glassBgSubtle, "rgba(15, 23, 42, 0.05)");
+
+  // Invalid colors fall back safely instead of producing null/NaN
+  const fallbackDark = tokens.resolveSurfaceTokens({}, { glassEnabled: false, mode: "dark" });
+  assert.equal(fallbackDark.glassBg, "rgb(30, 30, 50)");
+  assert.equal(fallbackDark.surfaceRgb, "30, 30, 50");
+
+  const fallbackLight = tokens.resolveSurfaceTokens({}, { glassEnabled: false, mode: "light" });
+  assert.equal(fallbackLight.glassBg, "rgb(255, 255, 255)");
+  assert.equal(fallbackLight.surfaceRgb, "255, 255, 255");
+});
+
+test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay symmetric", () => {
+  const tokens = load();
+  const palette = {
+    primary: "#1a5f4a",
+    primaryLight: "#2e8b6f",
+    primaryDark: "#0f3d2e",
+    glassBg: "rgba(26, 95, 74, 0.35)",
+    glassBgHover: "rgba(26, 95, 74, 0.45)",
+    glassBorder: "rgba(26, 95, 74, 0.4)",
+  };
+
+  const glassHighlights = tokens.resolveHighlightTokens(palette, {
+    glassEnabled: true,
+    opacity: 35,
+  });
+  assert.equal(
+    glassHighlights.activeBg,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.35), rgba(26, 95, 74, 0.35))",
+  );
+  assert.equal(
+    glassHighlights.bgHover,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.45), rgba(26, 95, 74, 0.45))",
+  );
+  assert.equal(glassHighlights.border, "rgba(46, 139, 111, 0.4)");
+  assert.equal(glassHighlights.lightBg, "rgba(46, 139, 111, 0.45)");
+  assert.equal(glassHighlights.lightSubtleBg, "rgba(46, 139, 111, 0.049)");
+  assert.equal(glassHighlights.shadow, "0 8px 18px rgba(15, 61, 46, 0.112)");
+
+  const solidHighlights = tokens.resolveHighlightTokens(palette, {
+    glassEnabled: false,
+    opacity: 0,
+  });
+  assert.equal(
+    solidHighlights.activeBg,
+    "linear-gradient(135deg, rgba(15, 61, 46, 1), rgba(26, 95, 74, 1))",
+  );
+  assert.equal(solidHighlights.border, "rgba(46, 139, 111, 1)");
+  assert.equal(solidHighlights.lightSubtleBg, "rgba(46, 139, 111, 0.14)");
+  assert.equal(solidHighlights.shadow, "0 8px 18px rgba(15, 61, 46, 0.32)");
+
+  const props = new Map();
+  const fakeEl = {
+    style: {
+      setProperty: (k, v) => props.set(k, v),
+      removeProperty: (k) => props.delete(k),
+      getPropertyValue: (k) => props.get(k) || "",
+    },
+  };
+  const surface = tokens.resolveSurfaceTokens(palette, {
+    glassEnabled: true,
+    opacity: 50,
+    mode: "dark",
+  });
+
+  tokens.applySurfaceTokens(fakeEl, surface, glassHighlights);
+  for (const name of [...tokens.SURFACE_CSS_VARS, ...tokens.HIGHLIGHT_CSS_VARS]) {
+    assert.ok(props.has(name), `applySurfaceTokens should write ${name}`);
+  }
+  assert.equal(props.get("--surface-opacity"), "0.5");
+  assert.equal(props.get("--surface-blur-factor"), "1");
+  assert.equal(props.get("--surface-tint-rgb"), "255, 255, 255");
+  assert.equal(props.get("--surface-rgb"), "26, 95, 74");
+
+  tokens.clearSurfaceTokens(fakeEl);
+  assert.equal(props.size, 0, "clearSurfaceTokens should remove every surface and highlight var");
+});

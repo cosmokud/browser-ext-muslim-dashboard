@@ -43,68 +43,31 @@
   }
 
   normalizeHexColor(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-
-    const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
-    if (shortHex) {
-      const expanded = shortHex[1]
-        .split("")
-        .map((c) => c + c)
-        .join("")
-        .toLowerCase();
-      return `#${expanded}`;
-    }
-
-    const fullHex = raw.match(/^#([0-9a-f]{6})$/i);
-    if (fullHex) {
-      return `#${fullHex[1].toLowerCase()}`;
-    }
-
-    return "";
+    return ThemeTokens.normalizeHexColor(value) || "";
   }
 
   parseCssRgbColor(colorValue) {
-    const value = String(colorValue || "").trim();
-    const match = value.match(
-      /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
-    );
-    if (!match) return null;
-
-    return {
-      r: Math.max(0, Math.min(255, Math.round(Number(match[1])))),
-      g: Math.max(0, Math.min(255, Math.round(Number(match[2])))),
-      b: Math.max(0, Math.min(255, Math.round(Number(match[3])))),
-    };
+    return ThemeTokens.extractRgbChannels(colorValue);
   }
 
   rgbToHex(r, g, b) {
-    const toHex = (value) =>
-      Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0");
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    return ThemeTokens.rgbToHex(r, g, b);
   }
 
   hexToRgb(color) {
-    const normalized = this.normalizeHexColor(color);
-    if (!normalized) return null;
-
-    return {
-      r: parseInt(normalized.slice(1, 3), 16),
-      g: parseInt(normalized.slice(3, 5), 16),
-      b: parseInt(normalized.slice(5, 7), 16),
-    };
+    return ThemeTokens.hexToRgb(this.normalizeHexColor(color));
   }
 
   clampHeaderGlowOpacity(value, fallback = 72) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
-    return Math.max(0, Math.min(100, Math.round(parsed)));
+    return ThemeTokens.clampNumber(Math.round(parsed), 0, 100, fallback);
   }
 
   clampHeaderGlowRadius(value, fallback = 14) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
-    return Math.max(0, Math.min(50, Math.round(parsed)));
+    return ThemeTokens.clampNumber(Math.round(parsed), 0, 50, fallback);
   }
 
   getInverseTextColorHex(sourceEl) {

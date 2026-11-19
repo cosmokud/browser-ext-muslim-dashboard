@@ -26,31 +26,7 @@
   _hexToRgb(hexOrRgb) {
     if (!hexOrRgb) return null;
     const s = String(hexOrRgb).trim();
-
-    // Accept rgb(...) or rgba(...)
-    const rgbMatch = s.match(
-      /^rgba?\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*[0-9.]+)?\s*\)$/i,
-    );
-    if (rgbMatch) {
-      return {
-        r: Math.round(Number(rgbMatch[1])),
-        g: Math.round(Number(rgbMatch[2])),
-        b: Math.round(Number(rgbMatch[3])),
-      };
-    }
-
-    let hex = s.replace("#", "");
-    if (hex.length === 3)
-      hex = hex
-        .split("")
-        .map((c) => c + c)
-        .join("");
-    if (hex.length !== 6) return null;
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-    return { r, g, b };
+    return ThemeTokens.extractRgbChannels(s) || ThemeTokens.hexToRgb(s);
   }
 
   _rgbToCss(rgb) {
@@ -59,12 +35,7 @@
 
   _rgbToHex(rgb) {
     if (!rgb) return "#000000";
-    const toHex = (n) => {
-      const v = Math.max(0, Math.min(255, Math.round(n)));
-      const h = v.toString(16);
-      return h.length === 1 ? "0" + h : h;
-    };
-    return "#" + toHex(rgb.r) + toHex(rgb.g) + toHex(rgb.b);
+    return ThemeTokens.rgbToHex(rgb.r, rgb.g, rgb.b);
   }
 
   _interpolateHex(a, b, t) {

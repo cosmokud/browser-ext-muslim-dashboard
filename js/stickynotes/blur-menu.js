@@ -67,8 +67,10 @@
     const state = note.blurState;
     const dashboardGlassEnabled = this.getDashboardGlassEnabled();
     const dashboardBlurPower = this.getDashboardBlurPower();
-    const dashboardGlassOpacity = this.getDashboardGlassOpacity();
-    const dashboardComponentOpacity = this.getDashboardComponentOpacity();
+    const dashboardComponentOpacity = SettingsRegistry.coerce(
+      "componentOpacity",
+      this.getDashboardComponentOpacity(),
+    );
 
     let effectiveGlass = false;
     if (state === "on") {
@@ -83,11 +85,8 @@
         ? note.blurPower
         : dashboardBlurPower;
 
-    const dashboardLinkedOpacity = note.color?.glass
-      ? dashboardComponentOpacity
-      : dashboardGlassOpacity;
     const effectiveOpacity =
-      state === "on" ? note.glassOpacity : dashboardLinkedOpacity;
+      state === "on" ? note.glassOpacity : dashboardComponentOpacity;
 
     // Keep legacy fields in sync so existing rendering logic remains intact.
     note.glassEffect = effectiveGlass;
@@ -274,7 +273,10 @@
       }
 
       const effectiveOpacity = isDashboardState
-        ? this.getDashboardGlassOpacity()
+        ? SettingsRegistry.coerce(
+            "componentOpacity",
+            this.getDashboardComponentOpacity(),
+          )
         : note.glassOpacity;
       if (opacityWrap) {
         opacityWrap.classList.toggle(
@@ -311,6 +313,7 @@
       this.closeAllNoteBlurMenus();
 
       if (!isOpen) {
+        syncUI();
         menu.classList.add("blur-menu-open");
         noteEl.classList.add("card-blur-popup-open");
         popup.classList.add("blur-popup-open");

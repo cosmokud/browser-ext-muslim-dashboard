@@ -1265,7 +1265,19 @@ class ThemeManager {
       document.getElementById("sidebarRight"),
     ].filter(Boolean);
 
-    const applyToComponent = (component, bgColor, hoverColor, borderColor) => {
+    const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
+      glassEnabled: true,
+      opacity: this._mainGridComponentOpacity,
+      mode: this._currentMode,
+      opacityRule: "componentOpacity",
+    });
+    const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
+      glassEnabled: true,
+      opacity: this._mainGridComponentOpacity,
+      opacityRule: "componentOpacity",
+    });
+
+    const applyToComponent = (component) => {
       // Keep explicit per-card overrides from readability menus authoritative.
       if (
         Object.prototype.hasOwnProperty.call(component.dataset, "glassEnabled")
@@ -1274,85 +1286,33 @@ class ThemeManager {
       }
 
       if (!this._glassEnabled) {
-        component.style.removeProperty("--glass-bg");
-        component.style.removeProperty("--glass-bg-hover");
-        component.style.removeProperty("--glass-border");
-        component.style.removeProperty("--glass-shadow");
-        component.style.removeProperty("--theme-highlight-bg-hover");
-        component.style.removeProperty("--theme-highlight-active-bg");
-        component.style.removeProperty("--theme-highlight-border");
-        component.style.removeProperty("--theme-highlight-light-bg");
-        component.style.removeProperty("--theme-highlight-light-subtle-bg");
-        component.style.removeProperty("--theme-highlight-shadow");
+        ThemeTokens.clearSurfaceTokens(component);
         return;
       }
 
-      component.style.setProperty("--glass-bg", bgColor);
-      component.style.setProperty("--glass-bg-hover", hoverColor);
-      component.style.setProperty("--glass-border", borderColor);
-      component.style.setProperty("--theme-highlight-bg-hover", highlightHoverBg);
-      component.style.setProperty("--theme-highlight-active-bg", highlightActiveBg);
-      component.style.setProperty("--theme-highlight-border", highlightBorder);
-      component.style.setProperty("--theme-highlight-light-bg", highlightLightBg);
-      component.style.setProperty(
-        "--theme-highlight-light-subtle-bg",
-        highlightLightSubtleBg,
-      );
-      component.style.setProperty("--theme-highlight-shadow", highlightShadow);
+      ThemeTokens.applySurfaceTokens(component, surfaceTokens, highlightTokens, {
+        includeShadow: false,
+      });
       component.style.removeProperty("--glass-shadow");
     };
 
-    const alphas = ThemeTokens.glassAlphas(this._mainGridComponentOpacity);
-    const bgColor = ThemeTokens.setColorAlpha(colors.glassBg, alphas.bg);
-    const hoverColor = ThemeTokens.setColorAlpha(
-      colors.glassBgHover,
-      alphas.hover,
-    );
-    const borderColor = ThemeTokens.setColorAlpha(
-      colors.glassBorder,
-      alphas.border,
-    );
-    const highlightDarkBg = ThemeTokens.setColorAlpha(
-      colors.primaryDark,
-      alphas.bg,
-    );
-    const highlightPrimaryBg = ThemeTokens.setColorAlpha(
-      colors.primary,
-      alphas.bg,
-    );
-    const highlightDarkHover = ThemeTokens.setColorAlpha(
-      colors.primaryDark,
-      alphas.hover,
-    );
-    const highlightPrimaryHover = ThemeTokens.setColorAlpha(
-      colors.primary,
-      alphas.hover,
-    );
-    const highlightBorder = ThemeTokens.setColorAlpha(
-      colors.primaryLight,
-      alphas.border,
-    );
-    const highlightLightBg = ThemeTokens.setColorAlpha(
-      colors.primaryLight,
-      alphas.hover,
-    );
-    const highlightLightSubtleBg = ThemeTokens.setColorAlpha(
-      colors.primaryLight,
-      alphas.bg * 0.14,
-    );
-    const highlightShadowColor = ThemeTokens.setColorAlpha(
-      colors.primaryDark,
-      alphas.bg * 0.32,
-    );
-    const highlightHoverBg = `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`;
-    const highlightActiveBg = `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`;
-    const highlightShadow = `0 8px 18px ${highlightShadowColor}`;
-
     if (this._glassEnabled) {
-      root.style.setProperty("--component-highlight-bg-hover", highlightHoverBg);
-      root.style.setProperty("--component-highlight-active-bg", highlightActiveBg);
-      root.style.setProperty("--component-highlight-border", highlightBorder);
-      root.style.setProperty("--component-highlight-shadow", highlightShadow);
+      root.style.setProperty(
+        "--component-highlight-bg-hover",
+        highlightTokens.bgHover,
+      );
+      root.style.setProperty(
+        "--component-highlight-active-bg",
+        highlightTokens.activeBg,
+      );
+      root.style.setProperty(
+        "--component-highlight-border",
+        highlightTokens.border,
+      );
+      root.style.setProperty(
+        "--component-highlight-shadow",
+        highlightTokens.shadow,
+      );
     } else {
       root.style.removeProperty("--component-highlight-bg-hover");
       root.style.removeProperty("--component-highlight-active-bg");
@@ -1372,7 +1332,7 @@ class ThemeManager {
       const isFloating = component.classList.contains("floating-card");
       if (!isInMainLayout && !isInSidebar && !isFloating) return;
 
-      applyToComponent(component, bgColor, hoverColor, borderColor);
+      applyToComponent(component);
     });
   }
 
@@ -1620,46 +1580,13 @@ class ThemeManager {
     root.style.setProperty("--surface-base-bg", colors.bodyBg);
 
     // Apply glass effect or solid background
-    if (this._glassEnabled) {
-      const globalGlassColors = ThemeTokens.applyGlassOpacityToThemeColors(
-        colors,
-        this._glassOpacity,
-      );
-      root.style.setProperty("--glass-bg", globalGlassColors.glassBg);
-      root.style.setProperty(
-        "--glass-bg-hover",
-        globalGlassColors.glassBgHover,
-      );
-      root.style.setProperty("--glass-border", globalGlassColors.glassBorder);
-      root.style.setProperty("--glass-shadow", "0 8px 32px rgba(0, 0, 0, 0.3)");
-    } else {
-      // Solid mode - NO transparency in the base surfaces.
-      // We mix theme colors into the body background to get fully-opaque panel colors.
-      const isLight = this._currentMode === "light";
-
-      const bgMix = isLight ? 0.12 : 0.38;
-      const bgHoverMix = isLight ? 0.18 : 0.48;
-      const borderMix = isLight ? 0.25 : 0.58;
-
-      const solidBg =
-        ThemeTokens.mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
-        (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
-      const solidHover =
-        ThemeTokens.mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
-        (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
-      const solidBorder =
-        ThemeTokens.mixHexToRgb(
-          colors.bodyBg,
-          colors.primaryLight,
-          borderMix,
-        ) ||
-        (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
-
-      root.style.setProperty("--glass-bg", solidBg);
-      root.style.setProperty("--glass-bg-hover", solidHover);
-      root.style.setProperty("--glass-border", solidBorder);
-      root.style.setProperty("--glass-shadow", "0 4px 20px rgba(0, 0, 0, 0.2)");
-    }
+    const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
+      glassEnabled: this._glassEnabled,
+      opacity: this._glassOpacity,
+      mode: this._currentMode,
+      opacityRule: "glassOpacity",
+    });
+    ThemeTokens.applySurfaceTokens(root, surfaceTokens);
 
     // Apply body background
     document.body.style.backgroundColor = colors.bodyBg;

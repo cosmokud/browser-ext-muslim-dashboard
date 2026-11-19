@@ -12,6 +12,7 @@ import { loadPageDom, repoRoot } from "./harness.mjs";
 
 const SETTINGS_SCRIPTS = [
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/base-manager.js",
   "js/settings/index.js",
   "js/settings/theme-panel.js",

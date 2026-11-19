@@ -2084,11 +2084,7 @@ document.addEventListener("DOMContentLoaded", () => {
     value,
     fallback = popupBlurDefaults.palette.primary,
   ) {
-    const source = String(value || "").trim();
-    if (/^#[0-9a-fA-F]{6}$/.test(source)) {
-      return source.toLowerCase();
-    }
-    return fallback;
+    return ThemeTokens.normalizeHexColor(value) || fallback;
   }
 
   function ensurePopupBlurPortal() {
@@ -2203,11 +2199,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function hexToRgb(hexColor) {
-    const normalized = normalizeHexColor(hexColor);
-    const red = parseInt(normalized.slice(1, 3), 16);
-    const green = parseInt(normalized.slice(3, 5), 16);
-    const blue = parseInt(normalized.slice(5, 7), 16);
-    return { r: red, g: green, b: blue, red, green, blue };
+    const rgb = ThemeTokens.hexToRgb(normalizeHexColor(hexColor));
+    if (!rgb) return { r: 0, g: 0, b: 0, red: 0, green: 0, blue: 0 };
+    return {
+      r: rgb.r,
+      g: rgb.g,
+      b: rgb.b,
+      red: rgb.r,
+      green: rgb.g,
+      blue: rgb.b,
+    };
   }
 
   function getCurrentThemeContext() {
@@ -2281,27 +2282,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getDashboardGlassOpacityPercent() {
     const settings = storage.getSettings();
-    return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity, 0);
-  }
-
-  function getGlassOpacityAlphas(opacityPercent) {
-    return ThemeTokens.glassAlphas(opacityPercent);
-  }
-
-  function setColorAlpha(value, alpha) {
-    return ThemeTokens.setColorAlpha(value, alpha);
-  }
-
-  function applyGlassOpacityToColors(colors) {
-    if (!colors) return colors;
-
-    const alphas = getGlassOpacityAlphas(getDashboardGlassOpacityPercent());
-    return {
-      ...colors,
-      glassBg: setColorAlpha(colors.glassBg, alphas.bg),
-      glassBgHover: setColorAlpha(colors.glassBgHover, alphas.hover),
-      glassBorder: setColorAlpha(colors.glassBorder, alphas.border),
-    };
+    return SettingsRegistry.coerce(
+      "glassOpacity",
+      settings?.theme?.glassOpacity,
+      SettingsRegistry.defaultOf("glassOpacity"),
+    );
   }
 
   function buildThemeColorsFromPopupPalette(inputPalette) {
@@ -2317,37 +2302,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (palette.primary) {
       colors.primary = palette.primary;
-      colors.primaryLight =
-        typeof themes._lightenColor === "function"
-          ? themes._lightenColor(palette.primary, 18)
-          : palette.primary;
-      colors.primaryDark =
-        typeof themes._darkenColor === "function"
-          ? themes._darkenColor(palette.primary, 18)
-          : palette.primary;
+      colors.primaryLight = ThemeTokens.lighten(palette.primary, 18);
+      colors.primaryDark = ThemeTokens.darken(palette.primary, 18);
     }
 
     if (palette.accent) {
-      const lighten =
-        typeof themes._lightenColor === "function"
-          ? themes._lightenColor.bind(themes)
-          : (hex) => hex;
       colors.accent = palette.accent;
       colors.accentText = palette.accent;
       colors.accentBackground = palette.accent;
-      colors.accentLight = lighten(palette.accent, 18);
-      colors.accentBlue = lighten(palette.accent, 10);
+      colors.accentLight = ThemeTokens.lighten(palette.accent, 18);
+      colors.accentBlue = ThemeTokens.lighten(palette.accent, 10);
       colors.settingsColor = palette.accent;
-      colors.settingsLight = lighten(palette.accent, 25);
+      colors.settingsLight = ThemeTokens.lighten(palette.accent, 25);
     }
 
     if (palette.background) {
       colors.bodyBg = palette.background;
 
-      const isDarkBg =
-        typeof themes._isDarkColor === "function"
-          ? themes._isDarkColor(palette.background)
-          : true;
+      const isDarkBg = ThemeTokens.isDark(palette.background);
 
       const lightTextPrimary = context.isPureTheme ? "#1a1a1a" : "#1a1a2e";
       colors.textPrimary = isDarkBg ? "#ffffff" : lightTextPrimary;
@@ -2363,10 +2335,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const defaultGlassTint =
         context.themeName === "pureBlack" ? "#000000" : "#ffffff";
       const glassTintHex = palette?.glassTint || defaultGlassTint;
-      const tintRgb =
-        typeof themes.hexToRgb === "function"
-          ? themes.hexToRgb(glassTintHex)
-          : hexToRgb(glassTintHex);
+      const tintRgb = ThemeTokens.hexToRgb(glassTintHex) || hexToRgb(glassTintHex);
 
       if (tintRgb) {
         colors.glassBg = `rgba(${tintRgb.r}, ${tintRgb.g}, ${tintRgb.b}, 0.12)`;
@@ -2375,17 +2344,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else if (palette?.primary) {
       const primaryRgb =
-        typeof themes.hexToRgb === "function"
-          ? themes.hexToRgb(colors.primary)
-          : hexToRgb(colors.primary);
+        ThemeTokens.hexToRgb(colors.primary) || hexToRgb(colors.primary);
 
       if (primaryRgb) {
         const base = context.theme?.[context.mode] || context.base;
         const parseAlpha = (value, fallback) => {
-          const parsed =
-            typeof themes._parseRgbaAlpha === "function"
-              ? themes._parseRgbaAlpha(value)
-              : null;
+          const parsed = ThemeTokens.parseRgbaAlpha(value);
           return Number.isFinite(parsed) ? parsed : fallback;
         };
 
@@ -2408,7 +2372,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    return applyGlassOpacityToColors(colors);
+    return ThemeTokens.applyGlassOpacityToThemeColors(
+      colors,
+      getDashboardGlassOpacityPercent(),
+    );
   }
 
   function isDashboardGlassEnabled() {
@@ -2426,56 +2393,20 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  function mixHexToRgb(baseHex, mixHex, mixWeight) {
-    return ThemeTokens.mixHexToRgb(baseHex, mixHex, mixWeight);
-  }
-
-  function getPopupGlassVars(colors, glassEnabled) {
-    if (!colors) return null;
-
-    if (glassEnabled) {
-      return {
-        glassBg: colors.glassBg,
-        glassBgHover: colors.glassBgHover,
-        glassBorder: colors.glassBorder,
-        glassShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-      };
-    }
+  function applyPopupGlassVars(colors, glassEnabled) {
+    if (!colors) return;
 
     const mode = getCurrentThemeContext().mode;
-    const isLight = mode === "light";
-
-    const bgMix = isLight ? 0.12 : 0.38;
-    const bgHoverMix = isLight ? 0.18 : 0.48;
-    const borderMix = isLight ? 0.25 : 0.58;
-
-    const solidBg =
-      mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
-      (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
-    const solidHover =
-      mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
-      (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
-    const solidBorder =
-      mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
-      (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
-
-    return {
-      glassBg: solidBg,
-      glassBgHover: solidHover,
-      glassBorder: solidBorder,
-      glassShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
-    };
-  }
-
-  function applyPopupGlassVars(colors, glassEnabled) {
-    const vars = getPopupGlassVars(colors, glassEnabled);
-    if (!vars) return;
+    const dashboardGlassOpacity = getDashboardGlassOpacityPercent();
+    const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
+      glassEnabled,
+      opacity: dashboardGlassOpacity,
+      mode,
+      opacityRule: "glassOpacity",
+    });
 
     const root = document.documentElement;
-    root.style.setProperty("--glass-bg", vars.glassBg);
-    root.style.setProperty("--glass-bg-hover", vars.glassBgHover);
-    root.style.setProperty("--glass-border", vars.glassBorder);
-    root.style.setProperty("--glass-shadow", vars.glassShadow);
+    ThemeTokens.applySurfaceTokens(root, surfaceTokens);
     root.dataset.glassEnabled = glassEnabled ? "true" : "false";
   }
 
@@ -2581,9 +2512,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const settingsRgb =
-      typeof themes.hexToRgb === "function"
-        ? themes.hexToRgb(colors.settingsColor)
-        : hexToRgb(colors.settingsColor);
+      ThemeTokens.hexToRgb(colors.settingsColor) ||
+      hexToRgb(colors.settingsColor);
 
     if (settingsRgb) {
       root.style.setProperty(
@@ -2609,7 +2539,10 @@ document.addEventListener("DOMContentLoaded", () => {
         popupBlurDefaults.palette.primary,
       );
 
-      return mixHexToRgb(primaryHex, "#000000", 0.75) || "rgb(5, 17, 13)";
+      return (
+        ThemeTokens.mixHexToRgb(primaryHex, "#000000", 0.75) ||
+        "rgb(5, 17, 13)"
+      );
     })();
 
     document.documentElement.style.setProperty(

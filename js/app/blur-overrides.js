@@ -47,7 +47,7 @@
         const settings = this.storage.getSettings();
         return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity);
       } catch (e) {
-        return 50;
+        return SettingsRegistry.defaultOf("glassOpacity");
       }
     };
 
@@ -242,108 +242,30 @@
       ensureBlurPopupPortal(menu, popup);
 
       const clearCardGlassVars = () => {
-        card.style.removeProperty("--glass-bg");
-        card.style.removeProperty("--glass-bg-hover");
-        card.style.removeProperty("--glass-border");
-        card.style.removeProperty("--glass-shadow");
-      };
-
-      const setColorAlpha = (value, alpha) => {
-        if (typeof value !== "string") return value;
-        const match = value
-          .replace(/\s+/g, "")
-          .match(/^rgba?\((\d+),(\d+),(\d+)(?:,[0-9.]+)?\)$/i);
-        if (!match) return value;
-
-        const bounded = Number(
-          Math.min(1, Math.max(0, Number(alpha))).toFixed(3),
-        );
-        return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${bounded})`;
-      };
-
-      const getGlassOpacityAlphas = (opacityPercent) => {
-        const baseAlpha = normalizeGlassOpacity(opacityPercent, 35) / 100;
-        const hoverRatio = 0.45 / 0.35;
-        const borderRatio = 0.4 / 0.35;
-        const clampAlpha = (alpha) =>
-          Number(Math.min(1, Math.max(0, alpha)).toFixed(3));
-
-        return {
-          bg: clampAlpha(baseAlpha),
-          hover: clampAlpha(baseAlpha * hoverRatio),
-          border: clampAlpha(baseAlpha * borderRatio),
-        };
+        ThemeTokens.clearSurfaceTokens(card);
       };
 
       const applyCardGlassVars = (glassEnabled, opacityPercent = null) => {
         const colors = this.themes?.getThemeColors?.();
         if (!colors) return;
 
-        if (glassEnabled) {
-          const targetOpacity = normalizeGlassOpacity(
-            opacityPercent,
-            getDashboardGlassOpacity(),
-          );
-          const opacityAlphas = getGlassOpacityAlphas(targetOpacity);
-          const glassBg = setColorAlpha(colors.glassBg, opacityAlphas.bg);
-          const glassBgHover = setColorAlpha(
-            colors.glassBgHover,
-            opacityAlphas.hover,
-          );
-          const glassBorder = setColorAlpha(
-            colors.glassBorder,
-            opacityAlphas.border,
-          );
-
-          card.style.setProperty("--glass-bg", glassBg);
-          card.style.setProperty("--glass-bg-hover", glassBgHover);
-          card.style.setProperty("--glass-border", glassBorder);
-          card.style.setProperty(
-            "--glass-shadow",
-            "0 8px 32px rgba(0, 0, 0, 0.3)",
-          );
-          return;
-        }
-
-        // Solid mode - NO transparency in the base surfaces.
-        // We mix theme colors into the body background to get fully-opaque panel colors.
-        const isLight = this.themes.getCurrentMode?.() === "light";
-
-        const bgMix = isLight ? 0.12 : 0.38;
-        const bgHoverMix = isLight ? 0.18 : 0.48;
-        const borderMix = isLight ? 0.25 : 0.58;
-
-        const mixHexToRgb = (baseHex, mixHex, mixWeight) => {
-          const base = this.themes.hexToRgb?.(baseHex);
-          const mix = this.themes.hexToRgb?.(mixHex);
-          if (!base || !mix) return null;
-
-          const w = Math.max(0, Math.min(1, Number(mixWeight)));
-          const blend = (a, b) => Math.round(a * (1 - w) + b * w);
-
-          return `rgb(${blend(base.r, mix.r)}, ${blend(base.g, mix.g)}, ${blend(
-            base.b,
-            mix.b,
-          )})`;
-        };
-
-        const solidBg =
-          mixHexToRgb(colors.bodyBg, colors.primary, bgMix) ||
-          (isLight ? "rgb(255, 255, 255)" : "rgb(30, 30, 50)");
-        const solidHover =
-          mixHexToRgb(colors.bodyBg, colors.primary, bgHoverMix) ||
-          (isLight ? "rgb(245, 245, 245)" : "rgb(40, 40, 60)");
-        const solidBorder =
-          mixHexToRgb(colors.bodyBg, colors.primaryLight, borderMix) ||
-          (isLight ? "rgb(220, 220, 220)" : "rgb(90, 90, 110)");
-
-        card.style.setProperty("--glass-bg", solidBg);
-        card.style.setProperty("--glass-bg-hover", solidHover);
-        card.style.setProperty("--glass-border", solidBorder);
-        card.style.setProperty(
-          "--glass-shadow",
-          "0 4px 20px rgba(0, 0, 0, 0.2)",
-        );
+        const mode =
+          this.themes?.getCurrentMode?.() === "light" ? "light" : "dark";
+        const targetOpacity = glassEnabled
+          ? normalizeGlassOpacity(opacityPercent, getDashboardGlassOpacity())
+          : 100;
+        const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
+          glassEnabled,
+          opacity: targetOpacity,
+          mode,
+          opacityRule: "glassOpacity",
+        });
+        const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
+          glassEnabled,
+          opacity: targetOpacity,
+          opacityRule: "glassOpacity",
+        });
+        ThemeTokens.applySurfaceTokens(card, surfaceTokens, highlightTokens);
       };
 
       // Apply glass state to the card
@@ -376,8 +298,12 @@
         // - ON   => data-glass-enabled="true" on this card only
         // - DASH => remove attribute so it follows dashboard/root setting
         if (state === "dashboard") {
+          const hadCardOverride = Object.prototype.hasOwnProperty.call(
+            card.dataset,
+            "glassEnabled",
+          );
           delete card.dataset.glassEnabled;
-          if (resetDashboardSurface) {
+          if (resetDashboardSurface || hadCardOverride) {
             clearCardGlassVars();
           }
         } else if (state === "on") {

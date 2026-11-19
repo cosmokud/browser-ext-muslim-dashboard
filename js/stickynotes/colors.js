@@ -14,69 +14,27 @@
 })(StickyNotesManager.prototype, class {
 
   adjustAlpha(rgba, alpha) {
-    const match = rgba.match(
-      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
-    );
-    if (match) {
-      const [, r, g, b] = match;
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-    return rgba;
+    return ThemeTokens.setColorAlpha(rgba, alpha);
   }
 
   clampNumber(value, min, max, fallback) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return fallback;
-    return Math.min(max, Math.max(min, numeric));
+    return ThemeTokens.clampNumber(value, min, max, fallback);
   }
 
   normalizeHexColor(value, fallback = "#ff7eb9") {
-    const normalize = (input) => {
-      if (typeof input !== "string") return null;
-      const match = input.trim().match(/^#([\da-f]{3}|[\da-f]{6})$/i);
-      if (!match) return null;
-
-      let raw = match[1].toLowerCase();
-      if (raw.length === 3) {
-        raw = raw
-          .split("")
-          .map((ch) => ch + ch)
-          .join("");
-      }
-      return `#${raw}`;
-    };
-
-    return normalize(value) || normalize(fallback) || "#ff7eb9";
+    return (
+      ThemeTokens.normalizeHexColor(value) ||
+      ThemeTokens.normalizeHexColor(fallback) ||
+      "#ff7eb9"
+    );
   }
 
   extractHexFromColorString(value) {
-    if (typeof value !== "string") return null;
-    const raw = value.trim();
-
-    const hexMatch = raw.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
-    if (hexMatch) {
-      return this.normalizeHexColor(raw);
-    }
-
-    const rgbMatch = raw.match(
-      /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([\d.]+))?\s*\)$/i,
-    );
-    if (!rgbMatch) return null;
-
-    const toHex = (num) =>
-      this.clampNumber(Number(num), 0, 255, 0).toString(16).padStart(2, "0");
-
-    return `#${toHex(rgbMatch[1])}${toHex(rgbMatch[2])}${toHex(rgbMatch[3])}`;
+    return ThemeTokens.colorToHex(value, null);
   }
 
   hexToRgb(hex) {
-    const normalized = this.normalizeHexColor(hex);
-    const raw = normalized.slice(1);
-    return {
-      r: parseInt(raw.slice(0, 2), 16),
-      g: parseInt(raw.slice(2, 4), 16),
-      b: parseInt(raw.slice(4, 6), 16),
-    };
+    return ThemeTokens.hexToRgb(this.normalizeHexColor(hex));
   }
 
   getReadableTextColorForHex(hex) {
@@ -232,13 +190,16 @@
     try {
       const themes = window.dashboard?.themes;
       if (themes && typeof themes.getGlassOpacity === "function") {
-        return this.clampNumber(themes.getGlassOpacity(), 0, 100, 35);
+        return SettingsRegistry.coerce("glassOpacity", themes.getGlassOpacity());
       }
 
       const settings = this.storage?.getSettings?.();
-      return SettingsRegistry.coerce("glassOpacity", settings?.theme?.glassOpacity, 35);
+      return SettingsRegistry.coerce(
+        "glassOpacity",
+        settings?.theme?.glassOpacity,
+      );
     } catch (e) {
-      return 35;
+      return SettingsRegistry.defaultOf("glassOpacity");
     }
   }
 
@@ -246,18 +207,19 @@
     try {
       const themes = window.dashboard?.themes;
       if (themes && typeof themes.getMainGridComponentOpacity === "function") {
-        return this.clampNumber(
+        return SettingsRegistry.coerce(
+          "componentOpacity",
           themes.getMainGridComponentOpacity(),
-          0,
-          100,
-          0,
         );
       }
 
       const settings = this.storage?.getSettings?.();
-      return SettingsRegistry.coerce("componentOpacity", settings?.theme?.componentOpacity, 0);
+      return SettingsRegistry.coerce(
+        "componentOpacity",
+        settings?.theme?.componentOpacity,
+      );
     } catch (e) {
-      return 0;
+      return SettingsRegistry.defaultOf("componentOpacity");
     }
   }
 

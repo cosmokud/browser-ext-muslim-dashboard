@@ -665,16 +665,8 @@ class BackgroundManager extends BaseManager {
       raw = `#${raw}`;
     }
 
-    const shortMatch = raw.match(/^#([0-9a-fA-F]{3})$/);
-    if (shortMatch) {
-      const [r, g, b] = shortMatch[1].split("");
-      raw = `#${r}${r}${g}${g}${b}${b}`;
-    }
-
-    const fullMatch = raw.match(/^#([0-9a-fA-F]{6})$/);
-    if (!fullMatch) return "";
-
-    return `#${fullMatch[1].toUpperCase()}`;
+    const normalized = ThemeTokens.normalizeHexColor(raw);
+    return normalized ? normalized.toUpperCase() : "";
   }
 
   _solidColorHexToUrl(value) {
@@ -697,45 +689,7 @@ class BackgroundManager extends BaseManager {
   }
 
   _hslToHex(h, s, l) {
-    const hh = (((Number(h) || 0) % 360) + 360) % 360;
-    const ss = Math.max(0, Math.min(100, Number(s) || 0)) / 100;
-    const ll = Math.max(0, Math.min(100, Number(l) || 0)) / 100;
-
-    const c = (1 - Math.abs(2 * ll - 1)) * ss;
-    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
-    const m = ll - c / 2;
-
-    let r1 = 0;
-    let g1 = 0;
-    let b1 = 0;
-
-    if (hh < 60) {
-      r1 = c;
-      g1 = x;
-    } else if (hh < 120) {
-      r1 = x;
-      g1 = c;
-    } else if (hh < 180) {
-      g1 = c;
-      b1 = x;
-    } else if (hh < 240) {
-      g1 = x;
-      b1 = c;
-    } else if (hh < 300) {
-      r1 = x;
-      b1 = c;
-    } else {
-      r1 = c;
-      b1 = x;
-    }
-
-    const toHex2 = (n) =>
-      Math.round((n + m) * 255)
-        .toString(16)
-        .padStart(2, "0")
-        .toUpperCase();
-
-    return `#${toHex2(r1)}${toHex2(g1)}${toHex2(b1)}`;
+    return ThemeTokens.hslToHex(h, s, l).toUpperCase();
   }
 
   _getDefaultSolidBackgroundUrls() {

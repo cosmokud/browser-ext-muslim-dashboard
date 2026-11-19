@@ -27,16 +27,8 @@
 
   _normalizeRgbString(rgbString) {
     const fallback = "255, 255, 255";
-    if (typeof rgbString !== "string") return fallback;
-    const m = rgbString
-      .trim()
-      .match(/^\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*$/);
-    if (!m) return fallback;
-    const clamp = (n) => Math.max(0, Math.min(255, n));
-    const r = clamp(parseInt(m[1], 10));
-    const g = clamp(parseInt(m[2], 10));
-    const b = clamp(parseInt(m[3], 10));
-    return `${r}, ${g}, ${b}`;
+    if (!this._isValidRgbString(rgbString)) return fallback;
+    return ThemeTokens.toRgbChannelString(rgbString, fallback);
   }
 
   _normalizeOptionalRgbString(rgbString) {
@@ -46,35 +38,20 @@
   }
 
   _hexToRgbString(hex) {
-    const s = String(hex || "").trim();
-    const m = s.match(/^#?([0-9a-fA-F]{6})$/);
-    if (!m) return null;
-    const raw = m[1];
-    const r = parseInt(raw.slice(0, 2), 16);
-    const g = parseInt(raw.slice(2, 4), 16);
-    const b = parseInt(raw.slice(4, 6), 16);
-    return `${r}, ${g}, ${b}`;
+    const rgb = ThemeTokens.hexToRgb(hex);
+    return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : null;
   }
 
   _rgbStringToHex(rgbString) {
-    const m = String(rgbString || "")
-      .trim()
-      .match(/^\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*$/);
-    if (!m) return null;
-    const clamp = (n) => Math.max(0, Math.min(255, n));
-    const r = clamp(parseInt(m[1], 10));
-    const g = clamp(parseInt(m[2], 10));
-    const b = clamp(parseInt(m[3], 10));
-    const toHex2 = (n) => n.toString(16).padStart(2, "0");
-    return `#${toHex2(r)}${toHex2(g)}${toHex2(b)}`;
+    if (!this._isValidRgbString(rgbString)) return null;
+    const normalized = ThemeTokens.toRgbChannelString(rgbString, null);
+    return normalized
+      ? ThemeTokens.colorToHex(`rgb(${normalized})`, null)
+      : null;
   }
 
   _parseHexColor(hex) {
-    const rgb = this._hexToRgbString(hex);
-    if (!rgb) return null;
-    const m = rgb.match(/^(\d+),\s*(\d+),\s*(\d+)$/);
-    if (!m) return null;
-    return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+    return ThemeTokens.hexToRgb(hex);
   }
 
   _mixRgb(a, b, t) {
@@ -87,43 +64,7 @@
   }
 
   _hslToRgb(h, s, l) {
-    const hh = (((Number(h) || 0) % 360) + 360) % 360;
-    const ss = Math.max(0, Math.min(100, Number(s) || 0)) / 100;
-    const ll = Math.max(0, Math.min(100, Number(l) || 0)) / 100;
-
-    const c = (1 - Math.abs(2 * ll - 1)) * ss;
-    const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
-    const m = ll - c / 2;
-
-    let r1 = 0;
-    let g1 = 0;
-    let b1 = 0;
-
-    if (hh < 60) {
-      r1 = c;
-      g1 = x;
-    } else if (hh < 120) {
-      r1 = x;
-      g1 = c;
-    } else if (hh < 180) {
-      g1 = c;
-      b1 = x;
-    } else if (hh < 240) {
-      g1 = x;
-      b1 = c;
-    } else if (hh < 300) {
-      r1 = x;
-      b1 = c;
-    } else {
-      r1 = c;
-      b1 = x;
-    }
-
-    return {
-      r: Math.round((r1 + m) * 255),
-      g: Math.round((g1 + m) * 255),
-      b: Math.round((b1 + m) * 255),
-    };
+    return ThemeTokens.hslToRgb(h, s, l);
   }
 
   _getRainbowPalette(count) {

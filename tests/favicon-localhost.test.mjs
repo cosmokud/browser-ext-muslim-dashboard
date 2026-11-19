@@ -65,6 +65,7 @@ function makeIndexedDB() {
 }
 
 const SEARCH_FILES = [
+  "js/theme-tokens.js",
   "js/base-manager.js",
   "js/faviconcache.js",
   "js/searchbar/index.js",

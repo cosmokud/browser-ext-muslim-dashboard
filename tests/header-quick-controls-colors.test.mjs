@@ -13,12 +13,17 @@ import { loadPageDom, repoRoot } from "./harness.mjs";
 
 const SETTINGS_SCRIPTS = [
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/base-manager.js",
   "js/settings/index.js",
   "js/settings/header-colors.js",
   "js/settings/theme-panel.js",
 ];
-const APP_SCRIPTS = ["js/app/index.js", "js/app/header-appearance.js"];
+const APP_SCRIPTS = [
+  "js/theme-tokens.js",
+  "js/app/index.js",
+  "js/app/header-appearance.js",
+];
 
 const ITEMS = ["Greeting", "Date", "Time", "NextPrayer", "CompactWeather"];
 
