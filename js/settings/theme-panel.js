@@ -128,7 +128,8 @@
     const glassOpacity = SettingsRegistry.coerce(
       "glassOpacity",
       themeSettings.glassOpacity,
-      window.dashboard?.themes?.getGlassOpacity?.() ?? 50,
+      window.dashboard?.themes?.getGlassOpacity?.() ??
+        SettingsRegistry.defaultOf("glassOpacity"),
     );
     if (this.themeGlassOpacity) {
       this.themeGlassOpacity.value = String(glassOpacity);
@@ -139,7 +140,8 @@
     const componentOpacity = SettingsRegistry.coerce(
       "componentOpacity",
       themeSettings.componentOpacity,
-      window.dashboard?.themes?.getMainGridComponentOpacity?.() ?? 0,
+      window.dashboard?.themes?.getMainGridComponentOpacity?.() ??
+        SettingsRegistry.defaultOf("componentOpacity"),
     );
     if (this.themeComponentOpacity) {
       this.themeComponentOpacity.value = String(componentOpacity);
@@ -150,7 +152,8 @@
     const modalOpacity = SettingsRegistry.coerce(
       "modalOpacity",
       themeSettings.modalOpacity,
-      window.dashboard?.themes?.getModalOpacity?.() ?? 97,
+      window.dashboard?.themes?.getModalOpacity?.() ??
+        SettingsRegistry.defaultOf("modalOpacity"),
     );
     if (this.themeModalOpacity) {
       this.themeModalOpacity.value = String(modalOpacity);
@@ -193,7 +196,7 @@
       dashboardQualityState.highestVisualFidelityEnabled,
     );
     this.applyPerformanceMode(dashboardQualityState.performanceModeEnabled);
-    this.applyUiBlurPower(settings.uiBlurPower ?? 100);
+    this.applyUiBlurPower(blurPower);
 
     // Highlight active theme
     const activeTheme = themeSettings.name || "emerald";

@@ -53,8 +53,11 @@ class SettingsRegistry {
     // Dashboard glass power, the custom container width, and the highlighter's
     // lead time (shared with js/quran-recitation.js).
     uiBlurPower: { default: 100, min: 0, max: 200, round: true },
-    componentOpacity: { default: 0, min: 0, max: 100 },
-    modalOpacity: { default: 97, min: 0, max: 100 },
+    componentOpacity: { default: 0, min: 0, max: 100, round: true },
+    modalOpacity: { default: 97, min: 0, max: 100, round: true },
+    "theme.glassEnabled": { default: true, boolean: true },
+    "theme.backgroundAwareFontColorEnabled": { default: false, boolean: true },
+    "theme.highestVisualFidelityEnabled": { default: false, boolean: true },
     containerWidthCustom: { default: 70, min: 20, max: 98 },
     "quran.reciterHighlighterDelayMs": {
       default: 0,
@@ -150,6 +153,65 @@ class SettingsRegistry {
     if (rule.round === true) next = Math.round(next);
 
     return next;
+  }
+
+  static THEME_RULE_MAP = {
+    glassEnabled: "theme.glassEnabled",
+    glassOpacity: "glassOpacity",
+    componentOpacity: "componentOpacity",
+    modalOpacity: "modalOpacity",
+    backgroundAwareFontColorEnabled: "theme.backgroundAwareFontColorEnabled",
+    highestVisualFidelityEnabled: "theme.highestVisualFidelityEnabled",
+  };
+
+  /** Default settings.theme block backed by registry rules. */
+  static themeDefaults() {
+    return {
+      name: "emerald",
+      mode: "dark",
+      glassEnabled: SettingsRegistry.defaultOf("theme.glassEnabled"),
+      glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
+      componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
+      modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
+      backgroundAwareFontColorEnabled: SettingsRegistry.defaultOf(
+        "theme.backgroundAwareFontColorEnabled",
+      ),
+      highestVisualFidelityEnabled: SettingsRegistry.defaultOf(
+        "theme.highestVisualFidelityEnabled",
+      ),
+      customAccent: null,
+      customPalettes: {},
+    };
+  }
+
+  /**
+   * Merge a partial theme update onto an existing theme settings object without
+   * dropping unrelated sibling keys, while coercing registry-backed theme keys
+   * whenever present.
+   */
+  static mergeThemeSettings(existing, patch) {
+    const base =
+      existing && typeof existing === "object" && !Array.isArray(existing)
+        ? existing
+        : {};
+    const next =
+      patch && typeof patch === "object" && !Array.isArray(patch) ? patch : {};
+    const merged = { ...base };
+
+    for (const [key, value] of Object.entries(next)) {
+      if (value !== undefined) {
+        merged[key] = value;
+      }
+    }
+
+    for (const [key, ruleName] of Object.entries(
+      SettingsRegistry.THEME_RULE_MAP,
+    )) {
+      if (!Object.prototype.hasOwnProperty.call(merged, key)) continue;
+      merged[key] = SettingsRegistry.coerce(ruleName, merged[key]);
+    }
+
+    return merged;
   }
 }
 

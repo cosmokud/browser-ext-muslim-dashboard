@@ -51,10 +51,10 @@
     }
 
     const themeSliderDefaults = {
-      blurPower: 100,
-      glassOpacity: 50,
-      componentOpacity: 0,
-      modalOpacity: 97,
+      blurPower: SettingsRegistry.defaultOf("uiBlurPower"),
+      glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
+      componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
+      modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
     };
     const themeSliderDebounceMs = 120;
 
@@ -333,7 +333,8 @@
         this.toggleThemeCustomWidth(e.target.value === "custom");
         this.applyContainerWidth(
           e.target.value,
-          parseInt(this.themeContainerWidthCustom?.value, 10) || 70,
+          parseInt(this.themeContainerWidthCustom?.value, 10) ||
+            SettingsRegistry.defaultOf("containerWidthCustom"),
         );
       });
     }
@@ -459,7 +460,7 @@
     }
 
     // Save theme settings
-    settings.theme = {
+    settings.theme = SettingsRegistry.mergeThemeSettings(settings.theme, {
       name: activeTheme,
       mode: mode,
       glassEnabled: glassEnabled,
@@ -471,7 +472,7 @@
         dashboardQualityState.highestVisualFidelityEnabled,
       customAccent: customAccent,
       customPalettes: customPalettes,
-    };
+    });
 
     // Save blur power (now from Themes panel)
     settings.uiBlurPower = SettingsRegistry.coerce(

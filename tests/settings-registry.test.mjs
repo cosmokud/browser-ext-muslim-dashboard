@@ -6,7 +6,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadSandbox } from "./harness.mjs";
+import { loadSandbox, makePage } from "./harness.mjs";
 
 const FILES = ["js/settings-registry.js", "js/storage.js"];
 
@@ -255,4 +255,110 @@ test("the calendar setting only accepts the calendars that exist", () => {
     "indonesia",
     "Kemenag stays available",
   );
+});
+
+test("componentOpacity and modalOpacity round floats and ship in default theme settings", () => {
+  const { registry, storage } = load();
+  const defaults = storage.getDefaultSettings();
+
+  assert.equal(registry.coerce("componentOpacity", 33.6), 34);
+  assert.equal(registry.coerce("componentOpacity", 33.4), 33);
+  assert.equal(registry.coerce("modalOpacity", 84.6), 85);
+  assert.equal(
+    defaults.theme.modalOpacity,
+    registry.defaultOf("modalOpacity"),
+    "default theme settings include modalOpacity from the registry",
+  );
+  assert.deepEqual(defaults.theme, registry.themeDefaults());
+});
+
+test("mergeThemeSettings coerces registry-backed keys while preserving sibling keys", () => {
+  const { registry } = load();
+
+  const merged = registry.mergeThemeSettings(
+    {
+      name: "emerald",
+      mode: "dark",
+      highestVisualFidelityEnabled: true,
+      accentColor: "#123456",
+      customSiblingKey: "keep-me",
+    },
+    {
+      name: "sapphire",
+      glassOpacity: 150,
+      componentOpacity: 42.6,
+      modalOpacity: -8,
+      backgroundAwareFontColorEnabled: true,
+    },
+  );
+
+  assert.deepEqual({ ...merged }, {
+    name: "sapphire",
+    mode: "dark",
+    highestVisualFidelityEnabled: true,
+    accentColor: "#123456",
+    customSiblingKey: "keep-me",
+    glassOpacity: 100,
+    componentOpacity: 43,
+    modalOpacity: 0,
+    backgroundAwareFontColorEnabled: true,
+  });
+
+  const preservesUnset = registry.mergeThemeSettings(
+    { glassOpacity: 72, customAccent: "#abcdef", highestVisualFidelityEnabled: true },
+    { glassOpacity: undefined, customAccent: null },
+  );
+  assert.equal(preservesUnset.glassOpacity, 72);
+  assert.equal(preservesUnset.customAccent, null);
+  assert.equal(preservesUnset.highestVisualFidelityEnabled, true);
+});
+
+test("ThemeManager.saveThemeSettings preserves highestVisualFidelityEnabled and sibling keys", () => {
+  const page = makePage();
+  const sandbox = loadSandbox(
+    [
+      "js/settings-registry.js",
+      "js/storage.js",
+      "js/theme-tokens.js",
+      "js/themes.js",
+    ],
+    {
+      globals: {
+        ...page,
+        localStorage: makeLocalStorage({
+          muslimDashboard_settings: {
+            theme: {
+              name: "emerald",
+              mode: "dark",
+              glassOpacity: 50,
+              componentOpacity: 15,
+              modalOpacity: 90,
+              highestVisualFidelityEnabled: true,
+              customThemeSibling: "preserved",
+            },
+          },
+        }),
+        CustomEvent: globalThis.CustomEvent,
+      },
+    },
+  );
+
+  const storage = new sandbox.StorageManager();
+  const themes = new sandbox.ThemeManager(storage);
+
+  themes.setTheme("sapphire", true);
+  let saved = storage.getSettings();
+  assert.equal(saved.theme.name, "sapphire");
+  assert.equal(saved.theme.highestVisualFidelityEnabled, true);
+  assert.equal(saved.theme.customThemeSibling, "preserved");
+
+  themes.setMainGridComponentOpacity(44.6, true);
+  themes.setModalOpacity(82.4, true);
+  themes.setGlassOpacity(68.5, true);
+  saved = storage.getSettings();
+  assert.equal(saved.theme.componentOpacity, 45);
+  assert.equal(saved.theme.modalOpacity, 82);
+  assert.equal(saved.theme.glassOpacity, 69);
+  assert.equal(saved.theme.highestVisualFidelityEnabled, true);
+  assert.equal(saved.theme.customThemeSibling, "preserved");
 });

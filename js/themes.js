@@ -684,9 +684,10 @@ class ThemeManager {
     this._currentTheme = ThemeManager.DEFAULT_THEME;
     this._currentMode = ThemeManager.DEFAULT_MODE;
     this._glassEnabled = true;
-    this._glassOpacity = 50;
-    this._mainGridComponentOpacity = 0;
-    this._modalOpacity = 97;
+    this._glassOpacity = SettingsRegistry.defaultOf("glassOpacity");
+    this._mainGridComponentOpacity =
+      SettingsRegistry.defaultOf("componentOpacity");
+    this._modalOpacity = SettingsRegistry.defaultOf("modalOpacity");
     this._backgroundAwareFontColorEnabled = false;
     this._backgroundAwareFontColorFrame = null;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -824,9 +825,9 @@ class ThemeManager {
     this._currentTheme = themeSettings.name || ThemeManager.DEFAULT_THEME;
     this._currentMode = themeSettings.mode || ThemeManager.DEFAULT_MODE;
     this._glassEnabled = themeSettings.glassEnabled !== false;
-    this._glassOpacity = ThemeTokens.clampOpacity(
+    this._glassOpacity = SettingsRegistry.coerce(
+      "glassOpacity",
       themeSettings.glassOpacity,
-      50,
     );
     this._mainGridComponentOpacity = SettingsRegistry.coerce(
       "componentOpacity",
@@ -885,17 +886,17 @@ class ThemeManager {
    */
   saveThemeSettings() {
     const settings = this.storage.getSettings();
-    settings.theme = {
+    settings.theme = SettingsRegistry.mergeThemeSettings(settings.theme, {
       name: this._currentTheme,
       mode: this._currentMode,
-        glassEnabled: this._glassEnabled,
-        glassOpacity: this._glassOpacity,
-        componentOpacity: this._mainGridComponentOpacity,
-        modalOpacity: this._modalOpacity,
-        backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
-        customAccent: this._customAccent,
+      glassEnabled: this._glassEnabled,
+      glassOpacity: this._glassOpacity,
+      componentOpacity: this._mainGridComponentOpacity,
+      modalOpacity: this._modalOpacity,
+      backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
+      customAccent: this._customAccent,
       customPalettes: this._customPalettes,
-    };
+    });
     this.storage.saveSettings(settings);
   }
 
@@ -1004,7 +1005,8 @@ class ThemeManager {
    * Set global glass opacity percentage
    */
   setGlassOpacity(opacityPercent, save = true) {
-    this._glassOpacity = ThemeTokens.clampOpacity(
+    this._glassOpacity = SettingsRegistry.coerce(
+      "glassOpacity",
       opacityPercent,
       this._glassOpacity,
     );

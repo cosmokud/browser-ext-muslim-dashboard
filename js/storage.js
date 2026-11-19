@@ -268,6 +268,7 @@ class StorageManager {
         glassEnabled: true,
         glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
         componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
+        modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
         backgroundAwareFontColorEnabled: false,
         highestVisualFidelityEnabled: false,
         customAccent: null,
@@ -824,13 +825,10 @@ class StorageManager {
       merged[mapping.opacityKey] = glassOpacity;
     });
 
-    if (
-      !merged.theme ||
-      typeof merged.theme !== "object" ||
-      Array.isArray(merged.theme)
-    ) {
-      merged.theme = { ...defaults.theme };
-    }
+    merged.theme = SettingsRegistry.mergeThemeSettings(
+      defaults.theme,
+      merged.theme,
+    );
 
     merged.performanceModeEnabled = merged.performanceModeEnabled === true;
     merged.theme.highestVisualFidelityEnabled =
@@ -858,10 +856,10 @@ class StorageManager {
         : { ...defaults };
 
     const rawTheme = normalizedSettings.theme;
-    normalizedSettings.theme =
-      rawTheme && typeof rawTheme === "object" && !Array.isArray(rawTheme)
-        ? { ...defaults.theme, ...rawTheme }
-        : { ...defaults.theme };
+    normalizedSettings.theme = SettingsRegistry.mergeThemeSettings(
+      defaults.theme,
+      rawTheme,
+    );
 
     normalizedSettings.performanceModeEnabled =
       normalizedSettings.performanceModeEnabled === true;
