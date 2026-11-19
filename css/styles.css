@@ -217,11 +217,7 @@
     var(--modal-surface-base) var(--modal-opacity),
     transparent calc(100% - var(--modal-opacity))
   );
-  --modal-popover-bg: color-mix(
-    in srgb,
-    var(--modal-surface-base) 100%,
-    transparent 0%
-  );
+  --modal-popover-bg: var(--modal-surface-bg);
 
   /* Global action button ground truth */
   --action-btn-size: 36px;
@@ -304,6 +300,7 @@
 }
 
 [data-theme-mode="light"] {
+  --surface-base-bg: #f5f5f5;
   --surface-tint-rgb: 15, 23, 42;
   --color-danger: #dc2626;
   --color-danger-text: #b91c1c;
@@ -3082,19 +3079,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--primary-dark) 70%, #0f1720 30%);
+  background: var(--modal-surface-bg);
   color: var(--text-primary);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+  box-shadow: var(--glass-shadow);
   opacity: 1;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   z-index: 12060;
-}
-
-[data-theme-mode="light"] .notes-toolbar.ql-toolbar.ql-snow .ql-picker-options {
-  background: color-mix(in srgb, var(--primary-color) 12%, #ffffff 88%);
-  border-color: color-mix(in srgb, var(--primary-color) 35%, #cbd5e1 65%);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
 }
 
 .notes-toolbar.ql-toolbar.ql-snow button[data-notes-tooltip],
@@ -3114,12 +3105,13 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   z-index: 12120;
   padding: 0.3rem 0.5rem;
   border-radius: 6px;
-  background: rgba(12, 18, 26, 0.97);
-  color: #f5f9ff;
+  border: 1px solid var(--glass-border);
+  background: var(--modal-surface-bg);
+  color: var(--text-primary);
   font-size: 0.72rem;
   line-height: 1.2;
   white-space: nowrap;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--glass-shadow);
   transition:
     opacity var(--transition-fast),
     transform var(--transition-fast);
@@ -3231,10 +3223,10 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   z-index: 12220;
   max-width: min(460px, calc(100vw - 24px));
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 40%, #334155 60%);
-  background: color-mix(in srgb, var(--primary-dark) 72%, #0f1720 28%);
+  border: 1px solid var(--glass-border);
+  background: var(--modal-surface-bg);
   color: var(--text-primary);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+  box-shadow: var(--shadow-lg);
   opacity: 1;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -3242,34 +3234,16 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   overflow-wrap: anywhere;
 }
 
-[data-theme-mode="light"]
-  .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip {
-  background: color-mix(in srgb, var(--primary-color) 10%, #ffffff 90%);
-  border-color: color-mix(in srgb, var(--primary-color) 35%, #cbd5e1 65%);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2);
-}
-
 .notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip::before {
-  border-bottom-color: color-mix(in srgb, var(--primary-dark) 72%, #0f1720 28%);
-}
-
-[data-theme-mode="light"]
-  .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip::before {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--primary-color) 10%,
-    #ffffff 90%
-  );
+  border-bottom-color: var(--modal-surface-bg);
 }
 
 .notes-editor.notes-editor-quill.ql-container.ql-snow
   .ql-tooltip
   input[type="text"] {
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, #334155 65%);
-  background: color-mix(in srgb, var(--primary-dark) 62%, #0f1720 38%);
+  border: 1px solid var(--glass-border);
+  background: var(--surface-control);
   color: var(--text-primary);
 }
 
@@ -3332,14 +3306,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   width: auto;
 }
 
-[data-theme-mode="light"]
-  .notes-editor.notes-editor-quill.ql-container.ql-snow
-  .ql-tooltip
-  input[type="text"] {
-  border-color: color-mix(in srgb, var(--primary-color) 30%, #cbd5e1 70%);
-  background: color-mix(in srgb, var(--primary-color) 7%, #ffffff 93%);
-}
-
 .notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip a,
 .notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip.ql-editing a {
   color: var(--accent-gold-light);
@@ -3354,18 +3320,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   position: relative;
   z-index: 2147483647;
   width: min(92vw, 520px);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 44%, #334155 56%);
-  box-shadow:
-    0 22px 48px rgba(0, 0, 0, 0.46),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
 }
 
 .notes-url-prompt-modal .modal-header {
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--primary-dark) 78%, #0f1720 22%),
-    color-mix(in srgb, var(--primary-color) 30%, #1f2937 70%)
-  );
+  background: var(--modal-surface-bg);
 }
 
 .notes-url-prompt-description {
@@ -3380,21 +3340,6 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 .notes-url-prompt-modal .setting-input {
   min-height: 46px;
-}
-
-[data-theme-mode="light"] .notes-url-prompt-modal .notes-url-prompt-dialog {
-  border-color: color-mix(in srgb, var(--primary-color) 30%, #d1d9e6 70%);
-  box-shadow:
-    0 18px 34px rgba(15, 23, 42, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.55);
-}
-
-[data-theme-mode="light"] .notes-url-prompt-modal .modal-header {
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--primary-color) 10%, #ffffff 90%),
-    color-mix(in srgb, var(--primary-color) 20%, #f8fafc 80%)
-  );
 }
 
 .notes-editor.notes-editor-quill .ql-editor {
@@ -3661,9 +3606,10 @@ textarea.notes-editor:focus {
   padding: 0.35rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: rgba(18, 24, 31, 0.96);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: var(--modal-surface-bg);
+  box-shadow: var(--glass-shadow);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
 .notes-table-context-menu.active {
@@ -5040,7 +4986,8 @@ textarea.notes-editor:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   user-select: none;
   opacity: 0;
@@ -5200,52 +5147,6 @@ textarea.notes-editor:focus {
   position: static;
   bottom: auto;
   right: auto;
-}
-
-.fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-) {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  box-shadow: var(--glass-shadow);
-}
-
-.fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-):hover {
-  background: var(--theme-highlight-bg-hover);
-  color: var(--on-primary-text);
-  border-color: var(--theme-highlight-border);
-  box-shadow: var(--theme-highlight-shadow);
-}
-
-[data-glass-enabled="false"] .fab-menu :is(
-  .fab-menu-toggle,
-  .fab-menu-items button,
-  .sticky-note-fab,
-  .moment-mode-btn,
-  .quran-focus-btn,
-  .layout-edit-btn,
-  .refresh-bg-btn,
-  .settings-btn
-) {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .fab-menu .sticky-note-add-btn,
@@ -6314,20 +6215,21 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   animation: rotateOnce 0.7s ease-in-out;
 }
 
-/* Modal Styles */
-.modal-overlay {
+/* Modal Styles (shared overlay & surface shell across dialog & widget modals) */
+.modal-overlay,
+.pq-bookmark-modal,
+.flashcard-set-modal,
+.adhkar-set-modal,
+.adhkar-lang-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000;
   opacity: 0;
   visibility: hidden;
   transition:
@@ -6336,6 +6238,16 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     background var(--transition-normal),
     backdrop-filter var(--transition-normal),
     -webkit-backdrop-filter var(--transition-normal);
+}
+
+.modal-overlay {
+  backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(5px * var(--ui-blur-multiplier)));
+  z-index: 1000;
+}
+
+.adhkar-lang-modal {
+  z-index: 13050;
 }
 
 /* Settings modal: anchor near top so tab switches don't recenter the dialog */
@@ -6353,9 +6265,25 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
   -webkit-backdrop-filter: blur(0);
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.pq-bookmark-modal.active,
+.flashcard-set-modal.active,
+.adhkar-set-modal.active,
+.adhkar-lang-modal.active {
   opacity: 1;
   visibility: visible;
+}
+
+.modal,
+.pq-bookmark-modal-content,
+.flashcard-set-modal-content,
+.adhkar-set-modal-content,
+.adhkar-lang-modal-content {
+  background: var(--modal-surface-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  transition: transform var(--transition-normal);
 }
 
 .modal {
@@ -6364,18 +6292,97 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
     var(--modal-gradient-start),
     var(--modal-gradient-end)
   );
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  width: 90%;
   max-width: 600px;
   max-height: 85vh;
   overflow: hidden;
   transform: scale(0.9);
-  transition: transform var(--transition-normal);
 }
 
 .modal-overlay.active .modal {
   transform: scale(1);
+}
+
+/* Shared Widget Picker Modal Shell */
+.pq-bookmark-modal-content,
+.flashcard-set-modal-content,
+.adhkar-set-modal-content,
+.adhkar-lang-modal-content {
+  max-width: 450px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--glass-shadow);
+  transform: scale(0.95) translateY(20px);
+}
+
+.pq-bookmark-modal-content {
+  max-width: 600px;
+  max-height: 80vh;
+}
+
+.adhkar-lang-modal-content {
+  max-width: 400px;
+}
+
+.pq-bookmark-modal.active .pq-bookmark-modal-content,
+.flashcard-set-modal.active .flashcard-set-modal-content,
+.adhkar-set-modal.active .adhkar-set-modal-content,
+.adhkar-lang-modal.active .adhkar-lang-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.pq-bookmark-modal-header,
+.flashcard-set-modal-header,
+.adhkar-set-modal-header,
+.adhkar-lang-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.pq-bookmark-modal-title,
+.flashcard-set-modal-title,
+.adhkar-set-modal-title,
+.adhkar-lang-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pq-bookmark-modal-close,
+.flashcard-set-modal-close,
+.adhkar-set-modal-close,
+.adhkar-lang-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.pq-bookmark-modal-close:hover,
+.flashcard-set-modal-close:hover,
+.adhkar-set-modal-close:hover,
+.adhkar-lang-modal-close:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.pq-bookmark-modal-body,
+.flashcard-set-modal-body,
+.adhkar-set-modal-body,
+.adhkar-lang-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) var(--spacing-lg);
 }
 
 .modal-small {
@@ -7231,7 +7238,8 @@ body.moment-mode .moment-mode-exit-btn.is-hidden {
 }
 
 .setting-select option {
-  background: #1e2a32;
+  background: var(--surface-base-bg);
+  color: var(--text-primary);
 }
 
 /* Ensure <optgroup label> stays readable in native dropdowns (some UAs ignore option background on optgroup headers) */
@@ -9190,8 +9198,9 @@ html[data-theme-mode="light"]
 }
 
 .delete-confirm-content {
-  background: rgba(30, 30, 50, 0.98);
+  background: var(--modal-surface-bg);
   backdrop-filter: blur(calc(30px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(30px * var(--ui-blur-multiplier)));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
@@ -9929,7 +9938,14 @@ html[data-theme-mode="light"]
     box-shadow 0.18s ease,
     background 0.18s ease;
   will-change: transform, box-shadow;
-  backdrop-filter: blur(8px) saturate(120%);
+  backdrop-filter: blur(
+      calc(8px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+    )
+    saturate(120%);
+  -webkit-backdrop-filter: blur(
+      calc(8px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+    )
+    saturate(120%);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
 }
 
@@ -10983,7 +10999,7 @@ html[data-theme-mode="light"]
   max-height: 96vh;
   display: flex;
   flex-direction: column;
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   border: 1px solid color-mix(in srgb, var(--text-primary) 20%, transparent 80%);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
@@ -11000,7 +11016,7 @@ html[data-theme-mode="light"]
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid
     color-mix(in srgb, var(--text-primary) 18%, transparent 82%);
-  background: color-mix(in srgb, var(--modal-popover-bg) 88%, #000 12%);
+  background: color-mix(in srgb, var(--modal-surface-bg) 88%, #000 12%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -11032,7 +11048,7 @@ html[data-theme-mode="light"]
 .editor-detach-modal-body {
   padding: var(--spacing-md);
   overflow: auto;
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -11050,7 +11066,7 @@ html[data-theme-mode="light"]
 .editor-detach-modal .setting-textarea,
 .editor-detach-modal .flashcards-editor,
 .editor-detach-modal .adhkar-editor {
-  background: color-mix(in srgb, var(--modal-popover-bg) 94%, #000 6%);
+  background: color-mix(in srgb, var(--modal-surface-bg) 94%, #000 6%);
   border-color: color-mix(in srgb, var(--text-primary) 20%, transparent 80%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -11384,7 +11400,8 @@ html[data-theme-mode="light"]
   color: #fff;
   background: rgba(0, 0, 0, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(calc(4px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(4px * var(--ui-blur-multiplier)));
 }
 
 .custom-bg-item.is-selected .custom-bg-item-check {
@@ -11582,64 +11599,12 @@ html[data-theme-mode="light"]
 .sticky-note-toggle-btn {
   right: calc(var(--spacing-xl) + 196px);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-}
-
-.sticky-note-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* FAB menu controls share the dashboard theme surface, including injected items. */
-.fab-menu
-  :is(
-    .fab-menu-toggle,
-    .fab-menu-items button,
-    .sticky-note-fab,
-    .moment-mode-btn,
-    .quran-focus-btn,
-    .layout-edit-btn,
-    .refresh-bg-btn,
-    .settings-btn
-  ):not(.active):not(.is-locked) {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  box-shadow: var(--glass-shadow);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
 }
 
-.fab-menu
-  :is(
-    .fab-menu-toggle,
-    .fab-menu-items button,
-    .sticky-note-fab,
-    .moment-mode-btn,
-    .quran-focus-btn,
-    .layout-edit-btn,
-    .refresh-bg-btn,
-    .settings-btn
-  ):not(.active):not(.is-locked):hover {
-  background: var(--theme-highlight-bg-hover);
-  border-color: var(--theme-highlight-border);
-  color: var(--on-primary-text);
-  box-shadow: var(--theme-highlight-shadow);
-}
-
-[data-glass-enabled="false"]
-  .fab-menu
-  :is(
-    .fab-menu-toggle,
-    .fab-menu-items button,
-    .sticky-note-fab,
-    .moment-mode-btn,
-    .quran-focus-btn,
-    .layout-edit-btn,
-    .refresh-bg-btn,
-    .settings-btn
-  ) {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+.sticky-note-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Individual Sticky Note */
@@ -11812,7 +11777,7 @@ html[data-theme-mode="light"]
   top: calc(100% + 10px);
   right: 8px;
   width: 220px;
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
   -webkit-backdrop-filter: blur(calc(16px * var(--ui-blur-multiplier, 1)));
   border-radius: var(--radius-lg);
@@ -12475,7 +12440,8 @@ body.sticky-note-resizing {
   }
 }
 
-.fab-menu.open :is(
+/* Consolidated FAB Menu Surface, Hover, Active & Glass-Off States */
+.fab-menu :is(
   .fab-menu-toggle,
   .fab-menu-items button,
   .sticky-note-fab,
@@ -12484,18 +12450,50 @@ body.sticky-note-resizing {
   .layout-edit-btn,
   .refresh-bg-btn,
   .settings-btn
-):hover {
-  background: var(--theme-highlight-bg-hover) !important;
-  border-color: var(--theme-highlight-border) !important;
-  color: var(--on-primary-text) !important;
-  box-shadow: var(--theme-highlight-shadow) !important;
+):where(:not(.active):not(.is-locked)) {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+}
+
+[data-glass-enabled="false"] .fab-menu :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .fab-menu.open .fab-menu-toggle {
-  background: var(--theme-highlight-active-bg) !important;
-  border-color: var(--theme-highlight-border) !important;
-  color: var(--on-primary-text) !important;
-  box-shadow: var(--theme-highlight-shadow) !important;
+  background: var(--theme-highlight-active-bg);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
+}
+
+.fab-menu :is(
+  .fab-menu-toggle,
+  .fab-menu-items button,
+  .sticky-note-fab,
+  .moment-mode-btn,
+  .quran-focus-btn,
+  .layout-edit-btn,
+  .refresh-bg-btn,
+  .settings-btn
+):not(.is-locked):hover {
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--theme-highlight-shadow);
 }
 
 .fab-menu.open :is(
@@ -12506,18 +12504,18 @@ body.sticky-note-resizing {
     135deg,
     color-mix(in srgb, var(--primary-dark) 88%, transparent),
     color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%)
-  ) !important;
+  );
   border-color: color-mix(
     in srgb,
     var(--primary-light) 90%,
     var(--on-primary-text) 10%
-  ) !important;
-  color: var(--on-primary-text) !important;
+  );
+  color: var(--on-primary-text);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
     0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent),
-    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent) !important;
-  animation: none !important;
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent);
+  animation: none;
 }
 
 .fab-menu.open :is(
@@ -12528,17 +12526,17 @@ body.sticky-note-resizing {
     135deg,
     color-mix(in srgb, var(--primary-dark) 88%, transparent),
     color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%)
-  ) !important;
+  );
   border-color: color-mix(
     in srgb,
     var(--accent-bg) 78%,
     var(--on-primary-text) 22%
-  ) !important;
-  color: var(--on-primary-text) !important;
+  );
+  color: var(--on-primary-text);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
     0 0 0 2px color-mix(in srgb, var(--accent-bg) 24%, transparent),
-    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent) !important;
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent);
 }
 
 .fab-menu.open :is(
@@ -12549,17 +12547,17 @@ body.sticky-note-resizing {
     135deg,
     color-mix(in srgb, var(--primary-dark) 88%, transparent),
     color-mix(in srgb, var(--accent-bg) 58%, var(--primary-color) 42%)
-  ) !important;
+  );
   border-color: color-mix(
     in srgb,
     var(--accent-bg) 76%,
     var(--on-primary-text) 24%
-  ) !important;
-  color: var(--on-primary-text) !important;
+  );
+  color: var(--on-primary-text);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent),
     0 0 0 2px color-mix(in srgb, var(--accent-bg) 22%, transparent),
-    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent) !important;
+    0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent);
 }
 
 /* ========================================
@@ -13740,9 +13738,7 @@ body:not(.sidebar-mode)
   .search-bar-engine-tab
 ):hover:not(:disabled) {
   background: var(--theme-highlight-bg-hover);
-  background: var(--theme-highlight-bg-hover) !important;
   border-color: var(--theme-highlight-border);
-  border-color: var(--theme-highlight-border) !important;
   box-shadow: var(--theme-highlight-shadow);
   color: var(--on-primary-text);
 }
@@ -13764,9 +13760,7 @@ body:not(.sidebar-mode)
   .search-bar-engine-tab[aria-selected="true"]
 ) {
   background: var(--theme-highlight-active-bg);
-  background: var(--theme-highlight-active-bg) !important;
   border-color: var(--theme-highlight-border);
-  border-color: var(--theme-highlight-border) !important;
   color: var(--on-primary-text);
   box-shadow: var(--theme-highlight-shadow);
 }
@@ -14237,7 +14231,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   right: 0;
   min-width: 210px;
   padding: var(--spacing-sm);
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--glass-shadow);
@@ -15081,13 +15075,17 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     .card-header-actions > button,
     .card-header-actions > .notes-header-actions > button,
     .card-header-actions > .card-blur-menu > .card-blur-btn,
+    .card-blur-menu .card-blur-btn,
+    .quote-top-actions > button,
     .quote-search-btn,
     .quote-lang-selector-btn,
     .quote-pause-btn,
     .quote-shuffle-btn,
     .pocket-quran-toggle-group > button
   ):hover:not(:disabled) {
-  background: var(--action-btn-bg-hover);
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
   transform: translateY(-1px);
   box-shadow: var(--action-btn-shadow-hover);
 }
@@ -15258,44 +15256,20 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   box-shadow: 0 8px 20px rgba(var(--accent-gold-rgb), 0.25);
 }
 
-.card-blur-menu .card-blur-btn:hover:not(:disabled),
-.card-blur-menu.blur-menu-open .card-blur-btn:hover:not(:disabled) {
-  background: var(--action-btn-bg);
-  border-color: var(--theme-highlight-border);
-  color: var(--on-primary-text);
-  box-shadow: var(--action-btn-shadow-hover);
-  transform: translateY(-1px);
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    BLUR SETTINGS POPUP
    ═══════════════════════════════════════════════════════════════════════════ */
-
-.card-header-actions > button:hover:not(:disabled),
-.card-header-actions > .notes-header-actions > button:hover:not(:disabled),
-.card-blur-menu .card-blur-btn:hover:not(:disabled),
-.card-header-actions > .card-blur-menu > .card-blur-btn:hover:not(:disabled) {
-  background: var(--action-btn-bg) !important;
-  border-color: var(--theme-highlight-border) !important;
-  color: var(--on-primary-text) !important;
-  box-shadow: var(--action-btn-shadow-hover) !important;
-  transform: translateY(-1px);
-}
-
-.quote-top-actions > button:hover:not(:disabled) {
-  background: var(--action-btn-bg) !important;
-  border-color: var(--theme-highlight-border) !important;
-  color: var(--on-primary-text) !important;
-  box-shadow: var(--action-btn-shadow-hover) !important;
-  transform: translateY(-1px);
-}
 
 .card-blur-menu.blur-menu-open .card-blur-btn:hover:not(:disabled) {
   background: color-mix(
     in srgb,
     var(--accent-gold) 17%,
     var(--action-btn-bg) 83%
-  ) !important;
+  );
+  border-color: var(--theme-highlight-border);
+  color: var(--on-primary-text);
+  box-shadow: var(--action-btn-shadow-hover);
+  transform: translateY(-1px);
 }
 
 .blur-settings-popup {
@@ -16710,89 +16684,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   margin-left: var(--spacing-sm) !important;
 }
 
-/* Bookmark Modal */
-.pq-bookmark-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--transition-normal),
-    visibility var(--transition-normal);
-}
-
-.pq-bookmark-modal.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.pq-bookmark-modal-content {
-  background: var(--modal-surface-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--glass-shadow);
-  transform: scale(0.95) translateY(20px);
-  transition: transform var(--transition-normal);
-}
-
-.pq-bookmark-modal.active .pq-bookmark-modal-content {
-  transform: scale(1) translateY(0);
-}
-
-.pq-bookmark-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.pq-bookmark-modal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.pq-bookmark-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.pq-bookmark-modal-close:hover {
-  color: var(--text-primary);
-  background: var(--glass-bg);
-}
-
-.pq-bookmark-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
+/* Bookmark Modal (overlay & surface shell consolidated under Modal Styles) */
 .pq-bookmark-search {
   display: flex;
   gap: var(--spacing-sm);
@@ -17125,8 +17017,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: var(--spacing-xs) var(--spacing-sm);
-  /* Opaque background so underlying text doesn't show through while sticky */
-  background: rgba(30, 40, 50, 0.98);
+  /* Modal surface background so underlying text doesn't show through while sticky */
+  background: var(--modal-surface-bg);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
@@ -17339,7 +17231,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   isolation: isolate;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: color-mix(in srgb, var(--modal-popover-bg) 96%, transparent 4%);
+  background: var(--modal-surface-bg);
   cursor: grab;
 }
 
@@ -17421,7 +17313,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pq-recitation-controls.pq-recitation-controls-floating.pq-recitation-controls-floating-opaque {
-  background: var(--modal-popover-bg);
+  background: var(--modal-surface-bg);
   border-color: color-mix(in srgb, var(--accent-gold) 44%, var(--glass-border));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -17759,88 +17651,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-size: 1rem;
 }
 
-.flashcard-set-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--transition-normal),
-    visibility var(--transition-normal);
-}
-
-.flashcard-set-modal.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.flashcard-set-modal-content {
-  background: var(--modal-surface-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 450px;
-  max-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--glass-shadow);
-  transform: scale(0.95) translateY(20px);
-  transition: transform var(--transition-normal);
-}
-
-.flashcard-set-modal.active .flashcard-set-modal-content {
-  transform: scale(1) translateY(0);
-}
-
-.flashcard-set-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.flashcard-set-modal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.flashcard-set-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.flashcard-set-modal-close:hover {
-  color: var(--text-primary);
-  background: var(--glass-bg);
-}
-
-.flashcard-set-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
+/* Flashcard set modal shell consolidated under Modal Styles */
 .flashcard-set-search {
   margin-bottom: var(--spacing-md);
 }
@@ -18593,88 +18404,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   font-size: 1rem;
 }
 
-.adhkar-set-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--transition-normal),
-    visibility var(--transition-normal);
-}
-
-.adhkar-set-modal.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.adhkar-set-modal-content {
-  background: var(--modal-surface-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 450px;
-  max-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--glass-shadow);
-  transform: scale(0.95) translateY(20px);
-  transition: transform var(--transition-normal);
-}
-
-.adhkar-set-modal.active .adhkar-set-modal-content {
-  transform: scale(1) translateY(0);
-}
-
-.adhkar-set-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.adhkar-set-modal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.adhkar-set-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.adhkar-set-modal-close:hover {
-  color: var(--text-primary);
-  background: var(--glass-bg);
-}
-
-.adhkar-set-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
+/* Adhkar set modal shell consolidated under Modal Styles */
 .adhkar-set-search {
   margin-bottom: var(--spacing-md);
 }
@@ -18829,7 +18559,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(30, 40, 50, 0.98);
+  background: var(--modal-surface-bg);
 }
 
 .adhkar-editor-table th {
@@ -19007,89 +18737,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   text-transform: uppercase;
 }
 
-/* Language selector modal */
-.adhkar-lang-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 13050;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--transition-normal),
-    visibility var(--transition-normal);
-}
-
-.adhkar-lang-modal.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.adhkar-lang-modal-content {
-  background: var(--modal-surface-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 400px;
-  max-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--glass-shadow);
-  transform: scale(0.95) translateY(20px);
-  transition: transform var(--transition-normal);
-}
-
-.adhkar-lang-modal.active .adhkar-lang-modal-content {
-  transform: scale(1) translateY(0);
-}
-
-.adhkar-lang-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.adhkar-lang-modal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.adhkar-lang-modal-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.adhkar-lang-modal-close:hover {
-  color: var(--text-primary);
-  background: var(--glass-bg);
-}
-
-.adhkar-lang-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
+/* Language selector modal shell consolidated under Modal Styles */
 .adhkar-lang-search {
   margin-bottom: var(--spacing-md);
 }
@@ -19565,11 +19213,6 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 [data-theme-mode="light"] .setting-select,
 [data-theme-mode="light"] .setting-textarea {
   background: rgba(0, 0, 0, 0.05);
-}
-
-[data-theme-mode="light"] .setting-select option {
-  background: #f5f5f5;
-  color: #333;
 }
 
 /* Disable Glass Mode Adjustments */

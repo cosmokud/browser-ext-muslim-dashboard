@@ -27,13 +27,23 @@ const STYLES_CSS = fs.readFileSync(
   path.join(repoRoot, "css/styles.css"),
   "utf8",
 );
+const POPUP_CSS = fs.readFileSync(
+  path.join(repoRoot, "css/popup.css"),
+  "utf8",
+);
+const CSS_FILES = [
+  ["css/styles.css", STYLES_CSS],
+  ["css/popup.css", POPUP_CSS],
+];
 
 function collectDefinedCssVars() {
   const defined = new Set();
 
-  // 1. All CSS custom property declarations in css/styles.css
-  for (const match of STYLES_CSS.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)) {
-    defined.add(match[1]);
+  // 1. All CSS custom property declarations in css/styles.css and css/popup.css
+  for (const [, source] of CSS_FILES) {
+    for (const match of source.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)) {
+      defined.add(match[1]);
+    }
   }
 
   // 2. All CSS custom property names written by JS files
@@ -117,26 +127,28 @@ test("canonical semantic status, elevation, and channel tokens are declared on :
   }
 });
 
-test("zero broken or undefined var(--...) references exist in css/styles.css", () => {
+test("zero broken or undefined var(--...) references exist in css/styles.css and css/popup.css", () => {
   const defined = collectDefinedCssVars();
-  const lines = STYLES_CSS.split(/\r?\n/);
   const undefinedRefs = [];
 
-  lines.forEach((line, index) => {
-    for (const match of line.matchAll(
-      /var\(\s*(--[a-zA-Z0-9_-]+)(\s*,[^)]*)?\)/g,
-    )) {
-      const name = match[1];
-      if (!defined.has(name)) {
-        undefinedRefs.push(`css/styles.css:${index + 1} uses undefined ${name}`);
+  for (const [relPath, source] of CSS_FILES) {
+    const lines = source.split(/\r?\n/);
+    lines.forEach((line, index) => {
+      for (const match of line.matchAll(
+        /var\(\s*(--[a-zA-Z0-9_-]+)(\s*,[^)]*)?\)/g,
+      )) {
+        const name = match[1];
+        if (!defined.has(name)) {
+          undefinedRefs.push(`${relPath}:${index + 1} uses undefined ${name}`);
+        }
       }
-    }
-  });
+    });
+  }
 
   assert.deepEqual(
     undefinedRefs,
     [],
-    "every var(--...) in css/styles.css must resolve to a defined CSS or JS token",
+    "every var(--...) in css/styles.css and css/popup.css must resolve to a defined CSS or JS token",
   );
 
   for (const legacyBroken of [
@@ -145,24 +157,29 @@ test("zero broken or undefined var(--...) references exist in css/styles.css", (
     "--action-btn-hover-color",
     "--action-btn-hover-border",
     "--accent-gold-light-",
+    "--card-bg",
   ]) {
-    assert.equal(
-      STYLES_CSS.includes(legacyBroken),
-      false,
-      `legacy broken variable ${legacyBroken} must not remain in css/styles.css`,
-    );
+    for (const [relPath, source] of CSS_FILES) {
+      assert.equal(
+        source.includes(legacyBroken),
+        false,
+        `legacy broken variable ${legacyBroken} must not remain in ${relPath}`,
+      );
+    }
   }
 });
 
-test("zero invalid rgba(var(--...)) calls reference non-*-rgb tokens in css/styles.css", () => {
+test("zero invalid rgba(var(--...)) calls reference non-*-rgb tokens in css/styles.css and css/popup.css", () => {
   const invalid = [];
-  STYLES_CSS.split(/\r?\n/).forEach((line, index) => {
-    for (const match of line.matchAll(/rgba\(\s*var\(\s*(--[a-zA-Z0-9_-]+)/g)) {
-      if (!match[1].endsWith("-rgb")) {
-        invalid.push(`css/styles.css:${index + 1}: rgba(var(${match[1]}))`);
+  for (const [relPath, source] of CSS_FILES) {
+    source.split(/\r?\n/).forEach((line, index) => {
+      for (const match of line.matchAll(/rgba\(\s*var\(\s*(--[a-zA-Z0-9_-]+)/g)) {
+        if (!match[1].endsWith("-rgb")) {
+          invalid.push(`${relPath}:${index + 1}: rgba(var(${match[1]}))`);
+        }
       }
-    }
-  });
+    });
+  }
 
   assert.deepEqual(
     invalid,
@@ -171,20 +188,47 @@ test("zero invalid rgba(var(--...)) calls reference non-*-rgb tokens in css/styl
   );
 });
 
-test("zero hardcoded default emerald/gold rgba leaks remain in css/styles.css", () => {
+test("zero hardcoded default emerald/gold rgba leaks remain in css/styles.css and css/popup.css", () => {
   const leaks = [];
   const leakPattern = /rgba\(\s*(26\s*,\s*95\s*,\s*74|212\s*,\s*175\s*,\s*55)/;
 
-  STYLES_CSS.split(/\r?\n/).forEach((line, index) => {
-    if (leakPattern.test(line)) {
-      leaks.push(`css/styles.css:${index + 1}: ${line.trim()}`);
-    }
-  });
+  for (const [relPath, source] of CSS_FILES) {
+    source.split(/\r?\n/).forEach((line, index) => {
+      if (leakPattern.test(line)) {
+        leaks.push(`${relPath}:${index + 1}: ${line.trim()}`);
+      }
+    });
+  }
 
   assert.deepEqual(
     leaks,
     [],
     "use rgba(var(--primary-rgb), ...) and rgba(var(--accent-gold-rgb), ...) instead of literal emerald/gold rgba values",
+  );
+});
+
+test("every nonzero backdrop-filter blur() in css/styles.css and css/popup.css scales by var(--ui-blur-multiplier)", () => {
+  const unscaled = [];
+  const declPattern = /(-webkit-)?backdrop-filter\s*:\s*([^;]+);/gi;
+
+  for (const [relPath, source] of CSS_FILES) {
+    for (const match of source.matchAll(declPattern)) {
+      const value = match[2].replace(/\s+/g, " ").trim();
+      if (!/blur\(/i.test(value)) continue;
+      if (/^blur\(\s*0(?:px)?\s*\)$/i.test(value)) continue;
+      if (!/var\(--ui-blur-multiplier\b/.test(value)) {
+        const line = source.slice(0, match.index).split(/\r?\n/).length;
+        unscaled.push(
+          `${relPath}:${line}: ${match[1] ?? ""}backdrop-filter: ${value}`,
+        );
+      }
+    }
+  }
+
+  assert.deepEqual(
+    unscaled,
+    [],
+    "every nonzero backdrop-filter blur(...) must multiply by var(--ui-blur-multiplier)",
   );
 });
 

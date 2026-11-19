@@ -271,8 +271,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  background: color-mix(in srgb, var(--glass-bg) 88%, transparent);
   backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
 }
 
 .popup-prayer-settings-clone-host {
@@ -597,7 +598,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-tab-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.28);
+  box-shadow: 0 0 0 3px rgba(var(--accent-gold-rgb), 0.28);
 }
 
 .popup-tab-panel {
@@ -778,6 +779,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   justify-content: stretch;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-control);
 }
 
 .popup-pq-size-controls .popup-pq-size-control {
@@ -822,7 +824,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-pq-size-controls .popup-pq-size-label-link:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.28);
+  box-shadow: 0 0 0 2px rgba(var(--accent-gold-rgb), 0.28);
 }
 
 .popup-pq-mini-tajweed-toggle {
@@ -858,7 +860,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-pq-mini-tajweed-toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.24);
+  box-shadow: 0 0 0 3px rgba(var(--accent-gold-rgb), 0.24);
 }
 
 .popup-pq-size-controls .popup-pq-size-label-row .pocket-quran-control-label {
@@ -958,7 +960,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 .popup-pq-ayah-snippet {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  background: var(--glass-bg-subtle);
+  background: var(--surface-inset);
   padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
@@ -1036,7 +1038,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 .popup-pq-embedded-panel {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  background: var(--glass-bg-subtle);
+  background: var(--surface-inset);
   overflow: hidden;
 }
 
@@ -1295,8 +1297,8 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   justify-content: center;
   padding: 10px;
   background: rgba(0, 0, 0, 0.56);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
 }
 
 .popup-pq-modal-overlay[hidden] {
@@ -1311,7 +1313,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   flex-direction: column;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: var(--modal-popover-bg, var(--glass-bg));
+  background: var(--modal-surface-bg);
   box-shadow: var(--glass-shadow);
 }
 
@@ -1377,7 +1379,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 .popup-pq-modal-select:focus-visible,
 .popup-pq-modal-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.24);
+  box-shadow: 0 0 0 3px rgba(var(--accent-gold-rgb), 0.24);
 }
 
 .popup-pq-modal-select {

@@ -11,6 +11,7 @@ import {
   assertRootDeclaration,
   assertRule,
   collapse,
+  ruleFor,
   stylesheetRules,
 } from "./harness.mjs";
 
@@ -107,7 +108,22 @@ const SELECTED_CONTROLS = [
   '.search-bar-engine-tab[aria-selected="true"]',
 ];
 
+const ACTION_HOVER_BUTTONS = [
+  ".card-header-actions > button",
+  ".card-header-actions > .notes-header-actions > button",
+  ".card-header-actions > .card-blur-menu > .card-blur-btn",
+  ".card-blur-menu .card-blur-btn",
+  ".quote-top-actions > button",
+  ".quote-search-btn",
+  ".quote-lang-selector-btn",
+  ".quote-pause-btn",
+  ".quote-shuffle-btn",
+  ".pocket-quran-toggle-group > button",
+];
+
 const actionButtons = (suffix = "") => `:where(${ACTION_BUTTONS.join(", ")})${suffix}`;
+const actionHoverButtons = (suffix = "") =>
+  `:where(${ACTION_HOVER_BUTTONS.join(", ")})${suffix}`;
 const commonControls = (suffix = "") => `:where(${COMMON_CONTROLS.join(", ")})${suffix}`;
 
 test("the theme highlight tokens are the primary gradient, not a glass tint", () => {
@@ -135,7 +151,7 @@ test("the shared chip groups hover and select on the primary highlights", () => 
   });
 });
 
-test("header and quote action buttons keep one surface colour and never fade", () => {
+test("header and quote action buttons rest on --action-btn-bg, highlight on hover without !important, and never fade", () => {
   // The transition list is exact: a background, opacity, filter or
   // backdrop-filter transition here re-renders on every theme slider move.
   assertRule(actionButtons(), {
@@ -147,23 +163,49 @@ test("header and quote action buttons keep one surface colour and never fade", (
       "transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast)",
     animation: "none",
   });
-  assertRule(actionButtons(":hover:not(:disabled)"), {
-    background: "var(--action-btn-bg-hover)",
-    "box-shadow": "var(--action-btn-shadow-hover)",
-  });
 
-  const hovered = {
-    background: "var(--action-btn-bg)",
+  const hoverSelector = actionHoverButtons(":hover:not(:disabled)");
+  assertRule(hoverSelector, {
+    background: "var(--theme-highlight-bg-hover)",
     "border-color": "var(--theme-highlight-border)",
     color: "var(--on-primary-text)",
     "box-shadow": "var(--action-btn-shadow-hover)",
-    important: ["background", "border-color", "color", "box-shadow"],
-  };
-  assertRule(
-    ".card-header-actions > button:hover:not(:disabled), .card-header-actions > .notes-header-actions > button:hover:not(:disabled), .card-blur-menu .card-blur-btn:hover:not(:disabled), .card-header-actions > .card-blur-menu > .card-blur-btn:hover:not(:disabled)",
-    hovered,
+  });
+
+  const hoverRule = ruleFor(hoverSelector);
+  for (const prop of ["background", "border-color", "color", "box-shadow"]) {
+    assert.equal(
+      hoverRule.style.getPropertyPriority(prop),
+      "",
+      `action button hover ${prop} should not require !important`,
+    );
+  }
+
+  // Open blur menu button keeps its subtle gold accent hover without !important.
+  const openBlurHover = ".card-blur-menu.blur-menu-open .card-blur-btn:hover:not(:disabled)";
+  assertRule(openBlurHover, {
+    background: "color-mix(in srgb, var(--accent-gold) 17%, var(--action-btn-bg) 83%)",
+    "border-color": "var(--theme-highlight-border)",
+    color: "var(--on-primary-text)",
+    "box-shadow": "var(--action-btn-shadow-hover)",
+  });
+  assert.equal(ruleFor(openBlurHover).style.getPropertyPriority("background"), "");
+
+  // Guard against competing !important hover overrides on card/quote action buttons.
+  const competingImportant = stylesheetRules().filter(
+    (rule) =>
+      rule.selectorText &&
+      /:hover/.test(rule.selectorText) &&
+      /card-header-actions|quote-top-actions|card-blur-btn/.test(rule.selectorText) &&
+      ["background", "border-color", "color", "box-shadow"].some(
+        (prop) => rule.style.getPropertyPriority(prop) === "important",
+      ),
   );
-  assertRule(".quote-top-actions > button:hover:not(:disabled)", hovered);
+  assert.deepEqual(
+    competingImportant.map((rule) => rule.selectorText),
+    [],
+    "card header and quote action button hovers must not fight with !important",
+  );
 
   // Hover must not paint an overlay pseudo-element over the button.
   const overlays = stylesheetRules().filter(

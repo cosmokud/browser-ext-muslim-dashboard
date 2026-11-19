@@ -9,7 +9,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { loadPageDom, repoRoot } from "./harness.mjs";
+import {
+  assertRootDeclaration,
+  collapse,
+  loadPageDom,
+  repoRoot,
+  stylesheetRules,
+} from "./harness.mjs";
 
 const SCRIPTS = [
   "js/settings-registry.js",
@@ -100,30 +106,63 @@ test("the panel clamps the slider and writes its readout", () => {
   assert.equal(self.themeModalOpacityValue.textContent, "100%");
 });
 
-test("modal panels and the blur popup take their surface from modal opacity", () => {
+test("modal panels, confirmation dialogs, context menus, sticky headers, and popovers use --modal-surface-bg", () => {
   const css = fs.readFileSync(path.join(repoRoot, "css/styles.css"), "utf8");
-  assert.match(css, /--modal-opacity:\s*97%;/);
-  assert.match(css, /--modal-gradient-start-opacity:\s*var\(--modal-opacity\);/);
-  assert.match(
-    css,
-    /--modal-gradient-end-opacity:\s*min\(100%, calc\(var\(--modal-opacity\) \+ 3%\)\);/,
+  const popupCss = fs.readFileSync(
+    path.join(repoRoot, "css/popup.css"),
+    "utf8",
   );
+
+  assertRootDeclaration("--modal-opacity", "97%");
+  assertRootDeclaration("--modal-gradient-start-opacity", "var(--modal-opacity)");
+  assertRootDeclaration(
+    "--modal-gradient-end-opacity",
+    "min(100%, calc(var(--modal-opacity) + 3%))",
+  );
+  assertRootDeclaration("--modal-popover-bg", "var(--modal-surface-bg)");
   assert.match(css, /--modal-surface-bg:[^;]*var\(--modal-opacity\)/);
 
-  // One rule each: the panel must not fall back to a fixed background.
+  const hasBackgroundSurface = (selector) => {
+    const wanted = collapse(selector);
+    return stylesheetRules().some((rule) => {
+      if (!rule.selectorText) return false;
+      const parts = rule.selectorText.split(",").map((part) => collapse(part));
+      return (
+        parts.includes(wanted) &&
+        collapse(rule.style.getPropertyValue("background")) ===
+          "var(--modal-surface-bg)"
+      );
+    });
+  };
+
   for (const selector of [
     ".blur-settings-popup",
     ".pq-bookmark-modal-content",
     ".flashcard-set-modal-content",
     ".adhkar-set-modal-content",
     ".adhkar-lang-modal-content",
+    ".delete-confirm-content",
+    ".notes-table-context-menu",
+    ".pq-translation-lang-header",
+    ".adhkar-editor-table thead",
+    ".sticky-note-dropdown",
+    ".sticky-note-dropdown::after",
+    ".header-glow-popover",
+    ".pq-recitation-controls.pq-recitation-controls-floating",
+    ".editor-detach-modal-content",
+    ".notes-toolbar.ql-toolbar.ql-snow .ql-picker-options",
+    ".notes-editor.notes-editor-quill.ql-container.ql-snow .ql-tooltip",
+    ".notes-url-prompt-modal .modal-header",
   ]) {
-    const rules = [...css.matchAll(/(^|\n)\.([^\n{]+)\{([^}]*)\}/g)].filter(
-      (match) => `.${match[2].trim()}` === selector,
-    );
     assert.ok(
-      rules.some((match) => /background:\s*var\(--modal-surface-bg\);/.test(match[3])),
-      `${selector} does not use var(--modal-surface-bg)`,
+      hasBackgroundSurface(selector),
+      `${selector} must declare background: var(--modal-surface-bg)`,
     );
   }
+
+  assert.match(
+    popupCss,
+    /\.popup-pq-modal-content\s*\{[^}]*background:\s*var\(--modal-surface-bg\);/,
+    ".popup-pq-modal-content in css/popup.css must use var(--modal-surface-bg)",
+  );
 });
