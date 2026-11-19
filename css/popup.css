@@ -313,13 +313,23 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   gap: var(--spacing-xs);
   /* Narrower title column: popup title font is 0.78rem */
   --prayer-title-col: 90px;
+  --prayer-grid-gap: 4px;
+  /* The popup panel is narrower than this grid's design width. Keep every
+     column at its intended size and let #popupPrayerMethodPanelHost scroll
+     sideways, so prayer names stay readable instead of collapsing. */
+  min-width: calc(
+    var(--prayer-title-col) + 36px + 52px + 200px + 3 * var(--prayer-grid-gap) +
+      2 * var(--spacing-xs)
+  );
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-list-header,
 .popup-prayer-settings-clone-host .prayer-settings-row {
-  grid-template-columns: minmax(0, var(--prayer-title-col, 90px))
-    minmax(36px, 1fr) minmax(52px, 1fr) minmax(200px, 1fr);
-  gap: 4px;
+  /* Fixed title track: it must never shrink, or names ellipsise away */
+  grid-template-columns: var(--prayer-title-col, 90px) minmax(36px, 1fr)
+    minmax(52px, 1fr) minmax(200px, 1fr);
+  column-gap: var(--prayer-grid-gap, 4px);
+  row-gap: 4px;
 }
 
 .popup-prayer-settings-clone-host .prayer-settings-list-header {
@@ -369,11 +379,19 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 @media (max-width: 430px) {
+  .popup-prayer-settings-clone-host .prayer-settings-list {
+    --prayer-grid-gap: 3px;
+    min-width: calc(
+      var(--prayer-title-col) + 34px + 48px + 181px + 3 *
+        var(--prayer-grid-gap) + 2 * var(--spacing-xs)
+    );
+  }
+
   .popup-prayer-settings-clone-host .prayer-settings-list-header,
   .popup-prayer-settings-clone-host .prayer-settings-row {
-    grid-template-columns: minmax(0, var(--prayer-title-col, 90px))
-      minmax(34px, 1fr) minmax(48px, 1fr) minmax(181px, 1fr);
-    gap: 3px;
+    grid-template-columns: var(--prayer-title-col, 90px) minmax(34px, 1fr)
+      minmax(48px, 1fr) minmax(181px, 1fr);
+    row-gap: 3px;
   }
 
   .popup-prayer-settings-clone-host .prayer-settings-list-header {
