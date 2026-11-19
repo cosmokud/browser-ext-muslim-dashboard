@@ -119,6 +119,6 @@ test("the header is a themed component and has its own glass rule", () => {
   assert.match(rule[3], /border:\s*1px solid var\(--glass-border\);/);
   assert.match(
     rule[3],
-    /backdrop-filter:\s*blur\(calc\(10px \* var\(--ui-blur-multiplier\)\)\);/,
+    /backdrop-filter:\s*blur\(calc\(10px \* var\(--ui-blur-multiplier\) \* var\(--surface-blur-factor, 1\)\)\);/,
   );
 });

@@ -18,6 +18,8 @@ class ThemeTokens {
     dark: "#1e1e32",
   };
 
+  static HIGHLIGHT_MIN_OPACITY = 30;
+
   static SURFACE_CSS_VARS = [
     "--glass-bg",
     "--glass-bg-hover",
@@ -28,6 +30,7 @@ class ThemeTokens {
     "--surface-blur-factor",
     "--surface-tint-rgb",
     "--surface-rgb",
+    "--glass-opacity-factor",
   ];
 
   static HIGHLIGHT_CSS_VARS = [
@@ -37,6 +40,21 @@ class ThemeTokens {
     "--theme-highlight-light-bg",
     "--theme-highlight-light-subtle-bg",
     "--theme-highlight-shadow",
+  ];
+
+  static COMPONENT_SURFACE_CSS_VARS = [
+    "--component-opacity-factor",
+    "--component-blur-factor",
+    "--component-glass-bg",
+    "--component-glass-bg-hover",
+    "--component-glass-border",
+    "--component-glass-bg-subtle",
+    "--component-highlight-bg-hover",
+    "--component-highlight-active-bg",
+    "--component-highlight-border",
+    "--component-highlight-light-bg",
+    "--component-highlight-light-subtle-bg",
+    "--component-highlight-shadow",
   ];
 
   static clampNumber(value, min, max, fallback) {
@@ -358,9 +376,10 @@ class ThemeTokens {
     { glassEnabled = true, opacity, opacityRule = "componentOpacity" } = {},
   ) {
     const coerced = SettingsRegistry.coerce(opacityRule, opacity);
+    const effectiveOpacity = Math.max(coerced, ThemeTokens.HIGHLIGHT_MIN_OPACITY);
     const alphas =
       glassEnabled !== false
-        ? ThemeTokens.glassAlphas(coerced)
+        ? ThemeTokens.glassAlphas(effectiveOpacity)
         : { bg: 1, hover: 1, border: 1 };
 
     const primary = colors?.primary;
@@ -429,10 +448,9 @@ class ThemeTokens {
         element.style.setProperty("--glass-shadow", surfaceTokens.glassShadow);
       }
       if (surfaceTokens.opacityRatio !== undefined) {
-        element.style.setProperty(
-          "--surface-opacity",
-          String(surfaceTokens.opacityRatio),
-        );
+        const opacityStr = String(surfaceTokens.opacityRatio);
+        element.style.setProperty("--surface-opacity", opacityStr);
+        element.style.setProperty("--glass-opacity-factor", opacityStr);
       }
       if (surfaceTokens.blurFactor !== undefined) {
         element.style.setProperty(
@@ -486,6 +504,80 @@ class ThemeTokens {
     }
     for (const prop of ThemeTokens.HIGHLIGHT_CSS_VARS) {
       element.style.removeProperty(prop);
+    }
+  }
+
+  static applyComponentSurfaceTokens(root, surfaceTokens, highlightTokens = null) {
+    if (!root?.style) return;
+
+    if (surfaceTokens) {
+      if (surfaceTokens.opacityRatio !== undefined) {
+        root.style.setProperty(
+          "--component-opacity-factor",
+          String(surfaceTokens.opacityRatio),
+        );
+      }
+      if (surfaceTokens.blurFactor !== undefined) {
+        root.style.setProperty(
+          "--component-blur-factor",
+          String(surfaceTokens.blurFactor),
+        );
+      }
+      if (surfaceTokens.glassBg !== undefined) {
+        root.style.setProperty("--component-glass-bg", surfaceTokens.glassBg);
+      }
+      if (surfaceTokens.glassBgHover !== undefined) {
+        root.style.setProperty(
+          "--component-glass-bg-hover",
+          surfaceTokens.glassBgHover,
+        );
+      }
+      if (surfaceTokens.glassBorder !== undefined) {
+        root.style.setProperty(
+          "--component-glass-border",
+          surfaceTokens.glassBorder,
+        );
+      }
+      if (surfaceTokens.glassBgSubtle !== undefined) {
+        root.style.setProperty(
+          "--component-glass-bg-subtle",
+          surfaceTokens.glassBgSubtle,
+        );
+      }
+    }
+
+    if (highlightTokens) {
+      root.style.setProperty(
+        "--component-highlight-bg-hover",
+        highlightTokens.bgHover,
+      );
+      root.style.setProperty(
+        "--component-highlight-active-bg",
+        highlightTokens.activeBg,
+      );
+      root.style.setProperty(
+        "--component-highlight-border",
+        highlightTokens.border,
+      );
+      root.style.setProperty(
+        "--component-highlight-light-bg",
+        highlightTokens.lightBg,
+      );
+      root.style.setProperty(
+        "--component-highlight-light-subtle-bg",
+        highlightTokens.lightSubtleBg,
+      );
+      root.style.setProperty(
+        "--component-highlight-shadow",
+        highlightTokens.shadow,
+      );
+    }
+  }
+
+  static clearComponentSurfaceTokens(root) {
+    if (!root?.style) return;
+    for (const prop of ThemeTokens.COMPONENT_SURFACE_CSS_VARS) {
+      root.style.removeProperty(prop);
     }
   }
 

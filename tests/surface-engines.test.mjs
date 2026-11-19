@@ -125,11 +125,15 @@ test("blur-overrides defaults missing glassOpacity to 50, writes full surface+hi
     );
   }
 
-  // Re-enabling dashboard glass with componentOpacity=20 lets DASH card inherit 20%.
+  // Re-enabling dashboard glass with componentOpacity=20 lets DASH card inherit 20% via :root --component-* scope without inline stamping.
   themes.setMainGridComponentOpacity(20, false);
   themes.setGlassEnabled(true, false);
-  assert.equal(card.style.getPropertyValue("--surface-opacity"), "0.2");
-  assert.match(card.style.getPropertyValue("--glass-bg"), /,\s*0\.2\)$/);
+  const rootStyle = document.documentElement.style;
+  assert.equal(card.style.getPropertyValue("--surface-opacity"), "");
+  assert.equal(card.style.getPropertyValue("--glass-bg"), "");
+  assert.equal(rootStyle.getPropertyValue("--component-opacity-factor"), "0.2");
+  assert.equal(rootStyle.getPropertyValue("--component-blur-factor"), "1");
+  assert.match(rootStyle.getPropertyValue("--component-glass-bg"), /,\s*0\.2\)$/);
 
   assert.ok(onBtn !== undefined);
   window.close();

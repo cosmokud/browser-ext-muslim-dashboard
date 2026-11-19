@@ -1,10 +1,11 @@
 /**
- * Component Opacity: the theme panel slider that moves the main grid and both
- * sidebars. Each placed component carries its own copy of the primary
- * highlight variables at that alpha, and portaled surfaces read the root copies,
- * so a dropdown lifted to <body> cannot fall back to a solid palette colour.
- * The stylesheet half is read through jsdom's CSSOM: the browser's own parse, so
- * a selector or declaration that no longer exists fails here.
+ * Component Opacity: the theme panel slider that moves all resting dashboard
+ * panels, nested sub-surfaces, borders, and backdrop blurs through one :root
+ * + CSS surface-token seam without inline-stamping individual component IDs.
+ * At 0%, resting surfaces and blurs drop to 0 while primary hover/active
+ * highlights stay legible. Portaled surfaces read the same :root copies.
+ * The stylesheet half is read through jsdom's CSSOM: the browser's own parse,
+ * so a selector or declaration that no longer exists fails here.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -13,8 +14,11 @@ import path from "node:path";
 import {
   assertRootDeclaration,
   assertRule,
+  collapse,
   loadPageDom,
   repoRoot,
+  ruleFor,
+  stylesheetRules,
 } from "./harness.mjs";
 
 const THEME_SCRIPTS = ["js/settings-registry.js", "js/theme-tokens.js", "js/themes.js"];
@@ -23,11 +27,21 @@ const HIGHLIGHT_VARIABLES = [
   "--theme-highlight-active-bg",
   "--theme-highlight-border",
   "--theme-highlight-light-bg",
+  "--theme-highlight-light-subtle-bg",
+  "--theme-highlight-shadow",
 ];
-const ROOT_VARIABLES = [
+const COMPONENT_ROOT_VARIABLES = [
+  "--component-opacity-factor",
+  "--component-blur-factor",
+  "--component-glass-bg",
+  "--component-glass-bg-hover",
+  "--component-glass-border",
+  "--component-glass-bg-subtle",
   "--component-highlight-bg-hover",
   "--component-highlight-active-bg",
   "--component-highlight-border",
+  "--component-highlight-light-bg",
+  "--component-highlight-light-subtle-bg",
   "--component-highlight-shadow",
 ];
 
@@ -48,52 +62,273 @@ function bootThemes() {
 const valuesOf = (element, variables) =>
   variables.map((variable) => element.style.getPropertyValue(variable));
 
-test("a component placed in a sidebar carries the component opacity highlights", () => {
+test("componentOpacity = 0 drops resting surfaces and blur to 0 on :root while keeping highlights legible", () => {
   const { document, themes } = bootThemes();
+  const root = document.documentElement;
+  const card = document.getElementById("prayerTimesCard");
+
+  themes.setMainGridComponentOpacity(0);
+
+  assert.equal(root.style.getPropertyValue("--component-opacity-factor"), "0");
+  assert.equal(root.style.getPropertyValue("--component-blur-factor"), "0");
+  assert.match(root.style.getPropertyValue("--component-glass-bg"), /,\s*0\)$/);
+  assert.match(root.style.getPropertyValue("--component-glass-bg-hover"), /,\s*0\)$/);
+  assert.match(root.style.getPropertyValue("--component-glass-border"), /,\s*0\)$/);
+  assert.equal(
+    root.style.getPropertyValue("--component-glass-bg-subtle"),
+    "rgba(255, 255, 255, 0)",
+  );
+
+  // Active/hover primary highlights keep a legible alpha floor at 0%.
+  const activeBg = root.style.getPropertyValue("--component-highlight-active-bg");
+  const hoverBg = root.style.getPropertyValue("--component-highlight-bg-hover");
+  const border = root.style.getPropertyValue("--component-highlight-border");
+  assert.match(activeBg, /rgba\([^)]+,\s*0\.3\)/);
+  assert.match(hoverBg, /rgba\([^)]+,\s*0\.386\)/);
+  assert.match(border, /rgba\([^)]+,\s*0\.343\)/);
+
+  // No 21-ID inline variable stamping on individual dashboard panels.
+  assert.equal(card.style.getPropertyValue("--glass-bg"), "");
+  assert.equal(card.style.getPropertyValue("--surface-opacity"), "");
+  assert.deepEqual(valuesOf(card, HIGHLIGHT_VARIABLES), ["", "", "", "", "", ""]);
+});
+
+test("componentOpacity = 35 writes scaled surface and highlight tokens on :root without stamping individual cards", () => {
+  const { document, themes } = bootThemes();
+  const root = document.documentElement;
   const card = document.getElementById("prayerTimesCard");
   document.getElementById("sidebarLeft").appendChild(card);
 
   themes.setMainGridComponentOpacity(35);
 
-  // The root copies are written from the same expression, so they are the
-  // expected value of the component copies.
-  assert.deepEqual(
-    valuesOf(card, HIGHLIGHT_VARIABLES.slice(0, 3)),
-    valuesOf(document.documentElement, ROOT_VARIABLES.slice(0, 3)),
+  assert.equal(root.style.getPropertyValue("--component-opacity-factor"), "0.35");
+  assert.equal(root.style.getPropertyValue("--component-blur-factor"), "1");
+  assert.match(root.style.getPropertyValue("--component-glass-bg"), /,\s*0\.35\)$/);
+  assert.match(root.style.getPropertyValue("--component-glass-bg-hover"), /,\s*0\.45\)$/);
+  assert.match(root.style.getPropertyValue("--component-glass-border"), /,\s*0\.4\)$/);
+  assert.equal(
+    root.style.getPropertyValue("--component-glass-bg-subtle"),
+    "rgba(255, 255, 255, 0.021)",
   );
 
-  // The lighter copy is the border's palette colour at the hover alpha, so it
-  // follows the slider without naming the theme's hex.
-  const [lightBg] = valuesOf(card, ["--theme-highlight-light-bg"]);
-  const [border] = valuesOf(document.documentElement, ["--component-highlight-border"]);
-  assert.equal(lightBg.slice(0, lightBg.lastIndexOf(",")), border.slice(0, border.lastIndexOf(",")));
+  // The lighter highlight follows the border's palette colour at the hover alpha.
+  const lightBg = root.style.getPropertyValue("--component-highlight-light-bg");
+  const border = root.style.getPropertyValue("--component-highlight-border");
+  assert.equal(
+    lightBg.slice(0, lightBg.lastIndexOf(",")),
+    border.slice(0, border.lastIndexOf(",")),
+  );
   assert.equal(lightBg.slice(lightBg.lastIndexOf(",")), ", 0.45)");
-});
 
-test("a component outside the layout, the sidebars and the floating cards is left alone", () => {
-  const { document, themes } = bootThemes();
-  const card = document.createElement("div");
-  card.id = "todoCard";
-  document.body.appendChild(card);
+  // Theme RGB channel tokens and global glass opacity factor are published on :root.
+  assert.ok(root.style.getPropertyValue("--primary-rgb").length > 0);
+  assert.ok(root.style.getPropertyValue("--primary-light-rgb").length > 0);
+  assert.ok(root.style.getPropertyValue("--primary-dark-rgb").length > 0);
+  assert.ok(root.style.getPropertyValue("--accent-gold-rgb").length > 0);
+  assert.ok(root.style.getPropertyValue("--accent-bg-rgb").length > 0);
+  assert.equal(
+    root.style.getPropertyValue("--glass-opacity-factor"),
+    root.style.getPropertyValue("--surface-opacity"),
+  );
 
-  themes.setMainGridComponentOpacity(35);
-
+  // Individual components stay free of inline opacity/highlight stamping.
   assert.equal(card.getAttribute("style"), null);
+
+  // Light mode flips subtle surface tint to dark slate RGB channels.
+  themes.setMode("light");
+  assert.equal(root.style.getPropertyValue("--surface-tint-rgb"), "15, 23, 42");
+  assert.equal(
+    root.style.getPropertyValue("--component-glass-bg-subtle"),
+    "rgba(15, 23, 42, 0.021)",
+  );
 });
 
-test("turning glass off removes the component and the root highlight copies", () => {
+test("turning glass off removes all component vars and sets surface blur factor to 0", () => {
   const { document, themes } = bootThemes();
-  const card = document.getElementById("prayerTimesCard");
+  const root = document.documentElement;
 
   themes.setMainGridComponentOpacity(35);
   themes.setGlassEnabled(false);
 
-  assert.deepEqual(valuesOf(card, HIGHLIGHT_VARIABLES), ["", "", "", ""]);
-  assert.deepEqual(valuesOf(document.documentElement, ROOT_VARIABLES), ["", "", "", ""]);
+  assert.deepEqual(
+    valuesOf(root, COMPONENT_ROOT_VARIABLES),
+    Array(COMPONENT_ROOT_VARIABLES.length).fill(""),
+  );
+  assert.equal(root.style.getPropertyValue("--surface-blur-factor"), "0");
+  assert.equal(root.style.getPropertyValue("--surface-opacity"), "1");
 });
 
-test("the stylesheet falls back to the theme highlights until the manager writes", () => {
+test("the stylesheet declares tiered surface defaults and dashboard + per-card local scopes", () => {
+  assertRootDeclaration("--surface-opacity", "0.5");
+  assertRootDeclaration("--surface-blur-factor", "1");
+  assertRootDeclaration("--surface-tint-rgb", "255, 255, 255");
+  assertRootDeclaration("--glass-bg-subtle", "var(--surface-inset)");
   assertRootDeclaration("--component-highlight-active-bg", "var(--theme-highlight-active-bg)");
+
+  assertRule('[data-theme-mode="light"]', {
+    "--surface-tint-rgb": "15, 23, 42",
+  });
+  assertRule('html[data-glass-enabled="false"], [data-glass-enabled="false"]', {
+    "--surface-blur-factor": "0",
+  });
+
+  const scopeRule = stylesheetRules().find(
+    (rule) =>
+      rule.selectorText &&
+      rule.style.getPropertyValue("--surface-opacity").trim() === "var(--component-opacity-factor)" &&
+      rule.style.getPropertyValue("--glass-bg").trim() === "var(--component-glass-bg)",
+  );
+  assert.ok(scopeRule, "missing Dashboard Surface Scope CSS rule");
+  const scopeSelector = collapse(scopeRule.selectorText);
+  for (const needle of [
+    ".main-container",
+    "#sidebarLeft",
+    "#sidebarRight",
+    "#momentModeLayout",
+    ".floating-card",
+    ":not([data-glass-enabled])",
+    'html:not([data-glass-enabled="false"])',
+  ]) {
+    assert.ok(
+      scopeSelector.includes(needle),
+      `Dashboard Surface Scope must cover ${needle}`,
+    );
+  }
+  assert.equal(
+    collapse(scopeRule.style.getPropertyValue("--surface-blur-factor")),
+    "var(--component-blur-factor)",
+  );
+  assert.equal(
+    collapse(scopeRule.style.getPropertyValue("--theme-highlight-bg-hover")),
+    "var(--component-highlight-bg-hover)",
+  );
+
+  const localDerivationRule = stylesheetRules().find(
+    (rule) =>
+      rule.selectorText &&
+      rule.selectorText.includes("[data-glass-enabled]") &&
+      !rule.selectorText.includes(":root") &&
+      rule.style.getPropertyValue("--surface-inset").trim().length > 0 &&
+      rule.style.getPropertyValue("--action-btn-bg").trim().length > 0 &&
+      rule.style.getPropertyValue("--scrollbar-track").trim().length > 0,
+  );
+  assert.ok(localDerivationRule, "missing Local Tiered Derivation CSS rule");
+  const localSel = collapse(localDerivationRule.selectorText);
+  for (const needle of [
+    ".main-container",
+    "#sidebarLeft",
+    "#sidebarRight",
+    "#momentModeLayout",
+    ".floating-card",
+    "[data-glass-enabled]",
+  ]) {
+    assert.ok(localSel.includes(needle), `Local Tiered Derivation must cover ${needle}`);
+  }
+  for (const token of [
+    "--surface-inset",
+    "--surface-inset-strong",
+    "--surface-inset-hover",
+    "--surface-control",
+    "--surface-control-hover",
+    "--surface-border-subtle",
+    "--surface-border",
+    "--surface-scrim",
+    "--action-btn-bg",
+    "--action-btn-bg-hover",
+    "--scrollbar-track",
+    "--scrollbar-track-strong",
+  ]) {
+    assert.ok(
+      localDerivationRule.style.getPropertyValue(token).trim().length > 0,
+      `Local Tiered Derivation must recompute ${token}`,
+    );
+  }
+});
+
+test("all 6 reported opaque widget selectors read surface-opacity and surface-blur-factor tokens", () => {
+  // 1. Fasting bar + badge + track
+  assertRule(".fasting-bar", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border-subtle)",
+  });
+  assertRule(".fasting-bar__badge", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border-subtle)",
+  });
+  assertRule(".fasting-bar__track", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border-subtle)",
+  });
+
+  // 2. Search bar input (resting scales by --surface-opacity; focus remains visible)
+  const searchInput = ruleFor(".search-bar-input");
+  assert.ok(searchInput, "no .search-bar-input rule");
+  assert.match(searchInput.style.getPropertyValue("background"), /var\(--surface-opacity\)/);
+  assert.match(searchInput.style.getPropertyValue("border"), /var\(--surface-opacity\)/);
+
+  // 3. Search bar buttons
+  const searchBtn = ruleFor(".search-bar-btn");
+  assert.ok(searchBtn, "no .search-bar-btn rule");
+  assert.equal(collapse(searchBtn.style.getPropertyValue("background")), "var(--surface-control)");
+  assert.match(searchBtn.style.getPropertyValue("border"), /var\(--surface-opacity\)/);
+
+  // 4. Flashcard flip/study card
+  const flashcard = ruleFor(".flashcard-flip-card");
+  assert.ok(flashcard, "no .flashcard-flip-card rule");
+  assert.equal(collapse(flashcard.style.getPropertyValue("background")), "var(--surface-inset)");
+  assert.equal(
+    collapse(flashcard.style.getPropertyValue("border-color")),
+    "var(--surface-border-subtle)",
+  );
+  assert.match(
+    flashcard.style.getPropertyValue("backdrop-filter"),
+    /var\(--surface-blur-factor,\s*1\)/,
+  );
+
+  // 5. Pocket Quran size controls, controls bar, and main wrapper
+  assertRule(".pocket-quran-size-controls", {
+    background: "var(--surface-control)",
+  });
+  const pqControlsRules = stylesheetRules().filter(
+    (rule) => rule.selectorText && collapse(rule.selectorText) === ".pocket-quran-controls",
+  );
+  const pqControls = pqControlsRules.find(
+    (rule) => rule.style.getPropertyValue("background").trim().length > 0,
+  );
+  assert.ok(pqControls, "no .pocket-quran-controls surface rule");
+  assert.equal(
+    collapse(pqControls.style.getPropertyValue("background")),
+    "var(--surface-inset-strong)",
+  );
+  assert.match(
+    pqControls.style.getPropertyValue("backdrop-filter"),
+    /var\(--surface-blur-factor,\s*1\)/,
+  );
+  const pqMain = ruleFor(".pocket-quran-main");
+  assert.ok(pqMain, "no .pocket-quran-main rule");
+  assert.equal(collapse(pqMain.style.getPropertyValue("background")), "transparent");
+  assert.match(
+    pqMain.style.getPropertyValue("backdrop-filter"),
+    /var\(--surface-blur-factor,\s*1\)/,
+  );
+
+  // 6. Pocket Quran ayah & content
+  const pqContent = ruleFor(".pocket-quran-content");
+  assert.ok(pqContent, "no .pocket-quran-content rule");
+  assert.match(
+    pqContent.style.getPropertyValue("backdrop-filter"),
+    /var\(--surface-blur-factor,\s*1\)/,
+  );
+  const pqAyah = ruleFor(".pocket-quran-ayah");
+  assert.ok(pqAyah, "no .pocket-quran-ayah rule");
+  assert.equal(
+    collapse(pqAyah.style.getPropertyValue("background")),
+    "var(--surface-inset-strong)",
+  );
+  assert.match(
+    pqAyah.style.getPropertyValue("backdrop-filter"),
+    /var\(--surface-blur-factor,\s*1\)/,
+  );
 });
 
 const PORTAL_COMPONENT_RULES = [

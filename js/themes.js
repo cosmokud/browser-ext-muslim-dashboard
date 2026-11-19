@@ -1259,11 +1259,10 @@ class ThemeManager {
     if (!colors || typeof colors !== "object") return;
 
     const root = document.documentElement;
-    const mainContainer = document.querySelector(".main-container");
-    const sidebarContainers = [
-      document.getElementById("sidebarLeft"),
-      document.getElementById("sidebarRight"),
-    ].filter(Boolean);
+    if (!this._glassEnabled) {
+      ThemeTokens.clearComponentSurfaceTokens(root);
+      return;
+    }
 
     const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
       glassEnabled: true,
@@ -1277,63 +1276,7 @@ class ThemeManager {
       opacityRule: "componentOpacity",
     });
 
-    const applyToComponent = (component) => {
-      // Keep explicit per-card overrides from readability menus authoritative.
-      if (
-        Object.prototype.hasOwnProperty.call(component.dataset, "glassEnabled")
-      ) {
-        return;
-      }
-
-      if (!this._glassEnabled) {
-        ThemeTokens.clearSurfaceTokens(component);
-        return;
-      }
-
-      ThemeTokens.applySurfaceTokens(component, surfaceTokens, highlightTokens, {
-        includeShadow: false,
-      });
-      component.style.removeProperty("--glass-shadow");
-    };
-
-    if (this._glassEnabled) {
-      root.style.setProperty(
-        "--component-highlight-bg-hover",
-        highlightTokens.bgHover,
-      );
-      root.style.setProperty(
-        "--component-highlight-active-bg",
-        highlightTokens.activeBg,
-      );
-      root.style.setProperty(
-        "--component-highlight-border",
-        highlightTokens.border,
-      );
-      root.style.setProperty(
-        "--component-highlight-shadow",
-        highlightTokens.shadow,
-      );
-    } else {
-      root.style.removeProperty("--component-highlight-bg-hover");
-      root.style.removeProperty("--component-highlight-active-bg");
-      root.style.removeProperty("--component-highlight-border");
-      root.style.removeProperty("--component-highlight-shadow");
-    }
-
-    ThemeManager.MAIN_GRID_COMPONENT_IDS.forEach((componentId) => {
-      const component = document.getElementById(componentId);
-      if (!component) return;
-
-      const isInMainLayout =
-        !!mainContainer && mainContainer.contains(component);
-      const isInSidebar = sidebarContainers.some((container) =>
-        container.contains(component),
-      );
-      const isFloating = component.classList.contains("floating-card");
-      if (!isInMainLayout && !isInSidebar && !isFloating) return;
-
-      applyToComponent(component);
-    });
+    ThemeTokens.applyComponentSurfaceTokens(root, surfaceTokens, highlightTokens);
   }
 
   /**
@@ -1553,6 +1496,18 @@ class ThemeManager {
     root.style.setProperty("--primary-color", colors.primary);
     root.style.setProperty("--primary-light", colors.primaryLight);
     root.style.setProperty("--primary-dark", colors.primaryDark);
+    root.style.setProperty(
+      "--primary-rgb",
+      ThemeTokens.toRgbChannelString(colors.primary, "26, 95, 74"),
+    );
+    root.style.setProperty(
+      "--primary-light-rgb",
+      ThemeTokens.toRgbChannelString(colors.primaryLight, "45, 138, 110"),
+    );
+    root.style.setProperty(
+      "--primary-dark-rgb",
+      ThemeTokens.toRgbChannelString(colors.primaryDark, "13, 61, 46"),
+    );
     const onPrimaryText = ThemeTokens.resolveOnPrimaryText(
       colors.onPrimaryText,
       colors.primary,
@@ -1569,6 +1524,14 @@ class ThemeManager {
     root.style.setProperty("--accent-gold", accentText);
     root.style.setProperty("--accent-bg", accentBackground);
     root.style.setProperty("--accent-text", accentText);
+    root.style.setProperty(
+      "--accent-gold-rgb",
+      ThemeTokens.toRgbChannelString(accentText, "212, 175, 55"),
+    );
+    root.style.setProperty(
+      "--accent-bg-rgb",
+      ThemeTokens.toRgbChannelString(accentBackground, "212, 175, 55"),
+    );
     root.style.setProperty("--accent-gold-light", colors.accentLight);
     root.style.setProperty("--accent-blue", colors.accentBlue);
     root.style.setProperty("--settings-color", colors.settingsColor);

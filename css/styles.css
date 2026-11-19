@@ -66,10 +66,15 @@
   --primary-color: #1a5f4a;
   --primary-light: #2d8a6e;
   --primary-dark: #0d3d2e;
+  --primary-rgb: 26, 95, 74;
+  --primary-light-rgb: 45, 138, 110;
+  --primary-dark-rgb: 13, 61, 46;
   --accent-gold: #d4af37;
   --accent-gold-light: #e6c866;
   --accent-bg: var(--accent-gold);
   --accent-text: var(--accent-gold);
+  --accent-gold-rgb: 212, 175, 55;
+  --accent-bg-rgb: 212, 175, 55;
 
   /* Utility accents (used by a few components) */
   --accent-blue: #0066cc;
@@ -86,9 +91,45 @@
   --weather-metric-precipitation: var(--text-muted);
   --weather-metric-wind: var(--primary-light);
 
+  /* Surface opacity & elevation tokens */
+  --surface-opacity: 0.5;
+  --surface-blur-factor: 1;
+  --surface-tint-rgb: 255, 255, 255;
+  --surface-rgb: 26, 95, 74;
+  --glass-opacity-factor: var(--surface-opacity);
+  --surface-inset: rgba(
+    var(--surface-tint-rgb),
+    calc(0.06 * var(--surface-opacity))
+  );
+  --surface-inset-strong: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-inset-hover: rgba(
+    var(--surface-tint-rgb),
+    calc(0.11 * var(--surface-opacity))
+  );
+  --surface-control: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-control-hover: rgba(
+    var(--surface-tint-rgb),
+    calc(0.14 * var(--surface-opacity))
+  );
+  --surface-border-subtle: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-border: rgba(
+    var(--surface-tint-rgb),
+    calc(0.12 * var(--surface-opacity))
+  );
+  --surface-scrim: rgba(0, 0, 0, calc(0.32 * var(--surface-opacity)));
+
   /* Glass effect */
   --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.04);
+  --glass-bg-subtle: var(--surface-inset);
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -191,9 +232,17 @@
   );
   --theme-highlight-shadow: 0 8px 18px
     color-mix(in srgb, var(--primary-dark) 32%, transparent);
+  --component-opacity-factor: var(--surface-opacity);
+  --component-blur-factor: var(--surface-blur-factor);
+  --component-glass-bg: var(--glass-bg);
+  --component-glass-bg-hover: var(--glass-bg-hover);
+  --component-glass-border: var(--glass-border);
+  --component-glass-bg-subtle: var(--glass-bg-subtle);
   --component-highlight-bg-hover: var(--theme-highlight-bg-hover);
   --component-highlight-active-bg: var(--theme-highlight-active-bg);
   --component-highlight-border: var(--theme-highlight-border);
+  --component-highlight-light-bg: var(--theme-highlight-light-bg);
+  --component-highlight-light-subtle-bg: var(--theme-highlight-light-subtle-bg);
   --component-highlight-shadow: var(--theme-highlight-shadow);
   --action-btn-bg-hover: var(--theme-highlight-bg-hover);
   --action-btn-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
@@ -233,6 +282,107 @@
   );
   --scrollbar-thumb: var(--primary-light);
   --scrollbar-thumb-hover: var(--primary-color);
+}
+
+[data-theme-mode="light"] {
+  --surface-tint-rgb: 15, 23, 42;
+}
+
+html[data-glass-enabled="false"],
+[data-glass-enabled="false"] {
+  --surface-blur-factor: 0;
+}
+
+/* Dashboard Surface Scope: re-bind dashboard panels to Component Opacity tokens */
+html:not([data-glass-enabled="false"])
+  :is(.main-container, #sidebarLeft, #sidebarRight, #momentModeLayout)
+  :is(
+    .card,
+    .header,
+    .pinned-apps-section,
+    .search-bar-section,
+    .quote-section,
+    .time-section,
+    #dateDisplay
+  ):not([data-glass-enabled]),
+html:not([data-glass-enabled="false"]) .floating-card:not([data-glass-enabled]) {
+  --surface-opacity: var(--component-opacity-factor);
+  --surface-blur-factor: var(--component-blur-factor);
+  --glass-opacity-factor: var(--component-opacity-factor);
+  --glass-bg: var(--component-glass-bg);
+  --glass-bg-hover: var(--component-glass-bg-hover);
+  --glass-border: var(--component-glass-border);
+  --glass-bg-subtle: var(--component-glass-bg-subtle);
+  --theme-highlight-bg-hover: var(--component-highlight-bg-hover);
+  --theme-highlight-active-bg: var(--component-highlight-active-bg);
+  --theme-highlight-border: var(--component-highlight-border);
+  --theme-highlight-light-bg: var(--component-highlight-light-bg);
+  --theme-highlight-light-subtle-bg: var(--component-highlight-light-subtle-bg);
+  --theme-highlight-shadow: var(--component-highlight-shadow);
+}
+
+/* Local Tiered Derivation: recompute derived tokens inside dashboard & per-card scopes */
+html:not([data-glass-enabled="false"])
+  :is(.main-container, #sidebarLeft, #sidebarRight, #momentModeLayout)
+  :is(
+    .card,
+    .header,
+    .pinned-apps-section,
+    .search-bar-section,
+    .quote-section,
+    .time-section,
+    #dateDisplay
+  ):not([data-glass-enabled]),
+html:not([data-glass-enabled="false"]) .floating-card:not([data-glass-enabled]),
+[data-glass-enabled] {
+  --surface-inset: rgba(
+    var(--surface-tint-rgb),
+    calc(0.06 * var(--surface-opacity))
+  );
+  --surface-inset-strong: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-inset-hover: rgba(
+    var(--surface-tint-rgb),
+    calc(0.11 * var(--surface-opacity))
+  );
+  --surface-control: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-control-hover: rgba(
+    var(--surface-tint-rgb),
+    calc(0.14 * var(--surface-opacity))
+  );
+  --surface-border-subtle: rgba(
+    var(--surface-tint-rgb),
+    calc(0.08 * var(--surface-opacity))
+  );
+  --surface-border: rgba(
+    var(--surface-tint-rgb),
+    calc(0.12 * var(--surface-opacity))
+  );
+  --surface-scrim: rgba(0, 0, 0, calc(0.32 * var(--surface-opacity)));
+  --action-btn-border-color: var(--glass-border);
+  --action-btn-bg: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
+  --action-btn-bg-hover: var(--theme-highlight-bg-hover);
+  --action-btn-danger-border: color-mix(
+    in srgb,
+    #ff7a7a 38%,
+    var(--glass-border) 62%
+  );
+  --action-btn-danger-bg-hover: color-mix(
+    in srgb,
+    #ff7a7a 16%,
+    var(--action-btn-bg) 84%
+  );
+  --scrollbar-track: color-mix(in srgb, var(--glass-bg) 68%, transparent 32%);
+  --scrollbar-track-strong: color-mix(
+    in srgb,
+    var(--glass-bg-hover) 76%,
+    transparent 24%
+  );
 }
 
 /* Reset & Base */
@@ -964,7 +1114,8 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1)));
   padding: var(--spacing-lg);
 }
 
@@ -1012,7 +1163,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all var(--transition-normal);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .calendar-toggle:hover {
@@ -1042,8 +1198,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -1381,7 +1541,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   --quote-translation-font-family: var(--font-primary);
   position: relative;
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
@@ -1735,7 +1900,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
 
 #notesCard {
   --notes-card-font-family: var(--font-primary);
-  --notes-card-readable-bg: var(--glass-bg-subtle);
+  --notes-card-readable-bg: var(--surface-inset);
   font-family: var(--notes-card-font-family);
 }
 
@@ -2380,7 +2545,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
     var(--spacing-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   scroll-snap-align: start;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
 }
@@ -2439,26 +2609,23 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   height: 42px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0.07) 100%
-  );
+  background: var(--surface-control);
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   font-size: 1rem;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
 .notes-page-btn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.12) 100%
-  );
+  background: var(--surface-control-hover);
 }
 
 .notes-page-btn:disabled {
@@ -2493,7 +2660,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: var(--spacing-sm) var(--spacing-md);
   outline: none;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .notes-title-input:focus {
@@ -2512,7 +2684,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .notes-scale-control {
@@ -2673,7 +2850,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   height: 34px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-control);
   color: var(--text-primary);
   padding: 0 0.55rem;
   outline: none;
@@ -2743,7 +2920,7 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   gap: 4px;
   padding: 0 0.4rem;
   border-color: var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-control);
 }
 
 .notes-mode-chip {
@@ -2822,7 +2999,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   word-break: normal;
   line-height: 1.7;
   font-size: calc(1rem * var(--notes-scale));
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .notes-editor.notes-editor-quill {
@@ -2831,7 +3013,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   max-height: none;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .notes-toolbar.ql-toolbar.ql-snow {
@@ -3262,12 +3449,12 @@ body.grid-edit-mode .sidebar-zone .sidebar-slot .grid-draggable:active {
   padding: 0.75em 0.9em;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
-  background: rgba(18, 23, 30, 0.65);
+  background: var(--surface-scrim);
   overflow: auto;
 }
 
 .notes-editor.notes-editor-quill .ql-editor pre.ql-syntax {
-  background: rgba(18, 23, 30, 0.65);
+  background: var(--surface-scrim);
   color: var(--text-primary);
 }
 
@@ -3352,8 +3539,8 @@ textarea.notes-editor:focus {
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: var(--glass-bg-subtle);
+  border: 1px solid var(--surface-border-subtle);
+  background: var(--surface-inset);
   overflow-x: auto;
   overflow-y: hidden;
   white-space: pre;
@@ -3394,7 +3581,7 @@ textarea.notes-editor:focus {
   margin: 0 0 var(--spacing-sm) 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border-left: 3px solid var(--accent-gold);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
 }
@@ -3532,7 +3719,12 @@ textarea.notes-editor:focus {
 /* Card Base Styles */
 .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
@@ -4097,20 +4289,17 @@ textarea.notes-editor:focus {
   padding: var(--spacing-md);
   flex: 1 1 auto;
   justify-content: center;
-  --qibla-compass-surface: color-mix(
-    in srgb,
-    var(--primary-color) 22%,
-    transparent
+  --qibla-compass-surface: rgba(
+    var(--primary-rgb),
+    calc(0.22 * var(--surface-opacity))
   );
-  --qibla-compass-surface-hover: color-mix(
-    in srgb,
-    var(--primary-light) 28%,
-    transparent
+  --qibla-compass-surface-hover: rgba(
+    var(--primary-light-rgb),
+    calc(0.28 * var(--surface-opacity))
   );
-  --qibla-compass-border: color-mix(
-    in srgb,
-    var(--text-muted) 48%,
-    var(--primary-light) 52%
+  --qibla-compass-border: rgba(
+    var(--primary-light-rgb),
+    calc(0.52 * var(--surface-opacity))
   );
 }
 
@@ -4355,7 +4544,12 @@ textarea.notes-editor:focus {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .todo-page-numbers {
@@ -4369,8 +4563,8 @@ textarea.notes-editor:focus {
   height: 34px;
   padding: 0 10px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: transparent;
+  border: 1px solid var(--surface-border-subtle);
+  background: var(--surface-control);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
@@ -8182,7 +8376,12 @@ html[data-theme-mode="light"]
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(18px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(18px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   transition:
     background-color var(--transition-normal),
     border-color var(--transition-normal),
@@ -8227,7 +8426,7 @@ html[data-theme-mode="light"]
   height: 34px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-control);
   color: var(--text-primary);
   cursor: pointer;
   transition:
@@ -8240,7 +8439,7 @@ html[data-theme-mode="light"]
 
 .search-bar-engine-arrow:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--surface-control-hover);
   border-color: var(--primary-light);
 }
 
@@ -8283,8 +8482,8 @@ html[data-theme-mode="light"]
   width: var(--sb-engine-size);
   height: var(--sb-engine-size);
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-control);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8318,7 +8517,7 @@ html[data-theme-mode="light"]
 
 .search-bar-engine-tab:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--surface-control-hover);
 }
 
 .search-bar-engine-tab[aria-selected="true"] {
@@ -8352,7 +8551,7 @@ html[data-theme-mode="light"]
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-inset-strong);
 }
 
 .search-bar-form {
@@ -8370,8 +8569,8 @@ html[data-theme-mode="light"]
   height: 44px;
   padding: 0 var(--spacing-md);
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
-  background: rgba(var(--sb-accent-rgb), 0.12);
+  border: 1px solid rgba(var(--sb-accent-rgb), calc(0.22 * var(--surface-opacity)));
+  background: rgba(var(--sb-accent-rgb), calc(0.12 * var(--surface-opacity)));
   color: var(--text-primary);
   caret-color: rgb(var(--sb-accent-rgb));
   outline: none;
@@ -8387,17 +8586,17 @@ html[data-theme-mode="light"]
 }
 
 .search-bar-input:focus {
-  border-color: rgba(var(--sb-accent-rgb), 0.45);
-  background: rgba(var(--sb-accent-rgb), 0.16);
-  box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.18);
+  border-color: rgba(var(--sb-accent-rgb), 0.55);
+  background: rgba(var(--sb-accent-rgb), calc(0.16 * var(--surface-opacity)));
+  box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.22);
 }
 
 .search-bar-btn {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(var(--sb-accent-rgb), 0.22);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--sb-accent-rgb), calc(0.22 * var(--surface-opacity)));
+  background: var(--surface-control);
   color: var(--text-primary);
   cursor: pointer;
   transition:
@@ -8409,8 +8608,8 @@ html[data-theme-mode="light"]
 
 .search-bar-btn:hover {
   transform: translateY(-1px);
-  background: rgba(var(--sb-accent-rgb), 0.14);
-  border-color: rgba(var(--sb-accent-rgb), 0.38);
+  background: rgba(var(--sb-accent-rgb), 0.16);
+  border-color: rgba(var(--sb-accent-rgb), 0.42);
   box-shadow: 0 0 0 3px rgba(var(--sb-accent-rgb), 0.16);
 }
 
@@ -8445,7 +8644,12 @@ html[data-theme-mode="light"]
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(calc(18px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(18px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(18px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .search-bar-add-input {
@@ -8453,7 +8657,7 @@ html[data-theme-mode="light"]
   padding: 0 var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-control);
   color: var(--text-primary);
   outline: none;
 }
@@ -8479,7 +8683,7 @@ html[data-theme-mode="light"]
   padding: 0 var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-control);
   color: var(--text-primary);
   cursor: pointer;
   transition:
@@ -8490,7 +8694,7 @@ html[data-theme-mode="light"]
 
 .search-bar-add-action:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--surface-control-hover);
 }
 
 @media (max-width: 720px) {
@@ -8516,7 +8720,12 @@ html[data-theme-mode="light"]
   overflow-y: visible;
   padding: var(--spacing-md);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(20px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(20px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   min-height: 80px;
@@ -8748,8 +8957,8 @@ html[data-theme-mode="light"]
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--glass-bg-subtle);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--surface-inset);
+  border: 1px solid var(--surface-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9051,8 +9260,8 @@ html[data-theme-mode="light"]
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--glass-bg-subtle);
-  border: 2px dashed var(--glass-border);
+  background: var(--surface-inset);
+  border: 2px dashed var(--surface-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9546,7 +9755,12 @@ html[data-theme-mode="light"]
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -9844,12 +10058,17 @@ html[data-theme-mode="light"]
   max-height: 100%; /* don't overflow the scene */
   align-self: center;
   border-radius: var(--radius-lg);
-  background: var(--glass-bg-subtle);
+  background: var(--surface-inset);
   border-width: 1px;
   border-style: solid;
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--surface-border-subtle);
   border-image: initial;
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   position: relative;
   transform-style: preserve-3d;
   transition: transform var(--transition-normal);
@@ -12346,8 +12565,8 @@ body.sticky-note-resizing {
   gap: 4px;
   text-align: center;
   padding: var(--spacing-sm) var(--spacing-md);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--surface-border-subtle);
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
 }
 
@@ -12545,8 +12764,8 @@ body.sticky-note-resizing {
 .fasting-bar {
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
-  background: var(--glass-bg-subtle);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--surface-inset);
+  border: 1px solid var(--surface-border-subtle);
   animation: fastingBarIn 420ms ease both;
 }
 
@@ -12600,8 +12819,8 @@ body.sticky-note-resizing {
 .fasting-bar__badge {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  background: var(--glass-bg-subtle);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-inset);
+  border: 1px solid var(--surface-border-subtle);
   padding: 2px 8px;
   border-radius: var(--radius-xl);
 }
@@ -12616,8 +12835,8 @@ body.sticky-note-resizing {
   height: 12px;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-inset);
+  border: 1px solid var(--surface-border-subtle);
 }
 
 .fasting-bar__fill {
@@ -12938,7 +13157,12 @@ body:not(.sidebar-mode)
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: center;
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   cursor: pointer;
   transition: all var(--transition-fast);
   /* Default: 7 columns layout using a 10px gap (6 gaps between items).
@@ -13009,10 +13233,15 @@ body:not(.sidebar-mode)
 .weather-chart-wrap {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--surface-scrim);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   position: relative;
 }
 
@@ -13104,8 +13333,8 @@ body:not(.sidebar-mode)
 }
 
 .weather-chart-tab {
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--surface-border-subtle);
+  background: var(--surface-control);
   color: var(--text-secondary);
   border-radius: var(--radius-xl);
   padding: 6px 10px;
@@ -13115,7 +13344,7 @@ body:not(.sidebar-mode)
 }
 
 .weather-chart-tab:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-control-hover);
 }
 
 .weather-chart-tab.active {
@@ -14269,7 +14498,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(calc(12px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(12px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .time-section.clock-style-pill .current-time,
@@ -14277,7 +14511,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .time-section.clock-style-pill .current-ampm {
   padding: 2px 10px;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-control);
   border: 1px solid var(--glass-border);
 }
 
@@ -14293,7 +14527,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .time-section.clock-style-underline .current-time {
-  border-bottom: 2px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 2px solid
+    rgba(var(--surface-tint-rgb), calc(0.22 * var(--surface-opacity)));
   padding-bottom: 2px;
 }
 
@@ -14357,7 +14592,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 2px 12px;
   border-radius: 999px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-control);
   line-height: 1.05;
 }
 
@@ -14374,11 +14609,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .time-section.clock-style-retro-flip .current-time .time-minutes {
   padding: 0.09em 0.25em;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-scrim);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.32);
+    inset 0 1px 0
+      rgba(var(--surface-tint-rgb), calc(0.08 * var(--surface-opacity))),
+    0 4px 12px rgba(0, 0, 0, calc(0.32 * var(--surface-opacity)));
 }
 
 .time-section.clock-style-retro-flip .current-time .time-minutes {
@@ -14491,7 +14727,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   color: var(--text-secondary);
   font-size: 0.85rem;
   line-height: 1.25;
@@ -14528,7 +14769,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   overflow: hidden;
 }
 
@@ -14618,7 +14864,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   background: var(--glass-bg);
   color: var(--text-primary);
   outline: none;
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .pocket-quran-pill-input:focus {
@@ -14744,8 +14995,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
     box-shadow var(--transition-fast),
     color var(--transition-fast);
   box-shadow: var(--action-btn-shadow);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 :where(
@@ -15419,9 +15674,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   gap: var(--spacing-md);
   /* Ensure blur settings affect the full Pocket Quran area too.
      Use a near-transparent background so Chromium reliably composites backdrop-filter. */
-  background: rgba(255, 255, 255, 0.001);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  background: transparent;
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .pocket-quran-controls {
@@ -15433,9 +15692,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.45rem 0.6rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  background: var(--surface-inset-strong);
+  backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .pocket-quran-surah-picker,
@@ -15544,7 +15807,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: 0.38rem 0.5rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-control);
 }
 
 .pocket-quran-toggle-group {
@@ -15644,9 +15907,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
      when this region rapidly changes height (e.g., switching surahs). */
   overflow-anchor: none;
   /* Let global/per-card blur power affect the content region itself. */
-  background: rgba(255, 255, 255, 0.001);
-  backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(6px * var(--ui-blur-multiplier)));
+  background: transparent;
+  backdrop-filter: blur(
+    calc(6px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(6px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 .pocket-quran-ayah {
@@ -15654,9 +15921,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  background: var(--surface-inset-strong);
+  backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   transition:
     transform var(--transition-fast),
     background var(--transition-fast),
@@ -15674,7 +15945,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah:hover {
-  background: rgba(255, 255, 255, 0.11);
+  background: var(--surface-inset-hover);
   transform: translateY(-1px);
 }
 
@@ -15717,21 +15988,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-star:hover {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--primary-dark) 90%, transparent),
-    color-mix(in srgb, var(--primary-color) 94%, transparent)
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--primary-light) 90%,
-    var(--on-primary-text) 10%
-  );
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
   color: var(--on-primary-text);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--primary-light) 34%, transparent),
-    0 10px 22px color-mix(in srgb, var(--primary-dark) 42%, transparent);
+  box-shadow: var(--theme-highlight-shadow);
   transform: scale(1.1);
 }
 
@@ -15756,21 +16016,10 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 }
 
 .pocket-quran-ayah-copy-badge:hover {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--primary-dark) 90%, transparent),
-    color-mix(in srgb, var(--primary-color) 94%, transparent)
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--primary-light) 90%,
-    var(--on-primary-text) 10%
-  );
+  background: var(--theme-highlight-bg-hover);
+  border-color: var(--theme-highlight-border);
   color: var(--on-primary-text);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 22%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--primary-light) 34%, transparent),
-    0 10px 22px color-mix(in srgb, var(--primary-dark) 42%, transparent);
+  box-shadow: var(--theme-highlight-shadow);
   transform: scale(1.1);
 }
 
@@ -16154,9 +16403,13 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: var(--spacing-lg);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(14px * var(--ui-blur-multiplier)));
+  background: var(--surface-inset-strong);
+  backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(14px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16293,7 +16546,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-inset-strong);
   overflow: hidden;
   position: relative;
 }
@@ -16319,8 +16572,8 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   z-index: 1;
   height: 16px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-inset-strong);
+  border: 1px solid var(--surface-border-subtle);
 }
 
 .pq-skeleton-line.pq-skel-ar {
@@ -16982,10 +17235,15 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  border: 1px solid
+    rgba(var(--accent-gold-rgb), calc(0.6 * var(--surface-opacity)));
+  background: rgba(var(--accent-gold-rgb), calc(0.1 * var(--surface-opacity)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
   flex-wrap: nowrap;
   animation: pqSlideIn 0.3s ease-out;
   width: fit-content;
@@ -17202,7 +17460,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: 36px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg-subtle);
+  background: var(--surface-control);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -17216,7 +17474,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
 .pq-recitation-btn.pq-autoplay-btn,
 .pq-recitation-btn.pq-autoplay-next-surah-btn,
 .pq-recitation-btn.pq-autoscroll-btn {
-  background: var(--glass-bg-subtle);
+  background: var(--surface-control);
 }
 
 .pq-recitation-btn:hover {
@@ -17301,7 +17559,7 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   height: 4px;
   appearance: none;
   -webkit-appearance: none;
-  background: var(--glass-bg-subtle);
+  background: var(--surface-control);
   border-radius: var(--radius-full);
   border: none;
   outline: none;
@@ -17881,8 +18139,12 @@ body.sidebar-mode .sidebar-zone .weather-chart {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-  backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
-  -webkit-backdrop-filter: blur(calc(10px * var(--ui-blur-multiplier)));
+  backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
+  -webkit-backdrop-filter: blur(
+    calc(10px * var(--ui-blur-multiplier) * var(--surface-blur-factor, 1))
+  );
 }
 
 /* Animations (nav + script toggle) */
@@ -20019,7 +20281,7 @@ body.layout-edit-toggle-no-anim .middle-layout-resize-handle {
   text-align: start;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-inset);
   color: var(--text-primary);
   padding: var(--spacing-md);
   cursor: text;

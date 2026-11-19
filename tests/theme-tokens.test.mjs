@@ -287,6 +287,21 @@ test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay sy
   assert.equal(glassHighlights.lightSubtleBg, "rgba(46, 139, 111, 0.049)");
   assert.equal(glassHighlights.shadow, "0 8px 18px rgba(15, 61, 46, 0.112)");
 
+  const zeroGlassHighlights = tokens.resolveHighlightTokens(palette, {
+    glassEnabled: true,
+    opacity: 0,
+  });
+  assert.equal(
+    zeroGlassHighlights.activeBg,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.3), rgba(26, 95, 74, 0.3))",
+  );
+  assert.equal(
+    zeroGlassHighlights.bgHover,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.386), rgba(26, 95, 74, 0.386))",
+  );
+  assert.equal(zeroGlassHighlights.border, "rgba(46, 139, 111, 0.343)");
+  assert.equal(zeroGlassHighlights.lightBg, "rgba(46, 139, 111, 0.386)");
+
   const solidHighlights = tokens.resolveHighlightTokens(palette, {
     glassEnabled: false,
     opacity: 0,
@@ -324,4 +339,13 @@ test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay sy
 
   tokens.clearSurfaceTokens(fakeEl);
   assert.equal(props.size, 0, "clearSurfaceTokens should remove every surface and highlight var");
+
+  tokens.applyComponentSurfaceTokens(fakeEl, surface, glassHighlights);
+  for (const name of tokens.COMPONENT_SURFACE_CSS_VARS) {
+    assert.ok(props.has(name), `applyComponentSurfaceTokens should write ${name}`);
+  }
+  assert.equal(props.get("--component-opacity-factor"), "0.5");
+  assert.equal(props.get("--component-blur-factor"), "1");
+  tokens.clearComponentSurfaceTokens(fakeEl);
+  assert.equal(props.size, 0, "clearComponentSurfaceTokens should remove every component var");
 });
