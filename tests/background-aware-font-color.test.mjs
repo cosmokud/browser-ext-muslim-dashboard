@@ -89,7 +89,7 @@ test("a fresh profile stores background-aware font colour off", () => {
     setItem() {},
     removeItem() {},
   };
-  const sandbox = loadSandbox(["js/settings-registry.js", "js/storage.js"], {
+  const sandbox = loadSandbox(["js/settings-registry.js", "js/theme-tokens.js", "js/storage.js"], {
     globals: { localStorage },
   });
 

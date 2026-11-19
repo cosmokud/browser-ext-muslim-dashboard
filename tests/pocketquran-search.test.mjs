@@ -15,6 +15,7 @@ import { loadPageDom, loadSandbox, repoRoot, withParts } from "./harness.mjs";
 
 const SCRIPTS = withParts([
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/quran-copy.js",
   "js/quran-search.js",
   "js/quran-recitation.js",
@@ -565,7 +566,7 @@ test("the header lays its actions and controls out in one two-column grid", () =
 });
 
 test("the copy setting defaults to leaving the Arabic out", () => {
-  const sandbox = loadSandbox(["js/settings-registry.js", "js/storage.js"], {
+  const sandbox = loadSandbox(["js/settings-registry.js", "js/theme-tokens.js", "js/storage.js"], {
     globals: { localStorage: { getItem: () => null, setItem() {}, removeItem() {} } },
   });
 

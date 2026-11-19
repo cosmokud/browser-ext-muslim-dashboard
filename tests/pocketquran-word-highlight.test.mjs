@@ -16,6 +16,7 @@ import { loadPageDom, loadSandbox, repoRoot, withParts } from "./harness.mjs";
 
 const SCRIPTS = withParts([
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/quran-recitation.js",
   "js/quran-arabic.js",
   "js/base-manager.js",
@@ -404,7 +405,7 @@ test("a reciter change drops the pending timing fetches", () => {
 });
 
 test("the delay defaults to zero and the dashboard offers it in milliseconds", () => {
-  const sandbox = loadSandbox(["js/settings-registry.js", "js/storage.js"], {
+  const sandbox = loadSandbox(["js/settings-registry.js", "js/theme-tokens.js", "js/storage.js"], {
     globals: { localStorage: { getItem: () => null, setItem() {}, removeItem() {} } },
   });
   const saved = vm.runInContext(

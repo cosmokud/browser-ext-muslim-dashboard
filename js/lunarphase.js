@@ -466,6 +466,7 @@ class LunarPhaseManager extends BaseManager {
     // Build the illuminated portion path
     // This creates a path that represents the lit portion of the Moon
     const litPath = this._buildLitPath(radius, terminatorRx, phaseFraction);
+    const litClipId = `litClip${Math.round(phaseFraction * 1000)}`;
 
     return `
 <svg viewBox="-50 -50 100 100" role="img" aria-label="Moon phase">
@@ -498,6 +499,11 @@ class LunarPhaseManager extends BaseManager {
     <!-- Clip path for the moon disk -->
     <clipPath id="moonClip">
       <circle cx="0" cy="0" r="${radius}" />
+    </clipPath>
+
+    <!-- Clip path matching the terminator path -->
+    <clipPath id="${litClipId}">
+      <path d="${litPath}" />
     </clipPath>
   </defs>
 
@@ -542,9 +548,7 @@ class LunarPhaseManager extends BaseManager {
       <path d="${litPath}" fill="url(#moonDarkSide)" />
       
       <!-- Re-apply crater texture on lit portion for visibility -->
-      <g clip-path="url(#litClip${Math.round(
-        phaseFraction * 1000,
-      )})" opacity="0.15" fill="rgba(80,80,80,0.5)">
+      <g clip-path="url(#${litClipId})" opacity="0.15" fill="rgba(80,80,80,0.5)">
         <g transform="rotate(${diskRotDeg - posAngleDeg})">
           <circle cx="-12" cy="-14" r="8" />
           <circle cx="-18" cy="-8" r="4" />

@@ -20,6 +20,29 @@ class ThemeTokens {
 
   static HIGHLIGHT_MIN_OPACITY = 30;
 
+  static DEFAULT_TAJWEED_COLORS = Object.freeze({
+    ham_wasl: "#aaaaaa",
+    slnt: "#aaaaaa",
+    laam_shamsiyah: "#aaaaaa",
+    madda_normal: "#537fff",
+    madda_permissible: "#4050ff",
+    madda_necessary: "#000ebc",
+    qlq: "#db393f",
+    madda_obligatory: "#2144c1",
+    ikhf_shfw: "#cf43bd",
+    ikhf: "#993ca5",
+    idghm_shfw: "#58b800",
+    iqlb: "#26bffd",
+    idgh_ghn: "#169777",
+    idgh_w_ghn: "#169200",
+    idgh_mus: "#a1a1a1",
+    ghn: "#ff7e1e",
+  });
+
+  static defaultTajweedColors() {
+    return { ...ThemeTokens.DEFAULT_TAJWEED_COLORS };
+  }
+
   static SURFACE_CSS_VARS = [
     "--glass-bg",
     "--glass-bg-hover",
@@ -672,4 +695,4 @@ class ThemeTokens {
   }
 }
 
-window.ThemeTokens = ThemeTokens;
+globalThis.ThemeTokens = ThemeTokens;

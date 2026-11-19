@@ -14,6 +14,7 @@ import { loadSandbox } from "./harness.mjs";
 
 const FILES = [
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/quran-copy.js",
   "js/quran-search.js",
   "js/quran-recitation.js",

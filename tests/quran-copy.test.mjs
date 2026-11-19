@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import { loadSandbox } from "./harness.mjs";
 
-const FILES = ["js/quran-copy.js", "js/base-manager.js", "js/pocketquran.js"];
+const FILES = ["js/theme-tokens.js", "js/quran-copy.js", "js/base-manager.js", "js/pocketquran.js"];
 
 function reader(settings = {}) {
   const sandbox = loadSandbox(FILES, {

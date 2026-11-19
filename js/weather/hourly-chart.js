@@ -86,28 +86,25 @@
     }
 
     const rootStyles = getComputedStyle(document.documentElement);
-    const colorTemp =
-      rootStyles.getPropertyValue("--weather-metric-temperature").trim() ||
-      rootStyles.getPropertyValue("--accent-gold").trim() ||
-      "#d4af37";
-    const colorHum =
-      rootStyles.getPropertyValue("--weather-metric-humidity").trim() ||
-      rootStyles.getPropertyValue("--accent-blue").trim() ||
-      "#0066cc";
-    const colorPrecip =
-      rootStyles.getPropertyValue("--weather-metric-precipitation").trim() ||
-      rootStyles.getPropertyValue("--text-muted").trim() ||
-      "rgba(255, 255, 255, 0.6)";
-    const colorWind =
-      rootStyles.getPropertyValue("--weather-metric-wind").trim() ||
-      rootStyles.getPropertyValue("--primary-color").trim() ||
-      "#1a5f4a";
+    const colorText =
+      rootStyles.getPropertyValue("--text-primary").trim() || "#ffffff";
     const colorMuted =
       rootStyles.getPropertyValue("--text-muted").trim() ||
       "rgba(255, 255, 255, 0.6)";
+    const colorGlassBg =
+      rootStyles.getPropertyValue("--glass-bg").trim() ||
+      "rgba(120, 120, 120, 0.35)";
     const colorBorder =
       rootStyles.getPropertyValue("--glass-border").trim() ||
       "rgba(255, 255, 255, 0.2)";
+    const surfaceTintRgb =
+      rootStyles.getPropertyValue("--surface-tint-rgb").trim() ||
+      "255, 255, 255";
+    const nowStripRgb =
+      typeof ThemeTokens !== "undefined" &&
+      typeof ThemeTokens.toRgbChannelString === "function"
+        ? ThemeTokens.toRgbChannelString(colorText, surfaceTintRgb)
+        : surfaceTintRgb;
 
     const canvas = this.weatherChart;
     const ctx = canvas.getContext("2d");
@@ -192,12 +189,6 @@
     ctx.textBaseline = "middle";
     ctx.fillText(`${Math.round(max)}${metricUnit}`, plotLeft - 8, plotTop + 6);
     ctx.fillText(`${Math.round(min)}${metricUnit}`, plotLeft - 8, plotBottom);
-
-    // bar color
-    let barColor = colorTemp;
-    if (metric === "humidity") barColor = colorHum;
-    else if (metric === "precipitation") barColor = colorPrecip;
-    else if (metric === "wind") barColor = colorWind;
 
     // bars
     const stepX = plotWidth / points;
@@ -316,18 +307,18 @@
 
         // vertical gradient stripe for depth
         const gradStrip = ctx.createLinearGradient(0, plotTop, 0, plotBottom);
-        gradStrip.addColorStop(0, "rgba(255,255,255,0.02)");
-        gradStrip.addColorStop(0.48, "rgba(255,255,255,0.06)");
-        gradStrip.addColorStop(0.5, "rgba(255,255,255,0.12)");
-        gradStrip.addColorStop(0.52, "rgba(255,255,255,0.06)");
-        gradStrip.addColorStop(1, "rgba(255,255,255,0.02)");
+        gradStrip.addColorStop(0, `rgba(${nowStripRgb}, 0.02)`);
+        gradStrip.addColorStop(0.48, `rgba(${nowStripRgb}, 0.06)`);
+        gradStrip.addColorStop(0.5, `rgba(${nowStripRgb}, 0.12)`);
+        gradStrip.addColorStop(0.52, `rgba(${nowStripRgb}, 0.06)`);
+        gradStrip.addColorStop(1, `rgba(${nowStripRgb}, 0.02)`);
 
         ctx.save();
         ctx.fillStyle = gradStrip;
         ctx.fillRect(xPos - half, plotTop, stripW, plotHeight);
 
         // center accent line
-        ctx.strokeStyle = "rgba(255,255,255,0.24)";
+        ctx.strokeStyle = colorMuted;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(xPos, plotTop);
@@ -348,9 +339,11 @@
         if (labelX > maxX) labelX = maxX;
         const labelY = plotTop - labelH - 8;
 
-        // Draw rounded rect background for pill (softer transparent gray)
+        // Draw rounded rect background for pill using computed theme surface tokens
         const r = 6;
-        ctx.fillStyle = "rgba(120,120,120,0.35)";
+        ctx.fillStyle = colorGlassBg;
+        ctx.strokeStyle = colorBorder;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(labelX + r, labelY);
         ctx.arcTo(labelX + txtW, labelY, labelX + txtW, labelY + labelH, r);
@@ -359,9 +352,10 @@
         ctx.arcTo(labelX, labelY, labelX + txtW, labelY, r);
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
 
-        // label text (slightly softer white for contrast)
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        // label text using computed theme text color
+        ctx.fillStyle = colorText;
         ctx.fillText(labelText, labelX + txtW / 2, labelY + labelH / 2);
 
         ctx.restore();

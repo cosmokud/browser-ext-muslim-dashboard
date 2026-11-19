@@ -24,6 +24,7 @@ import {
 
 const SCRIPTS = withParts([
   "js/settings-registry.js",
+  "js/theme-tokens.js",
   "js/quran-recitation.js",
   "js/quran-arabic.js",
   "js/base-manager.js",
@@ -424,6 +425,7 @@ test("the highlighter ships on, and a missing legacy setting keeps it on", () =>
   const document = loadPageDom("index.html");
   const window = document.defaultView;
   window.eval(fs.readFileSync(path.join(repoRoot, "js/settings-registry.js"), "utf8"));
+  window.eval(fs.readFileSync(path.join(repoRoot, "js/theme-tokens.js"), "utf8"));
   window.eval(fs.readFileSync(path.join(repoRoot, "js/storage.js"), "utf8"));
   const defaults = window.StorageManager.prototype.getDefaultSettings.call({});
   assert.equal(defaults.pocketQuran.reciterHighlighter, true);

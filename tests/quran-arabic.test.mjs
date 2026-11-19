@@ -10,6 +10,7 @@ import vm from "node:vm";
 import { loadSandbox } from "./harness.mjs";
 
 const FILES = [
+  "js/theme-tokens.js",
   "js/quran-arabic.js",
   "js/base-manager.js",
   "js/pocketquran.js",

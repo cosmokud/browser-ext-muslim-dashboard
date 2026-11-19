@@ -3,7 +3,7 @@
  * Schedules prayer-time notifications using chrome.alarms + chrome.notifications.
  */
 
-/* global IslamicDay */
+/* global IslamicDay, ThemeTokens */
 
 importScripts(
   "praytimes.js",
@@ -11,6 +11,7 @@ importScripts(
   "hijri.js",
   "islamic-day.js",
   "settings-registry.js",
+  "theme-tokens.js",
 );
 
 const RESCHEDULE_ALARM_NAME = "md_reschedule";
@@ -549,6 +550,29 @@ function getNextVisiblePrayerInfo(settings, location, nowDate = new Date()) {
   return null;
 }
 
+const DEFAULT_ACTION_BADGE_BG = "#0d3d2e";
+const DEFAULT_ACTION_BADGE_TEXT = "#ffffff";
+
+function resolveActionBadgeColors(settings) {
+  const theme = settings?.theme;
+  const name = theme?.name;
+  const mode = theme?.mode === "light" ? "light" : "dark";
+  const customPalette = name && theme?.customPalettes?.[name]?.[mode];
+  const candidateBg =
+    theme?.badgeBg ||
+    theme?.primaryDark ||
+    theme?.primary ||
+    customPalette?.primary ||
+    null;
+  const bg =
+    ThemeTokens.normalizeHexColor(candidateBg) || DEFAULT_ACTION_BADGE_BG;
+  const text =
+    ThemeTokens.normalizeHexColor(theme?.badgeText) ||
+    ThemeTokens.resolveOnPrimaryText(null, bg) ||
+    DEFAULT_ACTION_BADGE_TEXT;
+  return { bg, text };
+}
+
 async function updateActionPrayerCountdownBadge() {
   try {
     const {
@@ -588,16 +612,17 @@ async function updateActionPrayerCountdownBadge() {
     );
 
     const badgeText = formatBadgeCountdown(remainingMinutes);
+    const badgeColors = resolveActionBadgeColors(settings);
 
     try {
-      chrome.action.setBadgeBackgroundColor({ color: "#0d3d2e" });
+      chrome.action.setBadgeBackgroundColor({ color: badgeColors.bg });
     } catch (e) {
       logServiceWorkerDebug("setBadgeBackgroundColor failed", e);
     }
 
     try {
       if (typeof chrome.action.setBadgeTextColor === "function") {
-        chrome.action.setBadgeTextColor({ color: "#ffffff" });
+        chrome.action.setBadgeTextColor({ color: badgeColors.text });
       }
     } catch (e) {
       logServiceWorkerDebug("setBadgeTextColor failed", e);

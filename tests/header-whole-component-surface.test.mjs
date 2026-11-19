@@ -66,7 +66,7 @@ test("the header carries the checkbox, unchecked, next to its label", () => {
 });
 
 test("the default is off, so a fresh install shows per-item surfaces", () => {
-  const { window } = boot(["js/settings-registry.js", "js/storage.js"]);
+  const { window } = boot(["js/settings-registry.js", "js/theme-tokens.js", "js/storage.js"]);
   const defaults = window.StorageManager.prototype.getDefaultSettings.call({});
 
   assert.equal(defaults.heading.wholeComponentSurfaceEnabled, false);

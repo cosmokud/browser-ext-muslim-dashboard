@@ -886,6 +886,11 @@ class ThemeManager {
    */
   saveThemeSettings() {
     const settings = this.storage.getSettings();
+    const colors = this.getThemeColors();
+    const badgeBg =
+      ThemeTokens.normalizeHexColor(colors?.primaryDark || colors?.primary) ||
+      "#0d3d2e";
+    const badgeText = ThemeTokens.resolveOnPrimaryText(null, badgeBg);
     settings.theme = SettingsRegistry.mergeThemeSettings(settings.theme, {
       name: this._currentTheme,
       mode: this._currentMode,
@@ -896,6 +901,8 @@ class ThemeManager {
       backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
+      badgeBg,
+      badgeText,
     });
     this.storage.saveSettings(settings);
   }

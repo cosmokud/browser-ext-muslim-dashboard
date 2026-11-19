@@ -154,3 +154,39 @@ test("the worker's fallback location is a coordinate example, not a fixed city",
   );
   assert.equal(last.city, "Last", "and so does the last known place");
 });
+
+test("action badge resolves stored theme colors with contrast-safe text and fallback", async () => {
+  const themedSettings = {
+    ...settingsFor([]),
+    showExtensionBadgeCountdown: true,
+    theme: {
+      name: "ocean",
+      mode: "dark",
+      badgeBg: "#0d2a4a",
+      badgeText: "#ffffff",
+    },
+  };
+  const { chrome, calls } = makeChrome({
+    stored: { md_settings: themedSettings, md_lastLocation: null },
+  });
+  const worker = loadSandbox(["js/service-worker.js"], {
+    window: false,
+    now: localDay(2026, 2, 18, 9, 0),
+    globals: { chrome },
+  });
+
+  await worker.updateActionPrayerCountdownBadge();
+  assert.equal(calls.badgeBackgroundColors.at(-1)?.color, "#0d2a4a");
+  assert.equal(calls.badgeTextColors.at(-1)?.color, "#ffffff");
+
+  const lightPrimary = vm.runInContext(
+    'resolveActionBadgeColors({ theme: { badgeBg: "#f5e6a8" } })',
+    worker,
+  );
+  assert.equal(lightPrimary.bg, "#f5e6a8");
+  assert.equal(lightPrimary.text, "#1a1a1a");
+
+  const fallback = vm.runInContext("resolveActionBadgeColors({})", worker);
+  assert.equal(fallback.bg, "#0d3d2e");
+  assert.equal(fallback.text, "#ffffff");
+});

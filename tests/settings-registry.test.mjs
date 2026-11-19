@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadSandbox, makePage } from "./harness.mjs";
 
-const FILES = ["js/settings-registry.js", "js/storage.js"];
+const FILES = ["js/settings-registry.js", "js/theme-tokens.js", "js/storage.js"];
 
 function makeLocalStorage(stored = {}) {
   const map = new Map(
@@ -318,8 +318,8 @@ test("ThemeManager.saveThemeSettings preserves highestVisualFidelityEnabled and 
   const sandbox = loadSandbox(
     [
       "js/settings-registry.js",
-      "js/storage.js",
       "js/theme-tokens.js",
+      "js/storage.js",
       "js/themes.js",
     ],
     {

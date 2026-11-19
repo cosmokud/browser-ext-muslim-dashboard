@@ -11,7 +11,7 @@ import vm from "node:vm";
 import { loadSandbox } from "./harness.mjs";
 
 const MB = 1024 * 1024;
-const FILES = ["js/base-manager.js", "js/pocketquran/index.js"];
+const FILES = ["js/theme-tokens.js", "js/base-manager.js", "js/pocketquran/index.js"];
 
 /** Just enough IndexedDB: stores, requests, and a transaction that completes. */
 function makeIndexedDB() {

@@ -101,7 +101,14 @@ export function makeDocument() {
  */
 export function makeChrome({ stored = {}, alarms = [] } = {}) {
   const state = { ...stored };
-  const calls = { alarmsCreated: [], alarmsCleared: [], notifications: [] };
+  const calls = {
+    alarmsCreated: [],
+    alarmsCleared: [],
+    notifications: [],
+    badgeTexts: [],
+    badgeBackgroundColors: [],
+    badgeTextColors: [],
+  };
   const noop = () => {};
   const addListener = () => {};
 
@@ -166,9 +173,10 @@ export function makeChrome({ stored = {}, alarms = [] } = {}) {
       onChanged: { addListener },
     },
     action: {
-      setBadgeText: noop,
-      setBadgeBackgroundColor: noop,
-      setBadgeTextColor: noop,
+      setBadgeText: (details) => calls.badgeTexts.push(details),
+      setBadgeBackgroundColor: (details) =>
+        calls.badgeBackgroundColors.push(details),
+      setBadgeTextColor: (details) => calls.badgeTextColors.push(details),
       setTitle: noop,
     },
     offscreen: { createDocument: async () => {} },
