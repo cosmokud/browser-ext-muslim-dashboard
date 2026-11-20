@@ -41,7 +41,7 @@ test("a hovered FAB control takes the primary highlight without !important", () 
   assertRule(hoverSelector, {
     background: "var(--theme-highlight-bg-hover)",
     "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
     "box-shadow": "var(--theme-highlight-shadow)",
   });
   const hoverRule = ruleFor(hoverSelector);
@@ -59,7 +59,7 @@ test("open menu toggle shows the active highlight without !important", () => {
   assertRule(toggleSelector, {
     background: "var(--theme-highlight-active-bg)",
     "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
     "box-shadow": "var(--theme-highlight-shadow)",
   });
   const toggleRule = ruleFor(toggleSelector);
@@ -68,33 +68,33 @@ test("open menu toggle shows the active highlight without !important", () => {
   }
 });
 
-test("an open menu paints the toggled controls with a subtle primary glow", () => {
+test("an open menu paints the toggled controls with unified accent surface tokens", () => {
   assertRule(
     '.fab-menu.open :is(.layout-edit-btn.active, .layout-edit-btn[aria-pressed="true"]:not(.is-locked))',
     {
-      background:
-        "linear-gradient(135deg, color-mix(in srgb, var(--primary-dark) 88%, transparent), color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%))",
-      "box-shadow":
-        "inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent), 0 0 0 2px color-mix(in srgb, var(--primary-light) 24%, transparent), 0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent)",
+      background: "var(--accent-surface-bg)",
+      "border-color": "var(--accent-surface-border)",
+      color: "var(--accent-surface-text)",
+      "box-shadow": "var(--accent-surface-shadow)",
       animation: "none",
     },
   );
   assertRule(
     '.fab-menu.open :is(.quran-focus-btn.active, .quran-focus-btn[aria-pressed="true"])',
     {
-      background:
-        "linear-gradient(135deg, color-mix(in srgb, var(--primary-dark) 88%, transparent), color-mix(in srgb, var(--accent-bg) 68%, var(--primary-color) 32%))",
-      "box-shadow":
-        "inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent), 0 0 0 2px color-mix(in srgb, var(--accent-bg) 24%, transparent), 0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent)",
+      background: "var(--accent-surface-bg)",
+      "border-color": "var(--accent-surface-border)",
+      color: "var(--accent-surface-text)",
+      "box-shadow": "var(--accent-surface-shadow)",
     },
   );
   assertRule(
     '.fab-menu.open :is(.sticky-note-toggle-btn[aria-pressed="true"], .sticky-note-toggle-btn[data-sticky-notes-state="visible"])',
     {
-      background:
-        "linear-gradient(135deg, color-mix(in srgb, var(--primary-dark) 88%, transparent), color-mix(in srgb, var(--accent-bg) 58%, var(--primary-color) 42%))",
-      "box-shadow":
-        "inset 0 0 0 1px color-mix(in srgb, var(--on-primary-text) 18%, transparent), 0 0 0 2px color-mix(in srgb, var(--accent-bg) 22%, transparent), 0 8px 18px color-mix(in srgb, var(--primary-dark) 34%, transparent)",
+      background: "var(--accent-surface-bg)",
+      "border-color": "var(--accent-surface-border)",
+      color: "var(--accent-surface-text)",
+      "box-shadow": "var(--accent-surface-shadow)",
     },
   );
 

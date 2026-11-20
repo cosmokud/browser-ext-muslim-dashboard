@@ -402,8 +402,8 @@ test("all 6 reported opaque widget selectors read surface-opacity and surface-bl
 
 const PORTAL_COMPONENT_RULES = [
   ["#pocketQuranSurahList, #pocketQuranAyahList", {
-    background: "var(--component-highlight-active-bg)",
-    color: "var(--on-primary-text)",
+    background: "var(--surface-inset)",
+    color: "var(--text-primary)",
   }],
   [".pq-translation-item:hover, .pq-translation-item:focus-visible", {
     background: "var(--component-highlight-bg-hover)",
@@ -461,36 +461,37 @@ const PORTAL_COMPONENT_RULES = [
     color: "var(--on-primary-text)",
   }],
   [".pq-search-input", {
-    background: "var(--component-highlight-bg-hover)",
-    border: "1px solid var(--component-highlight-border)",
-    color: "var(--on-primary-text)",
+    background: "var(--surface-control)",
+    border: "1px solid var(--glass-border)",
+    color: "var(--text-primary)",
   }],
   [".pq-search-input::placeholder", {
-    color: "var(--on-primary-text)",
+    color: "var(--text-placeholder)",
     opacity: "0.78",
   }],
   [".pq-search-input:hover, .pq-search-input:focus-visible", {
     background: "var(--component-highlight-bg-hover)",
     "border-color": "var(--component-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
     "box-shadow": "0 0 0 2px var(--component-highlight-border), var(--component-highlight-shadow)",
   }],
   [".pq-search-submit-btn", {
-    background: "var(--component-highlight-active-bg)",
-    border: "1px solid var(--component-highlight-border)",
-    color: "var(--on-primary-text)",
+    background: "var(--accent-surface-bg)",
+    border: "1px solid var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
   }],
   [".pq-search-submit-btn:hover:not(:disabled), .pq-search-submit-btn:focus-visible", {
-    background: "var(--component-highlight-bg-hover)",
-    "border-color": "var(--component-highlight-border)",
-    color: "var(--on-primary-text)",
-    "box-shadow": "var(--component-highlight-shadow)",
+    background: "var(--accent-surface-bg-hover)",
+    "border-color": "var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
   }],
   [".pq-search-submit-btn:active:not(:disabled)", {
-    background: "var(--component-highlight-active-bg)",
-    "border-color": "var(--component-highlight-border)",
-    color: "var(--on-primary-text)",
-    "box-shadow": "var(--component-highlight-shadow)",
+    background: "var(--accent-surface-bg)",
+    "border-color": "var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
   }],
   [".adhkar-set-page-btn:hover:not(:disabled), .adhkar-set-page-btn:focus-visible", {
     background: "var(--component-highlight-bg-hover)",
@@ -518,8 +519,30 @@ const PORTAL_COMPONENT_RULES = [
   }],
 ];
 
-test("portaled surfaces read the root component opacity highlights", () => {
+test("portaled surfaces read the root component opacity highlights and resting surface tokens", () => {
   for (const [selector, declarations] of PORTAL_COMPONENT_RULES) {
     assertRule(selector, declarations);
   }
+});
+
+test("resting containers moved off highlights follow --surface-inset and --surface-control", () => {
+  assertRule(".notes-toolbar.ql-toolbar.ql-snow", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--glass-border)",
+  });
+  assertRule(".next-prayer", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border)",
+    color: "var(--text-primary)",
+  });
+  assertRule(".pocket-quran-surah-item", {
+    background: "var(--surface-control)",
+    border: "1px solid var(--glass-border)",
+    color: "var(--text-primary)",
+  });
+  assertRule(".pocket-quran-ayah-option", {
+    background: "var(--surface-control)",
+    border: "1px solid var(--glass-border)",
+    color: "var(--text-primary)",
+  });
 });

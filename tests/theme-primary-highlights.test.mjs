@@ -33,12 +33,12 @@ const LIGHT = {
   color: "var(--on-primary-text)",
 };
 
-/** The primary gradient at the pressed alphas, with its lighter border. */
-const PRESSED = {
-  background:
-    "linear-gradient(135deg, color-mix(in srgb, var(--primary-dark) 84%, transparent), color-mix(in srgb, var(--primary-color) 88%, transparent))",
-  "border-color": "color-mix(in srgb, var(--primary-light) 82%, var(--on-primary-text) 18%)",
-  color: "var(--on-primary-text)",
+/** Unified accent surface tokens (scale cleanly with --accent-opacity). */
+const ACCENT_SURFACE = {
+  background: "var(--accent-surface-bg)",
+  "border-color": "var(--accent-surface-border)",
+  color: "var(--accent-surface-text)",
+  "box-shadow": "var(--accent-surface-shadow)",
 };
 
 /**
@@ -142,12 +142,12 @@ test("the shared chip groups hover and select on the primary highlights", () => 
   assertRule(commonControls(":hover:not(:disabled)"), {
     background: "var(--theme-highlight-bg-hover)",
     "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
   });
   assertRule(`:where(${SELECTED_CONTROLS.join(", ")})`, {
     background: "var(--theme-highlight-active-bg)",
     "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
   });
 });
 
@@ -168,7 +168,7 @@ test("header and quote action buttons rest on --action-btn-bg, highlight on hove
   assertRule(hoverSelector, {
     background: "var(--theme-highlight-bg-hover)",
     "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
+    color: "var(--accent-surface-text)",
     "box-shadow": "var(--action-btn-shadow-hover)",
   });
 
@@ -181,13 +181,13 @@ test("header and quote action buttons rest on --action-btn-bg, highlight on hove
     );
   }
 
-  // Open blur menu button keeps its subtle gold accent hover without !important.
+  // Open blur menu button uses unified accent surface tokens without !important.
   const openBlurHover = ".card-blur-menu.blur-menu-open .card-blur-btn:hover:not(:disabled)";
   assertRule(openBlurHover, {
-    background: "color-mix(in srgb, var(--accent-gold) 17%, var(--action-btn-bg) 83%)",
-    "border-color": "var(--theme-highlight-border)",
-    color: "var(--on-primary-text)",
-    "box-shadow": "var(--action-btn-shadow-hover)",
+    background: "var(--accent-surface-bg-hover)",
+    "border-color": "var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
   });
   assert.equal(ruleFor(openBlurHover).style.getPropertyPriority("background"), "");
 
@@ -246,10 +246,10 @@ test("quote top actions stay hidden until the quote component is hovered", () =>
 const STABLE_RULES = [
   [
     ".quote-pause-btn[aria-pressed=\"true\"], .quote-shuffle-btn[aria-pressed=\"true\"]",
-    PRESSED,
+    ACCENT_SURFACE,
   ],
-  [".pq-ayah-play-btn.playing", PRESSED],
-  [".pq-recitation-btn.active", PRESSED],
+  [".pq-ayah-play-btn.playing", ACCENT_SURFACE],
+  [".pq-recitation-btn.active", ACCENT_SURFACE],
 ];
 
 const HOVER_RULES = [
@@ -277,20 +277,121 @@ const SELECTED_RULES = [
   [".notes-list-item.active", ACTIVE],
   [".prayer-item.active", ACTIVE],
   ['.flashcard-auto-toggle-btn:is(:active, [data-paused="true"], [aria-pressed="true"])', ACTIVE],
-  [".next-prayer", { background: "var(--theme-highlight-active-bg)" }],
+  [".next-prayer", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border)",
+    color: "var(--text-primary)",
+  }],
   [".weather-forecast-day.selected", {
     "border-color": "var(--theme-highlight-border)",
     background: "var(--theme-highlight-active-bg)",
+    color: "var(--accent-surface-text)",
   }],
   [".notes-toolbar.ql-toolbar.ql-snow", {
-    border: "1px solid var(--theme-highlight-border)",
-    background: "var(--theme-highlight-active-bg)",
+    border: "1px solid var(--glass-border)",
+    background: "var(--surface-inset)",
   }],
 ];
 
 test("every primary surface reads the theme highlight variables", () => {
   for (const [selector, declarations] of [...STABLE_RULES, ...HOVER_RULES, ...SELECTED_RULES]) {
     assertRule(selector, declarations);
+  }
+});
+
+test("all 8 reported elements use unified --surface-inset or --accent-surface-*/--accent-opacity tokens with zero opaque gradients or !important", () => {
+  // 1. Theme mode active pill
+  assertRule(".theme-mode-btn.active", ACCENT_SURFACE);
+
+  // 2. Todo add CTA
+  assertRule(".todo-add-btn", {
+    background: "var(--accent-surface-bg)",
+    border: "1px solid var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
+  });
+  assertRule(".todo-add-btn:hover", {
+    background: "var(--accent-surface-bg-hover)",
+  });
+
+  // 3. Calendar today pill
+  assertRule(".calendar-day.today", {
+    background: "var(--accent-surface-bg)",
+    border: "1px solid var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+    "box-shadow": "var(--accent-surface-shadow)",
+  });
+
+  // 4. Quote pause/shuffle pressed — single clean non-!important rule
+  const quotePressedMatches = stylesheetRules().filter(
+    (rule) =>
+      rule.selectorText &&
+      collapse(rule.selectorText) ===
+        collapse('.quote-pause-btn[aria-pressed="true"], .quote-shuffle-btn[aria-pressed="true"]'),
+  );
+  assert.equal(quotePressedMatches.length, 1, "expected exactly one pressed quote toggle rule");
+  const quotePressed = quotePressedMatches[0];
+  for (const prop of ["background", "border-color", "color", "box-shadow"]) {
+    assert.equal(quotePressed.style.getPropertyPriority(prop), "", `quote pressed ${prop} must not use !important`);
+  }
+  const quotePressedHover = ruleFor(
+    '.quote-pause-btn[aria-pressed="true"]:hover, .quote-shuffle-btn[aria-pressed="true"]:hover',
+  );
+  assert.ok(quotePressedHover, "missing pressed quote toggle hover rule");
+  assert.equal(collapse(quotePressedHover.style.getPropertyValue("background")), "var(--accent-surface-bg-hover)");
+  for (const prop of ["background", "border-color", "color", "box-shadow"]) {
+    assert.equal(quotePressedHover.style.getPropertyPriority(prop), "", `quote pressed hover ${prop} must not use !important`);
+  }
+
+  // 5. Flashcard jump slider (+ shared range slider rules)
+  const sliderBase = ruleFor(
+    '.flashcard-jump-slider, .pocket-quran-size-range, #settingsModal .settings-panel input[type="range"]',
+  );
+  assert.ok(sliderBase, "missing unified range slider base rule");
+  assert.equal(collapse(sliderBase.style.getPropertyValue("--jump-track-bg")), "var(--surface-inset)");
+  assert.match(sliderBase.style.getPropertyValue("--jump-track-fill-start"), /var\(--accent-opacity\)/);
+  assert.match(sliderBase.style.getPropertyValue("--jump-track-fill-end"), /var\(--accent-opacity\)/);
+  const sliderThumb = ruleFor(
+    '.flashcard-jump-slider::-webkit-slider-thumb, .pocket-quran-size-range::-webkit-slider-thumb, #settingsModal .settings-panel input[type="range"]::-webkit-slider-thumb',
+  );
+  assert.ok(sliderThumb, "missing unified range slider thumb rule");
+  assert.match(sliderThumb.style.getPropertyValue("background"), /var\(--accent-opacity\)/);
+  assert.equal(collapse(sliderThumb.style.getPropertyValue("border")), "2px solid var(--accent-surface-border)");
+
+  // 6 & 7. Resting containers: .next-prayer & .notes-toolbar.ql-toolbar.ql-snow
+  assertRule(".next-prayer", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--surface-border)",
+    color: "var(--text-primary)",
+  });
+  assertRule(".notes-toolbar.ql-toolbar.ql-snow", {
+    background: "var(--surface-inset)",
+    border: "1px solid var(--glass-border)",
+  });
+
+  // 8. Weather forecast selected day
+  assertRule(".weather-forecast-day.selected", {
+    background: "var(--theme-highlight-active-bg)",
+    "border-color": "var(--theme-highlight-border)",
+    color: "var(--accent-surface-text)",
+  });
+
+  // Guard: none of the 8 reported elements may carry hardcoded linear-gradient(var(--primary...)) or !important
+  const reportedSelectors = [
+    ".theme-mode-btn.active",
+    ".todo-add-btn",
+    ".calendar-day.today",
+    '.quote-pause-btn[aria-pressed="true"], .quote-shuffle-btn[aria-pressed="true"]',
+    ".next-prayer",
+    ".notes-toolbar.ql-toolbar.ql-snow",
+    ".weather-forecast-day.selected",
+  ];
+  for (const sel of reportedSelectors) {
+    const rule = ruleFor(sel);
+    assert.ok(rule, `missing rule for ${sel}`);
+    const bg = rule.style.getPropertyValue("background");
+    assert.doesNotMatch(bg, /linear-gradient\(/, `${sel} must not hardcode a raw gradient`);
+    assert.equal(rule.style.getPropertyPriority("background"), "", `${sel} background must not use !important`);
   }
 });
 
