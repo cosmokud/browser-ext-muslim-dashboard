@@ -2289,6 +2289,15 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function getDashboardAccentOpacityPercent() {
+    const settings = storage.getSettings();
+    return SettingsRegistry.coerce(
+      "accentOpacity",
+      settings?.theme?.accentOpacity,
+      SettingsRegistry.defaultOf("accentOpacity"),
+    );
+  }
+
   function buildThemeColorsFromPopupPalette(inputPalette) {
     const context = getCurrentThemeContext();
     const themeByMode = context.isPureTheme
@@ -2398,15 +2407,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const mode = getCurrentThemeContext().mode;
     const dashboardGlassOpacity = getDashboardGlassOpacityPercent();
+    const dashboardAccentOpacity = getDashboardAccentOpacityPercent();
     const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
       glassEnabled,
       opacity: dashboardGlassOpacity,
       mode,
       opacityRule: "glassOpacity",
     });
+    const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
+      glassEnabled,
+      opacity: dashboardAccentOpacity,
+      opacityRule: "accentOpacity",
+    });
 
     const root = document.documentElement;
-    ThemeTokens.applySurfaceTokens(root, surfaceTokens);
+    ThemeTokens.applySurfaceTokens(root, surfaceTokens, highlightTokens);
     root.dataset.glassEnabled = glassEnabled ? "true" : "false";
   }
 

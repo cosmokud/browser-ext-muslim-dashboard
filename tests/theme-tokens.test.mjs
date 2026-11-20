@@ -259,50 +259,98 @@ test("resolveSurfaceTokens resolves solid light and dark surfaces with safe fall
   assert.equal(fallbackLight.surfaceRgb, "255, 255, 255");
 });
 
-test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay symmetric", () => {
+test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay symmetric without a hidden 30% floor", () => {
   const tokens = load();
-  const palette = {
+  assert.equal(tokens.HIGHLIGHT_MIN_OPACITY, undefined);
+
+  const darkPalette = {
     primary: "#1a5f4a",
     primaryLight: "#2e8b6f",
     primaryDark: "#0f3d2e",
+    onPrimaryText: "#ffffff",
+    textPrimary: "#ffffff",
     glassBg: "rgba(26, 95, 74, 0.35)",
     glassBgHover: "rgba(26, 95, 74, 0.45)",
     glassBorder: "rgba(26, 95, 74, 0.4)",
   };
+  const lightPalette = {
+    ...darkPalette,
+    textPrimary: "#1a1a2e",
+  };
 
-  const glassHighlights = tokens.resolveHighlightTokens(palette, {
+  // Default accentOpacity rule coerces undefined to 75%
+  const defaultAccent = tokens.resolveHighlightTokens(darkPalette, {
     glassEnabled: true,
-    opacity: 35,
   });
+  assert.equal(defaultAccent.opacityRatio, 0.75);
+  assert.equal(defaultAccent.accentOpacity, "0.75");
   assert.equal(
-    glassHighlights.activeBg,
-    "linear-gradient(135deg, rgba(15, 61, 46, 0.35), rgba(26, 95, 74, 0.35))",
+    defaultAccent.accentBg,
+    "linear-gradient(135deg, rgba(26, 95, 74, 0.75), rgba(46, 139, 111, 0.75))",
   );
   assert.equal(
-    glassHighlights.bgHover,
-    "linear-gradient(135deg, rgba(15, 61, 46, 0.45), rgba(26, 95, 74, 0.45))",
+    defaultAccent.activeBg,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.75), rgba(26, 95, 74, 0.75))",
   );
-  assert.equal(glassHighlights.border, "rgba(46, 139, 111, 0.4)");
-  assert.equal(glassHighlights.lightBg, "rgba(46, 139, 111, 0.45)");
-  assert.equal(glassHighlights.lightSubtleBg, "rgba(46, 139, 111, 0.049)");
-  assert.equal(glassHighlights.shadow, "0 8px 18px rgba(15, 61, 46, 0.112)");
+  assert.equal(
+    defaultAccent.bgHover,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0.862), rgba(26, 95, 74, 0.862))",
+  );
+  assert.equal(defaultAccent.border, "rgba(46, 139, 111, 0.863)");
+  assert.equal(defaultAccent.accentBorder, "rgba(46, 139, 111, 0.863)");
+  assert.equal(defaultAccent.lightBg, "rgba(46, 139, 111, 0.862)");
+  assert.equal(defaultAccent.lightSubtleBg, "rgba(46, 139, 111, 0.105)");
+  assert.equal(defaultAccent.shadow, "0 8px 18px rgba(15, 61, 46, 0.24)");
+  assert.equal(defaultAccent.accentText, "#ffffff");
 
-  const zeroGlassHighlights = tokens.resolveHighlightTokens(palette, {
+  // 0%: strictly zero fill/shadow alpha, crisp 0.45 border, readable text in light and dark modes
+  const zeroDark = tokens.resolveHighlightTokens(darkPalette, {
     glassEnabled: true,
     opacity: 0,
   });
+  assert.equal(zeroDark.opacityRatio, 0);
+  assert.equal(zeroDark.accentOpacity, "0");
   assert.equal(
-    zeroGlassHighlights.activeBg,
-    "linear-gradient(135deg, rgba(15, 61, 46, 0.3), rgba(26, 95, 74, 0.3))",
+    zeroDark.accentBg,
+    "linear-gradient(135deg, rgba(26, 95, 74, 0), rgba(46, 139, 111, 0))",
   );
   assert.equal(
-    zeroGlassHighlights.bgHover,
-    "linear-gradient(135deg, rgba(15, 61, 46, 0.386), rgba(26, 95, 74, 0.386))",
+    zeroDark.activeBg,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0), rgba(26, 95, 74, 0))",
   );
-  assert.equal(zeroGlassHighlights.border, "rgba(46, 139, 111, 0.343)");
-  assert.equal(zeroGlassHighlights.lightBg, "rgba(46, 139, 111, 0.386)");
+  assert.equal(
+    zeroDark.bgHover,
+    "linear-gradient(135deg, rgba(15, 61, 46, 0), rgba(26, 95, 74, 0))",
+  );
+  assert.equal(zeroDark.lightBg, "rgba(46, 139, 111, 0)");
+  assert.equal(zeroDark.lightSubtleBg, "rgba(46, 139, 111, 0)");
+  assert.equal(zeroDark.border, "rgba(46, 139, 111, 0.45)");
+  assert.equal(zeroDark.accentBorder, "rgba(46, 139, 111, 0.45)");
+  assert.equal(zeroDark.shadow, "none");
+  assert.equal(zeroDark.accentShadow, "none");
+  assert.equal(zeroDark.accentText, "#ffffff");
 
-  const solidHighlights = tokens.resolveHighlightTokens(palette, {
+  const zeroLight = tokens.resolveHighlightTokens(lightPalette, {
+    glassEnabled: true,
+    opacity: 0,
+  });
+  assert.equal(zeroLight.accentText, "#1a1a2e");
+
+  // 100% glass and solid mode both produce full solid fills and borders
+  const fullGlass = tokens.resolveHighlightTokens(lightPalette, {
+    glassEnabled: true,
+    opacity: 100,
+  });
+  assert.equal(fullGlass.opacityRatio, 1);
+  assert.equal(
+    fullGlass.accentBg,
+    "linear-gradient(135deg, rgba(26, 95, 74, 1), rgba(46, 139, 111, 1))",
+  );
+  assert.equal(fullGlass.border, "rgba(46, 139, 111, 1)");
+  assert.equal(fullGlass.accentText, "#ffffff");
+  assert.equal(fullGlass.shadow, "0 8px 18px rgba(15, 61, 46, 0.32)");
+
+  const solidHighlights = tokens.resolveHighlightTokens(lightPalette, {
     glassEnabled: false,
     opacity: 0,
   });
@@ -313,6 +361,7 @@ test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay sy
   assert.equal(solidHighlights.border, "rgba(46, 139, 111, 1)");
   assert.equal(solidHighlights.lightSubtleBg, "rgba(46, 139, 111, 0.14)");
   assert.equal(solidHighlights.shadow, "0 8px 18px rgba(15, 61, 46, 0.32)");
+  assert.equal(solidHighlights.accentText, "#ffffff");
 
   const props = new Map();
   const fakeEl = {
@@ -322,25 +371,34 @@ test("resolveHighlightTokens, applySurfaceTokens, and clearSurfaceTokens stay sy
       getPropertyValue: (k) => props.get(k) || "",
     },
   };
-  const surface = tokens.resolveSurfaceTokens(palette, {
+  const surface = tokens.resolveSurfaceTokens(darkPalette, {
     glassEnabled: true,
     opacity: 50,
     mode: "dark",
   });
 
-  tokens.applySurfaceTokens(fakeEl, surface, glassHighlights);
-  for (const name of [...tokens.SURFACE_CSS_VARS, ...tokens.HIGHLIGHT_CSS_VARS]) {
+  tokens.applySurfaceTokens(fakeEl, surface, defaultAccent);
+  for (const name of [
+    ...tokens.SURFACE_CSS_VARS,
+    ...tokens.ACCENT_SURFACE_CSS_VARS,
+    ...tokens.HIGHLIGHT_CSS_VARS,
+  ]) {
     assert.ok(props.has(name), `applySurfaceTokens should write ${name}`);
   }
   assert.equal(props.get("--surface-opacity"), "0.5");
   assert.equal(props.get("--surface-blur-factor"), "1");
   assert.equal(props.get("--surface-tint-rgb"), "255, 255, 255");
   assert.equal(props.get("--surface-rgb"), "26, 95, 74");
+  assert.equal(props.get("--accent-opacity"), "0.75");
 
   tokens.clearSurfaceTokens(fakeEl);
-  assert.equal(props.size, 0, "clearSurfaceTokens should remove every surface and highlight var");
+  assert.equal(
+    props.size,
+    0,
+    "clearSurfaceTokens should remove every surface, accent, and highlight var",
+  );
 
-  tokens.applyComponentSurfaceTokens(fakeEl, surface, glassHighlights);
+  tokens.applyComponentSurfaceTokens(fakeEl, surface, defaultAccent);
   for (const name of tokens.COMPONENT_SURFACE_CSS_VARS) {
     assert.ok(props.has(name), `applyComponentSurfaceTokens should write ${name}`);
   }

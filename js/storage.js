@@ -269,6 +269,7 @@ class StorageManager {
         glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
         componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
         modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
+        accentOpacity: SettingsRegistry.defaultOf("accentOpacity"),
         backgroundAwareFontColorEnabled: false,
         highestVisualFidelityEnabled: false,
         customAccent: null,

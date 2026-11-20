@@ -688,6 +688,7 @@ class ThemeManager {
     this._mainGridComponentOpacity =
       SettingsRegistry.defaultOf("componentOpacity");
     this._modalOpacity = SettingsRegistry.defaultOf("modalOpacity");
+    this._accentOpacity = SettingsRegistry.defaultOf("accentOpacity");
     this._backgroundAwareFontColorEnabled = false;
     this._backgroundAwareFontColorFrame = null;
     // Legacy single-color accent override (kept for backward compatibility)
@@ -837,6 +838,10 @@ class ThemeManager {
       "modalOpacity",
       themeSettings.modalOpacity,
     );
+    this._accentOpacity = SettingsRegistry.coerce(
+      "accentOpacity",
+      themeSettings.accentOpacity,
+    );
     this._backgroundAwareFontColorEnabled =
       themeSettings.backgroundAwareFontColorEnabled === true;
     this._customAccent = themeSettings.customAccent || null;
@@ -898,6 +903,7 @@ class ThemeManager {
       glassOpacity: this._glassOpacity,
       componentOpacity: this._mainGridComponentOpacity,
       modalOpacity: this._modalOpacity,
+      accentOpacity: this._accentOpacity,
       backgroundAwareFontColorEnabled: this._backgroundAwareFontColorEnabled,
       customAccent: this._customAccent,
       customPalettes: this._customPalettes,
@@ -947,6 +953,13 @@ class ThemeManager {
    */
   getModalOpacity() {
     return this._modalOpacity;
+  }
+
+  /**
+   * Get current unified accent & active opacity percentage
+   */
+  getAccentOpacity() {
+    return this._accentOpacity;
   }
 
   /**
@@ -1048,6 +1061,22 @@ class ThemeManager {
       "modalOpacity",
       opacityPercent,
       this._modalOpacity,
+    );
+    this.applyTheme();
+
+    if (save) {
+      this.saveThemeSettings();
+    }
+  }
+
+  /**
+   * Set unified accent & active opacity percentage
+   */
+  setAccentOpacity(opacityPercent, save = true) {
+    this._accentOpacity = SettingsRegistry.coerce(
+      "accentOpacity",
+      opacityPercent,
+      this._accentOpacity,
     );
     this.applyTheme();
 
@@ -1262,7 +1291,7 @@ class ThemeManager {
     root.style.setProperty("--modal-opacity", String(this._modalOpacity) + "%");
   }
 
-  _applyMainGridComponentOpacity(colors) {
+  _applyMainGridComponentOpacity(colors, highlightTokens = null) {
     if (!colors || typeof colors !== "object") return;
 
     const root = document.documentElement;
@@ -1277,13 +1306,19 @@ class ThemeManager {
       mode: this._currentMode,
       opacityRule: "componentOpacity",
     });
-    const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
-      glassEnabled: true,
-      opacity: this._mainGridComponentOpacity,
-      opacityRule: "componentOpacity",
-    });
+    const resolvedHighlightTokens =
+      highlightTokens ||
+      ThemeTokens.resolveHighlightTokens(colors, {
+        glassEnabled: true,
+        opacity: this._accentOpacity,
+        opacityRule: "accentOpacity",
+      });
 
-    ThemeTokens.applyComponentSurfaceTokens(root, surfaceTokens, highlightTokens);
+    ThemeTokens.applyComponentSurfaceTokens(
+      root,
+      surfaceTokens,
+      resolvedHighlightTokens,
+    );
   }
 
   /**
@@ -1549,20 +1584,25 @@ class ThemeManager {
     root.style.setProperty("--text-placeholder", colors.textPlaceholder);
     root.style.setProperty("--surface-base-bg", colors.bodyBg);
 
-    // Apply glass effect or solid background
+    // Apply glass effect or solid background and unified accent/highlight tokens
     const surfaceTokens = ThemeTokens.resolveSurfaceTokens(colors, {
       glassEnabled: this._glassEnabled,
       opacity: this._glassOpacity,
       mode: this._currentMode,
       opacityRule: "glassOpacity",
     });
-    ThemeTokens.applySurfaceTokens(root, surfaceTokens);
+    const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
+      glassEnabled: this._glassEnabled,
+      opacity: this._accentOpacity,
+      opacityRule: "accentOpacity",
+    });
+    ThemeTokens.applySurfaceTokens(root, surfaceTokens, highlightTokens);
 
     // Apply body background
     document.body.style.backgroundColor = colors.bodyBg;
 
     // Restrict component opacity overrides to main grid components only.
-    this._applyMainGridComponentOpacity(colors);
+    this._applyMainGridComponentOpacity(colors, highlightTokens);
     this._applyModalOpacity();
 
     // Set data attributes for CSS hooks
@@ -1589,6 +1629,7 @@ class ThemeManager {
           glassOpacity: this._glassOpacity,
           componentOpacity: this._mainGridComponentOpacity,
           modalOpacity: this._modalOpacity,
+          accentOpacity: this._accentOpacity,
         },
       }),
     );

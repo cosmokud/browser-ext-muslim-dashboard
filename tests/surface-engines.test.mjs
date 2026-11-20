@@ -38,7 +38,7 @@ function bootIndex(scripts) {
   return { document, window };
 }
 
-test("blur-overrides defaults missing glassOpacity to 50, writes full surface+highlight tokens on on/off, and clears on dashboard", () => {
+test("blur-overrides defaults missing glassOpacity to 50, writes surface tokens without conflicting highlight overrides, and clears on dashboard", () => {
   const { document, window } = bootIndex(BLUR_SCRIPTS);
   let stored = { theme: { name: "emerald", mode: "dark", glassEnabled: true } };
   const storage = {
@@ -90,23 +90,24 @@ test("blur-overrides defaults missing glassOpacity to 50, writes full surface+hi
     "255, 255, 255",
   );
   assert.ok(card.style.getPropertyValue("--surface-rgb").length > 0);
-  for (const name of window.ThemeTokens.HIGHLIGHT_CSS_VARS) {
-    assert.ok(
-      card.style.getPropertyValue(name).length > 0,
-      `ON override should populate ${name}`,
+  for (const name of [
+    ...window.ThemeTokens.HIGHLIGHT_CSS_VARS,
+    ...window.ThemeTokens.ACCENT_SURFACE_CSS_VARS,
+  ]) {
+    assert.equal(
+      card.style.getPropertyValue(name),
+      "",
+      `ON override should not overwrite unified ${name}`,
     );
   }
 
-  // Switching to OFF writes full solid surface + solid highlight tokens.
+  // Switching to OFF writes full solid surface tokens while inheriting unified accent/highlight tokens.
   openPopup.querySelector('.blur-glass-option[data-glass-value="off"]').click();
   assert.equal(card.dataset.glassEnabled, "false");
   assert.equal(card.style.getPropertyValue("--surface-opacity"), "1");
   assert.equal(card.style.getPropertyValue("--surface-blur-factor"), "0");
   assert.match(card.style.getPropertyValue("--glass-bg"), /^rgb\(/);
-  assert.match(
-    card.style.getPropertyValue("--theme-highlight-border"),
-    /,\s*1\)$/,
-  );
+  assert.equal(card.style.getPropertyValue("--theme-highlight-border"), "");
 
   // Switching back to DASH clears card overrides and lets dashboard componentOpacity take over.
   themes.setGlassEnabled(false, false);
@@ -165,14 +166,15 @@ function bootPopupWithSettings(settingsBlob) {
   return dom;
 }
 
-test("popup Follow-Dashboard applies dashboard glassOpacity without raw-alpha clobber and defaults missing glassOpacity to 50", () => {
-  // Explicit dashboard glassOpacity=75 must reach :root instead of raw theme 0.35.
+test("popup Follow-Dashboard applies dashboard glassOpacity and accentOpacity without raw-alpha clobber", () => {
+  // Explicit dashboard glassOpacity=75 and accentOpacity=40 must reach :root.
   const domExplicit = bootPopupWithSettings({
     theme: {
       name: "emerald",
       mode: "dark",
       glassEnabled: true,
       glassOpacity: 75,
+      accentOpacity: 40,
     },
   });
   try {
@@ -184,11 +186,13 @@ test("popup Follow-Dashboard applies dashboard glassOpacity without raw-alpha cl
       rootStyle.getPropertyValue("--glass-bg-subtle"),
       "rgba(255, 255, 255, 0.045)",
     );
+    assert.equal(rootStyle.getPropertyValue("--accent-opacity"), "0.4");
+    assert.match(rootStyle.getPropertyValue("--accent-surface-bg"), /,\s*0\.4\)/);
   } finally {
     domExplicit.window.close();
   }
 
-  // Missing or invalid glassOpacity must default to 50 (not 0).
+  // Missing glassOpacity defaults to 50 and missing accentOpacity defaults to 75.
   const domDefault = bootPopupWithSettings({
     theme: {
       name: "emerald",
@@ -201,6 +205,7 @@ test("popup Follow-Dashboard applies dashboard glassOpacity without raw-alpha cl
     assert.equal(rootStyle.getPropertyValue("--surface-opacity"), "0.5");
     assert.equal(rootStyle.getPropertyValue("--surface-blur-factor"), "1");
     assert.match(rootStyle.getPropertyValue("--glass-bg"), /,\s*0\.5\)$/);
+    assert.equal(rootStyle.getPropertyValue("--accent-opacity"), "0.75");
   } finally {
     domDefault.window.close();
   }

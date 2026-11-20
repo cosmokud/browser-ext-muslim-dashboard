@@ -6689,9 +6689,10 @@
               class="setting-group theme-blur-group"
               id="themeGlassOpacityGroup"
             >
-              <label class="setting-label">Opacity</label>
+              <label class="setting-label">Chrome &amp; Controls Opacity</label>
               <p class="setting-hint">
-                Scales global glass transparency for all dashboard surfaces.
+                Scales glass transparency for modal inner controls, FAB menu,
+                toasts, and popup.
               </p>
               <div class="custom-width-slider">
                 <input
@@ -6748,6 +6749,30 @@
                 />
                 <span class="custom-width-value" id="themeModalOpacityValue"
                   >97%</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="setting-group theme-blur-group"
+              id="themeAccentOpacityGroup"
+            >
+              <label class="setting-label">Accent &amp; Active Opacity</label>
+              <p class="setting-hint">
+                Scales opacity for primary buttons, active/selected states,
+                sliders, and toggles across all surfaces.
+              </p>
+              <div class="custom-width-slider">
+                <input
+                  type="range"
+                  id="themeAccentOpacity"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="75"
+                />
+                <span class="custom-width-value" id="themeAccentOpacityValue"
+                  >75%</span
                 >
               </div>
             </div>

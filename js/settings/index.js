@@ -372,6 +372,13 @@ class SettingsManager extends BaseManager {
     this.themeModalOpacityValue = document.getElementById(
       "themeModalOpacityValue",
     );
+    this.themeAccentOpacityGroup = document.getElementById(
+      "themeAccentOpacityGroup",
+    );
+    this.themeAccentOpacity = document.getElementById("themeAccentOpacity");
+    this.themeAccentOpacityValue = document.getElementById(
+      "themeAccentOpacityValue",
+    );
     this.themePickerGrid = document.getElementById("themePickerGrid");
     this.themeContainerWidth = document.getElementById("themeContainerWidth");
     this.themeContainerWidthCustom = document.getElementById(

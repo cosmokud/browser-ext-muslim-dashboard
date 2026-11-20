@@ -55,6 +55,7 @@ class SettingsRegistry {
     uiBlurPower: { default: 100, min: 0, max: 200, round: true },
     componentOpacity: { default: 0, min: 0, max: 100, round: true },
     modalOpacity: { default: 97, min: 0, max: 100, round: true },
+    accentOpacity: { default: 75, min: 0, max: 100, round: true },
     "theme.glassEnabled": { default: true, boolean: true },
     "theme.backgroundAwareFontColorEnabled": { default: false, boolean: true },
     "theme.highestVisualFidelityEnabled": { default: false, boolean: true },
@@ -160,6 +161,7 @@ class SettingsRegistry {
     glassOpacity: "glassOpacity",
     componentOpacity: "componentOpacity",
     modalOpacity: "modalOpacity",
+    accentOpacity: "accentOpacity",
     backgroundAwareFontColorEnabled: "theme.backgroundAwareFontColorEnabled",
     highestVisualFidelityEnabled: "theme.highestVisualFidelityEnabled",
   };
@@ -173,6 +175,7 @@ class SettingsRegistry {
       glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
       componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
       modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
+      accentOpacity: SettingsRegistry.defaultOf("accentOpacity"),
       backgroundAwareFontColorEnabled: SettingsRegistry.defaultOf(
         "theme.backgroundAwareFontColorEnabled",
       ),

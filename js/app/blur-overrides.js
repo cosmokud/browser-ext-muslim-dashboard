@@ -260,12 +260,7 @@
           mode,
           opacityRule: "glassOpacity",
         });
-        const highlightTokens = ThemeTokens.resolveHighlightTokens(colors, {
-          glassEnabled,
-          opacity: targetOpacity,
-          opacityRule: "glassOpacity",
-        });
-        ThemeTokens.applySurfaceTokens(card, surfaceTokens, highlightTokens);
+        ThemeTokens.applySurfaceTokens(card, surfaceTokens);
       };
 
       // Apply glass state to the card

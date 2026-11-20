@@ -228,6 +228,25 @@
   --action-btn-color: var(--text-primary);
   --action-btn-border-color: var(--glass-border);
   --action-btn-bg: color-mix(in srgb, var(--glass-bg) 92%, transparent 8%);
+  --accent-opacity: 0.75;
+  --accent-surface-bg: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 75%, transparent),
+    color-mix(in srgb, var(--primary-light) 75%, transparent)
+  );
+  --accent-surface-bg-hover: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-dark) 86%, transparent),
+    color-mix(in srgb, var(--primary-color) 86%, transparent)
+  );
+  --accent-surface-border: color-mix(
+    in srgb,
+    var(--primary-light) 86%,
+    transparent
+  );
+  --accent-surface-text: var(--on-primary-text);
+  --accent-surface-shadow: 0 8px 18px
+    color-mix(in srgb, var(--primary-dark) 24%, transparent);
   --theme-highlight-bg-hover: linear-gradient(
     135deg,
     var(--primary-dark),

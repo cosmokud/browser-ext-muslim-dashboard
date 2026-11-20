@@ -18,8 +18,6 @@ class ThemeTokens {
     dark: "#1e1e32",
   };
 
-  static HIGHLIGHT_MIN_OPACITY = 30;
-
   static DEFAULT_TAJWEED_COLORS = Object.freeze({
     ham_wasl: "#aaaaaa",
     slnt: "#aaaaaa",
@@ -54,6 +52,15 @@ class ThemeTokens {
     "--surface-tint-rgb",
     "--surface-rgb",
     "--glass-opacity-factor",
+  ];
+
+  static ACCENT_SURFACE_CSS_VARS = [
+    "--accent-opacity",
+    "--accent-surface-bg",
+    "--accent-surface-bg-hover",
+    "--accent-surface-border",
+    "--accent-surface-text",
+    "--accent-surface-shadow",
   ];
 
   static HIGHLIGHT_CSS_VARS = [
@@ -396,48 +403,142 @@ class ThemeTokens {
 
   static resolveHighlightTokens(
     colors,
-    { glassEnabled = true, opacity, opacityRule = "componentOpacity" } = {},
+    { glassEnabled = true, opacity, opacityRule = "accentOpacity" } = {},
   ) {
+    const isGlass = glassEnabled !== false;
     const coerced = SettingsRegistry.coerce(opacityRule, opacity);
-    const effectiveOpacity = Math.max(coerced, ThemeTokens.HIGHLIGHT_MIN_OPACITY);
-    const alphas =
-      glassEnabled !== false
-        ? ThemeTokens.glassAlphas(effectiveOpacity)
-        : { bg: 1, hover: 1, border: 1 };
+    const opacityRatio = isGlass ? Number((coerced / 100).toFixed(3)) : 1;
+    const hoverAlpha = !isGlass
+      ? 1
+      : opacityRatio === 0
+        ? 0
+        : Math.min(1, Number((opacityRatio * 1.15).toFixed(3)));
+    const borderAlpha = !isGlass
+      ? 1
+      : Number((0.45 + 0.55 * opacityRatio).toFixed(3));
+    const lightSubtleAlpha = Number((opacityRatio * 0.14).toFixed(3));
+    const shadowAlpha = Number((opacityRatio * 0.32).toFixed(3));
 
     const primary = colors?.primary;
     const primaryDark = colors?.primaryDark || primary;
     const primaryLight = colors?.primaryLight || primary;
 
-    const highlightDarkBg = ThemeTokens.setColorAlpha(primaryDark, alphas.bg);
-    const highlightPrimaryBg = ThemeTokens.setColorAlpha(primary, alphas.bg);
+    const accentBg = `linear-gradient(135deg, ${ThemeTokens.setColorAlpha(
+      primary,
+      opacityRatio,
+    )}, ${ThemeTokens.setColorAlpha(primaryLight, opacityRatio)})`;
+    const highlightDarkBg = ThemeTokens.setColorAlpha(primaryDark, opacityRatio);
+    const highlightPrimaryBg = ThemeTokens.setColorAlpha(primary, opacityRatio);
     const highlightDarkHover = ThemeTokens.setColorAlpha(
       primaryDark,
-      alphas.hover,
+      hoverAlpha,
     );
     const highlightPrimaryHover = ThemeTokens.setColorAlpha(
       primary,
-      alphas.hover,
+      hoverAlpha,
     );
-    const border = ThemeTokens.setColorAlpha(primaryLight, alphas.border);
-    const lightBg = ThemeTokens.setColorAlpha(primaryLight, alphas.hover);
+    const bgHover = `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`;
+    const activeBg = `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`;
+    const border = ThemeTokens.setColorAlpha(primaryLight, borderAlpha);
+    const lightBg = ThemeTokens.setColorAlpha(primaryLight, hoverAlpha);
     const lightSubtleBg = ThemeTokens.setColorAlpha(
       primaryLight,
-      alphas.bg * 0.14,
+      lightSubtleAlpha,
     );
-    const shadowColor = ThemeTokens.setColorAlpha(
-      primaryDark,
-      alphas.bg * 0.32,
+    const shadow =
+      opacityRatio === 0
+        ? "none"
+        : `0 8px 18px ${ThemeTokens.setColorAlpha(primaryDark, shadowAlpha)}`;
+    const onPrimaryText = ThemeTokens.resolveOnPrimaryText(
+      colors?.onPrimaryText,
+      primary,
     );
+    const accentText =
+      !isGlass || coerced >= 25
+        ? onPrimaryText
+        : colors?.textPrimary || onPrimaryText;
 
     return {
-      bgHover: `linear-gradient(135deg, ${highlightDarkHover}, ${highlightPrimaryHover})`,
-      activeBg: `linear-gradient(135deg, ${highlightDarkBg}, ${highlightPrimaryBg})`,
+      opacityRatio,
+      accentOpacity: String(opacityRatio),
+      accentBg,
+      accentBgHover: bgHover,
+      accentBorder: border,
+      accentText,
+      accentShadow: shadow,
+      bgHover,
+      activeBg,
       border,
       lightBg,
       lightSubtleBg,
-      shadow: `0 8px 18px ${shadowColor}`,
+      shadow,
     };
+  }
+
+  static applyAccentSurfaceTokens(element, tokens) {
+    if (!element?.style || !tokens) return;
+    if (tokens.accentOpacity !== undefined) {
+      element.style.setProperty("--accent-opacity", String(tokens.accentOpacity));
+    }
+    if (tokens.accentBg !== undefined) {
+      element.style.setProperty("--accent-surface-bg", tokens.accentBg);
+    }
+    if (tokens.accentBgHover !== undefined) {
+      element.style.setProperty(
+        "--accent-surface-bg-hover",
+        tokens.accentBgHover,
+      );
+    }
+    if (tokens.accentBorder !== undefined) {
+      element.style.setProperty("--accent-surface-border", tokens.accentBorder);
+    }
+    if (tokens.accentText !== undefined) {
+      element.style.setProperty("--accent-surface-text", tokens.accentText);
+    }
+    if (tokens.accentShadow !== undefined) {
+      element.style.setProperty("--accent-surface-shadow", tokens.accentShadow);
+    }
+  }
+
+  static applyHighlightTokens(element, highlightTokens) {
+    if (!element?.style || !highlightTokens) return;
+    ThemeTokens.applyAccentSurfaceTokens(element, highlightTokens);
+    if (highlightTokens.bgHover !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-bg-hover",
+        highlightTokens.bgHover,
+      );
+    }
+    if (highlightTokens.activeBg !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-active-bg",
+        highlightTokens.activeBg,
+      );
+    }
+    if (highlightTokens.border !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-border",
+        highlightTokens.border,
+      );
+    }
+    if (highlightTokens.lightBg !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-light-bg",
+        highlightTokens.lightBg,
+      );
+    }
+    if (highlightTokens.lightSubtleBg !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-light-subtle-bg",
+        highlightTokens.lightSubtleBg,
+      );
+    }
+    if (highlightTokens.shadow !== undefined) {
+      element.style.setProperty(
+        "--theme-highlight-shadow",
+        highlightTokens.shadow,
+      );
+    }
   }
 
   static applySurfaceTokens(
@@ -493,36 +594,16 @@ class ThemeTokens {
     }
 
     if (highlightTokens) {
-      element.style.setProperty(
-        "--theme-highlight-bg-hover",
-        highlightTokens.bgHover,
-      );
-      element.style.setProperty(
-        "--theme-highlight-active-bg",
-        highlightTokens.activeBg,
-      );
-      element.style.setProperty(
-        "--theme-highlight-border",
-        highlightTokens.border,
-      );
-      element.style.setProperty(
-        "--theme-highlight-light-bg",
-        highlightTokens.lightBg,
-      );
-      element.style.setProperty(
-        "--theme-highlight-light-subtle-bg",
-        highlightTokens.lightSubtleBg,
-      );
-      element.style.setProperty(
-        "--theme-highlight-shadow",
-        highlightTokens.shadow,
-      );
+      ThemeTokens.applyHighlightTokens(element, highlightTokens);
     }
   }
 
   static clearSurfaceTokens(element) {
     if (!element?.style) return;
     for (const prop of ThemeTokens.SURFACE_CSS_VARS) {
+      element.style.removeProperty(prop);
+    }
+    for (const prop of ThemeTokens.ACCENT_SURFACE_CSS_VARS) {
       element.style.removeProperty(prop);
     }
     for (const prop of ThemeTokens.HIGHLIGHT_CSS_VARS) {

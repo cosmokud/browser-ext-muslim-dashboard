@@ -160,6 +160,18 @@
     }
     this.updateThemeModalOpacityLabel();
 
+    // Load accent & active opacity
+    const accentOpacity = SettingsRegistry.coerce(
+      "accentOpacity",
+      themeSettings.accentOpacity,
+      window.dashboard?.themes?.getAccentOpacity?.() ??
+        SettingsRegistry.defaultOf("accentOpacity"),
+    );
+    if (this.themeAccentOpacity) {
+      this.themeAccentOpacity.value = String(accentOpacity);
+    }
+    this.updateThemeAccentOpacityLabel();
+
     // Load container width (now in Themes panel)
     if (this.themeContainerWidth) {
       this.themeContainerWidth.value = settings.containerWidth || "narrow";
@@ -265,6 +277,17 @@
       );
       this.themeModalOpacity.value = String(clamped);
       this.themeModalOpacityValue.textContent = clamped + "%";
+    }
+  }
+
+  updateThemeAccentOpacityLabel() {
+    if (this.themeAccentOpacityValue && this.themeAccentOpacity) {
+      const clamped = SettingsRegistry.coerce(
+        "accentOpacity",
+        parseInt(this.themeAccentOpacity.value, 10),
+      );
+      this.themeAccentOpacity.value = String(clamped);
+      this.themeAccentOpacityValue.textContent = clamped + "%";
     }
   }
 

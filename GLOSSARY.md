@@ -49,15 +49,22 @@ remain visible.
 
 ## Glass opacity
 
-The transparency level governing chrome glass surfaces — such as header
-surfaces, overlays in glass mode, and the popup shell — independently of
-dashboard card surface opacity.
+The transparency level governing chrome glass surfaces — modal inner controls,
+the FAB menu, toasts, and the popup shell — independently of dashboard card
+surface opacity.
 
 ## Modal opacity
 
 The background opacity shared by all overlays — modals, confirmation dialogs,
 context menus, dropdowns, and floating popovers — independently of dashboard
 card opacity.
+
+## Accent opacity
+
+The opacity level governing all primary buttons, active, selected, and pressed
+states, range slider fills, and checked toggles uniformly across the dashboard,
+modals, and popup, with `0%` rendering fills fully transparent and `100%` fully
+solid.
 
 ## Surface tier
 

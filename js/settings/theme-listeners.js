@@ -55,6 +55,7 @@
       glassOpacity: SettingsRegistry.defaultOf("glassOpacity"),
       componentOpacity: SettingsRegistry.defaultOf("componentOpacity"),
       modalOpacity: SettingsRegistry.defaultOf("modalOpacity"),
+      accentOpacity: SettingsRegistry.defaultOf("accentOpacity"),
     };
     const themeSliderDebounceMs = 120;
 
@@ -95,6 +96,12 @@
     const applyThemeModalOpacity = (opacity) => {
       if (window.dashboard?.themes?.setModalOpacity) {
         window.dashboard.themes.setModalOpacity(opacity, false);
+      }
+    };
+
+    const applyThemeAccentOpacity = (opacity) => {
+      if (window.dashboard?.themes?.setAccentOpacity) {
+        window.dashboard.themes.setAccentOpacity(opacity, false);
       }
     };
 
@@ -395,6 +402,39 @@
       });
     }
 
+    // Accent & active opacity slider
+    if (this.themeAccentOpacity) {
+      this.themeAccentOpacity.addEventListener("input", () => {
+        this.updateThemeAccentOpacityLabel();
+        const opacity = parseInt(this.themeAccentOpacity.value, 10);
+
+        scheduleThemeSliderUpdate("accentOpacity", () =>
+          applyThemeAccentOpacity(opacity),
+        );
+      });
+
+      this.themeAccentOpacity.addEventListener("change", () => {
+        this.updateThemeAccentOpacityLabel();
+        const opacity = parseInt(this.themeAccentOpacity.value, 10);
+        flushThemeSliderUpdate("accentOpacity", () =>
+          applyThemeAccentOpacity(opacity),
+        );
+      });
+
+      this.themeAccentOpacity.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.themeAccentOpacity.value = String(
+          themeSliderDefaults.accentOpacity,
+        );
+        this.updateThemeAccentOpacityLabel();
+        const opacity = parseInt(this.themeAccentOpacity.value, 10);
+        flushThemeSliderUpdate("accentOpacity", () =>
+          applyThemeAccentOpacity(opacity),
+        );
+        this.scheduleAutoSave(120);
+      });
+    }
+
     if (this.themeBackgroundAwareFontColorEnabled) {
       this.themeBackgroundAwareFontColorEnabled.addEventListener("change", () => {
         const enabled = this.themeBackgroundAwareFontColorEnabled.checked;
@@ -428,6 +468,10 @@
     const modalOpacity = SettingsRegistry.coerce(
       "modalOpacity",
       parseInt(this.themeModalOpacity?.value, 10),
+    );
+    const accentOpacity = SettingsRegistry.coerce(
+      "accentOpacity",
+      parseInt(this.themeAccentOpacity?.value, 10),
     );
     const backgroundAwareFontColorEnabled =
       this.themeBackgroundAwareFontColorEnabled?.checked === true;
@@ -467,6 +511,7 @@
       glassOpacity: glassOpacity,
       componentOpacity: componentOpacity,
       modalOpacity: modalOpacity,
+      accentOpacity: accentOpacity,
       backgroundAwareFontColorEnabled: backgroundAwareFontColorEnabled,
       highestVisualFidelityEnabled:
         dashboardQualityState.highestVisualFidelityEnabled,
@@ -521,6 +566,10 @@
         typeof themeManager.getModalOpacity === "function"
           ? themeManager.getModalOpacity()
           : null;
+      const currentAccentOpacity =
+        typeof themeManager.getAccentOpacity === "function"
+          ? themeManager.getAccentOpacity()
+          : null;
 
       if (
         currentTheme !== activeTheme &&
@@ -559,6 +608,13 @@
         typeof themeManager.setModalOpacity === "function"
       ) {
         themeManager.setModalOpacity(modalOpacity, false);
+      }
+
+      if (
+        currentAccentOpacity !== accentOpacity &&
+        typeof themeManager.setAccentOpacity === "function"
+      ) {
+        themeManager.setAccentOpacity(accentOpacity, false);
       }
 
       if (

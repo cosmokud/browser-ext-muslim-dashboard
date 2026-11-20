@@ -62,7 +62,7 @@ function bootThemes() {
 const valuesOf = (element, variables) =>
   variables.map((variable) => element.style.getPropertyValue(variable));
 
-test("componentOpacity = 0 drops resting surfaces and blur to 0 on :root while keeping highlights legible", () => {
+test("componentOpacity = 0 drops resting surfaces and blur to 0 on :root while highlights follow unified accentOpacity", () => {
   const { document, themes } = bootThemes();
   const root = document.documentElement;
   const card = document.getElementById("prayerTimesCard");
@@ -79,13 +79,17 @@ test("componentOpacity = 0 drops resting surfaces and blur to 0 on :root while k
     "rgba(255, 255, 255, 0)",
   );
 
-  // Active/hover primary highlights keep a legible alpha floor at 0%.
+  // Active/hover primary highlights follow unified accentOpacity (default 75%) on both :root and component mirrors.
   const activeBg = root.style.getPropertyValue("--component-highlight-active-bg");
   const hoverBg = root.style.getPropertyValue("--component-highlight-bg-hover");
   const border = root.style.getPropertyValue("--component-highlight-border");
-  assert.match(activeBg, /rgba\([^)]+,\s*0\.3\)/);
-  assert.match(hoverBg, /rgba\([^)]+,\s*0\.386\)/);
-  assert.match(border, /rgba\([^)]+,\s*0\.343\)/);
+  assert.equal(activeBg, root.style.getPropertyValue("--theme-highlight-active-bg"));
+  assert.equal(hoverBg, root.style.getPropertyValue("--theme-highlight-bg-hover"));
+  assert.equal(border, root.style.getPropertyValue("--theme-highlight-border"));
+  assert.equal(root.style.getPropertyValue("--accent-opacity"), "0.75");
+  assert.match(activeBg, /rgba\([^)]+,\s*0\.75\)/);
+  assert.match(hoverBg, /rgba\([^)]+,\s*0\.862\)/);
+  assert.match(border, /rgba\([^)]+,\s*0\.863\)/);
 
   // No 21-ID inline variable stamping on individual dashboard panels.
   assert.equal(card.style.getPropertyValue("--glass-bg"), "");
@@ -93,7 +97,7 @@ test("componentOpacity = 0 drops resting surfaces and blur to 0 on :root while k
   assert.deepEqual(valuesOf(card, HIGHLIGHT_VARIABLES), ["", "", "", "", "", ""]);
 });
 
-test("componentOpacity = 35 writes scaled surface and highlight tokens on :root without stamping individual cards", () => {
+test("componentOpacity = 35 writes scaled surface tokens on :root while highlights stay unified with accentOpacity", () => {
   const { document, themes } = bootThemes();
   const root = document.documentElement;
   const card = document.getElementById("prayerTimesCard");
@@ -111,14 +115,18 @@ test("componentOpacity = 35 writes scaled surface and highlight tokens on :root 
     "rgba(255, 255, 255, 0.021)",
   );
 
-  // The lighter highlight follows the border's palette colour at the hover alpha.
+  // Highlight tokens mirror unified accentOpacity (default 75%) regardless of componentOpacity.
   const lightBg = root.style.getPropertyValue("--component-highlight-light-bg");
   const border = root.style.getPropertyValue("--component-highlight-border");
   assert.equal(
     lightBg.slice(0, lightBg.lastIndexOf(",")),
     border.slice(0, border.lastIndexOf(",")),
   );
-  assert.equal(lightBg.slice(lightBg.lastIndexOf(",")), ", 0.45)");
+  assert.equal(lightBg.slice(lightBg.lastIndexOf(",")), ", 0.862)");
+  assert.equal(
+    root.style.getPropertyValue("--component-highlight-active-bg"),
+    root.style.getPropertyValue("--theme-highlight-active-bg"),
+  );
 
   // Theme RGB channel tokens and global glass opacity factor are published on :root.
   assert.ok(root.style.getPropertyValue("--primary-rgb").length > 0);
@@ -140,6 +148,67 @@ test("componentOpacity = 35 writes scaled surface and highlight tokens on :root 
   assert.equal(
     root.style.getPropertyValue("--component-glass-bg-subtle"),
     "rgba(15, 23, 42, 0.021)",
+  );
+});
+
+test("accentOpacity slider UI, Chrome & Controls Opacity label, and 0%/75%/100% accent token scaling", () => {
+  const { document, themes } = bootThemes();
+  const root = document.documentElement;
+
+  const chromeGroup = document.getElementById("themeGlassOpacityGroup");
+  assert.equal(
+    chromeGroup.querySelector(".setting-label").textContent.trim(),
+    "Chrome & Controls Opacity",
+  );
+  assert.match(
+    chromeGroup.querySelector(".setting-hint").textContent,
+    /modal inner controls,\s*FAB menu,\s*toasts,\s*and popup/i,
+  );
+
+  const accentGroup = document.getElementById("themeAccentOpacityGroup");
+  assert.equal(
+    accentGroup.previousElementSibling,
+    document.getElementById("themeModalOpacityGroup"),
+  );
+  assert.equal(
+    accentGroup.querySelector(".setting-label").textContent.trim(),
+    "Accent & Active Opacity",
+  );
+  const accentSlider = document.getElementById("themeAccentOpacity");
+  assert.equal(accentSlider.type, "range");
+  assert.equal(accentSlider.min, "0");
+  assert.equal(accentSlider.max, "100");
+  assert.equal(accentSlider.step, "1");
+  assert.equal(accentSlider.value, "75");
+  assert.equal(
+    document.getElementById("themeAccentOpacityValue").textContent.trim(),
+    "75%",
+  );
+
+  // 0%: transparent fills, no shadow, crisp border, mode-readable text
+  themes.setAccentOpacity(0, false);
+  assert.equal(themes.getAccentOpacity(), 0);
+  assert.equal(root.style.getPropertyValue("--accent-opacity"), "0");
+  assert.match(root.style.getPropertyValue("--accent-surface-bg"), /,\s*0\)/);
+  assert.match(root.style.getPropertyValue("--theme-highlight-active-bg"), /,\s*0\)/);
+  assert.equal(root.style.getPropertyValue("--accent-surface-shadow"), "none");
+  assert.match(root.style.getPropertyValue("--accent-surface-border"), /,\s*0\.45\)$/);
+  assert.equal(root.style.getPropertyValue("--accent-surface-text"), "#ffffff");
+
+  themes.setMode("light", false);
+  assert.equal(
+    root.style.getPropertyValue("--accent-surface-text"),
+    root.style.getPropertyValue("--text-primary"),
+  );
+
+  // 100%: solid fills and on-primary text
+  themes.setAccentOpacity(100, false);
+  assert.equal(root.style.getPropertyValue("--accent-opacity"), "1");
+  assert.match(root.style.getPropertyValue("--accent-surface-bg"), /,\s*1\)/);
+  assert.match(root.style.getPropertyValue("--accent-surface-border"), /,\s*1\)$/);
+  assert.equal(
+    root.style.getPropertyValue("--accent-surface-text"),
+    root.style.getPropertyValue("--on-primary-text"),
   );
 });
 

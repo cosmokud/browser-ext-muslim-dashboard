@@ -257,17 +257,26 @@ test("the calendar setting only accepts the calendars that exist", () => {
   );
 });
 
-test("componentOpacity and modalOpacity round floats and ship in default theme settings", () => {
+test("componentOpacity, modalOpacity, and accentOpacity round floats and ship in default theme settings", () => {
   const { registry, storage } = load();
   const defaults = storage.getDefaultSettings();
 
   assert.equal(registry.coerce("componentOpacity", 33.6), 34);
   assert.equal(registry.coerce("componentOpacity", 33.4), 33);
   assert.equal(registry.coerce("modalOpacity", 84.6), 85);
+  assert.equal(registry.defaultOf("accentOpacity"), 75);
+  assert.equal(registry.coerce("accentOpacity", -5), 0);
+  assert.equal(registry.coerce("accentOpacity", 150), 100);
+  assert.equal(registry.coerce("accentOpacity", 42.6), 43);
   assert.equal(
     defaults.theme.modalOpacity,
     registry.defaultOf("modalOpacity"),
     "default theme settings include modalOpacity from the registry",
+  );
+  assert.equal(
+    defaults.theme.accentOpacity,
+    registry.defaultOf("accentOpacity"),
+    "default theme settings include accentOpacity from the registry",
   );
   assert.deepEqual(defaults.theme, registry.themeDefaults());
 });
@@ -288,6 +297,7 @@ test("mergeThemeSettings coerces registry-backed keys while preserving sibling k
       glassOpacity: 150,
       componentOpacity: 42.6,
       modalOpacity: -8,
+      accentOpacity: 123.4,
       backgroundAwareFontColorEnabled: true,
     },
   );
@@ -301,6 +311,7 @@ test("mergeThemeSettings coerces registry-backed keys while preserving sibling k
     glassOpacity: 100,
     componentOpacity: 43,
     modalOpacity: 0,
+    accentOpacity: 100,
     backgroundAwareFontColorEnabled: true,
   });
 
@@ -333,6 +344,7 @@ test("ThemeManager.saveThemeSettings preserves highestVisualFidelityEnabled and 
               glassOpacity: 50,
               componentOpacity: 15,
               modalOpacity: 90,
+              accentOpacity: 60,
               highestVisualFidelityEnabled: true,
               customThemeSibling: "preserved",
             },
@@ -346,6 +358,8 @@ test("ThemeManager.saveThemeSettings preserves highestVisualFidelityEnabled and 
   const storage = new sandbox.StorageManager();
   const themes = new sandbox.ThemeManager(storage);
 
+  assert.equal(themes.getAccentOpacity(), 60);
+
   themes.setTheme("sapphire", true);
   let saved = storage.getSettings();
   assert.equal(saved.theme.name, "sapphire");
@@ -355,10 +369,12 @@ test("ThemeManager.saveThemeSettings preserves highestVisualFidelityEnabled and 
   themes.setMainGridComponentOpacity(44.6, true);
   themes.setModalOpacity(82.4, true);
   themes.setGlassOpacity(68.5, true);
+  themes.setAccentOpacity(33.6, true);
   saved = storage.getSettings();
   assert.equal(saved.theme.componentOpacity, 45);
   assert.equal(saved.theme.modalOpacity, 82);
   assert.equal(saved.theme.glassOpacity, 69);
+  assert.equal(saved.theme.accentOpacity, 34);
   assert.equal(saved.theme.highestVisualFidelityEnabled, true);
   assert.equal(saved.theme.customThemeSibling, "preserved");
 });
