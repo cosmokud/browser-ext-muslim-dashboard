@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { JSDOM } from "jsdom";
-import { loadPageDom, repoRoot, withParts } from "./harness.mjs";
+import { assertRootDeclaration, loadPageDom, repoRoot, withParts } from "./harness.mjs";
 
 const SCRIPTS = withParts([
   "js/settings-registry.js",
@@ -118,7 +118,8 @@ test("the preview rule drops the blur and lightens the backdrop", () => {
   const rule = ruleFor("#settingsModal.modal-overlay.settings-visual-preview");
   assert.ok(rule, "no #settingsModal.modal-overlay.settings-visual-preview rule");
 
-  assert.equal(rule.style.background, "rgba(0, 0, 0, 0.18)");
+  assert.equal(rule.style.background, "var(--overlay-backdrop-preview-bg)");
+  assertRootDeclaration("--overlay-backdrop-preview-bg", "rgba(0, 0, 0, 0.18)");
   assert.equal(rule.style.getPropertyValue("backdrop-filter"), "blur(0)");
   // jsdom's CSSOM drops the prefixed declaration, so the file's text is the
   // only place that copy can be read.

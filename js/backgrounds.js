@@ -1342,7 +1342,7 @@ class BackgroundManager extends BaseManager {
 
     if (!fullUrl) {
       targetBg.style.background =
-        "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
+        "linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%)";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
       this.currentImageUrl = "";
@@ -1372,7 +1372,7 @@ class BackgroundManager extends BaseManager {
 
       // Use fallback gradient if image fails
       targetBg.style.background =
-        "linear-gradient(135deg, #1a5f4a 0%, #0d3d2e 100%)";
+        "linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%)";
       targetBg.classList.add("active");
       currentBgEl.classList.remove("active");
       this.currentImageUrl = "";

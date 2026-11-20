@@ -385,16 +385,23 @@ document.addEventListener("DOMContentLoaded", () => {
     798: { label: "Abdul Hamid Silika", language: "Yau" },
     125: { label: "Shaykh Abu Rahimah Mikael Aykyuni", language: "Yoruba" },
   };
+  const defaultThemeColors =
+    (typeof ThemeManager !== "undefined" &&
+      (ThemeManager.THEMES?.[ThemeManager.DEFAULT_THEME]?.[
+        ThemeManager.DEFAULT_MODE
+      ] ||
+        ThemeManager.THEMES?.emerald?.dark)) ||
+    null;
   const popupBlurDefaults = {
     glassState: "dashboard",
     customBlurEnabled: false,
     customBlurPower: 100,
     colorSource: "follow",
     palette: {
-      primary: "#1a5f4a",
-      accent: "#d4af37",
-      background: "#1a1a2e",
-      glassTint: "#1a5f4a",
+      primary: defaultThemeColors?.primary || ThemeTokens.SOLID_BASE_HEX.dark,
+      accent: defaultThemeColors?.accent || ThemeTokens.SOLID_BASE_HEX.light,
+      background: defaultThemeColors?.bodyBg || ThemeTokens.SOLID_BASE_HEX.dark,
+      glassTint: defaultThemeColors?.primary || ThemeTokens.SOLID_BASE_HEX.dark,
     },
   };
 
@@ -2263,8 +2270,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const defaultGlassTint = context.isPureTheme
       ? context.themeName === "pureBlack"
-        ? "#000000"
-        : "#ffffff"
+        ? ThemeManager.THEMES?.pureBlack?.dark?.bodyBg || "#000000"
+        : ThemeManager.THEMES?.pureWhite?.light?.bodyBg ||
+          ThemeTokens.SOLID_BASE_HEX.light
       : activePalette?.primary || context.base?.primary;
 
     return normalizePopupPalette(
@@ -2329,20 +2337,22 @@ document.addEventListener("DOMContentLoaded", () => {
       colors.bodyBg = palette.background;
 
       const isDarkBg = ThemeTokens.isDark(palette.background);
-
-      const lightTextPrimary = context.isPureTheme ? "#1a1a1a" : "#1a1a2e";
-      colors.textPrimary = isDarkBg ? "#ffffff" : lightTextPrimary;
-      colors.textSecondary = isDarkBg
-        ? "rgba(255, 255, 255, 0.85)"
-        : "rgba(0, 0, 0, 0.75)";
-      colors.textMuted = isDarkBg
-        ? "rgba(255, 255, 255, 0.6)"
-        : "rgba(0, 0, 0, 0.55)";
+      const resolvedText = ThemeTokens.resolveBackgroundAwareTextColors(
+        colors,
+        isDarkBg ? "dark" : "light",
+      );
+      colors.textPrimary = resolvedText.textPrimary;
+      colors.textSecondary = resolvedText.textSecondary;
+      colors.textMuted = resolvedText.textMuted;
+      colors.textPlaceholder = resolvedText.textPlaceholder;
     }
 
     if (context.isPureTheme) {
       const defaultGlassTint =
-        context.themeName === "pureBlack" ? "#000000" : "#ffffff";
+        context.themeName === "pureBlack"
+          ? ThemeManager.THEMES?.pureBlack?.dark?.bodyBg || "#000000"
+          : ThemeManager.THEMES?.pureWhite?.light?.bodyBg ||
+            ThemeTokens.SOLID_BASE_HEX.light;
       const glassTintHex = palette?.glassTint || defaultGlassTint;
       const tintRgb = ThemeTokens.hexToRgb(glassTintHex) || hexToRgb(glassTintHex);
 
@@ -2556,7 +2566,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return (
         ThemeTokens.mixHexToRgb(primaryHex, "#000000", 0.75) ||
-        "rgb(5, 17, 13)"
+        ThemeTokens.mixHexToRgb(
+          popupBlurDefaults.palette.primary,
+          "#000000",
+          0.75,
+        ) ||
+        popupBlurDefaults.palette.background
       );
     })();
 

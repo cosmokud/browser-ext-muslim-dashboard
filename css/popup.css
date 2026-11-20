@@ -6,8 +6,8 @@ body {
   max-height: none !important;
   overflow: hidden !important;
   scrollbar-width: none;
-  background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
-  background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
+  background: var(--popup-backdrop-color, var(--bg-dark)) !important;
+  background-color: var(--popup-backdrop-color, var(--bg-dark)) !important;
 }
 
 html::-webkit-scrollbar,
@@ -24,8 +24,8 @@ body.popup-prayer-times {
   min-height: 0 !important;
   max-height: none !important;
   overflow: hidden;
-  background: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
-  background-color: var(--popup-backdrop-color, rgb(5, 17, 13)) !important;
+  background: var(--popup-backdrop-color, var(--bg-dark)) !important;
+  background-color: var(--popup-backdrop-color, var(--bg-dark)) !important;
 }
 
 body.popup-prayer-times .card:hover {
@@ -417,7 +417,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-prayer-settings-status.error {
-  color: #ff8f8f;
+  color: var(--color-danger-text);
 }
 
 .popup-prayer-card .prayer-item {
@@ -452,23 +452,22 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 
 .popup-open-dashboard-btn {
   align-self: flex-start;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--accent-surface-border);
   border-radius: var(--radius-full);
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--primary-light)
-  );
-  color: var(--text-primary);
+  background: var(--accent-surface-bg);
+  color: var(--accent-surface-text);
   cursor: pointer;
   transition:
     transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
 .popup-open-dashboard-btn:hover {
   transform: translateY(-1px);
-  box-shadow: var(--glass-shadow);
+  background: var(--accent-surface-bg-hover);
+  box-shadow: var(--accent-surface-shadow);
 }
 
 .popup-open-dashboard-btn:active {
@@ -609,9 +608,10 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-tab-btn.active {
-  background: color-mix(in srgb, var(--accent-gold) 22%, transparent);
-  border-color: color-mix(in srgb, var(--accent-gold) 55%, var(--glass-border));
-  color: var(--text-primary);
+  background: var(--accent-surface-bg);
+  border-color: var(--accent-surface-border);
+  color: var(--accent-surface-text);
+  box-shadow: var(--accent-surface-shadow);
 }
 
 .popup-tab-btn:focus-visible {
@@ -871,9 +871,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-mini-tajweed-toggle.active {
-  color: var(--accent-gold);
-  background: color-mix(in srgb, var(--accent-gold) 18%, transparent);
-  border-color: color-mix(in srgb, var(--accent-gold) 70%, var(--glass-border));
+  color: var(--accent-surface-text);
+  background: var(--accent-surface-bg);
+  border-color: var(--accent-surface-border);
 }
 
 .popup-pq-mini-tajweed-toggle:focus-visible {
@@ -937,13 +937,9 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   .popup-pq-visibility-toggle
   input:checked
   + .popup-pq-visibility-toggle-check {
-  background: color-mix(in srgb, var(--accent-gold) 36%, transparent 64%);
-  border-color: color-mix(
-    in srgb,
-    var(--accent-gold) 70%,
-    var(--glass-border) 30%
-  );
-  color: var(--accent-gold);
+  background: var(--accent-surface-bg);
+  border-color: var(--accent-surface-border);
+  color: var(--accent-surface-text);
 }
 
 .popup-pq-size-controls
@@ -1314,7 +1310,7 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.56);
+  background: var(--overlay-backdrop-soft-bg);
   backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
   -webkit-backdrop-filter: blur(calc(8px * var(--ui-blur-multiplier)));
 }
@@ -1441,7 +1437,11 @@ body.popup-prayer-times .card.popup-prayer-card .prayer-list {
 }
 
 .popup-pq-modal-btn-primary {
-  background: var(--accent-gold);
-  color: #000;
-  border-color: var(--accent-gold);
+  background: var(--accent-surface-bg);
+  color: var(--accent-surface-text);
+  border-color: var(--accent-surface-border);
+}
+
+.popup-pq-modal-btn-primary:hover:not(:disabled) {
+  background: var(--accent-surface-bg-hover);
 }

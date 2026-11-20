@@ -344,7 +344,7 @@
         : this.clampNumber(note.blur, 0, 30, 0);
       styles += `backdrop-filter: blur(${blurValue}px); -webkit-backdrop-filter: blur(${blurValue}px);`;
       // Keep the note sleek by avoiding theme-driven borders while preserving depth.
-      styles += `box-shadow: var(--glass-shadow), 0 10px 40px rgba(0,0,0,0.3);`;
+      styles += `box-shadow: var(--glass-shadow), var(--shadow-lg);`;
     }
 
     return styles;

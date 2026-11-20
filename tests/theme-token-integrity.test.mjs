@@ -418,3 +418,219 @@ test("lunar phase SVG clip-path references match defined <clipPath> IDs", () => 
     }
   }
 });
+
+function parseLeafCssRules(cssSource) {
+  const clean = cssSource.replace(/\/\*[\s\S]*?\*\//g, (match) =>
+    match.replace(/[^\n]/g, " "),
+  );
+  const rules = [];
+  const stack = [];
+  let bufStart = 0;
+
+  for (let i = 0; i < clean.length; i++) {
+    const ch = clean[i];
+    if (ch === "{") {
+      const header = clean.slice(bufStart, i).trim();
+      const line = clean.slice(0, bufStart).split(/\r?\n/).length;
+      stack.push({ header, line, start: i + 1 });
+      bufStart = i + 1;
+    } else if (ch === "}") {
+      const top = stack.pop();
+      if (top) {
+        const body = clean.slice(top.start, i);
+        if (!body.includes("{")) {
+          rules.push({
+            selector: top.header.replace(/\s+/g, " "),
+            line: top.line,
+            body,
+            bodyStart: top.start,
+          });
+        }
+      }
+      bufStart = i + 1;
+    }
+  }
+
+  return { rules, clean };
+}
+
+function splitTopLevelSelectors(selector) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i];
+    if (ch === "(" || ch === "[") depth++;
+    else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+    else if (ch === "," && depth === 0) {
+      parts.push(selector.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  const tail = selector.slice(start).trim();
+  if (tail) parts.push(tail);
+  return parts;
+}
+
+test("strict theme-palette compliance: zero off-palette literal colors outside domain allowlist in css/styles.css and css/popup.css", () => {
+  const DOMAIN_ALLOWLIST = [
+    /^:root\b/,
+    /\[data-theme-mode="light"\]/,
+    /\.tajweed-/,
+    /^\.(ham_wasl|slnt|silent|laam_shamsiyah|madda_normal|madda_permissible|madda_necessary|qlq|qalaqah|madda_obligatory|ikhf_shfw|ikhafa_shafawi|ikhf|ikhafa|idghm_shfw|idgham_shafawi|iqlb|iqlab|idgh_ghn|idgham_ghunnah|idgh_w_ghn|idgham_wo_ghunnah|idgh_mus|idgham_mutajanisayn|idgham_mutaqaribayn|ghn|ghunnah)\b/,
+    /\.calendar-fast-dot/,
+    /\.calendar-legend/,
+    /\.sticky-note-color-/,
+    /\.sticky-note-swatch/,
+    /\.sticky-note\[data-note-color/,
+  ];
+  const isDomainAllowed = (selector) =>
+    splitTopLevelSelectors(selector).every((part) =>
+      DOMAIN_ALLOWLIST.some((rx) => rx.test(part)),
+    );
+
+  const TARGET_PROP =
+    /^(color|background|background-color|background-image|border(?:-[a-z-]+)?|outline(?:-[a-z-]+)?|fill|stroke)$/i;
+  const LITERAL_COLOR_RE =
+    /#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*(?!var\(--[a-zA-Z0-9_-]+-rgb\b)|\bhsla?\(|\b(white|black)\b/i;
+
+  const violations = [];
+  for (const [relPath, source] of CSS_FILES) {
+    const { rules, clean } = parseLeafCssRules(source);
+    for (const rule of rules) {
+      if (isDomainAllowed(rule.selector)) continue;
+      let offset = rule.bodyStart;
+      for (const decl of rule.body.split(";")) {
+        const colon = decl.indexOf(":");
+        if (colon !== -1) {
+          const prop = decl.slice(0, colon).trim().toLowerCase();
+          const val = decl.slice(colon + 1).trim();
+          if (TARGET_PROP.test(prop) && LITERAL_COLOR_RE.test(val)) {
+            const line = clean
+              .slice(0, offset + Math.max(0, decl.search(/\S/)))
+              .split(/\r?\n/).length;
+            violations.push(
+              `${relPath}:${line} (${rule.selector}) ${prop}: ${val.replace(/\s+/g, " ")}`,
+            );
+          }
+        }
+        offset += decl.length + 1;
+      }
+    }
+  }
+
+  assert.deepEqual(
+    violations,
+    [],
+    "every color/background/border/outline/fill/stroke rule outside the explicit domain allowlist must use CSS theme/surface/status tokens",
+  );
+});
+
+test("strict !important guard: zero unallowlisted !important color/background/border-color rules in css/styles.css and css/popup.css", () => {
+  const IMPORTANT_ALLOWLIST = [
+    /^html\[data-performance-mode="true"\]/,
+    /^body\.popup-prayer-times$/,
+    /^body\.moment-mode\s+\.moment-mode-layout\b/,
+    /^body\.moment-mode\s+\.moment-mode-exit-btn\b/,
+    /^\.pocket-quran-pill-input-with-nav(?::focus)?$/,
+    /^\.pocket-quran-ayah\.pq-highlight$/,
+  ];
+  const isImportantAllowed = (relPath, selector) =>
+    splitTopLevelSelectors(selector).every(
+      (part) =>
+        IMPORTANT_ALLOWLIST.some((rx) => rx.test(part)) ||
+        (relPath === "css/popup.css" && /^(?:html|body)$/.test(part)),
+    );
+
+  const TARGET_PROP = /^(color|background|background-color|border-color)$/i;
+  const violations = [];
+
+  for (const [relPath, source] of CSS_FILES) {
+    const { rules, clean } = parseLeafCssRules(source);
+    for (const rule of rules) {
+      if (isImportantAllowed(relPath, rule.selector)) continue;
+      let offset = rule.bodyStart;
+      for (const decl of rule.body.split(";")) {
+        const colon = decl.indexOf(":");
+        if (colon !== -1) {
+          const prop = decl.slice(0, colon).trim().toLowerCase();
+          const val = decl.slice(colon + 1).trim();
+          if (TARGET_PROP.test(prop) && /!important\b/i.test(val)) {
+            const line = clean
+              .slice(0, offset + Math.max(0, decl.search(/\S/)))
+              .split(/\r?\n/).length;
+            violations.push(
+              `${relPath}:${line} (${rule.selector}) ${prop}: ${val.replace(/\s+/g, " ")}`,
+            );
+          }
+        }
+        offset += decl.length + 1;
+      }
+    }
+  }
+
+  assert.deepEqual(
+    violations,
+    [],
+    "!important on color/background/background-color/border-color is forbidden outside the documented structural allowlist",
+  );
+});
+
+test(".moment-mode-btn uses active theme tokens and Quill vendor leaks are contained", () => {
+  assertRule(".moment-mode-btn", {
+    background: "var(--accent-surface-bg)",
+    border: "1px solid var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+  });
+  assertRule(".moment-mode-btn:hover", {
+    background: "var(--accent-surface-bg-hover)",
+  });
+  assertRule(".moment-mode-btn.active", {
+    background: "var(--accent-surface-bg-hover)",
+    "border-color": "var(--accent-surface-border)",
+    color: "var(--accent-surface-text)",
+  });
+  assertRule(".moment-mode-btn:focus-visible", {
+    outline: "2px solid var(--primary-light)",
+  });
+  for (const blueHex of ["#1f84cf", "#4aa9eb", "#2b90da", "#64bcf7"]) {
+    assert.equal(
+      STYLES_CSS.toLowerCase().includes(blueHex),
+      false,
+      `hardcoded sky-blue ${blueHex} must not remain in css/styles.css`,
+    );
+  }
+
+  assertRule(
+    ".notes-toolbar.ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label",
+    {
+      color: "var(--text-primary)",
+      "border-color": "var(--glass-border)",
+    },
+  );
+  assertRule(
+    ".notes-toolbar.ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options",
+    {
+      "border-color": "var(--glass-border)",
+    },
+  );
+  assertRule('.ql-snow .ql-tooltip input[type="text"]', {
+    "border-color": "var(--glass-border)",
+    background: "var(--surface-control)",
+    color: "var(--text-primary)",
+  });
+  assertRule(".ql-snow .ql-editor td, .ql-snow .ql-editor th", {
+    "border-color": "var(--surface-border)",
+  });
+  assertRule(".ql-snow .ql-editor .ql-code-block-container", {
+    background: "var(--surface-scrim)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--surface-border-subtle)",
+  });
+  assertRule(".ql-container.ql-snow", {
+    "border-color": "var(--glass-border)",
+  });
+  assertRule(".ql-snow a", {
+    color: "var(--accent-gold-light, var(--primary-light))",
+  });
+});
